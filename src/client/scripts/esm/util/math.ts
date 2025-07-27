@@ -155,7 +155,7 @@ function intersectLineSegments(A1: bigint, B1: bigint, C1: bigint, s1p1: Coords,
  */
 function isPointOnSegment(point: BDCoords, segStart: Coords, segEnd: Coords): boolean {
 	const segStartBD = bigdecimal.FromCoords(segStart);
-	const segEndBD = bigdecimal.FromCoords(segStart);
+	const segEndBD = bigdecimal.FromCoords(segEnd);
 
 	const minSegX = bigdecimal.min(segStartBD[0], segEndBD[0]);
 	const maxSegX = bigdecimal.max(segStartBD[0], segEndBD[0]);
@@ -186,10 +186,7 @@ function intersectLineAndSegment(A: bigint, B: bigint, C: bigint, segP1: Coords,
 
 	// 2. Calculate intersection of the two infinite lines
 	// Uses the provided function calcIntersectionPointOfLines
-	const intersectionPoint = calcIntersectionPointOfLines(
-		A, B, C,
-		segA, segB, segC
-	);
+	const intersectionPoint = calcIntersectionPointOfLines(A, B, C, segA, segB, segC);
 
 	// 3. Handle no intersection (parallel) or collinear lines.
 	// calcIntersectionPointOfLines returns undefined if determinant is 0.
@@ -230,7 +227,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 		// First check if the ray's start lies on the start/end poit of the segment.
 		const rayStartIsP1 = coordutil.areCoordsEqual(ray.start, segP1);
 		const rayStartIsP2 = coordutil.areCoordsEqual(ray.start, segP2);
-		if (rayStartIsP1 || rayStartIsP2) { // Collinear
+		if (rayStartIsP1 || rayStartIsP2) { // Collinear, and ray starts at one of the segment's endpoints
 			// This means the lines must be collinear, so we need to check if
 			// the ray's direction vector points away from the segment's opposite end (1 intersection),
 			// because if it pointed towards the segment's opposite end, it would have infinite intersections.
@@ -240,11 +237,11 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 		return undefined; // Parallel, not collinear, zero intersections.
 	}
 
-	function getCollinearIntersection(oppositePoint: Coords): Coords | undefined {
+	function getCollinearIntersection(oppositePoint: Coords): BDCoords | undefined {
 		const vectorToOppositePoint = calculateVectorFromPoints(ray.start, oppositePoint);
 		const dotProd = dotProduct(ray.vector, vectorToOppositePoint);
 		if (dotProd > 0) return undefined; // The ray points towards the opposite end of the segment, so no unique intersection.
-		else return [...ray.start]; // The ray's start is the intersection point.
+		else return bigdecimal.FromCoords(ray.start); // The intersection point is the ray's start.
 	}
 
 	// 5. Check if the calculated intersection point lies on the actual segment.
@@ -393,6 +390,8 @@ function getXYComponents_FromAngle(theta: number): DoubleCoords {
  * For example, a point of [5200,1100] and gridSize of 10000 would yield [10000,0]
  */
 function roundPointToNearestGridpoint(point: Coords, gridSize: bigint): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
+
+	// To round bigints, we add half the gridSize before dividing by it.
 	function roundBigintNearestMultiple(value: bigint, multiple: bigint) {
 		const halfMultiple = multiple / 2n; // Assumes multiple is positive and divisible by 2.
 
@@ -402,7 +401,6 @@ function roundPointToNearestGridpoint(point: Coords, gridSize: bigint): Coords {
 		else return ((value - halfMultiple) / multiple) * multiple;
 	}
 
-	// To round bigints, we add half the gridSize before dividing by it.
 	const nearestX = roundBigintNearestMultiple(point[0], gridSize);
 	const nearestY = roundBigintNearestMultiple(point[1], gridSize);
 
