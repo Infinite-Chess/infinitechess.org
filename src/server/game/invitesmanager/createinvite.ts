@@ -1,4 +1,6 @@
 
+// src/server/game/invitesmanager/createinvite.ts
+
 /**
  * This script handles invite creation, making sure that the invites have valid properties.
  * 
@@ -11,37 +13,40 @@
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
+// @ts-ignore
+import { getTranslation } from '../../utility/translate.js'; 
+// @ts-ignore
 import clockweb from '../clockweb.js';
+// @ts-ignore
+import { printActiveGameCount } from '../gamemanager/gamecount.js';
+// @ts-ignore
+import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { printActiveGameCount } from '../gamemanager/gamecount.js';
-import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { getTranslation } from '../../utility/translate.js'; 
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
-/**
- * Type Definitions
- * @typedef {import('./inviteutility.js').Invite} Invite
- */
-
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+// @ts-ignore
+import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
+import type { Invite } from './inviteutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Rating } from '../../database/leaderboardsManager.js';
 
 /**
  * Creates a new invite from their websocket message.
  * 
  * This is async because we need to read allowinvites.json to see
  * if new invites are allowed, before we create it.
- * @param {CustomWebSocket} ws - Their socket
- * @param {*} messageContents - The incoming socket message that SHOULD contain the invite properties!
- * @param {number} replyto - The incoming websocket message ID, to include in the reply
+ * @param ws - Their socket
+ * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
+ * @param replyto - The incoming websocket message ID, to include in the reply
  */
-async function createInvite(ws, messageContents, replyto) { // invite: { id, owner, variant, clock, color, rated, publicity } 
+async function createInvite(ws: CustomWebSocket, messageContents: any, replyto: number) { // invite: { id, owner, variant, clock, color, rated, publicity } 
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
 
 	// Make sure they don't already have an existing invite
@@ -76,12 +81,12 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 /**
  * Makes sure the socket message is an object, and strips it of all non-variant related properties.
  * STILL DO EXPLOIT checks on the specific invite values after this!!
- * @param {CustomWebSocket} ws
- * @param {*} messageContents - The incoming websocket message contents (separate from route and action)
- * @param {number} replyto - The incoming websocket message ID, to include in the reply
- * @returns {Invite | undefined} The Invite object, or undefined it the message contents were invalid.
+ * @param ws
+ * @param messageContents - The incoming websocket message contents (separate from route and action)
+ * @param replyto - The incoming websocket message ID, to include in the reply
+ * @returns The Invite object, or void it the message contents were invalid.
  */
-function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
+function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: any, replyto: number): Invite | void {
 
 	// Verify their invite contains the required properties...
 
@@ -104,40 +109,44 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
      * usernamecontainer
      */
 
-	const invite = {};
 
-	let id;
+	let id: string;
 	do { id = uuid.generateID_Base36(IDLengthOfInvites); } while (existingInviteHasID(id));
-	invite.id = id;
 
-	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username, user_id: ws.metadata.memberInfo.user_id } : { browser: ws.metadata.cookies["browser-id"] };
-	invite.owner = owner;
-	invite.usernamecontainer = {};
-	invite.usernamecontainer.type = owner.member ? 'player' : 'guest';
-	invite.usernamecontainer.username = owner.member || "(Guest)"; // Protect browser's browser-id cookie
+	const owner = ws.metadata.memberInfo;
+
+	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
 		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
-		invite.usernamecontainer.rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
+		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
-	invite.variant = messageContents.variant;
-	invite.clock = messageContents.clock;
-	invite.color = messageContents.color;
-	invite.rated = messageContents.rated;
-	invite.publicity = messageContents.publicity;
-	invite.tag = messageContents.tag;
+	const usernamecontainer: ServerUsernameContainer = {
+		type: owner.signedIn ? 'player' : 'guest',
+		username: owner.signedIn ? owner.username : "(Guest)",
+		rating
+	};
     
-	return invite;
+	return {
+		id,
+		owner,
+		usernamecontainer,
+		variant: messageContents.variant,
+		clock: messageContents.clock,
+		rated: messageContents.rated,
+		color: messageContents.color,
+		tag: messageContents.tag,
+		publicity: messageContents.publicity,
+	};
 }
 
 /**
  * Tests if a provided invite's properties have illegal values.
  * If so, they should be reported, and don't create the invite.
- * @param {Invite} invite 
- * @returns {boolean} true if it's illegal, false if it's normal
+ * @returns true if it's illegal, false if it's normal
  */
-function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, publicity }
+function isCreatedInviteExploited(invite: Invite) {  // { variant, clock, color, rated, publicity }
 
 	if (typeof invite.variant !== 'string') return true;
 	if (typeof invite.clock !== 'string') return true;
@@ -167,11 +176,11 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 
 /**
  * Logs an incident of exploiting invite properties to the hack log.
- * @param {CustomWebSocket} ws - The socket that exploited invite creation
- * @param {Invite} invite - The exploited invite
- * @param {number} replyto - The incoming websocket message ID, to include in the reply
+ * @param ws - The socket that exploited invite creation
+ * @param invite - The exploited invite
+ * @param replyto - The incoming websocket message ID, to include in the reply
  */
-function reportForExploitingInvite(ws, invite, replyto) {
+function reportForExploitingInvite(ws: CustomWebSocket, invite: Invite, replyto: number) {
 	sendSocketMessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
 
 	const logText = ws.metadata.memberInfo.signedIn ? `User ${ws.metadata.memberInfo.username} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
@@ -183,11 +192,11 @@ function reportForExploitingInvite(ws, invite, replyto) {
 /**
  * Returns true if the user is allowed to create a new invite at this time,
  * depending on whether the server is about to restart, or they have the owner role.
- * @param {CustomWebSocket} ws - The socket attempting to create a new invite
- * @param {number} replyto - The incoming websocket message ID, to include in the reply
- * @returns {Promise<boolean>} true if invite creation is allowed
+ * @param ws - The socket attempting to create a new invite
+ * @param replyto - The incoming websocket message ID, to include in the reply
+ * @returns true if invite creation is allowed
  */
-async function isAllowedToCreateInvite(ws, replyto) {
+async function isAllowedToCreateInvite(ws: CustomWebSocket, replyto: number) {
 	if (!await isServerRestarting()) return true; // Server not restarting, all new invites are allowed!
 
 	// Server is restarting... Do we have admin perms to create an invite anyway?

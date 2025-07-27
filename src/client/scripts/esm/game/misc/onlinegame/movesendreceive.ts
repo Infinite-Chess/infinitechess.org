@@ -4,7 +4,7 @@
  */
 
 import type { FullGame } from "../../../chess/logic/gamefile.js";
-import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
+import type { OpponentsMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 

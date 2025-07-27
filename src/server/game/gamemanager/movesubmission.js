@@ -21,7 +21,7 @@ import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconvert
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Game} Game
+ * @typedef {import('./gameutility.js').Game} Game
  * @typedef {import('../../../client/scripts/esm/chess/util/coordutil.js').Coords} Coords
  * @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket
  * @typedef {import('../../../client/scripts/esm/chess/logic/icn/icnconverter.js')._Move_Out} _Move_Out
@@ -107,7 +107,7 @@ function submitMove(ws, game, messageContents) {
 
 	if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color);
 	else gameutility.sendUpdatedClockToColor(game, color);
-	gameutility.sendMoveToColor(game, opponentColor); // Send their move to their opponent.
+	gameutility.sendMoveToColor(game, opponentColor, move); // Send their move to their opponent.
 }
 
 

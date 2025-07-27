@@ -10,6 +10,8 @@ import docutil from "./docutil.js";
 
 
 import type { Rating } from "../../../../server/database/leaderboardsManager.js";
+// @ts-ignore
+import type { ServerUsernameContainer } from "../game/misc/invites.js";
 
 
 // Types ----------------------------------------------------------------------------------------
@@ -154,17 +156,16 @@ function createUsernameContainer(type: UsernameContainerType, username: Username
  * @param containerDiv - the HTMLDivElement to extract information from
  * @returns a freshly created UsernameContainer or undefined, if this failed
  */
-function extractPropertiesFromUsernameContainerElement(containerDiv: HTMLDivElement) : UsernameContainerProperties {
+function extractPropertiesFromUsernameContainerElement(containerDiv: HTMLDivElement) : ServerUsernameContainer {
 	if (!containerDiv.classList.contains('username-embed')) throw Error("Cannot extract username container from element that is not a username embed!");
 
 	// Reconstruct type and username
 	const usernameElem = containerDiv.querySelector('.username')!;
-	const result: UsernameContainerProperties = {
-		type: containerDiv.getAttribute('user-type') as UsernameContainerType,
-		username: {
-			value: usernameElem.textContent!,
-			openInNewWindow: usernameElem.getAttribute('target') === '_blank'
-		}
+	const type = usernameElem.getAttribute('user-type') as 'player' | 'guest';
+	if (!type) throw Error("Cannot extract username container from element that does not have a user-type attribute!");
+	const result: ServerUsernameContainer = {
+		type,
+		username: usernameElem.textContent!
 	};
 
 	// Reconstruct rating

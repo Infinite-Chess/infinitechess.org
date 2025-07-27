@@ -11,7 +11,7 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
-import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 import type { FullGame } from "../../chess/logic/gamefile.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
@@ -81,7 +81,7 @@ interface LoadOptions {
  * Typically used if we're pasting a game, or reloading an online one. */
 interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: ServerGameMovesMessage,
+	moves?: ServerGameMoveMessage[],
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions,
 	/** The conclusion of the game, if loading an online game that has already ended. */

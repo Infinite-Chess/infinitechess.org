@@ -12,13 +12,15 @@ import path from 'path';
 
 // Middleware imports
 import { readFile, writeFile } from '../utility/lockFile.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Custom imports
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
+// @ts-ignore
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+// @ts-ignore
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
-/** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -39,13 +41,29 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
 	console.log("Generated allowinvites file");
 })();
 
+interface AllowInvites {
+	/** Whether invites are currently allowed to be created. */
+	allowinvites: boolean,
+	/**
+	 * If when read, this is a number, and allowinvites is false,
+	 * then the server initiates a restart in that many minutes
+	 * then saves the file with this value as false.
+	 */
+	restartIn: number | false,
+}
+
 /**
  * The allowinvites.json file in the "database". This needs to periodically be re-read
  * in order to see our changes made to it. This is typcailly
  * done when a new invite is attempted to be created.
- * `{ allowinvites: true, restartIn: false }`
  */
-let allowinvites = await readFile(allowinvitesPath, 'Unable to read allowinvites.json on startup.');
+let allowinvites: AllowInvites;
+try {
+	allowinvites = await readFile(allowinvitesPath);
+} catch (e) {
+	const errMsg = 'Unable to read allowinvites.json on startup.' + (e instanceof Error ? e.message : String(e));
+	throw new Error(errMsg);
+}
 /**
  * The minimum time required between new reads of allowinvites.json.
  * 
@@ -59,8 +77,7 @@ const intervalToReadAllowinviteMillis = 5000; // 5 seconds
  * Returns true if the server is about to restart.
  * This will re-read allowinvites.json if it's
  * been a little bit since it was last read.
- * @param {CustomWebSocket} ws - The socket attempting to create a new invite
- * @returns {Promise<boolean>} true if invite creation is allowed
+ * @returns true if invite creation is allowed
  */
 async function isServerRestarting() {
 	await updateAllowInvites();
@@ -88,16 +105,16 @@ const updateAllowInvites = (function() {
 		// console.log("Reading allowinvites.json!")
     
 		// If this is not called with 'await', it returns a promise.
-		const newAllowInvitesValue = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`);
-
-		timeLastReadAllowInvites = Date.now();
-    
-		if (newAllowInvitesValue === undefined) { // Not defined, error in reading. Probably file is locked
+		try {
+			allowinvites = await readFile(allowinvitesPath);
+		} catch (e) {
+			const errMsg = `Error locking & reading allowinvites.json after receiving a created invite: ` + (e instanceof Error ? e.message : String(e));
+			logEventsAndPrint(errMsg, 'errLog.txt');
 			console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
 			return;
 		}
 
-		allowinvites = newAllowInvitesValue;
+		timeLastReadAllowInvites = Date.now();
 
 		// Stop server restarting if we're allowing invites again!
 		if (allowinvites.allowinvites) cancelServerRestart();
@@ -114,7 +131,7 @@ const updateAllowInvites = (function() {
  * periodically informing the user when it gets closer.
  * @param {Object} newAllowInvitesValue - The newly read allowinvites.json file.
  */
-async function initServerRestart(newAllowInvitesValue) { // { allowInvites, restartIn: minutes }
+async function initServerRestart(newAllowInvitesValue: AllowInvites) { // { allowInvites, restartIn: minutes }
 	if (!newAllowInvitesValue.restartIn) return; // We have not changed the value to indicate we're restarting. Return.
 
 	const now = Date.now(); // Current time in milliseconds
@@ -126,15 +143,21 @@ async function initServerRestart(newAllowInvitesValue) { // { allowInvites, rest
 
 	console.log(`Will be restarting the server in ${newAllowInvitesValue.restartIn} minutes!`);
 
-	// Set our restartIn variable to undefined, so we don't repeat this next time we load the file!
+	// Set our restartIn variable to false, so we don't repeat this next time we load the file!
 	newAllowInvitesValue.restartIn = false;
 
 	// Save the file
-	await writeFile(
-		allowinvitesPath,
-		newAllowInvitesValue,
-		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
-	);
+	try {
+		await writeFile(
+			allowinvitesPath,
+			newAllowInvitesValue
+		);
+	} catch (e) {
+		const errMsg = 
+		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created. `
+		+ (e instanceof Error ? e.message : String(e));
+		logEventsAndPrint(errMsg, 'errLog.txt');
+	}
 
 	// Alert all people on the invite screen that we will be restarting soon
 	// ...

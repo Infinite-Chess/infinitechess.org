@@ -528,14 +528,14 @@ function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * @returns The product of bd1 and bd2.
  */
 function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: number): BigDecimal {
-    // 1. Calculate the raw product of the internal bigints.
-    const newBigInt = bd1.bigint * bd2.bigint;
+	// 1. Calculate the raw product of the internal bigints.
+	const newBigInt = bd1.bigint * bd2.bigint;
     
-    // 2. The new scale is the sum of the original scales.
-    const newDivex = bd1.divex + bd2.divex;
+	// 2. The new scale is the sum of the original scales.
+	const newDivex = bd1.divex + bd2.divex;
     
-    // 3. Immediately hand off to normalize to enforce the floating-point model.
-    return normalize({ bigint: newBigInt, divex: newDivex }, mantissaBits);
+	// 3. Immediately hand off to normalize to enforce the floating-point model.
+	return normalize({ bigint: newBigInt, divex: newDivex }, mantissaBits);
 }
 
 /**
@@ -586,35 +586,35 @@ function divide_fixed(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number
  * @returns The quotient of bd1 and bd2 (bd1 / bd2).
  */
 function divide_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
-    if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
-    if (bd1.bigint === ZERO) return { bigint: ZERO, divex: mantissaBits }; // Or any divex, normalize will handle it.
+	if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
+	if (bd1.bigint === ZERO) return { bigint: ZERO, divex: mantissaBits }; // Or any divex, normalize will handle it.
 
-    // 1. Calculate bit length of the absolute values for a magnitude comparison.
-    const len1 = bimath.bitLength_bisection(bimath.abs(bd1.bigint));
-    const len2 = bimath.bitLength_bisection(bimath.abs(bd2.bigint));
+	// 1. Calculate bit length of the absolute values for a magnitude comparison.
+	const len1 = bimath.bitLength_bisection(bimath.abs(bd1.bigint));
+	const len2 = bimath.bitLength_bisection(bimath.abs(bd2.bigint));
 
-    // 2. Determine the necessary left shift.
-    // We need to shift bd1.bigint left enough so that the resulting quotient has 'mantissaBits' of precision.
-    const bitDifference = len2 - len1;
+	// 2. Determine the necessary left shift.
+	// We need to shift bd1.bigint left enough so that the resulting quotient has 'mantissaBits' of precision.
+	const bitDifference = len2 - len1;
     
-    // We need to shift by the difference in bit lengths (if bd2 is larger) PLUS the desired final mantissa bits.
-    // We add 1 for extra safety against off-by-one truncation errors in the integer division.
-    const requiredShift = BigInt(Math.max(bitDifference, 0) + mantissaBits + 1);
+	// We need to shift by the difference in bit lengths (if bd2 is larger) PLUS the desired final mantissa bits.
+	// We add 1 for extra safety against off-by-one truncation errors in the integer division.
+	const requiredShift = BigInt(Math.max(bitDifference, 0) + mantissaBits + 1);
 
-    // 3. Scale the dividend up by the required shift amount.
-    const scaledDividend = bd1.bigint << requiredShift;
+	// 3. Scale the dividend up by the required shift amount.
+	const scaledDividend = bd1.bigint << requiredShift;
 
-    // 4. Perform the single, precise integer division.
-    const quotient = scaledDividend / bd2.bigint;
+	// 4. Perform the single, precise integer division.
+	const quotient = scaledDividend / bd2.bigint;
     
-    // 5. Calculate the new divex for the result.
-    // The total scaling factor is 2^requiredShift from our scaling,
-    // and we must also account for the original exponents.
-    const newDivex = bd1.divex - bd2.divex + Number(requiredShift);
+	// 5. Calculate the new divex for the result.
+	// The total scaling factor is 2^requiredShift from our scaling,
+	// and we must also account for the original exponents.
+	const newDivex = bd1.divex - bd2.divex + Number(requiredShift);
 
-    // 6. Normalize the result to the target mantissa size. This will trim any excess bits
-    // if the dividend was much larger than the divisor.
-    return normalize({ bigint: quotient, divex: newDivex }, mantissaBits);
+	// 6. Normalize the result to the target mantissa size. This will trim any excess bits
+	// if the dividend was much larger than the divisor.
+	return normalize({ bigint: quotient, divex: newDivex }, mantissaBits);
 }
 
 /**

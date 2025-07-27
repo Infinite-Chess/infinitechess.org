@@ -166,7 +166,7 @@ function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): { xHalfLength
 	return {
 		xHalfLength: bigdecimal.divide_fixed(xDiff, TWO),
 		yHalfLength: bigdecimal.divide_fixed(yDiff, TWO)
-	}
+	};
 }
 
 /**

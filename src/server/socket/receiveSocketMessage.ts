@@ -1,4 +1,6 @@
 
+// src/server/socket/receiveSocketMessage.ts
+
 /**
  * This script receives incoming socket messages, rate limits them, logs them,
  * cancels their echo timer, sends an echo, then sends the message to our router.

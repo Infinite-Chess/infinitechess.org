@@ -8,6 +8,9 @@ import type { MetaData } from '../util/metadata.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GlobalGameState } from './state.js';
+import type { PieceMoveset } from './movesets.js';
+import type { RawTypeGroup } from '../util/typeutil.js';
+import type { SpecialMoveFunction } from './specialmove.js';
 
 import variant from '../variants/variant.js';
 
@@ -55,7 +58,7 @@ function getVariantGamerules(metadata: MetaData, options?: VariantOptions): Game
  * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. 
  * @param [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
 */
-function getPieceMovesets(metadata: MetaData, slideLimit?: bigint) {
+function getPieceMovesets(metadata: MetaData, slideLimit?: bigint): { pieceMovesets: RawTypeGroup<() => PieceMoveset>, specialMoves: RawTypeGroup<SpecialMoveFunction> } {
 	// The movesets and methods for detecting and executing special moves
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
