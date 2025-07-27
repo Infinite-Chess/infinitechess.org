@@ -86,7 +86,7 @@ const TEN: bigint = 10n;
  * I arbitrarily chose 50 bits for the minimum, because that gives us about 15 digits of precision,
  * which is about how much javascript's doubles give us.
  */
-const DEFAULT_WORKING_PRECISION = 23; // Default: 53 (matches javascript's double precision)
+const DEFAULT_WORKING_PRECISION = 23; // Default: 53 (matches javascript's double precision)   23: float32 precision
 
 /**
  * The maximum divex a BigDecimal is allowed to have.
@@ -687,66 +687,54 @@ function power(base: BigDecimal, exp: number): BigDecimal {
 /**
  * [Floating-Point Model] Calculates the square root of a BigDecimal using Newton's method.
  * The precision of the result is determined by the `mantissaBits` parameter.
- * @param bd The BigDecimal to find the square root of. Must be non-negative.
- * @param [mantissaBits=DEFAULT_MANTISSA_PRECISION_BITS] The number of mantissa bits for the result's precision.
- * @returns The square root of the input BigDecimal.
  */
 function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
 	// 1. Validate input
 	if (bd.bigint < ZERO) throw new Error("Cannot calculate the square root of a negative number.");
 	if (bd.bigint === ZERO) return { bigint: ZERO, divex: bd.divex };
 
-	// 2. Setup for Newton's method
-	// To ensure the result has `mantissaBits` of precision, we need to add that
-	// much working precision to our input number. We also add one extra bit
-	// to prevent rounding errors from affecting the final result.
-	const workingPrecision = mantissaBits + 1;
-    
-	// Scale the input number up by shifting it left. This is the 'n' in our formula.
-	const scaledBigInt = bd.bigint << BigInt(2 * workingPrecision);
-	const scaledDivex = bd.divex + 2 * workingPrecision;
-	const n = { bigint: scaledBigInt, divex: scaledDivex };
-
-	// 3. Make an initial guess (x_0)
-	// A good initial guess is crucial for fast convergence. A common technique is to
-	// use a value related to 2^(bitLength/2).
-	const bitLength = bimath.bitLength_bisection(n.bigint);
-	const initialGuessBigInt = ONE << BigInt(bitLength / 2);
-	let x_k = { bigint: initialGuessBigInt, divex: 0 }; // Our guess is an integer, so divex is 0.
+	// 2. Make an initial guess (x_0)
+	// A good initial guess is crucial for fast convergence.
+	// A common technique is to use a value related to 2^(bitLength/2).
+	// But that's the bitlength of the INTEGER portion, none of the decimal bits.
+	const bitLength = bimath.bitLength_bisection(bd.bigint) - bd.divex; // Subtract the decimal bits
+	// Initial guess
+	let x_k = {
+		bigint: ONE,
+		divex: Math.round(-bitLength / 2)
+	};
+	// console.log("Initial guess for sqrt (before normalization):"); printInfo(x_k);
+	x_k = normalize(x_k, mantissaBits); // Normalize the guess to the desired mantissa bits.
+	// console.log(`Initial guess for sqrt:`); printInfo(x_k);
 
 	// 4. Iterate using Newton's method: x_{k+1} = (x_k + n / x_k) / 2
 	// We continue until the guess stabilizes.
 	let last_x_k = clone(x_k); // A copy to check for convergence
 
-	// A safety limit to prevent infinite loops in case of unexpected behavior.
-	const maxIterations = 100; 
-	for (let i = 0; i < maxIterations; i++) {
+	let i = 0;
+	while (true) {
+		if (i >= 100) throw Error(`Reached maximum iterations ${100} in sqrt calculation without convergence!`);
+
 		// Calculate `n / x_k` using high-precision floating division
-		const n_div_xk = divide_floating(n, x_k, mantissaBits * 2);
+		const n_div_xk = divide_floating(bd, x_k, mantissaBits * 2);
 		// Calculate `x_k + (n / x_k)`
 		const sum = add(x_k, n_div_xk);
 		// Divide by 2: `(sum) / 2`. A right shift is equivalent to division by 2.
 		x_k = { bigint: sum.bigint >> ONE, divex: sum.divex };
+
 		// Check for convergence: if the guess is no longer changing, we've found our answer.
+		// console.log(`Iteration ${i}: x_k = ${toExactString(x_k)}`);
 		if (areEqual(x_k, last_x_k)) {
-			console.log(`Reached convergence in sqrt after ${i} iterations.`);
+			// console.log(`Reached convergence in sqrt after ${i} iterations.`);
 			break;
 		}
 
+		// Prepare for the next iteration.
 		last_x_k = clone(x_k);
+		i++;
 	}
-    
-	// 5. Final result
-	// The value we found is the square root of the *scaled* number. The resulting
-	// divex is now (original_divex / 2) + working_precision. We need to normalize
-	// it back to the target precision.
-	// const finalDivex = Math.floor(bd.divex / 2);
-    
-	// NOT NEEDED???
-	// setExponent(x_k, finalDivex + workingPrecision);
 
-	// Normalize the result to the desired number of mantissa bits.
-	return normalize(x_k, mantissaBits);
+	return x_k;
 }
 
 /**
@@ -983,8 +971,6 @@ function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PREC
 	// Use the fast, mathematical bitLength function.
 	const currentBitLength = bimath.bitLength_bisection(mantissa);
 
-	if (currentBitLength <= precisionBits) return { bigint: bd.bigint, divex: bd.divex };
-
 	const shiftAmount = BigInt(currentBitLength - precisionBits);
 
 	// Calculate the new divex. It can now be negative.
@@ -1041,13 +1027,13 @@ function toNumber(bd: BigDecimal) {
 	if (bd.divex >= 0) {
 		if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
 		const mantissaAsNumber = Number(bd.bigint);
-		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
+		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
 		return mantissaAsNumber / powersOfTwoList[bd.divex]!;
 	} else { // divex is negative
 		const exp = -bd.divex;
 		if (exp > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the positive exponent is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
 		const mantissaAsNumber = Number(bd.bigint);
-		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
+		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
 		return mantissaAsNumber * powersOfTwoList[exp]!;
 	}
 }
@@ -1344,28 +1330,29 @@ export type {
 
 
 
-const n1 = 164;
+const n1 = 144;
 const bd1: BigDecimal = FromNumber(n1);
 console.log(`${n1} converted into a BigDecimal:`);
 printInfo(bd1);
 
-const n2: number = 5.56;
-const bd2: BigDecimal = FromNumber(n2);
-console.log(`\n${n2} converted into a BigDecimal:`);
-printInfo(bd2);
+// const n2: number = 5.56;
+// const bd2: BigDecimal = FromNumber(n2);
+// console.log(`\n${n2} converted into a BigDecimal:`);
+// printInfo(bd2);
 
+console.log(`Starting sqrt test on ${n1}...`);
 const bd3 = sqrt(bd1);
 console.log(`\nSqrt ${n1}:`);
 printInfo(bd3);
 
-const power2 = 3;
-const bd4 = power(bd1, 3);
-console.log(`\nPower ${n1} by ${power2}:`);
-printInfo(bd4);
+// const power2 = 3;
+// const bd4 = power(bd1, 3);
+// console.log(`\nPower ${n1} by ${power2}:`);
+// printInfo(bd4);
 
-const bd5 = mod(bd1, bd2);
-console.log(`\nMod ${n1} by ${n2}:`);
-printInfo(bd5);
+// const bd5 = mod(bd1, bd2);
+// console.log(`\nMod ${n1} by ${n2}:`);
+// printInfo(bd5);
 
 
 
