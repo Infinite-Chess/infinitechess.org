@@ -45,6 +45,7 @@ import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 const ONE = bigdecimal.FromNumber(1.0);
 const TWO = bigdecimal.FromNumber(2.0);
+const TEN = bigdecimal.FromNumber(10);
 
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
@@ -181,53 +182,54 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
  */
-function regenBoardModel(): BufferModel | undefined {
-	const boardTexture = perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
-	if (!boardTexture) return; // Can't create buffer model if texture not loaded.
-
+function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): BufferModel | undefined {
 	const boardScale = boardpos.getBoardScale();
-	const TwoTimesScale = bigdecimal.multiply_floating(boardScale, TWO);
+	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
+	const relativeScaleWhen1TileIs1VirtualPixel = bigdecimal.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
+	if (bigdecimal.compare(relativeScaleWhen1TileIs1VirtualPixel, scaleWhen1TileIs1VirtualPixel) < 0) {
+		// STOP rendering to avoid glitches! Too small
+		console.log(`Skipping generating board model of zoom ${bigdecimal.toNumber(zoom)}. Scale is too small.`);
+		return;
+	}
+
+	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
+	const boardTexture = isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+
+	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
+	const zoomTimesScale = bigdecimal.toNumber(bigdecimal.multiply_floating(boardScale, zoom));
+	const zoomTimesScaleTwo = zoomTimesScale * 2;
 
 	const inPerspective = perspective.getEnabled();
 	const distToRenderBoard = perspective.distToRenderBoard;
-
 	const screenBoundingBox = camera.getScreenBoundingBox(false);
+
 	const startX = inPerspective ? -distToRenderBoard : screenBoundingBox.left;
-	const endX = inPerspective ? distToRenderBoard : screenBoundingBox.right;
+	const endX =   inPerspective ?  distToRenderBoard : screenBoundingBox.right;
 	const startY = inPerspective ? -distToRenderBoard : screenBoundingBox.bottom;
-	const endY = inPerspective ? distToRenderBoard : screenBoundingBox.top;
-
-	const startXBD = bigdecimal.FromNumber(startX);
-	const startYBD = bigdecimal.FromNumber(startY);
-
-	const xDiffBD = bigdecimal.FromNumber(endX - startX);
-	const yDiffBD = bigdecimal.FromNumber(endY - startY);
+	const endY =   inPerspective ?  distToRenderBoard : screenBoundingBox.top;
 
 	const boardPos = boardpos.getBoardPos();
 
-	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)...
+	/** Calculates the texture coords for one axis (X/Y) of the tiles model. */
+	function getAxisTexCoords(boardPos: BigDecimal, start: number, end: number) {
+		const boardPosAdjusted: BigDecimal = bigdecimal.add(boardPos, squareCenter);
+		const addend1: BigDecimal = bigdecimal.divide_fixed(boardPosAdjusted, zoom);
+		const addend2: BigDecimal = bigdecimal.FromNumber(start / zoomTimesScale);
+		
+		const sum: BigDecimal = bigdecimal.add(addend1, addend2);
+		const mod2: number = bigdecimal.toNumber(bigdecimal.mod(sum, TWO));
+		const texstart: number = mod2 / 2;
 
-	const boardPosAdjusted: BDCoords = [
-		bigdecimal.add(boardPos[0], squareCenter),
-		bigdecimal.add(boardPos[1], squareCenter)
-	];
-	const dividendX = bigdecimal.add(boardPosAdjusted[0], startXBD);
-	const dividendY = bigdecimal.add(boardPosAdjusted[1], startYBD);
-	let quotientX = bigdecimal.divide_floating(dividendX, boardScale);
-	let quotientY = bigdecimal.divide_floating(dividendY, boardScale);
-	const mod2X = bigdecimal.mod(quotientX, TWO);
-	const mod2Y = bigdecimal.mod(quotientY, TWO);
-	const texCoordStartX = bigdecimal.divide_fixed(mod2X, TWO);
-	const texCoordStartY = bigdecimal.divide_fixed(mod2Y, TWO);
+		const diff = end - start;
+		const texdiff = diff / zoomTimesScaleTwo;
+		const texend = texstart + texdiff;
+		return [texstart, texend]
+	}
+
+	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], startX, endX);
+	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], startY, endY);
 	
-	quotientX = bigdecimal.add(texCoordStartX, xDiffBD);
-	quotientY = bigdecimal.add(texCoordStartY, yDiffBD);
-	const texCoordEndX = bigdecimal.divide_fixed(quotientX, TwoTimesScale);
-	const texCoordEndY = bigdecimal.divide_fixed(quotientY, TwoTimesScale);
-
-	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
-    
-	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, 1, 1, 1, 1);
+	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
 	return createModel(data, 3, "TRIANGLES", true, boardTexture);
 }
 
@@ -236,7 +238,7 @@ function renderMainBoard() {
 
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
 	// The other option is to regenerate it as much as highlighted squares, with the bounding box.
-	const model = regenBoardModel();
+	const model = generateBoardModel(false);
 	if (!model) return; // Model not defined because the texture was not fully loaded yet
 	model.render();
 }
@@ -329,35 +331,35 @@ function render() {
 }
 
 function renderFractalBoards() {
-
-	const e = -math.getBaseLog10(boardpos.getBoardScale());
+	const e = -bigdecimal.log10(boardpos.getBoardScale());
 
 	const startE = 0.5; // 0.5   lower = starts coming in quicker
 	if (e < startE) return;
 
 	const interval = 3;
 	const length = 6;
-
-	let firstInterval = Math.floor((e - startE) / interval) * interval + startE;
-	const zeroCount = 3 * (firstInterval - startE) / interval + 3; // Always a multiple of 3
-	// console.log(firstInterval, zeroCount)
-
 	const capOpacity = 0.7;
 
+	let firstInterval = Math.floor((e - startE) / interval) * interval + startE;
+	let zeroCount = 3 * (firstInterval - startE) / interval + 3; // Always a multiple of 3
+	// console.log(firstInterval, zeroCount)
+
 	// Most-zoomed out board
-	let zoom = Math.pow(10, zeroCount);
-	let x = (firstInterval - e) / length; // 0 - 1
-	// console.log(`x: ${x}`)
-	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7); // 0.7  the lower the pow, the faster the opacity
-	renderZoomedBoard(zoom, opacity);
+	let zoom = bigdecimal.power(TEN, zeroCount);
+	let x = (firstInterval - e) / length;
+	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
+	generateBoardModel(true, zoom, opacity)?.render();
 
 	// 2nd most-zoomed out board
 	firstInterval -= interval;
 	if (firstInterval < 0) return;
-	zoom /= Math.pow(10, 3);
+
+	// To divide a bigdecimal by 10^3, we just subtract 3 from the exponent
+	zeroCount -= 3;
+	zoom = bigdecimal.power(TEN, zeroCount);
 	x = (firstInterval - e) / length; // 0 - 1
 	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
-	renderZoomedBoard(zoom, opacity);
+	generateBoardModel(true, zoom, opacity)?.render();
 }
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
@@ -381,66 +383,34 @@ function renderSolidCover() {
 	model.render();
 }
 
-function renderZoomedBoard(zoom: number, opacity: number) {
-	const boardTexture = tilesTexture_2; 
-	if (!boardTexture) return; // Can't create buffer model if texture not defined.
-
-	const zoomTimesScale = zoom * boardpos.getBoardScale();
-	const zoomTimesScaleTwo = zoomTimesScale * 2;
-
-	const inPerspective = perspective.getEnabled();
-	const distToRenderBoard = perspective.distToRenderBoard;
-
-	const startX = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).left;
-	const endX =   inPerspective ?  distToRenderBoard : camera.getScreenBoundingBox(false).right;
-	const startY = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
-	const endY =   inPerspective ?  distToRenderBoard : camera.getScreenBoundingBox(false).top;
-
-	const boardPos = boardpos.getBoardPos();
-	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-	const texleft = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2;
-	const texbottom = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2;
-	const texCoordDiffX = (endX - startX) / zoomTimesScaleTwo;
-	const screenTexCoordDiffX = (camera.getScreenBoundingBox(false).right - camera.getScreenBoundingBox(false).left) / zoomTimesScaleTwo;
-	const diffWhen1TileIs1Pixel = camera.canvas.width / 2;
-	if (screenTexCoordDiffX > diffWhen1TileIs1Pixel) return; // STOP rendering to avoid glitches! Too small
-	const texCoordDiffY = (endY - startY) / zoomTimesScaleTwo;
-	const texright = texleft + texCoordDiffX;
-	const textop = texbottom + texCoordDiffY;
-
-	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
-    
-	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, 1, 1, 1, opacity);
-	const model = createModel(data, 3, "TRIANGLES", true, boardTexture);
-
-	model.render();
-}
-
 /**
  * Calculates the bounding box of the board visible on screen,
- * when the camera is at the specified position.
+ * when the camera is at the specified position, up to a certain precision level.
+ * 
  * This is different from the bounding box of the canvas, because
  * this is effected by the camera's scale (zoom) property.
  * 
  * Returns in float form. To round away from the origin to encapsulate
  * the whole of all tiles atleast partially visible, further use {@link roundAwayBoundingBox}
- * @param {number[]} [position] - The position of the camera.
- * @param {number} [scale] - The scale (zoom) of the camera.
- * @param {boolean} [debugMode] Whether developer mode is enabled.
- * @returns {BoundingBox} The bounding box
+ * @param [position] The position of the camera.
+ * @param [scale] The scale (zoom) of the camera.
+ * @param debugMode - Whether developer mode is enabled.
+ * @returns The bounding box
  */
 function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode: boolean): BoundingBoxBD {
+	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 
-	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
+	function getAxisEdges(position: BigDecimal, screenEnd: number): [BigDecimal, BigDecimal] {
+		const screenEndBD = bigdecimal.FromNumber(screenEnd);
+		const distToEdgeInSquares: BigDecimal = bigdecimal.divide_floating(screenEndBD, scale);
+		const start = bigdecimal.subtract(position, distToEdgeInSquares);
+		const end = bigdecimal.add(position, distToEdgeInSquares);
+		return [start, end];
+	}
 
-	const left = position[0] - distToHorzEdgeDivScale;
-	const right = position[0] + distToHorzEdgeDivScale;
-
-	const distToVertEdgeDivScale = camera.getScreenBoundingBox(debugMode).top / scale;
-
-	const bottom = position[1] - distToVertEdgeDivScale;
-	const top = position[1] + distToVertEdgeDivScale;
-
+	const [left, right] = getAxisEdges(position[0], screenBoundingBox.right);
+	const [bottom, top] = getAxisEdges(position[1], screenBoundingBox.top);
+	
 	return { left, right, bottom, top };
 }
 
@@ -449,15 +419,17 @@ function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scal
  * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
  * @returns {BoundingBox} The perspective mode render range bounding box
  */
-function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBox { // ~18
-	const coords = boardpos.getBoardPos();
-	const renderDistInSquares = rangeOfView / boardpos.getBoardScale();
+function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD { // ~18
+	const position = boardpos.getBoardPos();
+	const scale = boardpos.getBoardScale();
+	const rangeOfViewBD = bigdecimal.FromNumber(rangeOfView);
+	const renderDistInSquares = bigdecimal.divide_floating(rangeOfViewBD, scale);
 
 	return {
-		left: coords[0] - renderDistInSquares,
-		right: coords[0] + renderDistInSquares,
-		bottom: coords[1] - renderDistInSquares,
-		top: coords[1] + renderDistInSquares,
+		left: bigdecimal.subtract(position[0], renderDistInSquares),
+		right: bigdecimal.add(position[0], renderDistInSquares),
+		bottom: bigdecimal.subtract(position[1], renderDistInSquares),
+		top: bigdecimal.add(position[1], renderDistInSquares),
 	};
 }
 
