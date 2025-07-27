@@ -8,7 +8,7 @@
 import coordutil from "../chess/util/coordutil.js";
 import bigdecimal, { BigDecimal } from "./bigdecimal/bigdecimal.js";
 
-import type { BDCoords, Coords } from "../chess/util/coordutil.js";
+import type { BDCoords, Coords, DoubleCoords } from "../chess/util/coordutil.js";
 
 
 // Type Definitions ------------------------------------------------------------------
@@ -68,8 +68,15 @@ type Ray = {
 	start: Coords
 	vector: Vec2
 	/** The line in general form (A, B, C coefficients) */
-	line: [number, number, number]
+	line: LineCoefficients
 }
+
+/**
+ * Coefficients A, B, C, of a line in general form.
+ * These can be bigints because all lines, rays, and segment
+ * points inside the game are integers.
+ */
+type LineCoefficients = [bigint, bigint, bigint];
 
 /** A color in a length-4 array: `[r,g,b,a]` */
 type Color = [number,number,number,number];
@@ -88,14 +95,21 @@ const TWO = bigdecimal.FromNumber(2.0);
  * Finds the intersection of two lines in general form.
  * [x, y] or undefined if there is no intersection (or infinite intersections).
  */
-function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: number, B2: number, C2: number): Coords | undefined {
+function calcIntersectionPointOfLines(A1: bigint, B1: bigint, C1: bigint, A2: bigint, B2: bigint, C2: bigint): BDCoords | undefined {
+
 	const determinant = A1 * B2 - A2 * B1;
-	
-	if (determinant === 0) return undefined; // Lines are parallel or identical
+	if (determinant === 0n) return undefined; // Lines are parallel or identical
+
+	const determinantBD = bigdecimal.FromBigInt(determinant);
+
+	function determineAxis(dividend: bigint) {
+		const dividendBD = bigdecimal.FromBigInt(dividend);
+		return bigdecimal.divide_fixed(dividendBD, determinantBD);
+	}
 
 	// Calculate the intersection point
-	const x = (C2 * B1 - C1 * B2) / determinant;
-	const y = (A2 * C1 - A1 * C2) / determinant;
+	const x = determineAxis(C2 * B1 - C1 * B2);
+	const y = determineAxis(A2 * C1 - A1 * C2);
 
 	return [x, y];
 }
@@ -119,9 +133,9 @@ function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: nu
  * @param s2p1 Start point of segment 2
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
-function intersectLineSegments(A1: number, B1: number, C1: number, s1p1: Coords, s1p2: Coords, A2: number, B2: number, C2: number, s2p1: Coords, s2p2: Coords): Coords | undefined {
+function intersectLineSegments(A1: bigint, B1: bigint, C1: bigint, s1p1: Coords, s1p2: Coords, A2: bigint, B2: bigint, C2: bigint, s2p1: Coords, s2p2: Coords): BDCoords | undefined {
 	// 1. Calculate intersection of the infinite lines
-	const intersectionPoint = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
+	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
 
 	if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
 
@@ -139,14 +153,18 @@ function intersectLineSegments(A1: number, B1: number, C1: number, s1p1: Coords,
  * @param segEnd The ending point of the segment.
  * @returns True if the point is on the segment, false otherwise.
  */
-function isPointOnSegment(point: Coords, segStart: Coords, segEnd: Coords): boolean {
-	const [px, py] = point;
-	const [s1x, s1y] = segStart;
-	const [s2x, s2y] = segEnd;
+function isPointOnSegment(point: BDCoords, segStart: Coords, segEnd: Coords): boolean {
+	const segStartBD = bigdecimal.FromCoords(segStart);
+	const segEndBD = bigdecimal.FromCoords(segStart);
+
+	const minSegX = bigdecimal.min(segStartBD[0], segEndBD[0]);
+	const maxSegX = bigdecimal.max(segStartBD[0], segEndBD[0]);
+	const minSegY = bigdecimal.min(segStartBD[1], segEndBD[1]);
+	const maxSegY = bigdecimal.max(segStartBD[1], segEndBD[1]);
 
 	// Check if point is within the bounding box of the segment
-	const withinX = px >= Math.min(s1x, s2x) && px <= Math.max(s1x, s2x);
-	const withinY = py >= Math.min(s1y, s2y) && py <= Math.max(s1y, s2y);
+	const withinX = bigdecimal.compare(point[0], minSegX) >= 0 && bigdecimal.compare(point[0], maxSegX) <= 0;
+	const withinY = bigdecimal.compare(point[1], minSegY) >= 0 && bigdecimal.compare(point[1], maxSegY) <= 0;
 
 	return withinX && withinY;
 }
@@ -155,21 +173,21 @@ function isPointOnSegment(point: Coords, segStart: Coords, segEnd: Coords): bool
  * Calculates the intersection point of an infinite line (in general form) and a line segment.
  * Returns undefined if there is no intersection, the intersection point lies
  * outside the segment, or if the line and segment are collinear/parallel.
- * @param lineA Coefficient A of the infinite line (Ax + By + C = 0)
- * @param lineB Coefficient B of the infinite line
- * @param lineC Coefficient C of the infinite line
+ * @param A Coefficient A of the infinite line (Ax + By + C = 0)
+ * @param B Coefficient B of the infinite line
+ * @param C Coefficient C of the infinite line
  * @param segP1 Start point of the segment
  * @param segP2 End point of the segment
  * @returns The intersection Coords if they intersect ON the segment, otherwise undefined.
  */
-function intersectLineAndSegment(lineA: number, lineB: number, lineC: number, segP1: Coords, segP2: Coords): Coords | undefined {
+function intersectLineAndSegment(A: bigint, B: bigint, C: bigint, segP1: Coords, segP2: Coords): BDCoords | undefined {
 	// 1. Get general form for the infinite line containing the segment
 	const [segA, segB, segC] = getLineGeneralFormFrom2Coords(segP1, segP2);
 
 	// 2. Calculate intersection of the two infinite lines
 	// Uses the provided function calcIntersectionPointOfLines
 	const intersectionPoint = calcIntersectionPointOfLines(
-		lineA, lineB, lineC,
+		A, B, C,
 		segA, segB, segC
 	);
 
@@ -196,7 +214,7 @@ function intersectLineAndSegment(lineA: number, lineB: number, lineC: number, se
  * @param segP2 End point of the segment.
  * @returns The intersection Coords if they intersect ON the segment and ON the ray, otherwise undefined.
  */
-function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): Coords | undefined {
+function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoords | undefined {
 	// 1. Get general form for the infinite line containing the ray.
 	const [lineA_ray, lineB_ray, lineC_ray] = ray.line;
 
@@ -291,7 +309,7 @@ function intersectRays(ray1: Ray, ray2: Ray): Coords | undefined {
 /**
  * Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector.
  */
-function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): [number, number, number] {
+function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): LineCoefficients {
 	// General form: Ax + By + C = 0
 	const A = vector[1];
 	const B = -vector[0];
@@ -304,19 +322,24 @@ function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): [numb
  * Calculates the general form of a line (Ax + By + C = 0) given two points on the line.
  * Handles both regular and vertical lines.
  */
-function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [number, number, number] {
+function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): LineCoefficients {
 	// Handle the case of a vertical line (infinite slope)
-	if (coords1[0] === coords2[0]) {
-		return [1, 0, -coords1[0]];  // The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
-	}
+	// The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
+	if (coords1[0] === coords2[0]) return [1n, 0n, -coords1[0]];
 
-	// Calculate the slope (m)
-	const m = (coords2[1] - coords1[1]) / (coords2[0] - coords1[0]);
+	// // Calculate the slope (m)
+	// const m = (coords2[1] - coords1[1]) / (coords2[0] - coords1[0]);
 
-	// General form coefficients: A = m, B = -1, and C = y1 - m * x1
-	const A = m;
-	const B = -1;
-	const C = coords1[1] - m * coords1[0];
+	// // General form coefficients: A = m, B = -1, and C = y1 - m * x1
+	// const A = m;
+	// const B = -1n;
+	// const C = coords1[1] - m * coords1[0];
+
+	// To avoid division and floating-point/truncation issues, we use the cross-multiplication method.
+	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
+	const A = coords2[1] - coords1[1]; // y2 - y1
+	const B = coords1[0] - coords2[0]; // x1 - x2
+	const C = coords2[0] * coords1[1] - coords1[0] * coords2[1]; // x2*y1 - x1*y2
 
 	return [A, B, C];
 }
@@ -328,7 +351,7 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [numbe
  * @param line2 - The second line in general form [A2, B2, C2]
  * @returns true if the lines are equal, false otherwise
  */
-function areLinesInGeneralFormEqual(line1: [number, number, number], line2: [number, number, number]): boolean {
+function areLinesInGeneralFormEqual(line1: LineCoefficients, line2: LineCoefficients): boolean {
 	const [A1, B1, C1] = line1;
 	const [A2, B2, C2] = line2;
 
@@ -351,7 +374,7 @@ function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
  * Step size here is unimportant, but the slope **is**.
  * This value will be unique for every line that *has the same slope*, but different positions.
  */
-function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): number {
+function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
 	return vector[0] * coords[1] - vector[1] * coords[0];
 }
 
@@ -360,7 +383,7 @@ function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): number {
  * @param theta - The angle in radians.
  * @returns A tuple containing the X and Y components, both between -1 and 1.
  */
-function getXYComponents_FromAngle(theta: number): Coords {
+function getXYComponents_FromAngle(theta: number): DoubleCoords {
 	return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
 }
 
@@ -369,9 +392,19 @@ function getXYComponents_FromAngle(theta: number): Coords {
  * 
  * For example, a point of [5200,1100] and gridSize of 10000 would yield [10000,0]
  */
-function roundPointToNearestGridpoint(point: Coords, gridSize: number): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
-	const nearestX = Math.round(point[0] / gridSize) * gridSize;
-	const nearestY = Math.round(point[1] / gridSize) * gridSize;
+function roundPointToNearestGridpoint(point: Coords, gridSize: bigint): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
+	function roundBigintNearestMultiple(value: bigint, multiple: bigint) {
+		const halfMultiple = multiple / 2n; // Assumes multiple is positive and divisible by 2.
+
+		// For positives, add half and truncate.
+		if (value >= 0n) return ((value + halfMultiple) / multiple) * multiple;
+		// For negatives, subtract half and truncate.
+		else return ((value - halfMultiple) / multiple) * multiple;
+	}
+
+	// To round bigints, we add half the gridSize before dividing by it.
+	const nearestX = roundBigintNearestMultiple(point[0], gridSize);
+	const nearestY = roundBigintNearestMultiple(point[1], gridSize);
 
 	return [nearestX, nearestY];
 }
@@ -489,7 +522,7 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
  * @returns An object containing the properties `coords`, which is the closest point on the segment,
  *          and `distance` to that point.
  */
-function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: Coords): { coords: Coords, distance: number } {
+function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: Coords): { coords: Coords, distance: BigDecimal } {
 	const dx = lineEnd[0] - lineStart[0];
 	const dy = lineEnd[1] - lineStart[1];
 
