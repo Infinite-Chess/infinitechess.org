@@ -7,13 +7,11 @@
  * And unsubbing a socket from subscriptions.
  */
 
-import socketUtility from "./socketUtility.js";
-import { sendSocketMessage } from "./sendSocketMessage.js";
-import uuid from "../../client/scripts/esm/util/uuid.js";
-import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
-import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
 // @ts-ignore
 import { printIncomingAndClosingSockets } from "../config/config.js";
+import { handleUnsubbing } from "./generalrouter.js";
+import socketUtility from "./socketUtility.js";
+import uuid from "../../client/scripts/esm/util/uuid.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -212,28 +210,11 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 	if (!ws.metadata.subscriptions) return; // No subscriptions
 
 	const subscriptions = ws.metadata.subscriptions;
-	const subscriptionsKeys = Object.keys(subscriptions);
+	const subscriptionsKeys = Object.keys(subscriptions) as (Array<keyof typeof subscriptions>);
 	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, closureNotByChoice);
 }
 
-// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws: CustomWebSocket, key: string, closureNotByChoice?: boolean) {
-	// What are they wanting to unsubscribe from updates from?
-	switch (key) {
-		case "invites":
-			// Unsubscribe them from the invites list
-			unsubFromInvitesList(ws, closureNotByChoice);
-			break;
-		case "game":
-			// If the unsub is not by choice (network interruption instead of closing tab), then we give them
-			// a 5 second cushion before starting an auto-resignation timer
-			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
-			break;
-		default:
-			console.log(`Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
-			return sendSocketMessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`);
-	}
-}
+
 
 
 // Miscellaneous ---------------------------------------------------------------------------

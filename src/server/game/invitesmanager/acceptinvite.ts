@@ -6,6 +6,8 @@
  * creating a new game if successful.
  */
 
+import * as z from 'zod';
+
 // Custom imports
 // @ts-ignore
 import { getTranslation } from '../../utility/translate.js';
@@ -20,12 +22,16 @@ import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, 
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
+
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-interface AcceptInviteMessage {
-	id: string
-	isPrivate: boolean
-}
+/** The zod schema for validating the contents of the acceptinvite message. */
+const acceptinviteschem = z.strictObject({
+	id: z.string().length(IDLengthOfInvites),
+	isPrivate: z.boolean()
+});
+
+type AcceptInviteMessage = z.infer<typeof acceptinviteschem>
 
 /**
  * Attempts to accept an invite of given id.
@@ -33,17 +39,12 @@ interface AcceptInviteMessage {
  * @param messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function acceptInvite(ws: CustomWebSocket, messageContents: any, replyto: number) { // { id, isPrivate }
-
+function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage, replyto?: number) { // { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game", { replyto });
 
-	if (!verifyMessageContents(messageContents)) return sendSocketMessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!", replyto);
-	const { id, isPrivate } = messageContents as AcceptInviteMessage;
-
-
 	// Does the invite still exist?
-	const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index }
-	if (!inviteAndIndex) return informThemGameAborted(ws, isPrivate, id, replyto);
+	const inviteAndIndex = getInviteAndIndexByID(messageContents.id); // { invite, index }
+	if (!inviteAndIndex) return informThemGameAborted(ws, messageContents.isPrivate, messageContents.id, replyto);
 
 	const { invite, index } = inviteAndIndex;
 
@@ -86,40 +87,19 @@ function acceptInvite(ws: CustomWebSocket, messageContents: any, replyto: number
 }
 
 /**
- * Tests if the provided message contents/body is valid for canceling an invite.
- * @param messageContents - The body of the incoming websocket message. It should look like: `{ id, isPrivate }`
- * @returns true if the message contents is valid for the cancellation of an invite
- */
-function verifyMessageContents(messageContents: any) {
-	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
-	// We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
-	if (typeof messageContents !== 'object' || messageContents === null) return false;
-
-	/**
-     * These are the properties it must contain:
-     * id
-     * isPrivate
-     */
-
-	if (typeof messageContents.id !== 'string' || messageContents.id.length !== IDLengthOfInvites) return false;
-	if (typeof messageContents.isPrivate !== 'boolean') return false;
-
-	return true;
-}
-
-/**
  * Called when a player clicks to accept an invite that gets deleted right before.
  * This tells them the game was aborted, or that the code
  * was invalid, if they entered a private invite code.
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function informThemGameAborted(ws: CustomWebSocket, isPrivate: boolean, inviteID: string, replyto: number) {
+function informThemGameAborted(ws: CustomWebSocket, isPrivate: boolean, inviteID: string, replyto?: number) {
 	const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
 	if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 	return sendNotify(ws, errString, { replyto });
 }
 
-
 export {
-	acceptInvite
+	acceptInvite,
+
+	acceptinviteschem,
 };
