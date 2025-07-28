@@ -66,8 +66,8 @@ function openDrawOffer(game: Game, color: Player): void {
 		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt");
 		return;
 	}
-	const data = game.players[color]!;
-	data.lastOfferPly = game.moves.length;
+	const playerdata = game.players[color]!;
+	playerdata.lastOfferPly = game.moves.length;
 	game.drawOfferState = color;
 	return;
 }

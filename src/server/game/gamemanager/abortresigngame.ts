@@ -7,7 +7,6 @@ import gameutility from './gameutility.js';
 import { setGameConclusion, getGameBySocket } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
-import type { Game } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -64,11 +63,7 @@ function resignGame(ws: CustomWebSocket): void {
 	}
 
 	// Resign
-	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	if (ourColor === undefined) {
-		console.warn("Unexpected! Player tried to resign the game they are not in! Ignoring...");
-		return;
-	}
+	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
 	setGameConclusion(game, gameConclusion);

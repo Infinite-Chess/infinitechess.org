@@ -12,6 +12,7 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game } from './gameutility.js';
+
 //--------------------------------------------------------------------------------------------------------
 
 /** 
@@ -95,7 +96,6 @@ function declineDraw(ws: CustomWebSocket, game: Game) {
 export {
 	offerDraw,
 	acceptDraw,
-	declineDraw,
-
 	declineDrawRoute,
+	declineDraw,
 };

@@ -14,15 +14,21 @@ let serverRestartingAt: number | false = false;
 /**
  * Returns the time the server is restarting at, if it is, in milliseconds after the Unix Opoch, otherwise false.
  */
-function getTimeServerRestarting(): number | false { return serverRestartingAt; }
+function getTimeServerRestarting(): number | false {
+	return serverRestartingAt;
+}
 
 /**
  * Sets the time the server is restarting at, in milliseconds after the Unix Opoch.
  */
-function setTimeServerRestarting(value: number): void { serverRestartingAt = value; }
+function setTimeServerRestarting(value: number): void {
+	serverRestartingAt = value;
+}
 
 /** Cancel the server restart by setting the restart time to false */
-function cancelServerRestart(): void { serverRestartingAt = false; }
+function cancelServerRestart(): void {
+	serverRestartingAt = false;
+}
 
 /**
  * Calculates the number of minutes, rounded up, the server will restart in,

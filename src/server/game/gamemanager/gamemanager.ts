@@ -194,7 +194,7 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * @param ws - Their websocket
  * @param game - The game they belong in, if they belong in one.
  */
-function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket) {
+function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket): void {
 	const game = getGameBySocket(ws);
 	if (!game) return;
 	const user = ws.metadata.memberInfo;

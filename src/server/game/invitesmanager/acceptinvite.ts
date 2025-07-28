@@ -6,6 +6,8 @@
  * creating a new game if successful.
  */
 
+import * as z from 'zod';
+
 // Custom imports
 // @ts-ignore
 import { getTranslation } from '../../utility/translate.js';
@@ -20,11 +22,11 @@ import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, 
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
-import * as z from 'zod';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-const acceptinviteschem = z.object({
+/** The zod schema for validating the contents of the acceptinvite message. */
+const acceptinviteschem = z.strictObject({
 	id: z.string().length(IDLengthOfInvites),
 	isPrivate: z.boolean()
 });
@@ -37,12 +39,12 @@ type AcceptInviteMessage = z.infer<typeof acceptinviteschem>
  * @param messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function acceptInvite(ws: CustomWebSocket, { id, isPrivate }: AcceptInviteMessage, replyto?: number) { // { id, isPrivate }
+function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage, replyto?: number) { // { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game", { replyto });
 
 	// Does the invite still exist?
-	const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index }
-	if (!inviteAndIndex) return informThemGameAborted(ws, isPrivate, id, replyto);
+	const inviteAndIndex = getInviteAndIndexByID(messageContents.id); // { invite, index }
+	if (!inviteAndIndex) return informThemGameAborted(ws, messageContents.isPrivate, messageContents.id, replyto);
 
 	const { invite, index } = inviteAndIndex;
 

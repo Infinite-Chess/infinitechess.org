@@ -7,7 +7,8 @@
  * Here we also read allowinvites.js to see if we are currently allowing new invites or not.
  */
 
-// Custom imports
+import * as z from 'zod';
+
 // @ts-ignore
 import { getTranslation } from '../../utility/translate.js'; 
 // @ts-ignore
@@ -24,7 +25,6 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
-import * as z from 'zod';
 
 // @ts-ignore
 import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
@@ -32,21 +32,22 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
 
+/** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z.strictObject({
-	variant: z.string().refine((val) => variant.isVariantValid(val)),
+	variant: z.string().refine(variant.isVariantValid, { error: "Invalid variant." }),
+	clock: z.string().refine(clockweb.isClockValueValid, { error: "Invalid clock value." }),
 	color: z.literal([players.WHITE, players.BLACK, players.NEUTRAL]),
-	publicity: z.literal(['private', 'public']),
-	tag: z.string().length(8),
+	publicity: z.literal(['public', 'private']),
 	rated: z.literal(['casual', 'rated']),
-	clock: z.string().refine((val) => clockweb.isClockValueValid(val))
-}).refine((val) => {
-	if (val.rated === "casual") return true;
-	return !(val.color !== players.NEUTRAL || 
-		val.publicity === "private" ||
-		val.clock === "-" ||
-		!(val.variant in VariantLeaderboards)
-	);
-});
+	tag: z.string().length(8),
+}).refine((val) => { // Additional refinements for cross-property validation
+	if (val.rated === "rated") {
+		// Rated game validation...
+		if (!(val.variant in VariantLeaderboards)) return false; // Invalid variant for a rated game.
+		if (val.clock === "-") return false; // Invalid clock for a rated game.
+		if (val.color !== players.NEUTRAL && val.publicity !== "private") return false; // Specific colors are only allowed if the rated game is also private.
+	} return true; // Casual games can have any properties.
+}, { error: "Invalid invite parameters for a rated game." });
 
 type CreateInviteMessage = z.infer<typeof createinviteschem>
 
@@ -62,7 +63,6 @@ type CreateInviteMessage = z.infer<typeof createinviteschem>
 async function createInvite(ws: CustomWebSocket, messageContents: CreateInviteMessage, replyto?: number) { // invite: { id, owner, variant, clock, color, rated, publicity } 
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
 
-	
 	// Make sure they don't already have an existing invite
 	if (userHasInvite(ws)) {
 		sendSocketMessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);

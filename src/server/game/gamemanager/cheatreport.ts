@@ -3,6 +3,8 @@
  * This script handles cheat reports, aborting games when they come in.
  */
 
+import * as z from 'zod';
+
 // Middleware imports
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 
@@ -11,15 +13,17 @@ import gameutility from './gameutility.js';
 import { setGameConclusion, getGameBySocket } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
-import * as z from 'zod';
 
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
+/** The zod schema for validating the contents of the cheatreport message. */
 const reportschem = z.strictObject({
 	reason: z.string(),
 	opponentsMoveNumber: z.int(),
 });
+
+type ReportMessage = z.infer<typeof reportschem>;
 
 /**
  * 
@@ -27,7 +31,7 @@ const reportschem = z.strictObject({
  * @param game - The game they belong in, if they belong in one.
  * @param messageContents - The contents of the socket report message
  */
-function onReport(ws: CustomWebSocket, messageContents: z.infer<typeof reportschem>): void { // { reason, opponentsMoveNumber }
+function onReport(ws: CustomWebSocket, messageContents: ReportMessage): void { // { reason, opponentsMoveNumber }
 	console.log("Client reported hacking!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 	const game = getGameBySocket(ws);
 
@@ -55,8 +59,8 @@ function onReport(ws: CustomWebSocket, messageContents: z.infer<typeof reportsch
 	// Remove the last move played.
 	const perpetratingMove = game.moves.pop();
     
-	const reason = messageContents?.reason;
-	const opponentsMoveNumber = messageContents?.opponentsMoveNumber;
+	const reason = messageContents.reason;
+	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
 	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove}. Move number: ${opponentsMoveNumber}. The report description: ${reason}. Color who reported: ${ourColor}. Probably cheater: ${JSON.stringify(game.players[opponentColor])}. Their color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
 	console.error(errText);

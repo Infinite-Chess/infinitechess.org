@@ -4,6 +4,8 @@
  * the game they are in, and does basic checks to make sure it's valid.
  */
 
+import * as z from 'zod';
+
 // Middleware imports
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
@@ -20,18 +22,20 @@ import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 
-import * as z from 'zod';
 
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 
-const submitmoveschem = z.object({
+/** The zod schema for validating the contents of the submitmove message. */
+const submitmoveschem = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
 	gameConclusion: z.string().optional(),
 });
+
+type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
 
 /**
  * 
@@ -41,7 +45,7 @@ const submitmoveschem = z.object({
  * @param ws - The websocket submitting the move
  * @param messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
-function submitMove(ws: CustomWebSocket, messageContents: z.infer<typeof submitmoveschem>): void {
+function submitMove(ws: CustomWebSocket, messageContents: SubmitMoveMessage): void {
 	const game = getGameBySocket(ws);
 
 	// They can't submit a move if they aren't subscribed to a game
@@ -64,9 +68,6 @@ function submitMove(ws: CustomWebSocket, messageContents: z.infer<typeof submitm
 	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
 	// The ACTUAL game conclusion SHOULD already be on the way to them so....
 	if (gameutility.isGameOver(game)) return; 
-
-	// Ignore if messageContents is not an object
-	if (typeof messageContents !== 'object' || messageContents === null) return;
 
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = game.moves.length + 1;
@@ -149,7 +150,7 @@ function doesMoveCheckOut(move: string): _Move_Out | false {
  */
 function doesGameConclusionCheckOut(gameConclusion: string | undefined, color: Player): boolean {
 	if (gameConclusion === undefined) return true;
-	if (typeof gameConclusion !== 'string') return false;
+	// It is a string...
 
 	// If conclusion is "aborted", victor will not be specified.
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);

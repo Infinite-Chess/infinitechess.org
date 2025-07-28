@@ -7,6 +7,8 @@
  * And unsubbing a socket from subscriptions.
  */
 
+import * as z from 'zod';
+
 // @ts-ignore
 import { printIncomingAndClosingSockets } from "../config/config.js";
 import socketUtility from "./socketUtility.js";
@@ -14,7 +16,7 @@ import { sendSocketMessage } from "./sendSocketMessage.js";
 import uuid from "../../client/scripts/esm/util/uuid.js";
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
 import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
-import * as z from 'zod';
+
 
 // Type Definitions ---------------------------------------------------------------------------
 
@@ -215,6 +217,7 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 	const subscriptionsKeys = Object.keys(subscriptions);
 	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, closureNotByChoice);
 }
+
 
 const unsubschem = z.literal(['game', 'invites']);
 

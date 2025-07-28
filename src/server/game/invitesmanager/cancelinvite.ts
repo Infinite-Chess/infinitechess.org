@@ -5,28 +5,27 @@
  * This script handles invite cancelation.
  */
 
-// Middleware imports
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import * as z from 'zod';
 
-// Custom imports
 import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
-import * as z from 'zod';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
+/** The zod schema for validating the contents of the cancelinvite message. */
 const cancelinviteschem = z.string().length(IDLengthOfInvites);
 
+/** This is also the id of the invite to delete */
 type CancelInviteMessage = z.infer<typeof cancelinviteschem>
 
 
 /**
  * Cancels/deletes the specified invite.
  * @param ws - Their socket
- * @param messageContents - The incoming socket message that SHOULD be the ID of the invite to be cancelled!
+ * @param messageContents - The incoming socket message that is the ID of the invite to be cancelled!
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage, replyto?: number) { // Value should be the ID of the invite to cancel!
