@@ -5,7 +5,7 @@
  */
 
 import gameutility from './gameutility.js';
-import { setGameConclusion, getGameBySocket } from './gamemanager.js';
+import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -18,12 +18,10 @@ import type { Game } from './gameutility.js';
 /** 
  * Called when client wants to offer a draw. Sends confirmation to opponent.
  * @param ws - The socket
+ * @param game - The game they are in.
  */
-function offerDraw(ws: CustomWebSocket): void {
+function offerDraw(ws: CustomWebSocket, game: Game): void {
 	console.log("Client offers a draw.");
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Client offered a draw when they don't belong in a game.");
-	
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 
 	if (gameutility.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
@@ -43,11 +41,10 @@ function offerDraw(ws: CustomWebSocket): void {
 /** 
  * Called when client accepts a draw. Ends the game.
  * @param ws - The socket
+ * @param game - The game they are in.
  */
-function acceptDraw(ws: CustomWebSocket): void {
+function acceptDraw(ws: CustomWebSocket, game: Game): void {
 	console.log("Client accepts a draw.");
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Client accepted a draw when they don't belong in a game.");
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 
 	if (gameutility.isGameOver(game)) return console.error("Client accepted a draw when the game is already over. Ignoring.");
@@ -64,13 +61,8 @@ function acceptDraw(ws: CustomWebSocket): void {
 /** 
  * Called when client declines a draw. Alerts opponent.
  * @param ws - The socket
+ * @param game - The game they are in.
  */
-function declineDrawRoute(ws: CustomWebSocket): void {
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Can't decline any open draw when they don't belong in a game.");
-	declineDraw(ws, game);
-}
-
 function declineDraw(ws: CustomWebSocket, game: Game) {
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
@@ -96,6 +88,5 @@ function declineDraw(ws: CustomWebSocket, game: Game) {
 export {
 	offerDraw,
 	acceptDraw,
-	declineDrawRoute,
 	declineDraw,
 };

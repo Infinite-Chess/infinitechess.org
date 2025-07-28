@@ -14,11 +14,10 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * The method that fires when a client sends the 'joingame' command after refreshing the page.
  * This should fetch any game their in and reconnect them to it.
  * @param ws - Their new websocket
- * @param game - The game they are in, if they are in one.
  */
 function onJoinGame(ws: CustomWebSocket): void {
 	const game = getGameBySocket(ws);
-	if (!game) return; // They don't belong in a game
+	if (!game) return; // They don't belong in a game, don't join them in one.
 
 	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	gameutility.subscribeClientToGame(game, ws, colorPlayingAs);

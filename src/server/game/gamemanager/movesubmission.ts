@@ -9,18 +9,17 @@ import * as z from 'zod';
 // Middleware imports
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
-// Custom imports
-import gameutility from './gameutility.js';
-import socketUtility from '../../socket/socketUtility.js';
 
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
-import { pushGameClock, setGameConclusion, getGameBySocket } from './gamemanager.js';
-import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import gameutility, { Game } from './gameutility.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -42,22 +41,16 @@ type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
  * Call when a websocket submits a move. Performs some checks,
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
- * @param ws - The websocket submitting the move
+ * @param ws - The websocket submitting the move.
+ * @param game - The game they are in.
  * @param messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
-function submitMove(ws: CustomWebSocket, messageContents: SubmitMoveMessage): void {
-	const game = getGameBySocket(ws);
-
+function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMoveMessage): void {
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
 		console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.");
 		sendSocketMessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
 		return;
-	}
-
-	if (!game) {
-		console.error(`Cannot submit move when player does not belong in a game! Game of id "${ws.metadata.subscriptions.game.id}" is deleted!`);
-		return sendSocketMessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
 	}
 
 	// Their subscription info should tell us what game they're in, including the color they are.

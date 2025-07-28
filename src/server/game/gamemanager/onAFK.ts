@@ -4,9 +4,9 @@
  */
 
 // Custom imports
-import gameutility from './gameutility.js';
-import { onPlayerLostByAbandonment, getGameBySocket } from './gamemanager.js';
+import { onPlayerLostByAbandonment } from './gamemanager.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
+import gameutility, { Game } from './gameutility.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -28,11 +28,10 @@ const durationOfAutoResignTimerMillis = 1000 * 20; // 20 seconds.
  * Called when a client alerts us they have gone AFK.
  * Alerts their opponent, and starts a timer to auto-resign.
  * @param ws - The socket
+ * @param game - The game they are in.
  */
-function onAFK(ws: CustomWebSocket): void {
+function onAFK(ws: CustomWebSocket, game: Game): void {
 	// console.log("Client alerted us they are AFK.")
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Client submitted they are afk when they don't belong in a game.");
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 
 	if (gameutility.isGameOver(game)) return console.error("Client submitted they are afk when the game is already over. Ignoring.");
@@ -61,11 +60,10 @@ function onAFK(ws: CustomWebSocket): void {
  * Called when a client alerts us they have returned from being AFK.
  * Alerts their opponent, and cancels the timer to auto-resign.
  * @param ws - The socket
+ * @param game - The game they are in.
  */
-function onAFK_Return(ws: CustomWebSocket): void {
+function onAFK_Return(ws: CustomWebSocket, game: Game): void {
 	// console.log("Client alerted us they no longer AFK.")
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Client submitted they are back from being afk when they don't belong in a game.");
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
 	if (gameutility.isGameOver(game)) return console.error("Client submitted they are back from being afk when the game is already over. Ignoring.");

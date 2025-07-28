@@ -192,11 +192,9 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * agrees with the resulting game conclusion (no cheating detected),
  * and the server may change the players elos once both players send this.
  * @param ws - Their websocket
- * @param game - The game they belong in, if they belong in one.
+ * @param game - The game they are in.
  */
-function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket): void {
-	const game = getGameBySocket(ws);
-	if (!game) return;
+function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game): void {
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, game.id);
     

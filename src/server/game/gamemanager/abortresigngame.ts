@@ -3,8 +3,8 @@
  * This script handles the abortings and resignations of online games
  */
 
-import gameutility from './gameutility.js';
-import { setGameConclusion, getGameBySocket } from './gamemanager.js';
+import gameutility, { Game } from './gameutility.js';
+import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -14,11 +14,9 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 /**
  * Called when a client tries to abort a game.
  * @param ws - The websocket
- * @param game - The game they belong in, if they belong in one.
+ * @param game - The game they are in..
  */
-function abortGame(ws: CustomWebSocket): void {
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Can't abort a game when player isn't in one.");
+function abortGame(ws: CustomWebSocket, game: Game): void {
 
 	// Is it legal?...
 
@@ -44,11 +42,9 @@ function abortGame(ws: CustomWebSocket): void {
 /**
  * Called when a client tries to resign a game.
  * @param ws - The websocket
- * @param game - The game they belong in, if they belong in one.
+ * @param game - The game they are in.
  */
-function resignGame(ws: CustomWebSocket): void {
-	const game = getGameBySocket(ws);
-	if (!game) return console.error("Can't resign a game when player isn't in one.");
+function resignGame(ws: CustomWebSocket, game: Game): void {
 
 	// Is it legal?...
 

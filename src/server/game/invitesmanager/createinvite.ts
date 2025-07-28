@@ -35,10 +35,11 @@ import type { Invite } from './inviteutility.js';
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z.strictObject({
 	variant: z.string().refine(variant.isVariantValid, { error: "Invalid variant." }),
-	clock: z.string().refine(clockweb.isClockValueValid, { error: "Invalid clock value." }),
+	// `${number}+${number}` | '-'
+	clock: z.union([z.templateLiteral([z.number(), "+", z.number()]), z.literal('-')]).refine(clockweb.isClockValueValid, { error: "Invalid clock value." }),
 	color: z.literal([players.WHITE, players.BLACK, players.NEUTRAL]),
-	publicity: z.literal(['public', 'private']),
-	rated: z.literal(['casual', 'rated']),
+	publicity: z.enum(['public', 'private']),
+	rated: z.enum(['casual', 'rated']),
 	tag: z.string().length(8),
 }).refine((val) => { // Additional refinements for cross-property validation
 	if (val.rated === "rated") {
@@ -97,7 +98,7 @@ async function createInvite(ws: CustomWebSocket, messageContents: CreateInviteMe
  * @param replyto - The incoming websocket message ID, to include in the reply
  * @returns The Invite object, or void it the message contents were invalid.
  */
-function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: any, replyto?: number): Invite | void {
+function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: CreateInviteMessage, replyto?: number): Invite | void {
 
 	// Verify their invite contains the required properties...
 
