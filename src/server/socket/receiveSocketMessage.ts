@@ -108,8 +108,7 @@ ${socketUtility.stringifySocketMetadata(ws)}
 
 	const message: WebsocketInMessageOrEcho = zod_result.data;
 
-	const isEcho = message.route === "echo";
-	if (isEcho) {
+	if (message.route === "echo") {
 		const incomingEcho: EchoMessage = message.contents;
 		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
@@ -126,7 +125,7 @@ ${socketUtility.stringifySocketMetadata(ws)}
 	// Send our echo here! We always send an echo to every message except echos themselves.
 	sendSocketMessage(ws, "general", "echo", message.id);
 
-	if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + rawMessage);
+	if (printIncomingAndOutgoingMessages) console.log("Received message: " + rawMessage);
 
 	rescheduleRenewConnection(ws); // We know they are connected, so reset this
 
