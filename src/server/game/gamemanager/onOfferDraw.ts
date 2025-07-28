@@ -10,25 +10,19 @@ import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHa
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
-/**
- * Type Definitions
- * @typedef {import('./gameutility.js').Game} Game
- */
-
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Game } from './gameutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 
 /** 
  * Called when client wants to offer a draw. Sends confirmation to opponent.
- * @param {CustomWebSocket} ws - The socket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
+ * @param ws - The socket
+ * @param game - The game they are in.
  */
-function offerDraw(ws, game) {
+function offerDraw(ws: CustomWebSocket, game: Game): void {
 	console.log("Client offers a draw.");
-
-	if (!game) return console.error("Client offered a draw when they don't belong in a game.");
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 
 	if (gameutility.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
 	if (isDrawOfferOpen(game)) return console.error(`${color} tried to offer a draw when the game already has a draw offer!`);
@@ -46,15 +40,12 @@ function offerDraw(ws, game) {
 
 /** 
  * Called when client accepts a draw. Ends the game.
- * @param {CustomWebSocket} ws - The socket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
- * @returns {true | undefined} true if the draw accept was a success (the game manager should terminate the game), otherwise undefined.
+ * @param ws - The socket
+ * @param game - The game they are in.
  */
-function acceptDraw(ws, game) {
+function acceptDraw(ws: CustomWebSocket, game: Game): void {
 	console.log("Client accepts a draw.");
-
-	if (!game) return console.error("Client accepted a draw when they don't belong in a game.");
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 
 	if (gameutility.isGameOver(game)) return console.error("Client accepted a draw when the game is already over. Ignoring.");
 	if (!isDrawOfferOpen(game)) return console.error("Client tried to accept a draw offer when there isn't one.");
@@ -69,12 +60,11 @@ function acceptDraw(ws, game) {
 
 /** 
  * Called when client declines a draw. Alerts opponent.
- * @param {CustomWebSocket} ws - The socket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
+ * @param ws - The socket
+ * @param game - The game they are in.
  */
-function declineDraw(ws, game) {
-	if (!game) return console.error("Can't decline any open draw when they don't belong in a game.");
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+function declineDraw(ws: CustomWebSocket, game: Game) {
+	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
 
 	// Since this method is run every time a move is submitted, we have to early exit

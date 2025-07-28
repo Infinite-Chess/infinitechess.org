@@ -10,7 +10,8 @@
 
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
-/** @typedef {import('./gameutility.js').Game} Game */
+import type { Game } from './gameutility.js';
+import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -28,31 +29,24 @@ const movesBetweenDrawOffers = 2;
 /**
  * Returns true if the game currently has an open draw offer.
  * If so, players are not allowed to extend another.
- * @param {Game} game
- * @returns {boolean}
  */
-function isDrawOfferOpen(game) {
+function isDrawOfferOpen(game: Game): boolean {
 	return game.drawOfferState !== undefined;
 }
 
 /**
  * Returns true if the given color has extended a draw offer that's not confirmed yet.
- * @param {Game} game
- * @param {Player} color - The color who extended the draw offer
- * @returns {boolean}
+ * @param color - The color who extended the draw offer
  */
-function doesColorHaveExtendedDrawOffer(game, color) {
+function doesColorHaveExtendedDrawOffer(game: Game, color: Player): boolean {
 	return game.drawOfferState === color;
 }
 
 /**
  * Returns true if they given color has extended a draw offer
  * too recently for them to extend another, yet.
- * @param {Game} game 
- * @param {Player} color 
- * @returns {boolean}
  */
-function hasColorOfferedDrawTooFast(game, color) {
+function hasColorOfferedDrawTooFast(game: Game, color: Player): boolean {
 	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(game, color); // number | undefined
 	if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
 		// console.log("Last ply offered:", lastPlyDrawOffered);
@@ -65,33 +59,32 @@ function hasColorOfferedDrawTooFast(game, color) {
 /**
  * Opens a draw offer, extended by the provided color.
  * DOES NOT INFORM the opponent.
- * @param {Game} game
- * @param {Player} color - The color of the player extending the offer
+ * @param color - The color of the player extending the offer
  */
-function openDrawOffer(game, color) {
-	if (isDrawOfferOpen(game)) return logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt");
-	const data = game.players[color];
-	data.lastOfferPly = game.moves.length;
+function openDrawOffer(game: Game, color: Player): void {
+	if (isDrawOfferOpen(game)) {
+		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt");
+		return;
+	}
+	const playerdata = game.players[color]!;
+	playerdata.lastOfferPly = game.moves.length;
 	game.drawOfferState = color;
+	return;
 }
 
 /**
  * Closes any open draw offer.
  * DOES NOT INFORM the opponent.
- * @param {Game} game
  */
-function closeDrawOffer(game) {
+function closeDrawOffer(game: Game): void {
 	game.drawOfferState = undefined;
 }
 
 /**
  * Returns the last ply move the provided color has offered a draw,
  * if they have, otherwise undefined.
- * @param {Game} game
- * @param {Player} color
- * @returns {number | undefined}
  */
-function getLastDrawOfferPlyOfColor(game, color) {
+function getLastDrawOfferPlyOfColor(game: Game, color: Player): number | undefined {
 	return game.players[color]?.lastOfferPly;
 }
 

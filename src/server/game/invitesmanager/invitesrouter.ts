@@ -4,41 +4,57 @@
 /*
  * This script routes all incoming websocket messages
  * with the "invites" route to where they need to go.
- * 
- * The script that actually keeps track of our open
- * invites is invitesmanager
  */
 
+import * as z from 'zod';
 
-import socketUtility from '../../socket/socketUtility.js';
-
-import { createInvite } from './createinvite.js';
-import { cancelInvite } from './cancelinvite.js';
-import { acceptInvite } from './acceptinvite.js';
+import { createInvite, createinviteschem } from './createinvite.js';
+import { cancelInvite, cancelinviteschem } from './cancelinvite.js';
+import { acceptInvite, acceptinviteschem } from './acceptinvite.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-function handleInviteRoute(ws: CustomWebSocket, data: any) { // data: { route, action, value, id }
-	// What is their action? Create invite? Cancel invite? Accept invite?
 
-	switch (data.action) {
+const InvitesSchema = z.discriminatedUnion('action', [
+	z.strictObject({ action: z.literal('createinvite'), value: createinviteschem }),
+	z.strictObject({ action: z.literal('cancelinvite'), value: cancelinviteschem }),
+	z.strictObject({ action: z.literal('acceptinvite'), value: acceptinviteschem })
+]);
+type InvitesMessage = z.infer<typeof InvitesSchema>;
+
+
+/**
+ * Routes all incoming websocket messages related to invites.
+ * @param ws 
+ * @param contents 
+ * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
+ * @returns 
+ */
+function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: number) { // data: { route, action, value, id }
+	// Route them according to their action
+	switch (contents.action) {
 		case "createinvite":
-			createInvite(ws, data.value, data.id);
+			createInvite(ws, contents.value, id);
 			break;
 		case "cancelinvite":
-			cancelInvite(ws, data.value, data.id);
+			cancelInvite(ws, contents.value, id);
 			break;
 		case "acceptinvite":
-			acceptInvite(ws, data.value, data.id);
+			acceptInvite(ws, contents.value, id);
 			break;
 		default:
-			console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
-			console.log(`Data: ${JSON.stringify(data)}`);
-			return;
+			// @ts-ignore
+			console.error(`UNKNOWN web socket action received in invites route! "${contents.action}"`);
 	}
 }
 
 
 export {
-	handleInviteRoute
+	routeInvitesMessage,
+
+	InvitesSchema,
+};
+
+export type {
+	
 };
