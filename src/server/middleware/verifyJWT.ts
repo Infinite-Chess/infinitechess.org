@@ -91,8 +91,13 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 
 	const payload = result.payload;
 
-	// Renew the session if it was issued more than a day ago.
-	freshenSession(req, res, payload.user_id, payload.username, payload.roles, result.tokenRecord);
+	try {
+		// Renew the session if it was issued more than a day ago.
+		freshenSession(req, res, payload.user_id, payload.username, payload.roles, result.tokenRecord);
+	} catch (error) {
+		const errMsg = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error freshening session: ${errMsg}`, 'errLog.txt');
+	}
 
 	// Valid! Set their req.memberInfo property!
 
