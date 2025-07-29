@@ -10,16 +10,17 @@
 
 import jwt from 'jsonwebtoken';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessionManager.js';
 import { Request, Response } from 'express';
 import { TokenPayload } from './tokenSigner.js';
+// @ts-ignore
+import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 
 
-if (!process.env.ACCESS_TOKEN_SECRET) throw new Error('Missing ACCESS_TOKEN_SECRET');
-if (!process.env.REFRESH_TOKEN_SECRET) throw new Error('Missing REFRESH_TOKEN_SECRET');
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
+if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
+const ACCESS_TOKEN_SECRET = process.env['ACCESS_TOKEN_SECRET'];
+const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 
 // Validating Tokens ---------------------------------------------------------------------------------
@@ -77,7 +78,8 @@ function isTokenValid(token: string, isRefreshToken: boolean, IP?: string, req?:
 		}
 	} catch (error) {
 		// This block will catch any unexpected errors from database calls
-		logEventsAndPrint(`A critical error occurred during token validation: ${error.message}`, 'errLog.txt');
+		const errMsg = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`A critical error occurred during token validation: ${errMsg}`, 'errLog.txt');
 		
 		return { isValid: false, reason: "An internal error occurred during validation." };
 	}

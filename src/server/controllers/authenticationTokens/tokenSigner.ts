@@ -20,10 +20,10 @@ interface TokenPayload {
 }
 
 
-if (!process.env.ACCESS_TOKEN_SECRET) throw new Error('Missing ACCESS_TOKEN_SECRET');
-if (!process.env.REFRESH_TOKEN_SECRET) throw new Error('Missing REFRESH_TOKEN_SECRET');
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
+if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
+const ACCESS_TOKEN_SECRET = process.env['ACCESS_TOKEN_SECRET'];
+const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 
 

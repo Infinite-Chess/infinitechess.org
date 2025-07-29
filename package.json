@@ -43,6 +43,7 @@
 		"@types/bcrypt": "^5.0.2",
 		"@types/better-sqlite3": "^7.6.12",
 		"@types/express": "^5.0.0",
+		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^22.10.1",
 		"@types/nodemailer": "^6.4.17",
 		"@types/proper-lockfile": "^4.1.4",
