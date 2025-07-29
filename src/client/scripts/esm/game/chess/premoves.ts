@@ -76,7 +76,7 @@ function rewindPremoves(gamefile: FullGame) {
 			if (!change || !change.action) { continue; } // Skip if change is undefined or has no action
 
 			if (change.action === 'capture') {
-				const capturedPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, change.endCoords);
+				const capturedPiece = change.piece;
 				if (!capturedPiece) {
 					// If any capture is not possible, cancel all premoves immediately
 					clearPremoves();
