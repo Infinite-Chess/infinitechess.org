@@ -317,14 +317,19 @@ function posMod(a: bigint, b: bigint): bigint {
 	return (a % b + b) % b;
 }
 
+/** Finds the smaller of two BigInts. */
+function min(a: bigint, b: bigint): bigint {
+	return a < b ? a : b;
+}
+
 /** Finds the larger of two BigInts. */
 function max(a: bigint, b: bigint): bigint {
 	return a > b ? a : b;
 }
 
-/** Finds the smaller of two BigInts. */
-function min(a: bigint, b: bigint): bigint {
-	return a < b ? a : b;
+/** Clamps a BigInt value between an inclusive minimum and maximum. */
+function clamp(value: bigint, min: bigint, max: bigint): bigint {
+    return value < min ? min : value > max ? max : value;
 }
 
 
@@ -379,8 +384,9 @@ export default {
 	bitLength_bisection,
 	estimateBigIntSize,
 	posMod,
-	max,
 	min,
+	max,
+	clamp,
 	GCD,
 	LCM,
 };

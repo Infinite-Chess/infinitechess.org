@@ -856,10 +856,8 @@ function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 }
 
 /** Returns a new BigDecimal that is clamped between the specified minimum and maximum values. */
-function clamp(bd: BigDecimal, minValue: BigDecimal, maxValue: BigDecimal): BigDecimal {
-	if (compare(bd, minValue) < 0) return minValue;
-	if (compare(bd, maxValue) > 0) return maxValue;
-	return bd; // Within bounds, return original.
+function clamp(bd: BigDecimal, min: BigDecimal, max: BigDecimal): BigDecimal {
+	return compare(bd, min) < 0 ? min : compare(bd, max) > 0 ? max : bd;
 }
 
 /**
