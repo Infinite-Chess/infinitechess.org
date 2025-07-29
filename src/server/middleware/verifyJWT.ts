@@ -8,6 +8,7 @@
  */
 
 import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../../types.js';
+import { freshenSession, revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { isAccessTokenValid, isRefreshTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
 import { CustomWebSocket } from '../socket/socketUtility.js';
 import { getClientIP } from '../utility/IP.js';
@@ -51,9 +52,12 @@ function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
 	const accessToken = authHeader.split(' ')[1];
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
-	const result = isAccessTokenValid(accessToken, res);
+	const result = isAccessTokenValid(accessToken);
 	if (!result.isValid) {
 		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt');
+		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
+		// The client should never use an expired token unless it's a bug.
+		revokeSession(res);
 		return false;
 	}
 
@@ -75,11 +79,20 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
 
-	const result = isRefreshTokenValid(refreshToken, getClientIP(req), req, res);
+	const result = isRefreshTokenValid(refreshToken, getClientIP(req));
+
 	if (!result.isValid) {
+		// Token was expired or tampered, or manually invalidated.
 		console.log(`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
-		return; // Token was expired or tampered
+		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
+		revokeSession(res);
+		return;
 	}
+
+	const payload = result.payload;
+
+	// Renew the session if it was issued more than a day ago.
+	freshenSession(req, res, payload.user_id, payload.username, payload.roles, result.tokenRecord);
 
 	// Valid! Set their req.memberInfo property!
 

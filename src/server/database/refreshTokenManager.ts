@@ -27,6 +27,7 @@ export type RefreshTokenRecord = {
     created_at: number;
     /** The Unix timestamp, in milliseconds, when the token will expire. */
     expires_at: number;
+    /** The last known IP address the user used this refresh token from. */
     ip_address: string | null;
 };
 

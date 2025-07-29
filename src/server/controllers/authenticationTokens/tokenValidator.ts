@@ -10,11 +10,12 @@
 
 import jwt from 'jsonwebtoken';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessionManager.js';
-import { Request, Response } from 'express';
-import { TokenPayload } from './tokenSigner.js';
+import { resolveRefreshTokenRecord } from './sessionManager.js';
 // @ts-ignore
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
+
+import type { TokenPayload } from './tokenSigner.js';
+import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 
 if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
@@ -26,30 +27,23 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 // Validating Tokens ---------------------------------------------------------------------------------
 
 
-/** The result of validating an access or refresh token. */
-type ValidationResult = {
+/**
+ * Checks if an access token is valid => not expired,
+ * nor tampered, and the user account still exists.
+ */
+function isAccessTokenValid(token: string): {
 	isValid: true,
 	payload: TokenPayload,
 } | {
 	isValid: false,
 	reason: string,
-};
-
-
-/**
- * Checks if an access token is valid => not expired,
- * nor tampered, and the user account still exists.
- */
-function isAccessTokenValid(token: string, res: Response): ValidationResult {
+} {
 	// Decode the token
 	const payload = decodeToken(token, false);
 	if (!payload) return { isValid: false, reason: "Token is expired or tampered." };
 
 	// Check if the user account still exists.
-	if (!doesMemberOfIDExist(payload.user_id)) {
-		revokeSession(res);
-		return { isValid: false, reason: "User account does not exist." };
-	}
+	if (!doesMemberOfIDExist(payload.user_id)) return { isValid: false, reason: "User account does not exist." };
 
 	updateLastSeen(payload.user_id);
 	return { isValid: true, payload };
@@ -60,22 +54,25 @@ function isAccessTokenValid(token: string, res: Response): ValidationResult {
  * in the database (not manually invalidated by logging out, or deleting the account).
  * @param token 
  * @param IP - Has a chance to not be defined on HTTP requests.
- * @param req - Will only be defined on HTTP requests, not websocket upgrade connection requests. If present, we are able to revoke or renew their session.
- * @param res - Will only be defined on HTTP requests, not websocket upgrade connection requests. If present, we are able to revoke or renew their session.
  * @returns 
  */
-function isRefreshTokenValid(token: string, IP?: string, req?: Request, res?: Response): ValidationResult {
+function isRefreshTokenValid(token: string, IP?: string): {
+	isValid: true,
+	payload: TokenPayload,
+	tokenRecord: RefreshTokenRecord,
+} | {
+	isValid: false,
+	reason: string,
+} {
 	// Decode the token
 	const payload = decodeToken(token, true);
 	if (!payload) return { isValid: false, reason: "Token is expired or tampered." };
 
+	let tokenRecord: RefreshTokenRecord | undefined;
 	try {
 		// Check against the database
-		const isStoredInDb = doesMemberHaveRefreshToken_RenewSession(payload.user_id, payload.username, payload.roles, token, IP, req, res);
-		if (!isStoredInDb) {
-			if (res) revokeSession(res); // Revoke their session in case they were manually logged out, and their client didn't know that. The response may not be defined if we called this method on a websocket upgrade connection request.
-			return { isValid: false, reason: "Refresh token not found in the database." };
-		}
+		tokenRecord = resolveRefreshTokenRecord(token, IP);
+		if (!tokenRecord) return { isValid: false, reason: "Refresh token unable to be resolved in the database." };
 	} catch (error) {
 		// This block will catch any unexpected errors from database calls
 		const errMsg = error instanceof Error ? error.message : String(error);
@@ -84,7 +81,7 @@ function isRefreshTokenValid(token: string, IP?: string, req?: Request, res?: Re
 	}
 
 	updateLastSeen(payload.user_id);
-	return { isValid: true, payload };
+	return { isValid: true, payload, tokenRecord };
 }
 
 
