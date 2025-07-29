@@ -11,7 +11,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../../game/misc/onlinegame/onlinegamerouter.js';
+import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
 
 
@@ -216,8 +216,8 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 function calcMovesChanges(boardsim: Board, piece: Piece, moveDraft: _Move_Compact, edit: Edit) {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.endCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(edit.changes, true, piece, moveDraft.endCoords, capturedPiece);
-	else boardchanges.queueMovePiece(edit.changes, true, piece, moveDraft.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(edit.changes, true, capturedPiece);
+	boardchanges.queueMovePiece(edit.changes, true, piece, moveDraft.endCoords);
 }
 
 /**
@@ -237,10 +237,8 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit) {
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 			state.createSpecialRightsState(edit, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
 		} else if (change.action === 'capture') {
-			// Delete the special rights off the start coords AND the capture coords, if there are ones.
-			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(edit, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
-			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
+			 // Future protection if the captured piece is ever not on the move's endCoords
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 			state.createSpecialRightsState(edit, captureCoordsKey, boardsim.state.global.specialRights.has(captureCoordsKey), false);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
@@ -355,7 +353,7 @@ function createCheckState(gamefile: FullGame, move: Move ) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMovesMessage) {
+function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMoveMessage[]) {
 	if (gamefile.boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);

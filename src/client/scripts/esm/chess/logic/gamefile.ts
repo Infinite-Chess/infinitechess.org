@@ -10,7 +10,7 @@ import type { PieceMoveset } from "./movesets.js";
 import type { GameState, GlobalGameState } from "./state.js";
 import type { Piece } from "../util/boardutil.js";
 import type { VariantOptions } from "./initvariant.js";
-import type { ServerGameMovesMessage } from "../../game/misc/onlinegame/onlinegamerouter.js";
+import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
@@ -197,7 +197,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 }
 
 /** Attaches a board to a specific game. Used for loading a game after it was started. */
-function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string): FullGame {
+function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMoveMessage[] = [], gameConclusion?: string): FullGame {
 	const gamefile = { basegame, boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
@@ -224,7 +224,7 @@ function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMov
  */
 function initFullGame(metadata: MetaData, { variantOptions, moves, gameConclusion, editor, clockValues }: {
 	variantOptions?: VariantOptions,
-	moves?: ServerGameMovesMessage,
+	moves?: ServerGameMoveMessage[],
 	gameConclusion?: string,
 	editor?: boolean,
 	clockValues?: ClockValues

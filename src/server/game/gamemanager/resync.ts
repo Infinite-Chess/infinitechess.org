@@ -11,11 +11,8 @@
  * both gamemanager and movesubmission depend on this, so we avoid circular dependancy.
  */
 
-// @ts-ignore
 import gameutility from './gameutility.js';
-// @ts-ignore
 import { getGameByID } from './gamemanager.js';
-// @ts-ignore
 import { cancelDisconnectTimer } from './afkdisconnect.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -23,8 +20,7 @@ import { getGameData } from '../../database/gamesManager.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 
-// @ts-ignore
-import type { Game } from '../TypeDefinitions.js';
+import type { Game } from './gameutility.js';
 
 
 

@@ -152,10 +152,13 @@ function log10(bigint: bigint): number {
 //     return binaryString;
 // }
 
-/** Returns a bigint's binary representation in a easy to read string format. */
-function toDebugBinaryString(bigint: bigint): string { 
+/**
+ * Returns a bigint's binary representation in an easy-to-read string format,
+ * displaying all bits in the underlying 64‑bit chunks.
+ */
+function toDebugBinaryString(bigint: bigint): string {
 	// 1. Handle the zero case cleanly.
-	if (bigint === ZERO) return "0b0000_0000 (8-bit, 1-byte)";
+	if (bigint === ZERO) return "0b_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000 (1-chunk, 8 bytes, 64 bits)";
 
 	// 2. Calculate the minimum number of bits required for two's complement.
 	let minBits: number;
@@ -170,31 +173,37 @@ function toDebugBinaryString(bigint: bigint): string {
 		minBits = ((bigint * NEGONE) - ONE).toString(2).length + 1;
 	}
 
-	// 3. Round up the bit-width to the nearest multiple of 8 (a full byte).
-	// This gives us a standard, padded view (8-bit, 16-bit, 24-bit, etc.).
-	const displayBits = Math.ceil(minBits / 8) * 8;
+	// Each chunk is 64 bits (8 bytes) on a 64-bit engine.
+	const CHUNK_BITS = 64;
+	const CHUNK_BYTES = CHUNK_BITS / 8;
+
+	// 3. Determine how many 64-bit chunks we need, then total display bits
+	const effectiveBits = bigint >= 0n
+		? minBits + 1      // reserve sign-bit = 0
+		: minBits;         // negatives still need exactly minBits
+	const chunkCount = Math.ceil(effectiveBits / CHUNK_BITS);
+	const displayBits = chunkCount * CHUNK_BITS;
 
 	// 4. Calculate the two's complement value for this specific display width.
 	const displayMask = (ONE << BigInt(displayBits)) - ONE;
-	const displayValue = bigint & displayMask; // This handles both positive and negative correctly
+	const displayValue = bigint & displayMask;
 
 	// 5. Convert to a binary string and pad with leading zeros.
 	const binaryString = displayValue.toString(2).padStart(displayBits, '0');
 
-	// 6. Add separators for readability (e.g., "1111_0110" instead of "11110110").
+	// 6. Add separators for readability (e.g., "1111_0110").
 	let formattedString = "0b";
 	for (let i = 0; i < binaryString.length; i++) {
 		if (i > 0 && i % 4 === 0) formattedString += "_";
 		formattedString += binaryString[i];
 	}
-    
-	// 7. Add a helpful annotation.
-	const annotation = `(${displayBits}-bit, ${displayBits / 8}-byte)`;
-    
-	// Pad the string so annotations align in console logs
-	// return `${formattedString.padEnd(10 + displayBits + Math.floor(displayBits/4))}${annotation}`;
+
+	// 7. Add a helpful annotation with chunk count, bytes, and bits.
+	const annotation = `(${chunkCount}-chunk, ${chunkCount * CHUNK_BYTES} bytes, ${displayBits} bits)`;
+
 	return `${formattedString} ${annotation}`;
 }
+
 
 
 // Big Length Algorithms =============================================================
@@ -210,6 +219,7 @@ let testersN = 0;
  * Calculates the bit length of a bigint using a highly optimized dynamic bisection algorithm.
  * It is 6x faster than then {@link bitLength_hex}, and 25x faster than {@link bitLength_toString}.
  * Complexity O(log n), where n is the number of bits.
+ * Algorithm pulled from https://stackoverflow.com/a/76616288
  */
 function bitLength_bisection(x: bigint): number {
 	if (x === ZERO) return 0;
@@ -269,6 +279,35 @@ function bitLength_toString(n: bigint): number {
 }
 
 
+/**
+ * Estimate the memory footprint of a BigInt in bytes, assuming a 64‑bit JavaScript engine
+ * (e.g. V8 in Chrome/Node.js or JavaScriptCore in Safari).
+ *
+ * On a 64‑bit build, each BigInt is represented as a small heap object:
+ * - Two pointer‑sized fields (object header)
+ * - A sequence of 64‑bit “words” holding the integer’s bits, rounded up
+ *
+ * Total size = headerBytes + dataBytes
+ * @param bi - The BigInt to measure.
+ * @returns The estimated number of bytes occupied by `value` in memory.
+ */
+function estimateBigIntSize(bi: bigint): number {
+	// Compute bit length (number of binary digits)
+	const bitLen = bitLength_bisection(bi);
+
+	// In a 64‑bit engine, pointerSize = 8 bytes
+	const pointerSize = 8;
+	// Two pointers for the BigInt object header
+	const headerBytes = pointerSize * 2;
+
+	// Number of 64‑bit chunks needed to store the bits
+	const chunkCount = Math.ceil(bitLen / (pointerSize * 8));
+	const dataBytes = pointerSize * chunkCount;
+
+	return headerBytes + dataBytes;
+}
+
+
 // Exports ============================================================
 
 
@@ -281,4 +320,5 @@ export default {
 	// getBitAtPositionFromRight,
 	toDebugBinaryString,
 	bitLength_bisection,
+	estimateBigIntSize,
 };

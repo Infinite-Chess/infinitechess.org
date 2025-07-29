@@ -4,12 +4,10 @@
  */
 
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-// @ts-ignore
-import gameutility from './gameutility.js';
-// @ts-ignore
-import type { Game } from '../TypeDefinitions.js';
+import gameutility, { Game } from './gameutility.js';
+
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 
 /**
@@ -22,10 +20,8 @@ import type { Game } from '../TypeDefinitions.js';
  * @param ws - The socket
  * @param game - The game they belong in, if they belong in one.
  */
-function onPaste(ws: CustomWebSocket, game?: Game) { // { reason, opponentsMoveNumber }
+function onPaste(ws: CustomWebSocket, game: Game) { // { reason, opponentsMoveNumber }
 	console.log("Client pasted a game.");
-
-	if (!game) return console.error("Unable to find game after a paste report.");
 
 	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 

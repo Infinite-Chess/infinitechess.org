@@ -71,7 +71,6 @@ let onreplyFuncs = {}; // { messageID: onreplyFunc }
 const timerIDsToCancelOnNewSocket = [];
 
 // Debugging...
-const alsoPrintSentEchos = false;
 const alsoPrintIncomingEchos = false;
 
 /** Enables simulated websocket latency, and prints all sent and received messages. */
@@ -378,6 +377,10 @@ function handleHardRefresh(GAME_VERSION) { // New update!
 	function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 })); }
 }
 
+/**
+ * 
+ * @param {string} description 
+ */
 function sendFeatureNotSupported(description) {
 	sendmessage('general', 'feature-not-supported', description);
 }
@@ -519,28 +522,34 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 
 	resetTimerToCloseSocket();
 
-	const payload = {
-		route, // general/invites/game
-		action, // sub/unsub/createinvite/cancelinvite/acceptinvite
-		value, // sublist/inviteinfo
-	};
-	const isEcho = action === "echo";
-	if (!isEcho) payload.id = uuid.generateNumbID(10);
+	let payload;
+	if (action === "echo") {
+		payload = {
+			route: "echo",
+			contents: value,
+		};
+	} else { // Not an echo, so we need to send a message with an ID, and expect an echo back.
+		payload = {
+			route, // general/invites/game
+			contents: {
+				action, // sub/unsub/createinvite/cancelinvite/acceptinvite
+				value, // sublist/inviteinfo
+			},
+			id: uuid.generateNumbID(10),
+		};
 
-	if (DEBUG) {
-		if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }
-		else console.log(`Sending: ${JSON.stringify(payload)}`);
+		if (DEBUG) console.log(`Sending: ${JSON.stringify(payload)}`);
+
+		// Set a timer. At the end, just assume we've disconnected and start again.
+		// This will be canceled if we here the echo in time.
+		echoTimers[payload.id] = {
+			timeSent: Date.now(),
+			timeoutID: setTimeout(renewConnection, timeToWaitForEchoMillis, payload.id)
+		};
+		//console.log(`Set timer of message id "${payload.id}"`)
+
+		scheduleOnreplyFunc(payload.id, onreplyFunc);
 	}
-
-	// Set a timer. At the end, just assume we've disconnected and start again.
-	// This will be canceled if we here the echo in time.
-	if (!isEcho) echoTimers[payload.id] = {
-		timeSent: Date.now(),
-		timeoutID: setTimeout(renewConnection, timeToWaitForEchoMillis, payload.id)
-	};
-	//console.log(`Set timer of message id "${payload.id}"`)
-
-	if (!isEcho) scheduleOnreplyFunc(payload.id, onreplyFunc);
 
 	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
 

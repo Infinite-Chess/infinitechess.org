@@ -3,26 +3,20 @@
  * This script handles the abortings and resignations of online games
  */
 
-import gameutility from './gameutility.js';
+import gameutility, { Game } from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
-/**
- * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Game} Game
- */
-
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 //--------------------------------------------------------------------------------------------------------
 
 /**
  * Called when a client tries to abort a game.
- * @param {CustomWebSocket} ws - The websocket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
+ * @param ws - The websocket
+ * @param game - The game they are in..
  */
-function abortGame(ws, game) {
-	if (!game) return console.error("Can't abort a game when player isn't in one.");
+function abortGame(ws: CustomWebSocket, game: Game): void {
 
 	// Is it legal?...
 
@@ -47,11 +41,10 @@ function abortGame(ws, game) {
 
 /**
  * Called when a client tries to resign a game.
- * @param {CustomWebSocket} ws - The websocket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
+ * @param ws - The websocket
+ * @param game - The game they are in.
  */
-function resignGame(ws, game) {
-	if (!game) return console.error("Can't resign a game when player isn't in one.");
+function resignGame(ws: CustomWebSocket, game: Game): void {
 
 	// Is it legal?...
 
@@ -66,8 +59,7 @@ function resignGame(ws, game) {
 	}
 
 	// Resign
-
-	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
 	setGameConclusion(game, gameConclusion);

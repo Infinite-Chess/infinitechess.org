@@ -10,6 +10,7 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessionHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
+import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
@@ -18,8 +19,6 @@ import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
-// @ts-ignore
-import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 
@@ -69,7 +68,7 @@ function onConnectionRequest(socket: WebSocket, req: Request) {
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	if (!ws.metadata.memberInfo.signedIn && ws.metadata.cookies['browser-id'] === undefined) { // Terminate web socket connection request, they NEED authentication!
+	if (!ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.browser_id === undefined) { // Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
 		socketUtility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
@@ -116,14 +115,22 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 		return;
 	}
 
+	const cookies = socketUtility.getCookiesFromWebsocket(req);
+	if (cookies['browser-id'] === undefined) {
+		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
+		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
+		return;
+	}
+
 	// Initialize the metadata and cast to a custom websocket object
 	const ws = socket as CustomWebSocket; // Cast WebSocket to CustomWebSocket
+	
 	ws.metadata = {
 		// Parse cookies from the Upgrade http headers
-		cookies: socketUtility.getCookiesFromWebsocket(req),
+		cookies,
 		subscriptions: {},
 		userAgent: req.headers['user-agent'],
-		memberInfo: { signedIn: false },
+		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		verified: false,
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,

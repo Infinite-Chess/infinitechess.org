@@ -13,7 +13,7 @@ import { getTranslationForReq } from "../utility/translate.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 import type { Response } from 'express';
-import type { AuthenticatedRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../../types.js";
 
 // A specific type for the return value of getMemberDataByCriteria for this module
 type MemberVerificationData = {
@@ -36,7 +36,7 @@ type MemberVerificationData = {
  * Route that verifies an account when the user clicks the link in the email.
  * If they are not signed in, this forwards them to the login page.
  */
-export async function verifyAccount(req: AuthenticatedRequest, res: Response) {
+export async function verifyAccount(req: IdentifiedRequest, res: Response) {
 	if (!req.memberInfo) {
 		logEventsAndPrint("req.memberInfo must be defined for verify account route!", 'errLog.txt');
 		return res.status(500).redirect('/500');

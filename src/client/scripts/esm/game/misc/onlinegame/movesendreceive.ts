@@ -4,7 +4,7 @@
  */
 
 import type { FullGame } from "../../../chess/logic/gamefile.js";
-import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
+import type { OpponentsMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
@@ -19,6 +19,7 @@ import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import premoves from "../../chess/premoves.js";
+import { animateMove } from "../../chess/graphicalchanges.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
@@ -91,7 +92,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	premoves.rewindPremovesVisuals();
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh) movesequence.animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
 
 	premoves.applyPremovesVisuals();
 

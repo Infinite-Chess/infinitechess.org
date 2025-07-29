@@ -34,7 +34,7 @@ async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board):
 	// console.log("Initializing texture cache for game...");
 
 	// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
-	const types = boardsim.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
+	const types = boardsim.existingTypes.filter((t: number) => !(typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t))));
 
 	if (types.length === 0) return console.log("TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.");
 
