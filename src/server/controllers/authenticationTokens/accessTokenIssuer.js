@@ -21,15 +21,10 @@ const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
  * Called when the browser uses the /api/get-access-token API request. This reads any refresh token cookie present,
  * and gives them a new access token if they are signed in.
  * If they are not, it gives them a browser-id cookie to verify their identity.
- * @param {*} req 
+ * @param {import("../../../types.js").IdentifiedRequest} req 
  * @param {*} res 
  */
 function accessTokenIssuer(req, res) {
-	if (!req.memberInfo) {
-		logEventsAndPrint("req.memberInfo must be defined for access token issuer route!", 'errLog.txt');
-		return res.status(500).json({'message' : "Server Error" });
-	}
-
 	if (!req.memberInfo.signedIn) {
 		return res.status(403).json({'message': "Invalid or missing refresh token (logged out), cannot issue access token."}); // Forbidden
 	}

@@ -117,15 +117,10 @@ function getPrefs(userId) {
 
 /**
  * Route that Handles a POST request to update user preferences in the database.
- * @param {Object} req - Express request object
+ * @param {import("../../types.js").IdentifiedRequest} req - Express request object
  * @param {Object} res - Express response object
  */
 function postPrefs(req, res) {
-	if (!req.memberInfo) { // { user_id, username, roles }
-		logEventsAndPrint("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt');
-		return res.status(500).json({ message: "Server Error: No Authorization"});
-	}
-
 	if (!req.memberInfo.signedIn) {
 		logEventsAndPrint("User tried to save preferences when they weren't signed in!", 'errLog.txt');
 		return res.status(401).json({ message: "Can't save preferences, not signed in."});

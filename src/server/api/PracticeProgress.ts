@@ -119,12 +119,6 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
  * @param res - Express response object
  */
 function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
-	if (!req.memberInfo) { // { user_id, username, roles }
-		logEventsAndPrint("Can't save user checkmates_beaten when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt');
-		res.status(500).json({ message: "Server Error: No Authorization"});
-		return;
-	}
-
 	if (!req.memberInfo.signedIn) {
 		logEventsAndPrint("User tried to save checkmates_beaten when they weren't signed in!", 'errLog.txt');
 		res.status(401).json({ message: "Can't save checkmates_beaten, not signed in."});
