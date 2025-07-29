@@ -479,6 +479,9 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 	// Initiate
 	pieceSelected = piece;
 
+	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
+	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn();// && !isOpponentType(gamefile.basegame, piece.type);
+
 	// Calculate the legal moves it has. Use premove logic if enabled in preferences.
 	if (preferences.getPremoveMode() && isPremove) {
 		legalMoves = legalmoves.calculateAllPremoves(gamefile, piece);
@@ -486,9 +489,6 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 		legalMoves = legalmoves.calculateAll(gamefile, piece);
 	}
 	// console.log('Selected Legal Moves:', legalMoves);
-
-	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn();// && !isOpponentType(gamefile.basegame, piece.type);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
