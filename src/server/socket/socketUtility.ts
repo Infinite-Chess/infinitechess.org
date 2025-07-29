@@ -8,14 +8,14 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
-import type { AuthMemberInfo } from '../../types.js';
+import type { AuthMemberInfo, ParsedCookies } from '../../types.js';
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
+
 
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
 interface CustomWebSocket extends WebSocket {
-	/** Our custom-entered information about this websocket.
-     * To my knowledge (Naviary), the `metadata` property isn't already in use. */
+	/** Our custom-entered information about this websocket. */
 	metadata: {
 		/** What subscription lists they are subscribed to. Possible: "invites" / "game" */
 		subscriptions: {
@@ -29,15 +29,8 @@ interface CustomWebSocket extends WebSocket {
 				color: Player;
 			};
 		};
-		/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
-		cookies: {
-			/** This is ALWAYS present, even if signed in! */
-			'browser-id'?: string;
-			/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
-			i18next?: string;
-			/** Their refresh/session token, if they are signed in. */
-			jwt?: string;
-		};
+		/** The parsed cookie object */
+		cookies: ParsedCookies
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent?: string;
 		memberInfo: AuthMemberInfo
@@ -48,12 +41,12 @@ interface CustomWebSocket extends WebSocket {
 		/** The socket's IP address. */
 		IP: string;
 		/** The timeout ID that can be used to cancel the timer that will
-         * expire the socket connection. This is useful if it closes early. */
+		 * expire the socket connection. This is useful if it closes early. */
 		clearafter?: NodeJS.Timeout;
 		/** The timeout ID to cancel the timer that will send an empty
-         * message to this socket just to verify they are alive and thinking. */
+		 * message to this socket just to verify they are alive and thinking. */
 		renewConnectionTimeoutID?: NodeJS.Timeout;
-	};
+	}
 }
 
 

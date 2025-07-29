@@ -1,4 +1,6 @@
 
+// src/server/middleware/middleware.js
+
 /**
  * This module configures the middleware waterfall of our server
  */

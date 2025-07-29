@@ -10,6 +10,7 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessionHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
+import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
@@ -18,8 +19,6 @@ import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
-// @ts-ignore
-import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 

@@ -7,16 +7,11 @@ import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 /**
  * 
- * @param {import('../../types.js').AuthenticatedRequest} req 
+ * @param {import('../../types.js').IdentifiedRequest} req 
  * @param {*} res 
  * @returns 
  */
 async function handleLogout(req, res) {
-	if (!req.memberInfo) {
-		logEventsAndPrint("req.memberInfo must be defined for us to log out!", 'errLog.txt');
-		return res.status(500).json({'message' : "Server Error" });
-	}
-
 	// Delete the refresh token cookie...
 	// On client, also delete the accessToken
 
