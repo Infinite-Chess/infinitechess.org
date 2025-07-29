@@ -7,17 +7,17 @@
 import { manuallyVerifyUser } from "../controllers/verifyAccountController.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
 // @ts-ignore
 import { deleteAccount } from "../controllers/deleteAccountController.js";
 // @ts-ignore
 import { refreshGitHubContributorsList } from "./GitHub.js";
 // @ts-ignore
 import { areRolesHigherInPriority } from "../controllers/roles.js";
-
-import type { AuthenticatedRequest } from "../../types.js";
-import type { Response } from "express";
 import { deleteAllRefreshTokensForUser } from "../database/refreshTokenManager.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
+
+import type { IdentifiedRequest } from "../../types.js";
+import type { Response } from "express";
 
 
 
@@ -35,7 +35,7 @@ const validCommands = [
 	"help",
 ];
 
-function processCommand(req: AuthenticatedRequest, res: Response): void {
+function processCommand(req: IdentifiedRequest, res: Response): void {
 	const command = req.params["command"]!;
 
 	const commandAndArgs = parseArgumentsFromCommand(command);
@@ -112,7 +112,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 	return commandAndArgs;
 }
 
-function deleteCommand(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
+function deleteCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
 	if (commandAndArgs.length < 3) {
 		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -133,7 +133,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: Authentic
 	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
 }
 
-function usernameCommand(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
+function usernameCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
 	if (commandAndArgs[1] === "get") {
 		if (commandAndArgs.length < 3) {
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
@@ -166,7 +166,7 @@ function usernameCommand(command: string, commandAndArgs: string[], req: Authent
 	}
 }
 
-function logoutUser(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
+function logoutUser(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -192,7 +192,7 @@ function logoutUser(command: string, commandAndArgs: string[], req: Authenticate
 	}
 }
 
-function verify(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
+function verify(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -206,7 +206,7 @@ function verify(command: string, commandAndArgs: string[], req: AuthenticatedReq
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
-function getUserInfo(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
+function getUserInfo(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -223,7 +223,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Authenticat
 	}
 }
 
-function updateContributorsCommand(command: string, req: AuthenticatedRequest, res: Response) {
+function updateContributorsCommand(command: string, req: IdentifiedRequest, res: Response) {
 	logCommand(command, req);
 	refreshGitHubContributorsList();
 	sendAndLogResponse(res, 200, "Contributors should now be updated!");
@@ -274,7 +274,7 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 	}
 }
 
-function logCommand(command: string, req: AuthenticatedRequest) {
+function logCommand(command: string, req: IdentifiedRequest) {
 	if (req.memberInfo.signedIn) {
 		logEventsAndPrint(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt");
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');

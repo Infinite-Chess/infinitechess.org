@@ -7,10 +7,7 @@
 
 // @ts-ignore
 import { deletePreferencesCookie } from '../../api/Prefs.js';
-// @ts-ignore
-import { signRefreshToken } from './tokenSigner.js';
-// @ts-ignore
-import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from '../../config/config.js';
+import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTokenIP } from '../../database/refreshTokenManager.js';
@@ -18,6 +15,10 @@ import { findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTok
 
 import type { Request, Response } from 'express';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+
+
+const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
@@ -33,8 +34,8 @@ import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
  * @param roles - The roles the user has.
  * @param token - The refresh token to check.
  * @param IP - The IP address they are connecting from.
- * @param req - The request object.
- * @param res - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
+ * @param req - The request object. Will only be undefined if this is called on a websocket upgrade connection request.
+ * @param res - The response object. Will only be undefined if this is called on a websocket upgrade connection request. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns - Returns true if the member has the refresh token, false otherwise.
  */
 export function doesMemberHaveRefreshToken_RenewSession(
@@ -43,8 +44,8 @@ export function doesMemberHaveRefreshToken_RenewSession(
 	roles: string[] | null,
 	token: string,
 	IP: string | undefined,
-	req: Request,
-	res: Response
+	req?: Request,
+	res?: Response,
 ): boolean {
 	// 1. Find the token in the database. This is a single, indexed query.
 	const tokenRecord = findRefreshToken(token);

@@ -10,7 +10,7 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 
-import type { AuthenticatedRequest } from "../../types.js";
+import type { IdentifiedRequest, ParsedCookies } from "../../types.js";
 import type { Request, Response } from "express";
 
 
@@ -29,11 +29,6 @@ import type { Request, Response } from "express";
  * @param next - The Express next middleware function.
  */
 function setPracticeProgressCookie(req: Request, res: Response, next: Function) {
-	if (!req.cookies) {
-		logEventsAndPrint("req.cookies must be parsed before setting checkmates_beaten cookie!", 'errLog.txt');
-		return next();
-	}
-
 	// We don't have to worry about the request being for a resource because those have already been served.
 	// The only scenario this request could be for now is an HTML or fetch API request
 	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
@@ -42,7 +37,8 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function) 
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab checkmates_beaten of other users this way, but there's no harm in that.
-	const memberInfoCookieStringified = req.cookies.memberInfo;
+	const cookies: ParsedCookies = req.cookies;
+	const memberInfoCookieStringified = cookies.memberInfo;
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
 	let memberInfoCookie: { user_id: number, username: string };
@@ -122,7 +118,7 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
  * @param req - Express request object
  * @param res - Express response object
  */
-function postCheckmateBeaten(req: AuthenticatedRequest, res: Response): void {
+function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
 	if (!req.memberInfo) { // { user_id, username, roles }
 		logEventsAndPrint("Can't save user checkmates_beaten when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt');
 		res.status(500).json({ message: "Server Error: No Authorization"});
