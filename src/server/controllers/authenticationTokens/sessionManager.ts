@@ -9,7 +9,7 @@
 import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
-import { findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTokenIP } from '../../database/refreshTokenManager.js';
+import { addRefreshToken, deleteRefreshToken } from '../../database/refreshTokenManager.js';
 
 
 import type { Request, Response } from 'express';
@@ -22,38 +22,6 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
 
-
-/**
- * Checks if a specific refresh token is present in the database, and has not expired,
- * deleting it if it has expired, and updating its last used IP address if it has changed.
- * If not present, it means it has either expired, been manually invalidated by the user logging out, or deleting their account.
- * 
- * Returns the token record if found and valid, otherwise undefined.
- */
-export function resolveRefreshTokenRecord(
-	token: string,
-	IP?: string,
-): RefreshTokenRecord | undefined {
-	// Find the token in the database.
-	const tokenRecord = findRefreshToken(token);
-
-	if (!tokenRecord) return; // Token must have been manually invalidated by the user logging out, or deleting their account.
-
-	// Check if it is expired.
-	if (tokenRecord.expires_at < Date.now()) {
-		// The token is expired, remove it from the database for cleanup.
-		deleteRefreshToken(token);
-		return;
-	}
-
-	// Update the IP address if it has changed.
-	const IP_New: string | null = IP || null;
-	if (IP_New !== tokenRecord.ip_address) {
-		updateRefreshTokenIP(token, IP_New);
-	}
-
-	return tokenRecord;
-}
 
 /** Makes sure a user's session is still fresh, renewing it if it's older than a day. */
 export function freshenSession(

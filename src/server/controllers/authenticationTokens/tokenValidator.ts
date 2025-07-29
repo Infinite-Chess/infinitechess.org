@@ -10,12 +10,11 @@
 
 import jwt from 'jsonwebtoken';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { resolveRefreshTokenRecord } from './sessionManager.js';
+import { deleteRefreshToken, findRefreshToken, updateRefreshTokenIP, type RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 // @ts-ignore
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 
 import type { TokenPayload } from './tokenSigner.js';
-import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 
 if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
@@ -76,12 +75,41 @@ function isRefreshTokenValid(token: string, IP?: string): {
 	} catch (error) {
 		// This block will catch any unexpected errors from database calls
 		const errMsg = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`A critical error occurred during refresh token validation: ${errMsg}`, 'errLog.txt');
+		logEventsAndPrint(`Error resolving refresh token in the database: ${errMsg}`, 'errLog.txt');
 		return { isValid: false, reason: "An internal error occurred during validation." };
 	}
 
 	updateLastSeen(payload.user_id);
 	return { isValid: true, payload, tokenRecord };
+}
+
+/**
+ * Checks if a specific refresh token is present in the database, and has not expired,
+ * deleting it if it has expired, and updating its last used IP address if it has changed.
+ * If not present, it means it has either expired, been manually invalidated by the user logging out, or deleting their account.
+ * 
+ * Returns the token record if found and valid, otherwise undefined.
+ */
+function resolveRefreshTokenRecord(token: string, IP?: string): RefreshTokenRecord | undefined {
+	// Find the token in the database.
+	const tokenRecord = findRefreshToken(token);
+
+	if (!tokenRecord) return; // Token must have been manually invalidated by the user logging out, or deleting their account.
+
+	// Check if it is expired.
+	if (tokenRecord.expires_at < Date.now()) {
+		// The token is expired, remove it from the database for cleanup.
+		deleteRefreshToken(token);
+		return;
+	}
+
+	// Update the IP address if it has changed.
+	const IP_New: string | null = IP || null;
+	if (IP_New !== tokenRecord.ip_address) {
+		updateRefreshTokenIP(token, IP_New);
+	}
+
+	return tokenRecord;
 }
 
 
