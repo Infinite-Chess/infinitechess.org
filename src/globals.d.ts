@@ -3,7 +3,6 @@
 
 /* eslint-disable no-unused-vars */
 
-import type { WebSocketMetadata } from "./server/socket/socketUtility";
 import type { MemberInfo } from "./types";
 
 declare global {
