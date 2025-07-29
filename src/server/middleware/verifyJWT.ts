@@ -8,7 +8,7 @@
  */
 
 import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../../types.js';
-import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
+import { isAccessTokenValid, isRefreshTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
 import { CustomWebSocket } from '../socket/socketUtility.js';
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from './logEvents.js';
@@ -51,7 +51,7 @@ function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
 	const accessToken = authHeader.split(' ')[1];
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
-	const result = isTokenValid(accessToken, false);
+	const result = isAccessTokenValid(accessToken, res);
 	if (!result.isValid) {
 		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt');
 		return false;
@@ -75,7 +75,7 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
 
-	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res);
+	const result = isRefreshTokenValid(refreshToken, getClientIP(req), req, res);
 	if (!result.isValid) {
 		console.log(`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
 		return; // Token was expired or tampered
@@ -113,7 +113,7 @@ function verifyRefreshToken_WebSocket(ws: CustomWebSocket): void {
 
 	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const ip = ws.metadata.IP;
-	const result = isTokenValid(refreshToken, true, ip); // True for refresh token
+	const result = isRefreshTokenValid(refreshToken, ip); // True for refresh token
 	if (!result.isValid) {
 		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
 		return; // Token was expired or tampered

@@ -26,64 +26,67 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 // Validating Tokens ---------------------------------------------------------------------------------
 
 
-/**
- * Checks if a token is valid.
- * This checks the following conditions:
- * 1. If the token has expired or has been tampered with (payload won't have required properties).
- * 2. If the token is manually invalidated, such as when a user logs out, or deletes their account, and the token was removed from their information in the members table.
- */
-function isTokenValid(token: string, isRefreshToken: boolean, IP?: string, req?: Request, res?: Response): {
+/** The result of validating an access or refresh token. */
+type ValidationResult = {
 	isValid: true,
 	payload: TokenPayload,
 } | {
 	isValid: false,
 	reason: string,
-} {
+};
+
+
+/**
+ * Checks if an access token is valid => not expired,
+ * nor tampered, and the user account still exists.
+ */
+function isAccessTokenValid(token: string, res: Response): ValidationResult {
+	// Decode the token
+	const payload = decodeToken(token, false);
+	if (!payload) return { isValid: false, reason: "Token is expired or tampered." };
+
+	// Check if the user account still exists.
+	if (!doesMemberOfIDExist(payload.user_id)) {
+		revokeSession(res);
+		return { isValid: false, reason: "User account does not exist." };
+	}
+
+	updateLastSeen(payload.user_id);
+	return { isValid: true, payload };
+}
+
+/**
+ * Checks if a refresh token is valid. Not expired, nor tampered, and it's still
+ * in the database (not manually invalidated by logging out, or deleting the account).
+ * @param token 
+ * @param IP - Has a chance to not be defined on HTTP requests.
+ * @param req - Will only be defined on HTTP requests, not websocket upgrade connection requests. If present, we are able to revoke or renew their session.
+ * @param res - Will only be defined on HTTP requests, not websocket upgrade connection requests. If present, we are able to revoke or renew their session.
+ * @returns 
+ */
+function isRefreshTokenValid(token: string, IP?: string, req?: Request, res?: Response): ValidationResult {
+	// Decode the token
+	const payload = decodeToken(token, true);
+	if (!payload) return { isValid: false, reason: "Token is expired or tampered." };
+
 	try {
-		if (isRefreshToken === undefined) {
-			const reason = "isTokenValid requires the isRefreshToken parameter.";
-			logEventsAndPrint(reason, 'errLog.txt');
-			return { isValid: false, reason };
-		}
-
-		// 1. Decode the token first
-		const payload = decodeToken(token, isRefreshToken);
-		if (!payload) return { isValid: false, reason: "Token is expired or tampered." };
-
-		if (!isRefreshToken) {
-			// 2. If it's an access token, check if the user account still exists.
-			
-			if (!doesMemberOfIDExist(payload.user_id)) {
-				console.log(`Token is for a deleted user account (ID: ${payload.user_id}).`);
-				if (res) revokeSession(res); // The response may not be defined if we called this method on a websocket upgrade connection request.
-				return { isValid: false, reason: "User account does not exist." };
-			}
-
-			// Validation complete for access token.
-
-			updateLastSeen(payload.user_id);
-			return { isValid: true, payload };
-		} else {
-			// 3. For a refresh token, check against the database.
-
-			const isStoredInDb = doesMemberHaveRefreshToken_RenewSession(payload.user_id, payload.username, payload.roles, token, IP, req, res);
-			if (!isStoredInDb) {
-				if (res) revokeSession(res); // Revoke their session in case they were manually logged out, and their client didn't know that. The response may not be defined if we called this method on a websocket upgrade connection request.
-				return { isValid: false, reason: "Refresh token not found in the database." };
-			}
-
-			// 4. If all checks pass, the token is valid.
-			updateLastSeen(payload.user_id);
-			return { isValid: true, payload };
+		// Check against the database
+		const isStoredInDb = doesMemberHaveRefreshToken_RenewSession(payload.user_id, payload.username, payload.roles, token, IP, req, res);
+		if (!isStoredInDb) {
+			if (res) revokeSession(res); // Revoke their session in case they were manually logged out, and their client didn't know that. The response may not be defined if we called this method on a websocket upgrade connection request.
+			return { isValid: false, reason: "Refresh token not found in the database." };
 		}
 	} catch (error) {
 		// This block will catch any unexpected errors from database calls
 		const errMsg = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`A critical error occurred during token validation: ${errMsg}`, 'errLog.txt');
-		
+		logEventsAndPrint(`A critical error occurred during refresh token validation: ${errMsg}`, 'errLog.txt');
 		return { isValid: false, reason: "An internal error occurred during validation." };
 	}
+
+	updateLastSeen(payload.user_id);
+	return { isValid: true, payload };
 }
+
 
 /** Extracts and decodes the payload from an access or refresh token. */
 function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | undefined {
@@ -107,5 +110,6 @@ function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | und
 
 
 export {
-	isTokenValid,
+	isAccessTokenValid,
+	isRefreshTokenValid,
 };
