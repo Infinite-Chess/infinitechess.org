@@ -7,30 +7,29 @@
  * if they are logged in.
  */
 
+import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../../types.js';
 import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
+import { CustomWebSocket } from '../socket/socketUtility.js';
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from './logEvents.js';
 
-/** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
+
+import type { Request, Response, NextFunction } from "express";
 
 
 /**
- * Reads the request's bearer token (from the authorization header)
+ * [HTTP] Reads the request's bearer token (from the authorization header)
  * OR the refresh cookie (contains refresh token),
  * sets req.memberInfo properties if it is valid (are signed in).
  * Further middleware can read these properties to not send
- * private information to unauthorized users.
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @param {Function} next - The function to call, when finished, to continue the middleware waterfall.
+ * private information to unauthorized users.\
  */
-const verifyJWT = (req, res, next) => {
-	const cookies = req.cookies;
-	if (!cookies) {
-		logEventsAndPrint("Cookie parser didn't set the req.cookies property when verifying JWT!", 'errLog.txt');
-		return;
-	}
+function verifyJWT(req: Request, res: Response, next: NextFunction) {
+	const cookies: ParsedCookies = req.cookies;
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
+
+	// After this line, typescript then thinks the req is of the IdentifiedRequest type.
+	if (!isRequestIdentified(req)) throw Error("Not all required IdentifiedRequest properties were set!");
 
 	const hasAccessToken = verifyAccessToken(req, res);
 	if (!hasAccessToken) verifyRefreshToken(req, res);
@@ -39,105 +38,88 @@ const verifyJWT = (req, res, next) => {
 };
 
 /**
- * Reads the request's bearer token (from the authorization header),
+ * [HTTP] Reads the request's bearer token (from the authorization header),
  * sets the connections `memberInfo` property if it is valid (are signed in).
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {boolean} true if a valid token was found (logged in)
+ * 
+ * Returns whether they have a valid access token or not.
  */
-function verifyAccessToken(req, res) {
-	const authHeader = req.headers.authorization || req.headers.Authorization;
+function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
+	const authHeader = req.headers.authorization;
 	if (!authHeader) return false; // No authentication header included
 	if (!authHeader.startsWith('Bearer ')) return false; // Authentication header doesn't look correct
 
 	const accessToken = authHeader.split(' ')[1];
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
-	// { isValid (boolean), user_id, username, roles }
-	const result = isTokenValid(accessToken, false, getClientIP(req)); // False for access token
+	const result = isTokenValid(accessToken, false);
 	if (!result.isValid) {
 		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt');
-		return false; //Token was expired or tampered
+		return false;
 	}
 
 	// Token is valid and hasn't hit the 15m expiry
-	// ...
 
 	console.log("A valid access token was used! :D :D");
 
-	req.memberInfo = {...req.memberInfo, signedIn: true, ...result}; // Username was our payload when we generated the access token
-
-	return true; // true if they have a valid ACCESS token
+	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload}; // Username was our payload when we generated the access token
+	return true;
 }
 
 /**
- * Reads the request's refresh token cookie (http-only),
- * sets the connections `memberInfo` property if it is valid (are signed in).
- * Only call if they did not have a valid access token!
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {boolean} true if a valid token was found (logged in)
+ * [HTTP] Reads the request's refresh token cookie,
+ * updates the connections `memberInfo` property if it is valid (are signed in).
+ * Only call if they did not have a valid access token, as this performs database queries!
  */
-function verifyRefreshToken(req, res) {
-	const cookies = req.cookies;
-	if (!cookies) return logEventsAndPrint("Cookie parser didn't set the req.cookies property!", 'errLog.txt');
-
+function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
+	const cookies: ParsedCookies = req.cookies;
 	const refreshToken = cookies.jwt;
-	if (!refreshToken) return false; // No refresh token present
+	if (!refreshToken) return; // No refresh token present
 
-	// { isValid (boolean), user_id, username, reason (string, if not valid) }
-	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res); // true for refresh token
+	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res);
 	if (!result.isValid) {
 		console.log(`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
-		return false; //Token was expired or tampered
+		return; // Token was expired or tampered
 	}
 
 	// Valid! Set their req.memberInfo property!
 
-	const { user_id, username, roles } = result;
-	req.memberInfo = { signedIn: true, user_id, username, roles }; // Username was our payload when we generated the access token
-
-	return true; // true if they have a valid REFRESH token
+	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
 };
 
 
 
 /**
- * Reads the refresh cookie token,
+ * [WebSocket] Reads the refresh cookie token,
  * Modifies ws.metadata.memberInfo if they are signed in
  * to add the user_id, username, and roles properties.
- * @param {} req
- * @param {CustomWebSocket} ws - The websocket object
- * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
+ * @param req
+ * @param ws - The websocket object
  */
-function verifyJWTWebSocket(ws) {
-	ws.metadata.memberInfo = { signedIn: false, browser_id: ws.metadata.cookies['browser-id'] };
-	
+function verifyJWTWebSocket(ws: CustomWebSocket): void {
 	verifyRefreshToken_WebSocket(ws);
 };
 
 /**
- * If they have a valid refresh token cookie (http-only), set's
+ * [WebSocket] If they have a valid refresh token cookie (http-only), set's
  * the socket metadata's `user` property, ands returns true.
- * @param {CustomWebSocket} ws - The websocket object
- * @returns {boolean} true if a valid token was found.
+ * @param ws - The websocket object
+ * @returns true if a valid token was found.
  */
-function verifyRefreshToken_WebSocket(ws) {
+function verifyRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	const cookies = ws.metadata.cookies;
-	if (!cookies) return logEventsAndPrint("Websocket needs to have the cookies property before verifying JWT!", 'errLog.txt');
 
 	const refreshToken = cookies.jwt;
-	if (!refreshToken) return false; // Not logged in, don't set their user property
+	if (!refreshToken) return; // Not logged in, don't set their user property
 
 	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const ip = ws.metadata.IP;
 	const result = isTokenValid(refreshToken, true, ip); // True for refresh token
 	if (!result.isValid) {
 		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
-		return false; // Token was expired or tampered
+		return; // Token was expired or tampered
 	}
 
-	ws.metadata.memberInfo = {...ws.metadata.memberInfo, signedIn: true, ...result};
+	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }
 
 export {
