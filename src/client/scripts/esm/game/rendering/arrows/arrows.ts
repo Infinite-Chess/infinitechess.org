@@ -392,7 +392,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 		// that will contain all organized lines of the given vector
 		// intersecting the box between them.
 
-		const containingPoints = math.findFarthestPointsALineSweepsABox(slide, boundingBoxInt);
+		const containingPoints = math.findCrossSectionalWidthPoints(slide, boundingBoxInt);
 		const containingPointsLineC = containingPoints.map(point => math.getLineCFromCoordsAndVec(point, slide)) as [number, number];
 		// Any line of this slope of which its C value is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
