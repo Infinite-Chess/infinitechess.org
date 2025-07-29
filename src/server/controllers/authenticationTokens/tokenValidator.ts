@@ -90,7 +90,12 @@ function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | und
 	const secret = isRefreshToken ? REFRESH_TOKEN_SECRET : ACCESS_TOKEN_SECRET;
 	try {
 		// Decode the JWT and return the payload
-		return jwt.verify(token, secret) as TokenPayload;
+		const jwtPayload = jwt.verify(token, secret) as jwt.JwtPayload; // Can cast here because we know we originally signed it as an object, not a string.
+		return {
+			user_id: jwtPayload['user_id'],
+			username: jwtPayload['username'],
+			roles: jwtPayload['roles'],
+		};
 	} catch (err) {
 		const errMsg = err instanceof Error ? err.message : String(err);
 		// Log the error event when verification fails
