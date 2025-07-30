@@ -29,7 +29,6 @@ function clamp(value: number, min: number, max: number): number {
 	return value < min ? min : value > max ? max : value;
 }
 
-
 /**
  * Computes the positive modulus of two numbers.
  * @param a - The dividend.
@@ -39,7 +38,6 @@ function clamp(value: number, min: number, max: number): number {
 function posMod(a: number, b: number): number {
 	return a - (Math.floor(a / b) * b);
 }
-
 
 
 // Easing Functions ---------------------------------------------------
