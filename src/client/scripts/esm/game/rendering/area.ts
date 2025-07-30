@@ -11,7 +11,7 @@
 import transition from './transition.js';
 import camera from './camera.js';
 import boardtiles from './boardtiles.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -22,7 +22,7 @@ import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
 import type { Board } from '../../chess/logic/gamefile.js';
-import type { BoundingBoxBD } from '../../util/math.js';
+import type { BoundingBoxBD } from '../../util/math/math.js';
 import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
 
 

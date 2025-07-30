@@ -8,7 +8,7 @@
 import perspective from "./perspective.js";
 // @ts-ignore
 import transition from "./transition.js";
-import math from "../../util/math.js";
+import math from "../../util/math/math.js";
 import mouse from "../../util/mouse.js";
 import { listener_overlay } from "../chess/game.js";
 import boardpos from "./boardpos.js";

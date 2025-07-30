@@ -6,7 +6,7 @@
  */
 
 import coordutil from "../../../../chess/util/coordutil.js";
-import math, { Color } from "../../../../util/math.js";
+import math, { Color } from "../../../../util/math/math.js";
 import space from "../../../misc/space.js";
 import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
 import instancedshapes from "../../instancedshapes.js";

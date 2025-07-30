@@ -9,14 +9,14 @@
 import boardutil from '../util/boardutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 
 import { players } from '../util/typeutil.js';
 import legalmoves from './legalmoves.js';
 
-import type { Vec2 } from '../../util/math.js';
+import type { Vec2 } from '../../util/math/math.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';

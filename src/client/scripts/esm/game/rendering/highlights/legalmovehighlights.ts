@@ -17,7 +17,7 @@ import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
-import math from '../../../util/math.js';
+import math from '../../../util/math/math.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
@@ -33,7 +33,7 @@ import shapes from '../shapes.js';
 // Type Definitions -----------------------------------------------------------------------------
 
 import type { Player } from '../../../chess/util/typeutil.js';
-import type { BoundingBox, Vec2, Color } from '../../../util/math.js';
+import type { BoundingBox, Vec2, Color } from '../../../util/math/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import type { Ray } from './annotations/annotations.js';

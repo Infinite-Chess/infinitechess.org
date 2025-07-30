@@ -23,7 +23,7 @@ import stats from "../gui/stats.js";
 import statustext from "../gui/statustext.js";
 import copygame from "../chess/copygame.js";
 import docutil from "../../util/docutil.js";
-import math, { Vec2 } from "../../util/math.js";
+import math, { Vec2 } from "../../util/math/math.js";
 import mouse from "../../util/mouse.js";
 import { listener_document } from "../chess/game.js";
 import guipromotion from "../gui/guipromotion.js";

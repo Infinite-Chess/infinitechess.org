@@ -7,7 +7,7 @@ import perspective from "./perspective.js";
 
 
 /**
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math/math.js').BoundingBox} BoundingBox
  * @typedef {import("../../chess/util/coordutil.js").Coords} Coords
  */
 

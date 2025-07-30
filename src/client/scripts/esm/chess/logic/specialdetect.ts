@@ -7,7 +7,7 @@ import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import checkresolver from './checkresolver.js';
 import { players, rawTypes } from '../util/typeutil.js';
 // Import End

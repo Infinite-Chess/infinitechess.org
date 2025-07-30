@@ -14,7 +14,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';

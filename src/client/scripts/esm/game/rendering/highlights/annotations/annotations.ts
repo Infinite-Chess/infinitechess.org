@@ -20,7 +20,7 @@ import boardeditor from "../../../misc/boardeditor.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
-import type { Ray } from "../../../../util/math.js";
+import type { Ray } from "../../../../util/math/math.js";
 
 
 // Type Definitions ------------------------------------------------------------

@@ -5,7 +5,7 @@
  */
 
 
-import type { Color } from '../../util/math.js';
+import type { Color } from '../../util/math/math.js';
 import type { RawType, Player } from '../util/typeutil.js';
 
 import typeutil from '../util/typeutil.js';
