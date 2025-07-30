@@ -241,7 +241,7 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 	let firstArea: Area | undefined;
 
 	if (isAZoomOut) { // If our current screen isn't within the final area, create new area to teleport to first
-		if (!bounds.boxContainsSquare(thisAreaBox, startCoords)) {
+		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
 			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
 			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
@@ -251,7 +251,7 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
 	} else { // zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
-		if (!bounds.boxContainsSquare(currentBoardBoundingBox, endCoords)) {
+		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
 			bounds.expandBDBoxToContainSquare(thisAreaBox, endCoords); // Unpadded
 			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
