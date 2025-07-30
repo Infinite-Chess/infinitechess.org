@@ -32,6 +32,7 @@ import specialdetect from "./specialdetect.js";
 import vectors, { Vec2Key } from "../../util/math/vectors.js";
 import bounds, { BoundingBox } from "../../util/math/bounds.js";
 import geometry from "../../util/math/geometry.js";
+import bd from "../../util/bigdecimal/bigdecimal.js";
 
 // Functions ------------------------------------------------------------------------------
 
@@ -332,15 +333,16 @@ function appendBlockingMoves(gamefile: FullGame, square1: Coords, square2: Coord
 		}
 
 		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
-		if (!bounds.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
-		if (!coordutil.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
-		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
-		if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
+		if (!bd.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
+		const blockPointInt = bd.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
+		if (!bounds.boxContainsSquare(box, blockPointInt)) continue; // Intersection point not between our 2 points, but outside of them.
+		if (coordutil.areCoordsEqual(blockPointInt, square1)) continue; // Can't move onto our piece that's in check..
+		if (coordutil.areCoordsEqual(blockPointInt, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 		// Don't add the move if it's already in the list. This can happen with colinear lines, since different slide direction can have the same exact vector, and thus blocking point.
-		if (gamefile.boardsim.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
+		if (gamefile.boardsim.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPointInt[0] && move[1] === blockPointInt[1])) continue;
 
 		// Can our piece legally move there?
-		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPoint, color, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
+		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, { ignoreIndividualMoves: true })) moves.individual.push(blockPointInt); // Can block!
 	}
 }
 
