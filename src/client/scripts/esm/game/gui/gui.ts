@@ -13,6 +13,7 @@ import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
 import vectors from '../../util/math/vectors.js';
+import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
 
 
 
@@ -27,7 +28,8 @@ import vectors from '../../util/math/vectors.js';
 function prepareForOpen() {
 	// Randomize pan velocity direction for the title screen and lobby menus
 	randomizePanVelDir();
-	boardpos.setBoardScale(1.8); // 1.8
+	const amount = bigdecimal.FromNumber(1.8); // Default: 1.8
+	boardpos.setBoardScale(amount);
 	loadbalancer.restartAFKTimer();
 }
 
