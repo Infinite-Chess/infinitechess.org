@@ -149,7 +149,19 @@ function boxContainsBox(outerBox: BoundingBox, innerBox: BoundingBox): boolean {
 /**
  * Returns true if the provided box contains the square coordinate.
  */
-function boxContainsSquare(box: BoundingBoxBD, square: BDCoords): boolean {
+function boxContainsSquare(box: BoundingBox, square: Coords): boolean {
+	if (square[0] < box.left) return false;
+	if (square[0] > box.right) return false;
+	if (square[1] < box.bottom) return false;
+	if (square[1] > box.top) return false;
+
+	return true;
+}
+
+/**
+ * Returns true if the provided bigdecimal box contains the square coordinate.
+ */
+function boxContainsSquareBD(box: BoundingBoxBD, square: BDCoords): boolean {
 	if (bd.compare(square[0], box.left) < 0) return false;
 	if (bd.compare(square[0], box.right) > 0) return false;
 	if (bd.compare(square[1], box.bottom) < 0) return false;
@@ -184,6 +196,7 @@ export default {
 	// Operations
 	boxContainsBox,
 	boxContainsSquare,
+	boxContainsSquareBD,
 	calcCenterOfBoundingBox,
 };
 
