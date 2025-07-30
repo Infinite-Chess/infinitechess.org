@@ -1058,6 +1058,16 @@ function toBigInt(bd: BigDecimal): bigint {
 }
 
 /**
+ * Converts a pair of bigdecimal coords into normal bigint Coords.
+ * THIS WILL LOSE PRECISION if you aren't already confident that both
+ * coordinates are integers!
+ */
+function coordsToBigInt(coords: BDCoords): Coords {
+	// Convert each coordinate to a BigInt using the toBigInt function.
+	return [toBigInt(coords[0]), toBigInt(coords[1])];
+}
+
+/**
  * Most efficient method to convert a BigDecimal to a number.
  * USE IF YOU ARE SURE the BigDecimal's mantissa (bigint property)
  * will not overflow or underflow the standard javascript number
@@ -1356,6 +1366,7 @@ export default {
 	log10,
 	// Conversions and Utility
 	toBigInt,
+	coordsToBigInt,
 	// toExactNumber,
 	toNumber,
 	toExactString,
