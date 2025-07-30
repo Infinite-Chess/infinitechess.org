@@ -56,13 +56,13 @@ function onReport(ws: CustomWebSocket, game: Game, messageContents: ReportMessag
 		gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', "Silly goose. You can't report yourself for cheating! You played that move!");
 		return;
 	}
-
 	// Remove the last move played.
 	const perpetratingMove = game.moves.pop();
+	if (!perpetratingMove) return;
     
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason}. Color who reported: ${ourColor}. Probably cheater: ${JSON.stringify(game.players[opponentColor])}. Their color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.compact}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason}. Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
     

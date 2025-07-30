@@ -8,9 +8,9 @@ import type { Move, BaseMove } from "./movepiece.js";
 import type { OrganizedPieces } from "./organizedpieces.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { GameState, GlobalGameState } from "./state.js";
-import type { Piece } from "../util/boardutil.js";
 import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
+import type { SpecialMoveFunction } from "./specialmove.js";
 
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
@@ -79,8 +79,7 @@ type Board = {
 
 	colinearsPresent: boolean
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>
-	// eslint-disable-next-line no-unused-vars
-	specialMoves: RawTypeGroup<(boardsim: Board, piece: Piece, move: Move) => boolean>
+	specialMoves: RawTypeGroup<SpecialMoveFunction>
 
 	specialVicinity: Record<CoordsKey, RawType[]>
 	vicinity: Record<CoordsKey, RawType[]>

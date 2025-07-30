@@ -13,6 +13,7 @@ import legalmovehighlights from "./legalmovehighlights.js";
 import specialrighthighlights from "./specialrighthighlights.js";
 import boardpos from "../boardpos.js";
 import annotations from "./annotations/annotations.js";
+import premoves from "../../chess/premoves.js";
 
 import type { Board } from "../../../chess/logic/gamefile.js";
 
@@ -32,7 +33,9 @@ function render(boardsim: Board) {
 		checkhighlight.render(boardsim);
 		legalmovehighlights.render();
 		specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
-	} 
+	}
+	premoves.render(); // Premove highlights
+	// Needs to render EVEN if zoomed out (different mode)
 	annotations.render_belowPieces(); // The square highlights added by the user
 }
 

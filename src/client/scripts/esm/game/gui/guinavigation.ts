@@ -15,6 +15,7 @@ import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import math from '../../util/math.js';
+import premoves from '../chess/premoves.js';
 // @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
@@ -536,6 +537,9 @@ function testIfForwardMove() {
 function rewindMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
+
+	premoves.cancelPremoves(gamefile, mesh);
+
 	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
 	frametracker.onVisualChange();
@@ -549,6 +553,9 @@ function rewindMove() {
 function forwardMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
+
+	premoves.cancelPremoves(gamefile, mesh);
+	
 	if (!moveutil.isIncrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
 	movesequence.navigateMove(gamefile, mesh, true);

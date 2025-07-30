@@ -203,4 +203,5 @@ export default {
 	getPresetOverrides,
 	clearPresetOverrides,
 	render,
+	genModel,
 };

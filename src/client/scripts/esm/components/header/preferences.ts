@@ -17,7 +17,7 @@ import type { Color } from "../../util/math.js";
 
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_mode'];
+const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled'];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
@@ -449,7 +449,7 @@ export default {
 	setLegalMovesShape,
 	getDragEnabled,
 	setDragEnabled,
-	getPremoveMode: getPremoveEnabled,
+	getPremoveEnabled,
 	setPremoveMode,
 	getAnimationsMode,
 	setAnimationsMode,

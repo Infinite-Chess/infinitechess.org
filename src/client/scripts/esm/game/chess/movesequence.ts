@@ -67,7 +67,6 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	// of the hovered arrows often changes.
 	// Erase the list so they can be regenerated next frame with the correct color.
 	arrowlegalmovehighlights.reset();
-	specialrighthighlights.onMove();
 
 	return move;
 }

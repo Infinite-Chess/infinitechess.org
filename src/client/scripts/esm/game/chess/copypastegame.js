@@ -1,7 +1,6 @@
 
 /** 
  * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../../chess/logic/icn/icnconverter.js').LongFormatOut} LongFormatOut
  * @typedef {import('./gameslot.js').VariantOptions} VariantOptions
  */
