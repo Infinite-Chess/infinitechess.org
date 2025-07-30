@@ -588,48 +588,48 @@ function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BD
  * we would return its left/right-most points.
  */
 function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
-    const { left, right, bottom, top } = boundingBox;
-    const [dx, dy] = vector;
+	const { left, right, bottom, top } = boundingBox;
+	const [dx, dy] = vector;
 
-    // Handle edge case: zero direction vector
-    if (dx === 0n && dy === 0n) throw new Error("Direction vector cannot be zero.");
+	// Handle edge case: zero direction vector
+	if (dx === 0n && dy === 0n) throw new Error("Direction vector cannot be zero.");
 
-    // The normal vector is perpendicular to the viewing vector.
+	// The normal vector is perpendicular to the viewing vector.
 	// We can use this to find the points that are furthest apart on this line.
-    const normal: Vec2 = [-dy, dx];
+	const normal: Vec2 = [-dy, dx];
 
-    const corners: Coords[] = [
+	const corners: Coords[] = [
         [left, top],     // Top-left
         [right, top],    // Top-right
         [left, bottom],  // Bottom-left
         [right, bottom]  // Bottom-right
     ];
 
-    // Initialize min/max with the projection of the first corner
-    let minCorner: Coords = corners[0]!;
-    let maxCorner: Coords = corners[0]!;
+	// Initialize min/max with the projection of the first corner
+	let minCorner: Coords = corners[0]!;
+	let maxCorner: Coords = corners[0]!;
 
-    let minProjection = minCorner[0] * normal[0] + minCorner[1] * normal[1];
-    let maxProjection = minProjection;
+	let minProjection = minCorner[0] * normal[0] + minCorner[1] * normal[1];
+	let maxProjection = minProjection;
 
-    // Iterate through the rest of the corners (from the second one)
-    for (let i = 1; i < corners.length; i++) {
-        const corner = corners[i]!;
+	// Iterate through the rest of the corners (from the second one)
+	for (let i = 1; i < corners.length; i++) {
+		const corner = corners[i]!;
 
-        // Project the corner onto the NORMAL vector using the dot product
+		// Project the corner onto the NORMAL vector using the dot product
 		const projection = dotProduct(corner, normal);
 
-        if (projection < minProjection) {
-            minProjection = projection;
-            minCorner = corner;
-        }
-        if (projection > maxProjection) {
-            maxProjection = projection;
-            maxCorner = corner;
-        }
-    }
+		if (projection < minProjection) {
+			minProjection = projection;
+			minCorner = corner;
+		}
+		if (projection > maxProjection) {
+			maxProjection = projection;
+			maxCorner = corner;
+		}
+	}
 
-    return [minCorner, maxCorner];
+	return [minCorner, maxCorner];
 }
 
 /**
@@ -658,80 +658,80 @@ function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
  */
 function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: BoundingBox): { coords: BDCoords; positiveDotProduct: boolean }[] {
 
-    // --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
-    const [bd_x0, bd_y0] = bd.FromCoords(startCoords);
-    const [bd_dx, bd_dy] = bd.FromCoords(direction);
-    const bd_left = bd.FromBigInt(box.left);
-    const bd_right = bd.FromBigInt(box.right);
-    const bd_bottom = bd.FromBigInt(box.bottom);
-    const bd_top = bd.FromBigInt(box.top);
+	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
+	const [bd_x0, bd_y0] = bd.FromCoords(startCoords);
+	const [bd_dx, bd_dy] = bd.FromCoords(direction);
+	const bd_left = bd.FromBigInt(box.left);
+	const bd_right = bd.FromBigInt(box.right);
+	const bd_bottom = bd.FromBigInt(box.bottom);
+	const bd_top = bd.FromBigInt(box.top);
     
-    const valid_t_values: BigDecimal[] = [];
+	const valid_t_values: BigDecimal[] = [];
 
-    // --- 2. Check for intersections with each of the four box edges ---
+	// --- 2. Check for intersections with each of the four box edges ---
 
-    // Check vertical edges (left and right)
-    if (direction[0] !== 0n) {
-        // t = (boundary - x0) / dx
-        const t_left = bd.divide_fixed(bd.subtract(bd_left, bd_x0), bd_dx);
-        const t_right = bd.divide_fixed(bd.subtract(bd_right, bd_x0), bd_dx);
+	// Check vertical edges (left and right)
+	if (direction[0] !== 0n) {
+		// t = (boundary - x0) / dx
+		const t_left = bd.divide_fixed(bd.subtract(bd_left, bd_x0), bd_dx);
+		const t_right = bd.divide_fixed(bd.subtract(bd_right, bd_x0), bd_dx);
 
-        // Check if the intersection at t_left is on the edge
-        const y_at_left = bd.add(bd_y0, bd.multiply_fixed(t_left, bd_dy));
-        if (bd.compare(y_at_left, bd_bottom) >= 0 && bd.compare(y_at_left, bd_top) <= 0) {
-            valid_t_values.push(t_left);
-        }
+		// Check if the intersection at t_left is on the edge
+		const y_at_left = bd.add(bd_y0, bd.multiply_fixed(t_left, bd_dy));
+		if (bd.compare(y_at_left, bd_bottom) >= 0 && bd.compare(y_at_left, bd_top) <= 0) {
+			valid_t_values.push(t_left);
+		}
 
-        // Check if the intersection at t_right is on the edge
-        const y_at_right = bd.add(bd_y0, bd.multiply_fixed(t_right, bd_dy));
-        if (bd.compare(y_at_right, bd_bottom) >= 0 && bd.compare(y_at_right, bd_top) <= 0) {
-            valid_t_values.push(t_right);
-        }
-    }
+		// Check if the intersection at t_right is on the edge
+		const y_at_right = bd.add(bd_y0, bd.multiply_fixed(t_right, bd_dy));
+		if (bd.compare(y_at_right, bd_bottom) >= 0 && bd.compare(y_at_right, bd_top) <= 0) {
+			valid_t_values.push(t_right);
+		}
+	}
 
-    // Check horizontal edges (bottom and top)
-    if (direction[1] !== 0n) {
-        // t = (boundary - y0) / dy
-        const t_bottom = bd.divide_fixed(bd.subtract(bd_bottom, bd_y0), bd_dy);
-        const t_top = bd.divide_fixed(bd.subtract(bd_top, bd_y0), bd_dy);
+	// Check horizontal edges (bottom and top)
+	if (direction[1] !== 0n) {
+		// t = (boundary - y0) / dy
+		const t_bottom = bd.divide_fixed(bd.subtract(bd_bottom, bd_y0), bd_dy);
+		const t_top = bd.divide_fixed(bd.subtract(bd_top, bd_y0), bd_dy);
         
-        // Check if the intersection at t_bottom is on the edge
-        const x_at_bottom = bd.add(bd_x0, bd.multiply_fixed(t_bottom, bd_dx));
-        if (bd.compare(x_at_bottom, bd_left) >= 0 && bd.compare(x_at_bottom, bd_right) <= 0) {
-            valid_t_values.push(t_bottom);
-        }
+		// Check if the intersection at t_bottom is on the edge
+		const x_at_bottom = bd.add(bd_x0, bd.multiply_fixed(t_bottom, bd_dx));
+		if (bd.compare(x_at_bottom, bd_left) >= 0 && bd.compare(x_at_bottom, bd_right) <= 0) {
+			valid_t_values.push(t_bottom);
+		}
 
-        // Check if the intersection at t_top is on the edge
-        const x_at_top = bd.add(bd_x0, bd.multiply_fixed(t_top, bd_dy));
-        if (bd.compare(x_at_top, bd_left) >= 0 && bd.compare(x_at_top, bd_right) <= 0) {
-            valid_t_values.push(t_top);
-        }
-    }
+		// Check if the intersection at t_top is on the edge
+		const x_at_top = bd.add(bd_x0, bd.multiply_fixed(t_top, bd_dy));
+		if (bd.compare(x_at_top, bd_left) >= 0 && bd.compare(x_at_top, bd_right) <= 0) {
+			valid_t_values.push(t_top);
+		}
+	}
 
-    // --- 3. De-duplicate and Sort the valid t-values ---
+	// --- 3. De-duplicate and Sort the valid t-values ---
     
-    // De-duplicate points
-    const unique_t_values = valid_t_values.filter((v, i, a) => 
-        a.findIndex(t => bd.areEqual(v, t)) === i
-    );
+	// De-duplicate points
+	const unique_t_values = valid_t_values.filter((v, i, a) => 
+		a.findIndex(t => bd.areEqual(v, t)) === i
+	);
 
-    // Sort
-    unique_t_values.sort((a, b) => bd.compare(a, b));
+	// Sort
+	unique_t_values.sort((a, b) => bd.compare(a, b));
 
-    // --- 4. Map sorted t-values to the final output format ---
-    const ZERO_BD = bd.FromBigInt(0n);
+	// --- 4. Map sorted t-values to the final output format ---
+	const ZERO_BD = bd.FromBigInt(0n);
 
-    return unique_t_values.map(t => {
-        // Calculate the final intersection coordinates
-        const x = bd.add(bd_x0, bd.multiply_fixed(t, bd_dx));
-        const y = bd.add(bd_y0, bd.multiply_fixed(t, bd_dy));
+	return unique_t_values.map(t => {
+		// Calculate the final intersection coordinates
+		const x = bd.add(bd_x0, bd.multiply_fixed(t, bd_dx));
+		const y = bd.add(bd_y0, bd.multiply_fixed(t, bd_dy));
 
-        return {
-            coords: [x, y],
-            // The sign of the dot product is the same as the sign of t.
-            positiveDotProduct: bd.compare(t, ZERO_BD) >= 0,
-        };
-    });
+		return {
+			coords: [x, y],
+			// The sign of the dot product is the same as the sign of t.
+			positiveDotProduct: bd.compare(t, ZERO_BD) >= 0,
+		};
+	});
 }
 
 /**
