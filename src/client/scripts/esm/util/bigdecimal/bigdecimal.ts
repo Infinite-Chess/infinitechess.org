@@ -934,6 +934,33 @@ function ceil(bd: BigDecimal): BigDecimal {
 	};
 }
 
+/** Checks if a BigDecimal represents a perfect integer (a whole number). */
+function isInteger(bd: BigDecimal): boolean {
+	// If divex is non-positive, the number is already an integer value.
+	// The value is bigint * 2^(-divex), which is guaranteed to be an integer.
+	if (bd.divex <= 0) return true;
+
+	// If divex is positive, the value is an integer only if the `bigint`
+	// is a multiple of 2^divex. This means the fractional part is zero.
+	const scale = ONE << BigInt(bd.divex);
+
+	// If the remainder of the bigint when divided by the scale is zero,
+	// it means all fractional bits are 0, so it's a perfect integer.
+	// It is almost CERTAIN this is highly optimized by the JS engine,
+	// since the divisor is a power of two. This should be on par with bitwise operations.
+	return bd.bigint % scale === ZERO;
+}
+
+/**
+ * Checks if both coordinates in a BDCoords tuple represent perfect integers.
+ * This is useful for determining if a point lies exactly on an integer grid.
+ * @param coords The BDCoords tuple [x, y] to check.
+ * @returns True if both the x and y coordinates are whole numbers.
+ */
+function areCoordsIntegers(coords: BDCoords): boolean {
+	return isInteger(coords[0]) && isInteger(coords[1]);
+}
+
 /**
  * Calculates the base-10 logarithm of a BigDecimal's value, returning a standard `number`.
  * SHOULD ONLY ever be called with a bigdecimal using floating point operations,
@@ -1324,6 +1351,8 @@ export default {
 	clamp,
 	floor,
 	ceil,
+	isInteger,
+	areCoordsIntegers,
 	log10,
 	// Conversions and Utility
 	toBigInt,
