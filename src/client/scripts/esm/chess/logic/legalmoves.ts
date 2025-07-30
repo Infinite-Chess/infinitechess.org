@@ -22,13 +22,13 @@ import { rawTypes as r } from '../util/typeutil.js';
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
-import type { Vec2Key, Vec2 } from '../../util/math/math.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
 
 // Type Definitions ----------------------------------------------------------------

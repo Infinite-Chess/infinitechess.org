@@ -7,14 +7,15 @@
 
 import preferences from "../../../components/header/preferences.js";
 import selection from "../../chess/selection.js";
-import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
-import math from "../../../util/math/math.js";
 import highlightline from "./highlightline.js";
 import boardpos from "../boardpos.js";
+import geometry from "../../../util/math/geometry.js";
+import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
+import vectors, { Vec2 } from "../../../util/math/vectors.js";
 
 
 import type { Line } from "./highlightline.js";
-import type { Ray, Vec2 } from "../../../util/math/math.js";
+import type { Ray } from "./annotations/annotations.js";
 
 
 
@@ -43,7 +44,7 @@ function getLines(): Line[] {
 		const line = coordutil.getCoordsFromKey(slideKey);
 		const lineIsVertical = line[0] === 0;
 
-		const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox).map(intersection => intersection.coords);
+		const intersectionPoints = geometry.findLineBoxIntersections(pieceCoords, line, boundingBox).map(intersection => intersection.coords);
 		if (intersectionPoints.length < 2) continue;
         
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, line, false);
@@ -57,7 +58,7 @@ function getLines(): Line[] {
 		// Skip if zero length
 		if (coordutil.areCoordsEqual(start, end)) continue;
 
-		const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
+		const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, line);
 
 		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
 	};
@@ -111,7 +112,7 @@ function getLineComponents(): { rays: Ray[], segments: Segment[] } {
 			segments.push({ start, end });
 		} else { // Can slide infinitly => RAY
 			const vector: Vec2 = negatedStep;
-			const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, vector);
+			const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, vector);
 			rays.push({ start, vector, line: coefficients });
 		}
 	}

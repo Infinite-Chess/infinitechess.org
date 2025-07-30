@@ -8,8 +8,8 @@ import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../util/math/math.js';
 
-import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
+import arrows from './arrows/arrows.js';
 import frametracker from './frametracker.js';
 import math from '../../util/math/math.js';
 import splines from '../../util/splines.js';
@@ -18,6 +18,7 @@ import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import sound from '../misc/sound.js';
 import typeutil, { RawType } from '../../chess/util/typeutil.js';
+import vectors from '../../util/math/vectors.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -222,7 +223,7 @@ function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
 		segments.push({
 			start,
 			end,
-			distance: math.euclideanDistance(start, end)
+			distance: vectors.euclideanDistance(start, end)
 		});
 	}
 	return segments;

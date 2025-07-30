@@ -11,7 +11,6 @@
 import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
-import type { BoundingBox, Vec2Key } from "../../util/math/math.js";
 import type { Player } from "../util/typeutil.js";
 import type { LegalMoves } from './legalmoves.js';
 import type { FullGame } from "./gamefile.js";
@@ -19,7 +18,6 @@ import type { FullGame } from "./gamefile.js";
 
 import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
-import math from "../../util/math/math.js";
 import boardchanges from "./boardchanges.js";
 import coordutil from "../util/coordutil.js";
 import movepiece from "./movepiece.js";
@@ -31,6 +29,9 @@ import checkdetection from "./checkdetection.js";
 import legalmoves from "./legalmoves.js";
 import bimath from "../../util/bigdecimal/bimath.js";
 import specialdetect from "./specialdetect.js";
+import vectors, { Vec2Key } from "../../util/math/vectors.js";
+import bounds, { BoundingBox } from "../../util/math/bounds.js";
+import geometry from "../../util/math/geometry.js";
 
 // Functions ------------------------------------------------------------------------------
 
@@ -173,9 +174,9 @@ function addressExistingChecks(gamefile: FullGame, legalMoves: LegalMoves, royal
 	 * 
 	 * then it's impossible to block.
 	 */
-	const dist = math.chebyshevDistance(royalCoords[0]!, attacker.coords);
+	const dist = vectors.chebyshevDistance(royalCoords[0]!, attacker.coords);
 	if (!attacker.slidingCheck && (attacker.path?.length ?? 2) < 3
-		|| attacker.slidingCheck && dist === 1) {
+		|| attacker.slidingCheck && dist === 1n) {
 		// Impossible to block
 		legalMoves.sliding = {}; // Erase all sliding moves
 		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
@@ -260,16 +261,16 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: FullGame, moves: LegalMo
 				// this same attacker must be pinning our piece against a different royal in check.
 				// The piece is on the line connecting the attacker and the royal if the line
 				// connecting our piece and the royal are the same.
-				const line1GeneralForm = math.getLineGeneralFormFrom2Coords(checkedRoyalCoords, attackerCoords);
-				const line2GeneralForm = math.getLineGeneralFormFrom2Coords(checkedRoyalCoords, pieceSelected.coords);
-				if (!math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) continue; // Not on the same line, it's pinning us against a different royal
+				const line1GeneralForm = vectors.getLineGeneralFormFrom2Coords(checkedRoyalCoords, attackerCoords);
+				const line2GeneralForm = vectors.getLineGeneralFormFrom2Coords(checkedRoyalCoords, pieceSelected.coords);
+				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) continue; // Not on the same line, it's pinning us against a different royal
 				// SAME line! This attacker must be pinning us against this royal!
 				// Delete all sliding moves but the one in the direction of the line between the attacker and the royal.
 				for (const slideDir of Object.keys(moves.sliding)) { // 'dx,dy'
-					const slideDirVec = math.getVec2FromKey(slideDir as Vec2Key); // [dx,dy]
+					const slideDirVec = vectors.getVec2FromKey(slideDir as Vec2Key); // [dx,dy]
 					// Does the line created from sliding this direction equal the line between the attacker and the royal?
-					const slideLineGeneralForm = math.getLineGeneralFormFromCoordsAndVec(pieceSelected.coords, slideDirVec);
-					if (!math.areLinesInGeneralFormEqual(line1GeneralForm, slideLineGeneralForm)) delete moves.sliding[slideDir as Vec2Key]; // Not the same line, delete it.
+					const slideLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(pieceSelected.coords, slideDirVec);
+					if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, slideLineGeneralForm)) delete moves.sliding[slideDir as Vec2Key]; // Not the same line, delete it.
 				}
 			}
 		}
@@ -310,12 +311,12 @@ function appendBlockingMoves(gamefile: FullGame, square1: Coords, square2: Coord
 
 	for (const lineKey in moves.sliding) { // 'dx,dy'
 		const line = coordutil.getCoordsFromKey(lineKey as Vec2Key); // [dx,dy]
-		const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, line);
-		const line2GeneralForm = math.getLineGeneralFormFrom2Coords(square1, square2);
-		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
+		const line1GeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(coords, line);
+		const line2GeneralForm = vectors.getLineGeneralFormFrom2Coords(square1, square2);
+		const blockPoint = geometry.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
 
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
-		if (blockPoint === undefined && gamefile.boardsim.colinearsPresent && math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
+		if (blockPoint === undefined && gamefile.boardsim.colinearsPresent && vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
 			// The piece lies on the same line from the attacker to the royal!
 			// Flag this slide direction to brute force check each move for legality.
 			moves.brute = true;
@@ -324,14 +325,14 @@ function appendBlockingMoves(gamefile: FullGame, square1: Coords, square2: Coord
 				if (slideDir === lineKey) continue; // Same line, don't delete this one.
 				// Different line... but is it colinear? If so we also want to keep it.
 				const thisSlideDir = coordutil.getCoordsFromKey(slideDir as Vec2Key); // [dx,dy]
-				const thisLineGeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, thisSlideDir);
-				if (!math.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
+				const thisLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(coords, thisSlideDir);
+				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
 			}
 			break; // All other slides were deleted, no point in continuing to iterate.
 		}
 
 		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
-		if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
+		if (!bounds.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
 		if (!coordutil.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
 		if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!

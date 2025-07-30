@@ -10,7 +10,6 @@ import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
-import math, { Color, Ray, Vec2 } from "../../../util/math/math.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -23,6 +22,9 @@ import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
+import bounds from "../../../util/math/bounds.js";
+import geometry from "../../../util/math/geometry.js";
+import vectors, { Ray } from "../../../util/math/vectors.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
@@ -35,6 +37,7 @@ import guipause from "../../gui/guipause.js";
 
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
+import type { Color } from "../../../util/math/math.js";
 
 
 // Variables --------------------------------------------------------------
@@ -209,7 +212,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	// First see if the pointer is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
 	const linesSnapPoints: LineSnapPoint[] = allLines.map(line => {
-		const snapPoint = math.closestPointOnLineSegment(line.start, line.end, pointerCoords);
+		const snapPoint = geometry.closestPointOnLineSegment(line.start, line.end, pointerCoords);
 		return { line, snapPoint };
 	});
 
@@ -247,7 +250,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 		for (let b = a + 1; b < closeLines.length; b++) {
 			const line2 = closeLines[b]!;
 			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(...line1.line.coefficients, line1.line.start, line1.line.end, ...line2.line.coefficients, line2.line.start, line2.line.end);
+			const intsect = geometry.intersectLineSegments(...line1.line.coefficients, line1.line.start, line1.line.end, ...line2.line.coefficients, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
 			if (!line_intersections.some(i => coordutil.areCoordsEqual(i.coords, intsect))) line_intersections.push({
@@ -263,7 +266,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	let closestIntsect: { intersection: Intersection, dist: number } | undefined;
 	for (const i of line_intersections) {
 		// Calculate distance to mouse
-		const dist = math.euclideanDistance(i.coords, pointerCoords);
+		const dist = vectors.euclideanDistance(i.coords, pointerCoords);
 		if (closestIntsect === undefined || dist < closestIntsect.dist) closestIntsect = { intersection: i, dist };
 	}
 
@@ -325,7 +328,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	// 3. Origin (Center of Play) ==============================
 
 	const startingBox = gamefileutility.getStartingAreaBox(boardsim);
-	const origin = math.calcCenterOfBoundingBox(startingBox);
+	const origin = bounds.calcCenterOfBoundingBox(startingBox);
 	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
 	if (closestOriginSnap) {
 		// Is the snap within snapping distance of the mouse?
@@ -364,16 +367,16 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[
 
 	for (const entityCoords of entities) {
 		// Eminate lines in all directions from the entity coords
-		const eminatingLines = searchVectors.map(l => math.getLineGeneralFormFromCoordsAndVec(entityCoords, l));
+		const eminatingLines = searchVectors.map(l => vectors.getLineGeneralFormFromCoordsAndVec(entityCoords, l));
 
 		// Calculate their intersections with each individual line close to the mouse
 		for (const eminatedLine of eminatingLines) {
 			for (const highlightLine of closeLines) {
 				// Do they intersect?
-				const intersection = math.intersectLineAndSegment(...eminatedLine, highlightLine.line.start, highlightLine.line.end);
+				const intersection = geometry.intersectLineAndSegment(...eminatedLine, highlightLine.line.start, highlightLine.line.end);
 				if (intersection === undefined) continue;
 				// They DO intersect.
-				const dist = math.euclideanDistance(intersection, mouseCoords);
+				const dist = vectors.euclideanDistance(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) {

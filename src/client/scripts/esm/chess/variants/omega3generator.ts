@@ -10,8 +10,8 @@ import coordutil from '../util/coordutil.js';
 import { ext as e, rawTypes as r } from '../util/typeutil.js';
 
 
-import type { BoundingBox } from '../../util/math/math.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
+import type { BoundingBox } from '../../util/math/bounds.js';
 
 
 /**

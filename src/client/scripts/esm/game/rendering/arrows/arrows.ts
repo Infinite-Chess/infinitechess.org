@@ -10,7 +10,6 @@
  */
 
 import type { Coords } from '../../../chess/util/coordutil.js';
-import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math/math.js';
 import type { LineKey } from '../../../chess/util/boardutil.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../buffermodel.js';
@@ -21,7 +20,6 @@ import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import math from '../../../util/math/math.js';
@@ -31,13 +29,17 @@ import frametracker from '../frametracker.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
 import boardutil from '../../../chess/util/boardutil.js';
-import { rawTypes } from '../../../chess/util/typeutil.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
-import { listener_overlay } from '../../chess/game.js';
-import { InputListener, Mouse, MouseButton } from '../../input.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
 import legalmoves from '../../../chess/logic/legalmoves.js';
+import vectors, { Vec2, Vec2Key } from '../../../util/math/vectors.js';
+import bounds, { BoundingBox } from '../../../util/math/bounds.js';
+import geometry from '../../../util/math/geometry.js';
+import { listener_overlay } from '../../chess/game.js';
+import { InputListener, Mouse, MouseButton } from '../../input.js';
+import { rawTypes } from '../../../chess/util/typeutil.js';
+import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -386,14 +388,14 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
 	gamefile.boardsim.pieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
-		const slideKey = math.getKeyFromVec2(slide);
+		const slideKey = vectors.getKeyFromVec2(slide);
 
 		// Find the 2 points on opposite sides of the bounding box
 		// that will contain all organized lines of the given vector
 		// intersecting the box between them.
 
-		const containingPoints = math.findCrossSectionalWidthPoints(slide, boundingBoxInt);
-		const containingPointsLineC = containingPoints.map(point => math.getLineCFromCoordsAndVec(point, slide)) as [number, number];
+		const containingPoints = geometry.findCrossSectionalWidthPoints(slide, boundingBoxInt);
+		const containingPointsLineC = containingPoints.map(point => vectors.getLineCFromCoordsAndVec(point, slide)) as [number, number];
 		// Any line of this slope of which its C value is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
 		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
@@ -443,19 +445,19 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, bound
 	 * The only difference is each piece may have a different dot product,
 	 * which just means it's on the opposite side.
 	 */
-	const intersections = math.findLineBoxIntersections(firstPiece.coords, slideDir, boundingBoxFloat).map(c => c.coords);
+	const intersections = geometry.findLineBoxIntersections(firstPiece.coords, slideDir, boundingBoxFloat).map(c => c.coords);
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
 	organizedline.forEach(idx => {
 		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
 
 		// Is the piece off-screen?
-		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
+		if (bounds.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
 
 		// Piece is guaranteed off-screen...
 		
 		// console.log(boundingBoxFloat, boundingBoxInt) 
-		const thisPieceIntersections = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt); // should THIS BE FLOAT???
+		const thisPieceIntersections = geometry.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt); // should THIS BE FLOAT???
 		if (thisPieceIntersections.length < 2) return; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
 
@@ -498,7 +500,7 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, bound
 		const firstIntersection = positiveDotProduct ? thisPieceIntersections[0]! : thisPieceIntersections[1]!;
 
 		// What is the distance to the first intersection point?
-		const firstIntersectionDist = math.chebyshevDistance(piece.coords, firstIntersection.coords);
+		const firstIntersectionDist = vectors.chebyshevDistance(piece.coords, firstIntersection.coords);
 
 		// What is the distance to the farthest point this piece can slide along this direction?
 		let farthestSlidePoint: Coords = positiveDotProduct ? [
@@ -512,7 +514,7 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, bound
 		// (but it doesn't matter whether we replace it with zero, a finite number, or infinity, because
 		// the chebyshev distance is gonna be infinity anyway, since the other coord is infinity)
 		farthestSlidePoint = farthestSlidePoint.map(coord => isNaN(coord) ? 0 : coord) as Coords;
-		const farthestSlidePointDist = math.chebyshevDistance(piece.coords, farthestSlidePoint);
+		const farthestSlidePointDist = vectors.chebyshevDistance(piece.coords, farthestSlidePoint);
 
 		// If the farthest slide point distance is greater than the first intersection
 		// distance, then the piece is able to slide into the screen bounding box!
@@ -575,7 +577,7 @@ function removeUnnecessaryArrows(slideArrowsDraft: SlideArrowsDraft) {
 /** Checks if a single animated arrow is needed, based on our current mode, and its direction. */
 function isAnimatedArrowUnnecessary(boardsim: Board, type: number, direction: Vec2, dirKey: Vec2Key): boolean {
 	if (mode === 3) return false; // Keep it, whether hippogonal orthogonal or diagonal
-	if (mode === 2) return math.chebyshevDistance([0,0], direction) !== 1; // Only keep orthogonals and diagonals, NO hippogonals.
+	if (mode === 2) return vectors.chebyshevDistance([0,0], direction) !== 1; // Only keep orthogonals and diagonals, NO hippogonals.
 
 	// mode must === 1, only keep it if it can slide in the direction, whether blocked or not
 	const thisPieceMoveset = legalmoves.getPieceMoveset(boardsim, type); // Default piece moveset
@@ -595,7 +597,7 @@ function getSlideExceptions(): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
-	if (mode === 2) slideExceptions = gamefile.boardsim.pieces.slides.filter((slideDir: Vec2) => math.chebyshevDistance([0,0], slideDir) === 1).map(math.getKeyFromVec2); // Filter out all hippogonal and greater vectors
+	if (mode === 2) slideExceptions = gamefile.boardsim.pieces.slides.filter((slideDir: Vec2) => vectors.chebyshevDistance([0,0], slideDir) === 1).map(math.getKeyFromVec2); // Filter out all hippogonal and greater vectors
 	return slideExceptions;
 }
 
@@ -631,11 +633,11 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 		const vec2Key = key as Vec2Key;
 		const linesOfDirectionDraft = value as { [lineKey: string]: ArrowsLineDraft };
 
-		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
+		const slideDir = vectors.getVec2FromKey(vec2Key as Vec2Key);
 		const linesOfDirection: { [lineKey: string]: ArrowsLine } = {};
 
 		const vector = slideDir;
-		const negVector = math.negateVector(slideDir);
+		const negVector = vectors.negateVector(slideDir);
 		
 		for (const [lineKey, value] of Object.entries(linesOfDirectionDraft)) {
 			const arrowLineDraft = value as ArrowsLineDraft;
@@ -691,7 +693,7 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
 	// Does the mouse hover over the piece?
 	let hovered = false;
 	for (const pointerWorld of pointerWorlds) {
-		const chebyshevDist = math.chebyshevDistance(worldLocation, pointerWorld);
+		const chebyshevDist = vectors.chebyshevDistance(worldLocation, pointerWorld);
 		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
 			hovered = true;
 			// ADD the piece to the list of arrows being hovered over!!!
@@ -715,7 +717,7 @@ function teleportToPieceIfClicked(piece: Piece, pieceWorld: Coords, vector: Vec2
 
 	function processMouseClick(button: MouseButton, listener: typeof mouse | InputListener) {
 		const clickWorld = mouse.getMouseWorld(button)!;
-		const chebyshevDist = math.chebyshevDistance(pieceWorld, clickWorld);
+		const chebyshevDist = vectors.chebyshevDistance(pieceWorld, clickWorld);
 		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
 			if (listener.isMouseClicked(button)) {
 				listener.claimMouseClick(button); // Don't let annotations erase/draw
@@ -724,12 +726,12 @@ function teleportToPieceIfClicked(piece: Piece, pieceWorld: Coords, vector: Vec2
 
 				const startCoords = boardpos.getBoardPos();
 				// The direction we will follow when teleporting
-				const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
+				const line1GeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
 				// The line perpendicular to the target piece
 				const perpendicularSlideDir: Vec2 = [-vector[1], vector[0]]; // Rotates left 90deg
-				const line2GeneralForm = math.getLineGeneralFormFromCoordsAndVec(piece.coords, perpendicularSlideDir);
+				const line2GeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(piece.coords, perpendicularSlideDir);
 				// The target teleport coords
-				const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
+				const telCoords = geometry.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
 
 				transition.panTel(startCoords, telCoords);
 			} else { // Mouse down
@@ -834,23 +836,24 @@ function executeArrowShifts() {
 			} else {
 				// This is an arrow animation for a piece IN MOTION, not a still animation.
 				// Add an animated arrow for it, since it is gonna be at a floating point coordinate
-				if (math.boxContainsSquare(boundingBoxInt!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
+				if (bounds.boxContainsSquare(boundingBoxInt!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
 
 				const piece = { type: shift.type, coords: shift.end, index: -1 };
 				const arrowDraft: ArrowDraft = { piece, canSlideOntoScreen: true };
 
 				// Add an arrow for every applicable direction
 				for (const lineKey of gamefile.boardsim.pieces.lines.keys()) {
-					let line = math.getVec2FromKey(lineKey);
+					let line = vectors.getVec2FromKey(lineKey);
 					
 					if (isAnimatedArrowUnnecessary(gamefile.boardsim, shift.type, line, lineKey)) continue; // Arrow mode isn't high enough, and the piece can't slide in the vector direction
 
 					// Determine the line's dot product with the screen box.
 					// Flip the vector if need be, to point it in the right direction.
-					const thisPieceIntersections = math.findLineBoxIntersections(arrowDraft.piece.coords, line, boundingBoxFloat!); // should THIS BE FLOAT???
-					if (thisPieceIntersections.length < 2) continue; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
+					const thisPieceIntersections = geometry.findLineBoxIntersections(arrowDraft.piece.coords, line, boundingBoxFloat!); // should THIS BE FLOAT???
+					// MAYBE NOT NEEDED AFTER UPGRADING THE LOGIC to bigints?
+					// if (thisPieceIntersections.length < 2) continue; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
 					const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	
-					if (positiveDotProduct) line = math.negateVector(line);
+					if (positiveDotProduct) line = vectors.negateVector(line);
 					// At what point does it intersect the screen?
 					const intersect = positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords;
 
@@ -933,7 +936,7 @@ function recalculateLinesThroughCoords(boardsim: Board, coords: Coords) {
 		const pointerWorlds = mouse.getAllPointerWorlds();
 
 		const vector = slide;
-		const negVector = math.negateVector(slide);
+		const negVector = vectors.negateVector(slide);
 
 		const posDotProd: Arrow[] = [];
 		const negDotProd: Arrow[] = [];
@@ -996,10 +999,10 @@ function regenerateModelAndRender() {
 		const vec2Key = key as Vec2Key;
 		const slideLinesOfDirection = value as { [lineKey: string]: ArrowsLine };
 
-		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
+		const slideDir = vectors.getVec2FromKey(vec2Key as Vec2Key);
 
 		// These are swamped so the arrow always points and the opposite direction the piece is able to slide.
-		const vector = math.negateVector(slideDir);
+		const vector = vectors.negateVector(slideDir);
 		const negVector = slideDir;
 
 		for (const value of Object.values(slideLinesOfDirection)) {
@@ -1060,7 +1063,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance
-	// let maxAxisDist = math.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
+	// let maxAxisDist = vectors.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
 	//							   instaceposition	   instancetexcoord  instancecolor

@@ -36,10 +36,10 @@ import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
 // Import End
 
 import type { BufferModel } from './buffermodel.js';
-import type { BoundingBoxBD } from '../../util/math/math.js';
 import type { Color } from '../../util/math/math.js';
 import type { BDCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import type { BoundingBoxBD } from '../../util/math/bounds.js';
 
 
 const ONE = bigdecimal.FromNumber(1.0);

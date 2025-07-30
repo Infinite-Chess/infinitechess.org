@@ -14,6 +14,9 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
+import variant from "../../../../chess/variants/variant.js";
+import gameslot from "../../../chess/gameslot.js";
+import vectors from "../../../../util/math/vectors.js";
 import { Mouse } from "../../../input.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";
@@ -21,8 +24,6 @@ import guipause from "../../../gui/guipause.js";
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Square } from "./annotations.js";
-import variant from "../../../../chess/variants/variant.js";
-import gameslot from "../../../chess/gameslot.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -78,7 +79,7 @@ function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: b
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistance(coordsWorld, world));
 		}
 	});
 

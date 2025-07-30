@@ -9,6 +9,9 @@ import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math/math.js';
 import checkresolver from './checkresolver.js';
+import bimath from '../../util/bigdecimal/bimath.js';
+import bounds from '../../util/math/bounds.js';
+import vectors from '../../util/math/vectors.js';
 import { players, rawTypes } from '../util/typeutil.js';
 // Import End
 
@@ -18,7 +21,6 @@ import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { enpassantCreate } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
-import bimath from '../../util/bigdecimal/bimath.js';
 
 "use strict";
 
@@ -340,13 +342,13 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possib
 				}
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
-				const centerOfPlay = math.calcCenterOfBoundingBox(boardsim.startSnapshot.box);
-				const vectorToCenter = math.calculateVectorFromPoints(coords, centerOfPlay);
-				const existingCoordVector = math.calculateVectorFromPoints(coords, coord.path![1]!);
-				const newCoordVector = math.calculateVectorFromPoints(coords, newCoord.path[1]!);
+				const centerOfPlay = bounds.calcCenterOfBoundingBox(boardsim.startSnapshot.box);
+				const vectorToCenter = vectors.calculateVectorFromPoints(coords, centerOfPlay);
+				const existingCoordVector = vectors.calculateVectorFromPoints(coords, coord.path![1]!);
+				const newCoordVector = vectors.calculateVectorFromPoints(coords, newCoord.path[1]!);
 				// Whichever's dot product scores higher is the one that curves more towards the center
-				const existingCoordDotProd = math.dotProduct(existingCoordVector, vectorToCenter);
-				const newCoordDotProd = math.dotProduct(newCoordVector, vectorToCenter);
+				const existingCoordDotProd = vectors.dotProduct(existingCoordVector, vectorToCenter);
+				const newCoordDotProd = vectors.dotProduct(newCoordVector, vectorToCenter);
 				if (existingCoordDotProd > newCoordDotProd) individualMoves[i] = coord; // Existing move's path curves more towards the center
 				else if (existingCoordDotProd < newCoordDotProd) individualMoves[i] = newCoord; // New move's path curves more towards the center
 				else if (existingCoordDotProd === newCoordDotProd) { // BOTH point equally point towards the origin.

@@ -42,7 +42,7 @@ function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
 	const srcType = gl.UNSIGNED_BYTE;
 	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, textureElement);
 
-	const isPowerOf2 = math.isPowerOfTwo(textureElement.naturalWidth) && math.isPowerOfTwo(textureElement.naturalHeight);
+	const isPowerOf2 = math.isPowerOfTwo(textureElement.naturalWidth) && isPowerOfTwo(textureElement.naturalHeight);
 	if (!isPowerOf2 && useMipmaps) {
 		console.error(`Image dimensions are not a power of two! Unable to use mipmaps. Dimensions: ${textureElement.naturalWidth}x${textureElement.naturalHeight}`);
 	}
@@ -77,6 +77,15 @@ function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
 	gl.bindTexture(gl.TEXTURE_2D, null); // Unbind the texture.
 
 	return texture;
+}
+
+/**
+ * Tests if the provided value is a power of 2.
+ * 
+ * It does this efficiently by using bitwise operations.
+ */
+function isPowerOfTwo(value) {
+	return (value & (value - 1)) === 0;
 }
 
 export default {

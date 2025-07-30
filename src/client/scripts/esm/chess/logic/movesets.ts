@@ -16,9 +16,9 @@ import isprime from '../../util/isprime.js';
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
-import type { Vec2, Vec2Key } from '../../util/math/math.js';
 import type { Piece } from '../util/boardutil.js';
 import type { FullGame } from './gamefile.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
 
 /**
@@ -277,7 +277,7 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				'0,1': [slideLimit, slideLimit]
 			},
 			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => {
-				const distance = math.chebyshevDistance(coords, blockingPiece.coords);
+				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
 				if (!isPrime) return 0; // Doesn't block
 				const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
@@ -285,7 +285,7 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				else return 2; // Enemy piece blocked
 			},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				const distance = math.chebyshevDistance(startCoords, endCoords);
+				const distance = vectors.chebyshevDistance(startCoords, endCoords);
 				const isPrime = isprime.primalityTest(distance, null);
 				return isPrime;
 			}

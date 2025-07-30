@@ -454,11 +454,18 @@ function goToMove(boardsim: Board, index: number, callback: (move: Move ) => voi
 	if (boardsim.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
 
 	while (i !== index) {
-		i = math.moveTowards(i, index, 1);
+		i = moveTowards(i, index, 1);
 		const move = boardsim.moves[i + offset];
 		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
 		callback(move);
 	}
+}
+
+/**
+ * Starts with `s`, steps it by +-`progress` towards `e`, then returns that number.
+ */
+function moveTowards(s: number, e: number, progress: number): number {
+	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }
 
 

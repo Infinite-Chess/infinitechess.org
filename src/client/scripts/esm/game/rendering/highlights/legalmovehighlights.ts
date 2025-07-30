@@ -17,7 +17,8 @@ import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
-import math from '../../../util/math/math.js';
+import geometry from '../../../util/math/geometry.js';
+import bounds, { BoundingBox } from '../../../util/math/bounds.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
@@ -33,14 +34,14 @@ import shapes from '../shapes.js';
 // Type Definitions -----------------------------------------------------------------------------
 
 import type { Player } from '../../../chess/util/typeutil.js';
-import type { BoundingBox, Vec2, Color } from '../../../util/math/math.js';
+import type { Color } from '../../../util/math/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
-import type { Ray } from './annotations/annotations.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
+import type { Ray } from '../../../util/math/vectors.js';
 
 
 
@@ -106,7 +107,7 @@ let model_Capture: BufferModelInstanced | undefined;
  * 
  * This is the nearest multiple of {@link highlightedMovesRegenRange} our camera is at.
  */
-let model_Offset: Coords = [0,0]; // [x,y]
+let model_Offset: Coords = [0n,0n]; // [x,y]
 
 
 // Functions -------------------------------------------------------------------------------------
@@ -173,7 +174,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 
 	// const oldOffset = jsutil.deepCopyObject(model_Offset);
 	// // This is the range at which we will always regen this model. Prevents gittering.
-	// model_Offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
+	// model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 	// if (!coordutil.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
 
 	// Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
@@ -185,7 +186,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 	if (changeMade) {
 		// console.log("Shifted offset of highlights.");
 		/** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
-		model_Offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
+		model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 		regenerateAll();
 	}
 }
@@ -211,7 +212,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 	if (width * multiplier * multiplier < renderRangeWidth && !perspective.getEnabled()) return true;
 
 	// If any edge of our screen bounding box is outside our render range bounding box, regenerate it.
-	return !math.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
+	return !bounds.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
 }
 
 function getBoundingBoxOfPerspectiveView() {
@@ -425,7 +426,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 
 	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
-		const intersections = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
+		const intersections = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
 		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
 		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
@@ -602,7 +603,7 @@ function genData_Rays(rays: Ray[]) { // { left, right, bottom, top} The size of 
 		if (vector[0] === 0 && vector[1] < 0) vector[1] *= -1;
 		else if (vector[0] < 0) { vector[0] *= -1; vector[1] *= -1; }
 
-		const intersections = math.findLineBoxIntersections(ray.start, vector, boundingBoxOfRenderRange);
+		const intersections = geometry.findLineBoxIntersections(ray.start, vector, boundingBoxOfRenderRange);
 		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
 		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.

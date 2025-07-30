@@ -9,13 +9,14 @@
 import perspective from '../perspective.js';
 // @ts-ignore
 import boardtiles from '../boardtiles.js';
-import { createModel } from '../buffermodel.js';
 import space from '../../misc/space.js';
-
-
-import type { BoundingBox, Color } from '../../../util/math/math.js';
-import type { Coords } from '../../../chess/util/coordutil.js';
 import boardpos from '../boardpos.js';
+import { createModel } from '../buffermodel.js';
+
+
+import type { Coords } from '../../../chess/util/coordutil.js';
+import type { Color } from '../../../util/math/math.js';
+import type { BoundingBox } from '../../../util/math/bounds.js';
 
 
 
