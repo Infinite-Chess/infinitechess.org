@@ -453,7 +453,7 @@ function boxContainsSquare(box: BoundingBoxBD, square: BDCoords): boolean {
  */
 function getBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
 	// Initialize the bounding box using the first coordinate
-	const firstPiece = coordsList.shift()!;
+	const firstPiece = coordsList[0]!;
 	const box: BoundingBox = {
 		left: firstPiece[0],
 		right: firstPiece[0],
