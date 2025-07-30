@@ -174,7 +174,7 @@ function update() {
 function panBoard() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
 
-	const panVelBD: BDCoords = bigdecimal.fromDoubleCoords(panVel);
+	const panVelBD: BDCoords = bigdecimal.FromDoubleCoords(panVel);
 
 	// What the change would be if all frames were the exact same time length.
 	const baseXChange = bigdecimal.divide_fixed(panVelBD[0], boardScale);
