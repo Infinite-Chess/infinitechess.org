@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/util/math.ts
+
 /**
  * This script contains many generalized mathematical operations that
  * SEVERAL scripts use.
@@ -6,9 +8,10 @@
 
 
 import coordutil from "../chess/util/coordutil.js";
-import bigdecimal, { BigDecimal } from "./bigdecimal/bigdecimal.js";
+import bd, { BigDecimal } from "./bigdecimal/bigdecimal.js";
 
 import type { BDCoords, Coords, DoubleCoords } from "../chess/util/coordutil.js";
+import bimath from "./bigdecimal/bimath.js";
 
 
 // Type Definitions ------------------------------------------------------------------
@@ -85,9 +88,9 @@ type Color = [number,number,number,number];
 // Constants ------------------------------------------------------------------------
 
 
-const ZERO = bigdecimal.FromNumber(0.0);
-const ONE = bigdecimal.FromNumber(1.0);
-const TWO = bigdecimal.FromNumber(2.0);
+const ZERO = bd.FromNumber(0.0);
+const ONE = bd.FromNumber(1.0);
+const TWO = bd.FromNumber(2.0);
 
 
 // Geometry -------------------------------------------------------------------------------------------
@@ -102,11 +105,11 @@ function calcIntersectionPointOfLines(A1: bigint, B1: bigint, C1: bigint, A2: bi
 	const determinant = A1 * B2 - A2 * B1;
 	if (determinant === 0n) return undefined; // Lines are parallel or identical
 
-	const determinantBD = bigdecimal.FromBigInt(determinant);
+	const determinantBD = bd.FromBigInt(determinant);
 
 	function determineAxis(dividend: bigint) {
-		const dividendBD = bigdecimal.FromBigInt(dividend);
-		return bigdecimal.divide_fixed(dividendBD, determinantBD);
+		const dividendBD = bd.FromBigInt(dividend);
+		return bd.divide_fixed(dividendBD, determinantBD);
 	}
 
 	// Calculate the intersection point
@@ -156,17 +159,17 @@ function intersectLineSegments(A1: bigint, B1: bigint, C1: bigint, s1p1: Coords,
  * @returns True if the point is on the segment, false otherwise.
  */
 function isPointOnSegment(point: BDCoords, segStart: Coords, segEnd: Coords): boolean {
-	const segStartBD = bigdecimal.FromCoords(segStart);
-	const segEndBD = bigdecimal.FromCoords(segEnd);
+	const segStartBD = bd.FromCoords(segStart);
+	const segEndBD = bd.FromCoords(segEnd);
 
-	const minSegX = bigdecimal.min(segStartBD[0], segEndBD[0]);
-	const maxSegX = bigdecimal.max(segStartBD[0], segEndBD[0]);
-	const minSegY = bigdecimal.min(segStartBD[1], segEndBD[1]);
-	const maxSegY = bigdecimal.max(segStartBD[1], segEndBD[1]);
+	const minSegX = bd.min(segStartBD[0], segEndBD[0]);
+	const maxSegX = bd.max(segStartBD[0], segEndBD[0]);
+	const minSegY = bd.min(segStartBD[1], segEndBD[1]);
+	const maxSegY = bd.max(segStartBD[1], segEndBD[1]);
 
 	// Check if point is within the bounding box of the segment
-	const withinX = bigdecimal.compare(point[0], minSegX) >= 0 && bigdecimal.compare(point[0], maxSegX) <= 0;
-	const withinY = bigdecimal.compare(point[1], minSegY) >= 0 && bigdecimal.compare(point[1], maxSegY) <= 0;
+	const withinX = bd.compare(point[0], minSegX) >= 0 && bd.compare(point[0], maxSegX) <= 0;
+	const withinY = bd.compare(point[1], minSegY) >= 0 && bd.compare(point[1], maxSegY) <= 0;
 
 	return withinX && withinY;
 }
@@ -243,7 +246,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 		const vectorToOppositePoint = calculateVectorFromPoints(ray.start, oppositePoint);
 		const dotProd = dotProduct(ray.vector, vectorToOppositePoint);
 		if (dotProd > 0) return undefined; // The ray points towards the opposite end of the segment, so no unique intersection.
-		else return bigdecimal.FromCoords(ray.start); // The intersection point is the ray's start.
+		else return bd.FromCoords(ray.start); // The intersection point is the ray's start.
 	}
 
 	// 5. Check if the calculated intersection point lies on the actual segment.
@@ -251,12 +254,14 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 
 	// 6. Check if the intersection point lies on the ray (not "behind" its start).
 	// Calculate vector from ray start to intersection.
-	const vectorToIntersection = calculateVectorFromPoints(ray.start, intersectionPoint);
+	const rayStartBD = bd.FromCoords(ray.start);
+	const vectorToIntersection = calculateVectorFromBDPoints(rayStartBD, intersectionPoint);
 
 	// Calculate dot product of ray's direction vector and the vector to the intersection.
-	const dotProd = dotProduct(ray.vector, vectorToIntersection);
+	const rayVecBD = bd.FromCoords(ray.vector);
+	const dotProd = dotProductBD(rayVecBD, vectorToIntersection);
 
-	if (dotProd < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
+	if (bd.compare(dotProd, ZERO) < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
 
 	// 7. If all checks pass, the intersection point is valid for both ray and segment.
 	return intersectionPoint;
@@ -274,7 +279,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
  * @param ray2 The second ray.
  * @returns The intersection Coords if they intersect on both rays, otherwise undefined.
  */
-function intersectRays(ray1: Ray, ray2: Ray): Coords | undefined {
+function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 	// 1. Calculate the intersection point of the infinite lines containing the rays.
 	const intersectionPoint = calcIntersectionPointOfLines(...ray1.line, ...ray2.line);
 
@@ -288,18 +293,21 @@ function intersectRays(ray1: Ray, ray2: Ray): Coords | undefined {
 	// The dot product will be non-negative (>= 0) if this is true.
     
 	// Vector from ray1's start to the intersection point
-	const vectorToIntersection1 = calculateVectorFromPoints(ray1.start, intersectionPoint);
-    
+	const ray1StartBD = bd.FromCoords(ray1.start);
+	const vectorToIntersection1 = calculateVectorFromBDPoints(ray1StartBD, intersectionPoint);
 	// Dot product of ray1's direction vector and vectorToIntersection1
-	const dotProd1 = dotProduct(ray1.vector, vectorToIntersection1);
+	const ray1VecBD = bd.FromCoords(ray1.vector);
+	const dotProd1 = dotProductBD(ray1VecBD, vectorToIntersection1);
 
-	if (dotProd1 < 0) return undefined; // The intersection point is "behind" the start of ray1.
+	if (bd.compare(dotProd1, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray1.
 
 	// 4. Check if the intersection point lies on the second ray (similarly).
-	const vectorToIntersection2 = calculateVectorFromPoints(ray2.start, intersectionPoint);
-	const dotProd2 = dotProduct(ray2.vector, vectorToIntersection2);
+	const ray2StartBD = bd.FromCoords(ray2.start);
+	const vectorToIntersection2 = calculateVectorFromBDPoints(ray2StartBD, intersectionPoint);
+	const ray2VecBD = bd.FromCoords(ray2.vector);
+	const dotProd2 = dotProductBD(ray2VecBD, vectorToIntersection2);
 
-	if (dotProd2 < 0) return undefined; // The intersection point is "behind" the start of ray2.
+	if (bd.compare(dotProd2, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray2.
 
 	// 5. If both checks pass, the intersection point is on both rays.
 	return intersectionPoint;
@@ -367,6 +375,13 @@ function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
 }
 
 /**
+ * Calculates the vector between 2 points.
+ */
+function calculateVectorFromBDPoints(start: BDCoords, end: BDCoords): BDCoords {
+	return [bd.subtract(end[0], start[0]), bd.subtract(end[1], start[1])];
+}
+
+/**
  * Calculates the C coefficient of a line in general form (Ax + By + C = 0) 
  * given a point (coords) and a direction vector (vector).
  * 
@@ -425,10 +440,10 @@ function boxContainsBox(outerBox: BoundingBox, innerBox: BoundingBox): boolean {
  * Returns true if the provided box contains the square coordinate.
  */
 function boxContainsSquare(box: BoundingBoxBD, square: BDCoords): boolean {
-	if (bigdecimal.compare(square[0], box.left) < 0) return false;
-	if (bigdecimal.compare(square[0], box.right) > 0) return false;
-	if (bigdecimal.compare(square[1], box.bottom) < 0) return false;
-	if (bigdecimal.compare(square[1], box.top) > 0) return false;
+	if (bd.compare(square[0], box.left) < 0) return false;
+	if (bd.compare(square[0], box.right) > 0) return false;
+	if (bd.compare(square[1], box.bottom) < 0) return false;
+	if (bd.compare(square[1], box.top) > 0) return false;
 
 	return true;
 }
@@ -438,7 +453,7 @@ function boxContainsSquare(box: BoundingBoxBD, square: BDCoords): boolean {
  */
 function getBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
 	// Initialize the bounding box using the first coordinate
-	const firstPiece = coordsList.shift()!;
+	const firstPiece = coordsList[0]!;
 	const box: BoundingBox = {
 		left: firstPiece[0],
 		right: firstPiece[0],
@@ -456,19 +471,19 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
 
 function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 	return {
-		left: bigdecimal.FromBigInt(box.left),
-		right: bigdecimal.FromBigInt(box.right),
-		bottom: bigdecimal.FromBigInt(box.bottom),
-		top: bigdecimal.FromBigInt(box.top)
+		left: bd.FromBigInt(box.left),
+		right: bd.FromBigInt(box.right),
+		bottom: bd.FromBigInt(box.bottom),
+		top: bd.FromBigInt(box.top)
 	};
 }
 
 function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
 	return {
-		left: bigdecimal.FromNumber(box.left),
-		right: bigdecimal.FromNumber(box.right),
-		bottom: bigdecimal.FromNumber(box.bottom),
-		top: bigdecimal.FromNumber(box.top)
+		left: bd.FromNumber(box.left),
+		right: bd.FromNumber(box.right),
+		bottom: bd.FromNumber(box.bottom),
+		top: bd.FromNumber(box.top)
 	};
 }
 
@@ -484,10 +499,10 @@ function expandBoxToContainSquare(box: BoundingBox, coord: Coords): void {
 }
 
 function expandBDBoxToContainSquare(box: BoundingBoxBD, coord: BDCoords): void {
-	if (bigdecimal.compare(coord[0], box.left) < 0) box.left = coord[0];
-	else if (bigdecimal.compare(coord[0], box.right) > 0) box.right = coord[0];
-	if (bigdecimal.compare(coord[1], box.bottom) < 0) box.bottom = coord[1];
-	else if (bigdecimal.compare(coord[1], box.top) > 0) box.top = coord[1];
+	if (bd.compare(coord[0], box.left) < 0) box.left = coord[0];
+	else if (bd.compare(coord[0], box.right) > 0) box.right = coord[0];
+	if (bd.compare(coord[1], box.bottom) < 0) box.bottom = coord[1];
+	else if (bd.compare(coord[1], box.top) > 0) box.top = coord[1];
 }
 
 /**
@@ -495,10 +510,10 @@ function expandBDBoxToContainSquare(box: BoundingBoxBD, coord: BDCoords): void {
  */
 function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): BoundingBoxBD {
 	return {
-		left: bigdecimal.min(box1.left, box2.left),
-		right: bigdecimal.max(box1.right, box2.right),
-		bottom: bigdecimal.min(box1.bottom, box2.bottom),
-		top: bigdecimal.max(box1.top, box2.top)
+		left: bd.min(box1.left, box2.left),
+		right: bd.max(box1.right, box2.right),
+		bottom: bd.min(box1.bottom, box2.bottom),
+		top: bd.max(box1.top, box2.top)
 	};
 }
 
@@ -506,11 +521,11 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
  * Calculates the center of a bounding box.
  */
 function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
-	const xSum = bigdecimal.add(box.left, box.right);
-	const ySum = bigdecimal.add(box.bottom, box.top);
+	const xSum = bd.add(box.left, box.right);
+	const ySum = bd.add(box.bottom, box.top);
 	return [
-		bigdecimal.divide_fixed(xSum, TWO),
-		bigdecimal.divide_fixed(ySum, TWO)
+		bd.divide_fixed(xSum, TWO),
+		bd.divide_fixed(ySum, TWO)
 	];
 }
 
@@ -523,12 +538,12 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
  *          and `distance` to that point.
  */
 function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
-	const lineStartBD = bigdecimal.FromCoords(lineStart);
+	const lineStartBD = bd.FromCoords(lineStart);
 
 	const dx = lineEnd[0] - lineStart[0];
 	const dy = lineEnd[1] - lineStart[1];
-	const dxBD = bigdecimal.FromBigInt(dx);
-	const dyBD = bigdecimal.FromBigInt(dy);
+	const dxBD = bd.FromBigInt(dx);
+	const dyBD = bd.FromBigInt(dy);
 
 	// Calculate the squared length of the segment.
 	// If the segment has zero length, the start point is the closest point.
@@ -537,23 +552,23 @@ function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BD
 		const distance = euclideanDistance(lineStartBD, point);
 		return { coords: lineStartBD, distance };
 	}
-	const lineLengthSquaredBD = bigdecimal.FromBigInt(lineLengthSquared);
+	const lineLengthSquaredBD = bd.FromBigInt(lineLengthSquared);
 
 	// Calculate the projection parameter t.
 	// t = dotProduct((point - lineStart), (lineEnd - lineStart)) / lineLengthSquared
-	const xDiff = bigdecimal.subtract(point[0], lineStartBD[0]);
-	const yDiff = bigdecimal.subtract(point[1], lineStartBD[1]);
-	const addend1 = bigdecimal.multiply_fixed(xDiff, dxBD);
-	const addend2 = bigdecimal.multiply_fixed(yDiff, dyBD);
-	const dotProduct = bigdecimal.add(addend1, addend2);
-	let t = bigdecimal.divide_fixed(dotProduct, lineLengthSquaredBD);
+	const xDiff = bd.subtract(point[0], lineStartBD[0]);
+	const yDiff = bd.subtract(point[1], lineStartBD[1]);
+	const addend1 = bd.multiply_fixed(xDiff, dxBD);
+	const addend2 = bd.multiply_fixed(yDiff, dyBD);
+	const dotProduct = bd.add(addend1, addend2);
+	let t = bd.divide_fixed(dotProduct, lineLengthSquaredBD);
 
 	// Clamp t to the range [0, 1] to stay within the segment.
-	t = bigdecimal.clamp(t, ZERO, ONE);
+	t = bd.clamp(t, ZERO, ONE);
 
 	// Calculate the coordinates of the closest point on the segment.
-	const closestX = bigdecimal.add(lineStartBD[0], bigdecimal.multiply_fixed(t, dxBD)); // lineStart[0] + t * dx
-	const closestY = bigdecimal.add(lineStartBD[1], bigdecimal.multiply_fixed(t, dyBD)); // lineStart[1] + t * dy
+	const closestX = bd.add(lineStartBD[0], bd.multiply_fixed(t, dxBD)); // lineStart[0] + t * dx
+	const closestY = bd.add(lineStartBD[1], bd.multiply_fixed(t, dyBD)); // lineStart[1] + t * dy
 	const closestPoint: BDCoords = [closestX, closestY];
 
 	// Calculate the distance from the original point to the closest point on the segment.
@@ -566,157 +581,157 @@ function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BD
 }
 
 /**
- * Calculates the distance between two parallel lines given their coefficients in the form Ax + By + C = 0.
- * @param A - The coefficient A of the line equation (this will be the same for both lines).
- * @param B - The coefficient B of the line equation (this will be the same for both lines).
- * @param C1 - The coefficient C for the first line.
- * @param C2 - The coefficient C for the second line.
- * @returns The distance between the two parallel lines.
+ * Finds the two corners of a bounding box that define its cross-sectional width
+ * when viewed from the direction of a given vector.
+ * 
+ * If the vector is vertical, then as if we were looking at the box from below,
+ * we would return its left/right-most points.
  */
-function distanceBetweenParallelLines(A: number, B: number, C1: number, C2: number): number {
-	if (A === 0 && B === 0)  throw new Error("Invalid line equation: A and B cannot both be zero.");
-	return Math.abs(C2 - C1) / Math.sqrt(A * A + B * B);
-}
-
-/**
- * Finds the two lines intersecting the corners of a bounding box that are the farthest apart.
- * The lines are defined by the direction of the given vector and pass through the corners of the bounding box.
- * @param vector - The direction vector [dx, dy] defining the slope of the lines.
- * @param boundingBox - The bounding box with left, right, bottom, and top properties.
- * @returns The pair of corners that define the farthest apart lines.
- */
-function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
+function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
 	const { left, right, bottom, top } = boundingBox;
 	const [dx, dy] = vector;
 
 	// Handle edge case: zero direction vector
-	if (dx === 0 && dy === 0) throw new Error("Direction vector cannot be zero.");
+	if (dx === 0n && dy === 0n) throw new Error("Direction vector cannot be zero.");
 
-	// Define the 4 corners of the bounding box
+	// The normal vector is perpendicular to the viewing vector.
+	// We can use this to find the points that are furthest apart on this line.
+	const normal: Vec2 = [-dy, dx];
+
 	const corners: Coords[] = [
-		[left, top],     // Top-left
-		[right, top],    // Top-right
-		[left, bottom],  // Bottom-left
-		[right, bottom]  // Bottom-right
-	];
+        [left, top],     // Top-left
+        [right, top],    // Top-right
+        [left, bottom],  // Bottom-left
+        [right, bottom]  // Bottom-right
+    ];
 
-	let maxDistance = -Infinity;
-	let farthestLines: [Coords, Coords] = [corners[0]!, corners[1]!];
+	// Initialize min/max with the projection of the first corner
+	let minCorner: Coords = corners[0]!;
+	let maxCorner: Coords = corners[0]!;
 
-	// Compare each pair of corners and calculate the distance between parallel lines
-	for (let i = 0; i < corners.length; i++) {
-		for (let j = i + 1; j < corners.length; j++) {
-			const [x1, y1] = corners[i]!;
-			const [x2, y2] = corners[j]!;
+	let minProjection = minCorner[0] * normal[0] + minCorner[1] * normal[1];
+	let maxProjection = minProjection;
 
-			// Calculate A, B, and C for the lines passing through the corners
-			const A = dy;
-			const B = -dx;
-			const C1 = dx * y1 - dy * x1;
-			const C2 = dx * y2 - dy * x2;
+	// Iterate through the rest of the corners (from the second one)
+	for (let i = 1; i < corners.length; i++) {
+		const corner = corners[i]!;
 
-			// Calculate the distance between the two parallel lines
-			const distance = distanceBetweenParallelLines(A, B, C1, C2);
+		// Project the corner onto the NORMAL vector using the dot product
+		const projection = dotProduct(corner, normal);
 
-			// Update if this distance is the greatest so far
-			if (distance > maxDistance) {
-				maxDistance = distance;
-				farthestLines = [corners[i]!, corners[j]!];
-			}
+		if (projection < minProjection) {
+			minProjection = projection;
+			minCorner = corner;
+		}
+		if (projection > maxProjection) {
+			maxProjection = projection;
+			maxCorner = corner;
 		}
 	}
 
-	return farthestLines;
+	return [minCorner, maxCorner];
 }
 
 /**
  * Computes the dot product of two 2D vectors.
  * WILL BE POSITIVE if they roughly point in the same direction.
  */
-function dotProduct(v1: Vec2, v2: Vec2): number {
+function dotProduct(v1: Vec2, v2: Vec2): bigint {
 	return v1[0] * v2[0] + v1[1] * v2[1];
 }
 
-
 /**
- * Finds the intersection points of a vector starting at a point with a bounding box.
- * SORTS THEM IN ORDER OF FIRST INTERSECTED.
- * 
- * THIS RARELY WILL MISS AN INTERSECTION. I think this is due to floating point imprecision
- * when an intersection lies exactly on the corners, but idk, because it is built to count that point.
- * @param coords - A point the line intersects.
- * @param direction - The direction of travel of the line (vector).
- * @param box - The bounding box defined by {left, right, bottom, top}.
- * @returns An array of intersection points, or an empty array if no intersections are found, along with a boolean indicating whether the intersection is in the positive direction of the vector.
+ * Computes the dot product of two 2D vectors.
+ * WILL BE POSITIVE if they roughly point in the same direction.
  */
-function findLineBoxIntersections(coords: Coords, direction: Vec2, box: BoundingBox): { coords: Coords, positiveDotProduct: boolean }[] {
-	const intersections: Coords[] = [];
-
-	// Function to check intersection with a vertical line (x = constant)
-	function checkVerticalEdge(x: number): number | null {
-		if (direction[0] === 0) return null; // No intersection with vertical line if no x-direction
-		const t = (x - coords[0]) / direction[0];
-		return coords[1] + t * direction[1]; // Calculate corresponding y
-	};
-
-	// Function to check intersection with a horizontal line (y = constant)
-	function checkHorizontalEdge(y: number): number | null {
-		if (direction[1] === 0) return null; // No intersection with horizontal line if no y-direction
-		const t = (y - coords[1]) / direction[1];
-		return coords[0] + t * direction[0]; // Calculate corresponding x
-	};
-
-	// Check intersection with the left edge (x = box.left)
-	const yAtLeft = checkVerticalEdge(box.left);
-	if (yAtLeft !== null && yAtLeft > box.bottom && yAtLeft < box.top) {
-		intersections.push([box.left, yAtLeft]);
-	}
-
-	// Check intersection with the right edge (x = box.right)
-	const yAtRight = checkVerticalEdge(box.right);
-	if (yAtRight !== null && yAtRight > box.bottom && yAtRight < box.top) {
-		intersections.push([box.right, yAtRight]);
-	}
-
-	// Check intersection with the bottom edge (y = box.bottom)
-	const xAtBottom = checkHorizontalEdge(box.bottom);
-	if (xAtBottom !== null && xAtBottom >= box.left && xAtBottom <= box.right) {
-		intersections.push([xAtBottom, box.bottom]);
-	}
-
-	// Check intersection with the top edge (y = box.top)
-	const xAtTop = checkHorizontalEdge(box.top);
-	if (xAtTop !== null && xAtTop >= box.left && xAtTop <= box.right) {
-		intersections.push([xAtTop, box.top]);
-	}
-
-	// Sort the intersections by distance along the direction of travel
-	intersections.sort((a, b) => {
-		const distA = (a[0] - coords[0]) * direction[0] + (a[1] - coords[1]) * direction[1]; // Dot product
-		const distB = (b[0] - coords[0]) * direction[0] + (b[1] - coords[1]) * direction[1]; // Dot product
-		return distA - distB;  // Sort by distance in the direction of the vector
-	});
-
-	const result = intersections.map(intersection => {
-		const dotProduct = (intersection[0] - coords[0]) * direction[0] + (intersection[1] - coords[1]) * direction[1];
-		return { coords: intersection, positiveDotProduct: dotProduct >= 0 };
-	});
-
-	return result;
+function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
+	return bd.add(bd.multiply_fixed(v1[0], v2[0]), bd.multiply_fixed(v1[1], v2[1]));
 }
 
+
 /**
- * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
+ * Finds the intersection points of a line with a bounding box.
+ * @param startCoords - The starting point of the line.
+ * @param direction - The direction vector [dx, dy] of the line.
+ * @param box - The bounding box the line intersects.
+ * @returns An array of intersection points as BDCoords, sorted by distance along the vector.
  */
-function areLinesCollinear(lines: Vec2[]): boolean {
-	let gradient: number | undefined;
-	for (const line of lines) {
-		const lgradient = line[1] / line[0];
-		if (gradient === undefined) gradient = lgradient;
-		else if (!Number.isFinite(gradient) && !Number.isFinite(lgradient)) continue;
-		else if (!isAproxEqual(lgradient, gradient)) return false;
+function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: BoundingBox): { coords: BDCoords; positiveDotProduct: boolean }[] {
+
+	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
+	const [bd_x0, bd_y0] = bd.FromCoords(startCoords);
+	const [bd_dx, bd_dy] = bd.FromCoords(direction);
+	const bd_left = bd.FromBigInt(box.left);
+	const bd_right = bd.FromBigInt(box.right);
+	const bd_bottom = bd.FromBigInt(box.bottom);
+	const bd_top = bd.FromBigInt(box.top);
+    
+	const valid_t_values: BigDecimal[] = [];
+
+	// --- 2. Check for intersections with each of the four box edges ---
+
+	// Check vertical edges (left and right)
+	if (direction[0] !== 0n) {
+		// t = (boundary - x0) / dx
+		const t_left = bd.divide_fixed(bd.subtract(bd_left, bd_x0), bd_dx);
+		const t_right = bd.divide_fixed(bd.subtract(bd_right, bd_x0), bd_dx);
+
+		// Check if the intersection at t_left is on the edge
+		const y_at_left = bd.add(bd_y0, bd.multiply_fixed(t_left, bd_dy));
+		if (bd.compare(y_at_left, bd_bottom) >= 0 && bd.compare(y_at_left, bd_top) <= 0) {
+			valid_t_values.push(t_left);
+		}
+
+		// Check if the intersection at t_right is on the edge
+		const y_at_right = bd.add(bd_y0, bd.multiply_fixed(t_right, bd_dy));
+		if (bd.compare(y_at_right, bd_bottom) >= 0 && bd.compare(y_at_right, bd_top) <= 0) {
+			valid_t_values.push(t_right);
+		}
 	}
-	return true;
+
+	// Check horizontal edges (bottom and top)
+	if (direction[1] !== 0n) {
+		// t = (boundary - y0) / dy
+		const t_bottom = bd.divide_fixed(bd.subtract(bd_bottom, bd_y0), bd_dy);
+		const t_top = bd.divide_fixed(bd.subtract(bd_top, bd_y0), bd_dy);
+        
+		// Check if the intersection at t_bottom is on the edge
+		const x_at_bottom = bd.add(bd_x0, bd.multiply_fixed(t_bottom, bd_dx));
+		if (bd.compare(x_at_bottom, bd_left) >= 0 && bd.compare(x_at_bottom, bd_right) <= 0) {
+			valid_t_values.push(t_bottom);
+		}
+
+		// Check if the intersection at t_top is on the edge
+		const x_at_top = bd.add(bd_x0, bd.multiply_fixed(t_top, bd_dy));
+		if (bd.compare(x_at_top, bd_left) >= 0 && bd.compare(x_at_top, bd_right) <= 0) {
+			valid_t_values.push(t_top);
+		}
+	}
+
+	// --- 3. De-duplicate and Sort the valid t-values ---
+    
+	// De-duplicate points
+	const unique_t_values = valid_t_values.filter((v, i, a) => 
+		a.findIndex(t => bd.areEqual(v, t)) === i
+	);
+
+	// Sort
+	unique_t_values.sort((a, b) => bd.compare(a, b));
+
+	// --- 4. Map sorted t-values to the final output format ---
+	const ZERO_BD = bd.FromBigInt(0n);
+
+	return unique_t_values.map(t => {
+		// Calculate the final intersection coordinates
+		const x = bd.add(bd_x0, bd.multiply_fixed(t, bd_dx));
+		const y = bd.add(bd_y0, bd.multiply_fixed(t, bd_dy));
+
+		return {
+			coords: [x, y],
+			// The sign of the dot product is the same as the sign of t.
+			positiveDotProduct: bd.compare(t, ZERO_BD) >= 0,
+		};
+	});
 }
 
 /**
@@ -730,7 +745,7 @@ function getKeyFromVec2(vec2: Vec2): Vec2Key {
  * Returns the vector from the Vec2Key: 'dx,dy' => [dx,dy]
  */
 function getVec2FromKey(vec2Key: Vec2Key): Vec2 {
-	return vec2Key.split(',').map(Number) as Vec2;
+	return vec2Key.split(',').map(BigInt) as Vec2;
 }
 
 /**
@@ -742,27 +757,6 @@ function negateVector(vec2: Vec2): Vec2 {
 	return [-vec2[0],-vec2[1]];
 }
 
-/**
- * Calculates X and Y components of a vector of given length.
- * @param vector - The direction vector [dx, dy].
- * @param length - The length of the vector.
- * @returns The x and y components of the vector.
- */
-function calculateVectorComponents(vector: Vec2, length: number): Coords {
-	// Normalize the direction vector
-	const magnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
-	if (magnitude === 0) throw new Error("Direction vector cannot be zero.");
-
-	const normalizedDx = vector[0] / magnitude;
-	const normalizedDy = vector[1] / magnitude;
-
-	// Calculate the endpoint
-	return [
-		normalizedDx * length,
-		normalizedDy * length
-	];
-}
-
 
 // Distance Calculation ----------------------------------------------------------------------------
 
@@ -771,9 +765,9 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
  * Returns the euclidean (hypotenuse) distance between 2 points.
  */
 function euclideanDistance(point1: BDCoords, point2: BDCoords): BigDecimal { // [x,y]
-	const xDiff = bigdecimal.subtract(point2[0], point1[0]);
-	const yDiff = bigdecimal.subtract(point2[1], point1[1]);
-	return bigdecimal.hypot(xDiff, yDiff);
+	const xDiff = bd.subtract(point2[0], point1[0]);
+	const yDiff = bd.subtract(point2[1], point1[1]);
+	return bd.hypot(xDiff, yDiff);
 }
 
 /**
@@ -781,8 +775,8 @@ function euclideanDistance(point1: BDCoords, point2: BDCoords): BigDecimal { // 
  * This is the sum of the distances between the points' x distance and y distance.
  * This is often the distance of roads, because you can't move diagonally.
  */
-function manhattanDistance(point1: Coords, point2: Coords): number {
-	return Math.abs(point2[0] - point1[0]) + Math.abs(point2[1] - point1[1]);
+function manhattanDistance(point1: Coords, point2: Coords): bigint {
+	return bimath.abs(point2[0] - point1[0]) + bimath.abs(point2[1] - point1[1]);
 }
 
 /**
@@ -791,8 +785,8 @@ function manhattanDistance(point1: Coords, point2: Coords): number {
  * This is often used for chess pieces, because moving
  * diagonally 1 is the same distance as moving orthogonally one.
  */
-function chebyshevDistance(point1: Coords, point2: Coords): number {
-	return Math.max(Math.abs(point2[0] - point1[0]), Math.abs(point2[1] - point1[1]));
+function chebyshevDistance(point1: Coords, point2: Coords): bigint {
+	return bimath.max(bimath.abs(point2[0] - point1[0]), bimath.abs(point2[1] - point1[1]));
 }
 
 
@@ -809,44 +803,14 @@ function isPowerOfTwo(value: number): boolean {
 }
 
 /**
- * Returns true if the given values are approximately equal, with the most amount
- * of difference allowed being the provided epsilon value.
- * @param a - The first value.
- * @param b - The second value.
- * @param epsilon - The allowed maximum difference between `a` and `b` for them to be considered equal.
- * @returns `true` if the values are approximately equal within the epsilon tolerance, otherwise `false`.
- */
-function isAproxEqual(a: number, b: number, epsilon: number = 0.000001): boolean {
-	return Math.abs(a - b) < epsilon;
-}
-
-/**
- * Returns the base-10 logarithm of a given value.
- */
-function getBaseLog10(value: number): number {
-	return Math.log(value) / Math.log(10);
-}
-
-/**
  * Clamps a value between a minimum and a maximum value.
  * @param min - The minimum value.
  * @param max - The maximum value.
  * @param value - The value to clamp.
  * @returns The clamped value.
  */
-function clamp(min: number, max: number, value: number): number {
-	if (min > value) return min;
-	if (max < value) return max;
-	return value;
-}
-
-/**
- * Rounds a number away from zero.
- * If it's positive, it rounds up.
- * If it's negative, it rounds down.
- */
-function roundAwayFromZero(value: number): number {
-	return value > 0 ? Math.ceil(value) : Math.floor(value);
+function clamp(value: number, min: number, max: number): number {
+	return value < min ? min : value > max ? max : value;
 }
 
 /**
@@ -931,22 +895,17 @@ export default {
 	mergeBoundingBoxBDs,
 	calcCenterOfBoundingBox,
 	closestPointOnLineSegment,
-	findFarthestPointsALineSweepsABox,
+	findCrossSectionalWidthPoints,
 	dotProduct,
 	findLineBoxIntersections,
-	areLinesCollinear,
 	getKeyFromVec2,
 	getVec2FromKey,
 	negateVector,
-	calculateVectorComponents,
 	euclideanDistance,
 	manhattanDistance,
 	chebyshevDistance,
 	isPowerOfTwo,
-	isAproxEqual,
-	getBaseLog10,
 	clamp,
-	roundAwayFromZero,
 	degreesToRadians,
 	roundUpToNextPowerOf2,
 	posMod,
