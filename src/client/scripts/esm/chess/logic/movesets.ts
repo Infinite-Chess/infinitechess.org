@@ -4,7 +4,7 @@
  */
 
 import typeutil from '../util/typeutil.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import { rawTypes } from '../util/typeutil.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
@@ -16,7 +16,7 @@ import isprime from '../../util/isprime.js';
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
-import type { Vec2, Vec2Key } from '../../util/math.js';
+import type { Vec2, Vec2Key } from '../../util/math/math.js';
 import type { Piece } from '../util/boardutil.js';
 import type { FullGame } from './gamefile.js';
 

@@ -13,11 +13,11 @@
 
 import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
-import math from "../../util/math.js";
+import math from "../../util/math/math.js";
 import movesets from "./movesets.js";
 
 import type { LineKey } from "../util/boardutil.js";
-import type { Vec2, Vec2Key } from "../../util/math.js";
+import type { Vec2, Vec2Key } from "../../util/math/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";

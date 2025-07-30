@@ -11,7 +11,7 @@
 
 import type { Coords } from "../chess/util/coordutil.js";
 import docutil from "../util/docutil.js";
-import type { Vec2 } from "../util/math.js";
+import type { Vec2 } from "../util/math/math.js";
 
 const Mouse = {
 	LEFT: 0,

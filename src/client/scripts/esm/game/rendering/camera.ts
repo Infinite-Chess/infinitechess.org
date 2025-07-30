@@ -26,7 +26,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
-import type { DoubleBoundingBox } from '../../util/math.js';
+import type { DoubleBoundingBox } from '../../util/math/math.js';
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 type Mat4 = Float32Array;

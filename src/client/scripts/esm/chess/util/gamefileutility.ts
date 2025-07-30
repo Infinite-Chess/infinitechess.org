@@ -12,7 +12,7 @@ import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import math, { BoundingBoxBD, Vec2 } from '../../util/math.js';
+import math, { BoundingBoxBD, Vec2 } from '../../util/math/math.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import winconutil from './winconutil.js';
 // @ts-ignore

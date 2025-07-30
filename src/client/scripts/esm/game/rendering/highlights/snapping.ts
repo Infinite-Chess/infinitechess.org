@@ -10,7 +10,7 @@ import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
-import math, { Color, Ray, Vec2 } from "../../../util/math.js";
+import math, { Color, Ray, Vec2 } from "../../../util/math/math.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";

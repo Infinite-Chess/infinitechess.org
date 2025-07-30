@@ -24,7 +24,7 @@ import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
 import wincondition from './wincondition.js';

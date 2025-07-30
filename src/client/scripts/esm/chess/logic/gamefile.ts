@@ -1,6 +1,6 @@
 import type { ClockData, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
-import type { BoundingBoxBD } from "../../util/math.js";
+import type { BoundingBoxBD } from "../../util/math/math.js";
 import type { MetaData } from "../util/metadata.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
@@ -19,7 +19,7 @@ import typeutil from "../util/typeutil.js";
 import legalmoves from "./legalmoves.js";
 import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
-import math from "../../util/math.js";
+import math from "../../util/math/math.js";
 import clock from "./clock.js";
 import movepiece from "./movepiece.js";
 import checkdetection from "./checkdetection.js";

@@ -8,13 +8,13 @@
 import preferences from "../../../components/header/preferences.js";
 import selection from "../../chess/selection.js";
 import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
-import math from "../../../util/math.js";
+import math from "../../../util/math/math.js";
 import highlightline from "./highlightline.js";
 import boardpos from "../boardpos.js";
 
 
 import type { Line } from "./highlightline.js";
-import type { Ray, Vec2 } from "../../../util/math.js";
+import type { Ray, Vec2 } from "../../../util/math/math.js";
 
 
 

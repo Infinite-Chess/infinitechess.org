@@ -6,12 +6,12 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { Color } from '../../util/math.js';
+import type { Color } from '../../util/math/math.js';
 
 import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';

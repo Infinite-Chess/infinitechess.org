@@ -14,7 +14,7 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import premoves from '../chess/premoves.js';
 // @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';

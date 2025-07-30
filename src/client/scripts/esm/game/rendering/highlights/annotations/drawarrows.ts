@@ -7,7 +7,7 @@
 
 
 import space from "../../../misc/space.js";
-import math, { Color } from "../../../../util/math.js";
+import math, { Color } from "../../../../util/math/math.js";
 import preferences from "../../../../components/header/preferences.js";
 import { createModel } from "../../buffermodel.js";
 import coordutil, { Coords } from "../../../../chess/util/coordutil.js";

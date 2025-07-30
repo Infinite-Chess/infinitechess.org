@@ -11,7 +11,7 @@
 import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
-import type { BoundingBox, Vec2Key } from "../../util/math.js";
+import type { BoundingBox, Vec2Key } from "../../util/math/math.js";
 import type { Player } from "../util/typeutil.js";
 import type { LegalMoves } from './legalmoves.js';
 import type { FullGame } from "./gamefile.js";
@@ -19,7 +19,7 @@ import type { FullGame } from "./gamefile.js";
 
 import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
-import math from "../../util/math.js";
+import math from "../../util/math/math.js";
 import boardchanges from "./boardchanges.js";
 import coordutil from "../util/coordutil.js";
 import movepiece from "./movepiece.js";

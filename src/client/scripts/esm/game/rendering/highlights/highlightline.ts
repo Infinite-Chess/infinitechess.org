@@ -13,7 +13,7 @@ import { createModel } from '../buffermodel.js';
 import space from '../../misc/space.js';
 
 
-import type { BoundingBox, Color } from '../../../util/math.js';
+import type { BoundingBox, Color } from '../../../util/math/math.js';
 import type { Coords } from '../../../chess/util/coordutil.js';
 import boardpos from '../boardpos.js';
 

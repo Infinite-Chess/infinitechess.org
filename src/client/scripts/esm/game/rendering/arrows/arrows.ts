@@ -10,7 +10,7 @@
  */
 
 import type { Coords } from '../../../chess/util/coordutil.js';
-import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math.js';
+import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math/math.js';
 import type { LineKey } from '../../../chess/util/boardutil.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../buffermodel.js';
@@ -24,7 +24,7 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
-import math from '../../../util/math.js';
+import math from '../../../util/math/math.js';
 import organizedpieces from '../../../chess/logic/organizedpieces.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import frametracker from '../frametracker.js';

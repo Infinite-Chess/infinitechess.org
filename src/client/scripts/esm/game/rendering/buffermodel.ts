@@ -9,7 +9,7 @@
  */
 
 
-import type { Vec3 } from '../../util/math.js';
+import type { Vec3 } from '../../util/math/math.js';
 import type { ShaderProgram } from './shaders.js';
 
 import { createBufferFromData, updateBufferIndices } from './buffers.js';

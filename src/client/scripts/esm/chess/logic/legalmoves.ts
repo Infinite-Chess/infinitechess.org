@@ -22,7 +22,7 @@ import { rawTypes as r } from '../util/typeutil.js';
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
-import type { Vec2Key, Vec2 } from '../../util/math.js';
+import type { Vec2Key, Vec2 } from '../../util/math/math.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';

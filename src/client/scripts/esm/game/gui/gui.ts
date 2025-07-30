@@ -11,7 +11,7 @@ import statustext from './statustext.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import guititle from './guititle.js';
 
 

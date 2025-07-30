@@ -10,7 +10,7 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
-import math, { Color, Vec2 } from "../../../../util/math.js";
+import math, { Color, Vec2 } from "../../../../util/math/math.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
