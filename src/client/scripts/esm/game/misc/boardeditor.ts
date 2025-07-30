@@ -337,8 +337,6 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
 
-	specialrighthighlights.onMove(); // Updates the model
-
 	addEditToHistory(edit);
 
 	return edit;

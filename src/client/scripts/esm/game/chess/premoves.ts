@@ -76,7 +76,7 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveD
 
 /** Applies a premove's changes to the board. */
 function applyPremove(gamefile: FullGame, mesh: Mesh | undefined, premove: Premove, forward: boolean) {
-	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
+	console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward, true); // forward & global are true
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, premove, forward);
 }
@@ -182,7 +182,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 		// Legal, apply the premove to the real game state
 		const premoveDraft: MoveDraft = pullMoveDraftFromPremove(premove);
-		movesequence.makeMove(gamefile, mesh, premoveDraft); // Make move
+		const move = movesequence.makeMove(gamefile, mesh, premoveDraft); // Make move
 
 		movesendreceive.sendMove();
 		enginegame.onMovePlayed();
@@ -191,7 +191,9 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 		// Only instant animate
 		// This also immediately terminates the opponent's move animation
-		animateMove(premove.changes, true, false);
+		// MUST READ the move's changes returned from movesequence.makeMove()
+		// instead of the premove's changes, as the changes need to be regenerated!
+		animateMove(move.changes, true, false);
 
 		// Apply remaining premove changes & visuals, but don't make them physically on the board
 		applyPremoves(gamefile, mesh);
