@@ -309,7 +309,7 @@ function FromCoords(coords: Coords, precision: number = DEFAULT_WORKING_PRECISIO
 }
 
 /** Converts coordinates of javascript doubles to BDCoords (BigDecimal) */
-function fromDoubleCoords(coords: DoubleCoords, precision: number = DEFAULT_WORKING_PRECISION): BDCoords {
+function FromDoubleCoords(coords: DoubleCoords, precision: number = DEFAULT_WORKING_PRECISION): BDCoords {
 	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
 	return [
 		FromNumber(coords[0], precision),
@@ -1336,7 +1336,7 @@ export default {
 	FromNumber,
 	FromBigInt,
 	FromCoords,
-	fromDoubleCoords,
+	FromDoubleCoords,
 	// Helpers
 	howManyBitsForDigitsOfPrecision,
 	getEffectiveDecimalPlaces,

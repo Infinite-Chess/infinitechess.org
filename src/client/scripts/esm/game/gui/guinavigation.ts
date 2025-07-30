@@ -16,6 +16,7 @@ import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import bounds from '../../util/math/bounds.js';
 import premoves from '../chess/premoves.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
 // @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
@@ -24,8 +25,6 @@ import guipause from './guipause.js';
 import area from '../rendering/area.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
-// @ts-ignore
-import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
 
@@ -58,8 +57,6 @@ const element_moveForward = document.getElementById('move-right')!;
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 const element_pause = document.getElementById('pause')!;
-
-const MAX_TELEPORT_DIST = Infinity;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
@@ -166,8 +163,8 @@ function updateElement_Coords() {
 	// element_CoordsY.textContent = Math.floor(boardPos[1] + squareCenter)
 
 	// Tile mouse over
-	element_CoordsX.value = String(mouseTile ? mouseTile[0] : Math.floor(boardPos[0] + squareCenter));
-	element_CoordsY.value = String(mouseTile ? mouseTile[1] : Math.floor(boardPos[1] + squareCenter));
+	element_CoordsX.value = String(mouseTile ? mouseTile[0] : bd.floor(bd.add(boardPos[0], squareCenter)));
+	element_CoordsY.value = String(mouseTile ? mouseTile[1] : bd.floor(bd.add(boardPos[1], squareCenter)));
 }
 
 /**
@@ -281,15 +278,11 @@ function callback_CoordsChange() {
 	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
 	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
 
-	const newX = Number(element_CoordsX.value);
-	const newY = Number(element_CoordsY.value);
-	// Make sure the teleport distance doesn't exceed the cap
-	if (newX < -MAX_TELEPORT_DIST || newX > MAX_TELEPORT_DIST || newY < -MAX_TELEPORT_DIST || newY > MAX_TELEPORT_DIST) {
-		statustext.showStatus(`Cannot teleport more than ${MAX_TELEPORT_DIST} squares in any direction.`, true);
-		return;
-	}
+	const newX = BigInt(element_CoordsX.value);
+	const newY = BigInt(element_CoordsY.value);
 
-	boardpos.setBoardPos([newX, newY]);
+	const newPos = bd.FromCoords([newX, newY]);
+	boardpos.setBoardPos(newPos);
 }
 
 function callback_Back() {
@@ -300,12 +293,12 @@ function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 	// Add the square annotation highlights, too.
 	allCoords.push(...snapping.getAnnoteSnapPoints(false));
-	if (allCoords.length === 0) allCoords.push([1,1], [8,8]); // use the [1,1]-[8,8] area as a fallback
+	if (allCoords.length === 0) allCoords.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
 	area.initTelFromCoordsList(allCoords);
 }
 
 function recenter() {
-	const boundingBox = boardeditor.areInBoardEditor() ? bounds.getBoxFromCoordsList([[1,1], [8,8]]) :
+	const boundingBox = boardeditor.areInBoardEditor() ? bounds.getBoxFromCoordsList([[1n,1n], [8n,8n]]) :
 														 gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
