@@ -25,8 +25,8 @@ import { pieceCountToDisableCheckmate } from '../../chess/logic/checkmate.js';
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { VariantOptions } from '../../chess/logic/initvariant.js';
-import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../misc/onlinegame/onlinegamerouter.js';
 import type { MetaData } from '../../chess/util/metadata.js';
+import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 
 /**
@@ -170,7 +170,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const additional: {
 		variantOptions: VariantOptions,
-		moves?: ServerGameMovesMessage,
+		moves?: ServerGameMoveMessage[],
 	} = { variantOptions };
 	if (longformOut.moves) {
 		// Trim the excess properties from the _Move_Out type, including the comment.
@@ -187,7 +187,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 		metadata: MetaData,
 		additional: {
 			variantOptions: VariantOptions,
-			moves?: ServerGameMovesMessage,
+			moves?: ServerGameMoveMessage[],
 		},
 		presetAnnotes?: PresetAnnotes
 	} = {
