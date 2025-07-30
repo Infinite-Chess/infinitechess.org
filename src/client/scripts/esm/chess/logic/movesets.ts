@@ -4,7 +4,7 @@
  */
 
 import typeutil from '../util/typeutil.js';
-import math from '../../util/math/math.js';
+import vectors from '../../util/math/vectors.js';
 import { rawTypes } from '../util/typeutil.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
@@ -308,7 +308,7 @@ function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec
 		if (!moveset.sliding) continue;
 		Object.keys(moveset.sliding).forEach(slide => slides.add(slide as Vec2Key));
 	}
-	return Array.from(slides, math.getVec2FromKey);
+	return Array.from(slides, vectors.getVec2FromKey);
 }
 
 

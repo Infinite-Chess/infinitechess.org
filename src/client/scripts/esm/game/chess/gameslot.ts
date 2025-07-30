@@ -49,6 +49,7 @@ import { animateMove } from "./graphicalchanges.js";
 import winconutil from "../../chess/util/winconutil.js";
 import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
+import bd from "../../util/bigdecimal/bigdecimal.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -273,7 +274,9 @@ function unloadGame() {
 function startStartingTransition() {
 	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
 	boardpos.setBoardPos(centerArea.coords);
-	boardpos.setBoardScale(centerArea.scale * 1.75);
+	const amount = bd.FromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
+	const startScale = bd.multiply_fixed(centerArea.scale, amount);
+	boardpos.setBoardScale(startScale);
 	guinavigation.recenter();
 	transition.eraseTelHist();
 }

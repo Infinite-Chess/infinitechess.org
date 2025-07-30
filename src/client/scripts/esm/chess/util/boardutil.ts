@@ -10,7 +10,7 @@ import jsutil from "../../util/jsutil.js";
 // Type Definitions -----------------------------------------------------------------------------------------
 
 import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
-import type { Coords, CoordsKey } from "./coordutil.js";
+import type { Coords } from "./coordutil.js";
 import type { RawType, Player } from "./typeutil.js";
 
 interface Piece {
