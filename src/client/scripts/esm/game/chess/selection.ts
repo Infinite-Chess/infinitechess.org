@@ -1,3 +1,4 @@
+
 /**
  * This script tests for piece selection and keeps track of the selected piece,
  * including the legal moves it has available.
@@ -5,7 +6,7 @@
 
 
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { MoveDraft } from '../../chess/logic/movepiece.js';
+import type { CoordsSpecial, MoveDraft } from '../../chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 import type { Game, FullGame } from '../../chess/logic/gamefile.js';
@@ -44,13 +45,14 @@ import { animateMove } from './graphicalchanges.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
-import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
+import specialdetect from '../../chess/logic/specialdetect.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -112,11 +114,15 @@ function getSquarePawnIsCurrentlyPromotingOn() { return pawnIsPromotingOn; }
  */
 function promoteToType(type: number) { promoteTo = type; }
 
+function getEditMode() {
+	return editMode;
+}
+
 // Toggles EDIT MODE! editMode
 // Called when '1' is pressed!
 function toggleEditMode() {
 	// Make sure it's legal
-	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener_document.isKeyHeld('0');
+	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener_document.isKeyHeld('Digit0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
 	if (boardeditor.areInBoardEditor()) return; // Don't toggle if in board editor
@@ -143,24 +149,7 @@ function update() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 	if (pawnIsPromotingOn) { // Do nothing else this frame but wait for a promotion piece to be selected
-		if (promoteTo) {
-			if (isPremove) {
-				// Add a premove with promotion
-				const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: pawnIsPromotingOn, promotion: promoteTo };
-				
-				premoves.rewindPremovesVisuals();
-				premoves.addPremove(moveDraft);
-				unselectPiece();
-				premoves.applyPremovesVisuals();
-				mouse.claimMouseClick(Mouse.LEFT);
-
-				// Reset promotion state
-				pawnIsPromotingOn = undefined;
-				promoteTo = undefined;
-			} else {
-				makePromotionMove(gamefile, mesh);
-			}
-		}
+		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
 	if (boardpos.areZoomedOut() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
@@ -204,7 +193,6 @@ function update() {
 function updateHoverSquareLegal(gamefile: FullGame): void {
 	if (!pieceSelected) return;
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
-
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
@@ -228,6 +216,7 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined) {
 	if (boardpos.boardHasMomentum()) return; // Don't select a piece if the boardsim is moving
 
 	// We have clicked, test if we clicked a piece...
+
 	const pieceClicked = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hoverSquare);
 	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
@@ -243,7 +232,7 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined) {
 		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
-		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
+		selectPiece(gamefile, mesh, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
@@ -255,7 +244,7 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined) {
 		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
 		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
-		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
+		selectPiece(gamefile, mesh, pieceClicked!, true); // Select, AND start dragging if that's enabled.
 	}
 }
 
@@ -282,24 +271,7 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
-	else if (hoverSquareLegal) { // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
-		if (isPremove) {
-			const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
-			// Check if the move is a pawn promotion
-			if (hoverSquare.promoteTrigger) {
-				const color = typeutil.getColorFromType(pieceSelected!.type);
-				guipromotion.open(color);
-				perspective.unlockMouse();
-				pawnIsPromotingOn = hoverSquare;
-				return;
-			}
-
-			premoves.addPremove(moveDraft);
-			unselectPiece();
-		} else {
-			moveGamefilePiece(gamefile, mesh, hoverSquare);
-		}
-	}
+	else if (hoverSquareLegal) moveGamefilePiece(gamefile, mesh, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
@@ -310,26 +282,9 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-
-	if (isPremove) {
-		const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
-		// Check if the move is a pawn promotion
-		if (hoverSquare.promoteTrigger) {
-			const color = typeutil.getColorFromType(pieceSelected!.type);
-			guipromotion.open(color);
-			perspective.unlockMouse();
-			pawnIsPromotingOn = hoverSquare;
-			return;
-		}
-
-		premoves.addPremove(moveDraft);
-		unselectPiece();
-		mouse.claimMouseClick(Mouse.LEFT);
-		return;
-	} else {
-		moveGamefilePiece(gamefile, mesh, hoverSquare);
-		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
-	}
+	moveGamefilePiece(gamefile, mesh, hoverSquare);
+	
+	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
@@ -361,11 +316,12 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	if (boardeditor.areInBoardEditor()) return preferences.getDragEnabled() ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
 	const [raw, player] = typeutil.splitType(type);
 	if (raw === rawTypes.VOID) return 0; // Can't select voids
-	if (editMode) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
+	if (editMode && gameloader.areInLocalGame()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged in local games.
 	if (player === players.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
+	// It is our piece type...
 	const isOurTurn = gameloader.isItOurTurn(player);
-	if (!isOurTurn && !preferences.getPremoveMode()) return 1; // Can select our piece when it's not our turn, but not draggable.
+	if (!isOurTurn && !preferences.getPremoveEnabled()) return 1; // Can select our piece when it's not our turn, but not draggable.
 	// The piece is also not considered draggable if this is exactly the second pointer down.
 	// But it still may be selected by a simulated click.
 	// This allows us to tap to select friendly pieces, even if we're already dragging with one finger.
@@ -380,9 +336,10 @@ function canMovePieceType(pieceType: number): boolean {
 	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	// const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
-	// return (!isPremove); // For now we can't premove, can only move our pieces on our turn.
-	return true;
+	// It is our piece type...
+	const isOurTurn = gameloader.areInLocalGame() || gameloader.isItOurTurn();
+	if (isOurTurn) return true; // Can always move pieces on our turn
+	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
 }
 
 /**
@@ -416,7 +373,7 @@ function isOpponentType(basegame: Game, type: number) {
  * @param piece 
  * @param drag - If true, the piece starts being dragged. This also means it won't be deselected if you clicked the selected piece again.
  */
-function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
+function selectPiece(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece, drag: boolean) {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
 
 	annotations.onPieceSelection();
@@ -431,7 +388,7 @@ function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
 		if (alreadySelected) return unselectPiece();
 	}
 
-	initSelectedPieceInfo(gamefile, piece);
+	initSelectedPieceInfo(gamefile, mesh, piece);
 }
 
 /**
@@ -442,6 +399,7 @@ function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
 function reselectPiece() {
 	if (!pieceSelected) return; // No piece to reselect.
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
 	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, pieceSelected.coords);
@@ -454,7 +412,7 @@ function reselectPiece() {
 
 	// Reselect! Recalc its legal moves, and recolor.
 	const pieceToReselect = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, pieceSelected.coords)!;
-	initSelectedPieceInfo(gamefile, pieceToReselect);
+	initSelectedPieceInfo(gamefile, mesh, pieceToReselect);
 }
 
 /** Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
@@ -475,19 +433,27 @@ function unselectPiece() {
 }
 
 /** Initializes the selected piece, and calculates its legal moves. */
-function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
+function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece) {
 	// Initiate
 	pieceSelected = piece;
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn();// && !isOpponentType(gamefile.basegame, piece.type);
+	isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
 
-	// Calculate the legal moves it has. Use premove logic if enabled in preferences.
-	if (preferences.getPremoveMode() && isPremove) {
+	// Calculate the legal moves it has...
+
+	if (isPremove && preferences.getPremoveEnabled()) {
+		// DO NOT rewind the premoves here before calculation,
+		// because we do need the SPECIALRIGHT state changes to still be applied!
+		// Else if you premove a pawn onto an opponent's pawn that hasn't moved,
+		// your premoved pawn will be able to double push again past their 8th rank.
 		legalMoves = legalmoves.calculateAllPremoves(gamefile, piece);
 	} else {
+		premoves.rewindPremoves(gamefile, mesh); // Rewind premoves first so that the legal moves are accurate.
 		legalMoves = legalmoves.calculateAll(gamefile, piece);
+		premoves.applyPremoves(gamefile, mesh); // Now re-apply them
 	}
+
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
@@ -500,15 +466,9 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
  */
 function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: CoordsSpecial) {
 	// Check if the move is a pawn promotion
-	if (coords.promoteTrigger && !boardeditor.areInBoardEditor()) {
-		const color = typeutil.getColorFromType(pieceSelected!.type);
-		guipromotion.open(color);
-		perspective.unlockMouse();
-		pawnIsPromotingOn = coords;
-		return;
-	}
+	if (coords.promoteTrigger && !boardeditor.areInBoardEditor()) return onPromoteTrigger(coords);
 
-	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
+	const strippedCoords: Coords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
 
@@ -516,27 +476,43 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 	// have to note whether it was being dragged BEFORE we move it!
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
-	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
 	
-	const changes = boardeditor.areInBoardEditor() ? boardeditor.makeMoveEdit(gamefile, mesh, moveDraft).changes
-												   : movesequence.makeMove(gamefile, mesh, moveDraft).changes;
+	const changes = boardeditor.areInBoardEditor() ?
+		boardeditor.makeMoveEdit(gamefile, mesh, moveDraft).changes : isPremove ?
+		premoves.addPremove(gamefile, mesh, moveDraft).changes :
+		movesequence.makeMove(gamefile, mesh, moveDraft).changes;
 	
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
+	const animateMain = !wasBeingDragged;
+	// const animateMain = !draganimation.areDraggingPiece(); // For premoving
 	animateMove(changes, true, animateMain);
 
-	movesendreceive.sendMove();
-	enginegame.onMovePlayed();
+	if (!isPremove) {
+		movesendreceive.sendMove();
+		enginegame.onMovePlayed();
+	}
+	specialrighthighlights.onMove(); // Updates the model
 
+	// Do very last, so that isPremove doesn't get reset.
 	unselectPiece();
+}
+
+/** Opens the promotion UI */
+function onPromoteTrigger(coords: CoordsSpecial): void {
+	const color = typeutil.getColorFromType(pieceSelected!.type);
+	guipromotion.open(color);
+	perspective.unlockMouse();
+	pawnIsPromotingOn = coords;
+	// Delete the promoteTrigger now
+	delete coords.promoteTrigger;
 }
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
 function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined) {
-	const coords = pawnIsPromotingOn!;
-	// DELETE THE promoteTrigger flag, and add the promoteTo flag
-	delete coords.promoteTrigger;
+	const coords: CoordsSpecial = pawnIsPromotingOn!;
+	// Add the promoteTo flag
 	coords.promotion = promoteTo!;
 	moveGamefilePiece(gamefile, mesh, coords);
 	perspective.relockMouse();
@@ -562,11 +538,11 @@ function renderGhostPiece() {
 export default {
 	isAPieceSelected,
 	getPieceSelected,
-	initSelectedPieceInfo,
 	reselectPiece,
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,
 	getSquarePawnIsCurrentlyPromotingOn,
+	getEditMode,
 	toggleEditMode,
 	disableEditMode,
 	enableEditMode,
@@ -575,5 +551,4 @@ export default {
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
-	moveGamefilePiece,
 };

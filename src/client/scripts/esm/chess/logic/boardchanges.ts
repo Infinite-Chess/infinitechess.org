@@ -201,7 +201,7 @@ function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIn
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
-	let idx;
+	let idx: number;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
 			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, boardsim.editor, basegame.gameRules.promotionsAllowed) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
@@ -213,7 +213,7 @@ function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIn
 	} else {
 		idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 		const { found, index } = jsutil.binarySearch(typedata.undefineds, idx);
-		if (!found) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
+		if (!found) throw Error(`Newly added piece ${JSON.stringify(change.piece)} attemped to overwrite an occupied index`);
 		typedata.undefineds.splice(index, 1);
 	}
 	pieces.XPositions[idx] = change.piece.coords[0];

@@ -19,6 +19,7 @@ import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import premoves from "../../chess/premoves.js";
+import specialrighthighlights from "../../rendering/highlights/specialrighthighlights.js";
 import { animateMove } from "../../chess/graphicalchanges.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
@@ -77,7 +78,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	}
 
 	// Rewind all premoves to get the real game state for legality check
-	premoves.rewindPremoves(gamefile);
+	premoves.rewindPremoves(gamefile, mesh);
 
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
@@ -89,14 +90,8 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 
 	// Forward the move...
 
-	premoves.rewindPremovesVisuals();
-
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
-
-	premoves.applyPremovesVisuals();
-
-	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
 	
@@ -116,8 +111,15 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
-	// Process the next premove, will reapply the premoves
-	premoves.processPremoves(gamefile);
+	// We should probably have this last, since this will make another move AFTER handling our opponent's move here.
+	// And it'd be weird to process that move before this opponent's move is fully processed.
+	premoves.onYourMove(gamefile, mesh);
+	specialrighthighlights.onMove(); // Updates the model after the opponent's move.
+
+	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
+	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.
+	// Above we premoves.rewindPremoves(), and premoves.onYourMove() applies them again, so this must be after them!
+	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
 

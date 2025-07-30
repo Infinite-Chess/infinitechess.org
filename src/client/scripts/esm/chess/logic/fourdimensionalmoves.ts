@@ -10,10 +10,11 @@
 
 
 import type { Piece } from "../util/boardutil.js";
-import type { CoordsSpecial, Move } from "./movepiece.js";
+import type { CoordsSpecial } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { Player } from "../util/typeutil.js";
 import type { Game, Board, FullGame } from "./gamefile.js";
+import type { MoveDraftEdit } from "./specialmove.js";
 
 import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
@@ -164,7 +165,7 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords) {
 }
 
 /** Executes a four dimensional pawn move.  */
-function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: Move): boolean {
+function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!

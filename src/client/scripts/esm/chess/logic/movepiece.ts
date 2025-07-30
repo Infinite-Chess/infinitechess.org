@@ -514,6 +514,7 @@ export type {
 export default {
 	generateMove,
 	calcMovesChanges,
+	queueSpecialRightDeletionStateChanges,
 	makeMove,
 	updateTurn,
 	goToMove,

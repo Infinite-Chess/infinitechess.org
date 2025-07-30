@@ -28,7 +28,7 @@ const lingeringAnnotationsCheckbox = document.querySelector('.selection-option.l
 
 function showCheckmarkOnSelectedOptions() {
 	dragCheckbox.checked = preferences.getDragEnabled();
-	premoveCheckbox.checked = preferences.getPremoveMode();
+	premoveCheckbox.checked = preferences.getPremoveEnabled();
 	animationsCheckbox.checked = preferences.getAnimationsMode();
 	lingeringAnnotationsCheckbox.checked = preferences.getLingeringAnnotationsMode();
 }
@@ -63,7 +63,7 @@ function toggleDrag() {
 	preferences.setDragEnabled(dragCheckbox.checked);
 }
 function togglePremove() {
-	preferences.setPremoveMode(premoveCheckbox.checked); // Enabled for development
+	preferences.setPremoveMode(premoveCheckbox.checked);
 }
 function toggleAnimations() {
 	preferences.setAnimationsMode(animationsCheckbox.checked);

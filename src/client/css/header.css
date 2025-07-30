@@ -388,11 +388,6 @@ span.arrow-head-left {
     cursor: pointer;
 }
 
-/*.selection-option.premove {
-    opacity: 0.5;
-    cursor: not-allowed;
-}*/
-
 .language-dropdown-item {
     height: 48px;
     padding: 0 15px;
