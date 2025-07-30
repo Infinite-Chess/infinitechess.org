@@ -1,4 +1,3 @@
-/* eslint-disable max-depth */
 
 /**
  * This script dynamically generates the positions of 4 dimensional variants

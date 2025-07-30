@@ -5,8 +5,6 @@
  */
 
 
-import math from "../../util/math/math.js";
-
 import type { DoubleCoords } from "../util/coordutil.js";
 
 
