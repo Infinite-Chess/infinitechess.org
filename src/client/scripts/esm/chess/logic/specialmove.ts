@@ -19,7 +19,7 @@ import type { Board } from './gamefile.js';
  * Function that queues all of the changes a special move makes when executed.
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveDraftEdit) => boolean;
+type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveDraftEdit, skip_state_changes?: boolean) => boolean;
 
 /** All properties of the Move that special move functions need to access */
 interface MoveDraftEdit extends MoveDraft, Edit {}
@@ -82,11 +82,11 @@ function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
 	return true;
 }
 
-function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
+function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit, skip_state_changes = false) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, boardsim.state.global.enpassant, move.enpassantCreate);
+	if (move.enpassantCreate !== undefined && !skip_state_changes) state.createEnPassantState(move, boardsim.state.global.enpassant, move.enpassantCreate);
 
 	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type

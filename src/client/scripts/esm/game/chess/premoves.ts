@@ -95,11 +95,15 @@ function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
 	};
 
 	const rawType = typeutil.getRawType(piece.type);
+	// This means a pawn double push won't create a state change of adding the enpassant square to the gamefile!
+	// We should not do that for premoves.
+	const skip_state_changes = true;
 	let specialMoveMade: boolean = false;
 	// If a special move function exists for this piece type, run it.
 	// The actual function will return whether a special move was actually made or not.
 	// If a special move IS made, we skip the normal move piece method.
-	if (rawType in gamefile.boardsim.specialMoves) specialMoveMade = gamefile.boardsim.specialMoves[rawType]!(gamefile.boardsim, piece, premove);
+
+	if (rawType in gamefile.boardsim.specialMoves) specialMoveMade = gamefile.boardsim.specialMoves[rawType]!(gamefile.boardsim, piece, premove, skip_state_changes);
 	if (!specialMoveMade) movepiece.calcMovesChanges(gamefile.boardsim, piece, moveDraft, premove); // Move piece regularly (no special tag)
 	
 	// Delete all special rights that should be revoked from the move.
