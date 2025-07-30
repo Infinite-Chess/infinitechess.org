@@ -14,7 +14,6 @@ import game from './chess/game.js';
 import shaders from './rendering/shaders.js';
 import browsersupport from './misc/browsersupport.js';
 import camera from './rendering/camera.js';
-import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
@@ -30,8 +29,6 @@ function start() {
 	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
 	shaders.initPrograms(); // Initiates the few shader programs we will be using. The most common we'll be using is the textureProgram, but we also create a shader program for color, and another for tinted textures.
 	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
-
-	browsersupport.checkBrowserSupport();
 
 	game.init();
 
