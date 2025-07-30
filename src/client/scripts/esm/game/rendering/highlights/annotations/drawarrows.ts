@@ -7,7 +7,6 @@
 
 
 import space from "../../../misc/space.js";
-import math, { Color } from "../../../../util/math/math.js";
 import preferences from "../../../../components/header/preferences.js";
 import { createModel } from "../../buffermodel.js";
 import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
@@ -16,9 +15,11 @@ import mouse from "../../../../util/mouse.js";
 import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import { listener_overlay } from "../../../chess/game.js";
+import vectors from "../../../../util/math/vectors.js";
 
 
 import type { Arrow } from "./annotations.js";
+import type { Color } from "../../../../util/math/math.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -201,7 +202,7 @@ function getDataArrow(
 	color: Color
 ): number[] {
 	// First we need to shift the arrow's base a little away from the center of the starting square.
-	const length_coords = math.euclideanDistance(arrow.start, arrow.end);
+	const length_coords = vectors.euclideanDistance(arrow.start, arrow.end);
 	// This makes sure that base offset looks the same no matter our zoom level
 	const invMult = boardpos.areZoomedOut() ? boardpos.getBoardScale() : 1;
 	const t = ARROW.BASE_OFFSET / (invMult * length_coords); // Proportion of the arrow length to offset the base
@@ -228,7 +229,7 @@ function getDataArrow(
 
 	const dx = ex - sx;
 	const dy = ey - sy;
-	const length = math.euclideanDistance(startWorld, endWorld);
+	const length = vectors.euclideanDistance(startWorld, endWorld);
 
 	// Helpers
 	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) => {

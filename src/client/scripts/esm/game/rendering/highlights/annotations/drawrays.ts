@@ -10,19 +10,23 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
-import math, { Color, Vec2 } from "../../../../util/math/math.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
-import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import gameslot from "../../../chess/gameslot.js";
-import highlightline, { Line } from "../highlightline.js";
-import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
-import annotations, { Ray } from "./annotations.js";
+import annotations from "./annotations.js";
 import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 import variant from "../../../../chess/variants/variant.js";
+import geometry from "../../../../util/math/geometry.js";
+import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
+import highlightline, { Line } from "../highlightline.js";
+import { Mouse } from "../../../input.js";
+import vectors, { Ray, Vec2 } from "../../../../util/math/vectors.js";
 import { listener_overlay } from "../../../chess/game.js";
+
+
+import type { Color } from "../../../../util/math/math.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -70,7 +74,7 @@ function getPresetRays(): Ray[] {
 		return {
 			start: r.start,
 			vector: r.vector,
-			line: math.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
+			line: vectors.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
 		};
 	});
 }
@@ -164,7 +168,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 	const lines: Line[] = [];
 	for (const ray of rays) {
 		// Find the points it intersects the screen
-		const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
+		const intersectionPoints = geometry.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
 		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
 		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
 
@@ -198,7 +202,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
 	const vector_unnormalized = coordutil.subtractCoordinates(mouseCoords, drag_start!);
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
-	const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
+	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
 	const deletedRays: Ray[] = [];
 
@@ -214,14 +218,14 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 			return { added: false, deletedRays };
 		}
 		const line2 = ray.line;
-		if (math.areLinesInGeneralFormEqual(line, line2)) { // Coincident
+		if (vectors.areLinesInGeneralFormEqual(line, line2)) { // Coincident
 			// Calculate the dot product the ray's vectors.
 			// If it's positive, they point in the same direction, otherwise opposite.
-			const dotProd = math.dotProduct(vector, ray.vector);
+			const dotProd = vectors.dotProduct(vector, ray.vector);
 			if (dotProd > 0) { // Positive, they point in same direction
 				// Which one is contained in the other?
 				const vecToComparingRayStart = coordutil.subtractCoordinates(ray.start, drag_start!);
-				const dotProd2 = math.dotProduct(vector, vecToComparingRayStart);
+				const dotProd2 = vectors.dotProduct(vector, vecToComparingRayStart);
 				if (dotProd2 > 0) { // Positive = comparing ray is contained within the new ray
 					// Remove this comparing ray in favor of the new one
 					rays.splice(i, 1);
@@ -305,7 +309,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 			const ray2 = rays_all[b]!; // Could be drawn or preset ray
 			
 			// Calculate where they intersect
-			const intsect = math.intersectRays(ray1, ray2);
+			const intsect = geometry.intersectRays(ray1, ray2);
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
@@ -326,7 +330,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 	for (const ray of rays_all) {
 		// Selected piece legal move RAYS
 		for (const legalRay of selectedPieceRays) {
-			const intsect = math.intersectRays(ray, legalRay);
+			const intsect = geometry.intersectRays(ray, legalRay);
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
@@ -337,7 +341,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 		}
 		// Selected piece legal move SEGMENTS
 		for (const segment of selectedPieceSegments) {
-			const intsect = math.intersectRayAndSegment(ray, segment.start, segment.end);
+			const intsect = geometry.intersectRayAndSegment(ray, segment.start, segment.end);
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer

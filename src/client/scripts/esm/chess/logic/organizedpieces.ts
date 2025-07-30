@@ -13,15 +13,14 @@
 
 import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
-import math from "../../util/math/math.js";
 import movesets from "./movesets.js";
+import vectors, { Vec2, Vec2Key } from "../../util/math/vectors.js";
+import bimath from "../../util/bigdecimal/bimath.js";
 
 import type { LineKey } from "../util/boardutil.js";
-import type { Vec2, Vec2Key } from "../../util/math/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";
-import bimath from "../../util/bigdecimal/bimath.js";
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -170,7 +169,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 
 	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
 	for (const line of slides) {
-		const strline = math.getKeyFromVec2(line);
+		const strline = vectors.getKeyFromVec2(line);
 		lines.set(strline, new Map());
 	}
 
@@ -554,7 +553,7 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
  * @returns the key `C|X`
  */
 function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
-	const C = math.getLineCFromCoordsAndVec(coords, step);
+	const C = vectors.getLineCFromCoordsAndVec(coords, step);
 	const X = getXFromLine(step, coords);
 	return `${C}|${X}`;
 }

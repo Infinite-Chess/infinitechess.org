@@ -19,10 +19,10 @@ import guigameinfo from '../gui/guigameinfo.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import boardpos from './boardpos.js';
 import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
 
 
 import type { Board } from '../../chess/logic/gamefile.js';
-import type { BoundingBoxBD } from '../../util/math/math.js';
 import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
 
 
@@ -68,8 +68,8 @@ const iterationsToRecalcPadding: number = 10;
 function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBoxBD): Area {
 	if (coordsList.length === 0) throw Error("Cannot calculate area from an empty coords list.");
 
-	let box: BoundingBoxBD = math.getBoxFromCoordsList(coordsList); // Unpadded
-	if (existingBox) box = math.mergeBoundingBoxBDs(box, existingBox); // Unpadded
+	let box: BoundingBoxBD = bounds.getBoxFromCoordsList(coordsList); // Unpadded
+	if (existingBox) box = bounds.mergeBoundingBoxBDs(box, existingBox); // Unpadded
 
 	return calculateFromUnpaddedBox(box);
 }
@@ -140,14 +140,14 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD { // { left, right
  */
 function calculateFromBox(box: BoundingBoxBD): Area { // { left, right, bottom, top }
 	// The new boardPos is the middle point
-	const newBoardPos = math.calcCenterOfBoundingBox(box);
+	const newBoardPos = bounds.calcCenterOfBoundingBox(box);
 
 
 	// What is the scale required to match the sides?
 	const newScale = calcScaleToMatchSides(box);
 
 	// Now maximize the bounding box to fill entire screen when at position and scale, so that
-	// we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
+	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
 	const maximizedBox = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, false);
 	math;
@@ -179,7 +179,7 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
 
 	const screenBoundingBox = camera.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
-	const screenBoundingBoxBD: BoundingBoxBD = math.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
+	const screenBoundingBoxBD: BoundingBoxBD = bounds.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
 
 	// What is the scale required to match the sides?
 	const xScale = bigdecimal.divide_floating(screenBoundingBoxBD.right, xHalfLength);
@@ -213,7 +213,7 @@ function addPaddingToBoundingBox(boundingBox: BoundingBoxBD, horzPad: BigDecimal
 function initTelFromCoordsList(coordsList: Coords[]): void {
 	if (coordsList.length === 0) throw Error("Cannot init teleport from an empty coords list.");
 
-	const box = math.getBoxFromCoordsList(coordsList); // Unpadded
+	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
 	initTelFromUnpaddedBox(box);
 }
 
@@ -241,23 +241,23 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 	let firstArea: Area | undefined;
 
 	if (isAZoomOut) { // If our current screen isn't within the final area, create new area to teleport to first
-		if (!math.boxContainsSquare(thisAreaBox, startCoords)) {
-			math.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
+		if (!bounds.boxContainsSquare(thisAreaBox, startCoords)) {
+			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
 			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
 		// Version that fits the entire screen on the zoom out
-		// if (!math.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
-		//     const mergedBoxes = math.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
+		// if (!bounds.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
+		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
 	} else { // zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
-		if (!math.boxContainsSquare(currentBoardBoundingBox, endCoords)) {
-			math.expandBDBoxToContainSquare(thisAreaBox, endCoords); // Unpadded
+		if (!bounds.boxContainsSquare(currentBoardBoundingBox, endCoords)) {
+			bounds.expandBDBoxToContainSquare(thisAreaBox, endCoords); // Unpadded
 			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
 		// Version that fits the entire screen on the zoom out
-		// if (!math.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {
-		//     const mergedBoxes = math.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
+		// if (!bounds.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {
+		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
 	}

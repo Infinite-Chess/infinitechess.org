@@ -12,6 +12,9 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
+import variant from "../../../../chess/variants/variant.js";
+import gameslot from "../../../chess/gameslot.js";
+import vectors from "../../../../util/math/vectors.js";
 import { Mouse } from "../../../input.js";
 import variant from "../../../../chess/variants/variant.js";
 import gameslot from "../../../chess/gameslot.js";
@@ -77,7 +80,7 @@ function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: b
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistance(coordsWorld, world));
 		}
 	});
 

@@ -8,16 +8,14 @@
 import perspective from "./perspective.js";
 // @ts-ignore
 import transition from "./transition.js";
-import math from "../../util/math/math.js";
 import mouse from "../../util/mouse.js";
 import { listener_overlay } from "../chess/game.js";
 import boardpos from "./boardpos.js";
 import guipromotion from "../gui/guipromotion.js";
-
+import vectors from "../../util/math/vectors.js";
 
 
 import type { Coords } from "../../chess/util/coordutil.js";
-
 
 
 // Types -------------------------------------------------------------
@@ -96,7 +94,7 @@ function checkIfBoardGrabbed() {
 			// Pixel distance
 			const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
 			const p2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
-			fingerPixelDist_WhenBoardPinched = math.euclideanDistance(p1Pos, p2Pos);
+			fingerPixelDist_WhenBoardPinched = vectors.euclideanDistance(p1Pos, p2Pos);
 			if (fingerPixelDist_WhenBoardPinched === 0) throw Error('Finger pixel dist when pinching is 0');
 		
 			// Scale
@@ -238,7 +236,7 @@ function dragBoard() {
 		const pointer2World = mouse.convertMousePositionToWorldSpace(pointer2Pos, listener_overlay.element);
 
 		// Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
-		const thisPixelDist = math.euclideanDistance(pointer1Pos, pointer2Pos);
+		const thisPixelDist = vectors.euclideanDistance(pointer1Pos, pointer2Pos);
 		let ratio = thisPixelDist / fingerPixelDist_WhenBoardPinched!;
 	
 		// If the scale is greatly zoomed out, start slowing it down

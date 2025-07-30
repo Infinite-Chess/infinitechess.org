@@ -23,7 +23,6 @@ import stats from "../gui/stats.js";
 import statustext from "../gui/statustext.js";
 import copygame from "../chess/copygame.js";
 import docutil from "../../util/docutil.js";
-import math, { Vec2 } from "../../util/math/math.js";
 import mouse from "../../util/mouse.js";
 import { listener_document } from "../chess/game.js";
 import guipromotion from "../gui/guipromotion.js";
@@ -38,6 +37,7 @@ import guinavigation from "../gui/guinavigation.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
 import boardeditor from "./boardeditor.js";
+import vectors, { Vec2 } from "../../util/math/vectors.js";
 
 
 import type { Mesh } from "../rendering/piecemodels.js";
@@ -134,8 +134,8 @@ function detectPanning() {
 function accelPanVel(panVel: Vec2, angleDegs: number): Vec2 {
 	const baseAngle = -perspective.getRotZ();
 	const dirOfTravel = baseAngle + angleDegs;
-	const angleRad = math.degreesToRadians(dirOfTravel);
-	const XYComponents: Vec2 = math.getXYComponents_FromAngle(angleRad);
+	const angleRad = vectors.degreesToRadians(dirOfTravel);
+	const XYComponents: Vec2 = vectors.getXYComponents_FromAngle(angleRad);
 	const accelToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
 	panVel[0] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[0];
 	panVel[1] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[1];

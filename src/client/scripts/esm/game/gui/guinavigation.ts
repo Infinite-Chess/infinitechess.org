@@ -14,7 +14,7 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
-import math from '../../util/math/math.js';
+import bounds from '../../util/math/bounds.js';
 import premoves from '../chess/premoves.js';
 // @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';
@@ -305,7 +305,7 @@ function callback_Expand() {
 }
 
 function recenter() {
-	const boundingBox = boardeditor.areInBoardEditor() ? math.getBoxFromCoordsList([[1,1], [8,8]]) :
+	const boundingBox = boardeditor.areInBoardEditor() ? bounds.getBoxFromCoordsList([[1,1], [8,8]]) :
 														 gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list

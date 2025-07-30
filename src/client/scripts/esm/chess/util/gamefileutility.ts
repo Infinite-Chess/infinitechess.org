@@ -12,9 +12,9 @@ import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import math, { BoundingBoxBD, Vec2 } from '../../util/math/math.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import winconutil from './winconutil.js';
+import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
@@ -99,7 +99,7 @@ function getStartingAreaBox(boardsim: Board): BoundingBoxBD {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 	if (coordsList.length === 0) coordsList.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
-	return math.getBoxFromCoordsList(coordsList);
+	return bounds.getBoxFromCoordsList(coordsList);
 }
 
 /**

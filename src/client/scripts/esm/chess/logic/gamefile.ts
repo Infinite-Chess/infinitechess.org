@@ -1,6 +1,5 @@
 import type { ClockData, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
-import type { BoundingBoxBD } from "../../util/math/math.js";
 import type { MetaData } from "../util/metadata.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
@@ -11,7 +10,7 @@ import type { GameState, GlobalGameState } from "./state.js";
 import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
-
+import type { BoundingBoxBD } from "../../util/math/bounds.js";
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
 import jsutil from "../../util/jsutil.js";
@@ -19,12 +18,12 @@ import typeutil from "../util/typeutil.js";
 import legalmoves from "./legalmoves.js";
 import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
-import math from "../../util/math/math.js";
 import clock from "./clock.js";
 import movepiece from "./movepiece.js";
 import checkdetection from "./checkdetection.js";
 import gamerules from "../variants/gamerules.js";
 import wincondition from "./wincondition.js";
+import bounds from "../../util/math/bounds.js";
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -157,7 +156,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		position,
 		state_global,
 		fullMove,
-		box: math.getBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces)),
+		box: bounds.getBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces)),
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);

@@ -14,13 +14,13 @@ import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
-import math from '../../util/math/math.js';
 import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import geometry from '../../util/math/geometry.js';
 // @ts-ignore
 import perspective from './perspective.js';
 
@@ -96,7 +96,7 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined) {
 	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
-	mesh.offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
+	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
 	mesh.inverted = perspective.getIsViewingBlackPerspective();
 
@@ -205,12 +205,12 @@ function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number):
 function shiftAll(boardsim: Board, mesh: Mesh) {
 	console.log("Shifting all piece meshes.");
 
-	const newOffset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
+	const newOffset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 
 	const diffXOffset = mesh.offset[0] - newOffset[0];
 	const diffYOffset = mesh.offset[1] - newOffset[1];
 	
-	const chebyshevDistance = math.chebyshevDistance(mesh.offset, newOffset);
+	const chebyshevDistance = vectors.chebyshevDistance(mesh.offset, newOffset);
 	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
 		console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
 		regenAll(boardsim, mesh);

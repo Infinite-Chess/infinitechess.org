@@ -42,7 +42,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	 */
 	const maxImgSizePerMaxTextureSize = maxTextureSize / gridSize;
 
-	const spritesheetSizeIfPreferredImgSizeUsed = math.roundUpToNextPowerOf2(PREFERRED_IMG_SIZE * gridSize); // Round up to nearest power of 2
+	const spritesheetSizeIfPreferredImgSizeUsed = roundUpToNextPowerOf2(PREFERRED_IMG_SIZE * gridSize); // Round up to nearest power of 2
 	const actualImgSizeIfUsingPreferredImgSize = spritesheetSizeIfPreferredImgSizeUsed / gridSize; 
 
 	/** Whichever is smaller of the two */
@@ -125,6 +125,24 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 		pieceWidth,
 		texLocs
 	};
+}
+
+/**
+ * Rounds up the given number to the next lowest power of two.
+ * 
+ * Time complexity O(1), because bitwise operations are extremely fast.
+ * @param num - The number to round up.
+ * @returns The nearest power of two greater than or equal to the given number.
+ */
+function roundUpToNextPowerOf2(num: number): number {
+	if (num <= 1) return 1; // Handle edge case for numbers 0 and 1
+	num--; // Step 1: Decrease by 1 to handle numbers like 8
+	num |= num >> 1; // Step 2: Propagate the most significant bit to the right
+	num |= num >> 2;
+	num |= num >> 4;
+	num |= num >> 8;
+	num |= num >> 16; // Additional shift for 32-bit numbers
+	return num + 1; // Step 3: Add 1 to get the next power of 2
 }
 
 

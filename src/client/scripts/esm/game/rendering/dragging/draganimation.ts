@@ -9,9 +9,9 @@
 import type { BufferModel } from "../buffermodel.js";
 import type { Color } from "../../../util/math/math.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
-import type { BoundingBox } from "../../../util/math/math.js";
 import type { Piece } from "../../../chess/util/boardutil.js";
-import type { RawType } from "../../../chess/util/typeutil.js";
+import type { BoundingBox } from "../../../util/math/bounds.js";
+
 
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
@@ -24,10 +24,10 @@ import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import animation from "../animation.js";
-import { listener_document, listener_overlay } from "../../chess/game.js";
-import { InputListener, Mouse } from "../../input.js";
 import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
+import { listener_overlay } from "../../chess/game.js";
+import { Mouse } from "../../input.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
