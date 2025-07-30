@@ -254,12 +254,14 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 
 	// 6. Check if the intersection point lies on the ray (not "behind" its start).
 	// Calculate vector from ray start to intersection.
-	const vectorToIntersection = calculateVectorFromPoints(ray.start, intersectionPoint);
+	const rayStartBD = bd.FromCoords(ray.start);
+	const vectorToIntersection = calculateVectorFromBDPoints(rayStartBD, intersectionPoint);
 
 	// Calculate dot product of ray's direction vector and the vector to the intersection.
-	const dotProd = dotProduct(ray.vector, vectorToIntersection);
+	const rayVecBD = bd.FromCoords(ray.vector);
+	const dotProd = dotProductBD(rayVecBD, vectorToIntersection);
 
-	if (dotProd < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
+	if (bd.compare(dotProd, ZERO) < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
 
 	// 7. If all checks pass, the intersection point is valid for both ray and segment.
 	return intersectionPoint;
@@ -277,7 +279,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
  * @param ray2 The second ray.
  * @returns The intersection Coords if they intersect on both rays, otherwise undefined.
  */
-function intersectRays(ray1: Ray, ray2: Ray): Coords | undefined {
+function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 	// 1. Calculate the intersection point of the infinite lines containing the rays.
 	const intersectionPoint = calcIntersectionPointOfLines(...ray1.line, ...ray2.line);
 
@@ -291,18 +293,21 @@ function intersectRays(ray1: Ray, ray2: Ray): Coords | undefined {
 	// The dot product will be non-negative (>= 0) if this is true.
     
 	// Vector from ray1's start to the intersection point
-	const vectorToIntersection1 = calculateVectorFromPoints(ray1.start, intersectionPoint);
-    
+	const ray1StartBD = bd.FromCoords(ray1.start);
+	const vectorToIntersection1 = calculateVectorFromBDPoints(ray1StartBD, intersectionPoint);
 	// Dot product of ray1's direction vector and vectorToIntersection1
-	const dotProd1 = dotProduct(ray1.vector, vectorToIntersection1);
+	const ray1VecBD = bd.FromCoords(ray1.vector);
+	const dotProd1 = dotProductBD(ray1VecBD, vectorToIntersection1);
 
-	if (dotProd1 < 0) return undefined; // The intersection point is "behind" the start of ray1.
+	if (bd.compare(dotProd1, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray1.
 
 	// 4. Check if the intersection point lies on the second ray (similarly).
-	const vectorToIntersection2 = calculateVectorFromPoints(ray2.start, intersectionPoint);
-	const dotProd2 = dotProduct(ray2.vector, vectorToIntersection2);
+	const ray2StartBD = bd.FromCoords(ray2.start);
+	const vectorToIntersection2 = calculateVectorFromBDPoints(ray2StartBD, intersectionPoint);
+	const ray2VecBD = bd.FromCoords(ray2.vector);
+	const dotProd2 = dotProductBD(ray2VecBD, vectorToIntersection2);
 
-	if (dotProd2 < 0) return undefined; // The intersection point is "behind" the start of ray2.
+	if (bd.compare(dotProd2, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray2.
 
 	// 5. If both checks pass, the intersection point is on both rays.
 	return intersectionPoint;
@@ -367,6 +372,13 @@ function areLinesInGeneralFormEqual(line1: LineCoefficients, line2: LineCoeffici
  */
 function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
 	return [end[0] - start[0], end[1] - start[1]];
+}
+
+/**
+ * Calculates the vector between 2 points.
+ */
+function calculateVectorFromBDPoints(start: BDCoords, end: BDCoords): BDCoords {
+	return [bd.subtract(end[0], start[0]), bd.subtract(end[1], start[1])];
 }
 
 /**
@@ -626,6 +638,14 @@ function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): 
  */
 function dotProduct(v1: Vec2, v2: Vec2): bigint {
 	return v1[0] * v2[0] + v1[1] * v2[1];
+}
+
+/**
+ * Computes the dot product of two 2D vectors.
+ * WILL BE POSITIVE if they roughly point in the same direction.
+ */
+function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
+	return bd.add(bd.multiply_fixed(v1[0], v2[0]), bd.multiply_fixed(v1[1], v2[1]));
 }
 
 
