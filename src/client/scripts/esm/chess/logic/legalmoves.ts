@@ -386,6 +386,13 @@ function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoord
 		}
 	}
 
+	// For premoving slides, without this block it would allow us to premove capturing voids!
+	const pieceOnDestination = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, endCoords);
+	if (pieceOnDestination) {
+		const rawType = typeutil.getRawType(pieceOnDestination.type);
+		if (rawType === r.VOID) return false; // Can't move to a void square
+	}
+
 	for (const [strline, limits] of Object.entries(legalMoves.sliding)) {
 		const line = coordutil.getCoordsFromKey(strline as Vec2Key); // 'dx,dy'
 
