@@ -138,6 +138,8 @@ function rewindPremoves(gamefile: FullGame, mesh?: Mesh) {
 
 	// console.error("Setting applied to false.");
 	applied = false;
+
+	specialrighthighlights.onMove();
 }
 
 /**
