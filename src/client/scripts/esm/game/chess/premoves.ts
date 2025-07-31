@@ -327,7 +327,8 @@ function update(gamefile: FullGame, mesh?: Mesh) {
 	if (mouse.isMouseDown(Mouse.RIGHT)) {
 		if (!hasAtleastOnePremove()) return; // No premoves to clear. Don't claim the right mouse button.
 
-		mouse.claimMouseDown(Mouse.RIGHT); // Claim the right mouse button so it doesn't propagate to annotation drawing
+		mouse.claimMouseDown(Mouse.RIGHT); // Claim the right mouse button so it doesn't propagate to arrow drawing
+		mouse.cancelMouseClick(Mouse.RIGHT); // Prevents the up-release from registering a click later
 
 		cancelPremoves(gamefile, mesh);
 	}
