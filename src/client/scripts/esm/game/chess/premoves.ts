@@ -307,6 +307,13 @@ function onGameConclude() {
 	applied = originalApplied;
 }
 
+/**
+ * Call externally when the game is unloaded.
+ */
+function onGameUnload() {
+	clearPremoves();
+}
+
 
 // Rendering --------------------------------------------------------
 
@@ -341,5 +348,6 @@ export default {
 	applyPremoves,
 	onYourMove,
 	onGameConclude,
+	onGameUnload,
 	render,
 };
