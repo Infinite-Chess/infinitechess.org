@@ -17,9 +17,6 @@ import { onReport, reportschem } from './cheatreport.js';
 import { resyncToGame } from './resync.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { onJoinGame } from './joingame.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import socketUtility from '../../socket/socketUtility.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
