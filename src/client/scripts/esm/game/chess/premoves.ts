@@ -21,6 +21,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import gameslot from './gameslot.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
+import animation from '../rendering/animation.js';
 import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
 
@@ -139,9 +140,13 @@ function clearPremoves() {
 /** Cancels all premoves */
 function cancelPremoves(gamefile: FullGame, mesh?: Mesh) {
 	// console.log("Clearing premoves");
+	const hadAtleastOnePremove = hasAtleastOnePremove();
 	rewindPremoves(gamefile, mesh);
 	clearPremoves();
 	if (selection.arePremoving()) selection.unselectPiece();
+	// If there were any animations, this should ensure they're only cancelled if they are for premoves,
+	// and not for the opponent's move. After all cancelPremoves() can be called at any time.
+	if (hadAtleastOnePremove) animation.clearAnimations();
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
