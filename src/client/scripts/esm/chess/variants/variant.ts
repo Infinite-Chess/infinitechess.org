@@ -499,7 +499,7 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
  * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
-function getMovesetsOfVariant(metadata: MetaData, slideLimit?: bigint): RawTypeGroup<() => PieceMoveset> {
+function getMovesetsOfVariant(metadata: VariantContext, slideLimit?: bigint): RawTypeGroup<() => PieceMoveset> {
 	// Pasted games with no variant specified use the default movesets
 	// TODO: Transfer the slide limit game rule of pasted games
 	if (metadata.Variant === undefined) return getMovesets(undefined, slideLimit);
