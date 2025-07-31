@@ -845,6 +845,11 @@ function areEqual(bd1: BigDecimal, bd2: BigDecimal): boolean {
 	return compare(bd1, bd2) === 0;
 }
 
+/** Negates a BigDecimal */
+function negate(bd: BigDecimal): BigDecimal {
+	return { bigint: -bd.bigint, divex: bd.divex, };
+}
+
 /** Returns the smaller of two BigDecimals. */
 function min(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	return compare(bd1, bd2) === 1 ? bd2 : bd1;
@@ -1356,6 +1361,7 @@ export default {
 	setExponent,
 	compare,
 	areEqual,
+	negate,
 	min,
 	max,
 	clamp,
