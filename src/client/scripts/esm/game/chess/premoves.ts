@@ -58,6 +58,21 @@ let applied: boolean = true;
 // Processing Premoves ---------------------------------------------------------------------
 
 
+/** Event listener for when we change the Premoves toggle */
+document.addEventListener('premoves-toggle', (e: CustomEvent) => {
+	// const enabled: boolean = e.detail;
+
+	const gamefile = gameslot.getGamefile();
+	const mesh = gameslot.getMesh();
+
+	if (!gamefile) return;
+
+	cancelPremoves(gamefile, mesh);
+
+	selection.reselectPiece(); // Recalculates the currently selected piece's legal moves
+});
+
+
 /** Gets all pending premoves. */
 function getPremoves() {
 	return premoves;

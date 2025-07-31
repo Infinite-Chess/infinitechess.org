@@ -190,10 +190,13 @@ function getPremoveEnabled(): boolean {
 	return preferences.premove_enabled ?? default_premove_enabled;
 }
 
-function setPremoveMode(premove_mode: boolean): void {
-	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
-	preferences.premove_enabled = premove_mode;
+function setPremoveMode(value: boolean): void {
+	if (typeof value !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
+	preferences.premove_enabled = value;
 	savePreferences();
+
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('premoves-toggle', { detail: value }));
 }
 
 function getAnimationsMode(): boolean {
@@ -240,6 +243,7 @@ function setLingeringAnnotationsMode(value: boolean) {
 	preferences.lingering_annotations = value;
 	onChangeMade();
 	savePreferences();
+
 	// Dispatch an event so that the game code can detect it, if present.
 	document.dispatchEvent(new CustomEvent('lingering-annotations-toggle', { detail: value }));
 }
