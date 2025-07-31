@@ -37,9 +37,9 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * @param gamefile - The gamefile
  * @param coords - Coordinates of the king selected
  * @param color - The color of the king selected
- * @param all_possible - Whether we should return all possible moves (premoving)
+ * @param premove - Whether we should return all possible moves (premoving)
  */
-function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
+function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
 	const individualMoves: CoordsSpecial[] = [];
 
 	const { boardsim, basegame } = gamefile;
@@ -59,7 +59,7 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 	let right = Infinity; // Piece directly right of king. (Infinity if none)
 
 	// If premoving, skip obstruction and check checks.
-	if (all_possible) {
+	if (premove) {
 
 		// Find the closest CASTLEABLE piece on each side of the king.
 		for (const idx of row) {
@@ -72,8 +72,8 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 		}
 
 		// THEN append the castling moves to the individual moves.
-		processSide(left, -1, all_possible); // Castling left
-		processSide(right, 1, all_possible); // Castling right
+		processSide(left, -1, premove); // Castling left
+		processSide(right, 1, premove); // Castling right
 
 	} else { // Not premoving. Perform obsctruction and check checks as normal.
 
@@ -86,8 +86,8 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 		}
 
 		// THEN check if the piece is castleable.
-		processSide(left, -1, all_possible); // Castling left
-		processSide(right, 1, all_possible); // Castling right
+		processSide(left, -1, premove); // Castling left
+		processSide(right, 1, premove); // Castling right
 	}
 
 	/**
@@ -121,9 +121,9 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 	 * If the given side is legal to castle with, it will append the castling move to the individual moves.
 	 * @param pieceX - The X coordinate of the piece that the king is castling with, or -Infinity/Infinity if there is no piece on that side.
 	 * @param dir - The direction the king is moving in. 1 for right, -1 for left.
-	 * @param all_possible - PREMOVING: Whether we should ignore checks.
+	 * @param premove - PREMOVING: Whether we should ignore checks.
 	 */
-	function processSide(pieceX: number, dir: 1 | -1, all_possible: boolean): void {
+	function processSide(pieceX: number, dir: 1 | -1, premove: boolean): void {
 
 		if (!isFinite(pieceX)) return; // No piece on this side, can't castle with it
 
@@ -133,7 +133,7 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 		
 		// Check checks: Only need if opponent is using checkmate as a win condition.
 		// Can skip if we're premoving, as we can't predict if we will be in check.
-		if (gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate') && !all_possible) { 
+		if (gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate') && !premove) { 
 
 			// Can't currently be in check
 			if (gamefileutility.isCurrentViewedPositionInCheck(boardsim)) return; // Not legal if in check
@@ -162,9 +162,9 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
  * @param gamefile - The gamefile
  * @param coords - Coordinates of the pawn selected
  * @param color - The color of the pawn selected
- * @param all_possible - Whether we should return all possible moves (premoving)
+ * @param premove - Whether we should return all possible moves (premoving)
  */
-function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
+function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === players.WHITE ? 1 : -1;
@@ -175,14 +175,15 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 
 	// Is there a piece in front of it?
 	const coordsInFront: Coords = [coords[0], coords[1] + yOneorNegOne];
-	if (boardutil.getTypeFromCoords(boardsim.pieces, coordsInFront) === undefined || all_possible) { // No piece in front of it, OR we're premoving
+	if (boardutil.getTypeFromCoords(boardsim.pieces, coordsInFront) === undefined || premove) { // No piece in front of it, OR we're premoving
 		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, coordsInFront, color); // No piece, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord: CoordsSpecial = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
 		const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, doublePushCoord);
-		if (doesPieceHaveSpecialRight(boardsim, coords) && (pieceAtCoords === undefined || all_possible)) { // Add the double push!
-			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
+		if (doesPieceHaveSpecialRight(boardsim, coords) && (pieceAtCoords === undefined || premove)) { // Add the double push!
+			// Only create the enpassantCreate flag if it's not a premove.
+			if (!premove) doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color); 
 		}
 	}
@@ -196,7 +197,7 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 	for (let i = 0; i < 2; i++) {
 		const thisCoordsToCapture: Coords = coordsToCapture[i]!;
 
-		if (!all_possible) { // Only perform obstruction checks if we're not premoving
+		if (!premove) { // Only perform obstruction checks if we're not premoving
 			// Is there an enemy piece at this coords?
 			const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, thisCoordsToCapture);
 			if (pieceAtCoords === undefined) continue; // No piece, skip.
@@ -214,7 +215,7 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
 	// Skip if we're premoving, as the capturing moves are added above
-	if (!all_possible) addPossibleEnPassant(gamefile, individualMoves, coords, color);
+	if (!premove) addPossibleEnPassant(gamefile, individualMoves, coords, color);
 
 	return individualMoves;
 }
@@ -279,10 +280,10 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
  * @param gamefile - The gamefile
  * @param coords - Coordinates of the rose selected
  * @param color - The color of the rose selected
- * @param all_possible - Whether we should return all possible moves (premoving)
+ * @param premove - Whether we should return all possible moves (premoving)
  * @returns
  */
-function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
+function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
 	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];
@@ -298,7 +299,7 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possib
 				currentCoord = coordutil.addCoordinates(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
 				const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, currentCoord); // { type, index, coords }
-				if (pieceOnSquare && !all_possible) { // If there is a piece on the square and we're not premoving
+				if (pieceOnSquare && !premove) { // If there is a piece on the square and we're not premoving
 					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
 					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
 					break; // Break the spiral

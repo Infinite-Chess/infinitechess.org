@@ -163,11 +163,11 @@ function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
  * @param piece 
  * @param moveset 
  * @param legalmoves 
- * @param all_possible - Default: false. SET TO TRUE when you need to calculate premoves, which allow all possible moves!
+ * @param premove - Default: false. SET TO TRUE when you need to calculate premoves, which allow all possible moves!
  */
-function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, all_possible: boolean): void {
+function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, premove: boolean): void {
 	const color = typeutil.getColorFromType(piece.type);
-	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color, all_possible));
+	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color, premove));
 }
 
 /**
