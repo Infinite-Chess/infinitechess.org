@@ -45,7 +45,7 @@ let preferences: Preferences;
 // The legal moves shape preference
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
-const default_premove_enabled: boolean = false; // Change this to true when premoves are implemented.
+const default_premove_enabled: boolean = true;
 /** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
