@@ -195,13 +195,14 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * @param game - The game they are in.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game): void {
+	if (!gameutility.isGameOver(game)) return; // Game is still going, can't let them join a new game.
+
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, game.id);
     
 	// If both players have requested this (i.e. have seen the game conclusion),
 	// and the game is scheduled to be deleted, just delete it now!
     
-	if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
 	// Is the opponent still in the players in active games list? (has not seen the game results)
 	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);

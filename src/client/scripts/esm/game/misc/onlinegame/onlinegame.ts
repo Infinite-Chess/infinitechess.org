@@ -332,10 +332,14 @@ function onAbortOrResignButtonPress() {
  * This requests the server to stop serving us game updates, and allow us to join a new game.
  */
 function onMainMenuButtonPress() {
-	// Tell the server we no longer want game updates, if we are still receiving them.
-	websocket.unsubFromSub('game');
-	
+	// MUST BE BEFORE UNSUBBING, since the code will skip
+	// sending this message if we are not subbed.
+	// This allows us to join a new game.
+	// Basically tells the server we don't want to see the game conclusion.
 	requestRemovalFromPlayersInActiveGames();
+
+	// Tell the server we no longer want game updates.
+	websocket.unsubFromSub('game');
 }
 
 
@@ -367,7 +371,11 @@ function deleteCustomVariantOptions() {
  */
 function requestRemovalFromPlayersInActiveGames() {
 	if (!areInOnlineGame()) return;
-	if (!websocket.areSubbedToSub('game')) return; // THE SERVER has deleted the game. Already removed from players in active games list!
+	if (!websocket.areSubbedToSub('game')) {
+		// THE SERVER has deleted the game. Already removed from players in active games list!
+		console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
+		return;
+	}; 
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
 }
 

@@ -684,7 +684,9 @@ function getSimplifiedGameString(game: Game) {
  * @param game - The game
  * @returns true if the game is over (gameConclusion truthy)
  */
-function isGameOver(game: Game) { return game.gameConclusion !== undefined; }
+function isGameOver(game: Game) {
+	return game.gameConclusion !== undefined;
+}
 
 /**
  * Returns true if the provided color has an actively running auto-resign timer.
