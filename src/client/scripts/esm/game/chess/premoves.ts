@@ -184,8 +184,6 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh) {
 		const results = premoveIsLegal(gamefile, oldPremove, 'premove');
 
 		if (results.legal === true) {
-			// MUST RECALCULATE CHANGES
-
 			// Extract the original MoveDraft from the premove
 			const premoveDraft: MoveDraft = {
 				startCoords: oldPremove.startCoords,
@@ -194,6 +192,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh) {
 			};
 			specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsSpecial, premoveDraft);
 
+			// MUST RECALCULATE CHANGES
 			const premove = generatePremove(gamefile, premoveDraft);
 
 			premoves[i] = premove; // Update the premove with the new changes
