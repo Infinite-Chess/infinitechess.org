@@ -64,8 +64,9 @@ function returnMeshPiece(mesh: Mesh, change: Change) {
  * @param forward - whether this is a forward or back animation
  * @param animateMain - Whether the main piece targeted by the move should be animated. All secondary pieces are guaranteed animated. If this is false, the main piece animation will be instantanious, only playing the SOUND.
  * @param premove - Whether this animation is for a premove.
+ * @param force_instant - Whether to FORCE instant animation, EVEN secondary pieces won't be animated. Enable when you are playing a premove in the game.
  */
-function animateMove(moveChanges: Change[], forward = true, animateMain = true, premove = false) {
+function animateMove(moveChanges: Change[], forward = true, animateMain = true, premove = false, force_instant = false) {
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
 
 	// Helper function for pushing an item to an array in a map, creating the array if it does not exist.
@@ -85,7 +86,7 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true, 
 			// Queue all captures to be associated with the next move
 			pushToArrayMap(showKeyframes, change.order, change.piece);
 		} else if (change.action === "move") {
-			const instant = (change.main && !animateMain) || !preferences.getAnimationsMode(); // Whether the animation should be instantanious, only playing the SOUND.
+			const instant = (change.main && !animateMain) || !preferences.getAnimationsMode() || force_instant; // Whether the animation should be instantanious, only playing the SOUND.
 			let waypoints = change.path ?? [change.piece.coords, change.endCoords];
 
 			// Put all pieces captured last in the last keyframe
