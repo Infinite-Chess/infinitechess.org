@@ -196,6 +196,7 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  */
 function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game): void {
 	const user = ws.metadata.memberInfo;
+	console.log(`DEBUG: Removing player from active game ${game.id}...`);
 	removeUserFromActiveGame(user, game.id);
     
 	// If both players have requested this (i.e. have seen the game conclusion),
@@ -205,7 +206,9 @@ function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Gam
 	// Is the opponent still in the players in active games list? (has not seen the game results)
 	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
+	console.log(`DEBUG: Player is color ${color}`);
 	if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
+	console.log(`DEBUG: Opponent color ${opponentColor} HAS seen the game conclusion! Deleting game...`);
 
 	// console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
 
