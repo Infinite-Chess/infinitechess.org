@@ -19,9 +19,10 @@ import preferences from '../../components/header/preferences.js';
 import selection from './selection.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
-import movepiece, { Edit, MoveDraft } from '../../chess/logic/movepiece.js';
-import { animateMove } from './graphicalchanges.js';
 import gameslot from './gameslot.js';
+import specialdetect from '../../chess/logic/specialdetect.js';
+import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../chess/logic/movepiece.js';
+import { animateMove } from './graphicalchanges.js';
 
 
 // Type Definitions ---------------------------------------------
@@ -173,7 +174,18 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh) {
 		const oldPremove = premoves[i]!;
 
 		// MUST RECALCULATE CHANGES
-		const premoveDraft: MoveDraft = pullMoveDraftFromPremove(oldPremove);
+
+		// Extract the original MoveDraft from the premove
+		const premoveDraft: MoveDraft = {
+			startCoords: oldPremove.startCoords,
+			endCoords: oldPremove.endCoords,
+			promotion: oldPremove.promotion,
+			// Don't miss any other special move flags
+			enpassantCreate: oldPremove.enpassantCreate,
+			enpassant: oldPremove.enpassant,
+			castle: oldPremove.castle,
+			path: oldPremove.path,
+		};
 		const premove = generatePremove(gamefile, premoveDraft);
 
 		premoves[i] = premove; // Update the premove with the new changes
@@ -200,13 +212,21 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	// we still need clearPremoves() to set applied to true!
 
 	// Check if the move is legal
-	const isLegal = premove && premoveIsLegal(gamefile, premove);
-	if (isLegal) {
-		// console.log("Premove is legal, applying it");
+	const results = premoveIsLegal(gamefile, premove);
 
+	if (premove && results.legal === true) {
+		// console.log("Premove is legal, applying it");
+		
 		// Legal, apply the premove to the real game state
-		const premoveDraft: MoveDraft = pullMoveDraftFromPremove(premove);
-		const move = movesequence.makeMove(gamefile, mesh, premoveDraft); // Make move
+
+		const moveDraft: MoveDraft = {
+			startCoords: premove.startCoords,
+			endCoords: premove.endCoords,
+			promotion: premove.promotion,
+		};
+		specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsSpecial, moveDraft);
+
+		const move = movesequence.makeMove(gamefile, mesh, moveDraft); // Make move
 
 		movesendreceive.sendMove();
 		enginegame.onMovePlayed();
@@ -230,32 +250,27 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 
 /** Tests whether a given premove is legal to make on the board. */
-function premoveIsLegal(gamefile: FullGame, premove: Premove): boolean {
+function premoveIsLegal(gamefile: FullGame, premove?: Premove): { legal: true, endCoordsSpecial: CoordsSpecial } | { legal: false } {
+	if (!premove) return { legal: false };
+
 	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
-	if (!piece) return false; // Can't premove nothing, could happen if your piece was captured by enpassant
+	if (!piece) return { legal: false }; // Can't premove nothing, could happen if your piece was captured by enpassant
 
-	if (premove.type !== piece.type) return false; // Our piece was probably captured, so it can't move anymore, thus the premove is illegal.
-
-	if (selection.getEditMode()) return true;
+	if (premove.type !== piece.type) return { legal: false }; // Our piece was probably captured, so it can't move anymore, thus the premove is illegal.
 
 	// Check if the move is legal
 	const premovedPieceLegalMoves = legalmoves.calculateAll(gamefile, piece);
 	const color = typeutil.getColorFromType(piece.type);
-	return legalmoves.checkIfMoveLegal(gamefile, premovedPieceLegalMoves, piece.coords, premove.endCoords, color);
-}
 
-/** Extracts the original MoveDraft from a generated Premove. */
-function pullMoveDraftFromPremove(premove: Premove): MoveDraft {
-	return {
-		startCoords: premove.startCoords,
-		endCoords: premove.endCoords,
-		promotion: premove.promotion,
-		// Don't miss any other special move flags
-		enpassantCreate: premove.enpassantCreate,
-		enpassant: premove.enpassant,
-		castle: premove.castle,
-		path: premove.path,
-	};
+	// A copy of the end coords for applying the special flags too.
+	// We have to do this because enpassant capture flags aren't
+	// generated for normal premoves
+	const endCoordsSpecial: CoordsSpecial = coordutil.copyCoords(premove.endCoords);
+
+	const isLegal = legalmoves.checkIfMoveLegal(gamefile, premovedPieceLegalMoves, premove.startCoords, endCoordsSpecial, color);
+
+	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsSpecial };
+	else return { legal: false };
 }
 
 /**

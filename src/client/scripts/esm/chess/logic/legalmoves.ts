@@ -369,7 +369,7 @@ function slide_CalcLegalLimit(
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns *true* if the provided legalMoves object contains the provided endCoords.
  */
-function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoords: Coords, endCoords: Coords, colorOfFriendly: Player, { ignoreIndividualMoves = false } = {}) {
+function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoords: Coords, endCoords: Coords, colorOfFriendly: Player, { ignoreIndividualMoves = false } = {}): boolean {
 	// Return if it's the same exact square
 	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
