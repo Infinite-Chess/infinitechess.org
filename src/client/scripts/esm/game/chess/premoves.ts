@@ -21,6 +21,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import movepiece, { Edit, MoveDraft } from '../../chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
+import gameslot from './gameslot.js';
 
 
 // Type Definitions ---------------------------------------------
@@ -47,6 +48,9 @@ let premoves: Premove[] = [];
  * When premove's changes have to be reapplied, we have to recalculate all
  * of their changes, since for all we know they could end up capturing a
  * piece when they didn't when we originally premoved, or vice versa.
+ * 
+ * THIS SHOULD ONLY TEMPORARILY ever be false!! If it is, it means we just
+ * need to do something like calculating legal moves, then reapply the premoves.
  */
 let applied: boolean = true;
 
@@ -77,7 +81,7 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveD
 
 /** Applies a premove's changes to the board. */
 function applyPremove(gamefile: FullGame, mesh: Mesh | undefined, premove: Premove, forward: boolean) {
-	console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
+	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward, true); // forward & global are true
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, premove, forward);
 }
@@ -115,6 +119,7 @@ function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
 
 /** Clears all pending premoves */
 function clearPremoves() {
+	// console.error("Clearing premoves");
 	premoves = [];
 	// Since we now have zero premoves, they are technically applied.
 	// console.error("Setting applied to true.");
@@ -174,7 +179,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh) {
  * B. Illegal => Clears all premoves.
  */
 function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
-	// console.log("Processing premoves");
+	// console.error("Processing premoves");
 
 	if (applied) throw Error("Don't processPremoves when other premoves are still applied! rewindPremoves() first.");
 
@@ -252,6 +257,26 @@ function onYourMove(gamefile: FullGame, mesh?: Mesh) {
 	processPremoves(gamefile, mesh);
 }
 
+/**
+ * Call externally when the game is concluded after it ends.
+ * Erases pending premoves, leaving the `applied` state at what it was before
+ * so the rest of the code doesn't experience it changed randomly.
+ */
+function onGameConclude() {
+	// console.error("Game ended, clearing premoves");
+
+	const originalApplied = applied; // Save the original applied state
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
+
+	if (applied) rewindPremoves(gamefile, mesh);
+	clearPremoves();
+
+	// Restore the original applied state, as the rest of the code will have expected it not to change.
+	applied = originalApplied;
+}
+
 
 // Rendering --------------------------------------------------------
 
@@ -285,5 +310,6 @@ export default {
 	rewindPremoves,
 	applyPremoves,
 	onYourMove,
+	onGameConclude,
 	render,
 };

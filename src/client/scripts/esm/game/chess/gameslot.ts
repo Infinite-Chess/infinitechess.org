@@ -44,6 +44,7 @@ import guiclock from "../gui/guiclock.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
+import premoves from "./premoves.js";
 import { animateMove } from "./graphicalchanges.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
@@ -310,6 +311,7 @@ function concludeGame() {
 	guigameinfo.gameEnd(basegame.gameConclusion);
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
+	premoves.onGameConclude();
 	guipause.onReceiveGameConclusion();
 
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion).victor; // undefined if aborted
