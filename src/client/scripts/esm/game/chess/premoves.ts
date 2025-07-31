@@ -73,10 +73,9 @@ document.addEventListener('premoves-toggle', (e: CustomEvent) => {
 	selection.reselectPiece(); // Recalculates the currently selected piece's legal moves
 });
 
-
 /** Gets all pending premoves. */
-function getPremoves() {
-	return premoves;
+function hasAtleastOnePremove() {
+	return premoves.length > 0;
 }
 
 /** Adds an premove and applies its changes to the board. */
@@ -331,7 +330,7 @@ function render() {
 
 
 export default {
-	getPremoves,
+	hasAtleastOnePremove,
 	addPremove,
 	cancelPremoves,
 	rewindPremoves,

@@ -538,7 +538,10 @@ function rewindMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
+	const hadAtleastOnePremove = premoves.hasAtleastOnePremove();
 	premoves.cancelPremoves(gamefile, mesh);
+	// If we had premoves to cancel, just cancel them, don't rewind a move this time.
+	if (hadAtleastOnePremove) return;
 
 	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
