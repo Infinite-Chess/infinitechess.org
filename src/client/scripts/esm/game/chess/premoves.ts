@@ -69,8 +69,6 @@ document.addEventListener('premoves-toggle', (e: CustomEvent) => {
 	if (!gamefile) return;
 
 	cancelPremoves(gamefile, mesh);
-
-	selection.reselectPiece(); // Recalculates the currently selected piece's legal moves
 });
 
 /** Gets all pending premoves. */
@@ -143,6 +141,7 @@ function cancelPremoves(gamefile: FullGame, mesh?: Mesh) {
 	// console.log("Clearing premoves");
 	rewindPremoves(gamefile, mesh);
 	clearPremoves();
+	if (selection.arePremoving()) selection.unselectPiece();
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
