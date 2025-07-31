@@ -75,9 +75,9 @@ interface BaseBufferModel {
      */
 	render: (
 		// eslint-disable-next-line no-unused-vars
-		position?: [number, number, number],
+		position?: Vec3,
 		// eslint-disable-next-line no-unused-vars
-		scale?: [number, number, number],
+		scale?: Vec3,
 		// eslint-disable-next-line no-unused-vars
 		uniforms?: { [uniform: string]: any }
 	) => void
@@ -222,8 +222,8 @@ function createModel_GivenAttribInfo(
 			changedIndicesCount: number
 		) => updateBufferIndices(buffer, data, changedIndicesStart, changedIndicesCount),
 		render: (
-			position: [number, number, number] = [0, 0, 0],
-			scale: [number, number, number] = [1, 1, 1],
+			position: Vec3 = [0, 0, 0],
+			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
 		) => render(buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
 	};
@@ -269,8 +269,8 @@ function createModel_Instanced_GivenAttribInfo(
 			changedIndicesCount: number
 		) => updateBufferIndices(instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount),
 		render: (
-			position: [number, number, number] = [0, 0, 0],
-			scale: [number, number, number] = [1, 1, 1],
+			position: Vec3 = [0, 0, 0],
+			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
 		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};

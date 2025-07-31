@@ -22,7 +22,7 @@ import geometry from "../../../../util/math/geometry.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
-import vectors, { Ray, Vec2 } from "../../../../util/math/vectors.js";
+import vectors, { Ray, Vec2, Vec3 } from "../../../../util/math/vectors.js";
 import { listener_overlay } from "../../../chess/game.js";
 
 
@@ -421,13 +421,13 @@ function genAndRenderRays(rays: Ray[], color: Color) {
 		// Render
 		const boardPos: Coords = boardpos.getBoardPos();
 		const model_Offset: Coords = legalmovehighlights.getOffset();
-		const position: [number,number,number] = [
+		const position: Vec3 = [
 			-boardPos[0] + model_Offset[0], // Add the model's offset
 			-boardPos[1] + model_Offset[1],
 			0
 		];
 		const boardScale: number = boardpos.getBoardScale();
-		const scale: [number,number,number] = [boardScale, boardScale, 1];
+		const scale: Vec3 = [boardScale, boardScale, 1];
 		model.render(position, scale);
 	}
 }

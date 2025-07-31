@@ -17,6 +17,7 @@ import { createModel } from '../buffermodel.js';
 import type { Coords } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../util/math/math.js';
 import type { BoundingBox } from '../../../util/math/bounds.js';
+import type { Vec3 } from '../../../util/math/vectors.js';
 
 
 
@@ -33,7 +34,7 @@ interface Line {
 	/** The ending point coords. */
 	end: Coords
 	/** The equation of the line in general form. [A,B,C] */
-	coefficients: [number, number, number]
+	coefficients: Vec3
 	/** The color of the line. */
 	color: Color
 	/**

@@ -8,6 +8,7 @@ import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { TypeGroup } from '../../chess/util/typeutil.js';
 import type { Board } from '../../chess/logic/gamefile.js';
+import type { Vec3 } from '../../util/math/vectors.js';
 
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -335,13 +336,13 @@ function deletebufferdata(mesh: Mesh, piece: Piece) {
 function renderAll(boardsim: Board, mesh: Mesh) {
 
 	const boardPos = boardpos.getBoardPos();
-	const position: [number,number,number] = [ // Translate
+	const position: Vec3 = [ // Translate
         -boardPos[0] + mesh.offset[0], // Add the model's offset. 
         -boardPos[1] + mesh.offset[1],
         Z
     ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
 	const boardScale = boardpos.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
 		// Only render voids

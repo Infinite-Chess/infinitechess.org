@@ -41,7 +41,7 @@ import type { Piece } from '../../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
-import type { Ray } from '../../../util/math/vectors.js';
+import type { Ray, Vec3 } from '../../../util/math/vectors.js';
 
 
 
@@ -377,13 +377,13 @@ function renderSelectedPiecesLegalMoves() {
 	if (!pieceSelected) return; // No model to render
 
 	const boardPos: Coords = boardpos.getBoardPos();
-	const position: [number,number,number] = [
+	const position: Vec3 = [
         -boardPos[0] + model_Offset[0], // Add the model's offset
         -boardPos[1] + model_Offset[1],
         0
     ];
 	const boardScale: number = boardpos.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	const scale: Vec3 = [boardScale, boardScale, 1];
 	
 	// Render each of the models using instanced rendering.
 	model_SelectedPiece!.render(position, scale);

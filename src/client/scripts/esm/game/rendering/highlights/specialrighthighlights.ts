@@ -100,13 +100,13 @@ function renderSpecialRights() {
 
 	const boardPos: Coords = boardpos.getBoardPos();
 	const model_Offset: Coords = legalmovehighlights.getOffset();
-	const position: [number,number,number] = [
+	const position: Vec3 = [
 		-boardPos[0] + model_Offset[0], // Add the model's offset
 		-boardPos[1] + model_Offset[1],
 		0
 	];
 	const boardScale: number = boardpos.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	model.render(position, scale);
 }

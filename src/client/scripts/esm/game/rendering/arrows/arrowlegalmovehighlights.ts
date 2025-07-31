@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/arrows/arrowlegalmovehighlights.ts
+
 /**
  * This script keeps track of and renders the
  * legal moves of all arrow indicators being hovered over.
@@ -9,11 +11,11 @@ import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Color } from "../../../util/math/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
 import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
+import type { Vec3 } from "../../../util/math/vectors.js";
 
 
 import arrows from "./arrows.js";
 import typeutil from "../../../chess/util/typeutil.js";
-import coordutil from "../../../chess/util/coordutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
@@ -22,6 +24,8 @@ import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
 import boardpos from "../boardpos.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
+import coordutil, { BDCoords, Coords } from "../../../chess/util/coordutil.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -121,13 +125,9 @@ function renderEachHoveredPieceLegalMoves() {
 
 	const boardPos = boardpos.getBoardPos();
 	const model_Offset = legalmovehighlights.getOffset();
-	const position: [number,number,number] = [
-		-boardPos[0] + model_Offset[0], // Add the highlights offset
-		-boardPos[1] + model_Offset[1],
-		0
-	];
-	const boardScale = boardpos.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	const position: Vec3 = getModelPosition(boardPos, model_Offset, 0);
+	const boardScaleNumber = bd.toNumber(boardpos.getBoardScale());
+	const scale: Vec3 = [boardScaleNumber, boardScaleNumber, 1];
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
@@ -138,6 +138,23 @@ function renderEachHoveredPieceLegalMoves() {
 		hoveredArrow.model_NonCapture.render(position, scale);
 		hoveredArrow.model_Capture.render(position, scale);
 	});
+}
+
+/**
+ * Any model that has a bigint offset, should be able to subtract that offset
+ * from our board position to obtain a number small emough for the gpu to render.
+ */
+function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
+	function getAxis(position: BigDecimal, offset: bigint): number {
+		const offsetBD = bd.FromBigInt(offset);
+		return bd.toNumber(bd.subtract(offsetBD, position));
+	}
+
+	return [
+		getAxis(boardPos[0], modelOffset[0]),
+		getAxis(boardPos[1], modelOffset[1]),
+		z
+	];
 }
 
 /**

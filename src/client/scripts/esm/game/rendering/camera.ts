@@ -27,14 +27,12 @@ import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
 import type { DoubleBoundingBox } from '../../util/math/bounds.js';
+import type { Vec3 } from '../../util/math/vectors.js';
 
 
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 type Mat4 = Float32Array;
-
-/** A 3D position, represented as a 3-element array of numbers */
-type Position = [number, number, number];
 
 
 
@@ -43,8 +41,8 @@ let DEBUG: boolean = false;
 
 // This will NEVER change! The camera stays while the board position is what moves!
 // What CAN change is the rotation of the view matrix!
-const position: Position = [0, 0, 12]; // [x, y, z]
-const position_devMode: Position = [0, 0, 18];
+const position: Vec3 = [0, 0, 12]; // [x, y, z]
+const position_devMode: Vec3 = [0, 0, 18];
 
 /** Field of view, in radians */
 let fieldOfView: number;
