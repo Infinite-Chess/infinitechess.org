@@ -8,7 +8,6 @@ import type { Mesh } from '../rendering/piecemodels.js';
 
 
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
-import movepiece, { Edit, MoveDraft } from '../../chess/logic/movepiece.js';
 import movesequence from './movesequence.js';
 import boardutil from '../../chess/util/boardutil.js';
 import typeutil from '../../chess/util/typeutil.js';
@@ -16,10 +15,12 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import coordutil from '../../chess/util/coordutil.js';
 import boardpos from '../rendering/boardpos.js';
-import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import { animateMove } from './graphicalchanges.js';
 import preferences from '../../components/header/preferences.js';
 import selection from './selection.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import squarerendering from '../rendering/highlights/squarerendering.js';
+import movepiece, { Edit, MoveDraft } from '../../chess/logic/movepiece.js';
+import { animateMove } from './graphicalchanges.js';
 
 
 // Type Definitions ---------------------------------------------
@@ -270,7 +271,7 @@ function render() {
 	const color = preferences.getAnnoteSquareColor();
 
 	// Render preset squares
-	drawsquares.genModel(premoveSquares, color).render(undefined, undefined, { size });
+	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { size });
 }
 
 

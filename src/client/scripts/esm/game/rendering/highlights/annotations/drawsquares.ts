@@ -8,21 +8,20 @@
 import coordutil from "../../../../chess/util/coordutil.js";
 import math, { Color } from "../../../../util/math.js";
 import space from "../../../misc/space.js";
-import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
-import instancedshapes from "../../instancedshapes.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import { Mouse } from "../../../input.js";
+import variant from "../../../../chess/variants/variant.js";
+import gameslot from "../../../chess/gameslot.js";
+import squarerendering from "../squarerendering.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Square } from "./annotations.js";
-import variant from "../../../../chess/variants/variant.js";
-import gameslot from "../../../chess/gameslot.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -148,20 +147,6 @@ function clearPresetOverrides() {
 // Rendering -----------------------------------------------------------------
 
 
-function genModel(highlights: Square[], color: Color): BufferModelInstanced {
-	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
-	const instanceData: number[] = [];
-
-	highlights.forEach(coords => {
-		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-		const worldLoc = space.convertCoordToWorldSpace(coords);
-		instanceData.push(...worldLoc);
-	});
-
-	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', true);
-}
-
-
 function render(highlights: Square[]) {
 	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 
@@ -169,7 +154,7 @@ function render(highlights: Square[]) {
 	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
 
 	// Render preset squares (only if zoomed in)
-	if (!boardpos.areZoomedOut() && presetSquares.length > 0) genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
+	if (!boardpos.areZoomedOut() && presetSquares.length > 0) squarerendering.genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
 
 	// Early exit if no drawn-squares to draw
 	if (highlights.length === 0) return;
@@ -178,7 +163,7 @@ function render(highlights: Square[]) {
 	const color = preferences.getAnnoteSquareColor();
 	color[3] += OPACITY_OFFSET; // Add opacity offset to make it more visible than rays
 
-	genModel(highlights, color).render(undefined, undefined, { size });
+	squarerendering.genModel(highlights, color).render(undefined, undefined, { size });
 
 	// Render hovered highlights
 
@@ -188,7 +173,7 @@ function render(highlights: Square[]) {
 	if (allHovered.length > 0) {
 		const hoverColor = preferences.getAnnoteSquareColor();
 		hoverColor[3] = hover_opacity;
-		genModel(allHovered, hoverColor).render(undefined, undefined, { size });
+		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { size });
 	}
 }
 
@@ -203,5 +188,4 @@ export default {
 	getPresetOverrides,
 	clearPresetOverrides,
 	render,
-	genModel,
 };
