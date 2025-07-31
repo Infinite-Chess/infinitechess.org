@@ -22,8 +22,10 @@ import squarerendering from '../rendering/highlights/squarerendering.js';
 import gameslot from './gameslot.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import animation from '../rendering/animation.js';
+import mouse from '../../util/mouse.js';
 import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
+import { Mouse } from '../input.js';
 
 
 // Type Definitions ---------------------------------------------
@@ -315,6 +317,23 @@ function onGameUnload() {
 }
 
 
+// Updating Premoves ------------------------------------------------
+
+
+/** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
+function update(gamefile: FullGame, mesh?: Mesh) {
+	if (preferences.getLingeringAnnotationsMode()) return; // Right mouse down doesn't clear premoves in Lingering Annotations mode
+
+	if (mouse.isMouseDown(Mouse.RIGHT)) {
+		if (!hasAtleastOnePremove()) return; // No premoves to clear. Don't claim the right mouse button.
+
+		mouse.claimMouseDown(Mouse.RIGHT); // Claim the right mouse button so it doesn't propagate to annotation drawing
+
+		cancelPremoves(gamefile, mesh);
+	}
+}
+
+
 // Rendering --------------------------------------------------------
 
 
@@ -349,5 +368,6 @@ export default {
 	onYourMove,
 	onGameConclude,
 	onGameUnload,
+	update,
 	render,
 };

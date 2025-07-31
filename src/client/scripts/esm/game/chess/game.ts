@@ -134,6 +134,7 @@ function update() {
 	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	snapping.teleportToEntitiesIfClicked(); // AFTER snapping.updateEntitiesHovered()
 	snapping.teleportToSnapIfClicked();
+	premoves.update(gamefile, mesh); // BEFORE annotations update(), since if right click cancels premoves, we don't want to draw arrows.
 	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
 
