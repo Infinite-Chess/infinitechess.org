@@ -28,6 +28,7 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
+import animation from '../rendering/animation.js';
 
 
 /**
@@ -541,7 +542,10 @@ function rewindMove() {
 	const hadAtleastOnePremove = premoves.hasAtleastOnePremove();
 	premoves.cancelPremoves(gamefile, mesh);
 	// If we had premoves to cancel, just cancel them, don't rewind a move this time.
-	if (hadAtleastOnePremove) return;
+	if (hadAtleastOnePremove) {
+		animation.clearAnimations();
+		return;
+	}
 
 	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
