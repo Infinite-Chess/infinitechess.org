@@ -138,16 +138,6 @@ function update() {
 	drawrays.update(annotes.Rays);
 }
 
-/** Collapses all annotations if we clicked the board (outside of board editor drawing). */
-function testIfCollapsed() {
-	if (boardeditor.isBoardEditorUsingDrawingTool()) return; // Don't collapse if the board editor is using a drawing tool
-	
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
-		Collapse();
-	}
-}
-
 /**
  * Collapses all annotations. The behavior is:
  * A. Atleast 1 ray => Erase all rays and add more Squares at all their intersections.
@@ -214,7 +204,6 @@ export default {
 	getRays,
 
 	update,
-	testIfCollapsed,
 	Collapse,
 	onPieceSelection,
 	onGameUnload,
