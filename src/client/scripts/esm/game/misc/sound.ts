@@ -52,6 +52,10 @@ const reverbDuration = 1.5;
 const amountToDampenMoves = 0.5;
 const amountToDampenBell = 0.5;
 
+// Premove constants
+const playbackRatePremoves = 1.5; // Premove sounds are played faster, so they sound more like a click.
+const volumeDampenerPremoves = 0.5; // Premove sounds are slightly quieter
+
 
 /** Timestamp of the last time {@link playSound_move} or {@link playSound_capture} was called. */
 let timeLastMoveOrCaptureSound = 0;
@@ -81,7 +85,7 @@ function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer) {
 	audioDecodedBuffer = decodedBuffer;
 }
 
-function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fadeInDuration = 0, reverbVolume = 0, reverbDuration = 0 } = {}): SoundObject | undefined {
+function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fadeInDuration = 0, reverbVolume = 0, reverbDuration = 0, playbackRate = 1 } = {}): SoundObject | undefined {
 	// A reverb volume of 3.5 and a duration of 1.5 seconds most-closely matches my audio file!
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound 
     
@@ -100,7 +104,7 @@ function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fa
 
 	const soundObject: SoundObject = {
 		/** The source of the audio, with its attached `gainNode`. */
-		source: createBufferSource(volume),
+		source: createBufferSource(volume, playbackRate),
 		/** The source of the reverb-only part of the audio, if specified, with its attached `gainNode`. */
 		sourceReverb: undefined,
 		/**
@@ -127,7 +131,7 @@ function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fa
 	// We will play them both!
 	if (!reverbVolume) return fadeInAndReturn(); // No reverb effect if volume is falsey or zero :)
 	if (!reverbDuration) throw Error("Need to specify a reverb duration.");
-	soundObject.sourceReverb = createBufferSource(reverbVolume, 1, reverbDuration);
+	soundObject.sourceReverb = createBufferSource(reverbVolume, playbackRate, reverbDuration);
 	soundObject.sourceReverb.start(startAt, startTime, duration);
 
 	return fadeInAndReturn();
@@ -285,7 +289,7 @@ function fadeOut(source: AudioBufferWithGainNode, durationMillis: number) {
 
 // Sounds
 
-function playSound_move(distanceMoved: number) {
+function playSound_move(distanceMoved: number, premove = false) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -299,38 +303,43 @@ function playSound_move(distanceMoved: number) {
 
 	const bell = distanceMoved >= bellDist;
 	const dampener = shouldDampen && bell ? amountToDampenBell : shouldDampen ? amountToDampenMoves : 1;
-	const volume = 1 * dampener;
+	const volume = 1 * dampener * (premove ? volumeDampenerPremoves : 1); // Premoves are slightly quieter
+	const playbackRate = premove ? playbackRatePremoves : 1; // Premove moves are played faster, so they sound more like a click.
 	// eslint-disable-next-line prefer-const
 	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
 	if (reverbVolume) reverbVolume *= dampener;
-	playSound('move', { volume, reverbVolume, reverbDuration, delay });
+	playSound('move', { volume, reverbVolume, reverbDuration, delay, playbackRate });
 
 	if (bell) {
 		const bellVolume = 0.6 * dampener;
-		playSound('bell', { volume: bellVolume, delay });
+		playSound('bell', { volume: bellVolume, delay, playbackRate });
 	}
 }
 
-function playSound_capture(distanceMoved: number) {
+function playSound_capture(distanceMoved: number, premove = false) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
 	timeLastMoveOrCaptureSound = now; // Update timestamp *after* checking
+
+	// Determine if we should add delay (sounds played at same time)
+	const delay = (Math.max(0, minMillisBetwMoveOrCaptureSounds - timeSinceLastMoveSoundPlayed)) / 1000;
 	
 	// Determine if we should dampen the sound (sounds played too rapidly)
 	const shouldDampen = timeSinceLastMoveSoundPlayed < dampenThresholdMillis;
 
 	const bell = distanceMoved >= bellDist;
 	const dampener = shouldDampen && bell ? amountToDampenBell : shouldDampen ? amountToDampenMoves : 1;
-	const volume = 1 * dampener;
+	const volume = 1 * dampener * (premove ? volumeDampenerPremoves : 1); // Premoves are slightly quieter
+	const playbackRate = premove ? playbackRatePremoves : 1; // Premove captures are played faster, so they sound more like a click.
 	// eslint-disable-next-line prefer-const
 	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
 	if (reverbVolume) reverbVolume *= dampener;
-	playSound('capture', { volume, reverbVolume, reverbDuration });
+	playSound('capture', { volume, reverbVolume, reverbDuration, delay, playbackRate });
 
 	if (distanceMoved >= bellDist) {
 		const bellVolume = 0.6 * dampener;
-		playSound('bell', { volume: bellVolume });
+		playSound('bell', { volume: bellVolume, delay, playbackRate });
 	}
 }
 

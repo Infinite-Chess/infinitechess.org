@@ -487,7 +487,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	const animateMain = !wasBeingDragged;
 	// const animateMain = !draganimation.areDraggingPiece(); // For premoving
-	animateMove(changes, true, animateMain);
+	animateMove(changes, true, animateMain, isPremove);
 
 	if (!isPremove) {
 		movesendreceive.sendMove();

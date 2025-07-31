@@ -56,6 +56,8 @@ interface Animation {
 	durationMillis: number;
 	/** The total distance the piece will travel throughout the animation across all waypoints. */
 	totalDistance: number;
+	/** Whether the animation is for a premove. */
+	premove: boolean;
 	/** Whether the sound has been played yet. */
 	soundPlayed: boolean;
 	/** The id of the timeout that will play the sound a little before the animation finishes, so there isn't a delay. */
@@ -134,7 +136,7 @@ let DEBUG = false;
  * @param instant - Whether the animation should be instantanious, only playing the SOUND. If this is true, the animation will not be added to the list of animations, and will not be rendered.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, Piece[]>, hideKeyframes: Map<number, Coords[]>, instant?: boolean, resetAnimations: boolean = true): void {
+function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, Piece[]>, hideKeyframes: Map<number, Coords[]>, instant?: boolean, resetAnimations = false, premove = false): void {
 	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
@@ -155,7 +157,7 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	if (new Set([...typesInvolved, ...typeutil.SVGLESS_TYPES]).size < typesInvolved.size + typeutil.SVGLESS_TYPES.size) instant = true; // Instant animations still play the sound
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
-	if (instant) return playSoundOfDistance(totalDistance, showKeyframes.size !== 0);
+	if (instant) return playSoundOfDistance(totalDistance, showKeyframes.size !== 0, premove);
 
 	
 
@@ -168,7 +170,8 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 		startTimeMillis: performance.now(),
 		durationMillis: calculateAnimationDuration(totalDistance, path_HighResolution.length),
 		totalDistance,
-		soundPlayed: false
+		premove,
+		soundPlayed: false,
 	};
 
 	scheduleSoundPlayback(newAnimation);
@@ -262,7 +265,7 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation) {
-	playSoundOfDistance(animation.totalDistance, animation.showKeyframes.size !== 0);
+	playSoundOfDistance(animation.totalDistance, animation.showKeyframes.size !== 0, animation.premove);
 	animation.soundPlayed = true;
 }
 
@@ -271,9 +274,9 @@ function playAnimationSound(animation: Animation) {
  * @param distance - The distance the piece traveled.
  * @param captured - Whether the animation involved a capture.
  */
-function playSoundOfDistance(distance: number, captured: boolean) {
-	if (captured) sound.playSound_capture(distance);
-	else sound.playSound_move(distance);
+function playSoundOfDistance(distance: number, captured: boolean, premove: boolean) {
+	if (captured) sound.playSound_capture(distance, premove);
+	else sound.playSound_move(distance, premove);
 }
 
 
