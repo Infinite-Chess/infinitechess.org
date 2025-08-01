@@ -14,13 +14,11 @@ import drawarrows from "./drawarrows.js";
 import gameloader from "../../../chess/gameloader.js";
 import drawrays from "./drawrays.js";
 import coordutil from "../../../../chess/util/coordutil.js";
-import { Mouse } from "../../../input.js";
-import mouse from "../../../../util/mouse.js";
 import boardeditor from "../../../misc/boardeditor.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
-import type { Ray } from "../../../../util/math.js";
+import type { Ray } from "../../../../util/math/vectors.js";
 
 
 // Type Definitions ------------------------------------------------------------

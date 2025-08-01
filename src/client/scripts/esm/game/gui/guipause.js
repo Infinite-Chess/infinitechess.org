@@ -3,7 +3,8 @@
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
 import statustext from './statustext.js';
-import copypastegame from '../chess/copypastegame.js';
+import copygame from '../chess/copygame.js';
+import pastegame from '../chess/pastegame.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guititle from './guititle.js';
 import moveutil from '../../chess/util/moveutil.js';
@@ -170,7 +171,7 @@ function initListeners() {
 	element_resume.addEventListener('click', callback_Resume);
 	element_pointers.addEventListener('click', callback_ToggleArrows);
 	element_copygame.addEventListener('click', callback_CopyGame);
-	element_pastegame.addEventListener('click', copypastegame.callbackPaste);
+	element_pastegame.addEventListener('click', pastegame.callbackPaste);
 	element_mainmenu.addEventListener('click', callback_MainMenu);
 	element_practicemenu.addEventListener('click', callback_PracticeMenu);
 	element_offerDraw.addEventListener('click', callback_OfferDraw);
@@ -181,7 +182,7 @@ function closeListeners() {
 	element_resume.removeEventListener('click', callback_Resume);
 	element_pointers.removeEventListener('click', callback_ToggleArrows);
 	element_copygame.removeEventListener('click', callback_CopyGame);
-	element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
+	element_pastegame.removeEventListener('click', pastegame.callbackPaste);
 	element_mainmenu.removeEventListener('click', callback_MainMenu);
 	element_practicemenu.removeEventListener('click', callback_PracticeMenu);
 	element_offerDraw.removeEventListener('click', callback_OfferDraw);
@@ -189,7 +190,7 @@ function closeListeners() {
 }
 
 function callback_CopyGame(event) {
-	copypastegame.copyGame(false);
+	copygame.copyGame(false);
 }
 
 function callback_Resume() {

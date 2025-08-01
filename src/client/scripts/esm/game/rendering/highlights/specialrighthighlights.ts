@@ -6,7 +6,8 @@
  */
 
 import type { Coords } from "../../../chess/util/coordutil.js";
-import type { Vec3, Color } from "../../../util/math.js";
+import type { Color } from "../../../util/math/math.js";
+import type { Vec3 } from "../../../util/math/vectors.js";
 
 
 import { BufferModelInstanced, createModel, createModel_Instanced } from "../buffermodel.js";
@@ -87,7 +88,7 @@ function regenModel() {
 	const squaresToHighlight: Array<number> = [];
 	for (const key of gamefile.boardsim.state.global.specialRights) {
 		const coords = coordutil.getCoordsFromKey(key);
-		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
+		const offsetCoord = coordutil.subtractCoords(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}
 	const vertexData: number[] = getSpecialRightsVertexData();
@@ -99,13 +100,13 @@ function renderSpecialRights() {
 
 	const boardPos: Coords = boardpos.getBoardPos();
 	const model_Offset: Coords = legalmovehighlights.getOffset();
-	const position: [number,number,number] = [
+	const position: Vec3 = [
 		-boardPos[0] + model_Offset[0], // Add the model's offset
 		-boardPos[1] + model_Offset[1],
 		0
 	];
 	const boardScale: number = boardpos.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	model.render(position, scale);
 }

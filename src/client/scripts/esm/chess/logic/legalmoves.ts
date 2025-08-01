@@ -6,7 +6,6 @@
 
 // @ts-ignore
 import specialdetect from './specialdetect.js';
-// @ts-ignore
 import winconutil from '../util/winconutil.js';
 import movepiece from './movepiece.js';
 import boardutil from '../util/boardutil.js';
@@ -23,13 +22,13 @@ import { rawTypes as r } from '../util/typeutil.js';
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
-import type { Vec2Key, Vec2 } from '../../util/math.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -38,10 +37,11 @@ import type { Board, FullGame } from './gamefile.js';
 /**
  * The negative/positive vector step-limit of a sliding direction.
  * 
- * [-2,Infinity] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
+ * NULL === INFINITY
+ * [-2,null] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
  * For knightriders, one [2,1] hop is considered 1 step.
  */
-type SlideLimits = [number, number]
+type SlideLimits = [bigint | null, bigint | null]
 
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
@@ -255,7 +255,7 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  * @param slideKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param organizedLine - The organized line of the above key that our piece is on
  */
-function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
+function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]): SlideLimits | undefined {
 	const thisPieceMoveset = getPieceMoveset(boardsim, piece.type); // Default piece moveset
 	if (!thisPieceMoveset.sliding) return; // This piece can't slide at all
 	if (!thisPieceMoveset.sliding[slideKey]) return; // This piece can't slide ALONG the provided line
@@ -318,8 +318,8 @@ function slide_CalcLegalLimit(
 	// The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
-	const axis = direction[0] === 0 ? 1 : 0; 
-	const limit = coordutil.copyCoords(slideMoveset);
+	const axis = direction[0] === 0n ? 1 : 0; 
+	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 	// Iterate through all pieces on same line
 	for (const idx of line) {
 
@@ -335,20 +335,20 @@ function slide_CalcLegalLimit(
 		if (blockResult === 0) continue; // Not blocked
 
 		// Is the piece to the left of us or right of us?
-		const thisPieceSteps = Math.floor((thisPiece.coords[axis] - coords[axis]) / direction[axis]);
+		const thisPieceSteps = (thisPiece.coords[axis] - coords[axis]) / direction[axis];
 		if (thisPieceSteps < 0) { // To our left
 
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
-			const newLeftSlideLimit = blockResult === 1 ? thisPieceSteps + 1 : thisPieceSteps;
+			const newLeftSlideLimit = blockResult === 1 ? thisPieceSteps + 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
+			if (limit[0] === null || newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
 
 		} else if (thisPieceSteps > 0) { // To our right
 
 			// What would our new right slide limit be? If it's an opponent, it's legal to capture it.
-			const newRightSlideLimit = blockResult === 1 ? thisPieceSteps - 1 : thisPieceSteps;
+			const newRightSlideLimit = blockResult === 1 ? thisPieceSteps - 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
+			if (limit[1] === null || newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
 
 		} // else this is us, don't do anything.
 	}
@@ -527,11 +527,11 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
  * @returns true if the piece is able to slide to the coordinates
  */
 function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: Vec2, pieceCoords: Coords, coords: Coords, ignoreFunc: IgnoreFunction): boolean {
-	const axis = direction[0] === 0 ? 1 : 0;
+	const axis = direction[0] === 0n ? 1 : 0;
 	const coordMag = coords[axis];
-	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
-	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
-	return coordMag >= min && coordMag <= max && ignoreFunc(pieceCoords, coords);
+	const min: bigint | null = slideMoveset[0] === null ? null : slideMoveset[0] * direction[axis] + pieceCoords[axis];
+	const max: bigint | null = slideMoveset[1] === null ? null : slideMoveset[1] * direction[axis] + pieceCoords[axis];
+	return (min === null || coordMag >= min) && (max === null || coordMag <= max) && ignoreFunc(pieceCoords, coords);
 }
 
 /**
@@ -546,8 +546,8 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 	}
 
 	function doesSlideHaveWidth(slide: SlideLimits) {
-		if (!slide) return false;
-		return slide[1] - slide[0] > 0;
+		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in atleast one direction
+		return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
 
 		// In the future: If the `brute` flag is present, and there isn't
 		// too large of a slide range (maybe 50 max),

@@ -11,8 +11,9 @@ import statustext from './statustext.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
-import math from '../../util/math.js';
 import guititle from './guititle.js';
+import vectors from '../../util/math/vectors.js';
+import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
 
 
 
@@ -27,14 +28,15 @@ import guititle from './guititle.js';
 function prepareForOpen() {
 	// Randomize pan velocity direction for the title screen and lobby menus
 	randomizePanVelDir();
-	boardpos.setBoardScale(1.8); // 1.8
+	const amount = bigdecimal.FromNumber(1.8); // Default: 1.8
+	boardpos.setBoardScale(amount);
 	loadbalancer.restartAFKTimer();
 }
 
 // Sets panVel to a random direction, and sets speed to titleBoardVel. Called when the title screen is initiated.
 function randomizePanVelDir() {
 	const randTheta = Math.random() * 2 * Math.PI;
-	const XYComponents = math.getXYComponents_FromAngle(randTheta);
+	const XYComponents = vectors.getXYComponents_FromAngle(randTheta);
 	boardpos.setPanVel([
 		XYComponents[0] * guititle.boardVel,
 		XYComponents[1] * guititle.boardVel

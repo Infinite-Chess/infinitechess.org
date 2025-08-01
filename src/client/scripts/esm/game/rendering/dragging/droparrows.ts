@@ -17,6 +17,7 @@ import space from "../../misc/space.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
 
 
 
@@ -77,7 +78,7 @@ function shiftArrows(): void {
 
 	if (capturedPieceThisFrame !== undefined) {
 		// Reflect the dragged piece's new location in draganimation.ts
-		const worldCoords = space.convertCoordToWorldSpace(capturedPieceThisFrame.coords) as Coords;
+		const worldCoords = space.convertCoordToWorldSpace(bd.FromCoords(capturedPieceThisFrame.coords));
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
 		arrows.shiftArrow(capturedPieceThisFrame.type, true, capturedPieceThisFrame.coords, undefined);

@@ -17,6 +17,7 @@ import preferences from "../../../components/header/preferences.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import squarerendering from "./squarerendering.js";
 
+
 import type { Board } from "../../../chess/logic/gamefile.js";
 
 

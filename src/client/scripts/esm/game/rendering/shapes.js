@@ -7,7 +7,7 @@ import perspective from "./perspective.js";
 
 
 /**
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math/math.js').BoundingBox} BoundingBox
  * @typedef {import("../../chess/util/coordutil.js").Coords} Coords
  */
 
@@ -32,7 +32,7 @@ function getBoundingBoxOfCoord(coords) {
  * you can EXACTLY render a highlight on the provided coords.
  * 
  * Does not require uniform translations before rendering.
- * @param {number[]} coords 
+ * @param {Coords} coords 
  * @returns {BoundingBox}
  */
 function getTransformedBoundingBoxOfSquare(coords) {

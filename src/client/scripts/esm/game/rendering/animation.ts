@@ -4,24 +4,24 @@
  * It also plays the sounds.
  */
 
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { Color } from '../../util/math.js';
+import type { Color } from '../../util/math/math.js';
 
-import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
+import arrows from './arrows/arrows.js';
 import frametracker from './frametracker.js';
-import math from '../../util/math.js';
+import math from '../../util/math/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import sound from '../misc/sound.js';
 import typeutil, { RawType } from '../../chess/util/typeutil.js';
+import vectors from '../../util/math/vectors.js';
+import boardtiles from './boardtiles.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
-// @ts-ignore
-import boardtiles from './boardtiles.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -33,8 +33,8 @@ import statustext from '../gui/statustext.js';
 
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {
-	start: Coords;
-	end: Coords;
+	start: BDCoords;
+	end: BDCoords;
 	distance: number;
 }
 
@@ -43,7 +43,7 @@ interface Animation {
 	/** The type of piece to animate. */
 	type: number;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
-	path: Coords[];
+	path: BDCoords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
 	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures. 0 is the start of the path. */
@@ -217,7 +217,7 @@ function stretchKeyframesForResolution<T>(keyframes: Map<number, T>, resolution:
 }
 
 /** Creates the segments between each waypoint. */
-function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
+function createAnimationSegments(waypoints: BDCoords[]): AnimationSegment[] {
 	const segments: AnimationSegment[] = [];
 	for (let i = 0; i < waypoints.length - 1; i++) {
 		const start = waypoints[i]!;
@@ -225,7 +225,7 @@ function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
 		segments.push({
 			start,
 			end,
-			distance: math.euclideanDistance(start, end)
+			distance: vectors.euclideanDistanceBD(start, end)
 		});
 	}
 	return segments;

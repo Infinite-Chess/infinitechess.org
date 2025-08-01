@@ -19,18 +19,18 @@ import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
 import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import math, { Color } from '../../util/math.js';
+import vectors from '../../util/math/vectors.js';
+import { Color } from '../../util/math/math.js';
 import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import jsutil from '../../util/jsutil.js';
+import boardtiles from './boardtiles.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-// @ts-ignore
-import boardtiles from './boardtiles.js';
 
 
 // Variables --------------------------------------------------------------
@@ -162,7 +162,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 		// Are we hovering over? If so, add the same data to instanceData_hovered
 		if (areWatchingMousePosition) {
 			for (const pointerWorld of pointerWorlds) {
-				if (math.chebyshevDistance(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
+				if (vectors.chebyshevDistance(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
 			}
 		}
 	}
@@ -187,10 +187,10 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 
 	function processPiece(coords: Coords) {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
-		if (math.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
+		if (vectors.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
 			imagesHovered.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistanceBD(coordsWorld, world));
 		}
 	}
 
