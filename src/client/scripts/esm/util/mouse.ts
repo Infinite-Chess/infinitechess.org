@@ -82,7 +82,7 @@ function getCrossHairWorld(): DoubleCoords {
 	// x^2 + y^2 = hyp^2
 	// hyp = sqrt( x^2 + y^2 )
 
-	const mouseWorld: Coords = [
+	const mouseWorld: DoubleCoords = [
 		hyp * Math.sin(rotZ),
 		hyp * Math.cos(rotZ)
 	];
@@ -92,14 +92,14 @@ function getCrossHairWorld(): DoubleCoords {
 }
 
 function convertMousePositionToWorldSpace(mouse: DoubleCoords, element: HTMLElement | typeof document): DoubleCoords {
-	const mouseCopy: Coords = [...mouse];
+	const mouseCopy: DoubleCoords = [...mouse];
 	const screenBox = camera.getScreenBoundingBox();
 	const screenWidth = screenBox.right - screenBox.left;
 	const screenHeight = screenBox.top - screenBox.bottom;
 	const clientWidth = element instanceof HTMLElement ? element.clientWidth : window.innerWidth;
 	const clientHeight = element instanceof HTMLElement ? element.clientHeight : window.innerHeight;
 	// The world space coordinates are sensitive to whether we're viewing white's or black's perspective.
-	const mouseWorldSpace: Coords = perspective.getIsViewingBlackPerspective() ? [
+	const mouseWorldSpace: DoubleCoords = perspective.getIsViewingBlackPerspective() ? [
 		screenBox.right - (mouseCopy[0] / clientWidth) * screenWidth,
 		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
 		screenBox.bottom + (mouseCopy[1] / clientHeight) * screenHeight
