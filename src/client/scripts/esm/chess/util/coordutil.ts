@@ -13,7 +13,10 @@ import bd from "../../util/bigdecimal/bigdecimal";
 // Type Definitions ------------------------------------------------------------
 
 
-/** A length-2 array of coordinates: `[x,y]` */
+/**
+ * A length-2 array of coordinates: `[x,y]`
+ * Contains infinite precision integers, represented as BigInt.
+ */
 type Coords = [bigint,bigint];
 
 /**
