@@ -13,10 +13,10 @@ import boardpos from '../boardpos.js';
 import { createModel } from '../buffermodel.js';
 
 
-import type { Coords } from '../../../chess/util/coordutil.js';
+import type { BDCoords } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../util/math/math.js';
 import type {  BoundingBoxBD } from '../../../util/math/bounds.js';
-import type { Vec3 } from '../../../util/math/vectors.js';
+import type { LineCoefficients } from '../../../util/math/vectors.js';
 
 
 
@@ -29,11 +29,11 @@ import type { Vec3 } from '../../../util/math/vectors.js';
  */
 interface Line {
 	/** The starting point coords. */
-	start: Coords
+	start: BDCoords
 	/** The ending point coords. */
-	end: Coords
+	end: BDCoords
 	/** The equation of the line in general form. [A,B,C] */
-	coefficients: Vec3
+	coefficients: LineCoefficients
 	/** The color of the line. */
 	color: Color
 	/**

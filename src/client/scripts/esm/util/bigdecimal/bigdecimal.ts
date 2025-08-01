@@ -1072,7 +1072,7 @@ function coordsToBigInt(coords: BDCoords): Coords {
 
 /**
  * Most efficient method to convert a BigDecimal to a number.
- * USE IF YOU ARE SURE the BigDecimal's mantissa (bigint property)
+ * Only use if you are CONFIDENT the BigDecimal's mantissa (bigint property)
  * will not overflow or underflow the standard javascript number
  * type, AND you are sure the divex is <= 1023!! Otherwise, use {@link toExactNumber}.
  * @param bd - The BigDecimal to convert.

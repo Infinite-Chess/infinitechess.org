@@ -88,7 +88,7 @@ function regenModel() {
 	const squaresToHighlight: Array<number> = [];
 	for (const key of gamefile.boardsim.state.global.specialRights) {
 		const coords = coordutil.getCoordsFromKey(key);
-		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
+		const offsetCoord = coordutil.subtractCoords(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}
 	const vertexData: number[] = getSpecialRightsVertexData();

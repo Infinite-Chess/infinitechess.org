@@ -293,7 +293,7 @@ function overwritebufferdata(mesh: Mesh, piece: Piece) {
 
 	const i = piece.index * STRIDE_PER_PIECE;
 
-	const offsetCoord = coordutil.subtractCoordinates(piece.coords, mesh.offset);
+	const offsetCoord = coordutil.subtractCoords(piece.coords, mesh.offset);
 
 	meshData.instanceData64[i] = offsetCoord[0];
 	meshData.instanceData64[i + 1] = offsetCoord[1];

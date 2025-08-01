@@ -8,7 +8,6 @@
 
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
-import coordutil, { Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
@@ -20,14 +19,17 @@ import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 import variant from "../../../../chess/variants/variant.js";
 import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
+import arrowlegalmovehighlights from "../../arrows/arrowlegalmovehighlights.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import vectors, { Ray, Vec2, Vec3 } from "../../../../util/math/vectors.js";
 import { listener_overlay } from "../../../chess/game.js";
 
 
 import type { Color } from "../../../../util/math/math.js";
+import bigdecimal from "../../../../util/bigdecimal/bigdecimal.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -40,6 +42,8 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
 	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
 };
+
+const ZERO_COORDS = bigdecimal.FromCoords([0n, 0n]);
 
 
 /** The simplest form of a ray. */
@@ -173,7 +177,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
 		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
 
-		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
+		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : bd.FromCoords(ray.start);
 
 		lines.push({
 			start,
@@ -199,9 +203,9 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
-	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
-	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
-	const vector_unnormalized = coordutil.subtractCoordinates(mouseCoords, drag_start!);
+	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
+	const mouseTileCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
+	const vector_unnormalized = coordutil.subtractBDCoords(mouseTileCoords, bd.FromCoords(drag_start!));
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
@@ -225,7 +229,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 			const dotProd = vectors.dotProduct(vector, ray.vector);
 			if (dotProd > 0) { // Positive, they point in same direction
 				// Which one is contained in the other?
-				const vecToComparingRayStart = coordutil.subtractCoordinates(ray.start, drag_start!);
+				const vecToComparingRayStart = coordutil.subtractCoords(ray.start, drag_start!);
 				const dotProd2 = vectors.dotProduct(vector, vecToComparingRayStart);
 				if (dotProd2 > 0) { // Positive = comparing ray is contained within the new ray
 					// Remove this comparing ray in favor of the new one
@@ -255,8 +259,15 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
  * Finds the VECTOR whose angle most closely matches the angle of the given targetVector.
  * This helps us snap the ray's direction to a slide direction in the game.
  */
-function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: boolean): Coords {
-	const targetAngle = Math.atan2(targetVector[1], targetVector[0]);
+function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Coords {
+	// Since the targetVector can be arbitrarily large, we need to normalize it
+	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
+	const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
+	const normalizedVectorX = bd.toNumber(bd.divide_floating(targetVector[0], targetLength));
+	const normalizedVectorY = bd.toNumber(bd.divide_floating(targetVector[1], targetLength));
+
+	// Now we can use small numbers
+	const targetAngle = Math.atan2(normalizedVectorY, normalizedVectorX);
 
 	const searchVectors: Coords[] = searchHippogonals ? [...snapping.VECTORS, ...snapping.VECTORS_HIPPOGONAL] : [...snapping.VECTORS];
 
@@ -265,7 +276,8 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 	let closestVector: Coords = searchVectors[0]!; 
 
 	for (const predefinedVector of searchVectors) {
-		const angle = Math.atan2(predefinedVector[1], predefinedVector[0]);
+		const predifinedVectorDouble: DoubleCoords = vectors.convertVectorToDoubles(predefinedVector);
+		const angle = Math.atan2(predifinedVectorDouble[1], predifinedVectorDouble[0]);
 		// Calculate the difference in angles
 		let angleDifferenceRad = targetAngle - angle;
 
@@ -292,8 +304,8 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
  * This includes all drawn ray starts, all intersections between drawn & all rays,
  * and all intersections between drawn rays and the selected piece's legal move rays/segments.
  */
-function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
-	const intersections: Coords[] = [];
+function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
+	const intersections: BDCoords[] = [];
 
 	const rays_preset = getPresetRays();
 	const rays_all: Ray[] = [...rays_drawn, ...rays_preset];
@@ -301,7 +313,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 	if (rays_all.length === 0) return intersections;
 
 	// First add the start coords of all rays to the list of intersections
-	for (const ray of rays_drawn) addSquare_NoDuplicates(ray.start);
+	for (const ray of rays_drawn) addSquare_NoDuplicates(bd.FromCoords(ray.start));
 
 	// Then add all the intersection points of the rays (drawn against drawn + preset, SKIP preset against preset)
 	for (let a = 0; a < rays_drawn.length; a++) {
@@ -353,8 +365,8 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 		}
 	}
 
-	function addSquare_NoDuplicates(coords: Coords) {
-		if (intersections.every(coords2 => !coordutil.areCoordsEqual(coords, coords2))) intersections.push(coords);
+	function addSquare_NoDuplicates(coords: BDCoords) {
+		if (intersections.every(coords2 => !coordutil.areBDCoordsEqual(coords, coords2))) intersections.push(coords);
 	}
 
 	return intersections;
@@ -420,14 +432,10 @@ function genAndRenderRays(rays: Ray[], color: Color) {
 		const instanceData = legalmovehighlights.genData_Rays(rays);
 		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
 		// Render
-		const boardPos: Coords = boardpos.getBoardPos();
+		const boardPos: BDCoords = boardpos.getBoardPos();
 		const model_Offset: Coords = legalmovehighlights.getOffset();
-		const position: Vec3 = [
-			-boardPos[0] + model_Offset[0], // Add the model's offset
-			-boardPos[1] + model_Offset[1],
-			0
-		];
-		const boardScale: number = boardpos.getBoardScale();
+		const position = arrowlegalmovehighlights.getModelPosition(boardPos, model_Offset, 0);
+		const boardScale: number = boardpos.getBoardScaleAsNumber();
 		const scale: Vec3 = [boardScale, boardScale, 1];
 		model.render(position, scale);
 	}

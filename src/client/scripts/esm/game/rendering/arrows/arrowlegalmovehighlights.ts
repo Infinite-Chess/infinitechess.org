@@ -141,23 +141,6 @@ function renderEachHoveredPieceLegalMoves() {
 }
 
 /**
- * Any model that has a bigint offset, should be able to subtract that offset
- * from our board position to obtain a number small emough for the gpu to render.
- */
-function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
-	function getAxis(position: BigDecimal, offset: bigint): number {
-		const offsetBD = bd.FromBigInt(offset);
-		return bd.toNumber(bd.subtract(offsetBD, position));
-	}
-
-	return [
-		getAxis(boardPos[0], modelOffset[0]),
-		getAxis(boardPos[1], modelOffset[1]),
-		z
-	];
-}
-
-/**
  * Regenerates the mesh of the piece arrow indicators hovered legal moves.
  * 
  * Call when our highlights offset, or render range bounding box, changes,
@@ -184,6 +167,28 @@ function reset() {
 }
 
 
+
+/**
+ * Any model that has a bigint offset, should be able to subtract that offset
+ * from our board position to obtain a number small emough for the gpu to render.
+ * 
+ * Typically this will always include numbers smaller than 10,000
+ */
+function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
+	function getAxis(position: BigDecimal, offset: bigint): number {
+		const offsetBD = bd.FromBigInt(offset);
+		return bd.toNumber(bd.subtract(offsetBD, position));
+	}
+
+	return [
+		// offset - boardPos
+		getAxis(boardPos[0], modelOffset[0]),
+		getAxis(boardPos[1], modelOffset[1]),
+		z
+	];
+}
+
+
 // -------------------------------------------------------------------------------------------------------------
 
 
@@ -192,4 +197,7 @@ export default {
 	reset,
 	renderEachHoveredPieceLegalMoves,
 	regenModelsOfHoveredPieces,
+
+	// TODO: Move to a better location???
+	getModelPosition,
 };

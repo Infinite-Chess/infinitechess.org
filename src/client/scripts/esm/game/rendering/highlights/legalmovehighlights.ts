@@ -324,7 +324,7 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 	
 	// The selected piece highlight model
 	const coords = pieceSelected!.coords;
-	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
+	const offsetCoord = coordutil.subtractCoords(coords, model_Offset);
 	const dataSelectedPieceHighlight = shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 	model_SelectedPiece = createModel(dataSelectedPieceHighlight, 2, "TRIANGLES", true);
 	
@@ -405,7 +405,7 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
 		const isPieceOnCoords = boardutil.isPieceOnCoords(boardsim.pieces, coord);
-		const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
+		const offsetCoord = coordutil.subtractCoords(coord, model_Offset);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
 	}
@@ -527,7 +527,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, i
 	}
 
 	// Shift the vertex data of our first step to the right place
-	const firstInstancePositionOffset: Coords = coordutil.subtractCoordinates(startCoords, model_Offset);
+	const firstInstancePositionOffset: Coords = coordutil.subtractCoords(startCoords, model_Offset);
 
 	// Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
 	const xyDist = stepIsPositive ? endCoords[index] - startCoords[index] : startCoords[index] - endCoords[index];

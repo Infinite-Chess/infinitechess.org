@@ -7,7 +7,7 @@
 
 import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
 
-import bigdecimal from "../../util/bigdecimal/bigdecimal";
+import bd from "../../util/bigdecimal/bigdecimal";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -63,7 +63,7 @@ function areCoordsEqual(coord1: Coords, coord2: Coords): boolean {
 
 /** Returns true if the BigDecimal coordinates are equal. */
 function areBDCoordsEqual(coord1: BDCoords, coord2: BDCoords): boolean {
-	return bigdecimal.areEqual(coord1[0], coord2[0]) && bigdecimal.areEqual(coord1[1], coord2[1]);
+	return bd.areEqual(coord1[0], coord2[0]) && bd.areEqual(coord1[1], coord2[1]);
 }
 
 /**
@@ -82,10 +82,23 @@ function addCoordinates(coord1: Coords, coord2: Coords): Coords {
  * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
  * @returns The resulting coordinate pair after subtracting.
  */
-function subtractCoordinates(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
+function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
 	return [
 		minuendCoord[0] - subtrahendCoord[0],
 		minuendCoord[1] - subtrahendCoord[1]
+	];
+}
+
+/**
+ * Subtracts two coordinate pairs together component-wise.
+ * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
+ * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
+ * @returns The resulting coordinate pair after subtracting.
+ */
+function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BDCoords {
+	return [
+		bd.subtract(minuendCoord[0], subtrahendCoord[0]),
+		bd.subtract(minuendCoord[1], subtrahendCoord[1])
 	];
 }
 
@@ -103,14 +116,14 @@ function copyCoords(coords: Coords): Coords {
  * @param t - The interpolation value (between 0 and 1).
  */
 function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
-	const bdstart: BDCoords = bigdecimal.FromCoords(start);
-	const bddiff: BDCoords = bigdecimal.FromCoords([end[0] - start[0], end[1] - start[1]]);
-	const bdt: BigDecimal = bigdecimal.FromNumber(t);
-	const travelX = bigdecimal.multiply_fixed(bddiff[0], bdt);
-	const travelY = bigdecimal.multiply_fixed(bddiff[1], bdt);
+	const bdstart: BDCoords = bd.FromCoords(start);
+	const bddiff: BDCoords = bd.FromCoords([end[0] - start[0], end[1] - start[1]]);
+	const bdt: BigDecimal = bd.FromNumber(t);
+	const travelX = bd.multiply_fixed(bddiff[0], bdt);
+	const travelY = bd.multiply_fixed(bddiff[1], bdt);
 	return [
-		bigdecimal.add(bdstart[0], travelX),
-		bigdecimal.add(bdstart[1], travelY),
+		bd.add(bdstart[0], travelX),
+		bd.add(bdstart[1], travelY),
     ];
 }
 
@@ -122,7 +135,8 @@ export default {
 	areCoordsEqual,
 	areBDCoordsEqual,
 	addCoordinates,
-	subtractCoordinates,
+	subtractCoords,
+	subtractBDCoords,
 	copyCoords,
 	lerpCoords,
 };
