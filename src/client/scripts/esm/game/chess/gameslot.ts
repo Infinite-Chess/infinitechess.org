@@ -265,6 +265,7 @@ function unloadGame() {
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
 	annotations.onGameUnload(); // Clear all user-drawn highlights
+	premoves.onGameUnload(); // Clear all premoves
 }
 
 /**

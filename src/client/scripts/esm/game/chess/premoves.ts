@@ -21,8 +21,11 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import gameslot from './gameslot.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
+import animation from '../rendering/animation.js';
+import mouse from '../../util/mouse.js';
 import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
+import { Mouse } from '../input.js';
 
 
 // Type Definitions ---------------------------------------------
@@ -69,8 +72,6 @@ document.addEventListener('premoves-toggle', (e: CustomEvent) => {
 	if (!gamefile) return;
 
 	cancelPremoves(gamefile, mesh);
-
-	selection.reselectPiece(); // Recalculates the currently selected piece's legal moves
 });
 
 /** Gets all pending premoves. */
@@ -141,8 +142,21 @@ function clearPremoves() {
 /** Cancels all premoves */
 function cancelPremoves(gamefile: FullGame, mesh?: Mesh) {
 	// console.log("Clearing premoves");
+	const hadAtleastOnePremove = hasAtleastOnePremove();
+	
 	rewindPremoves(gamefile, mesh);
 	clearPremoves();
+
+	if (selection.arePremoving()) {
+		// Unselect in the case where the premoves are being rewound
+		if (hadAtleastOnePremove) selection.unselectPiece();
+		// Reselect if we haven't actually made any premoves yet
+		else selection.reselectPiece();
+	}
+
+	// If there were any animations, this should ensure they're only cancelled if they are for premoves,
+	// and not for the opponent's move. After all cancelPremoves() can be called at any time.
+	if (hadAtleastOnePremove) animation.clearAnimations();
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
@@ -172,23 +186,35 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh) {
 	for (let i = 0; i < premoves.length; i++) {
 		const oldPremove = premoves[i]!;
 
-		// MUST RECALCULATE CHANGES
+		// Check if the premove is still legal to premove
+		// It might not be if the premoved piece was captured,
+		// Or if a castling premove's rook was captured.
+		const results = premoveIsLegal(gamefile, oldPremove, 'premove');
 
-		// Extract the original MoveDraft from the premove
-		const premoveDraft: MoveDraft = {
-			startCoords: oldPremove.startCoords,
-			endCoords: oldPremove.endCoords,
-			promotion: oldPremove.promotion,
-			// Don't miss any other special move flags
-			enpassantCreate: oldPremove.enpassantCreate,
-			enpassant: oldPremove.enpassant,
-			castle: oldPremove.castle,
-			path: oldPremove.path,
-		};
-		const premove = generatePremove(gamefile, premoveDraft);
+		if (results.legal === true) {
+			// Extract the original MoveDraft from the premove
+			const premoveDraft: MoveDraft = {
+				startCoords: oldPremove.startCoords,
+				endCoords: oldPremove.endCoords,
+				promotion: oldPremove.promotion,
+			};
+			specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsSpecial, premoveDraft);
 
-		premoves[i] = premove; // Update the premove with the new changes
-		applyPremove(gamefile, mesh, premove, true); // Apply the premove to the game state
+			// MUST RECALCULATE CHANGES
+			const premove = generatePremove(gamefile, premoveDraft);
+
+			premoves[i] = premove; // Update the premove with the new changes
+			applyPremove(gamefile, mesh, premove, true); // Apply the premove to the game state
+		} else {
+			console.log('Premove is no longer legal:', oldPremove);
+			// Premove is no longer legal to premove.
+			// This could happen if it was a castling premove, and the rook was captured,
+			// so there's no longer a valid rook to premove castle with.
+			
+			// Delete this premove and all following premoves
+			premoves.splice(i, premoves.length - i);
+			break;
+		}
 	}
 
 	// console.error("Setting applied to true.");
@@ -211,7 +237,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	// we still need clearPremoves() to set applied to true!
 
 	// Check if the move is legal
-	const results = premoveIsLegal(gamefile, premove);
+	const results = premoveIsLegal(gamefile, premove, 'physical');
 
 	if (premove && results.legal === true) {
 		// console.log("Premove is legal, applying it");
@@ -247,9 +273,14 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	}
 }
 
-
-/** Tests whether a given premove is legal to make on the board. */
-function premoveIsLegal(gamefile: FullGame, premove?: Premove): { legal: true, endCoordsSpecial: CoordsSpecial } | { legal: false } {
+/**
+ * Tests whether a given premove is legal to make on the board.
+ * @param gamefile 
+ * @param premove 
+ * @param mode - Whether we should be testing if the premove is legal to make physically in the game, OR if it's still a valid premove to PREMOVE. A premove may no longer become a valid premove if for example the castling opportunity dissapears due to the opponent capturing the rook.
+ * @returns 
+ */
+function premoveIsLegal(gamefile: FullGame, premove: Premove | undefined, mode: 'physical' | 'premove'): { legal: true, endCoordsSpecial: CoordsSpecial } | { legal: false } {
 	if (!premove) return { legal: false };
 
 	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
@@ -258,7 +289,9 @@ function premoveIsLegal(gamefile: FullGame, premove?: Premove): { legal: true, e
 	if (premove.type !== piece.type) return { legal: false }; // Our piece was probably captured, so it can't move anymore, thus the premove is illegal.
 
 	// Check if the move is legal
-	const premovedPieceLegalMoves = legalmoves.calculateAll(gamefile, piece);
+	const premovedPieceLegalMoves = mode === 'physical' ?
+		legalmoves.calculateAll(gamefile, piece) :
+		legalmoves.calculateAllPremoves(gamefile, piece);
 	const color = typeutil.getColorFromType(piece.type);
 
 	// A copy of the end coords for applying the special flags too.
@@ -303,6 +336,31 @@ function onGameConclude() {
 	applied = originalApplied;
 }
 
+/**
+ * Call externally when the game is unloaded.
+ */
+function onGameUnload() {
+	clearPremoves();
+}
+
+
+// Updating Premoves ------------------------------------------------
+
+
+/** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
+function update(gamefile: FullGame, mesh?: Mesh) {
+	if (preferences.getLingeringAnnotationsMode()) return; // Right mouse down doesn't clear premoves in Lingering Annotations mode
+
+	if (mouse.isMouseDown(Mouse.RIGHT)) {
+		if (!hasAtleastOnePremove()) return; // No premoves to clear. Don't claim the right mouse button.
+
+		mouse.claimMouseDown(Mouse.RIGHT); // Claim the right mouse button so it doesn't propagate to arrow drawing
+		mouse.cancelMouseClick(Mouse.RIGHT); // Prevents the up-release from registering a click later, drawing a square highlight
+
+		cancelPremoves(gamefile, mesh);
+	}
+}
+
 
 // Rendering --------------------------------------------------------
 
@@ -337,5 +395,7 @@ export default {
 	applyPremoves,
 	onYourMove,
 	onGameConclude,
+	onGameUnload,
+	update,
 	render,
 };

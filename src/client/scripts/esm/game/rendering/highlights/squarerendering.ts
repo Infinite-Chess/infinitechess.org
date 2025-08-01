@@ -1,13 +1,6 @@
 
 // src/client/scripts/esm/game/rendering/highlights/squarerendering.ts
 
-import space from "../../misc/space.js";
-import instancedshapes from "../instancedshapes.js";
-import { BufferModelInstanced, createModel_Instanced } from "../buffermodel.js";
-
-import type { Coords } from "../../../chess/util/coordutil.js";
-import type { Color } from "../../../util/math.js";
-
 /**
  * This script knows how to generate buffer
  * models for rendering square highlights, such as:
@@ -16,6 +9,14 @@ import type { Color } from "../../../util/math.js";
  * * Square annotations
  * * Premove highlights
  */
+
+
+import space from "../../misc/space.js";
+import instancedshapes from "../instancedshapes.js";
+import { BufferModelInstanced, createModel_Instanced } from "../buffermodel.js";
+
+import type { Coords } from "../../../chess/util/coordutil.js";
+import type { Color } from "../../../util/math.js";
 
 
 /**

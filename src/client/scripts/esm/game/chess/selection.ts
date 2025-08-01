@@ -142,7 +142,6 @@ function enableEditMode() { editMode = true; }
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
 	guipromotion.update();
-	// DISABLED BECAUSE highlight drawing uses the right click
 	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Right-click deselects everything
 
 	// Guard clauses...

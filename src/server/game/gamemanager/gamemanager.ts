@@ -195,13 +195,14 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * @param game - The game they are in.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game): void {
+	if (!gameutility.isGameOver(game)) return; // Game is still going, can't let them join a new game.
+
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, game.id);
     
 	// If both players have requested this (i.e. have seen the game conclusion),
 	// and the game is scheduled to be deleted, just delete it now!
     
-	if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
 	// Is the opponent still in the players in active games list? (has not seen the game results)
 	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
@@ -402,6 +403,10 @@ function onPlayerLostByAbandonment(game: Game, colorWon: Player) {
  * @param game
  */
 async function deleteGame(game: Game) {
+	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
+	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
+	delete activeGames[game.id]; // Delete the game from the activeGames list
+
 	// If the pastedGame flag is present, skip logging to the database.
 	// We don't know the starting position.
 	if (game.positionPasted) console.log('Skipping logging custom game.');
@@ -434,8 +439,6 @@ async function deleteGame(game: Game) {
 	// Doesn't have to be in the same transaction as the game logging,
 	// as the rating abuse table's data does not reference other tables.
 	await ratingabuse.measureRatingAbuseAfterGame(game);
-
-	delete activeGames[game.id]; // Delete the game from the activeGames list
 
 	console.log(`Deleted game ${game.id}.`);
 }
