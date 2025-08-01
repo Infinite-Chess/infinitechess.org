@@ -441,14 +441,13 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, bou
 	const axis = slideDir[0] === 0n ? 1 : 0;
 
 	const firstPiece = boardutil.getPieceFromIdx(boardsim.pieces, organizedline[0]!)!;
-	const firstPieceCoordsBD: BDCoords = bd.FromCoords(firstPiece.coords);
 
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
 	 * The only difference is each piece may have a different dot product,
 	 * which just means it's on the opposite side.
 	 */
-	const intersections = geometry.findLineBoxIntersections(firstPieceCoordsBD, slideDir, boundingBoxFloat).map(c => c.coords);
+	const intersections = geometry.findLineBoxIntersections(firstPiece.coords, slideDir, boundingBoxFloat).map(c => c.coords);
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
 	organizedline.forEach(idx => {
@@ -461,7 +460,7 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, bou
 		// Piece is guaranteed off-screen...
 		
 		// console.log(boundingBoxFloat, boundingBoxInt) 
-		const thisPieceIntersections = geometry.findLineBoxIntersections(pieceCoordsBD, slideDir, boundingBoxInt);
+		const thisPieceIntersections = geometry.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt);
 		if (thisPieceIntersections.length < 2) return; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
 
@@ -862,8 +861,7 @@ function executeArrowShifts() {
 
 					// Determine the line's dot product with the screen box.
 					// Flip the vector if need be, to point it in the right direction.
-					const arrowDraftPieceCoordsBD: BDCoords = bd.FromCoords(arrowDraft.piece.coords);
-					const thisPieceIntersections = geometry.findLineBoxIntersections(arrowDraftPieceCoordsBD, line, boundingBoxFloat!); // should THIS BE FLOAT???
+					const thisPieceIntersections = geometry.findLineBoxIntersections(arrowDraft.piece.coords, line, boundingBoxFloat!); // should THIS BE FLOAT???
 					// MAYBE NOT NEEDED AFTER UPGRADING THE LOGIC to bigints?
 					// if (thisPieceIntersections.length < 2) continue; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
 					const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	

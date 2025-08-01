@@ -8,7 +8,7 @@
 
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
-import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
+import coordutil, { Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
@@ -56,7 +56,7 @@ let drag_start: Coords | undefined;
 /** The ID of the pointer that is drawing the ray. */
 let pointerId: string | undefined;
 /** The last known position of the pointer drawing a ray. */
-let pointerWorld: Coords | undefined;
+let pointerWorld: DoubleCoords | undefined;
 
 
 // Getters -------------------------------------------------------------------
