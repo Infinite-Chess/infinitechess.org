@@ -18,7 +18,7 @@ import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
 import geometry from '../../../util/math/geometry.js';
-import bounds, { BoundingBox } from '../../../util/math/bounds.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
@@ -215,7 +215,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 	return !bounds.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
 }
 
-function getBoundingBoxOfPerspectiveView() {
+function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 
 	const boardPos = boardpos.getBoardPos();
 	const x = boardPos[0];

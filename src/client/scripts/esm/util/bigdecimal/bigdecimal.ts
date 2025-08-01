@@ -835,9 +835,7 @@ function compare(bd1: BigDecimal, bd2: BigDecimal): -1 | 0 | 1 {
 	// If divex are equal, no scaling is needed.
 
 	// Now that they are at the same scale, we can directly compare the bigints.
-	if (bigint1 < bigint2) return -1;
-	if (bigint1 > bigint2) return 1;
-	return 0;
+	return bigint1 < bigint2 ? -1 : bigint1 > bigint2 ? 1 : 0;
 }
 
 /** Tests if two BigDecimals are equal in value. */

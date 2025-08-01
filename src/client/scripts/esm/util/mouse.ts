@@ -15,7 +15,7 @@ import camera from "../game/rendering/camera.js";
 import perspective from "../game/rendering/perspective.js";
 
 
-import type { Coords } from "../chess/util/coordutil.js";
+import type { BDCoords, Coords, DoubleCoords } from "../chess/util/coordutil.js";
 
 
 /**
@@ -28,7 +28,7 @@ import type { Coords } from "../chess/util/coordutil.js";
  * 
  * ONLY WORKS IF WE LEFT-CLICK-DRAG off the screen. NOT if we right-click-drag!
  */
-function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
+function getPointerPosition_Offscreen(pointerId: string): DoubleCoords | undefined {
 	if (pointerId === 'mouse') {
 		// The mouse on the document is sensitive to 'mousemove' events even when the mouse is outside the element/window.
 		// This allows us to continue dragging the board/piece even when the mouse is outside the window.
@@ -45,7 +45,7 @@ function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
  * Returns the world space coordinates of the mouse pointer,
  * or the crosshair if the mouse is locked (in perspective mode).
  */
-function getMouseWorld(button: MouseButton = Mouse.LEFT): Coords | undefined {
+function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
 		const mouseId = listener_overlay.getMouseId(button);
 		if (!mouseId) return undefined;
@@ -64,7 +64,7 @@ function getMouseWorld(button: MouseButton = Mouse.LEFT): Coords | undefined {
  * Returns the world space coordinates of the mouse pointer,
  * or the crosshair if in perspective mode.
  */
-function getPointerWorld(pointerId: string): Coords | undefined {
+function getPointerWorld(pointerId: string): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
 		const pointerPos = getPointerPosition_Offscreen(pointerId);
 		if (!pointerPos) return undefined;
@@ -72,7 +72,7 @@ function getPointerWorld(pointerId: string): Coords | undefined {
 	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
 }
 
-function getCrossHairWorld(): Coords {
+function getCrossHairWorld(): DoubleCoords {
 	const rotX = (Math.PI / 180) * perspective.getRotX();
 	const rotZ = (Math.PI / 180) * perspective.getRotZ();
 	
@@ -91,7 +91,7 @@ function getCrossHairWorld(): Coords {
 	return mouseWorld;
 }
 
-function convertMousePositionToWorldSpace(mouse: Coords, element: HTMLElement | typeof document): Coords {
+function convertMousePositionToWorldSpace(mouse: DoubleCoords, element: HTMLElement | typeof document): DoubleCoords {
 	const mouseCopy: Coords = [...mouse];
 	const screenBox = camera.getScreenBoundingBox();
 	const screenWidth = screenBox.right - screenBox.left;
@@ -111,7 +111,7 @@ function convertMousePositionToWorldSpace(mouse: Coords, element: HTMLElement | 
 	return mouseWorldSpace;
 }
 
-function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): Coords | undefined {
+function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): BDCoords | undefined {
 	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords(mouseWorld);
@@ -123,7 +123,7 @@ function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | un
 	return space.convertWorldSpaceToCoords_Rounded(mouseWorld);
 }
 
-function getTilePointerOver_Float(pointerId: string): Coords | undefined {
+function getTilePointerOver_Float(pointerId: string): BDCoords | undefined {
 	// const pointerCoords = listener_overlay.getPointerPos(pointerId)!;
 	const pointerCoords = getPointerPosition_Offscreen(pointerId);
 	if (!pointerCoords) return undefined;
@@ -235,7 +235,7 @@ function getRelevantListener(): InputListener {
  * Returns all the existing pointers' world coordinates,
  * depending on the relevant listener.
  */
-function getAllPointerWorlds(): Coords[] {
+function getAllPointerWorlds(): DoubleCoords[] {
 	const allPointersIds = getRelevantListener().getAllPointerIds();
 	return allPointersIds.map(id => getPointerWorld(id)!);
 }

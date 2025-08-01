@@ -48,6 +48,11 @@ type Ray = {
  */
 type LineCoefficients = [bigint, bigint, bigint];
 
+/**
+ * {@link LineCoefficients} but for BigDecimal lines (requiring decimal precision).
+ */
+type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
+
 
 // Construction ----------------------------------------------------------------------
 
@@ -65,6 +70,14 @@ function getKeyFromVec2(vec2: Vec2): Vec2Key {
 function getVec2FromKey(vec2Key: Vec2Key): Vec2 {
 	return vec2Key.split(',').map(BigInt) as Vec2;
 }
+
+/**
+ * Converts a bigint vector to javascript doubles. 
+ */
+function convertVectorToDoubles(vec2: Vec2): DoubleCoords {
+	return [Number(vec2[0]), Number(vec2[1])];
+}
+
 /**
  * Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector.
  */
@@ -73,6 +86,21 @@ function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): LineC
 	const A = vector[1];
 	const B = -vector[0];
 	const C = vector[0] * coords[1] - vector[1] * coords[0];
+
+	return [A, B, C];
+}
+
+/**
+ * {@link getLineGeneralFormFromCoordsAndVec} but for BigDecimal coordinates.
+ */
+function getLineGeneralFormFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): LineCoefficientsBD {
+	const vectorBD = bd.FromCoords(vector);
+
+	// General form: Ax + By + C = 0
+	const A: BigDecimal = bd.clone(vectorBD[1]);
+	const B: BigDecimal = bd.negate(vectorBD[0]);
+	// vector[0] * coords[1] - vector[1] * coords[0]
+	const C: BigDecimal = bd.subtract(bd.multiply_fixed(vectorBD[0], coords[1]), bd.multiply_fixed(vectorBD[1], coords[0]));
 
 	return [A, B, C];
 }
@@ -104,6 +132,17 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): LineCo
 }
 
 /**
+ * Upgrades bigint line coefficients [A, B, C] to BigDecimals.
+ */
+function convertCoeficcientsToBD(line: LineCoefficients): LineCoefficientsBD {
+	return [
+		bd.FromBigInt(line[0]),
+		bd.FromBigInt(line[1]),
+		bd.FromBigInt(line[2]),
+	];
+}
+
+/**
  * Calculates the vector between 2 points.
  */
 function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
@@ -126,6 +165,14 @@ function calculateVectorFromBDPoints(start: BDCoords, end: BDCoords): BDCoords {
  */
 function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
 	return vector[0] * coords[1] - vector[1] * coords[0];
+}
+
+/**
+ * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
+ */
+function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: BDCoords): BigDecimal {
+	// Coors first since they are likely higher precision.
+	return bd.subtract(bd.multiply_fixed(coords[1], vector[0]), bd.multiply_fixed(coords[0], vector[1]));
 }
 
 
@@ -222,6 +269,20 @@ function chebyshevDistance(point1: Coords, point2: Coords): bigint {
 	return bimath.max(bimath.abs(point2[0] - point1[0]), bimath.abs(point2[1] - point1[1]));
 }
 
+/**
+ * {@link chebyshevDistance} but for BigDecimal coordinates.
+ */
+function chebyshevDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
+	return bd.max(bd.abs(bd.subtract(point2[0], point1[0])), bd.abs(bd.subtract(point2[1], point1[1])));
+}
+
+/**
+ * {@link chebyshevDistance} but for javascript numbers (doubles).
+ */
+function chebyshevDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): number {
+	return Math.max(Math.abs(point2[0] - point1[0]), Math.abs(point2[1] - point1[1]));
+}
+
 
 // Exports -------------------------------------------------------------
 
@@ -230,11 +291,15 @@ export default {
 	// Construction
 	getKeyFromVec2,
 	getVec2FromKey,
+	convertVectorToDoubles,
 	getLineGeneralFormFromCoordsAndVec,
+	getLineGeneralFormFromCoordsAndVecBD,
 	getLineGeneralFormFrom2Coords,
+	convertCoeficcientsToBD,
 	calculateVectorFromPoints,
 	calculateVectorFromBDPoints,
 	getLineCFromCoordsAndVec,
+	getLineCFromCoordsAndVecBD,
 
 	// Operations
 	areLinesInGeneralFormEqual,
@@ -248,6 +313,8 @@ export default {
 	euclideanDistance,
 	manhattanDistance,
 	chebyshevDistance,
+	chebyshevDistanceBD,
+	chebyshevDistanceDoubles,
 };
 
 export type {

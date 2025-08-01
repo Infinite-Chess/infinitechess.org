@@ -9,7 +9,7 @@
  */
 
 
-import type { Coords } from "../chess/util/coordutil.js";
+import type { Coords, DoubleCoords } from "../chess/util/coordutil.js";
 import type { Vec2 } from "../util/math/vectors.js";
 
 import docutil from "../util/docutil.js";
@@ -65,7 +65,7 @@ interface InputListener {
 	getMouseId(button: MouseButton): string | undefined;
 	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
 	// eslint-disable-next-line no-unused-vars
-	getMousePosition(button: MouseButton): Coords | undefined;
+	getMousePosition(button: MouseButton): DoubleCoords | undefined;
 	/** Whether the given mouse button simulated a full CLICK this frame. */
 	// eslint-disable-next-line no-unused-vars
 	isMouseClicked(button: MouseButton): boolean;
@@ -83,7 +83,7 @@ interface InputListener {
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-    getPointerPos(pointerId?: string): Coords | undefined;
+    getPointerPos(pointerId?: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
@@ -704,7 +704,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
  * Converts the mouse coordinates to be relative to the
  * element bounding box instead of absolute to the whole page.
  */
-function getRelativeMousePosition(coords: Coords, element: HTMLElement | typeof document): Coords {
+function getRelativeMousePosition(coords: DoubleCoords, element: HTMLElement | typeof document): DoubleCoords {
 	if (element instanceof Document) return coords; // No need to adjust if we're listening on the document.
 	const rect = element.getBoundingClientRect();
 	return [

@@ -37,7 +37,8 @@ import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 /**
  * The negative/positive vector step-limit of a sliding direction.
  * 
- * [-2,Infinity] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
+ * NULL === INFINITY
+ * [-2,null] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
  * For knightriders, one [2,1] hop is considered 1 step.
  */
 type SlideLimits = [bigint | null, bigint | null]
@@ -254,7 +255,7 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  * @param slideKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param organizedLine - The organized line of the above key that our piece is on
  */
-function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
+function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]): SlideLimits | undefined {
 	const thisPieceMoveset = getPieceMoveset(boardsim, piece.type); // Default piece moveset
 	if (!thisPieceMoveset.sliding) return; // This piece can't slide at all
 	if (!thisPieceMoveset.sliding[slideKey]) return; // This piece can't slide ALONG the provided line

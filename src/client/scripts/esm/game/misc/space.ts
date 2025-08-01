@@ -87,10 +87,9 @@ function convertCoordToWorldSpace(coords: Coords, position: BDCoords = boardpos.
 	];
 }
 
-function convertCoordToWorldSpace_IgnoreSquareCenter(coords: Coords, position = boardpos.getBoardPos(), scale = boardpos.getBoardScale()): DoubleCoords {
-	function getAxis(coord: bigint, position: BigDecimal): number {
-		const coordBD = bigdecimal.FromBigInt(coord);
-		const diff = bigdecimal.subtract(coordBD, position);
+function convertCoordToWorldSpace_IgnoreSquareCenter(coords: BDCoords, position = boardpos.getBoardPos(), scale = boardpos.getBoardScale()): DoubleCoords {
+	function getAxis(coord: BigDecimal, position: BigDecimal): number {
+		const diff = bigdecimal.subtract(coord, position);
 		const scaled = bigdecimal.multiply_floating(diff, scale);
 		return bigdecimal.toNumber(scaled);
 	}

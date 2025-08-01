@@ -8,9 +8,7 @@
 
 
 import type { Board } from '../../chess/logic/gamefile.js';
-import type { Coords } from '../../chess/logic/movesets.js';
-
-
+import type{ DoubleCoords } from '../../chess/util/coordutil.js';
 
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import typeutil from '../../chess/util/typeutil.js';
@@ -41,7 +39,7 @@ let spritesheetData: {
 	 * where (0,0) is the bottom-left corner of the spritesheet,
 	 * and the coordinates provided are the bottom-left corner of the corresponding type.
 	 */
-	texLocs: { [type: number]: Coords
+	texLocs: { [type: number]: DoubleCoords
 	 }
 } | undefined;
 
@@ -59,7 +57,7 @@ function getSpritesheetDataPieceWidth() {
 	return spritesheetData!.pieceWidth;
 }
 
-function getSpritesheetDataTexLocation(type: number): Coords {
+function getSpritesheetDataTexLocation(type: number): DoubleCoords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
 	if (!spritesheetData!.texLocs[type]) throw new Error("No texture location for piece type: " + type);
 	return spritesheetData!.texLocs[type]!;

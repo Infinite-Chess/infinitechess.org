@@ -11,14 +11,14 @@ import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal";
 import vectors, { Ray, Vec2 } from "./vectors";
 
-import type { BoundingBox } from "./bounds";
+import type { BoundingBoxBD } from "./bounds";
 
 
 // Constants -----------------------------------------------------------
 
 
-const ZERO = bd.FromNumber(0.0);
-const ONE = bd.FromNumber(1.0);
+const ZERO = bd.FromBigInt(0n);
+const ONE = bd.FromBigInt(1n);
 
 
 // Operations -----------------------------------------------------------
@@ -43,6 +43,24 @@ function calcIntersectionPointOfLines(A1: bigint, B1: bigint, C1: bigint, A2: bi
 	// Calculate the intersection point
 	const x = determineAxis(C2 * B1 - C1 * B2);
 	const y = determineAxis(A2 * C1 - A1 * C2);
+
+	return [x, y];
+}
+
+/**
+ * {@link calcIntersectionPointOfLines}, but for BigDecimal lines (requiring decimal precision).
+ */
+function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigDecimal, A2: BigDecimal, B2: BigDecimal, C2: BigDecimal): BDCoords | undefined {
+	const determinant = bd.subtract(bd.multiply_fixed(A1, B2), bd.multiply_fixed(A2, B1));
+	if (bd.areEqual(determinant, ZERO)) return undefined; // Lines are parallel or identical
+
+	function determineAxis(dividend: BigDecimal) {
+		return bd.divide_fixed(dividend, determinant);
+	}
+
+	// Calculate the intersection point
+	const x = determineAxis(bd.subtract(bd.multiply_fixed(C2, B1), bd.multiply_fixed(C1, B2)));
+	const y = determineAxis(bd.subtract(bd.multiply_fixed(A2, C1), bd.multiply_fixed(A1, C2)));
 
 	return [x, y];
 }
@@ -300,18 +318,18 @@ function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BD
  * If the vector is vertical, then as if we were looking at the box from below,
  * we would return its left/right-most points.
  */
-function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
+function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBoxBD): [BDCoords, BDCoords] {
 	const { left, right, bottom, top } = boundingBox;
 	const [dx, dy] = vector;
 
 	// Handle edge case: zero direction vector
-	if (dx === 0n && dy === 0n) throw new Error("Direction vector cannot be zero.");
+	if (bd.areEqual(dx, ZERO) && bd.areEqual(dy, ZERO)) throw new Error("Direction vector cannot be zero.");
 
 	// The normal vector is perpendicular to the viewing vector.
 	// We can use this to find the points that are furthest apart on this line.
-	const normal: Vec2 = [-dy, dx];
+	const normal: BDCoords = [bd.negate(dy), dx];
 
-	const corners: Coords[] = [
+	const corners: BDCoords[] = [
         [left, top],     // Top-left
         [right, top],    // Top-right
         [left, bottom],  // Bottom-left
@@ -319,24 +337,25 @@ function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): 
     ];
 
 	// Initialize min/max with the projection of the first corner
-	let minCorner: Coords = corners[0]!;
-	let maxCorner: Coords = corners[0]!;
+	let minCorner: BDCoords = corners[0]!;
+	let maxCorner: BDCoords = corners[0]!;
 
-	let minProjection = minCorner[0] * normal[0] + minCorner[1] * normal[1];
-	let maxProjection = minProjection;
+	// minCorner[0] * normalBD[0] + minCorner[1] * normalBD[1]
+	let minProjection: BigDecimal = bd.add(bd.multiply_fixed(minCorner[0], normal[0]), bd.multiply_fixed(minCorner[1], normal[1]));
+	let maxProjection: BigDecimal = minProjection;
 
 	// Iterate through the rest of the corners (from the second one)
 	for (let i = 1; i < corners.length; i++) {
-		const corner = corners[i]!;
+		const corner: BDCoords = corners[i]!;
 
 		// Project the corner onto the NORMAL vector using the dot product
-		const projection = vectors.dotProduct(corner, normal);
+		const projection = vectors.dotProductBD(corner, normal);
 
-		if (projection < minProjection) {
+		if (bd.compare(projection, minProjection) < 0) {
 			minProjection = projection;
 			minCorner = corner;
 		}
-		if (projection > maxProjection) {
+		if (bd.compare(projection, maxProjection) > 0) {
 			maxProjection = projection;
 			maxCorner = corner;
 		}
@@ -377,15 +396,13 @@ function roundPointToNearestGridpoint(point: Coords, gridSize: bigint): Coords {
  * @param box - The bounding box the line intersects.
  * @returns An array of intersection points as BDCoords, sorted by distance along the vector.
  */
-function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: BoundingBox): { coords: BDCoords; positiveDotProduct: boolean }[] {
+function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: BoundingBoxBD): { coords: BDCoords; positiveDotProduct: boolean }[] {
 
 	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
-	const [bd_x0, bd_y0] = bd.FromCoords(startCoords);
+	const [bd_x0, bd_y0] = startCoords;
 	const [bd_dx, bd_dy] = bd.FromCoords(direction);
-	const bd_left = bd.FromBigInt(box.left);
-	const bd_right = bd.FromBigInt(box.right);
-	const bd_bottom = bd.FromBigInt(box.bottom);
-	const bd_top = bd.FromBigInt(box.top);
+	
+	const { left, right, bottom, top } = box;
     
 	const valid_t_values: BigDecimal[] = [];
 
@@ -394,18 +411,18 @@ function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: Bou
 	// Check vertical edges (left and right)
 	if (direction[0] !== 0n) {
 		// t = (boundary - x0) / dx
-		const t_left = bd.divide_fixed(bd.subtract(bd_left, bd_x0), bd_dx);
-		const t_right = bd.divide_fixed(bd.subtract(bd_right, bd_x0), bd_dx);
+		const t_left = bd.divide_fixed(bd.subtract(left, bd_x0), bd_dx);
+		const t_right = bd.divide_fixed(bd.subtract(right, bd_x0), bd_dx);
 
 		// Check if the intersection at t_left is on the edge
-		const y_at_left = bd.add(bd_y0, bd.multiply_fixed(t_left, bd_dy));
-		if (bd.compare(y_at_left, bd_bottom) >= 0 && bd.compare(y_at_left, bd_top) <= 0) {
+		const y_at_left = bd.add(bd.multiply_fixed(t_left, bd_dy), bd_y0);
+		if (bd.compare(y_at_left, bottom) >= 0 && bd.compare(y_at_left, top) <= 0) {
 			valid_t_values.push(t_left);
 		}
 
 		// Check if the intersection at t_right is on the edge
-		const y_at_right = bd.add(bd_y0, bd.multiply_fixed(t_right, bd_dy));
-		if (bd.compare(y_at_right, bd_bottom) >= 0 && bd.compare(y_at_right, bd_top) <= 0) {
+		const y_at_right = bd.add(bd.multiply_fixed(t_right, bd_dy), bd_y0);
+		if (bd.compare(y_at_right, bottom) >= 0 && bd.compare(y_at_right, top) <= 0) {
 			valid_t_values.push(t_right);
 		}
 	}
@@ -413,18 +430,18 @@ function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: Bou
 	// Check horizontal edges (bottom and top)
 	if (direction[1] !== 0n) {
 		// t = (boundary - y0) / dy
-		const t_bottom = bd.divide_fixed(bd.subtract(bd_bottom, bd_y0), bd_dy);
-		const t_top = bd.divide_fixed(bd.subtract(bd_top, bd_y0), bd_dy);
+		const t_bottom = bd.divide_fixed(bd.subtract(bottom, bd_y0), bd_dy);
+		const t_top = bd.divide_fixed(bd.subtract(top, bd_y0), bd_dy);
         
 		// Check if the intersection at t_bottom is on the edge
-		const x_at_bottom = bd.add(bd_x0, bd.multiply_fixed(t_bottom, bd_dx));
-		if (bd.compare(x_at_bottom, bd_left) >= 0 && bd.compare(x_at_bottom, bd_right) <= 0) {
+		const x_at_bottom = bd.add(bd.multiply_fixed(t_bottom, bd_dx), bd_x0);
+		if (bd.compare(x_at_bottom, left) >= 0 && bd.compare(x_at_bottom, right) <= 0) {
 			valid_t_values.push(t_bottom);
 		}
 
 		// Check if the intersection at t_top is on the edge
-		const x_at_top = bd.add(bd_x0, bd.multiply_fixed(t_top, bd_dy));
-		if (bd.compare(x_at_top, bd_left) >= 0 && bd.compare(x_at_top, bd_right) <= 0) {
+		const x_at_top = bd.add(bd.multiply_fixed(t_top, bd_dy), bd_x0);
+		if (bd.compare(x_at_top, left) >= 0 && bd.compare(x_at_top, right) <= 0) {
 			valid_t_values.push(t_top);
 		}
 	}
@@ -460,6 +477,7 @@ function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: Bou
 export default {
 	// Operations
 	calcIntersectionPointOfLines,
+	calcIntersectionPointOfLinesBD,
 	intersectLineSegments,
 	intersectLineAndSegment,
 	intersectRayAndSegment,

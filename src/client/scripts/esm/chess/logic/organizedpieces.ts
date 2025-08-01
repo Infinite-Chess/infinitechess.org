@@ -559,8 +559,8 @@ function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
 }
 
 /** Splits the `C` value out of the line key */
-function getCFromKey(lineKey: LineKey): number {
-	return Number(lineKey.split('|')[0]);
+function getCFromKey(lineKey: LineKey): bigint {
+	return BigInt(lineKey.split('|')[0]);
 }
 
 /**

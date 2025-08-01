@@ -67,7 +67,7 @@ function getBoardPos(): BDCoords {
 }
 
 function getBoardScale() {
-	return boardScale;
+	return bigdecimal.clone(boardScale);
 }
 
 function getPanVel(): DoubleCoords {

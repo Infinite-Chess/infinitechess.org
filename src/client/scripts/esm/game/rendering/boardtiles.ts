@@ -119,7 +119,7 @@ function gsquareCenter() {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels() {
+function gtileWidth_Pixels(): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox();
 	const factor1: BigDecimal = bigdecimal.FromNumber(camera.canvas.height * 0.5 / screenBoundingBox.top);

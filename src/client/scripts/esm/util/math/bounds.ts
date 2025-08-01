@@ -100,6 +100,15 @@ function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 	};
 }
 
+// function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
+// 	return {
+// 		left: bd.toBigInt(box.left),
+// 		right: bd.toBigInt(box.right),
+// 		bottom: bd.toBigInt(box.bottom),
+// 		top: bd.toBigInt(box.top)
+// 	};
+// }
+
 /**
  * Expands the bounding box to include the provided coordinates, if it doesn't already.
  * DESTRUCTIVE. Modifies the original box.
@@ -190,6 +199,7 @@ export default {
 	// Construction
 	getBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
+	// castBDBoundingBoxToBigint,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
 

@@ -16,7 +16,7 @@ import { createModel } from '../buffermodel.js';
 
 import type { Coords } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../util/math/math.js';
-import type { BoundingBox } from '../../../util/math/bounds.js';
+import type {  BoundingBoxBD } from '../../../util/math/bounds.js';
 import type { Vec3 } from '../../../util/math/vectors.js';
 
 
@@ -50,7 +50,7 @@ interface Line {
  * Returns the respective bounding box inside which we should render highlight lines out to,
  * according to whether we're in perspective mode or not.
  */
-function getRenderRange(): BoundingBox {
+function getRenderRange(): BoundingBoxBD {
 	if (!perspective.getEnabled()) { // 2D mode
 		return boardtiles.gboundingBoxFloat();
 	} else { // Perspective mode
