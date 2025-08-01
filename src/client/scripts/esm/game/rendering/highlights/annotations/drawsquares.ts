@@ -6,24 +6,23 @@
  */
 
 import coordutil from "../../../../chess/util/coordutil.js";
-import math, { Color } from "../../../../util/math/math.js";
 import space from "../../../misc/space.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
-import variant from "../../../../chess/variants/variant.js";
-import gameslot from "../../../chess/gameslot.js";
 import vectors from "../../../../util/math/vectors.js";
-import { Mouse } from "../../../input.js";
 import variant from "../../../../chess/variants/variant.js";
 import gameslot from "../../../chess/gameslot.js";
 import squarerendering from "../squarerendering.js";
+import bd from "../../../../util/bigdecimal/bigdecimal.js";
+import { Mouse } from "../../../input.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";
 
 
-import type { Coords } from "../../../../chess/util/coordutil.js";
+import type { Color } from "../../../../util/math/math.js";
+import type { Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import type { Square } from "./annotations.js";
 
 
@@ -56,7 +55,7 @@ const hover_opacity = 0.5;
 function getAllSquaresHovered(highlights: Square[]): Coords[] {
 	const allHovered: Square[] = [];
 	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
-		const pointerWorld: Coords = mouse.getPointerWorld(pointerId)!;
+		const pointerWorld: DoubleCoords = mouse.getPointerWorld(pointerId)!;
 		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
 		hovered.forEach(coords => {
 			// Prevent duplicates
@@ -67,7 +66,7 @@ function getAllSquaresHovered(highlights: Square[]): Coords[] {
 }
 
 /** Returns a list of Square highlight coordinates that are all being hovered over by the provided world coords. */
-function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: boolean): { squares: Coords[], dists?: number[] } {
+function getSquaresBelowWorld(highlights: Square[], world: DoubleCoords, trackDists: boolean): { squares: Coords[], dists?: number[] } {
 	const squares: Square[] = [];
 	const dists: number[] = [];
 
@@ -75,12 +74,12 @@ function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: b
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach(coords => {
-		const coordsWorld = space.convertCoordToWorldSpace(coords);
-		const dist_cheby = math.chebyshevDistance(coordsWorld, world);
+		const coordsWorld = space.convertCoordToWorldSpace(bd.FromCoords(coords));
+		const dist_cheby = vectors.chebyshevDistanceDoubles(coordsWorld, world);
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(vectors.euclideanDistanceBD(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistanceDoubles(coordsWorld, world));
 		}
 	});
 
@@ -98,7 +97,7 @@ function update(highlights: Square[]) {
 	// If the pointer simulated a right click, add a highlight!
 	if (mouse.isMouseClicked(Mouse.RIGHT)) {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
-		const pointerWorld: Coords = mouse.getMouseWorld(Mouse.RIGHT)!;
+		const pointerWorld: DoubleCoords = mouse.getMouseWorld(Mouse.RIGHT)!;
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 		const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
