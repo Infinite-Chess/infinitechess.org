@@ -126,8 +126,8 @@ function renderEachHoveredPieceLegalMoves() {
 	const boardPos = boardpos.getBoardPos();
 	const model_Offset = legalmovehighlights.getOffset();
 	const position: Vec3 = getModelPosition(boardPos, model_Offset, 0);
-	const boardScaleNumber = bd.toNumber(boardpos.getBoardScale());
-	const scale: Vec3 = [boardScaleNumber, boardScaleNumber, 1];
+	const boardScale = boardpos.getBoardScaleAsNumber();
+	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
