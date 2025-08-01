@@ -4,7 +4,7 @@
  * It also plays the sounds.
  */
 
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../util/math/math.js';
 
@@ -34,8 +34,8 @@ import statustext from '../gui/statustext.js';
 
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {
-	start: Coords;
-	end: Coords;
+	start: BDCoords;
+	end: BDCoords;
 	distance: number;
 }
 
@@ -44,7 +44,7 @@ interface Animation {
 	/** The type of piece to animate. */
 	type: number;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
-	path: Coords[];
+	path: BDCoords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
 	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures. 0 is the start of the path. */
@@ -218,7 +218,7 @@ function stretchKeyframesForResolution<T>(keyframes: Map<number, T>, resolution:
 }
 
 /** Creates the segments between each waypoint. */
-function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
+function createAnimationSegments(waypoints: BDCoords[]): AnimationSegment[] {
 	const segments: AnimationSegment[] = [];
 	for (let i = 0; i < waypoints.length - 1; i++) {
 		const start = waypoints[i]!;

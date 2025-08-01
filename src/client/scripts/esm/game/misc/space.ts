@@ -67,14 +67,13 @@ function roundCoords(coords: BDCoords): Coords {
 }
 
 // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
-function convertCoordToWorldSpace(coords: Coords, position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale()): DoubleCoords {
+function convertCoordToWorldSpace(coords: BDCoords, position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale()): DoubleCoords {
 	const squareCenter = board.gsquareCenter();
 
 	const halfMinusSquareCenter = bigdecimal.subtract(HALF, squareCenter);
 
-	function getAxis(coord: bigint, position: BigDecimal): number {
-		const coordBD = bigdecimal.FromBigInt(coord);
-		const diff = bigdecimal.subtract(coordBD, position);
+	function getAxis(coord: BigDecimal, position: BigDecimal): number {
+		const diff = bigdecimal.subtract(coord, position);
 		const diffPlusHalf = bigdecimal.add(diff, halfMinusSquareCenter);
 		const scaled = bigdecimal.multiply_floating(diffPlusHalf, scale);
 		return bigdecimal.toNumber(scaled);
