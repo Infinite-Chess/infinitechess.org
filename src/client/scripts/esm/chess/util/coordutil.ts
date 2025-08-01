@@ -40,25 +40,6 @@ type CoordsKey = `${bigint},${bigint}`;
 // Functions -------------------------------------------------------------------
 
 
-/**
- * Checks if both the x-coordinate and the y-coordinate of a point are integers.
- */
-function areCoordsIntegers(coords: Coords): boolean {
-	return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
-}
-
-// /**
-//  * ALTERNATIVE to {@link areCoordsIntegers}, if we end up having floating point imprecision problems!
-//  *
-//  * Checks if a number is effectively an integer considering floating point imprecision.
-//  * @param {number} num - The number to check.
-//  * @param {number} [epsilon=Number.EPSILON] - The tolerance for floating point imprecision.
-//  * @returns {boolean} - Returns true if the number is effectively an integer, otherwise false.
-//  */
-// function isEffectivelyInteger(num, epsilon = Number.EPSILON) {
-//     return Math.abs(num - Math.round(num)) < epsilon;
-// }
-
 /** Returns the key string of the coordinates: [x,y] => 'x,y' */
 function getKeyFromCoords(coords: Coords): CoordsKey {
 	// Casting to BigInt and back to a string avoids scientific notation.
@@ -78,6 +59,11 @@ function getCoordsFromKey(key: CoordsKey): Coords {
 /**  Returns true if the coordinates are equal. */
 function areCoordsEqual(coord1: Coords, coord2: Coords): boolean {
 	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
+}
+
+/** Returns true if the BigDecimal coordinates are equal. */
+function areBDCoordsEqual(coord1: BDCoords, coord2: BDCoords): boolean {
+	return bigdecimal.areEqual(coord1[0], coord2[0]) && bigdecimal.areEqual(coord1[1], coord2[1]);
 }
 
 /**
@@ -131,10 +117,10 @@ function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
 
 
 export default {
-	areCoordsIntegers,
 	getKeyFromCoords,
 	getCoordsFromKey,
 	areCoordsEqual,
+	areBDCoordsEqual,
 	addCoordinates,
 	subtractCoordinates,
 	copyCoords,

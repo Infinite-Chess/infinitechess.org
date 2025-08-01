@@ -16,8 +16,8 @@ import camera from "./camera.js";
 // @ts-ignore
 import loadbalancer from "../misc/loadbalancer.js";
 import frametracker from "./frametracker.js";
-import bigdecimal, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import jsutil from "../../util/jsutil.js";
+import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 
 
 import type { BDCoords, DoubleCoords } from "../../chess/util/coordutil.js";
@@ -25,8 +25,8 @@ import type { BDCoords, DoubleCoords } from "../../chess/util/coordutil.js";
 
 // BigDecimal Constants ---------------------------------------------------
 
-const ZERO = bigdecimal.FromNumber(0.0);
-const ONE = bigdecimal.FromNumber(1.0);
+const ZERO = bd.FromNumber(0.0);
+const ONE = bd.FromNumber(1.0);
 
 // Variables -------------------------------------------------------------
 
@@ -36,7 +36,7 @@ const ONE = bigdecimal.FromNumber(1.0);
  * The camera never moves, only the board beneath it.
  * A positon of [0,0] places the [0,0] square in the center of the screen.
  */
-let boardPos: BDCoords = bigdecimal.FromCoords([0n,0n]); // Coordinates
+let boardPos: BDCoords = bd.FromCoords([0n,0n]); // Coordinates
 /** The current board panning velocity. */
 let panVel: DoubleCoords = [0,0];
 /**
@@ -44,7 +44,7 @@ let panVel: DoubleCoords = [0,0];
  * Higher => zoomed IN
  * Lower => zoomed OUT
  */
-let boardScale: BigDecimal = bigdecimal.FromNumber(1.0); // Default: 1.0
+let boardScale: BigDecimal = bd.FromNumber(1.0); // Default: 1.0
 /** The current board scale (zoom) velocity. */
 let scaleVel: number = 0;
 
@@ -55,7 +55,7 @@ const panVelCap2D = 22.0; // Default: 22
 const panVelCap3D = 16.0; // Default: 16
 
 /** The furthest we can be zoomed IN. */
-const maximumScale = bigdecimal.FromNumber(5.0); // Default: 5.0
+const maximumScale = bd.FromNumber(5.0); // Default: 5.0
 const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
 
 
@@ -67,7 +67,19 @@ function getBoardPos(): BDCoords {
 }
 
 function getBoardScale() {
-	return bigdecimal.clone(boardScale);
+	return bd.clone(boardScale);
+}
+
+/**
+ * Call when you are CONFIDENT we are zoomed in enough that our scale
+ * can be represented as a javascript number without overflowing to
+ * Infinity or underflowing to 0.
+ * 
+ * Typically used for graphics calculations, as the arithmetic
+ * is much simpler than using BigDecimals.
+ */
+function getBoardScaleAsNumber(): number {
+	return bd.toNumber(boardScale);
 }
 
 function getPanVel(): DoubleCoords {
@@ -96,10 +108,10 @@ function setBoardPos(newPos: BDCoords) {
 }
 
 function setBoardScale(newScale: BigDecimal) {
-	if (bigdecimal.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to ${newScale}!`);
+	if (bd.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to ${newScale}!`);
 
 	// Cap the scale
-	if (bigdecimal.compare(newScale, maximumScale) > 0) {
+	if (bd.compare(newScale, maximumScale) > 0) {
 		newScale = maximumScale;
 		scaleVel = 0; // Cut the scale momentum immediately
 	}
@@ -144,7 +156,7 @@ function boardHasMomentum() {
  * * Pieces rendering as mini-images.
  */
 function areZoomedOut() {
-	return bigdecimal.compare(boardScale, camera.getScaleWhenZoomedOut()) < 0;
+	return bd.compare(boardScale, camera.getScaleWhenZoomedOut()) < 0;
 }
 
 /**
@@ -153,7 +165,7 @@ function areZoomedOut() {
  * On retina displays you have to zoom out even more to reach this.
  */
 function isScaleSmallForInvisibleTiles() {
-	return bigdecimal.compare(boardScale, camera.getScaleWhenTilesInvisible()) < 0;
+	return bd.compare(boardScale, camera.getScaleWhenTilesInvisible()) < 0;
 }
 
 
@@ -174,19 +186,19 @@ function update() {
 function panBoard() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
 
-	const panVelBD: BDCoords = bigdecimal.FromDoubleCoords(panVel);
+	const panVelBD: BDCoords = bd.FromDoubleCoords(panVel);
 
 	// What the change would be if all frames were the exact same time length.
-	const baseXChange = bigdecimal.divide_fixed(panVelBD[0], boardScale);
-	const baseYChange = bigdecimal.divide_fixed(panVelBD[1], boardScale);
+	const baseXChange = bd.divide_fixed(panVelBD[0], boardScale);
+	const baseYChange = bd.divide_fixed(panVelBD[1], boardScale);
 
 	// Account for delta time
-	const deltaTimeBD: BigDecimal = bigdecimal.FromNumber(loadbalancer.getDeltaTime());
-	const actualXChange = bigdecimal.multiply_fixed(baseXChange, deltaTimeBD);
-	const actualYChange = bigdecimal.multiply_fixed(baseYChange, deltaTimeBD);
+	const deltaTimeBD: BigDecimal = bd.FromNumber(loadbalancer.getDeltaTime());
+	const actualXChange = bd.multiply_fixed(baseXChange, deltaTimeBD);
+	const actualYChange = bd.multiply_fixed(baseYChange, deltaTimeBD);
 
-	boardPos[0] = bigdecimal.add(boardPos[0], actualXChange);
-	boardPos[1] = bigdecimal.add(boardPos[1], actualYChange);
+	boardPos[0] = bd.add(boardPos[0], actualXChange);
+	boardPos[1] = bd.add(boardPos[1], actualYChange);
 	frametracker.onVisualChange();
 }
 
@@ -194,13 +206,13 @@ function panBoard() {
 function recalcScale() {
 	if (scaleVel === 0) return; // Exit if we're not zooming
 
-	const scaleVelBD: BigDecimal = bigdecimal.FromNumber(scaleVel);
-	const deltaTimeBD: BigDecimal = bigdecimal.FromNumber(loadbalancer.getDeltaTime());
+	const scaleVelBD: BigDecimal = bd.FromNumber(scaleVel);
+	const deltaTimeBD: BigDecimal = bd.FromNumber(loadbalancer.getDeltaTime());
 
-	const product = bigdecimal.multiply_fixed(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
-	const factor2 = bigdecimal.add(product, ONE); // scaleVel * deltaTime + 1
+	const product = bd.multiply_fixed(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
+	const factor2 = bd.add(product, ONE); // scaleVel * deltaTime + 1
 
-	const newScale = bigdecimal.multiply_fixed(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
+	const newScale = bd.multiply_fixed(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
 	setBoardScale(newScale);
 }
 
@@ -212,6 +224,7 @@ export default {
 	// Getters
 	getBoardPos,
 	getBoardScale,
+	getBoardScaleAsNumber,
 	getPanVel,
 	getRelativePanVelCap,
 	getScaleVel,

@@ -19,12 +19,11 @@ import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
 import geometry from '../../../util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
+import boardtiles from '../boardtiles.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
-// @ts-ignore
-import boardtiles from '../boardtiles.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore

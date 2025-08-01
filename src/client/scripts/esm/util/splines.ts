@@ -215,7 +215,7 @@ function renderSplineDebug(
 	const worldControlPoints: DoubleCoords[] = controlPoints.map(p => space.convertCoordToWorldSpace(p));
 
 	// Convert the desired width from square units to world units by applying the board scale.
-	const scale = bd.toNumber(boardpos.getBoardScale());
+	const scale = boardpos.getBoardScaleAsNumber();
 	const halfWorldWidth = (width * scale) / 2;
 
 	const vertexData: number[] = [];

@@ -19,10 +19,9 @@ import boardpos from './boardpos.js';
 import sound from '../misc/sound.js';
 import typeutil, { RawType } from '../../chess/util/typeutil.js';
 import vectors from '../../util/math/vectors.js';
+import boardtiles from './boardtiles.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
-// @ts-ignore
-import boardtiles from './boardtiles.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore

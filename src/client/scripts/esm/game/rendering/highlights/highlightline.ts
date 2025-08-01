@@ -7,7 +7,6 @@
 
 // @ts-ignore
 import perspective from '../perspective.js';
-// @ts-ignore
 import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';

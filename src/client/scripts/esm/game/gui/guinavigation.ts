@@ -17,7 +17,6 @@ import guiboardeditor from './guiboardeditor.js';
 import bounds from '../../util/math/bounds.js';
 import premoves from '../chess/premoves.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
-// @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import guipause from './guipause.js';

@@ -32,7 +32,7 @@ function getBoundingBoxOfCoord(coords) {
  * you can EXACTLY render a highlight on the provided coords.
  * 
  * Does not require uniform translations before rendering.
- * @param {number[]} coords 
+ * @param {Coords} coords 
  * @returns {BoundingBox}
  */
 function getTransformedBoundingBoxOfSquare(coords) {

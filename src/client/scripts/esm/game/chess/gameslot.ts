@@ -50,12 +50,11 @@ import winconutil from "../../chess/util/winconutil.js";
 import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
 import bd from "../../util/bigdecimal/bigdecimal.js";
+import board from "../rendering/boardtiles.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
-// @ts-ignore
-import board from "../rendering/boardtiles.js";
 // @ts-ignore
 import area from "../rendering/area.js";
 // @ts-ignore

@@ -19,6 +19,7 @@ import annotations from "./annotations.js";
 import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 import variant from "../../../../chess/variants/variant.js";
 import geometry from "../../../../util/math/geometry.js";
+import bd from "../../../../util/bigdecimal/bigdecimal.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
@@ -313,7 +314,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !bd.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 			// OPTIONAL: Floor() the coords and add it anyway, even if not integer.
 			// intsect = space.roundCoords(intsect);
 
@@ -334,7 +335,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !bd.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);
@@ -345,7 +346,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !bd.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);

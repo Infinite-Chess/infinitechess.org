@@ -24,14 +24,13 @@ import { Color } from '../../util/math/math.js';
 import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import jsutil from '../../util/jsutil.js';
+import boardtiles from './boardtiles.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-// @ts-ignore
-import boardtiles from './boardtiles.js';
 
 
 // Variables --------------------------------------------------------------

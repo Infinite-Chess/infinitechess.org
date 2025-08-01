@@ -634,7 +634,7 @@ function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft) 
 function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	if (Object.keys(slideArrows).length > 0) throw Error('SHOULD have erased all slide arrows before recalcing');
 
-	const worldHalfWidth = (width * bd.toNumber(boardpos.getBoardScale())) / 2;
+	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
 
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
@@ -696,7 +696,7 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: BDCoor
 
 	// If this picture is an adjacent picture, adjust it's positioning
 	if (index > 0) {
-		const scale = bd.toNumber(boardpos.getBoardScale());
+		const scale = boardpos.getBoardScaleAsNumber();
 		worldLocation[0] += Number(vector[0]) * index * paddingBetwAdjacentPictures * scale;
 		worldLocation[1] += Number(vector[1]) * index * paddingBetwAdjacentPictures * scale;
 	}
@@ -795,7 +795,7 @@ let shifts: Shift[] = [];
  */
 function shiftArrow(type: number, still: boolean, start?: Coords, end?: Coords) {
 	if (start === undefined && end === undefined) throw Error('Must provide one of either start or end coords of modified arrow.');
-	if (still && end && !coordutil.areCoordsIntegers(end)) throw Error('Cannot add a still-animated arrow to floating point coordinates.');
+	if (still && end && !bd.areCoordsIntegers(end)) throw Error('Cannot add a still-animated arrow to floating point coordinates.');
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 
 	// console.log(`Shifting arrow (still = ${still}):`);
@@ -830,7 +830,7 @@ function executeArrowShifts() {
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 
-	const worldHalfWidth = (width * bd.toNumber(boardpos.getBoardScale())) / 2; // The world-space width of our images
+	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2; // The world-space width of our images
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
@@ -944,7 +944,7 @@ function recalculateLinesThroughCoords(boardsim: Board, coords: Coords) {
 
 		// Calculate more detailed information, enough to render...
 
-		const worldHalfWidth = (width * bd.toNumber(boardpos.getBoardScale())) / 2;
+		const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
 
 		const pointerWorlds = mouse.getAllPointerWorlds();
 
@@ -986,7 +986,7 @@ function render() {
 function regenerateModelAndRender() {
 	if (Object.keys(slideArrows).length === 0 && animatedArrows.length === 0) return; // No visible arrows, don't generate the model
 
-	const worldHalfWidth = (width * bd.toNumber(boardpos.getBoardScale())) / 2;
+	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
 
 	// Position data of the single instance
 	const left = -worldHalfWidth;
