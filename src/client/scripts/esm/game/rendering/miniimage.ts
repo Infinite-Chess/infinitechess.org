@@ -190,7 +190,7 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 		if (vectors.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
 			imagesHovered.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(vectors.euclideanDistance(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistanceBD(coordsWorld, world));
 		}
 	}
 

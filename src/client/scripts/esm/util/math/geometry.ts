@@ -280,7 +280,7 @@ function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BD
 	// If the segment has zero length, the start point is the closest point.
 	const lineLengthSquared = dx * dx + dy * dy;
 	if (lineLengthSquared === 0n) { // If the segment has zero length, return the start point
-		const distance = vectors.euclideanDistance(lineStartBD, point);
+		const distance = vectors.euclideanDistanceBD(lineStartBD, point);
 		return { coords: lineStartBD, distance };
 	}
 	const lineLengthSquaredBD = bd.FromBigInt(lineLengthSquared);
@@ -303,7 +303,7 @@ function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BD
 	const closestPoint: BDCoords = [closestX, closestY];
 
 	// Calculate the distance from the original point to the closest point on the segment.
-	const distance = vectors.euclideanDistance(closestPoint, point);
+	const distance = vectors.euclideanDistanceBD(closestPoint, point);
 
 	return {
 		coords: closestPoint,

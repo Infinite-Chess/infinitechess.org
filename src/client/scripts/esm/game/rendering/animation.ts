@@ -225,7 +225,7 @@ function createAnimationSegments(waypoints: BDCoords[]): AnimationSegment[] {
 		segments.push({
 			start,
 			end,
-			distance: vectors.euclideanDistance(start, end)
+			distance: vectors.euclideanDistanceBD(start, end)
 		});
 	}
 	return segments;

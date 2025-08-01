@@ -242,12 +242,26 @@ function degreesToRadians(angleDegrees: number): number {
 
 
 /**
- * Returns the euclidean (hypotenuse) distance between 2 points.
+ * Returns the euclidean (hypotenuse) distance between 2 bigint points.
  */
-function euclideanDistance(point1: BDCoords, point2: BDCoords): BigDecimal { // [x,y]
-	const xDiff = bd.subtract(point2[0], point1[0]);
-	const yDiff = bd.subtract(point2[1], point1[1]);
-	return bd.hypot(xDiff, yDiff);
+function euclideanDistance(point1: Coords, point2: Coords): BigDecimal {
+	const point1BD: BDCoords = bd.FromCoords(point1);
+	const point2BD: BDCoords = bd.FromCoords(point2);
+	return euclideanDistanceBD(point1BD, point2BD);
+}
+
+/**
+ * Returns the euclidean (hypotenuse) distance between 2 BigDecimal points.
+ */
+function euclideanDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
+	return bd.hypot(bd.subtract(point2[0], point1[0]), bd.subtract(point2[1], point1[1]));
+}
+
+/**
+ * Returns the euclidean (hypotenuse) distance between 2 javascript double coordinates.
+ */
+function euclideanDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): number {
+	return Math.hypot(point2[0] - point1[0], point2[1] - point1[1]);
 }
 
 /**
@@ -311,6 +325,8 @@ export default {
 
 	// Distance Calculation
 	euclideanDistance,
+	euclideanDistanceBD,
+	euclideanDistanceDoubles,
 	manhattanDistance,
 	chebyshevDistance,
 	chebyshevDistanceBD,

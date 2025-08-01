@@ -35,7 +35,7 @@ import bufferdata from "../bufferdata.js";
 import guipause from "../../gui/guipause.js";
 
 
-import type { Coords } from "../../../chess/util/coordutil.js";
+import type { Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
 import type { Color } from "../../../util/math/math.js";
 
@@ -110,7 +110,7 @@ type ClosestEntity = {
 };
 
 /** Calculates the closest entity (piece/square) to the given world coords. */
-function getClosestEntityToWorld(world: Coords): ClosestEntity | undefined {
+function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined {
 	if (!isSnappingEnabledThisFrame()) return undefined;
 
 	// Find the closest hovered entity to the pointer
@@ -176,7 +176,7 @@ function isSnappingEnabledThisFrame(): boolean {
 }
 
 /** Snap's the provided world coords to the nearest snappable coords. */
-function getWorldSnapCoords(world: Coords): Coords | undefined {
+function getWorldSnapCoords(world: DoubleCoords): Coords | undefined {
 	if (!isSnappingEnabledThisFrame()) return undefined;
 
 	const snap = snapPointerWorld(world);
@@ -266,7 +266,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	let closestIntsect: { intersection: Intersection, dist: number } | undefined;
 	for (const i of line_intersections) {
 		// Calculate distance to mouse
-		const dist = vectors.euclideanDistance(i.coords, pointerCoords);
+		const dist = vectors.euclideanDistanceBD(i.coords, pointerCoords);
 		if (closestIntsect === undefined || dist < closestIntsect.dist) closestIntsect = { intersection: i, dist };
 	}
 
@@ -376,7 +376,7 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[
 				const intersection = geometry.intersectLineAndSegment(...eminatedLine, highlightLine.line.start, highlightLine.line.end);
 				if (intersection === undefined) continue;
 				// They DO intersect.
-				const dist = vectors.euclideanDistance(intersection, mouseCoords);
+				const dist = vectors.euclideanDistanceBD(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) {

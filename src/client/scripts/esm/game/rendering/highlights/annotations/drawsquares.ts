@@ -80,7 +80,7 @@ function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: b
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(vectors.euclideanDistance(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistanceBD(coordsWorld, world));
 		}
 	});
 
