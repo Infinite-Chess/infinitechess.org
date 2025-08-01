@@ -10,7 +10,6 @@ import type { TypeGroup } from '../../chess/util/typeutil.js';
 import type { Board } from '../../chess/logic/gamefile.js';
 import type { Vec3 } from '../../util/math/vectors.js';
 
-import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
@@ -18,21 +17,32 @@ import instancedshapes from './instancedshapes.js';
 import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
-import { rawTypes } from '../../chess/util/typeutil.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import geometry from '../../util/math/geometry.js';
+import vectors from '../../util/math/vectors.js';
+import arrowlegalmovehighlights from './arrows/arrowlegalmovehighlights.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
+import { rawTypes } from '../../chess/util/typeutil.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 // @ts-ignore
 import perspective from './perspective.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
 
+/**
+ * Piece Mesh Instance Data.
+ * HIGH RESOLUTION bigint values.
+ * null === undefined placeholder
+ */
+type InstanceData = (bigint | null)[];
+
 /** Mesh data of a single piece type in mesh.types */
 interface MeshData {
-	/** High precision instance data for performing arithmetic. */
-	instanceData64: Float64Array,
-	/** Buffere model for rendering. (This automatically stores the instanceData32 array going into the gpu) */
+	/** Infinite precision BIGINT instance data for performing arithmetic. */
+	instanceData: InstanceData,
+	/** Buffer model for rendering. (This automatically stores the instanceData32 array going into the gpu) */
 	model: BufferModelInstanced
 }
 
@@ -65,13 +75,13 @@ const Z: number = 0.001;
  * 10,000 was arbitrarily chosen because once you reach uniform translations much bigger
  * than that, the rendering of the pieces start to get somewhat gittery.
  */
-const REGEN_RANGE = 10_000;
+const REGEN_RANGE = 10_000n;
 
-/**
- * The distance of which panning will noticably distort the pieces mesh.
- * If we ever shift the piece models by more than this, we should regenerate them instead.
- */
-const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrillion
+// /**
+//  * The distance of which panning will noticably distort the pieces mesh.
+//  * If we ever shift the piece models by more than this, we should regenerate them instead.
+//  */
+// const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrillion
 
 /** The instance data array stride, per piece. */
 const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
@@ -142,12 +152,12 @@ function regenType(boardsim: Board, mesh: Mesh, type: number) {
 function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(boardsim, mesh, type);
+	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
 	const tex = texturecache.getTexture(type);
 	return {
-		instanceData64,
-		model: createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(instanceData64), ATTRIBUTE_INFO, 'TRIANGLES', tex)
+		instanceData,
+		model: createModel_Instanced_GivenAttribInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', tex)
 	};
 }
 
@@ -159,11 +169,11 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
  */
 function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(boardsim, mesh, type);
+	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
 	return {
-		instanceData64,
-		model: createModel_Instanced(vertexData, new Float32Array(instanceData64), 'TRIANGLES', true)
+		instanceData,
+		model: createModel_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', true)
 	};
 }
 
@@ -172,26 +182,53 @@ function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number): Float64Array {
-	const range = boardsim.pieces.typeRanges.get(type)!;
-	const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
+function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number): InstanceData {
+	// const range = boardsim.pieces.typeRanges.get(type)!;
+	// const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
+	const instanceData: InstanceData = []; // Initialize empty
 
 	let currIndex: number = 0;
 	boardutil.iteratePiecesInTypeRange_IncludeUndefineds(boardsim.pieces, type, (idx: number, isUndefined: boolean) => {
 		if (isUndefined) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
-			instanceData64[currIndex] = Infinity;
-			instanceData64[currIndex + 1] = Infinity;
+			instanceData[currIndex] = null;
+			instanceData[currIndex + 1] = null;
 		} else { // NOT undefined
 			const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 			// Apply the piece mesh offset to the coordinates
-			instanceData64[currIndex] = coords[0] - mesh.offset[0];
-			instanceData64[currIndex + 1] = coords[1] - mesh.offset[1];
+			instanceData[currIndex] = coords[0] - mesh.offset[0];
+			instanceData[currIndex + 1] = coords[1] - mesh.offset[1];
 		}
 		currIndex += STRIDE_PER_PIECE;
 	});
 
-	return instanceData64;
+	return instanceData;
+}
+
+/**
+ * Converts a (bigint | null) array containing into a `Float32Array`.
+ * Which should then be used to pass into a buffer model constructor.
+ */
+function castInstanceDataToFloat32(instanceData: InstanceData): Float32Array {
+	// Pre-allocate the Float32Array to the final size. Critical for performance.
+	const result: Float32Array = new Float32Array(instanceData.length);
+
+	// Iterate through the source array once and place the converted value directly into the result array.
+	// This single-pass approach is much faster than methods like .map(), which create a temporary intermediate array.
+	for (let i: number = 0; i < instanceData.length; i++) {
+		const value: bigint | null = instanceData[i];
+
+		if (value === null) {
+			// Convert null to NaN. When used as a vertex position, NaN values are typically
+			// discarded by the GPU's rasterizer, effectively making the vertex invisible.
+			result[i] = NaN; // Alternative would be Infinity
+		} else { // value === bigint
+			// Convert the bigint to a number. The Float32Array will store it as a 32-bit float.
+			result[i] = Number(value);
+		}
+	}
+
+	return result;
 }
 
 
@@ -211,42 +248,44 @@ function shiftAll(boardsim: Board, mesh: Mesh) {
 	const diffXOffset = mesh.offset[0] - newOffset[0];
 	const diffYOffset = mesh.offset[1] - newOffset[1];
 	
-	const chebyshevDistance = vectors.chebyshevDistance(mesh.offset, newOffset);
-	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
-		console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
-		regenAll(boardsim, mesh);
-		return;
-	}
+	// const chebyshevDistance = vectors.chebyshevDistance(mesh.offset, newOffset);
+	// if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
+	// 	console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
+	// 	regenAll(boardsim, mesh);
+	// 	return;
+	// }
 
 	mesh.offset = newOffset;
 
 	// Go ahead and shift each model
 	for (const meshData of Object.values(mesh.types)) {
-		shiftModel(meshData as MeshData, diffXOffset, diffYOffset);
+		shiftModel(meshData, diffXOffset, diffYOffset);
 	}
 }
 
 /**
  * Shifts the vertex data of the piece model and reinits it on the gpu.
  * Faster than {@link regenType} or {@link genTypeModel}.
- * @param meshData - An object containing the instanceData64, and the actual model.
+ * @param meshData - An object containing the infinite resolution bigint instanceData, and the actual model.
  * @param diffXOffset - The x-amount to shift the model's vertex data.
  * @param diffYOffset - The y-amount to shift the model's vertex data.
  */
-function shiftModel(meshData: MeshData, diffXOffset: number, diffYOffset: number): void {
+function shiftModel(meshData: MeshData, diffXOffset: bigint, diffYOffset: bigint): void {
 
-	const instanceData64 = meshData.instanceData64; // High precision floats for performing calculations
+	const instanceData = meshData.instanceData; // High precision floats for performing calculations
 	const instanceData32 = meshData.model.instanceData; // Low precision floats for sending to the gpu
 	for (let i = 0; i < instanceData32.length; i += STRIDE_PER_PIECE) {
-		instanceData64[i]! += diffXOffset;
-		instanceData64[i + 1]! += diffYOffset;
-		// Copy the float32 values from the float64 array so as to gain the most precision
-		instanceData32[i]! = instanceData64[i]!;
-		instanceData32[i + 1]! = instanceData64[i + 1]!;
+		if (instanceData[i] === null) continue; // Skip undefined placeholders
+		
+		instanceData[i]! += diffXOffset;
+		instanceData[i + 1]! += diffYOffset;
+		// Copy the float32 values from the bigint array so as to retain the most precision
+		instanceData32[i]! = Number(instanceData[i]!);
+		instanceData32[i + 1]! = Number(instanceData[i + 1]!);
 	}
 	
 	// Update the buffer on the gpu!
-	meshData.model.updateBufferIndices_InstanceBuffer(0, instanceData64.length); // Update every index
+	meshData.model.updateBufferIndices_InstanceBuffer(0, instanceData.length); // Update every index
 }
 
 
@@ -269,10 +308,10 @@ function rotateAll(mesh: Mesh, newInverted: boolean) {
 		const rawType = typeutil.getRawType(Number(stringType));
 		if (typeutil.SVGLESS_TYPES.has(rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
-		const vertexData = (meshData as MeshData).model.vertexData;
+		const vertexData = meshData.model.vertexData;
 		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net
 		vertexData.set(newVertexData); // Copies the values over without changing the memory location
-		(meshData as MeshData).model.updateBufferIndices_VertexBuffer(0, vertexData.length); // Send those changes off to the gpu
+		meshData.model.updateBufferIndices_VertexBuffer(0, vertexData.length); // Send those changes off to the gpu
 	}
 }
 
@@ -295,10 +334,10 @@ function overwritebufferdata(mesh: Mesh, piece: Piece) {
 
 	const offsetCoord = coordutil.subtractCoords(piece.coords, mesh.offset);
 
-	meshData.instanceData64[i] = offsetCoord[0];
-	meshData.instanceData64[i + 1] = offsetCoord[1];
-	meshData.model.instanceData[i] = offsetCoord[0];
-	meshData.model.instanceData[i + 1] = offsetCoord[1];
+	meshData.instanceData[i] = offsetCoord[0];
+	meshData.instanceData[i + 1] = offsetCoord[1];
+	meshData.model.instanceData[i] = Number(offsetCoord[0]);
+	meshData.model.instanceData[i + 1] = Number(offsetCoord[1]);
 
 	// Update the buffer on the gpu!
 	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE); // Update only the indices the piece is at
@@ -316,10 +355,11 @@ function deletebufferdata(mesh: Mesh, piece: Piece) {
 
 	const i = piece.index * STRIDE_PER_PIECE;
 
-	meshData.instanceData64[i] = Infinity; // Unfortunately we can't set them to 0 to hide it, as an actual piece instance would be visible at [0,0]
-	meshData.instanceData64[i + 1] = Infinity;
-	meshData.model.instanceData[i] = Infinity;
-	meshData.model.instanceData[i + 1] = Infinity;
+	// Unfortunately we can't set them to 0 to hide it, as an actual piece instance would be visible at [0,0]
+	meshData.instanceData[i] = null; 
+	meshData.instanceData[i + 1] = null;
+	meshData.model.instanceData[i] = NaN;
+	meshData.model.instanceData[i + 1] = NaN;
 
 	// Update the buffer on the gpu!
 	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE); // Update only the indices the piece was at
@@ -336,12 +376,8 @@ function deletebufferdata(mesh: Mesh, piece: Piece) {
 function renderAll(boardsim: Board, mesh: Mesh) {
 
 	const boardPos = boardpos.getBoardPos();
-	const position: Vec3 = [ // Translate
-        -boardPos[0] + mesh.offset[0], // Add the model's offset. 
-        -boardPos[1] + mesh.offset[1],
-        Z
-    ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
-	const boardScale = boardpos.getBoardScale();
+	const position = arrowlegalmovehighlights.getModelPosition(boardPos, mesh.offset, Z);
+	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
@@ -371,11 +407,9 @@ function renderAll(boardsim: Board, mesh: Mesh) {
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
 function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
-	const boardPos = boardpos.getBoardPos();
-	const xDiff = Math.abs(boardPos[0] - offset[0]);
-	const yDiff = Math.abs(boardPos[1] - offset[1]);
-	if (xDiff > REGEN_RANGE || yDiff > REGEN_RANGE) return true;
-	return false;
+	const boardPosRounded: Coords = bd.coordsToBigInt(boardpos.getBoardPos());
+	const chebyshevDist = vectors.chebyshevDistance(boardPosRounded, offset);
+	return chebyshevDist > REGEN_RANGE;
 }
 
 
