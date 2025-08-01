@@ -224,8 +224,29 @@ function castInstanceDataToFloat32(instanceData: InstanceData): Float32Array {
 			result[i] = NaN; // Alternative would be Infinity
 		} else { // value === bigint
 			// Convert the bigint to a number. The Float32Array will store it as a 32-bit float.
+			// Naturally, precision loss occurs.
 			result[i] = Number(value);
 		}
+	}
+
+	return result;
+}
+
+/**
+ * Converts a bigint instance data array into a `Float32Array`.
+ * Which should then be used to pass into a buffer model constructor.
+ */
+function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
+	// Pre-allocate the Float32Array to the final size. This is critical for performance.
+	const result: Float32Array = new Float32Array(instanceData.length);
+
+	// Iterate through the source array once and place the converted value directly into the result array.
+	// This single-pass approach is much faster than methods like .map(), which create a temporary intermediate array.
+	for (let i: number = 0; i < instanceData.length; i++) {
+		// Convert the bigint to a number. The Float32Array will store it as a 32-bit float.
+		// Be aware of potential precision loss for very large BigInts.
+		// Naturally, precision loss occurs.
+		result[i] = Number(instanceData[i]);
 	}
 
 	return result;
@@ -419,6 +440,7 @@ function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
 export default {
 	regenAll,
 	regenType,
+	castBigIntArrayToFloat32,
 	overwritebufferdata,
 	deletebufferdata,
 	renderAll,

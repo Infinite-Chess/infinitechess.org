@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/buffermodel.ts
+
 /**
  * This script contains all the functions used to generate renderable buffer models of the
  * game objects that the shader programs can use. It receives the object's vertex data to do so,

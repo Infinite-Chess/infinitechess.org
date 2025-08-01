@@ -146,11 +146,11 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
 /**
  * Determines if one bounding box (`innerBox`) is entirely contained within another bounding box (`outerBox`).
  */
-function boxContainsBox(outerBox: BoundingBox, innerBox: BoundingBox): boolean {
-	if (innerBox.left < outerBox.left) return false;
-	if (innerBox.right > outerBox.right) return false;
-	if (innerBox.bottom < outerBox.bottom) return false;
-	if (innerBox.top > outerBox.top) return false;
+function boxContainsBox(outerBox: BoundingBoxBD, innerBox: BoundingBoxBD): boolean {
+	if (bd.compare(innerBox.left, outerBox.left) < 0) return false;
+	if (bd.compare(innerBox.right, outerBox.right) > 0) return false;
+	if (bd.compare(innerBox.bottom, outerBox.bottom) < 0) return false;
+	if (bd.compare(innerBox.top, outerBox.top) > 0) return false;
 
 	return true;
 }
@@ -199,6 +199,7 @@ export default {
 	// Construction
 	getBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
+	castBoundingBoxToBigDecimal,
 	// castBDBoundingBoxToBigint,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,

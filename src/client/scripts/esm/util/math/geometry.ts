@@ -369,7 +369,9 @@ function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBo
  * 
  * For example, a point of [5200,1100] and gridSize of 10000 would yield [10000,0]
  */
-function roundPointToNearestGridpoint(point: Coords, gridSize: bigint): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
+function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
+	// Incurs rounding, but honestly this doesn't need to be exact because it's for graphics.
+	const pointBigInt: Coords = bd.coordsToBigInt(point);
 
 	// To round bigints, we add half the gridSize before dividing by it.
 	function roundBigintNearestMultiple(value: bigint, multiple: bigint) {
@@ -381,8 +383,8 @@ function roundPointToNearestGridpoint(point: Coords, gridSize: bigint): Coords {
 		else return ((value - halfMultiple) / multiple) * multiple;
 	}
 
-	const nearestX = roundBigintNearestMultiple(point[0], gridSize);
-	const nearestY = roundBigintNearestMultiple(point[1], gridSize);
+	const nearestX = roundBigintNearestMultiple(pointBigInt[0], gridSize);
+	const nearestY = roundBigintNearestMultiple(pointBigInt[1], gridSize);
 
 	return [nearestX, nearestY];
 }
