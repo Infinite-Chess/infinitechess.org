@@ -1,11 +1,10 @@
 
 /**
- * This script handles the rendering of legal moves
+ * [ZOOMED IN] This script handles the rendering of legal moves
  * of both the selected piece, and of all piece's arrows
  * currently being hovered over.
  */
 
-import { BufferModel, BufferModelInstanced, createModel, createModel_Instanced } from '../buffermodel.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import gameslot from '../../chess/gameslot.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
@@ -17,15 +16,17 @@ import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
-import geometry from '../../../util/math/geometry.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
+import geometry, { IntersectionPoint } from '../../../util/math/geometry.js';
 import boardtiles from '../boardtiles.js';
+import piecemodels from '../piecemodels.js';
+import legalmoveshapes from '../instancedshapes.js';
+import bounds, { BoundingBoxBD } from '../../../util/math/bounds.js';
+import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
+import { BufferModel, BufferModelInstanced, createModel, createModel_Instanced } from '../buffermodel.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
-// @ts-ignore
-import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 
@@ -34,13 +35,13 @@ import shapes from '../shapes.js';
 
 import type { Player } from '../../../chess/util/typeutil.js';
 import type { Color } from '../../../util/math/math.js';
-import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
+import type { BDCoords, Coords, CoordsKey, DoubleCoords } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
-import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
+import type { LegalMoves, SlideLimits } from '../../../chess/logic/legalmoves.js';
 import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
-import type { Ray, Vec3 } from '../../../util/math/vectors.js';
+import type { Ray, Vec2, Vec3 } from '../../../util/math/vectors.js';
 
 
 
@@ -65,7 +66,7 @@ import type { Ray, Vec3 } from '../../../util/math/vectors.js';
  * 
  * Using an offset means the vertex data ALWAYS remains less than 10000!
  */
-const highlightedMovesRegenRange = 10_000;
+const highlightedMovesRegenRange = 10_000n;
 
 /**
  * The current view box to generate visible legal moves inside.
@@ -76,8 +77,10 @@ const highlightedMovesRegenRange = 10_000;
  * 
  * By default it expands past the screen somewhat, so that a little
  * panning around doesn't immediately trigger this view box to change.
+ * 
+ * THIS IS ROUNDED AWAY TO NEXT INTEGER
  */
-let boundingBoxOfRenderRange: BoundingBox;
+let boundingBoxOfRenderRange: BoundingBoxBD;
 /** The distance, in perspective mode, we want to aim to render legal moves highlights out to, or farther. */
 const PERSPECTIVE_VIEW_RANGE = 1000;
 /** Amount of screens in number the render range bounding box should try to aim for beyond the screen. */
@@ -199,16 +202,19 @@ function isRenderRangeBoundingBoxOutOfRange() {
 	if (!boundingBoxOfRenderRange) return true; // It isn't even initiated yet 
 
 	// The bounding box of what the camera currently sees on-screen.
-	const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
-       												   : boardtiles.gboundingBox(false);
+	const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
+       																  : boardtiles.gboundingBox(false);
+	console.log("Is screen view box accurate? ", boundingBoxOfView);
 
 	// If our screen bounding box is less than 4x smaller than our render range bounding box,
 	// we're wasting cpu, let's regenerate it.
 
-	const width = boundingBoxOfView.right - boundingBoxOfView.left + 1;
-	const renderRangeWidth = boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left + 1;
+	// We can cast to number since we're confident it's going to be small (we are zoomed in)
+	const width: number = bd.toNumber(bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left));
+	const renderRangeWidth: number = bd.toNumber(bd.subtract(boundingBoxOfRenderRange.right, boundingBoxOfRenderRange.left)) + 1;
+
 	// multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
-	if (width * multiplier * multiplier < renderRangeWidth && !perspective.getEnabled()) return true;
+	if (!perspective.getEnabled() && (width * multiplier * multiplier < renderRangeWidth)) return true;
 
 	// If any edge of our screen bounding box is outside our render range bounding box, regenerate it.
 	return !bounds.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
@@ -217,17 +223,15 @@ function isRenderRangeBoundingBoxOutOfRange() {
 function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 
 	const boardPos = boardpos.getBoardPos();
-	const x = boardPos[0];
-	const y = boardPos[1];
 
-	const a = PERSPECTIVE_VIEW_RANGE;
+	const a: BigDecimal = bd.FromNumber(PERSPECTIVE_VIEW_RANGE);
 
-	const left = x - a;
-	const right = x + a;
-	const bottom = y - a;
-	const top = y + a;
-
-	return { left, right, bottom, top };
+	return {
+		left: bd.subtract(boardPos[0], a),
+		right: bd.add(boardPos[0], a),
+		bottom: bd.subtract(boardPos[1], a),
+		top: bd.add(boardPos[1], a)
+	};
 }
 
 /**
@@ -242,32 +246,29 @@ function initBoundingBoxOfRenderRange() {
 	const [ newWidth, newHeight ] = perspective.getEnabled() ? getDimensionsOfPerspectiveViewRange()
         													 : getDimensionsOfOrthographicViewRange();
 
-	const halfNewWidth = newWidth / 2;
-	const halfNewHeight = newHeight / 2;
+	const halfNewWidth: BigDecimal = bd.FromNumber(newWidth / 2);
+	const halfNewHeight: BigDecimal = bd.FromNumber(newHeight / 2);
 
 	const boardPos = boardpos.getBoardPos();
-	const newLeft = Math.ceil(boardPos[0] - halfNewWidth);
-	const newRight = Math.floor(boardPos[0] + halfNewWidth);
-	const newBottom = Math.ceil(boardPos[1] - halfNewHeight);
-	const newTop = Math.floor(boardPos[1] + halfNewHeight);
 
-	boundingBoxOfRenderRange = { 
-		left: newLeft,
-		right: newRight,
-		bottom: newBottom,
-		top: newTop
+	boundingBoxOfRenderRange = {
+		left: bd.ceil(bd.subtract(boardPos[0], halfNewWidth)),
+		right: bd.floor(bd.add(boardPos[0], halfNewWidth)),
+		bottom: bd.ceil(bd.subtract(boardPos[1], halfNewHeight)),
+		top: bd.floor(bd.add(boardPos[1], halfNewHeight))
 	};
 }
 
 /**
  * Returns the target dimensions of the legal move highlights box.
  */
-function getDimensionsOfOrthographicViewRange(): Coords {
+function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	// New improved method of calculating render bounding box
 
 	const boardBoundingBox = boardtiles.gboundingBox();
-	const width = boardBoundingBox.right - boardBoundingBox.left + 1;
-	const height = boardBoundingBox.top - boardBoundingBox.bottom + 1;
+	const width: number = bd.toNumber(bd.subtract(boardBoundingBox.right, boardBoundingBox.left));
+	const height: number = bd.toNumber(bd.subtract(boardBoundingBox.top, boardBoundingBox.bottom));
+	console.log("Does this need +1? width of board bounding box: ", width);
 
 	let newWidth = width * multiplier;
 	let newHeight = height * multiplier;
@@ -288,7 +289,7 @@ function getDimensionsOfOrthographicViewRange(): Coords {
  * Returns the target dimensions of the legal move highlights box
  * FOR PERSPECTIVE MODE
  */
-function getDimensionsOfPerspectiveViewRange(): Coords {
+function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 	const width = PERSPECTIVE_VIEW_RANGE * 2;
 	const newWidth = width * multiplier_perspective;
 	return [newWidth, newWidth];
@@ -345,11 +346,11 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
 	const vertexData_NonCapture: number[] = usingDots ? legalmoveshapes.getDataLegalMoveDot(highlightColor) : legalmoveshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the NON-CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
-	const instanceData_NonCapture: number[] = [];
+	const instanceData_NonCapture: bigint[] = [];
 	/** The vertex data OF A SINGLE INSTANCE of the CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
 	const vertexData_Capture: number[] = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(highlightColor) : legalmoveshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
-	const instanceData_Capture: number[] = [];
+	const instanceData_Capture: bigint[] = [];
 
 	const gamefile = gameslot.getGamefile()!;
 
@@ -360,9 +361,9 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 
 	return {
 		// The NON-CAPTURING legal move highlights model
-		NonCaptureModel: createModel_Instanced(vertexData_NonCapture, instanceData_NonCapture, "TRIANGLES", true),
+		NonCaptureModel: createModel_Instanced(vertexData_NonCapture, piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture), "TRIANGLES", true),
 		// The CAPTURING legal move highlights model
-		CaptureModel: createModel_Instanced(vertexData_Capture, instanceData_Capture, "TRIANGLES", true),
+		CaptureModel: createModel_Instanced(vertexData_Capture, piecemodels.castBigIntArrayToFloat32(instanceData_Capture), "TRIANGLES", true),
 	};
 }
 
@@ -375,13 +376,10 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 function renderSelectedPiecesLegalMoves() {
 	if (!pieceSelected) return; // No model to render
 
-	const boardPos: Coords = boardpos.getBoardPos();
-	const position: Vec3 = [
-        -boardPos[0] + model_Offset[0], // Add the model's offset
-        -boardPos[1] + model_Offset[1],
-        0
-    ];
-	const boardScale: number = boardpos.getBoardScale();
+	const boardPos: BDCoords = boardpos.getBoardPos();
+	// Add the model's offset
+	const position = arrowlegalmovehighlights.getModelPosition(boardPos, model_Offset, 0);
+	const boardScale: number = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 	
 	// Render each of the models using instanced rendering.
@@ -397,7 +395,7 @@ function renderSelectedPiecesLegalMoves() {
  * @param legalMoves - The piece legal moves to highlight
  * @param boardsim - A reference to the current loaded gamefile's board
  */
-function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[], instanceData_Capture: number[], legalMoves: LegalMoves, boardsim: Board) {
+function concatData_HighlightedMoves_Individual(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], legalMoves: LegalMoves, boardsim: Board) {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const legalIndividuals: Coords[] = legalMoves.individual;
 	if (!legalIndividuals) return; // This piece doesn't have any legal jumping/individual moves.
@@ -420,13 +418,12 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
  * @param gamefile - A reference to the current loaded gamefile
  * @param friendlyColor - The color of friendly pieces
  */
-function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, legalMoves: LegalMoves, gamefile: FullGame, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
+function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], coords: Coords, legalMoves: LegalMoves, gamefile: FullGame, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
 	if (!legalMoves.sliding) return; // No sliding moves
 
 	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
-		const intersections = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
-		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
+		const [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
 
 		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
         
@@ -448,13 +445,19 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
+function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], coords: Coords, step: Vec2, intsect1Tile: IntersectionPoint, intsect2Tile: IntersectionPoint, limits: SlideLimits, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	// Right moveset
-	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		    ignoreFunc, gamefile, friendlyColor, brute);
+	if (!intsect2Tile.positiveDotProduct) {
+		// The start coords are either on screen, or points towards the screen
+		concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile.coords, intsect2Tile.coords, limits[1], 		    ignoreFunc, gamefile, friendlyColor, brute);
+	} // else the start coords are off screen and point in the opposite direction of the screen
     
 	// Left moveset
-	const negStep: Coords = [step[0] * -1, step[1] * -1];
-	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), ignoreFunc, gamefile, friendlyColor, brute);
+	const negStep: Vec2 = [step[0] * -1n, step[1] * -1n];
+	if (intsect1Tile.positiveDotProduct) {
+		// The start coords are either on screen, or points towards the screen
+		concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, negStep, intsect1Tile.coords, intsect2Tile.coords, limits[0], ignoreFunc, gamefile, friendlyColor, brute);
+	} // else the start coords are off screen and point in the opposite direction of the screen
 }
 
 /**
@@ -471,8 +474,8 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
-	if (limit === 0) return; // Quick exit
+function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], coords: Coords, step: Vec2, intsect1Tile: BDCoords, intsect2Tile: BDCoords, limit: bigint | null, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
+	if (limit === 0n) return; // Quick exit
 
 	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, limit, false);
 	if (iterationInfo === undefined) return;
@@ -491,12 +494,12 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  * @param includeStartCoords - Set to true for rays, it will also highlight the starting coordinate.
  * @returns 
  */
-function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, includeStartCoords: boolean) {
-	const lineIsVertical = step[0] === 0;
-	const index: 0 | 1 = lineIsVertical ? 1 : 0;
-	const inverseIndex: 0 | 1 = 1 - index as 0 | 1;
+function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: BDCoords, intsect2Tile: BDCoords, limit: bigint | null, includeStartCoords: boolean) {
+	const lineIsVertical = step[0] === 0n;
+	const axis: 0 | 1 = lineIsVertical ? 1 : 0;
+	const inverseAxis: 0 | 1 = 1 - axis as 0 | 1;
 
-	const stepIsPositive = step[index] > 0;
+	const stepIsPositive = step[axis] > 0;
 	const entryIntsectTile = stepIsPositive ? intsect1Tile : intsect2Tile;
 	const exitIntsectTile = stepIsPositive ? intsect2Tile : intsect1Tile;
     
@@ -506,33 +509,46 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, i
 		startCoords[0] += step[0];
 		startCoords[1] += step[1];
 	}
-	// Is the piece 
-	// Is the piece left, off-screen, of our intsect1Tile?
-	if (stepIsPositive && startCoords[index] < entryIntsectTile[index] || !stepIsPositive && startCoords[index] > entryIntsectTile[index]) { // Modify the start square
-		const distToEntryIntsectTile = entryIntsectTile[index] - startCoords[index]; // Can be negative
-		const distInSteps = Math.ceil(distToEntryIntsectTile / step[index]); // Should always be positive
-		const distRoundedUpToNearestStep = distInSteps * step[index]; // Can be negative
-		const newStartXY = startCoords[index] + distRoundedUpToNearestStep;
-		const yxToXStepRatio = step[inverseIndex] / step[index];
-		const newStartYX = startCoords[inverseIndex] + distRoundedUpToNearestStep * yxToXStepRatio;
-		startCoords = lineIsVertical ? [newStartYX, newStartXY] : [newStartXY, newStartYX];
+
+	const startCoordsBD = bd.FromCoords(startCoords);
+	const stepBD = bd.FromCoords(step);
+
+	// Is the piece left, off-screen, of our intsect1Tile? Then adjust our start square
+	if (stepIsPositive && bd.compare(startCoordsBD[axis], entryIntsectTile[axis]) < 0 ||
+		!stepIsPositive && bd.compare(startCoordsBD[axis], entryIntsectTile[axis]) > 0) { // Modify the start square
+		const distToEntryIntsectTile: BigDecimal = bd.subtract(entryIntsectTile[axis], startCoordsBD[axis]); // Can be negative
+		const distInSteps: bigint = bd.toBigInt(bd.ceil(bd.divide_fixed(distToEntryIntsectTile, stepBD[axis]))); // Should always be positive
+		const distRoundedUpToNearestStep: bigint = distInSteps * step[axis]; // Can be negative
+		const newAxisStart = startCoords[axis] + distRoundedUpToNearestStep;
+
+		// const yxToXStepRatio = step[inverseAxis] / step[axis];hfhhf
+		// const newInverseAxisStart = startCoords[inverseAxis] + distRoundedUpToNearestStep * yxToXStepRatio;
+		// NEW. Perfect integers?
+		const inverseAxisDistRoundedUpToNearestStep: bigint = distInSteps * step[inverseAxis]; // Can be negative
+		const newInverseAxisStart = startCoords[inverseAxis] + inverseAxisDistRoundedUpToNearestStep;
+
+		startCoords = lineIsVertical ? [newInverseAxisStart, newAxisStart] : [newAxisStart, newInverseAxisStart];
 	}
 
 	let endCoords = exitIntsectTile;
-	// Is the exitIntsectTile farther than we can legally slide?
-	const xyWeShouldEnd = coords[index] + step[index] * limit;
-	if (stepIsPositive && xyWeShouldEnd < endCoords[index] || !stepIsPositive && xyWeShouldEnd > endCoords[index]) {
-		const yxWeShouldEnd = coords[inverseIndex] + step[inverseIndex] * limit;
-		endCoords = lineIsVertical ? [yxWeShouldEnd, xyWeShouldEnd] : [xyWeShouldEnd, xyWeShouldEnd];
+	// Is the exitIntsectTile farther than we can legally slide? Then adjust our end square
+	if (limit !== null) {
+		const furthestAxisSquareWeCanSlide = coords[axis] + step[axis] * limit;
+		const furthestAxisSquareWeCanSlideBD = bd.FromBigInt(furthestAxisSquareWeCanSlide);
+		if (stepIsPositive && bd.compare(furthestAxisSquareWeCanSlideBD, endCoords[axis]) < 0 ||
+			!stepIsPositive && bd.compare(furthestAxisSquareWeCanSlideBD, endCoords[axis]) > 0) {
+			// The furthest square we can slide to does NOT reach the outside of the screen.
+			const furthestInverseAxisSquareWeCanSlide = coords[inverseAxis] + step[inverseAxis] * limit;
+			endCoords = lineIsVertical ? [furthestInverseAxisSquareWeCanSlide, furthestAxisSquareWeCanSlide] : [furthestAxisSquareWeCanSlide, furthestAxisSquareWeCanSlide];
+		}
 	}
 
 	// Shift the vertex data of our first step to the right place
 	const firstInstancePositionOffset: Coords = coordutil.subtractCoords(startCoords, model_Offset);
 
 	// Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
-	const xyDist = stepIsPositive ? endCoords[index] - startCoords[index] : startCoords[index] - endCoords[index];
-	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
-	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
+	const axisDistFromStartToEnd = stepIsPositive ? endCoords[axis] - startCoords[axis] : startCoords[axis] - endCoords[axis]; // Always positive
+	const iterationCount = Math.floor((axisDistFromStartToEnd + Math.abs(step[axis])) / Math.abs(step[axis])); // How many legal move square/dots to render on this line
 
 	return { firstInstancePositionOffset, startCoords, iterationCount };
 }
@@ -552,7 +568,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, i
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
+function addDataDiagonalVariant(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	for (let i = 0; i < iterateCount; i++) { 
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		legal: if (ignoreFunc(pieceCoords, thisCoord)) { // Ignore function PASSED. This move is LEGAL

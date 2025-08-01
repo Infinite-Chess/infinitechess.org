@@ -14,6 +14,21 @@ import vectors, { Ray, Vec2 } from "./vectors";
 import type { BoundingBoxBD } from "./bounds";
 
 
+// Type Definitions -----------------------------------------------------------
+
+
+/** The form of the intersection points returned by {@link findLineBoxIntersections}. */
+type IntersectionPoint = {
+	/** The actual intersection point */
+	coords: BDCoords;
+	/**
+	 * True if the dot product of the direction vector and the vector to the intersection point is positive.
+	 * This tells us if the intersection is in the direction of the vector, or the opposite way.
+	 */
+	positiveDotProduct: boolean;
+}
+
+
 // Constants -----------------------------------------------------------
 
 
@@ -398,7 +413,7 @@ function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords
  * @param box - The bounding box the line intersects.
  * @returns An array of intersection points as BDCoords, sorted by distance along the vector.
  */
-function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: BoundingBoxBD): { coords: BDCoords; positiveDotProduct: boolean }[] {
+function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: BoundingBoxBD): IntersectionPoint[] {
 
 	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
 	const [bd_x0, bd_y0] = bd.FromCoords(startCoords);
@@ -488,4 +503,8 @@ export default {
 	findCrossSectionalWidthPoints,
 	roundPointToNearestGridpoint,
 	findLineBoxIntersections,
+};
+
+export type {
+	IntersectionPoint,
 };
