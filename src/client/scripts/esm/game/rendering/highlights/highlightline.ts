@@ -10,6 +10,7 @@ import perspective from '../perspective.js';
 import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
+import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
 import { createModel } from '../buffermodel.js';
 
 
@@ -50,17 +51,23 @@ interface Line {
  * according to whether we're in perspective mode or not.
  */
 function getRenderRange(): BoundingBoxBD {
+
 	if (!perspective.getEnabled()) { // 2D mode
 		return boardtiles.gboundingBoxFloat();
 	} else { // Perspective mode
-		const distToRenderBoard_Tiles = perspective.distToRenderBoard / boardpos.getBoardScale();
+
+		const distToRenderBoardBD: BigDecimal = bd.FromNumber(perspective.distToRenderBoard);
+		const scale: BigDecimal = boardpos.getBoardScale();
+		const position = boardpos.getBoardPos();
+
+		const distToRenderBoard_Tiles: BigDecimal = bd.divide_floating(distToRenderBoardBD, scale);
+
 		// Shift the box based on our current board position
-		const boardPos = boardpos.getBoardPos();
 		return {
-			left: boardPos[0] - distToRenderBoard_Tiles,
-			right: boardPos[0] + distToRenderBoard_Tiles,
-			bottom: boardPos[1] - distToRenderBoard_Tiles,
-			top: boardPos[1] + distToRenderBoard_Tiles,
+			left: bd.subtract(position[0], distToRenderBoard_Tiles),
+			right: bd.add(position[0], distToRenderBoard_Tiles),
+			bottom: bd.subtract(position[1], distToRenderBoard_Tiles),
+			top: bd.add(position[1], distToRenderBoard_Tiles),
 		};
 	}
 }
