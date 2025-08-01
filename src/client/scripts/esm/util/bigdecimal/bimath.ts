@@ -327,9 +327,19 @@ function max(a: bigint, b: bigint): bigint {
 	return a > b ? a : b;
 }
 
+/**
+ * Compares two BigInts.
+ * @param a The first BigInt.
+ * @param b The second BigInt.
+ * @returns -1 if a < b, 0 if a === b, and 1 if a > b.
+ */
+function compare(a: bigint, b: bigint): -1 | 0 | 1 {
+	return a < b ? -1 : a > b ? 1 : 0;
+}
+
 /** Clamps a BigInt value between an inclusive minimum and maximum. */
 function clamp(value: bigint, min: bigint, max: bigint): bigint {
-    return value < min ? min : value > max ? max : value;
+	return value < min ? min : value > max ? max : value;
 }
 
 
@@ -386,6 +396,7 @@ export default {
 	posMod,
 	min,
 	max,
+	compare,
 	clamp,
 	GCD,
 	LCM,
