@@ -143,9 +143,17 @@ function clearPremoves() {
 function cancelPremoves(gamefile: FullGame, mesh?: Mesh) {
 	// console.log("Clearing premoves");
 	const hadAtleastOnePremove = hasAtleastOnePremove();
+	
 	rewindPremoves(gamefile, mesh);
 	clearPremoves();
-	if (selection.arePremoving()) selection.unselectPiece();
+
+	if (selection.arePremoving()) {
+		// Unselect in the case where the premoves are being rewound
+		if (hadAtleastOnePremove) selection.unselectPiece();
+		// Reselect if we haven't actually made any premoves yet
+		else selection.reselectPiece();
+	}
+
 	// If there were any animations, this should ensure they're only cancelled if they are for premoves,
 	// and not for the opponent's move. After all cancelPremoves() can be called at any time.
 	if (hadAtleastOnePremove) animation.clearAnimations();
