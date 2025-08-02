@@ -220,7 +220,6 @@ function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
 	return bd.add(bd.multiply_fixed(v1[0], v2[0]), bd.multiply_fixed(v1[1], v2[1]));
 }
 
-
 /**
  * Negates the provided length-2 vector so it points in the opposite direction
  * 
@@ -228,6 +227,13 @@ function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
  */
 function negateVector(vec2: Vec2): Vec2 {
 	return [-vec2[0],-vec2[1]];
+}
+
+/**
+ * Calculates the normal (perpendicular) vector of a given 2D vector.
+ */
+function getPerpendicularVector(vec2: Vec2): Vec2 {
+	return [-vec2[1], vec2[0]];
 }
 
 /**
@@ -321,6 +327,7 @@ export default {
 	dotProduct,
 	dotProductBD,
 	negateVector,
+	getPerpendicularVector,
 	degreesToRadians,
 
 	// Distance Calculation
