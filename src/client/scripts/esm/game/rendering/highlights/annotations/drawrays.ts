@@ -6,11 +6,11 @@
  */
 
 
+import type { Color } from "../../../../util/math/math.js";
+
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import space from "../../../misc/space.js";
-import legalmovehighlights from "../legalmovehighlights.js";
-import instancedshapes from "../../instancedshapes.js";
 import gameslot from "../../../chess/gameslot.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
@@ -21,7 +21,6 @@ import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
 import arrowlegalmovehighlights from "../../arrows/arrowlegalmovehighlights.js";
 import legalmovemodel from "../legalmovemodel.js";
-import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
@@ -29,19 +28,11 @@ import vectors, { Ray, Vec2, Vec3 } from "../../../../util/math/vectors.js";
 import { listener_overlay } from "../../../chess/game.js";
 
 
-import type { Color } from "../../../../util/math/math.js";
-
-
 // Variables -----------------------------------------------------------------
 
 
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
-
-const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
-	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
-};
 
 const ZERO_COORDS = bd.FromCoords([0n, 0n]);
 
@@ -427,17 +418,13 @@ function genAndRenderRays(rays: Ray[], color: Color) {
 		const lines = getLines(rays, color);
 		highlightline.genLinesModel(lines).render();
 	} else { // Zoomed in, render rays as infinite legal move highlights
-		// Construct the data
-		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-		const instanceData = legalmovemodel.genData_Rays(rays);
-		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-		// Render
 		const boardPos: BDCoords = boardpos.getBoardPos();
 		const model_Offset: Coords = legalmovemodel.getOffset();
 		const position = arrowlegalmovehighlights.getModelPosition(boardPos, model_Offset, 0);
 		const boardScale: number = boardpos.getBoardScaleAsNumber();
 		const scale: Vec3 = [boardScale, boardScale, 1];
-		model.render(position, scale);
+
+		legalmovemodel.genModelForRays(rays, color).render(position, scale);
 	}
 }
 

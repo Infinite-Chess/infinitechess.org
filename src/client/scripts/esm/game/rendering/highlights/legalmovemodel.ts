@@ -8,7 +8,7 @@
 
 import type { Player } from '../../../chess/util/typeutil.js';
 import type { Color } from '../../../util/math/math.js';
-import type { BDCoords, Coords, CoordsKey, DoubleCoords } from '../../../chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves, SlideLimits } from '../../../chess/logic/legalmoves.js';
@@ -25,23 +25,42 @@ import boardtiles from '../boardtiles.js';
 import piecemodels from '../piecemodels.js';
 import legalmoveshapes from '../instancedshapes.js';
 import space from '../../misc/space.js';
+import vectors from '../../../util/math/vectors.js';
+import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../util/math/geometry.js';
 import bounds, { BoundingBoxBD } from '../../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
-import { BufferModelInstanced, createModel, createModel_Instanced } from '../buffermodel.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
 import shapes from '../shapes.js';
-import vectors from '../../../util/math/vectors.js';
-import bimath from '../../../util/bigdecimal/bimath.js';
 
+
+// Type Definitions ------------------------------------------------------------
+
+
+/** Information for iterating the instance data of a legal move line as far as it needs to be rendered. */
+type RayIterationInfo = {
+	/** The first TRUE coordinate the ray starts on. */
+	startCoords: Coords;
+	/** The OFFSET coordinate the ray starts on. */
+	startCoordsOffset: Coords;
+	/** How many times to repeat a highlight in one direction for this given ray. */
+	iterationCount: number;
+}
 
 
 // Constants -----------------------------------------------------------------------------
 
+
+/** The attribute info for all legal move highlight instanced rendering models. */
+const ATTRIB_INFO: AttributeInfoInstanced = {
+	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
+	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+};
 
 /**
  * An offset applied to the legal move highlights mesh, to keep all of the
@@ -109,7 +128,7 @@ let model_Offset: Coords = [0n,0n];
 
 /** Returns {@link model_Offset} */
 function getOffset() {
-    return model_Offset;
+	return model_Offset;
 }
 
 /**
@@ -119,34 +138,34 @@ function getOffset() {
  */
 function updateRenderRange(): boolean {
 
-    // Determine if our camera/screen exceeds the boundary of our render range box...
+	// Determine if our camera/screen exceeds the boundary of our render range box...
 	if (!isViewRangeContainedInRenderRange()) return false; // No change needed
 
-    // Regenerate the legal move highlights render range bounding box
+	// Regenerate the legal move highlights render range bounding box
 
-    // console.log("Recalculating bounding box of render range.");
+	// console.log("Recalculating bounding box of render range.");
 
-    const [ newWidth, newHeight ] = perspective.getEnabled() ? getDimensionsOfPerspectiveViewRange()
+	const [ newWidth, newHeight ] = perspective.getEnabled() ? getDimensionsOfPerspectiveViewRange()
                                                              : getDimensionsOfOrthographicViewRange();
 
-    const halfNewWidth: BigDecimal = bd.FromNumber(newWidth / 2);
-    const halfNewHeight: BigDecimal = bd.FromNumber(newHeight / 2);
+	const halfNewWidth: BigDecimal = bd.FromNumber(newWidth / 2);
+	const halfNewHeight: BigDecimal = bd.FromNumber(newHeight / 2);
 
-    const boardPos = boardpos.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 
-    boundingBoxOfRenderRange = {
-        left: space.roundCoord(bd.subtract(boardPos[0], halfNewWidth)),
-        right: space.roundCoord(bd.add(boardPos[0], halfNewWidth)),
-        bottom: space.roundCoord(bd.subtract(boardPos[1], halfNewHeight)),
-        top: space.roundCoord(bd.add(boardPos[1], halfNewHeight))
-    };
+	boundingBoxOfRenderRange = {
+		left: space.roundCoord(bd.subtract(boardPos[0], halfNewWidth)),
+		right: space.roundCoord(bd.add(boardPos[0], halfNewWidth)),
+		bottom: space.roundCoord(bd.subtract(boardPos[1], halfNewHeight)),
+		top: space.roundCoord(bd.add(boardPos[1], halfNewHeight))
+	};
 
-    /** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
-    model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
+	/** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
+	model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 
-    // console.log("Shifted offset of highlights.");
+	// console.log("Shifted offset of highlights.");
 
-    return true; // A change was made
+	return true; // A change was made
 }
 
 
@@ -156,38 +175,38 @@ function updateRenderRange(): boolean {
  * OR if it's significantly smaller than it.
  */
 function isViewRangeContainedInRenderRange() {
-    if (!boundingBoxOfRenderRange) return false; // It isn't even initiated yet 
+	if (!boundingBoxOfRenderRange) return false; // It isn't even initiated yet 
 
-    // The bounding box of what the camera currently sees on-screen.
-    const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled() ?
+	// The bounding box of what the camera currently sees on-screen.
+	const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled() ?
         getBoundingBoxOfPerspectiveView() :
         boardtiles.gboundingBoxFloat();
 
-    // In 2D mode, we also care about whether the
-    // camera box is significantly smaller than our render range.
-    if (!perspective.getEnabled()) {
-        // We can cast to number since we're confident it's going to be small (we are zoomed in)
-        const width: number = bd.toNumber(bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left));
-        const renderRangeWidth: number = bd.toNumber(bd.subtract(boundingBoxOfRenderRange.right, boundingBoxOfRenderRange.left)) + 1;
+	// In 2D mode, we also care about whether the
+	// camera box is significantly smaller than our render range.
+	if (!perspective.getEnabled()) {
+		// We can cast to number since we're confident it's going to be small (we are zoomed in)
+		const width: number = bd.toNumber(bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left));
+		const renderRangeWidth: number = bd.toNumber(bd.subtract(boundingBoxOfRenderRange.right, boundingBoxOfRenderRange.left)) + 1;
 
-        // multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
-        if (width * multiplier * multiplier < renderRangeWidth) return false;
-    }
+		// multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
+		if (width * multiplier * multiplier < renderRangeWidth) return false;
+	}
 
-    // Whether the camera view box exceeds the boundaries of the render range
-    return bounds.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
+	// Whether the camera view box exceeds the boundaries of the render range
+	return bounds.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
 }
 
 /** [PERSPECTIVE] Returns our approximate camera view range bounding box. */
 function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
-    const boardPos = boardpos.getBoardPos();
-    const viewDist: BigDecimal = bd.FromNumber(PERSPECTIVE_VIEW_RANGE);
-    return {
-        left: bd.subtract(boardPos[0], viewDist),
-        right: bd.add(boardPos[0], viewDist),
-        bottom: bd.subtract(boardPos[1], viewDist),
-        top: bd.add(boardPos[1], viewDist)
-    };
+	const boardPos = boardpos.getBoardPos();
+	const viewDist: BigDecimal = bd.FromNumber(PERSPECTIVE_VIEW_RANGE);
+	return {
+		left: bd.subtract(boardPos[0], viewDist),
+		right: bd.add(boardPos[0], viewDist),
+		bottom: bd.subtract(boardPos[1], viewDist),
+		top: bd.add(boardPos[1], viewDist)
+	};
 }
 
 /** [PERSPECTIVE] Returns the target dimensions of the legal move highlights box. */
@@ -199,27 +218,27 @@ function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 
 /** [ORTHOGRAPHIC] Returns the target dimensions of the legal move highlights box. */
 function getDimensionsOfOrthographicViewRange(): DoubleCoords {
-    // New improved method of calculating render bounding box
+	// New improved method of calculating render bounding box
 
-    const boardBoundingBox = boardtiles.gboundingBox();
-    const width: number = bd.toNumber(bd.subtract(boardBoundingBox.right, boardBoundingBox.left));
-    const height: number = bd.toNumber(bd.subtract(boardBoundingBox.top, boardBoundingBox.bottom));
-    console.log("Does this need +1? width of board bounding box: ", width);
+	const boardBoundingBox = boardtiles.gboundingBox();
+	const width: number = bd.toNumber(bd.subtract(boardBoundingBox.right, boardBoundingBox.left));
+	const height: number = bd.toNumber(bd.subtract(boardBoundingBox.top, boardBoundingBox.bottom));
+	console.log("Does this need +1? width of board bounding box: ", width);
 
-    let newWidth = width * multiplier;
-    let newHeight = height * multiplier;
+	const newWidth = width * multiplier;
+	const newHeight = height * multiplier;
 
-    // Make sure width has a cap so we aren't generating a model stupidly large
-    // Cap width = width of screen in pixels, * multiplier
-    const capWidth = camera.canvas.width * multiplier;
-    if (newWidth > capWidth) {
-        // const ratio = capWidth / newWidth;
-        // newWidth *= ratio;
-        // newHeight *= ratio;
-        throw Error("Legal move highlights bounding box render range width exceeded cap! Don't recalculate it if we're zoomed out.");
-    }
+	// Make sure width has a cap so we aren't generating a model stupidly large
+	// Cap width = width of screen in pixels, * multiplier
+	const capWidth = camera.canvas.width * multiplier;
+	if (newWidth > capWidth) {
+		// const ratio = capWidth / newWidth;
+		// newWidth *= ratio;
+		// newHeight *= ratio;
+		throw Error("Legal move highlights bounding box render range width exceeded cap! Don't recalculate it if we're zoomed out.");
+	}
 
-    return [newWidth, newHeight];
+	return [newWidth, newHeight];
 }
 
 
@@ -312,6 +331,7 @@ function pushSliding(
 
 		// The intersection points this slide direction intersects
 		// our legal move highlights render range bounding box, if it does.
+		// eslint-disable-next-line prefer-const
 		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange!);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
@@ -364,11 +384,11 @@ function pushSlide(
 	const negVecIntsect1: IntersectionPoint = {
 		coords: intsect2.coords,
 		positiveDotProduct: !intsect2.positiveDotProduct,
-	}
+	};
 	const negVecIntsect2: IntersectionPoint = {
 		coords: intsect1.coords,
 		positiveDotProduct: !intsect1.positiveDotProduct,
-	}
+	};
 
 	if (!negVecIntsect2.positiveDotProduct) {
 		// The start coords are either on screen, or the ray points towards the screen
@@ -405,15 +425,18 @@ function pushRay(
 ) {
 	if (limit === 0n) return; // Can't slide any spaces this ray's direction
 
-	const { firstInstancePositionOffset, startCoords, iterationCount } = getRayIterationInfo(coords, step, intsect1, intsect2, limit, false);
+	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, true);
+	if (!iterationInfo) return; // None of the piece's slide is visible on screen, skip.
+
+	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
 
 	// Recursively adds the coords to the instance data list, shifting by the step size.
-	let targetCoords: Coords = startCoords;
+	const targetCoords: Coords = startCoords;
 	for (let i = 0; i < iterationCount; i++) {
 		targetCoords[0] += step[0];
 		targetCoords[1] += step[1];
 
-		legal: if (ignoreFunc(coords, targetCoords)) { // Ignore function PASSED. This move is LEGAL
+		legal: if (ignoreFunc(coords, targetCoords)) { // Ignore function PASSED. (Is a prime square for huygens)
 
 			// If we're brute force checking each move for check, do that here. (royal queen, or colinear pins)
 			if (brute) {
@@ -422,26 +445,21 @@ function pushRay(
 			}
 
 			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.boardsim.pieces, targetCoords);
-			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
-			else instanceData_NonCapture.push(...firstInstancePositionOffset);
+			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
+			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
 		
-		firstInstancePositionOffset[0] += step[0];
-		firstInstancePositionOffset[1] += step[1];
+		startCoordsOffset[0] += step[0];
+		startCoordsOffset[1] += step[1];
 	}
 }
 
 /**
- * Calculates how many times a highlight should be repeated to cover all squares a ray can reach in the render range.
- * @param coords 
- * @param step 
- * @param intsect1 
- * @param intsect2 
- * @param limit 
+ * Calculates how many times a highlight should be repeated
+ * to cover all squares a ray can reach in the render range.=
  * @param isRay - This will also include the starting coordinate, as is not the behavior for selected pieces.
- * @returns 
  */
-function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionPoint, intsect2: IntersectionPoint, limit: bigint | null, isRay: boolean) {
+function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionPoint, intsect2: IntersectionPoint, limit: bigint | null, isRay: boolean): RayIterationInfo | undefined {
 	const coordsBD: BDCoords = bd.FromCoords(coords);
 	const stepBD: BDCoords = bd.FromCoords(step);
 
@@ -456,9 +474,10 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 		startCoords[1] += step[1];
 	}
 
-	// Is the piece left, off-screen, of our intsect1Tile? Then adjust our start square
-	if (intsect1.positiveDotProduct) { // Modify the start square
-		const axisDistToIntsect1: BigDecimal = bd.subtract(intsect1[axis], coordsBD[axis]); // Can be negative
+	// Is the piece off screen in the opposite direction of the step?
+	if (intsect1.positiveDotProduct) {
+		// Adjust the start square to be the first square we land on after intsect1.
+		const axisDistToIntsect1: BigDecimal = bd.subtract(intsect1[axis], coordsBD[axis]);
 		const distInSteps: bigint = bd.toBigInt(bd.ceil(bd.divide_fixed(axisDistToIntsect1, stepBD[axis]))); // Minimum number of steps to overtake the first intersection.
 		startCoords = [
 			coords[0] + step[0] * distInSteps,
@@ -478,9 +497,9 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 	];
 
 	if (limit !== null) {
-		// Determine if we can't slide as far as to reach intsect2. If so, we need to shorten our endCoords
+		// Determine if we can't even slide far enough to reach intsect2. If so, we need to shorten our endCoords
 
-		// What is the farthest point we can slide?
+		// What is the farthest point we can slide to?
 		const furthestSquareWeCanSlide: Coords = [
 			coords[0] + step[0] * limit,
 			coords[1] + step[1] * limit,
@@ -488,22 +507,27 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 		const furthestSquareWeCanSlideBD: BDCoords = bd.FromCoords(furthestSquareWeCanSlide);
 
 		const vectorFromFurthestSquareTowardsIntsect = coordutil.subtractBDCoords(intsect2.coords, furthestSquareWeCanSlideBD);
-		const dotProd = vectors.dotProductBD(vectorFromFurthestSquareTowardsIntsect, stepBD)
+		const dotProd = vectors.dotProductBD(vectorFromFurthestSquareTowardsIntsect, stepBD);
 		// A dotProd of zero would mean it can slide EXACTLY up to the end of the screen, that is okay
 		// But positive means we can't slide far enough to reach intsect2. Shorten our endCoords!
 		if (bd.compare(dotProd, ZERO) > 0) endCoords = furthestSquareWeCanSlide;
 	}
 
-	// Next, determine firstInstancePositionOffset and iterationCount.
+	// Next, determine iterationCount and startCoordsOffset.
+	
+	// Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
+	const axisDistFromStartToEnd: bigint = endCoords[axis] - startCoords[axis];
+	// How many legal move squares/dots to render on this line
+	const iterationCount = Number(axisDistFromStartToEnd / step[axis]) + 1; // +1 for start & end inclusive
+
+	// This will occur if the piece isn't able to move past intsect1, the start of the screen.
+	if (iterationCount <= 0) return undefined;
 
 	// Shift the vertex data of our first step to the right place
-	const firstInstancePositionOffset: Coords = coordutil.subtractCoords(startCoords, model_Offset);
+	const startCoordsOffset: Coords = coordutil.subtractCoords(startCoords, model_Offset);
 
-	// Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
-	const axisDistFromStartToEnd = endCoords[axis] - startCoords[axis]; // Always positive
-	const iterationCount = Number(axisDistFromStartToEnd / step[axis]); // How many legal move square/dots to render on this line
 
-	return { firstInstancePositionOffset, startCoords, iterationCount };
+	return { startCoords, startCoordsOffset, iterationCount };
 }
 
 
@@ -511,46 +535,37 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 
 
 /**
- * Calculates the instanceData of all Rays in a list.
+ * Generates a model for rendering all rays in the provided list.
+ * 
  * Rays are square highlights starting from a single coord
  * and going in one direction to infinity, unobstructed.
  */
-function genData_Rays(rays: Ray[]) { // { left, right, bottom, top} The size of the box we should render within
-	const instanceData: number[] = [];
+function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
+	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+	const instanceData: bigint[] = [];
 
 	for (const ray of rays) {
-		const vector = coordutil.copyCoords(ray.vector);
-		// Make the vector positive
-		if (vector[0] === 0 && vector[1] < 0) vector[1] *= -1;
-		else if (vector[0] < 0) { vector[0] *= -1; vector[1] *= -1; }
+		const step = ray.start;
 
-		const intersections = geometry.findLineBoxIntersections(ray.start, vector, boundingBoxOfRenderRange);
-		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
-
-		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
+		// eslint-disable-next-line prefer-const
+		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(step, ray.vector, boundingBoxOfRenderRange!);
+		
+		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
+		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
         
-		concatData_Ray(instanceData, ray.start, ray.vector, intsect1Tile, intsect2Tile);
+		const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(step, ray.vector, intsect1Tile, intsect2Tile, null, true);
+		if (iterationInfo === undefined) continue; // Technically should never happen for rays since they are never blocked.
+
+		const { startCoordsOffset, iterationCount } = iterationInfo;
+
+		for (let i = 0; i < iterationCount; i++) { 
+			instanceData.push(...startCoordsOffset);
+			startCoordsOffset[0] += step[0];
+			startCoordsOffset[1] += step[1];
+		}
 	}
 
-	return instanceData;
-}
-
-/** Simplified {@link pushRay} for Ray drawing */
-function concatData_Ray(instanceData: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords) {
-	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, null, true);
-	if (iterationInfo === undefined) return;
-	const { firstInstancePositionOffset, iterationCount } = iterationInfo;
-
-	addDataDiagonalVariant_Ray(instanceData, firstInstancePositionOffset, step, iterationCount);
-}
-
-/** Simplified {@link addDataDiagonalVariant} for Ray drawing */
-function addDataDiagonalVariant_Ray(instanceData: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number) {
-	for (let i = 0; i < iterateCount; i++) { 
-		instanceData.push(...firstInstancePositionOffset);
-		firstInstancePositionOffset[0] += step[0];
-		firstInstancePositionOffset[1] += step[1];
-	}
+	return createModel_Instanced_GivenAttribInfo(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), ATTRIB_INFO, 'TRIANGLES');
 }
 
 
@@ -573,13 +588,13 @@ function renderOutlineofRenderBox() {
 
 
 export default {
-    // Updating Render Range and Offset
-    getOffset,
-    updateRenderRange,
-    // Generating Legal Move Buffer Models
-    generateModelsForPiecesLegalMoveHighlights,
+	// Updating Render Range and Offset
+	getOffset,
+	updateRenderRange,
+	// Generating Legal Move Buffer Models
+	generateModelsForPiecesLegalMoveHighlights,
 	// Rays
-	genData_Rays,
-    // Rendering
-    renderOutlineofRenderBox,
-}
+	genModelForRays,
+	// Rendering
+	renderOutlineofRenderBox,
+};
