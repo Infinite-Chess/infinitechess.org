@@ -72,11 +72,8 @@ function areBDCoordsEqual(coord1: BDCoords, coord2: BDCoords): boolean {
 /**
  * Adds two coordinate pairs together component-wise.
  */
-function addCoordinates(coord1: Coords, coord2: Coords): Coords {
-	return [
-		coord1[0] + coord2[0],
-		coord1[1] + coord2[1]
-	];
+function addCoords(coord1: Coords, coord2: Coords): Coords {
+	return [coord1[0] + coord2[0], coord1[1] + coord2[1]];
 }
 
 /**
@@ -86,10 +83,7 @@ function addCoordinates(coord1: Coords, coord2: Coords): Coords {
  * @returns The resulting coordinate pair after subtracting.
  */
 function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
-	return [
-		minuendCoord[0] - subtrahendCoord[0],
-		minuendCoord[1] - subtrahendCoord[1]
-	];
+	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
 }
 
 /**
@@ -99,10 +93,7 @@ function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
  * @returns The resulting coordinate pair after subtracting.
  */
 function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BDCoords {
-	return [
-		bd.subtract(minuendCoord[0], subtrahendCoord[0]),
-		bd.subtract(minuendCoord[1], subtrahendCoord[1])
-	];
+	return [bd.subtract(minuendCoord[0], subtrahendCoord[0]), bd.subtract(minuendCoord[1], subtrahendCoord[1])];
 }
 
 /**
@@ -137,7 +128,7 @@ export default {
 	getCoordsFromKey,
 	areCoordsEqual,
 	areBDCoordsEqual,
-	addCoordinates,
+	addCoords,
 	subtractCoords,
 	subtractBDCoords,
 	copyCoords,

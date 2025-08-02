@@ -14,7 +14,7 @@ import { BufferModelInstanced, createModel, createModel_Instanced } from "../buf
 import gameslot from "../../chess/gameslot.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
-import legalmovehighlights from "./legalmovehighlights.js";
+import legalmovemodel from "./legalmovemodel.js";
 import boardpos from "../boardpos.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
@@ -83,7 +83,7 @@ function regenModel() {
 
 	// console.log("Regenerating specialrights model");
 	const gamefile = gameslot.getGamefile()!;
-	const model_Offset: Coords = legalmovehighlights.getOffset();
+	const model_Offset: Coords = legalmovemodel.getOffset();
 	// Instance data
 	const squaresToHighlight: Array<number> = [];
 	for (const key of gamefile.boardsim.state.global.specialRights) {
@@ -99,7 +99,7 @@ function renderSpecialRights() {
 	if (!model) throw Error("Specialrights model not initialized");
 
 	const boardPos: Coords = boardpos.getBoardPos();
-	const model_Offset: Coords = legalmovehighlights.getOffset();
+	const model_Offset: Coords = legalmovemodel.getOffset();
 	const position: Vec3 = [
 		-boardPos[0] + model_Offset[0], // Add the model's offset
 		-boardPos[1] + model_Offset[1],

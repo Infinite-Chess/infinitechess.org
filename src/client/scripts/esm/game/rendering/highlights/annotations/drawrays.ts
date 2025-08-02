@@ -20,6 +20,7 @@ import variant from "../../../../chess/variants/variant.js";
 import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
 import arrowlegalmovehighlights from "../../arrows/arrowlegalmovehighlights.js";
+import legalmovemodel from "../legalmovemodel.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
@@ -29,7 +30,6 @@ import { listener_overlay } from "../../../chess/game.js";
 
 
 import type { Color } from "../../../../util/math/math.js";
-import bigdecimal from "../../../../util/bigdecimal/bigdecimal.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -43,7 +43,7 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
 };
 
-const ZERO_COORDS = bigdecimal.FromCoords([0n, 0n]);
+const ZERO_COORDS = bd.FromCoords([0n, 0n]);
 
 
 /** The simplest form of a ray. */
@@ -429,11 +429,11 @@ function genAndRenderRays(rays: Ray[], color: Color) {
 	} else { // Zoomed in, render rays as infinite legal move highlights
 		// Construct the data
 		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-		const instanceData = legalmovehighlights.genData_Rays(rays);
+		const instanceData = legalmovemodel.genData_Rays(rays);
 		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
 		// Render
 		const boardPos: BDCoords = boardpos.getBoardPos();
-		const model_Offset: Coords = legalmovehighlights.getOffset();
+		const model_Offset: Coords = legalmovemodel.getOffset();
 		const position = arrowlegalmovehighlights.getModelPosition(boardPos, model_Offset, 0);
 		const boardScale: number = boardpos.getBoardScaleAsNumber();
 		const scale: Vec3 = [boardScale, boardScale, 1];
