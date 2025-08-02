@@ -299,7 +299,7 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 			const path = [coords]; // The running path of travel for the current spiral. Used for animating.
 			for (let c = 0; c < movements.length - 1; c++) { // Iterate 7 times, since we can't land on the square we started
 				const movement = movements[math.posMod(b, movements.length)]!;
-				currentCoord = coordutil.addCoordinates(currentCoord, movement);
+				currentCoord = coordutil.addCoords(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
 				const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, currentCoord); // { type, index, coords }
 				if (pieceOnSquare && !premove) { // If there is a piece on the square and we're not premoving

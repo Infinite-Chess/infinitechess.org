@@ -26,6 +26,7 @@ import boardpos from "../boardpos.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
 import coordutil, { BDCoords, Coords } from "../../../chess/util/coordutil.js";
+import legalmovemodel from "../highlights/legalmovemodel.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -114,7 +115,7 @@ function onPieceIndicatorHover(piece: Piece) {
 	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
-	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);
+	const { NonCaptureModel, CaptureModel } = legalmovemodel.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);
 	// Store both these objects inside piecesHoveredOver
 	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
 }
@@ -124,7 +125,7 @@ function renderEachHoveredPieceLegalMoves() {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
 	const boardPos = boardpos.getBoardPos();
-	const model_Offset = legalmovehighlights.getOffset();
+	const model_Offset = legalmovemodel.getOffset();
 	const position: Vec3 = getModelPosition(boardPos, model_Offset, 0);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
@@ -154,7 +155,7 @@ function regenModelsOfHoveredPieces() {
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
 		const pieceColor = typeutil.getColorFromType(hoveredArrow.piece.type);
-		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
+		const { NonCaptureModel, CaptureModel } = legalmovemodel.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;

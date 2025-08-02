@@ -165,7 +165,7 @@ function setTheme(theme: string): void {
 	savePreferences();
 }
 
-function getLegalMovesShape(): string {
+function getLegalMovesShape(): 'dots' | 'squares' {
 	return preferences.legal_moves || default_legal_moves;
 }
 

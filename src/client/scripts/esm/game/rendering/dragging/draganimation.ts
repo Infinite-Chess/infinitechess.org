@@ -132,7 +132,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
-	if (animation.animations.some(a => coordutil.areBDCoordsEqual(bd.FromCoords(piece.coords), a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
+	if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
 }
 
 /**

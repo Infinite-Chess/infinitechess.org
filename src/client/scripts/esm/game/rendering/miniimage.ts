@@ -224,7 +224,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
 		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
 		// Add the main animated piece
-		pushPieceNoDuplicatesOrVoids({coords: currentAnimationPosition, type: a.type, index: -1});
+		pushPieceNoDuplicatesOrVoids({ coords: currentAnimationPosition, type: a.type, index: -1 });
 		// Add the captured pieces being shown
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
 		// Construct the hidden pieces for below

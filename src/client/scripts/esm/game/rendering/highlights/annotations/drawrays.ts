@@ -6,11 +6,11 @@
  */
 
 
+import type { Color } from "../../../../util/math/math.js";
+
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import space from "../../../misc/space.js";
-import legalmovehighlights from "../legalmovehighlights.js";
-import instancedshapes from "../../instancedshapes.js";
 import gameslot from "../../../chess/gameslot.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
@@ -20,16 +20,12 @@ import variant from "../../../../chess/variants/variant.js";
 import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
 import arrowlegalmovehighlights from "../../arrows/arrowlegalmovehighlights.js";
-import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
+import legalmovemodel from "../legalmovemodel.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import vectors, { Ray, Vec2, Vec3 } from "../../../../util/math/vectors.js";
 import { listener_overlay } from "../../../chess/game.js";
-
-
-import type { Color } from "../../../../util/math/math.js";
-import bigdecimal from "../../../../util/bigdecimal/bigdecimal.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -38,12 +34,7 @@ import bigdecimal from "../../../../util/bigdecimal/bigdecimal.js";
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
 
-const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
-	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
-};
-
-const ZERO_COORDS = bigdecimal.FromCoords([0n, 0n]);
+const ZERO_COORDS = bd.FromCoords([0n, 0n]);
 
 
 /** The simplest form of a ray. */
@@ -172,12 +163,14 @@ function getLines(rays: Ray[], color: Color): Line[] {
 
 	const lines: Line[] = [];
 	for (const ray of rays) {
+		const rayStartBD = bd.FromCoords(ray.start);
+
 		// Find the points it intersects the screen
-		const intersectionPoints = geometry.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
+		const intersectionPoints = geometry.findLineBoxIntersections(rayStartBD, ray.vector, boundingBox);
 		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
 		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
 
-		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : bd.FromCoords(ray.start);
+		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : rayStartBD;
 
 		lines.push({
 			start,
@@ -427,17 +420,13 @@ function genAndRenderRays(rays: Ray[], color: Color) {
 		const lines = getLines(rays, color);
 		highlightline.genLinesModel(lines).render();
 	} else { // Zoomed in, render rays as infinite legal move highlights
-		// Construct the data
-		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-		const instanceData = legalmovehighlights.genData_Rays(rays);
-		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-		// Render
 		const boardPos: BDCoords = boardpos.getBoardPos();
-		const model_Offset: Coords = legalmovehighlights.getOffset();
+		const model_Offset: Coords = legalmovemodel.getOffset();
 		const position = arrowlegalmovehighlights.getModelPosition(boardPos, model_Offset, 0);
 		const boardScale: number = boardpos.getBoardScaleAsNumber();
 		const scale: Vec3 = [boardScale, boardScale, 1];
-		model.render(position, scale);
+
+		legalmovemodel.genModelForRays(rays, color).render(position, scale);
 	}
 }
 

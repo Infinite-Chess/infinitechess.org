@@ -8,7 +8,6 @@ import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../util/math/math.js';
 
-import { createModel } from './buffermodel.js';
 import arrows from './arrows/arrows.js';
 import frametracker from './frametracker.js';
 import math from '../../util/math/math.js';
@@ -17,9 +16,11 @@ import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import sound from '../misc/sound.js';
-import typeutil, { RawType } from '../../chess/util/typeutil.js';
 import vectors from '../../util/math/vectors.js';
 import boardtiles from './boardtiles.js';
+import { createModel } from './buffermodel.js';
+import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import typeutil, { RawType } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -35,15 +36,17 @@ import statustext from '../gui/statustext.js';
 interface AnimationSegment {
 	start: BDCoords;
 	end: BDCoords;
-	distance: number;
+	distance: BigDecimal;
 }
 
 /** Represents an animation of a piece. */
 interface Animation {
 	/** The type of piece to animate. */
 	type: number;
-	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
-	path: BDCoords[];
+	/** The original integer coordinates of the piece's path. Minimum: 2 */
+	path: Coords[]
+	/** The high resolution waypoints the piece will pass throughout the animation. */
+	path_smooth: BDCoords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
 	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures. 0 is the start of the path. */
@@ -69,6 +72,8 @@ interface Animation {
 
 // Constants -------------------------------------------------------------------
 
+
+const ZERO = bigdecimal.FromBigInt(0n);
 
 /** Config for the splines. */
 const SPLINES: {
@@ -141,10 +146,10 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	if (resetAnimations) clearAnimations(true);
 
 	// Generate smooth spline waypoints
-	const path_HighResolution = splines.generateSplinePath(path, SPLINES.RESOLUTION);
-	const segments = createAnimationSegments(path_HighResolution);
+	const path_smooth = splines.generateSplinePath(path, SPLINES.RESOLUTION);
+	const segments = createAnimationSegments(path_smooth);
 	// Calculates the total length of the path traveled by the piece in the animation.
-	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
+	const totalDistance: BigDecimal = segments.reduce((sum, seg) => bigdecimal.add(sum, seg.distance), ZERO);
 
 	// The hideShowKeyframes need to be stretched to match the resolution of the spline.
 	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
@@ -163,12 +168,13 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 
 	const newAnimation: Animation = {
 		type,
-		path: path_HighResolution,
+		path,
+		path_smooth,
 		segments,
 		showKeyframes,
 		hideKeyframes,
 		startTimeMillis: performance.now(),
-		durationMillis: calculateAnimationDuration(totalDistance, path_HighResolution.length),
+		durationMillis: calculateAnimationDuration(totalDistance, path_smooth.length),
 		totalDistance,
 		premove,
 		soundPlayed: false,
@@ -295,12 +301,12 @@ function update() {
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const segment = getCurrentSegment(animation);
 	// Delete the arrows of the hidden pieces
-	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.shiftArrow(1, true, c))); // Use an arbitrary piece type
+	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.deleteArrow(c)));
 	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
 	// Add the arrow of the animated piece (also removes the arrow it off its destination square)
-	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	arrows.animateArrow(animation.path[animation.path.length - 1]!, animationCurrentCoords);
 	// Add the arrows of the captured pieces only after we've shifted the piece that captured it
-	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.shiftArrow(p.type, true, undefined, p.coords)));
+	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.addArrow(p.type, p.coords)));
 }
 
 
@@ -333,7 +339,7 @@ function renderTransparentSquares(): void {
 function renderAnimations() {
 	if (animations.length === 0) return;
 
-	if (DEBUG) animations.forEach(animation => splines.renderSplineDebug(animation.path, SPLINES.WIDTH, SPLINES.COLOR));
+	if (DEBUG) animations.forEach(animation => splines.renderSplineDebug(animation.path_smooth, SPLINES.WIDTH, SPLINES.COLOR));
 
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => {
@@ -437,7 +443,7 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANC
  * @param segmentNum - The segment number, which is the progress of the animation from {@link getCurrentSegment}.
  * @returns the coordinate the animation's piece should be rendered this frame.
  */
-function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: number): Coords {
+function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: number): BDCoords {
 	if (segmentNum >= segments.length) return segments[segments.length - 1]!.end;
 	const segment = segments[Math.floor(segmentNum)]!;
 	return coordutil.lerpCoords(segment.start, segment.end, segmentNum % 1);

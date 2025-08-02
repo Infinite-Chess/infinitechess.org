@@ -5,18 +5,17 @@
  */
 
 
+import type { Line } from "./highlightline.js";
+import type { Ray } from "./annotations/annotations.js";
+
 import preferences from "../../../components/header/preferences.js";
 import selection from "../../chess/selection.js";
 import highlightline from "./highlightline.js";
 import boardpos from "../boardpos.js";
 import geometry from "../../../util/math/geometry.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
 import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
 import vectors, { Vec2 } from "../../../util/math/vectors.js";
-
-
-import type { Line } from "./highlightline.js";
-import type { Ray } from "./annotations/annotations.js";
-
 
 
 
@@ -44,7 +43,7 @@ function getLines(): Line[] {
 		const line = coordutil.getCoordsFromKey(slideKey);
 		const lineIsVertical = line[0] === 0;
 
-		const intersectionPoints = geometry.findLineBoxIntersections(pieceCoords, line, boundingBox).map(intersection => intersection.coords);
+		const intersectionPoints = geometry.findLineBoxIntersections(bd.FromCoords(pieceCoords), line, boundingBox).map(intersection => intersection.coords);
 		if (intersectionPoints.length < 2) continue;
         
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, line, false);
