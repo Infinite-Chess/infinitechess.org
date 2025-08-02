@@ -338,7 +338,7 @@ function pushSliding(
 		// The intersection points this slide direction intersects
 		// our legal move highlights render range bounding box, if it does.
 		// eslint-disable-next-line prefer-const
-		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange!);
+		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(bd.FromCoords(coords), line, boundingBoxOfRenderRange!);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
@@ -552,15 +552,15 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
 	const instanceData: bigint[] = [];
 
 	for (const ray of rays) {
-		const step = ray.start;
+		const step = ray.vector;
 
 		// eslint-disable-next-line prefer-const
-		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(step, ray.vector, boundingBoxOfRenderRange!);
+		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(bd.FromCoords(ray.start), ray.vector, boundingBoxOfRenderRange!);
 		
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
         
-		const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(step, ray.vector, intsect1Tile, intsect2Tile, null, true);
+		const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(ray.start, ray.vector, intsect1Tile, intsect2Tile, null, true);
 		if (iterationInfo === undefined) continue; // Technically should never happen for rays since they are never blocked.
 
 		const { startCoordsOffset, iterationCount } = iterationInfo;

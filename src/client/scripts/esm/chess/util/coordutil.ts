@@ -109,16 +109,13 @@ function copyCoords(coords: Coords): Coords {
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
  */
-function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
-	const bdstart: BDCoords = bd.FromCoords(start);
-	const bddiff: BDCoords = bd.FromCoords([end[0] - start[0], end[1] - start[1]]);
+function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
+	const bddiff: BDCoords = subtractBDCoords(end, start);
 	const bdt: BigDecimal = bd.FromNumber(t);
 	const travelX = bd.multiply_fixed(bddiff[0], bdt);
 	const travelY = bd.multiply_fixed(bddiff[1], bdt);
-	return [
-		bd.add(bdstart[0], travelX),
-		bd.add(bdstart[1], travelY),
-    ];
+
+	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
 }
 
 
