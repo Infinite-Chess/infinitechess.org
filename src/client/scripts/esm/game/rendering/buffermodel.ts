@@ -47,7 +47,7 @@ type InputArray = number[] | TypedArray;
  * Int16Array => Max integer: 32,767
  * Int8Array => Max integer: 127
  */
-type TypedArray = Float32Array | Int8Array | Int16Array | Int32Array;
+type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
 /** All valid primitive shapes we can render with */
 type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES';
