@@ -253,7 +253,13 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
  * @param friendlyColor - The color of friendly pieces
  * @param highlightColor - The color to use, which may vary depending on if the highlights are for your piece, opponent's, or a premove.
  */
-function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: LegalMoves, friendlyColor: Player, highlightColor: Color): { NonCaptureModel: BufferModelInstanced, CaptureModel: BufferModelInstanced } {
+function generateModelsForPiecesLegalMoveHighlights(
+	coords: Coords,
+	legalMoves: LegalMoves,
+	friendlyColor: Player,
+	highlightColor: Color
+): { NonCaptureModel: BufferModelInstanced, CaptureModel: BufferModelInstanced } {
+
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
@@ -456,7 +462,8 @@ function pushRay(
 
 /**
  * Calculates how many times a highlight should be repeated
- * to cover all squares a ray can reach in the render range.=
+ * to cover all squares a ray can reach in the render range,
+ * and calculates where it should start and end.
  * @param isRay - This will also include the starting coordinate, as is not the behavior for selected pieces.
  */
 function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionPoint, intsect2: IntersectionPoint, limit: bigint | null, isRay: boolean): RayIterationInfo | undefined {
