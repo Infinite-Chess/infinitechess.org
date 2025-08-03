@@ -7,19 +7,16 @@
  */
 
 
-import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Color } from "../../../util/math/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
 import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 import type { Vec3 } from "../../../util/math/vectors.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
 
-
-import arrows from "./arrows.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
-import legalmovehighlights from "../highlights/legalmovehighlights.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
 import boardpos from "../boardpos.js";
@@ -27,6 +24,8 @@ import legalmoves from "../../../chess/logic/legalmoves.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
 import coordutil, { BDCoords, Coords } from "../../../chess/util/coordutil.js";
 import legalmovemodel from "../highlights/legalmovemodel.js";
+import arrows, { ArrowPiece } from "./arrows.js";
+
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -83,7 +82,11 @@ function update() {
 	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
 		const thisHoveredArrow = hoveredArrowsLegalMoves[i]!;
 		// Is this arrow still being hovered over?
-		if (!hoveredArrows.some(arrow => arrow.piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over
+		if (!hoveredArrows.some(arrow => {
+			if (!arrow.piece.floating) return false;
+			const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
+			return coordutil.areCoordsEqual(integerCoords, thisHoveredArrow.piece.coords);
+		})) hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over. Delete its legal moves.
 	}
 
 	for (const pieceHovered of hoveredArrows) {
@@ -96,11 +99,23 @@ function update() {
  * Calculates their legal moves and model for rendering them.
  * @param piece - The piece this arrow is pointing to
  */
-function onPieceIndicatorHover(piece: Piece) {
+function onPieceIndicatorHover(arrowPiece: ArrowPiece) {
+	// SHOULD WE JUST RETURN HERE INSTEAD OF ERROR???
+	if (!bd.areCoordsIntegers(arrowPiece.coords)) throw Error("We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!");
 
 	// Check if their legal moves and mesh have already been stored
-	// TODO: Make sure this is still often called
-	if (hoveredArrowsLegalMoves.some(hoveredArrow => hoveredArrow.piece.coords === piece.coords)) return; // Legal moves and mesh already calculated.
+	if (hoveredArrowsLegalMoves.some(hoveredArrow => {
+		const integerCoords = bd.coordsToBigInt(arrowPiece.coords);
+		return coordutil.areCoordsEqual(hoveredArrow.piece.coords, integerCoords);
+	})) return; // Legal moves and mesh already calculated.
+
+	
+	const integerCoords: Coords = bd.coordsToBigInt(arrowPiece.coords);
+	const piece: Piece = {
+		type: arrowPiece.type,
+		coords: integerCoords,
+		index: arrowPiece.index,
+	};
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;

@@ -138,11 +138,14 @@ interface Arrow {
 
 /**
  * Reflection of the {@link Piece} type, but with extra decimal precision
- * for the coordinates (needed for animated arrows), and without the index.
+ * for the coordinates (needed for animated arrows).
  */
 interface ArrowPiece {
 	type: number,
 	coords: BDCoords,
+	index: number,
+	/** Whether the piece is at a floating point coordinate. */
+	floating: boolean,
 }
 
 /** Animated arrows are treated separately, we also need to know their direction. */
@@ -460,9 +463,11 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, bou
 
 	organizedline.forEach(idx => {
 		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
-		const arrowPiece = {
+		const arrowPiece: ArrowPiece = {
 			type: piece.type,
 			coords: bd.FromCoords(piece.coords),
+			index: piece.index,
+			floating: false,
 		};
 
 		// Is the piece off-screen?
@@ -887,7 +892,7 @@ function executeArrowShifts() {
 			// Add an animated arrow for it, since it is gonna be at a floating point coordinate
 			if (bounds.boxContainsSquareBD(boundingBoxInt!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
 
-			const piece: ArrowPiece = { type, coords: shift.end };
+			const piece: ArrowPiece = { type, coords: shift.end, index: -1, floating: true }; // Create a piece object for the arrow
 
 			// Add an arrow for every applicable direction
 			for (const lineKey of gamefile.boardsim.pieces.lines.keys()) {
@@ -1189,5 +1194,6 @@ export default {
 };
 
 export type {
-	HoveredArrow
+	ArrowPiece,
+	HoveredArrow,
 };
