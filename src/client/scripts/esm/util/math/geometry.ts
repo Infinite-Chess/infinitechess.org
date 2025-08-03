@@ -9,7 +9,7 @@
 
 import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal";
-import vectors, { Ray, Vec2 } from "./vectors";
+import vectors, { LineCoefficientsBD, Ray, Vec2 } from "./vectors";
 
 import type { BoundingBoxBD } from "./bounds";
 
@@ -99,9 +99,9 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
  * @param s2p1 Start point of segment 2
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
-function intersectLineSegments(A1: bigint, B1: bigint, C1: bigint, s1p1: Coords, s1p2: Coords, A2: bigint, B2: bigint, C2: bigint, s2p1: Coords, s2p2: Coords): BDCoords | undefined {
+function intersectLineSegments(line1Coefficients: LineCoefficientsBD, s1p1: BDCoords, s1p2: BDCoords, line2Coefficients: LineCoefficientsBD, s2p1: BDCoords, s2p2: BDCoords): BDCoords | undefined {
 	// 1. Calculate intersection of the infinite lines
-	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
+	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLinesBD(...line1Coefficients, ...line2Coefficients);
 
 	if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
 
@@ -119,14 +119,12 @@ function intersectLineSegments(A1: bigint, B1: bigint, C1: bigint, s1p1: Coords,
  * @param segEnd The ending point of the segment.
  * @returns True if the point is on the segment, false otherwise.
  */
-function isPointOnSegment(point: BDCoords, segStart: Coords, segEnd: Coords): boolean {
-	const segStartBD = bd.FromCoords(segStart);
-	const segEndBD = bd.FromCoords(segEnd);
+function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords): boolean {
 
-	const minSegX = bd.min(segStartBD[0], segEndBD[0]);
-	const maxSegX = bd.max(segStartBD[0], segEndBD[0]);
-	const minSegY = bd.min(segStartBD[1], segEndBD[1]);
-	const maxSegY = bd.max(segStartBD[1], segEndBD[1]);
+	const minSegX = bd.min(segStart[0], segEnd[0]);
+	const maxSegX = bd.max(segStart[0], segEnd[0]);
+	const minSegY = bd.min(segStart[1], segEnd[1]);
+	const maxSegY = bd.max(segStart[1], segEnd[1]);
 
 	// Check if point is within the bounding box of the segment
 	const withinX = bd.compare(point[0], minSegX) >= 0 && bd.compare(point[0], maxSegX) <= 0;
@@ -146,17 +144,17 @@ function isPointOnSegment(point: BDCoords, segStart: Coords, segEnd: Coords): bo
  * @param segP2 End point of the segment
  * @returns The intersection Coords if they intersect ON the segment, otherwise undefined.
  */
-function intersectLineAndSegment(A: bigint, B: bigint, C: bigint, segP1: Coords, segP2: Coords): BDCoords | undefined {
+function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segP1: BDCoords, segP2: BDCoords): BDCoords | undefined {
 	// 1. Get general form for the infinite line containing the segment
-	const [segA, segB, segC] = vectors.getLineGeneralFormFrom2Coords(segP1, segP2);
+	const segmentCoefficients = vectors.getLineGeneralFormFrom2CoordsBD(segP1, segP2);
 
 	// 2. Calculate intersection of the two infinite lines
 	// Uses the provided function calcIntersectionPointOfLines
-	const intersectionPoint = calcIntersectionPointOfLines(A, B, C, segA, segB, segC);
+	const intersectionPoint = calcIntersectionPointOfLinesBD(...lineCoefficients, ...segmentCoefficients);
 
 	// 3. Handle no intersection (parallel) or collinear lines.
 	// calcIntersectionPointOfLines returns undefined if determinant is 0.
-	if (!intersectionPoint) return undefined;
+	if (intersectionPoint === undefined) return undefined;
 
 	// 4. Check if the calculated intersection point lies on the actual segment
 	// The point is guaranteed to be collinear with the segment if an intersection was found.
@@ -211,7 +209,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 	}
 
 	// 5. Check if the calculated intersection point lies on the actual segment.
-	if (!isPointOnSegment(intersectionPoint, segP1, segP2)) return undefined; // Intersection point is not within the segment bounds.
+	if (!isPointOnSegment(intersectionPoint, bd.FromCoords(segP1), bd.FromCoords(segP2))) return undefined; // Intersection point is not within the segment bounds.
 
 	// 6. Check if the intersection point lies on the ray (not "behind" its start).
 	// Calculate vector from ray start to intersection.
@@ -283,38 +281,33 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
  * @returns An object containing the properties `coords`, which is the closest point on the segment,
  *          and `distance` to that point.
  */
-function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
-	const lineStartBD = bd.FromCoords(lineStart);
-
-	const dx = lineEnd[0] - lineStart[0];
-	const dy = lineEnd[1] - lineStart[1];
-	const dxBD = bd.FromBigInt(dx);
-	const dyBD = bd.FromBigInt(dy);
+function closestPointOnLineSegment(lineStart: BDCoords, lineEnd: BDCoords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
+	const dx = bd.subtract(lineEnd[0], lineStart[0]);
+	const dy = bd.subtract(lineEnd[1], lineStart[1]);
 
 	// Calculate the squared length of the segment.
 	// If the segment has zero length, the start point is the closest point.
-	const lineLengthSquared = dx * dx + dy * dy;
-	if (lineLengthSquared === 0n) { // If the segment has zero length, return the start point
-		const distance = vectors.euclideanDistanceBD(lineStartBD, point);
-		return { coords: lineStartBD, distance };
+	const lineLengthSquared: BigDecimal = bd.add(bd.multiply_fixed(dx, dx), bd.multiply_fixed(dy, dy)); // dx * dx + dy * dy
+	if (bd.areEqual(lineLengthSquared, ZERO)) { // If the segment has zero length, return the start point
+		const distance = vectors.euclideanDistanceBD(lineStart, point);
+		return { coords: lineStart, distance };
 	}
-	const lineLengthSquaredBD = bd.FromBigInt(lineLengthSquared);
 
 	// Calculate the projection parameter t.
 	// t = dotProduct((point - lineStart), (lineEnd - lineStart)) / lineLengthSquared
-	const xDiff = bd.subtract(point[0], lineStartBD[0]);
-	const yDiff = bd.subtract(point[1], lineStartBD[1]);
-	const addend1 = bd.multiply_fixed(xDiff, dxBD);
-	const addend2 = bd.multiply_fixed(yDiff, dyBD);
+	const xDiff = bd.subtract(point[0], lineStart[0]);
+	const yDiff = bd.subtract(point[1], lineStart[1]);
+	const addend1 = bd.multiply_fixed(xDiff, dx);
+	const addend2 = bd.multiply_fixed(yDiff, dy);
 	const dotProduct = bd.add(addend1, addend2);
-	let t = bd.divide_fixed(dotProduct, lineLengthSquaredBD);
+	let t = bd.divide_fixed(dotProduct, lineLengthSquared);
 
 	// Clamp t to the range [0, 1] to stay within the segment.
 	t = bd.clamp(t, ZERO, ONE);
 
 	// Calculate the coordinates of the closest point on the segment.
-	const closestX = bd.add(lineStartBD[0], bd.multiply_fixed(t, dxBD)); // lineStart[0] + t * dx
-	const closestY = bd.add(lineStartBD[1], bd.multiply_fixed(t, dyBD)); // lineStart[1] + t * dy
+	const closestX = bd.add(lineStart[0], bd.multiply_fixed(t, dx)); // lineStart[0] + t * dx
+	const closestY = bd.add(lineStart[1], bd.multiply_fixed(t, dy)); // lineStart[1] + t * dy
 	const closestPoint: BDCoords = [closestX, closestY];
 
 	// Calculate the distance from the original point to the closest point on the segment.

@@ -3,7 +3,7 @@
  */
 
 
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
+import type { Coords, CoordsKey, DoubleCoords } from '../../chess/util/coordutil.js';
 
 
 import space from '../misc/space.js';
@@ -171,7 +171,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 }
 
 /** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
-function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coords[], dists?: number[] } {
+function getImagesBelowWorld(world: DoubleCoords, trackDists: boolean): { images: Coords[], dists?: number[] } {
 	const imagesHovered: Coords[] = [];
 	const dists: number[] = [];
 
@@ -187,10 +187,10 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 
 	function processPiece(coords: Coords) {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
-		if (vectors.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
+		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
 			imagesHovered.push(coords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(vectors.euclideanDistanceBD(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistanceDoubles(coordsWorld, world));
 		}
 	}
 

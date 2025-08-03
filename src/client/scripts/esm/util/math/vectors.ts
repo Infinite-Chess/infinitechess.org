@@ -54,6 +54,13 @@ type LineCoefficients = [bigint, bigint, bigint];
 type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
 
 
+// Constants ----------------------------------------------------------------------
+
+
+const ZERO: BigDecimal = bd.FromBigInt(0n);
+const ONE: BigDecimal = bd.FromBigInt(1n);
+
+
 // Construction ----------------------------------------------------------------------
 
 
@@ -127,6 +134,23 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): LineCo
 	const A = coords2[1] - coords1[1]; // y2 - y1
 	const B = coords1[0] - coords2[0]; // x1 - x2
 	const C = coords2[0] * coords1[1] - coords1[0] * coords2[1]; // x2*y1 - x1*y2
+
+	return [A, B, C];
+}
+
+/**
+ * {@link getLineGeneralFormFrom2Coords} but for BigDecimal coordinates.
+ */
+function getLineGeneralFormFrom2CoordsBD(coords1: BDCoords, coords2: BDCoords): LineCoefficientsBD {
+	// Handle the case of a vertical line (infinite slope)
+	// The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
+	if (bd.areEqual(coords1[0], coords2[0])) return [ONE, ZERO, bd.negate(coords1[0])];
+
+	// To avoid division and floating-point/truncation issues, we use the cross-multiplication method.
+	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
+	const A = bd.subtract(coords2[1], coords1[1]); // y2 - y1
+	const B = bd.subtract(coords1[0], coords2[0]); // x1 - x2
+	const C = bd.subtract(bd.multiply_fixed(coords2[0], coords1[1]), bd.multiply_fixed(coords1[0], coords2[1])); // x2*y1 - x1*y2
 
 	return [A, B, C];
 }
@@ -315,6 +339,7 @@ export default {
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFromCoordsAndVecBD,
 	getLineGeneralFormFrom2Coords,
+	getLineGeneralFormFrom2CoordsBD,
 	convertCoeficcientsToBD,
 	calculateVectorFromPoints,
 	calculateVectorFromBDPoints,
