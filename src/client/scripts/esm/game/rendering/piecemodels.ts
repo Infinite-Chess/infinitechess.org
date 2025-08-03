@@ -245,7 +245,6 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
 	for (let i: number = 0; i < instanceData.length; i++) {
 		// Convert the bigint to a number. The Float32Array will store it as a 32-bit float.
 		// Be aware of potential precision loss for very large BigInts.
-		// Naturally, precision loss occurs.
 		result[i] = Number(instanceData[i]);
 	}
 
