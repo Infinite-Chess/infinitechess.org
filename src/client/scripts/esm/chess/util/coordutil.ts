@@ -72,11 +72,8 @@ function areBDCoordsEqual(coord1: BDCoords, coord2: BDCoords): boolean {
 /**
  * Adds two coordinate pairs together component-wise.
  */
-function addCoordinates(coord1: Coords, coord2: Coords): Coords {
-	return [
-		coord1[0] + coord2[0],
-		coord1[1] + coord2[1]
-	];
+function addCoords(coord1: Coords, coord2: Coords): Coords {
+	return [coord1[0] + coord2[0], coord1[1] + coord2[1]];
 }
 
 /**
@@ -86,10 +83,7 @@ function addCoordinates(coord1: Coords, coord2: Coords): Coords {
  * @returns The resulting coordinate pair after subtracting.
  */
 function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
-	return [
-		minuendCoord[0] - subtrahendCoord[0],
-		minuendCoord[1] - subtrahendCoord[1]
-	];
+	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
 }
 
 /**
@@ -99,10 +93,7 @@ function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
  * @returns The resulting coordinate pair after subtracting.
  */
 function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BDCoords {
-	return [
-		bd.subtract(minuendCoord[0], subtrahendCoord[0]),
-		bd.subtract(minuendCoord[1], subtrahendCoord[1])
-	];
+	return [bd.subtract(minuendCoord[0], subtrahendCoord[0]), bd.subtract(minuendCoord[1], subtrahendCoord[1])];
 }
 
 /**
@@ -118,16 +109,13 @@ function copyCoords(coords: Coords): Coords {
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
  */
-function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
-	const bdstart: BDCoords = bd.FromCoords(start);
-	const bddiff: BDCoords = bd.FromCoords([end[0] - start[0], end[1] - start[1]]);
+function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
+	const bddiff: BDCoords = subtractBDCoords(end, start);
 	const bdt: BigDecimal = bd.FromNumber(t);
 	const travelX = bd.multiply_fixed(bddiff[0], bdt);
 	const travelY = bd.multiply_fixed(bddiff[1], bdt);
-	return [
-		bd.add(bdstart[0], travelX),
-		bd.add(bdstart[1], travelY),
-    ];
+
+	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
 }
 
 
@@ -137,7 +125,7 @@ export default {
 	getCoordsFromKey,
 	areCoordsEqual,
 	areBDCoordsEqual,
-	addCoordinates,
+	addCoords,
 	subtractCoords,
 	subtractBDCoords,
 	copyCoords,

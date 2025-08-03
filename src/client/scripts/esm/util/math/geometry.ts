@@ -413,10 +413,10 @@ function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords
  * @param box - The bounding box the line intersects.
  * @returns An array of intersection points as BDCoords, sorted by distance along the vector.
  */
-function findLineBoxIntersections(startCoords: Coords, direction: Vec2, box: BoundingBoxBD): IntersectionPoint[] {
+function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: BoundingBoxBD): IntersectionPoint[] {
 
 	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
-	const [bd_x0, bd_y0] = bd.FromCoords(startCoords);
+	const [bd_x0, bd_y0] = startCoords;
 	const [bd_dx, bd_dy] = bd.FromCoords(direction);
 	
 	const { left, right, bottom, top } = box;

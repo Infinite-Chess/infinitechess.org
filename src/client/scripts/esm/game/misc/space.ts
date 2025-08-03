@@ -16,14 +16,14 @@
 // @ts-ignore
 import camera from "../rendering/camera.js";
 import boardpos from '../rendering/boardpos.js';
-import bigdecimal from "../../util/bigdecimal/bigdecimal.js";
+import bd from "../../util/bigdecimal/bigdecimal.js";
 import board from "../rendering/boardtiles.js";
 
 import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
-const HALF: BigDecimal = bigdecimal.FromNumber(0.5);
+const HALF: BigDecimal = bd.FromNumber(0.5);
 
 
 /**
@@ -35,8 +35,8 @@ function convertWorldSpaceToCoords(worldCoords: DoubleCoords): BDCoords {
 	const boardScale: BigDecimal = boardpos.getBoardScale();
 
 	function getAxis(worldCoords: number, boardPos: BigDecimal): BigDecimal {
-		const positionBD = bigdecimal.FromNumber(worldCoords);
-		return bigdecimal.add(bigdecimal.divide_floating(positionBD, boardScale), boardPos);
+		const positionBD = bd.FromNumber(worldCoords);
+		return bd.add(bd.divide_floating(positionBD, boardScale), boardPos);
 	}
 
 	return [
@@ -51,32 +51,28 @@ function convertWorldSpaceToCoords_Rounded(worldCoords: DoubleCoords): Coords {
 	return roundCoords(coordsBD);
 }
 
+/** Returns the integer coordinate that contains the floating point coordinate provided. */
+function roundCoord(coord: BigDecimal): BigDecimal {
+	const squareCenter = board.gsquareCenter();
+	return bd.floor(bd.add(coord, squareCenter));
+}
+
 /** Returns the integer coordinates that contain the floating point coordinate provided. */
 function roundCoords(coords: BDCoords): Coords {
-	const squareCenter = board.gsquareCenter();
-
-	function roundAxis(coord: BigDecimal): bigint {
-		const floorBD = bigdecimal.floor(bigdecimal.add(coord, squareCenter));
-		return bigdecimal.toBigInt(floorBD);
-	}
-
-	return [
-		roundAxis(coords[0]),
-		roundAxis(coords[1])
-	];
+	return [bd.toBigInt(roundCoord(coords[0])), bd.toBigInt(roundCoord(coords[1]))];
 }
 
 // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
 function convertCoordToWorldSpace(coords: BDCoords, position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale()): DoubleCoords {
 	const squareCenter = board.gsquareCenter();
 
-	const halfMinusSquareCenter = bigdecimal.subtract(HALF, squareCenter);
+	const halfMinusSquareCenter = bd.subtract(HALF, squareCenter);
 
 	function getAxis(coord: BigDecimal, position: BigDecimal): number {
-		const diff = bigdecimal.subtract(coord, position);
-		const diffPlusHalf = bigdecimal.add(diff, halfMinusSquareCenter);
-		const scaled = bigdecimal.multiply_floating(diffPlusHalf, scale);
-		return bigdecimal.toNumber(scaled);
+		const diff = bd.subtract(coord, position);
+		const diffPlusHalf = bd.add(diff, halfMinusSquareCenter);
+		const scaled = bd.multiply_floating(diffPlusHalf, scale);
+		return bd.toNumber(scaled);
 	}
 
 	// (coords[0] - position[0] + 0.5 - squareCenter) * scale
@@ -88,9 +84,9 @@ function convertCoordToWorldSpace(coords: BDCoords, position: BDCoords = boardpo
 
 function convertCoordToWorldSpace_IgnoreSquareCenter(coords: BDCoords, position = boardpos.getBoardPos(), scale = boardpos.getBoardScale()): DoubleCoords {
 	function getAxis(coord: BigDecimal, position: BigDecimal): number {
-		const diff = bigdecimal.subtract(coord, position);
-		const scaled = bigdecimal.multiply_floating(diff, scale);
-		return bigdecimal.toNumber(scaled);
+		const diff = bd.subtract(coord, position);
+		const scaled = bd.multiply_floating(diff, scale);
+		return bd.toNumber(scaled);
 	}
 	// (coords[0] - position[0]) * scale
 	return [
@@ -111,16 +107,17 @@ function convertWorldSpaceToPixels_Virtual(value: number): number {
 
 /** Tells you how many square units span the grid value you pass in. */
 function convertWorldSpaceToGrid(value: number): BigDecimal {
-	const valueBD = bigdecimal.FromNumber(value);
+	const valueBD = bd.FromNumber(value);
 	const scale = boardpos.getBoardScale();
 	// value / scale
-	return bigdecimal.divide_floating(valueBD, scale);
+	return bd.divide_floating(valueBD, scale);
 }
 
 
 export default {
 	convertWorldSpaceToCoords,
 	convertWorldSpaceToCoords_Rounded,
+	roundCoord,
 	roundCoords,
 	convertCoordToWorldSpace,
 	convertCoordToWorldSpace_IgnoreSquareCenter,
