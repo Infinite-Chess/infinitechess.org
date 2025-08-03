@@ -14,8 +14,8 @@ import highlightline from "./highlightline.js";
 import boardpos from "../boardpos.js";
 import geometry from "../../../util/math/geometry.js";
 import bd from "../../../util/bigdecimal/bigdecimal.js";
-import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
-import vectors, { Vec2 } from "../../../util/math/vectors.js";
+import coordutil, { BDCoords, Coords, CoordsKey } from "../../../chess/util/coordutil.js";
+import vectors, { Vec2, Vec2Key } from "../../../util/math/vectors.js";
 
 
 
@@ -40,24 +40,30 @@ function getLines(): Line[] {
 
 	for (const [strline, limits] of Object.entries(legalmoves.sliding)) {
 		const slideKey = strline as CoordsKey;
-		const line = coordutil.getCoordsFromKey(slideKey);
-		const lineIsVertical = line[0] === 0;
+		const step = coordutil.getCoordsFromKey(slideKey);
+		const negStep: Vec2 = vectors.negateVector(step);
+		const lineIsVertical = step[0] === 0n;
+		const cappingAxis = lineIsVertical ? 1 : 0;
 
-		const intersectionPoints = geometry.findLineBoxIntersections(bd.FromCoords(pieceCoords), line, boundingBox).map(intersection => intersection.coords);
+		const intersectionPoints = geometry.findLineBoxIntersections(bd.FromCoords(pieceCoords), step, boundingBox).map(intersection => intersection.coords);
 		if (intersectionPoints.length < 2) continue;
-        
-		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, line, false);
-		// const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
-		const start = clampPointToSlideLimit(intersectionPoints[0]!, leftLimitPointCoord, false, lineIsVertical);
 
-		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, line, true);
-		// const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
-		const end = clampPointToSlideLimit(intersectionPoints[1]!, rightLimitPointCoord, true, lineIsVertical);
+		let start: BDCoords = intersectionPoints[0]!;
+		if (limits[0] !== null) { // The left slide limit has a chance of not reaching intsect1
+			const leftLimit: BDCoords = bd.FromCoords([pieceCoords[0] + negStep[0] * limits[0], pieceCoords[1] + negStep[1] * limits[0]]);
+			if (bd.compare(leftLimit[cappingAxis], start[cappingAxis]) > 0) start = leftLimit;
+		}
+
+		let end: BDCoords = intersectionPoints[1]!;
+		if (limits[1] !== null) { // The right slide limit has a chance of not reaching intsect2
+			const rightLimit: BDCoords = bd.FromCoords([pieceCoords[0] + step[0] * limits[1], pieceCoords[1] + step[1] * limits[1]]);
+			if (bd.compare(rightLimit[cappingAxis], end[cappingAxis]) < 0) end = rightLimit;
+		}
 
 		// Skip if zero length
-		if (coordutil.areCoordsEqual(start, end)) continue;
+		if (coordutil.areBDCoordsEqual(start, end)) continue;
 
-		const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, line);
+		const coefficients = vectors.getLineGeneralFormFromCoordsAndVecBD(start, step);
 
 		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
 	};
@@ -89,50 +95,25 @@ function getLineComponents(): { rays: Ray[], segments: Segment[] } {
 	const legalmoves = selection.getLegalMovesOfSelectedPiece()!; // CAREFUL not to modify!
 
 	for (const [strline, limits] of Object.entries(legalmoves.sliding)) {
-		const slideKey = strline as CoordsKey;
-		const step = coordutil.getCoordsFromKey(slideKey);
+		const slideKey = strline as Vec2Key;
+		const step: Vec2 = vectors.getVec2FromKey(slideKey);
+		const negStep: Vec2 = vectors.negateVector(step);
 
-		let start: Coords = [...pieceCoords];
-		const leftLimitPointCoord = getPointOfDiagSlideLimit(start, limits, step, false);
-		processComponent(pieceCoords, leftLimitPointCoord, step, false);
-
-		start = [...pieceCoords];
-		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, step, true);
-		processComponent(pieceCoords, rightLimitPointCoord, step, true);
+		processComponent(coordutil.copyCoords(pieceCoords), negStep, limits[0]); // Negative slide direction
+		processComponent(coordutil.copyCoords(pieceCoords), step, limits[1]); // Positive slide direction
 	};
 
-	function processComponent(start: Coords, leftRightLimitPointCoord: Coords, step: Vec2, positive: boolean) {
-		const negatedStep: Coords = positive ? [...step] : [-step[0], -step[1]]; // Negate the step if we're going left/down
-
-		if (isFinite(leftRightLimitPointCoord[0]) && isFinite(leftRightLimitPointCoord[1])) { // Can't slide infinitly => SEGMENT
-			const end = leftRightLimitPointCoord;
-			// Skip if zero length
-			if (coordutil.areCoordsEqual(start, end)) return;
+	function processComponent(start: Coords, step: Vec2, limit: bigint | null) {
+		if (limit === null) { // Can slide infinitly => RAY
+			const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, step);
+			rays.push({ start, vector: step, line: coefficients });
+		} else { // Can't slide infinitly => SEGMENT
+			const end: Coords = [start[0] + step[0] * limit, start[1] + step[1] * limit];
 			segments.push({ start, end });
-		} else { // Can slide infinitly => RAY
-			const vector: Vec2 = negatedStep;
-			const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, vector);
-			rays.push({ start, vector, line: coefficients });
 		}
 	}
 
 	return { rays, segments };
-}
-
-/** Calculates the furthest square the piece can slide to, given the direction, parity, and moveset. */
-function getPointOfDiagSlideLimit(pieceCoords: Coords, moveset: Coords, line: Vec2, positive: boolean): Coords { // positive is true if it's the right/top half of the slide direction
-	const steps = positive ? moveset[1] : moveset[0];
-	const yDiff = line[1] * steps;
-	const xDiff = line[0] * steps;
-	return [pieceCoords[0] + xDiff, pieceCoords[1] + yDiff];
-}
-
-/** Doesn't let a point exceed how far the piece can slide. */
-function clampPointToSlideLimit(point: Coords, slideLimit: Coords, positive: boolean, lineIsVertical: boolean): Coords { // slideLimit = [x,y]
-	const cappingAxis = lineIsVertical ? 1 : 0;
-	if (!positive && point[cappingAxis] < slideLimit[cappingAxis]
-        || positive && point[cappingAxis] > slideLimit[cappingAxis]) return [...slideLimit];
-	return [...point];
 }
 
 

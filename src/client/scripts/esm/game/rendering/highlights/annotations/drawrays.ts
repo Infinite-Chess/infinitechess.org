@@ -175,7 +175,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 		lines.push({
 			start,
 			end: intersectionPoints[1]!.coords,
-			coefficients: ray.line,
+			coefficients: vectors.convertCoeficcientsToBD(ray.line),
 			color,
 		});
 	}

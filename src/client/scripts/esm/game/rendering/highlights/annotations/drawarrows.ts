@@ -211,7 +211,7 @@ function getDataArrow(
 	const invMultTimesLength: number = bd.toNumber(bd.multiply_fixed(length_coords, invMult));
 	const t = ARROW.BASE_OFFSET / invMultTimesLength; // Proportion of the arrow length to offset the base
 	if (t >= 1) return []; // No arrow drawn if base offset is greater than the entire arrow length (else it would be drawn with negative length).
-	const trueStartCoords = coordutil.lerpCoords(arrow.start, arrow.end, t);
+	const trueStartCoords = coordutil.lerpCoords(bd.FromCoords(arrow.start), bd.FromCoords(arrow.end), t);
 
 	// Calculate the base and tip world space coordinates
 	const startWorld = space.convertCoordToWorldSpace(trueStartCoords);

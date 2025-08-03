@@ -32,7 +32,7 @@ type Vec3 = [number,number,number]
 /**
  * A maethematical ray, starting from a single point
  * and going out to infinity in one direction.
- * */
+ */
 type Ray = {
     start: Coords
     vector: Vec2
@@ -346,4 +346,5 @@ export type {
 	Vec3,
 	Ray,
 	LineCoefficients,
+	LineCoefficientsBD,
 };
