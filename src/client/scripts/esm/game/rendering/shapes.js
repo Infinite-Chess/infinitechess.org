@@ -1,9 +1,11 @@
 
+// src/client/scripts/esm/game/rendering/shapes.ts
+
 import board from "./boardtiles.js";
 import boardpos from "./boardpos.js";
-import primitives from "./primitives.js";
 import perspective from "./perspective.js";
 import spritesheet from "./spritesheet.js";
+import primitives from "./primitives.js";
 import { createModel } from "./buffermodel.js";
 
 
@@ -16,7 +18,7 @@ import { createModel } from "./buffermodel.js";
  * Returns a bounding box of a square.
  * ACCOUNTS FOR SQUARE CENTER.
  * REQUIRES uniform transformations before rendering.
- * @param {number[]} coords 
+ * @param {Coords} coords 
  * @returns {BoundingBox}
  */
 function getBoundingBoxOfCoord(coords) {
@@ -240,8 +242,8 @@ function getModelCircle3D(x, y, z, radius, resolution, r, g, b, a) {
  * @param {number} inRad - The radius of the inner edge of the ring.
  * @param {number} outRad - The radius of the outer edge of the ring.
  * @param {number} resolution - The number of points rendered along the ring's edge; must be 3 or greater.
- * @param {number[]} innerColor - RGBA color array for the inner edge [r1, g1, b1, a1].
- * @param {number[]} outerColor - RGBA color array for the outer edge [r2, g2, b2, a2].
+ * @param {import("../../util/math/math.js").Color} innerColor - RGBA color array for the inner edge [r1, g1, b1, a1].
+ * @param {Color} outerColor - RGBA color array for the outer edge [r2, g2, b2, a2].
  * @returns {BufferModel} The buffer model representing the gradient-colored ring.
  */
 function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
