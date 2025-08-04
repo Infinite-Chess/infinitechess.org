@@ -1071,6 +1071,15 @@ function coordsToBigInt(coords: BDCoords): Coords {
 }
 
 /**
+ * Converts a pair of bigdecimal coords into DoubleCoords.
+ * Only call if you are CONFIDENT all both coordinates won't overflow or underflow!
+ */
+function coordsToDoubles(coords: BDCoords): DoubleCoords {
+	// Convert each coordinate to a BigInt using the toBigInt function.
+	return [toNumber(coords[0]), toNumber(coords[1])];
+}
+
+/**
  * Most efficient method to convert a BigDecimal to a number.
  * Only use if you are CONFIDENT the BigDecimal's mantissa (bigint property)
  * will not overflow or underflow the standard javascript number
@@ -1371,6 +1380,7 @@ export default {
 	// Conversions and Utility
 	toBigInt,
 	coordsToBigInt,
+	coordsToDoubles,
 	// toExactNumber,
 	toNumber,
 	toExactString,
