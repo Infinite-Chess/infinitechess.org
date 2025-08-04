@@ -100,7 +100,7 @@ function getStartingAreaBox(boardsim: Board): BoundingBoxBD {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 	if (coordsList.length === 0) coordsList.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
-	return bounds.getBoxFromCoordsList(coordsList);
+	return bounds.getBDBoxFromCoordsList(coordsList);
 }
 
 /**

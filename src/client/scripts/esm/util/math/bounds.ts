@@ -64,7 +64,7 @@ const TWO = bd.FromNumber(2.0);
 /**
  * Calculates the minimum bounding box that contains all the provided coordinates.
  */
-function getBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
+function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 	// Initialize the bounding box using the first coordinate
 	const firstPiece = coordsList[0]!;
 	const box: BoundingBox = {
@@ -79,7 +79,15 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
 		expandBoxToContainSquare(box, coord);
 	}
 
-	return castBoundingBoxToBigDecimal(box);
+	return box;
+}
+
+/**
+ * {@link getBoxFromCoordsList} but returns a BigDecimal bounding box instead of a bigint one.
+ */
+function getBDBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
+	const integerBox = getBoxFromCoordsList(coordsList);
+	return castBoundingBoxToBigDecimal(integerBox);
 }
 
 function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
@@ -198,9 +206,11 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 export default {
 	// Construction
 	getBoxFromCoordsList,
+	getBDBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
 	// castBDBoundingBoxToBigint,
+	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
 

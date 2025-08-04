@@ -156,7 +156,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		position,
 		state_global,
 		fullMove,
-		box: bounds.getBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces)),
+		box: bounds.getBDBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces)),
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
