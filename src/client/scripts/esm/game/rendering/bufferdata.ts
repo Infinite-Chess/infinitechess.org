@@ -118,20 +118,6 @@ function getDataQuad_Texture(left: number, bottom: number, right: number, top: n
     ];
 }
 
-// Returns an array of the data that can be entered into the buffer model!
-function getDataQuad_Texture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
-	return [
-    //     Position               Texture Coord
-        left, bottom, z,     texleft, texbottom,
-        left, top, z,       texleft, textop,
-        right, bottom, z,       texright, texbottom,
-
-        right, bottom, z,       texright, texbottom,
-        left, top, z,       texleft, textop,
-        right, top, z,         texright, textop
-    ];
-}
-
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
 function getDataQuad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
@@ -175,23 +161,23 @@ function getDataRect({ left, right, bottom, top }: DoubleBoundingBox, [r,g,b,a]:
 // Circles...
 
 // Hollow circle
-function getDataCircle(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
-	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
+// function getDataCircle(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
+// 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
-	const data: number[] = [];
+// 	const data: number[] = [];
 
-	for (let i = 0; i < resolution; i++) {
-		const theta = (i / resolution) * 2 * Math.PI;
+// 	for (let i = 0; i < resolution; i++) {
+// 		const theta = (i / resolution) * 2 * Math.PI;
 
-		const thisX = x + radius * Math.cos(theta);
-		const thisY = y + radius * Math.sin(theta);
+// 		const thisX = x + radius * Math.cos(theta);
+// 		const thisY = y + radius * Math.sin(theta);
 
-		// Points around the circle
-		data.push(thisX, thisY, r, g, b, a);
-	}
+// 		// Points around the circle
+// 		data.push(thisX, thisY, r, g, b, a);
+// 	}
 
-	return data;
-}
+// 	return data;
+// }
 
 /**
  * A circle, solid color.
@@ -288,39 +274,39 @@ function getDataGlowDot(x: number, y: number, radius: number, resolution: number
 
 // A ring with color points for the inner and outer edges.
 // Resolution is the number of points around the ring.
-function getDataRingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
-	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
+// function getDataRingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
+// 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
-	const data: number[] = [];
+// 	const data: number[] = [];
 
-	for (let i = 0; i < resolution; i++) {
-		const theta = (i / resolution) * 2 * Math.PI;
-		const nextTheta = ((i + 1) / resolution) * 2 * Math.PI;
+// 	for (let i = 0; i < resolution; i++) {
+// 		const theta = (i / resolution) * 2 * Math.PI;
+// 		const nextTheta = ((i + 1) / resolution) * 2 * Math.PI;
 
-		const innerX = x + inRad * Math.cos(theta);
-		const innerY = y + inRad * Math.sin(theta);
-		const outerX = x + outRad * Math.cos(theta);
-		const outerY = y + outRad * Math.sin(theta);
+// 		const innerX = x + inRad * Math.cos(theta);
+// 		const innerY = y + inRad * Math.sin(theta);
+// 		const outerX = x + outRad * Math.cos(theta);
+// 		const outerY = y + outRad * Math.sin(theta);
 
-		const innerXNext = x + inRad * Math.cos(nextTheta);
-		const innerYNext = y + inRad * Math.sin(nextTheta);
-		const outerXNext = x + outRad * Math.cos(nextTheta);
-		const outerYNext = y + outRad * Math.sin(nextTheta);
+// 		const innerXNext = x + inRad * Math.cos(nextTheta);
+// 		const innerYNext = y + inRad * Math.sin(nextTheta);
+// 		const outerXNext = x + outRad * Math.cos(nextTheta);
+// 		const outerYNext = y + outRad * Math.sin(nextTheta);
 
-		// Add triangles for the current and next segments
-		data.push(
-			innerX, innerY, r, g, b, a,
-			outerX, outerY, r, g, b, a,
-			innerXNext, innerYNext, r, g, b, a,
+// 		// Add triangles for the current and next segments
+// 		data.push(
+// 			innerX, innerY, r, g, b, a,
+// 			outerX, outerY, r, g, b, a,
+// 			innerXNext, innerYNext, r, g, b, a,
 
-			outerX, outerY, r, g, b, a,
-			outerXNext, outerYNext, r, g, b, a,
-			innerXNext, innerYNext, r, g, b, a
-		);
-	}
+// 			outerX, outerY, r, g, b, a,
+// 			outerXNext, outerYNext, r, g, b, a,
+// 			innerXNext, innerYNext, r, g, b, a
+// 		);
+// 	}
 
-	return data;
-}
+// 	return data;
+// }
 
 /**
  * A ring with color points for the inner and outer edges.
@@ -362,72 +348,6 @@ function getDataRing(x: number, y: number, inRad: number, outRad: number, resolu
 }
 
 
-// Modifying data...
-
-// Rotates the piece 180 of a stride-4 model utilizing the texture shader.
-function rotateDataTexture(data: number[], rotation = 1): number[] {
-	const copiedData = data.slice(); // Creates shallow copy (data array must not contain objects)
-	const texWidth = spritesheet.getSpritesheetDataPieceWidth() * rotation;
-
-	// Point 1
-	copiedData[2] += texWidth;
-	copiedData[3] += texWidth;
-
-	// Point 2
-	copiedData[6] += texWidth;
-	copiedData[7] -= texWidth;
-
-	// Point 3
-	copiedData[10] -= texWidth;
-	copiedData[11] += texWidth;
-
-	// Point 4
-	copiedData[14] -= texWidth;
-	copiedData[15] += texWidth;
-
-	// Point 5
-	copiedData[18] += texWidth;
-	copiedData[19] -= texWidth;
-
-	// Point 6
-	copiedData[22] -= texWidth;
-	copiedData[23] -= texWidth;
-
-	return copiedData;
-}
-
-// Rotates the piece 180 of a stride-8 model utilizing the colored-texture shader.
-function rotateDataColorTexture(data: number[], rotation = 1): number[] {
-	const copiedData = data.slice(); // Creates shallow copy (data array must not contain objects)
-	const texWidth = spritesheet.getSpritesheetDataPieceWidth() * rotation;
-
-	// Point 1
-	copiedData[2] += texWidth;
-	copiedData[3] += texWidth;
-
-	// Point 2
-	copiedData[10] += texWidth;
-	copiedData[11] -= texWidth;
-
-	// Point 3
-	copiedData[18] -= texWidth;
-	copiedData[19] += texWidth;
-
-	// Point 4
-	copiedData[26] -= texWidth;
-	copiedData[27] += texWidth;
-
-	// Point 5
-	copiedData[34] += texWidth;
-	copiedData[35] -= texWidth;
-
-	// Point 6
-	copiedData[42] -= texWidth;
-	copiedData[43] -= texWidth;
-
-	return copiedData;
-}
-
 
 
 export default {
@@ -436,16 +356,11 @@ export default {
 	getDataQuad_Color,
 	getDataQuad_Color3D,
 	getDataQuad_Texture,
-	getDataQuad_Texture3D,
 	getDataQuad_ColorTexture,
 	getDataQuad_ColorTexture3D,
 	getDataRect,
-	getDataCircle,
 	getDataBoxTunnel,
 	getDataCircle_TRIANGLES,
 	getDataGlowDot,
-	getDataRingSolid,
 	getDataRing,
-	rotateDataTexture,
-	rotateDataColorTexture,
 };

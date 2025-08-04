@@ -115,6 +115,11 @@ async function initTextures() {
 }
 
 
+/** Returns what Z level the board tiles should be rendered at this frame. */
+function getRelativeZ() {
+	return perspective.getEnabled() ? perspectiveMode_z : 0;
+}
+
 function gsquareCenter() {
 	return squareCenter;
 }
@@ -191,7 +196,6 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 		return;
 	}
 
-	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
 	const boardTexture = isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
@@ -228,8 +232,8 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], startX, endX);
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], startY, endY);
 	
-	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
-	return createModel(data, 3, "TRIANGLES", true, boardTexture);
+	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
+	return createModel(data, 2, "TRIANGLES", true, boardTexture);
 }
 
 function renderMainBoard() {
@@ -238,8 +242,10 @@ function renderMainBoard() {
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
 	// The other option is to regenerate it as much as highlighted squares, with the bounding box.
 	const model = generateBoardModel(false);
-	if (!model) return; // Model not defined because the texture was not fully loaded yet
-	model.render();
+	if (!model) return; // Too small, would cause graphical glitches to render
+
+	const z = getRelativeZ();
+	model.render([0,0,z]);
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
@@ -330,6 +336,8 @@ function render() {
 }
 
 function renderFractalBoards() {
+	const z = getRelativeZ();
+
 	const e = -bigdecimal.log10(boardpos.getBoardScale());
 
 	const startE = 0.5; // 0.5   lower = starts coming in quicker
@@ -347,7 +355,7 @@ function renderFractalBoards() {
 	let zoom = bigdecimal.power(TEN, zeroCount);
 	let x = (firstInterval - e) / length;
 	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
-	generateBoardModel(true, zoom, opacity)?.render();
+	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
 
 	// 2nd most-zoomed out board
 	firstInterval -= interval;
@@ -358,14 +366,14 @@ function renderFractalBoards() {
 	zoom = bigdecimal.power(TEN, zeroCount);
 	x = (firstInterval - e) / length; // 0 - 1
 	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
-	generateBoardModel(true, zoom, opacity)?.render();
+	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
 }
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
 function renderSolidCover() {
 	// const dist = perspective.distToRenderBoard;
 	const dist = camera.getZFar() / Math.SQRT2;
-	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
+	const z = getRelativeZ();
 	const cameraZ = camera.getPosition(true)[2];
 
 	const r = (lightTiles[0] + darkTiles[0]) / 2;
