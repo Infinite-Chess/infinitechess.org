@@ -1,0 +1,84 @@
+
+// src/client/scripts/esm/game/rendering/promotionlines.ts
+
+/**
+ * This script handles the rendering of our promotion lines.
+ */
+
+
+import type { Color } from '../../util/math/math.js';
+
+import boardtiles from './boardtiles.js';
+import gameslot from '../chess/gameslot.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import boardpos from './boardpos.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
+import { players } from '../../chess/util/typeutil.js';
+import { createModel } from './buffermodel.js';
+import primitives from './primitives.js';
+import camera from './camera.js';
+
+
+// ===================================== Constants =====================================
+
+
+/** How many tiles on both ends the promotion lines should extend past the farthest piece */
+const EXTRA_LENGTH = 2;
+/** Vertical thickness of the promotion lines. */
+const THICKNESS = 0.01;
+
+
+// ===================================== Functions =====================================
+
+
+function render(): void {
+	const gamefile = gameslot.getGamefile()!;
+	if (gamefile.basegame.gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
+	
+	// Generate the vertex data
+
+	const position = boardpos.getBoardPos();
+	const scale = boardpos.getBoardScaleAsNumber();
+
+	let left: number;
+	let right: number;
+
+	if (gamefile.boardsim.editor) {
+		// In editor mode, the promotion lines extend to the edges of the screen
+		({ left, right } = camera.getScreenBoundingBox(false));
+	} else {
+		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim);
+		left = (bd.toNumber(bd.subtract(startPositionBox.left, position[0])) - EXTRA_LENGTH) * scale;
+		right = (bd.toNumber(bd.subtract(startPositionBox.right, position[0])) + EXTRA_LENGTH) * scale;
+	}
+
+	const squareCenterNum = bd.toNumber(boardtiles.gsquareCenter());
+	const color: Color = [0,0,0,1];
+	const vertexData: number[] = [];
+
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.WHITE]!, 1);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.BLACK]!, 0);
+
+	function addDataForSide(ranks: bigint[], yShift: 1 | 0): void {
+		ranks.forEach(rank => {
+			const rankBD = bd.FromBigInt(rank);
+			const relativeRank: number = bd.toNumber(bd.subtract(rankBD, position[1])); // Subtract our board position
+
+			const bottom = relativeRank - squareCenterNum + yShift - THICKNESS;
+			const top = relativeRank - squareCenterNum + yShift + THICKNESS;
+			vertexData.push(...primitives.Quad_Color(left, bottom, right, top, color));
+		});
+	}
+
+	// Create and Render the model
+
+	createModel(vertexData, 2, "TRIANGLES", true).render();
+}
+
+
+// ===================================== Exports =====================================
+
+
+export default {
+	render
+};

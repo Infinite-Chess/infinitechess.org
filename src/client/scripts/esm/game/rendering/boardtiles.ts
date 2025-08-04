@@ -401,7 +401,7 @@ function renderSolidCover() {
  * @param debugMode - Whether developer mode is enabled.
  * @returns The bounding box
  */
-function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode: boolean): BoundingBoxBD {
+function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode?: boolean): BoundingBoxBD {
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 
 	function getAxisEdges(position: BigDecimal, screenEnd: number): [BigDecimal, BigDecimal] {
