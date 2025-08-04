@@ -12,7 +12,9 @@
 import type { Color } from '../../util/math/math.js';
 
 
-// Quads ----------------------------------------------------------------------------------------------------------
+
+// =========================================== Quads ==================================================
+
 
 
 /** [TRIANGLES] Generates vertex data for a solid-colored 2D quad. */
@@ -97,7 +99,9 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
 }
 
 
-// Circles ----------------------------------------------------------------------------------------------------------
+
+// =========================================== Circles ================================================
+
 
 
 /** [LINE_LOOP] Generates vertex data for the outline of a hollow circle. */
@@ -236,7 +240,9 @@ function Ring(x: number, y: number, inRad: number, outRad: number, resolution: n
 }
 
 
-// Other shapes ----------------------------------------------------------------------------------------------------------
+
+// =========================================== Other Shapes ================================================
+
 
 
 /** [TRIANGLES] Generates vertex data for a four-sided, hollow rectangular prism. */
@@ -274,7 +280,9 @@ function BoxTunnel(left: number, bottom: number, startZ: number, right: number, 
 }
 
 
-// Exports ------------------------------------------------------------------------------------------
+
+// =========================================== Exports ================================================
+
 
 
 export default {
