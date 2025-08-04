@@ -42,7 +42,7 @@ import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 // @ts-ignore
-import bufferdata from '../bufferdata.js';
+import primitives from '../primitives.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
@@ -1057,7 +1057,7 @@ function regenerateModelAndRender() {
 
 	// Initialize the data arrays...
 
-	const vertexData_Pictures: number[] = bufferdata.Quad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
+	const vertexData_Pictures: number[] = primitives.Quad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
 	const instanceData_Pictures: number[] = [];
 
 	const vertexData_Arrows: number[] = getVertexDataOfArrow(worldHalfWidth);

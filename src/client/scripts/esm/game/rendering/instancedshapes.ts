@@ -18,7 +18,7 @@ import type { Color } from "../../util/math/math.js";
 
 import board from "./boardtiles.js";
 // @ts-ignore
-import bufferdata from "./bufferdata.js";
+import primitives from "./primitives.js";
 // @ts-ignore
 import shapes from "./shapes.js";
 
@@ -222,7 +222,7 @@ function getDataTexture(inverted: boolean): number[] {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top
 	}
-	return bufferdata.Quad_Texture(left, bottom, right, top, 0, 0, 1, 1);
+	return primitives.Quad_Texture(left, bottom, right, top, 0, 0, 1, 1);
 }
 
 /**
@@ -239,7 +239,7 @@ function getDataColoredTexture(color: Color, inverted: boolean): number[] {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top
 	}
-	return bufferdata.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
+	return primitives.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
 }
 
 export default {

@@ -11,7 +11,7 @@ import boardpos from '../boardpos.js';
 import bd from '../../../util/bigdecimal/bigdecimal.js';
 import { BufferModel, createModel } from '../buffermodel.js';
 // @ts-ignore
-import bufferdata from '../bufferdata.js';
+import primitives from '../primitives.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -55,8 +55,8 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 		const x = worldSpaceCoord[0];
 		const y = worldSpaceCoord[1];
 
-		const dataCircle: number[] = bufferdata.Circle(x, y, inRad, resolution, color);
-		const dataRing: number[] = bufferdata.Ring(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
+		const dataCircle: number[] = primitives.Circle(x, y, inRad, resolution, color);
+		const dataRing: number[] = primitives.Ring(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
 		data.push(...dataCircle);
 		data.push(...dataRing);
 	}

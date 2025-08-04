@@ -12,7 +12,7 @@ import texture from './texture.js';
 // @ts-ignore
 import style from '../gui/style.js';
 // @ts-ignore
-import bufferdata from './bufferdata.js';
+import primitives from './primitives.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -232,7 +232,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], startX, endX);
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], startY, endY);
 	
-	const data = bufferdata.Quad_ColorTexture(startX, startY, endX, endY, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
+	const data = primitives.Quad_ColorTexture(startX, startY, endX, endY, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
 	return createModel(data, 2, "TRIANGLES", true, boardTexture);
 }
 
@@ -381,8 +381,8 @@ function renderSolidCover() {
 	const b = (lightTiles[2] + darkTiles[2]) / 2;
 	const a = (lightTiles[3] + darkTiles[3]) / 2;
 
-	const data = bufferdata.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
-	data.push(...bufferdata.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
+	const data = primitives.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
+	data.push(...primitives.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
 	const model = createModel(data, 3, "TRIANGLES", true);
 
