@@ -254,7 +254,7 @@ function genPieceModel(): BufferModel | undefined {
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
+	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(pieceType!, rotation);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;

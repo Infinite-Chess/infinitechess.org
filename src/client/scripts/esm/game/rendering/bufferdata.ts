@@ -9,72 +9,12 @@
  */
 
 
-import type { DoubleCoords } from '../../chess/util/coordutil.js';
 import type { DoubleBoundingBox } from '../../util/math/bounds.js';
 import type { Color } from '../../util/math/math.js';
 
-import spritesheet from './spritesheet.js';
-
-
-/** A bounding box storing texture coords info. */
-interface TextureData {
-	texleft: number;
-	texbottom: number;
-	texright: number;
-	textop: number;
-}
 
 
 
-// Texture data...
-
-function getTexDataOfType(type: number, rotation: number = 1): TextureData {
-	const texLocation: DoubleCoords = spritesheet.getSpritesheetDataTexLocation(type);
-	const texWidth: number = spritesheet.getSpritesheetDataPieceWidth();
-
-	const texleft = texLocation[0];
-	const texbottom = texLocation[1];
-
-	if (rotation === 1) return { // Regular rotation
-		texleft,
-		texbottom,
-		texright: texleft + texWidth,
-		textop: texbottom + texWidth
-	};
-
-	return { // Inverted rotation
-		texleft: texleft + texWidth,
-		texbottom: texbottom + texWidth,
-		texright: texleft,
-		textop: texbottom
-	};
-}
-
-/**
- * Returns the texture data of a a single instance with texcoords [0,0].
- * THE INSTANCE-SPECIFIC data needs to further contain texcoord offsets!
- */
-function getTexDataGeneric(rotation = 1): TextureData {
-	const texLocation: DoubleCoords = [0,0];
-	const texWidth: number = spritesheet.getSpritesheetDataPieceWidth();
-
-	const texleft = texLocation[0];
-	const texbottom = texLocation[1];
-
-	if (rotation === 1) return { // Regular rotation
-		texleft,
-		texbottom,
-		texright: texleft + texWidth,
-		textop: texbottom + texWidth
-	};
-
-	return { // Inverted rotation
-		texleft: texleft + texWidth,
-		texbottom: texbottom + texWidth,
-		texright: texleft,
-		textop: texbottom
-	};
-}
 
 // Quads...
 
@@ -351,8 +291,6 @@ function getDataRing(x: number, y: number, inRad: number, outRad: number, resolu
 
 
 export default {
-	getTexDataOfType,
-	getTexDataGeneric,
 	getDataQuad_Color,
 	getDataQuad_Color3D,
 	getDataQuad_Texture,

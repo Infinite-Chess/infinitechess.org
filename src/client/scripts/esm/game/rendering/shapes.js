@@ -2,8 +2,9 @@
 import board from "./boardtiles.js";
 import boardpos from "./boardpos.js";
 import bufferdata from "./bufferdata.js";
-import { createModel } from "./buffermodel.js";
 import perspective from "./perspective.js";
+import spritesheet from "./spritesheet.js";
+import { createModel } from "./buffermodel.js";
 
 
 /**
@@ -275,7 +276,7 @@ function getDataRect_FromTileBoundingBox(boundingBox, color) {
 
 function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
 	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
 	const [ r, g, b, a ] = color;
 
@@ -284,7 +285,7 @@ function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
 
 function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
 	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
 	const [ r, g, b, a ] = color;
 

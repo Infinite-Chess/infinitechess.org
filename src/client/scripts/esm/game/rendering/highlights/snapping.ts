@@ -469,7 +469,7 @@ function render() {
 		if (snap.type === undefined) {
 			// Render glow dot
 			const color = snap.color;
-			const colorTransparent = [...color];
+			const colorTransparent = jsutil.deepCopyObject(color);
 			colorTransparent[3] = 0;
 	
 			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
@@ -489,7 +489,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords) {
 	const dataGhost: number[] = [];
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
 
 	const entityWorldWidth = getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;

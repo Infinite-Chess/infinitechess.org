@@ -1053,7 +1053,7 @@ function regenerateModelAndRender() {
 	const top = worldHalfWidth;
 	// Texture data of the single instance
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texright, texbottom, textop } = bufferdata.getTexDataGeneric(rotation);
+	const { texleft, texright, texbottom, textop } = spritesheet.getTexDataGeneric(rotation);
 
 	// Initialize the data arrays...
 

@@ -17,6 +17,18 @@ import imagecache from '../../chess/rendering/imagecache.js';
 import texture from './texture.js';
 
 
+// Type Definitions ---------------------------------------------------------------------
+
+
+/** A bounding box storing texture coords info. */
+interface TextureData {
+	texleft: number;
+	texbottom: number;
+	texright: number;
+	textop: number;
+}
+
+
 // Variables ---------------------------------------------------------------------------
 
 
@@ -47,20 +59,20 @@ let spritesheetData: {
 // Functions ---------------------------------------------------------------------------
 
 
-function getSpritesheet() {
+function getSpritesheet(): WebGLTexture {
 	if (!spritesheet) throw new Error("Should not be getting the spritesheet when not loaded!");
-	return spritesheet!;
+	return spritesheet;
 }
 
-function getSpritesheetDataPieceWidth() {
+function getSpritesheetDataPieceWidth(): number {
 	if (!spritesheetData) throw new Error("Should not be getting piece width when the spritesheet is not loaded!");
-	return spritesheetData!.pieceWidth;
+	return spritesheetData.pieceWidth;
 }
 
 function getSpritesheetDataTexLocation(type: number): DoubleCoords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
 	if (!spritesheetData!.texLocs[type]) throw new Error("No texture location for piece type: " + type);
-	return spritesheetData!.texLocs[type]!;
+	return spritesheetData!.texLocs[type];
 }
 
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
@@ -96,6 +108,55 @@ function deleteSpritesheet() {
 }
 
 
+// Generating Texture Data For Going Into A Mesh ----------------------------------------------------
+
+
+/**
+ * Returns the texture data of a piece type.
+ */
+function getTexDataOfType(type: number, rotation: number = 1): TextureData {
+	const texLocation: DoubleCoords = getSpritesheetDataTexLocation(type);
+	const texWidth: number = getSpritesheetDataPieceWidth();
+	return getTexDataFromLocationAndWidth(texLocation, texWidth, rotation);
+}
+
+/**
+ * Returns the texture data of a a single instance with texcoords [0,0].
+ * THE INSTANCE-SPECIFIC data needs to further contain texcoord offsets!
+ */
+function getTexDataGeneric(rotation = 1): TextureData {
+	const texLocation: DoubleCoords = [0,0];
+	const texWidth: number = getSpritesheetDataPieceWidth();
+	return getTexDataFromLocationAndWidth(texLocation, texWidth, rotation);
+}
+
+/**
+ * Returns the texture data from a given texture location and width.
+ */
+function getTexDataFromLocationAndWidth(texLocation: DoubleCoords, texWidth: number, rotation = 1): TextureData {
+	const texleft = texLocation[0];
+	const texbottom = texLocation[1];
+
+	if (rotation === 1) { // Regular rotation
+		return { 
+			texleft,
+			texbottom,
+			texright: texleft + texWidth,
+			textop: texbottom + texWidth
+		};
+	} else { // Inverted rotation
+		return { 
+			texleft: texleft + texWidth,
+			texbottom: texbottom + texWidth,
+			texright: texleft,
+			textop: texbottom
+		};
+	}
+}
+
+
+// Exports -------------------------------------------------------------------
+
 
 export default {
 	initSpritesheetForGame,
@@ -103,4 +164,7 @@ export default {
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,
 	deleteSpritesheet,
+	// Texture Data
+	getTexDataOfType,
+	getTexDataGeneric
 };
