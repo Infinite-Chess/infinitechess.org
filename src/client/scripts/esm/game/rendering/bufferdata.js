@@ -1,10 +1,5 @@
 
-// Import Start
-import spritesheet from './spritesheet.js';
-// Import End
-
-
-"use strict";
+// src/client/scripts/esm/game/rendering/bufferdata.ts
 
 /**
  * This script contains methods for obtaining the vertex array data
@@ -14,12 +9,23 @@ import spritesheet from './spritesheet.js';
  */
 
 
+import spritesheet from './spritesheet.js';
+
+
+
+interface TextureData {
+	texleft: number;
+	texbottom: number;
+	texright: number;
+	textop: number;
+}
+
 
 // Texture data...
 
-function getTexDataOfType(type, rotation = 1) {
-	const texLocation = spritesheet.getSpritesheetDataTexLocation(type);
-	const texWidth = spritesheet.getSpritesheetDataPieceWidth();
+function getTexDataOfType(type: number, rotation: number = 1): TextureData {
+	const texLocation: DoubleCoords = spritesheet.getSpritesheetDataTexLocation(type);
+	const texWidth: number = spritesheet.getSpritesheetDataPieceWidth();
 
 	const texleft = texLocation[0];
 	const texbottom = texLocation[1];
@@ -43,9 +49,9 @@ function getTexDataOfType(type, rotation = 1) {
  * Returns the texture data of a a single instance with texcoords [0,0].
  * THE INSTANCE-SPECIFIC data needs to further contain texcoord offsets!
  */
-function getTexDataGeneric(rotation = 1) {
-	const texLocation = [0,0];
-	const texWidth = spritesheet.getSpritesheetDataPieceWidth();
+function getTexDataGeneric(rotation = 1): TextureData {
+	const texLocation: DoubleCoords = [0,0];
+	const texWidth: number = spritesheet.getSpritesheetDataPieceWidth();
 
 	const texleft = texLocation[0];
 	const texbottom = texLocation[1];
@@ -67,26 +73,26 @@ function getTexDataGeneric(rotation = 1) {
 
 // Quads...
 
-function getDataQuad_Color({left,right,bottom,top}, [r,g,b,a]) {
+function getDataQuad_Color({ left, right, bottom, top }: DoubleBoundingBox, [r,g,b,a]: Color): number[] {
 	return [
     //      Position           Color
         left, bottom,       r, g, b, a,
         left, top,          r, g, b, a,
         right, bottom,      r, g, b, a,
-        
+
         right, bottom,      r, g, b, a,
         left, top,          r, g, b, a,
         right, top,         r, g, b, a
     ];
 }
 
-function getDataQuad_Color3D({left,right,bottom,top}, z, [r,g,b,a]) {
+function getDataQuad_Color3D({ left, right, bottom, top }: DoubleBoundingBox, z: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position               Color
         left, bottom, z,      r, g, b, a,
         left, top, z,        r, g, b, a,
         right, bottom, z,        r, g, b, a,
-        
+
         right, bottom, z,        r, g, b, a,
         left, top, z,        r, g, b, a,
         right, top, z,          r, g, b, a
@@ -94,13 +100,13 @@ function getDataQuad_Color3D({left,right,bottom,top}, z, [r,g,b,a]) {
 }
 
 // Returns an array of the data that can be entered into the buffer model!
-function getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop) {
+function getDataQuad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
     //     Position          Texture Coord
         left, bottom,     texleft, texbottom,
         left, top,        texleft, textop,
         right, bottom,    texright, texbottom,
-        
+
         right, bottom,    texright, texbottom,
         left, top,        texleft, textop,
         right, top,       texright, textop
@@ -108,13 +114,13 @@ function getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texri
 }
 
 // Returns an array of the data that can be entered into the buffer model!
-function getDataQuad_Texture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop) {
+function getDataQuad_Texture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
     //     Position               Texture Coord
         left, bottom, z,     texleft, texbottom,
         left, top, z,       texleft, textop,
         right, bottom, z,       texright, texbottom,
-        
+
         right, bottom, z,       texright, texbottom,
         left, top, z,       texleft, textop,
         right, top, z,         texright, textop
@@ -122,13 +128,13 @@ function getDataQuad_Texture3D(left, bottom, right, top, z, texleft, texbottom, 
 }
 
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
-function getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a) {
+function getDataQuad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
         left, bottom,     texleft, texbottom,     r, g, b, a,
         left, top,       texleft, textop,       r, g, b, a,
         right, bottom,       texright, texbottom,       r, g, b, a,
-        
+
         right, bottom,       texright, texbottom,       r, g, b, a,
         left, top,       texleft, textop,       r, g, b, a,
         right, top,         texright, textop,         r, g, b, a
@@ -136,13 +142,13 @@ function getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, 
 }
 
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
-function getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a) {
+function getDataQuad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
         left, bottom, z,     texleft, texbottom,     r, g, b, a,
         left, top, z,       texleft, textop,       r, g, b, a,
         right, bottom, z,       texright, texbottom,       r, g, b, a,
-        
+
         right, bottom, z,       texright, texbottom,       r, g, b, a,
         left, top, z,       texleft, textop,       r, g, b, a,
         right, top, z,         texright, textop,         r, g, b, a
@@ -151,7 +157,7 @@ function getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbot
 
 // Rectangles...
 
-function getDataRect({left,right,bottom,top}, [r,g,b,a]) {
+function getDataRect({ left, right, bottom, top }: DoubleBoundingBox, [r,g,b,a]: Color): number[] {
 	return [
     //      x y               color
         left, bottom,      r, g, b,  a,
@@ -164,10 +170,10 @@ function getDataRect({left,right,bottom,top}, [r,g,b,a]) {
 // Circles...
 
 // Hollow circle
-function getDataCircle(x, y, radius, r, g, b, a, resolution) { // res is resolution
-	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a circle.");
+function getDataCircle(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
-	const data = [];
+	const data: number[] = [];
 
 	for (let i = 0; i < resolution; i++) {
 		const theta = (i / resolution) * 2 * Math.PI;
@@ -186,12 +192,11 @@ function getDataCircle(x, y, radius, r, g, b, a, resolution) { // res is resolut
  * A circle, solid color.
  * Resolution is the number of points around on the edge.
  * REQUIRES TRIANGLES mode to render.
- * @returns {number[]}
  */
-function getDataCircle_TRIANGLES(x, y, radius, resolution, [r,g,b,a]) {
-	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a circle.");
+function getDataCircle_TRIANGLES(x: number, y: number, radius: number, resolution: number, [r,g,b,a]: Color): number[] {
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
-	const data = [];
+	const data: number[] = [];
 
 	for (let i = 0; i < resolution; i++) {
 		const theta = (i / resolution) * 2 * Math.PI;
@@ -222,7 +227,7 @@ function getDataCircle_TRIANGLES(x, y, radius, resolution, [r,g,b,a]) {
 // Other odd shapes...
 
 // A rectangular prism with 2 holes opposite, in the z direction.
-function getDataBoxTunnel(left, bottom, startZ, right, top, endZ, r, g, b, a) {
+function getDataBoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
 	return [
         //     Vertex                  Color
         left, bottom, startZ,     r, g, b,  a,
@@ -260,18 +265,11 @@ function getDataBoxTunnel(left, bottom, startZ, right, top, endZ, r, g, b, a) {
  * A circle with color points for the middle and edge. 1 is mid, 2 is outer.
  * Resolution is number of points around on the edge.
  * REQUIRES TRIANGLE_FAN mode to render.
- * @param {*} x 
- * @param {*} y 
- * @param {*} radius 
- * @param {*} resolution 
- * @param {Color} color_mid 
- * @param {Color} color_edge 
- * @returns {number[]}
  */
-function getDataGlowDot(x, y, radius, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
-	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.");
+function getDataGlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
 
-	const data = [x, y, r1, g1, b1, a1]; // Mid point
+	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
 
 	for (let i = 0; i <= resolution; i++) { // Add all outer points
 		const theta = (i / resolution) * 2 * Math.PI;
@@ -285,10 +283,10 @@ function getDataGlowDot(x, y, radius, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) 
 
 // A ring with color points for the inner and outer edges.
 // Resolution is the number of points around the ring.
-function getDataRingSolid(x, y, inRad, outRad, resolution, [r,g,b,a]) {
-	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a ring.");
+function getDataRingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
-	const data = [];
+	const data: number[] = [];
 
 	for (let i = 0; i < resolution; i++) {
 		const theta = (i / resolution) * 2 * Math.PI;
@@ -323,19 +321,11 @@ function getDataRingSolid(x, y, inRad, outRad, resolution, [r,g,b,a]) {
  * A ring with color points for the inner and outer edges.
  * Resolution is the number of points around the ring.
  * REQUIRES TRIANGLES mode to render.
- * @param {*} x 
- * @param {*} y 
- * @param {*} inRad 
- * @param {*} outRad 
- * @param {*} resolution 
- * @param {*} param5 
- * @param {number[]} param6 
- * @returns {number[]}
  */
-function getDataRing(x, y, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
-	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a ring.");
+function getDataRing(x: number, y: number, inRad: number, outRad: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] {
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
-	const data = [];
+	const data: number[] = [];
 
 	for (let i = 0; i < resolution; i++) {
 		const theta = (i / resolution) * 2 * Math.PI;
@@ -370,7 +360,7 @@ function getDataRing(x, y, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2,b2,a
 // Modifying data...
 
 // Rotates the piece 180 of a stride-4 model utilizing the texture shader.
-function rotateDataTexture(data, rotation = 1) {
+function rotateDataTexture(data: number[], rotation = 1): number[] {
 	const copiedData = data.slice(); // Creates shallow copy (data array must not contain objects)
 	const texWidth = spritesheet.getSpritesheetDataPieceWidth() * rotation;
 
@@ -402,7 +392,7 @@ function rotateDataTexture(data, rotation = 1) {
 }
 
 // Rotates the piece 180 of a stride-8 model utilizing the colored-texture shader.
-function rotateDataColorTexture(data, rotation = 1) {
+function rotateDataColorTexture(data: number[], rotation = 1): number[] {
 	const copiedData = data.slice(); // Creates shallow copy (data array must not contain objects)
 	const texWidth = spritesheet.getSpritesheetDataPieceWidth() * rotation;
 
@@ -421,7 +411,7 @@ function rotateDataColorTexture(data, rotation = 1) {
 	// Point 4
 	copiedData[26] -= texWidth;
 	copiedData[27] += texWidth;
-    
+
 	// Point 5
 	copiedData[34] += texWidth;
 	copiedData[35] -= texWidth;
