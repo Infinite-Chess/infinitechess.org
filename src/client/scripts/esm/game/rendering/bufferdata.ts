@@ -15,7 +15,7 @@ import type { Color } from '../../util/math/math.js';
 // Quads ----------------------------------------------------------------------------------------------------------
 
 
-/** [TRIANGLES] */
+/** [TRIANGLES] Generates vertex data for a solid-colored 2D quad. */
 function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position           Color
@@ -29,7 +29,7 @@ function Quad_Color(left: number, bottom: number, right: number, top: number, [r
     ];
 }
 
-/** [TRIANGLES] */
+/** [TRIANGLES] Generates vertex data for a solid-colored 3D quad. */
 function Quad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position               Color
@@ -43,9 +43,7 @@ function Quad_Color3D(left: number, bottom: number, right: number, top: number, 
     ];
 }
 
-// Returns an array of the data that can be entered into the buffer model!
-
-/** [TRIANGLES] */
+/** [TRIANGLES] Generates vertex and texture coordinate data for a textured 2D quad. */
 function Quad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
     //     Position          Texture Coord
@@ -59,8 +57,7 @@ function Quad_Texture(left: number, bottom: number, right: number, top: number, 
     ];
 }
 
-// Returns an array of the tinted/colored data that can be entered into the buffer model!
-/** [TRIANGLES] */
+/** [TRIANGLES] Generates vertex, texture coordinate, and color data for a tinted textured 2D quad. */
 function Quad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
@@ -74,8 +71,7 @@ function Quad_ColorTexture(left: number, bottom: number, right: number, top: num
     ];
 }
 
-// Returns an array of the tinted/colored data that can be entered into the buffer model!
-/** [TRIANGLES] */
+/** [TRIANGLES] Generates vertex, texture coordinate, and color data for a tinted textured 3D quad. */
 function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
@@ -89,7 +85,7 @@ function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: n
     ];
 }
 
-/** [LINE_LOOP] */
+/** [LINE_LOOP] Generates vertex data for the outline of a 2D rectangle. */
 function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      x y               color
@@ -104,8 +100,7 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
 // Circles ----------------------------------------------------------------------------------------------------------
 
 
-// Hollow circle
-/** [LINE_LOOP] */
+/** [LINE_LOOP] Generates vertex data for the outline of a hollow circle. */
 // function Circle_LINES(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
 // 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
@@ -124,11 +119,7 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
 // 	return data;
 // }
 
-/**
- * [TRIANGLES] A circle, solid color.
- * Resolution is the number of points around on the edge.
- * REQUIRES TRIANGLES mode to render.
- */
+/** [TRIANGLES] Generates vertex data for a solid-colored circle composed of triangles. */
 function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b,a]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
@@ -158,9 +149,23 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 	return data;
 }
 
-// A ring with color points for the inner and outer edges.
-// Resolution is the number of points around the ring.
-/** [TRIANGLES] */
+/** [TRIANGLE_FAN] Generates vertex data for a circle with a color gradient from the center to the edge. */
+function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
+
+	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
+
+	for (let i = 0; i < resolution; i++) { // Add all outer points
+		const theta = (i / resolution) * 2 * Math.PI;
+		const thisX = x + radius * Math.cos(theta);
+		const thisY = y + radius * Math.sin(theta);
+		data.push(...[thisX, thisY, r2, g2, b2, a2]);
+	}
+
+	return data;
+}
+
+/** [TRIANGLES] Generates vertex data for a solid-colored ring. */
 // function RingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
 // 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
@@ -195,10 +200,7 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 // 	return data;
 // }
 
-/**
- * [TRIANGLES] A ring with color points for the inner and outer edges.
- * Resolution is the number of points around the ring.
- */
+/** [TRIANGLES] Generates vertex data for a ring with color gradients between the inner and outer edges. */
 function Ring(x: number, y: number, inRad: number, outRad: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
@@ -233,31 +235,11 @@ function Ring(x: number, y: number, inRad: number, outRad: number, resolution: n
 	return data;
 }
 
-/**
- * [TRIANGLE_FAN] A circle with color points for the middle and edge. 1 is mid, 2 is outer.
- * Resolution is number of points around on the edge.
- */
-function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
-	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
-
-	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
-
-	for (let i = 0; i < resolution; i++) { // Add all outer points
-		const theta = (i / resolution) * 2 * Math.PI;
-		const thisX = x + radius * Math.cos(theta);
-		const thisY = y + radius * Math.sin(theta);
-		data.push(...[thisX, thisY, r2, g2, b2, a2]);
-	}
-
-	return data;
-}
-
 
 // Other shapes ----------------------------------------------------------------------------------------------------------
 
 
-// A rectangular prism with 2 holes opposite, in the z direction.
-/** [TRIANGLES] */
+/** [TRIANGLES] Generates vertex data for a four-sided, hollow rectangular prism. */
 function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
 	return [
         //     Vertex                  Color
@@ -305,8 +287,8 @@ export default {
 	Rect,
 	// Circles
 	Circle,
-	Ring,
 	GlowDot,
+	Ring,
 	// Other Shapes
 	BoxTunnel,
 };
