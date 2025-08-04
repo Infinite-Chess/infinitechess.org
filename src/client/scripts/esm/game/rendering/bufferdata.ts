@@ -15,7 +15,6 @@ import type { Color } from '../../util/math/math.js';
 // Quads ----------------------------------------------------------------------------------------------------------
 
 
-
 function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position           Color
@@ -84,8 +83,6 @@ function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: n
     ];
 }
 
-// Rectangles...
-
 function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      x y               color
@@ -96,7 +93,9 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
     ];
 }
 
-// Circles...
+
+// Circles ----------------------------------------------------------------------------------------------------------
+
 
 // Hollow circle
 // function Circle_LINES(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
@@ -146,65 +145,6 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 		// Points around the circle
 		data.push(thisX, thisY, r, g, b, a);
 		data.push(nextX, nextY, r, g, b, a);
-	}
-
-	return data;
-}
-
-
-
-// Other odd shapes...
-
-// A rectangular prism with 2 holes opposite, in the z direction.
-function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
-	return [
-        //     Vertex                  Color
-        left, bottom, startZ,     r, g, b,  a,
-        left, bottom, endZ,       r, g, b,  a,
-        right, bottom, startZ,       r, g, b,  a,
-        right, bottom, startZ,       r, g, b,  a,
-        left, bottom, endZ,       r, g, b,  a,
-        right, bottom, endZ,         r, g, b,  a,
-
-        right, bottom, startZ,       r, g, b,  a,
-        right, bottom, endZ,         r, g, b,  a,
-        right, top, startZ,         r, g, b,  a,
-        right, top, startZ,         r, g, b,  a,
-        right, bottom, endZ,         r, g, b,  a,
-        right, top, endZ,           r, g, b,  a,
-
-        right, top, startZ,         r, g, b,  a,
-        right, top, endZ,           r, g, b,  a,
-        left, top, startZ,       r, g, b,  a,
-        left, top, startZ,       r, g, b,  a,
-        right, top, endZ,           r, g, b,  a,
-        left, top, endZ,         r, g, b,  a,
-
-        left, top, startZ,       r, g, b,  a,
-        left, top, endZ,         r, g, b,  a,
-        left, bottom, startZ,     r, g, b,  a,
-        left, bottom, startZ,     r, g, b,  a,
-        left, top, endZ,         r, g, b,  a,
-        left, bottom, endZ,       r, g, b,  a
-    ];
-}
-
-
-/**
- * A circle with color points for the middle and edge. 1 is mid, 2 is outer.
- * Resolution is number of points around on the edge.
- * REQUIRES TRIANGLE_FAN mode to render.
- */
-function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
-	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
-
-	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
-
-	for (let i = 0; i <= resolution; i++) { // Add all outer points
-		const theta = (i / resolution) * 2 * Math.PI;
-		const thisX = x + radius * Math.cos(theta);
-		const thisY = y + radius * Math.sin(theta);
-		data.push(...[thisX, thisY, r2, g2, b2, a2]);
 	}
 
 	return data;
@@ -285,6 +225,64 @@ function Ring(x: number, y: number, inRad: number, outRad: number, resolution: n
 	return data;
 }
 
+/**
+ * A circle with color points for the middle and edge. 1 is mid, 2 is outer.
+ * Resolution is number of points around on the edge.
+ * REQUIRES TRIANGLE_FAN mode to render.
+ */
+function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
+	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
+
+	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
+
+	for (let i = 0; i <= resolution; i++) { // Add all outer points
+		const theta = (i / resolution) * 2 * Math.PI;
+		const thisX = x + radius * Math.cos(theta);
+		const thisY = y + radius * Math.sin(theta);
+		data.push(...[thisX, thisY, r2, g2, b2, a2]);
+	}
+
+	return data;
+}
+
+
+// Other shapes ----------------------------------------------------------------------------------------------------------
+
+
+// A rectangular prism with 2 holes opposite, in the z direction.
+function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
+	return [
+        //     Vertex                  Color
+        left, bottom, startZ,     r, g, b,  a,
+        left, bottom, endZ,       r, g, b,  a,
+        right, bottom, startZ,       r, g, b,  a,
+        right, bottom, startZ,       r, g, b,  a,
+        left, bottom, endZ,       r, g, b,  a,
+        right, bottom, endZ,         r, g, b,  a,
+
+        right, bottom, startZ,       r, g, b,  a,
+        right, bottom, endZ,         r, g, b,  a,
+        right, top, startZ,         r, g, b,  a,
+        right, top, startZ,         r, g, b,  a,
+        right, bottom, endZ,         r, g, b,  a,
+        right, top, endZ,           r, g, b,  a,
+
+        right, top, startZ,         r, g, b,  a,
+        right, top, endZ,           r, g, b,  a,
+        left, top, startZ,       r, g, b,  a,
+        left, top, startZ,       r, g, b,  a,
+        right, top, endZ,           r, g, b,  a,
+        left, top, endZ,         r, g, b,  a,
+
+        left, top, startZ,       r, g, b,  a,
+        left, top, endZ,         r, g, b,  a,
+        left, bottom, startZ,     r, g, b,  a,
+        left, bottom, startZ,     r, g, b,  a,
+        left, top, endZ,         r, g, b,  a,
+        left, bottom, endZ,       r, g, b,  a
+    ];
+}
+
 
 // Exports ------------------------------------------------------------------------------------------
 
@@ -299,8 +297,8 @@ export default {
 	Rect,
 	// Circles
 	Circle,
-	// Other shapes
-	BoxTunnel,
-	GlowDot,
 	Ring,
+	GlowDot,
+	// Other Shapes
+	BoxTunnel,
 };
