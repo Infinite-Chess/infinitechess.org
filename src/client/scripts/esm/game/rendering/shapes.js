@@ -266,6 +266,7 @@ function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g
 	return createModel(data, 3, "TRIANGLE_STRIP", true);
 }
 
+// Intended to be rendered using LINE_LOOP
 function getDataRect_FromTileBoundingBox(boundingBox, color) {
 	boundingBox = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBox);

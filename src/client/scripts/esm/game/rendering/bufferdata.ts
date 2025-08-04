@@ -15,6 +15,7 @@ import type { Color } from '../../util/math/math.js';
 // Quads ----------------------------------------------------------------------------------------------------------
 
 
+/** [TRIANGLES] */
 function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position           Color
@@ -28,6 +29,7 @@ function Quad_Color(left: number, bottom: number, right: number, top: number, [r
     ];
 }
 
+/** [TRIANGLES] */
 function Quad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position               Color
@@ -42,6 +44,8 @@ function Quad_Color3D(left: number, bottom: number, right: number, top: number, 
 }
 
 // Returns an array of the data that can be entered into the buffer model!
+
+/** [TRIANGLES] */
 function Quad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
     //     Position          Texture Coord
@@ -56,6 +60,7 @@ function Quad_Texture(left: number, bottom: number, right: number, top: number, 
 }
 
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
+/** [TRIANGLES] */
 function Quad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
@@ -70,6 +75,7 @@ function Quad_ColorTexture(left: number, bottom: number, right: number, top: num
 }
 
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
+/** [TRIANGLES] */
 function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
@@ -83,6 +89,7 @@ function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: n
     ];
 }
 
+/** [LINE_LOOP] */
 function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      x y               color
@@ -98,6 +105,7 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
 
 
 // Hollow circle
+/** [LINE_LOOP] */
 // function Circle_LINES(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
 // 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
@@ -117,7 +125,7 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
 // }
 
 /**
- * A circle, solid color.
+ * [TRIANGLES] A circle, solid color.
  * Resolution is the number of points around on the edge.
  * REQUIRES TRIANGLES mode to render.
  */
@@ -152,6 +160,7 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 
 // A ring with color points for the inner and outer edges.
 // Resolution is the number of points around the ring.
+/** [TRIANGLES] */
 // function RingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
 // 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
@@ -187,9 +196,8 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 // }
 
 /**
- * A ring with color points for the inner and outer edges.
+ * [TRIANGLES] A ring with color points for the inner and outer edges.
  * Resolution is the number of points around the ring.
- * REQUIRES TRIANGLES mode to render.
  */
 function Ring(x: number, y: number, inRad: number, outRad: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
@@ -226,16 +234,15 @@ function Ring(x: number, y: number, inRad: number, outRad: number, resolution: n
 }
 
 /**
- * A circle with color points for the middle and edge. 1 is mid, 2 is outer.
+ * [TRIANGLE_FAN] A circle with color points for the middle and edge. 1 is mid, 2 is outer.
  * Resolution is number of points around on the edge.
- * REQUIRES TRIANGLE_FAN mode to render.
  */
 function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
 
 	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
 
-	for (let i = 0; i <= resolution; i++) { // Add all outer points
+	for (let i = 0; i < resolution; i++) { // Add all outer points
 		const theta = (i / resolution) * 2 * Math.PI;
 		const thisX = x + radius * Math.cos(theta);
 		const thisY = y + radius * Math.sin(theta);
@@ -250,6 +257,7 @@ function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g
 
 
 // A rectangular prism with 2 holes opposite, in the z direction.
+/** [TRIANGLES] */
 function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
 	return [
         //     Vertex                  Color
