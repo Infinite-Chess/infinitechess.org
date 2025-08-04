@@ -118,6 +118,18 @@ function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
 	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
 }
 
+/**
+ * {@link lerpCoords} but for DoubleCoords.
+ */
+function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): DoubleCoords {
+	const diffX = end[0] - start[0];
+	const diffY = end[1] - start[1];
+	const travelX = diffX * t;
+	const travelY = diffY * t;
+
+	return [start[0] + travelX, start[1] + travelY];
+}
+
 
 
 export default {
@@ -130,6 +142,7 @@ export default {
 	subtractBDCoords,
 	copyCoords,
 	lerpCoords,
+	lerpCoordsDouble,
 };
 
 export type {
