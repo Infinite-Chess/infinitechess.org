@@ -5,7 +5,9 @@ import boardpos from "./boardpos.js";
 import perspective from "./perspective.js";
 import spritesheet from "./spritesheet.js";
 import primitives from "./primitives.js";
-import { createModel, BufferModel } from "./buffermodel.js";
+import { Coords, DoubleCoords } from "../../chess/util/coordutil.js";
+import { BoundingBox } from "../../util/math/bounds.js";
+import { Color } from "../../util/math/math.js";
 
 
 
@@ -105,15 +107,15 @@ function getTransformedDataQuad_Color_FromCoord(coords: Coords, color: Color): n
 
 /**
  * Generates the vertex data for a circle in 3D space with color attributes.
- * @param {number} x - The X coordinate of the circle's center.
- * @param {number} y - The Y coordinate of the circle's center.
- * @param {number} radius - The radius of the circle.
- * @param {number} resolution - The number of triangles (segments) used to approximate the circle.
- * @param {number} r - Red color component (0-1).
- * @param {number} g - Green color component (0-1).
- * @param {number} b - Blue color component (0-1).
- * @param {number} a - Alpha (transparency) component (0-1).
- * @returns {number[]} The vertex data for the circle, including position and color for each vertex.
+ * @param x - The X coordinate of the circle's center.
+ * @param y - The Y coordinate of the circle's center.
+ * @param radius - The radius of the circle.
+ * @param resolution - The number of triangles (segments) used to approximate the circle.
+ * @param r - Red color component (0-1).
+ * @param g - Green color component (0-1).
+ * @param b - Blue color component (0-1).
+ * @param a - Alpha (transparency) component (0-1).
+ * @returns The vertex data for the circle, including position and color for each vertex.
  */
 function getDataCircle(x: number, y: number, radius: number, resolution: number, r: number, g: number, b: number, a: number): number[] {
 	if (!Number.isInteger(resolution)) throw new Error("Resolution of circle data must be an integer!");
@@ -147,117 +149,6 @@ function getDataCircle(x: number, y: number, radius: number, resolution: number,
 	return vertices;
 }
 
-/**
- * Generates the vertex data for a circle in 3D space with color attributes.
- * @param x - The X coordinate of the circle's center.
- * @param y - The Y coordinate of the circle's center.
- * @param z - The Z coordinate of the circle's center.
- * @param radius - The radius of the circle.
- * @param resolution - The number of triangles (segments) used to approximate the circle.
- * @param r - Red color component (0-1).
- * @param g - Green color component (0-1).
- * @param b - Blue color component (0-1).
- * @param a - Alpha (transparency) component (0-1).
- * @returns The vertex data for the circle, including position and color for each vertex.
- */
-function getDataCircle_3D(x: number, y: number, z: number, radius: number, resolution: number, r: number, g: number, b: number, a: number): number[] {
-	const vertices: number[] = [];
-	const angleStep = (2 * Math.PI) / resolution;
-
-	// Center point of the circle
-	for (let i = 0; i < resolution; i++) {
-		// Current and next angle positions
-		const currentAngle = i * angleStep;
-		const nextAngle = (i + 1) * angleStep;
-
-		// Position of current and next points on the circumference
-		const x1 = x + radius * Math.cos(currentAngle);
-		const y1 = y + radius * Math.sin(currentAngle);
-		const x2 = x + radius * Math.cos(nextAngle);
-		const y2 = y + radius * Math.sin(nextAngle);
-
-		// Triangle fan: center point, current point, and next point
-		vertices.push(
-			// Center vertex
-			x, y, z, 		r, g, b, a,
-			// Current circumference vertex
-			x1, y1, z, 		r, g, b, a,
-			// Next circumference vertex
-			x2, y2, z, 		r, g, b, a
-		);
-	}
-
-	return vertices;
-}
-
-/**
- * Returns the buffer model of a solid-color circle at the provided coordinates,
- * lying flat in xy space, with the provided dimensions, resolution, and color.
- * Renders with TRIANGLE_FAN, as it's less vertex data.
- * @param x 
- * @param y 
- * @param z
- * @param radius 
- * @param resolution - How many points will be rendered on the circle's edge. 3+
- * @param r - Red
- * @param g - Green
- * @param b - Blue
- * @param a - Alpha
- * @returns The buffer model
- */
-function getModelCircle3D(x: number, y: number, z: number, radius: number, resolution: number, r: number, g: number, b: number, a: number): BufferModel {
-	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
-
-	const data = [x, y, z, r, g, b, a]; // Mid point
-
-	for (let i = 0; i <= resolution; i++) { // Add all outer points
-		const theta = (i / resolution) * 2 * Math.PI;
-		const thisX = x + radius * Math.cos(theta);
-		const thisY = y + radius * Math.sin(theta);
-		data.push(thisX, thisY, z, r, g, b, a);
-	}
-
-	return createModel(data, 3, 'TRIANGLE_FAN', true);
-}
-
-/**
- * Returns the buffer model of a gradient-colored ring at the provided coordinates,
- * lying flat in xy space, with the specified dimensions, resolution, and color gradient.
- * @param x - The x-coordinate of the ring's center.
- * @param y - The y-coordinate of the ring's center.
- * @param z - The z-coordinate for the ring's plane.
- * @param inRad - The radius of the inner edge of the ring.
- * @param outRad - The radius of the outer edge of the ring.
- * @param resolution - The number of points rendered along the ring's edge; must be 3 or greater.
- * @param innerColor - RGBA color array for the inner edge [r1, g1, b1, a1].
- * @param outerColor - RGBA color array for the outer edge [r2, g2, b2, a2].
- * @returns The buffer model representing the gradient-colored ring.
- */
-function getModelRing3D(x: number, y: number, z: number, inRad: number, outRad: number, resolution: number, innerColor: Color, outerColor: Color): BufferModel {
-	if (resolution < 3) throw Error("Resolution must be 3+ to get model of a ring.");
-
-	const [r1,g1,b1,a1] = innerColor;
-	const [r2,g2,b2,a2] = outerColor;
-	
-	const data: number[] = [];
-
-	for (let i = 0; i <= resolution; i++) {
-		const theta = (i / resolution) * 2 * Math.PI;
-		const innerX = x + inRad * Math.cos(theta);
-		const innerY = y + inRad * Math.sin(theta);
-		const outerX = x + outRad * Math.cos(theta);
-		const outerY = y + outRad * Math.sin(theta);
-
-		// Inner point
-		data.push(innerX, innerY, z, r1, g1, b1, a1);
-
-		// Outer point
-		data.push(outerX, outerY, z, r2, g2, b2, a2);
-	}
-
-	return createModel(data, 3, "TRIANGLE_STRIP", true);
-}
-
 // Intended to be rendered using LINE_LOOP
 function getDataRect_FromTileBoundingBox(boundingBox: BoundingBox, color: Color): number[] {
 	boundingBox = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
@@ -276,23 +167,8 @@ function getDataQuad_ColorTexture_FromCoordAndType(coords: Coords, type: string,
 	return primitives.Quad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
-function getDataQuad_ColorTexture3D_FromCoordAndType(coords: Coords, z: number, type: string, color: Color): number[] {
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
-	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
-	const [ r, g, b, a ] = color;
-
-	return primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
-}
-
-/**
- * Applies a rotational & translational transformation to an array of points.
- * @param {Coords[]} points 
- * @param {number} rotation 
- * @param {Coords} translation 
- * @returns {Coords[]}
- */
-function applyTransformToPoints(points: Coords[], rotation: number, translation: Coords): Coords[] {
+/** Applies a rotational & translational transformation to an array of points. */
+function applyTransformToPoints(points: DoubleCoords[], rotation: number, translation: DoubleCoords): DoubleCoords[] {
 	// convert rotation angle to radians
 	const cos = Math.cos(rotation);
 	const sin = Math.sin(rotation);
@@ -303,7 +179,7 @@ function applyTransformToPoints(points: Coords[], rotation: number, translation:
 		const yRot = point[0] * sin + point[1] * cos;
 		const xTrans = xRot + translation[0];
 		const yTrans = yRot + translation[1];
-		return [xTrans, yTrans] as Coords;
+		return [xTrans, yTrans] as DoubleCoords;
 	});
     
 	// return transformed points as an array of length-2 arrays
@@ -315,16 +191,12 @@ function applyTransformToPoints(points: Coords[], rotation: number, translation:
 export default {
 	getBoundingBoxOfCoord,
 	getDataCircle,
-	getDataCircle_3D,
 	getDataQuad_Color_FromCoord,
 	getTransformedDataQuad_Color_FromCoord,
 	expandTileBoundingBoxToEncompassWholeSquare,
 	applyWorldTransformationsToBoundingBox,
-	getModelCircle3D,
-	getModelRing3D,
 	getDataRect_FromTileBoundingBox,
 	getDataQuad_ColorTexture_FromCoordAndType,
-	getDataQuad_ColorTexture3D_FromCoordAndType,
 	getTransformedBoundingBoxOfSquare,
 	applyTransformToPoints,
 };
