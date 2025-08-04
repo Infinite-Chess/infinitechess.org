@@ -1,7 +1,9 @@
 
-"use strict";
-
 /** This script controls the playing of our sound effects. */
+
+
+import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
+
 
 type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode }
 
@@ -289,7 +291,7 @@ function fadeOut(source: AudioBufferWithGainNode, durationMillis: number) {
 
 // Sounds
 
-function playSound_move(distanceMoved: number, premove = false) {
+function playSound_move(distanceMoved: BigDecimal, premove = false) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -316,7 +318,7 @@ function playSound_move(distanceMoved: number, premove = false) {
 	}
 }
 
-function playSound_capture(distanceMoved: number, premove = false) {
+function playSound_capture(distanceMoved: BigDecimal, premove = false) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;

@@ -150,7 +150,6 @@ function regenType(boardsim: Board, mesh: Mesh, type: number) {
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
 function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
-	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
@@ -437,6 +436,8 @@ function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
 
 
 export default {
+	ATTRIBUTE_INFO,
+
 	regenAll,
 	regenType,
 	castBigIntArrayToFloat32,
