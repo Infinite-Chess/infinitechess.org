@@ -1401,20 +1401,20 @@ export type {
 
 
 
-const n1 = 155.66;
-const bd1: BigDecimal = FromNumber(n1);
-console.log(`${n1} converted into a BigDecimal:`);
-printInfo(bd1);
+// const n1 = 155.66;
+// const bd1: BigDecimal = FromNumber(n1);
+// console.log(`${n1} converted into a BigDecimal:`);
+// printInfo(bd1);
 
 // const n2: number = 5.56;
 // const bd2: BigDecimal = FromNumber(n2);
 // console.log(`\n${n2} converted into a BigDecimal:`);
 // printInfo(bd2);
 
-console.log(`Starting sqrt test on ${n1}...`);
-const bd3 = sqrt(bd1);
-console.log(`\nSqrt ${n1}:`);
-printInfo(bd3);
+// console.log(`Starting sqrt test on ${n1}...`);
+// const bd3 = sqrt(bd1);
+// console.log(`\nSqrt ${n1}:`);
+// printInfo(bd3);
 
 // const power2 = 3;
 // const bd4 = power(bd1, 3);
