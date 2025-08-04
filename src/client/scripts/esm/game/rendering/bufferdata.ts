@@ -9,16 +9,21 @@
  */
 
 
+import type { DoubleCoords } from '../../chess/util/coordutil.js';
+import type { DoubleBoundingBox } from '../../util/math/bounds.js';
+import type { Color } from '../../util/math/math.js';
+
 import spritesheet from './spritesheet.js';
 
 
-
+/** A bounding box storing texture coords info. */
 interface TextureData {
 	texleft: number;
 	texbottom: number;
 	texright: number;
 	textop: number;
 }
+
 
 
 // Texture data...
