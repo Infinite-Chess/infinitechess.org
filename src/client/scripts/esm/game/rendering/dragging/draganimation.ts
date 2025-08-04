@@ -306,10 +306,10 @@ function genOutlineModel(): BufferModel {
 			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
 		} else boundingBox = camera.getScreenBoundingBox(false);
 
-		data.push(...bufferdata.getDataQuad_Color({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // left
-		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom + width }, color)); // bottom
-		data.push(...bufferdata.getDataQuad_Color({ left: right - width, right, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // right
-		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom: top - width, top }, color)); // top
+		data.push(...bufferdata.getDataQuad_Color(left, boundingBox.bottom, left + width, boundingBox.top, color)); // left
+		data.push(...bufferdata.getDataQuad_Color(boundingBox.left, bottom, boundingBox.right, bottom + width, color)); // bottom
+		data.push(...bufferdata.getDataQuad_Color(right - width, boundingBox.bottom, right, boundingBox.top, color)); // right
+		data.push(...bufferdata.getDataQuad_Color(boundingBox.left, top - width, boundingBox.right, top, color)); // top
 	} else {
 		// Outline the hovered square
 		data.push(...getBoxFrameData(hoveredCoords!));

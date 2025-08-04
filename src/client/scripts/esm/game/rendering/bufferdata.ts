@@ -9,16 +9,12 @@
  */
 
 
-import type { DoubleBoundingBox } from '../../util/math/bounds.js';
 import type { Color } from '../../util/math/math.js';
-
-
-
 
 
 // Quads...
 
-function getDataQuad_Color({ left, right, bottom, top }: DoubleBoundingBox, [r,g,b,a]: Color): number[] {
+function getDataQuad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position           Color
         left, bottom,       r, g, b, a,
@@ -31,7 +27,7 @@ function getDataQuad_Color({ left, right, bottom, top }: DoubleBoundingBox, [r,g
     ];
 }
 
-function getDataQuad_Color3D({ left, right, bottom, top }: DoubleBoundingBox, z: number, [r,g,b,a]: Color): number[] {
+function getDataQuad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position               Color
         left, bottom, z,      r, g, b, a,
@@ -88,7 +84,7 @@ function getDataQuad_ColorTexture3D(left: number, bottom: number, right: number,
 
 // Rectangles...
 
-function getDataRect({ left, right, bottom, top }: DoubleBoundingBox, [r,g,b,a]: Color): number[] {
+function getDataRect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      x y               color
         left, bottom,      r, g, b,  a,

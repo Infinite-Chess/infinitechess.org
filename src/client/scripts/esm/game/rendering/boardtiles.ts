@@ -382,8 +382,7 @@ function renderSolidCover() {
 	const a = (lightTiles[3] + darkTiles[3]) / 2;
 
 	const data = bufferdata.getDataBoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
-	const boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
-	data.push(...bufferdata.getDataQuad_Color3D(boundingBox, z, [r, g, b, a])); // Floor of the box
+	data.push(...bufferdata.getDataQuad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
 	const model = createModel(data, 3, "TRIANGLES", true);
 

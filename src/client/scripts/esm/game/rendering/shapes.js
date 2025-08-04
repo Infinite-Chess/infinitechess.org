@@ -98,8 +98,8 @@ function expandTileBoundingBoxToEncompassWholeSquare(boundingBox) {
 
 
 function getDataQuad_Color_FromCoord(coords, color) {
-	const boundingBox = getBoundingBoxOfCoord(coords);
-	return bufferdata.getDataQuad_Color(boundingBox, color);
+	const { left, bottom, right, top } = getBoundingBoxOfCoord(coords);
+	return bufferdata.getDataQuad_Color(left, bottom, right, top, color);
 }
 
 /**
@@ -107,8 +107,8 @@ function getDataQuad_Color_FromCoord(coords, color) {
  * WITHOUT REQUIRING a positional or scale transformation when rendering!
  */
 function getTransformedDataQuad_Color_FromCoord(coords, color) {
-	const boundingBox = getTransformedBoundingBoxOfSquare(coords);
-	return bufferdata.getDataQuad_Color(boundingBox, color);
+	const { left, bottom, right, top } = getTransformedBoundingBoxOfSquare(coords);
+	return bufferdata.getDataQuad_Color(left, bottom, right, top, color);
 }
 
 
@@ -268,8 +268,8 @@ function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g
 
 function getDataRect_FromTileBoundingBox(boundingBox, color) {
 	boundingBox = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-	boundingBox = applyWorldTransformationsToBoundingBox(boundingBox);
-	return bufferdata.getDataRect(boundingBox, color);
+	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBox);
+	return bufferdata.getDataRect(left, bottom, right, top, color);
 }
 
 
