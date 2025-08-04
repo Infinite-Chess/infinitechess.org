@@ -1057,7 +1057,7 @@ function regenerateModelAndRender() {
 
 	// Initialize the data arrays...
 
-	const vertexData_Pictures: number[] = bufferdata.getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
+	const vertexData_Pictures: number[] = bufferdata.Quad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
 	const instanceData_Pictures: number[] = [];
 
 	const vertexData_Arrows: number[] = getVertexDataOfArrow(worldHalfWidth);

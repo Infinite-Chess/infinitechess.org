@@ -276,8 +276,8 @@ function genPieceModel(): BufferModel | undefined {
 	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	
 	const data: number[] = [];
-	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
-	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
+	if (perspectiveEnabled) data.push(...bufferdata.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
+	data.push(...bufferdata.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
 	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
@@ -306,10 +306,10 @@ function genOutlineModel(): BufferModel {
 			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
 		} else boundingBox = camera.getScreenBoundingBox(false);
 
-		data.push(...bufferdata.getDataQuad_Color(left, boundingBox.bottom, left + width, boundingBox.top, color)); // left
-		data.push(...bufferdata.getDataQuad_Color(boundingBox.left, bottom, boundingBox.right, bottom + width, color)); // bottom
-		data.push(...bufferdata.getDataQuad_Color(right - width, boundingBox.bottom, right, boundingBox.top, color)); // right
-		data.push(...bufferdata.getDataQuad_Color(boundingBox.left, top - width, boundingBox.right, top, color)); // top
+		data.push(...bufferdata.Quad_Color(left, boundingBox.bottom, left + width, boundingBox.top, color)); // left
+		data.push(...bufferdata.Quad_Color(boundingBox.left, bottom, boundingBox.right, bottom + width, color)); // bottom
+		data.push(...bufferdata.Quad_Color(right - width, boundingBox.bottom, right, boundingBox.top, color)); // right
+		data.push(...bufferdata.Quad_Color(boundingBox.left, top - width, boundingBox.right, top, color)); // top
 	} else {
 		// Outline the hovered square
 		data.push(...getBoxFrameData(hoveredCoords!));

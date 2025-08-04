@@ -99,7 +99,7 @@ function expandTileBoundingBoxToEncompassWholeSquare(boundingBox) {
 
 function getDataQuad_Color_FromCoord(coords, color) {
 	const { left, bottom, right, top } = getBoundingBoxOfCoord(coords);
-	return bufferdata.getDataQuad_Color(left, bottom, right, top, color);
+	return bufferdata.Quad_Color(left, bottom, right, top, color);
 }
 
 /**
@@ -108,7 +108,7 @@ function getDataQuad_Color_FromCoord(coords, color) {
  */
 function getTransformedDataQuad_Color_FromCoord(coords, color) {
 	const { left, bottom, right, top } = getTransformedBoundingBoxOfSquare(coords);
-	return bufferdata.getDataQuad_Color(left, bottom, right, top, color);
+	return bufferdata.Quad_Color(left, bottom, right, top, color);
 }
 
 
@@ -269,7 +269,7 @@ function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g
 function getDataRect_FromTileBoundingBox(boundingBox, color) {
 	boundingBox = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBox);
-	return bufferdata.getDataRect(left, bottom, right, top, color);
+	return bufferdata.Rect(left, bottom, right, top, color);
 }
 
 
@@ -280,7 +280,7 @@ function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
 	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
 	const [ r, g, b, a ] = color;
 
-	return bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
+	return bufferdata.Quad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
 function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
@@ -289,7 +289,7 @@ function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
 	const [ r, g, b, a ] = color;
 
-	return bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
+	return bufferdata.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
 /**

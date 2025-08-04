@@ -473,7 +473,7 @@ function render() {
 			colorTransparent[3] = 0;
 	
 			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
-			const data: number[] = bufferdata.getDataGlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
+			const data: number[] = bufferdata.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
 			createModel(data, 2, 'TRIANGLE_FAN', true).render();
 		} else {
 			// Render mini image of piece
@@ -499,7 +499,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords) {
 	const endX = startX + entityWorldWidth;
 	const endY = startY + entityWorldWidth;
 
-	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, GHOST_IMAGE_OPACITY);
+	const data = bufferdata.Quad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, GHOST_IMAGE_OPACITY);
 
 	dataGhost.push(...data);
 	

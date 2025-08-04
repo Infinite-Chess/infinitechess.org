@@ -55,8 +55,8 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 		const x = worldSpaceCoord[0];
 		const y = worldSpaceCoord[1];
 
-		const dataCircle: number[] = bufferdata.getDataCircle_TRIANGLES(x, y, inRad, resolution, color);
-		const dataRing: number[] = bufferdata.getDataRing(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
+		const dataCircle: number[] = bufferdata.Circle(x, y, inRad, resolution, color);
+		const dataRing: number[] = bufferdata.Ring(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
 		data.push(...dataCircle);
 		data.push(...dataRing);
 	}

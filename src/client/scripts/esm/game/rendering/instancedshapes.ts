@@ -222,7 +222,7 @@ function getDataTexture(inverted: boolean): number[] {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top
 	}
-	return bufferdata.getDataQuad_Texture(left, bottom, right, top, 0, 0, 1, 1);
+	return bufferdata.Quad_Texture(left, bottom, right, top, 0, 0, 1, 1);
 }
 
 /**
@@ -239,7 +239,7 @@ function getDataColoredTexture(color: Color, inverted: boolean): number[] {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top
 	}
-	return bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
+	return bufferdata.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
 }
 
 export default {

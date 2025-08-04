@@ -12,9 +12,11 @@
 import type { Color } from '../../util/math/math.js';
 
 
-// Quads...
+// Quads ----------------------------------------------------------------------------------------------------------
 
-function getDataQuad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
+
+
+function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position           Color
         left, bottom,       r, g, b, a,
@@ -27,7 +29,7 @@ function getDataQuad_Color(left: number, bottom: number, right: number, top: num
     ];
 }
 
-function getDataQuad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
+function Quad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
 	return [
     //      Position               Color
         left, bottom, z,      r, g, b, a,
@@ -41,7 +43,7 @@ function getDataQuad_Color3D(left: number, bottom: number, right: number, top: n
 }
 
 // Returns an array of the data that can be entered into the buffer model!
-function getDataQuad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
+function Quad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
     //     Position          Texture Coord
         left, bottom,     texleft, texbottom,
@@ -55,7 +57,7 @@ function getDataQuad_Texture(left: number, bottom: number, right: number, top: n
 }
 
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
-function getDataQuad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
+function Quad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
         left, bottom,     texleft, texbottom,     r, g, b, a,
@@ -69,7 +71,7 @@ function getDataQuad_ColorTexture(left: number, bottom: number, right: number, t
 }
 
 // Returns an array of the tinted/colored data that can be entered into the buffer model!
-function getDataQuad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
+function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
     //     Position           Texture Coord              Color
         left, bottom, z,     texleft, texbottom,     r, g, b, a,
@@ -84,7 +86,7 @@ function getDataQuad_ColorTexture3D(left: number, bottom: number, right: number,
 
 // Rectangles...
 
-function getDataRect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
+function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
     //      x y               color
         left, bottom,      r, g, b,  a,
@@ -97,7 +99,7 @@ function getDataRect(left: number, bottom: number, right: number, top: number, [
 // Circles...
 
 // Hollow circle
-// function getDataCircle(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
+// function Circle_LINES(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
 // 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
 // 	const data: number[] = [];
@@ -120,7 +122,7 @@ function getDataRect(left: number, bottom: number, right: number, top: number, [
  * Resolution is the number of points around on the edge.
  * REQUIRES TRIANGLES mode to render.
  */
-function getDataCircle_TRIANGLES(x: number, y: number, radius: number, resolution: number, [r,g,b,a]: Color): number[] {
+function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b,a]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
 	const data: number[] = [];
@@ -154,7 +156,7 @@ function getDataCircle_TRIANGLES(x: number, y: number, radius: number, resolutio
 // Other odd shapes...
 
 // A rectangular prism with 2 holes opposite, in the z direction.
-function getDataBoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
+function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
 	return [
         //     Vertex                  Color
         left, bottom, startZ,     r, g, b,  a,
@@ -193,7 +195,7 @@ function getDataBoxTunnel(left: number, bottom: number, startZ: number, right: n
  * Resolution is number of points around on the edge.
  * REQUIRES TRIANGLE_FAN mode to render.
  */
-function getDataGlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
+function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
 
 	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
@@ -210,7 +212,7 @@ function getDataGlowDot(x: number, y: number, radius: number, resolution: number
 
 // A ring with color points for the inner and outer edges.
 // Resolution is the number of points around the ring.
-// function getDataRingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
+// function RingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
 // 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
 // 	const data: number[] = [];
@@ -249,7 +251,7 @@ function getDataGlowDot(x: number, y: number, radius: number, resolution: number
  * Resolution is the number of points around the ring.
  * REQUIRES TRIANGLES mode to render.
  */
-function getDataRing(x: number, y: number, inRad: number, outRad: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] {
+function Ring(x: number, y: number, inRad: number, outRad: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
 	const data: number[] = [];
@@ -284,17 +286,21 @@ function getDataRing(x: number, y: number, inRad: number, outRad: number, resolu
 }
 
 
+// Exports ------------------------------------------------------------------------------------------
 
 
 export default {
-	getDataQuad_Color,
-	getDataQuad_Color3D,
-	getDataQuad_Texture,
-	getDataQuad_ColorTexture,
-	getDataQuad_ColorTexture3D,
-	getDataRect,
-	getDataBoxTunnel,
-	getDataCircle_TRIANGLES,
-	getDataGlowDot,
-	getDataRing,
+	// Quads
+	Quad_Color,
+	Quad_Color3D,
+	Quad_Texture,
+	Quad_ColorTexture,
+	Quad_ColorTexture3D,
+	Rect,
+	// Circles
+	Circle,
+	// Other shapes
+	BoxTunnel,
+	GlowDot,
+	Ring,
 };

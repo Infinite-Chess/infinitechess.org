@@ -232,7 +232,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], startX, endX);
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], startY, endY);
 	
-	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
+	const data = bufferdata.Quad_ColorTexture(startX, startY, endX, endY, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
 	return createModel(data, 2, "TRIANGLES", true, boardTexture);
 }
 
@@ -381,8 +381,8 @@ function renderSolidCover() {
 	const b = (lightTiles[2] + darkTiles[2]) / 2;
 	const a = (lightTiles[3] + darkTiles[3]) / 2;
 
-	const data = bufferdata.getDataBoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
-	data.push(...bufferdata.getDataQuad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
+	const data = bufferdata.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
+	data.push(...bufferdata.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
 	const model = createModel(data, 3, "TRIANGLES", true);
 
