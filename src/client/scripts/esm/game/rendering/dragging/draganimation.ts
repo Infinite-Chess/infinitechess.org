@@ -28,12 +28,11 @@ import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
 import bd from "../../../util/bigdecimal/bigdecimal.js";
 import boardtiles from "../boardtiles.js";
+import primitives from "../primitives.js";
 import { listener_overlay } from "../../chess/game.js";
 import { Mouse } from "../../input.js";
 // @ts-ignore
 import shapes from "../shapes.js";
-// @ts-ignore
-import primitives from "../primitives.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore

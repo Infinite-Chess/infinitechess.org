@@ -11,17 +11,13 @@
  */
 
 
-
 import type { Coords } from "../../chess/util/coordutil.js";
 import type { Color } from "../../util/math/math.js";
 
-
 import board from "./boardtiles.js";
-// @ts-ignore
 import primitives from "./primitives.js";
 // @ts-ignore
 import shapes from "./shapes.js";
-
 
 
 // Variables ------------------------------------------------------------------------------

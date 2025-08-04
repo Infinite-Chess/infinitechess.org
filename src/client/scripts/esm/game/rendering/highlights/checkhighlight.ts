@@ -9,9 +9,8 @@ import gamefileutility from '../../../chess/util/gamefileutility.js';
 import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
 import bd from '../../../util/bigdecimal/bigdecimal.js';
-import { BufferModel, createModel } from '../buffermodel.js';
-// @ts-ignore
 import primitives from '../primitives.js';
+import { BufferModel, createModel } from '../buffermodel.js';
 
 
 // Type Definitions ----------------------------------------------------------------

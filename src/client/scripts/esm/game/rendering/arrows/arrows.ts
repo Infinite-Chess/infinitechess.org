@@ -34,6 +34,7 @@ import boardpos from '../boardpos.js';
 import legalmoves from '../../../chess/logic/legalmoves.js';
 import geometry from '../../../util/math/geometry.js';
 import boardtiles from '../boardtiles.js';
+import primitives from '../primitives.js';
 import vectors, { Vec2, Vec2Key } from '../../../util/math/vectors.js';
 import bounds, { BoundingBoxBD } from '../../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
@@ -41,8 +42,6 @@ import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
-// @ts-ignore
-import primitives from '../primitives.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore

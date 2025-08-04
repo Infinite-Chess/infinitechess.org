@@ -4,23 +4,13 @@
  * We also keep track of what tile the mouse is currently hovering over.
  */
 
-// Import Start
-// @ts-ignore
-import webgl from './webgl.js';
-// @ts-ignore
-import texture from './texture.js';
-// @ts-ignore
-import style from '../gui/style.js';
-// @ts-ignore
-import primitives from './primitives.js';
-// @ts-ignore
-import perspective from './perspective.js';
-// @ts-ignore
-import camera from './camera.js';
-// @ts-ignore
-import { gl } from './webgl.js';
+import type { BufferModel } from './buffermodel.js';
+import type { Color } from '../../util/math/math.js';
+import type { BDCoords } from '../../chess/util/coordutil.js';
+import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import type { BoundingBoxBD } from '../../util/math/bounds.js';
+
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
-import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import frametracker from './frametracker.js';
@@ -33,13 +23,21 @@ import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
-// Import End
+import primitives from './primitives.js';
+import { createModel } from './buffermodel.js';
+// @ts-ignore
+import webgl from './webgl.js';
+// @ts-ignore
+import texture from './texture.js';
+// @ts-ignore
+import style from '../gui/style.js';
+// @ts-ignore
+import perspective from './perspective.js';
+// @ts-ignore
+import camera from './camera.js';
+// @ts-ignore
+import { gl } from './webgl.js';
 
-import type { BufferModel } from './buffermodel.js';
-import type { Color } from '../../util/math/math.js';
-import type { BDCoords } from '../../chess/util/coordutil.js';
-import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import type { BoundingBoxBD } from '../../util/math/bounds.js';
 
 
 const ONE = bigdecimal.FromNumber(1.0);

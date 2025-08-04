@@ -13,26 +13,25 @@ import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
-import { createModel } from "../buffermodel.js";
 import spritesheet from "../spritesheet.js";
 import drawrays from "./annotations/drawrays.js";
-import { Mouse } from "../../input.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import mouse from "../../../util/mouse.js";
-import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
 import bounds from "../../../util/math/bounds.js";
 import geometry from "../../../util/math/geometry.js";
 import jsutil from "../../../util/jsutil.js";
+import primitives from "../primitives.js";
 import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
+import { listener_overlay } from "../../chess/game.js";
+import { Mouse } from "../../input.js";
+import { createModel } from "../buffermodel.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
 import perspective from "../perspective.js";
-// @ts-ignore
-import primitives from "../primitives.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 
