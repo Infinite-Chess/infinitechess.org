@@ -8,11 +8,13 @@
  */
 
 
+import bd from "../../util/bigdecimal/bigdecimal.js";
 import bimath from "../../util/bigdecimal/bimath.js";
 import jsutil from "../../util/jsutil.js";
 import bounds, { BoundingBox } from "../../util/math/bounds.js";
-import vectors, { LineCoefficients, Vec2Key } from "../../util/math/vectors.js";
-import coordutil, { Coords, CoordsKey, DoubleCoords } from "../util/coordutil.js";
+import geometry from "../../util/math/geometry.js";
+import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../util/math/vectors.js";
+import coordutil, { BDCoords, Coords, CoordsKey, DoubleCoords } from "../util/coordutil.js";
 import icnconverter from "./icn/icnconverter.js";
 
 
@@ -23,6 +25,7 @@ import icnconverter from "./icn/icnconverter.js";
 
 interface CompressionInfo {
 	position: Map<CoordsKey, number>;
+	axisOrders: Record<Vec2Key, AxisOrder>;
 	/**
 	 * Contains information on each group, the group's
 	 * original position, and each piece in the group.
@@ -41,7 +44,29 @@ type PieceTransform = {
 };
 
 
-type DoubleMoveDraft = { startCoords: DoubleCoords, endCoords: DoubleCoords };
+/**
+ * Contains information of what pieces are connected/linked/merged on what axis,
+ * and how they have been transformed into the compressed position.
+ */
+type AxisOrders = Record<Vec2Key, AxisOrder>;
+
+/**
+ * An ordering of the pieces on one axis (X/Y/pos-diag/neg-diag),
+ * also storing what pieces are linked together (their axis values are close together).
+ */
+type AxisOrder = AxisGroup[];
+
+/**
+ * A group of pieces all linked on one axis (X/Y/pos-diag/neg-diag) 
+ * due to being close together.
+ */
+type AxisGroup = {
+	range: [bigint, bigint];
+	transformedRange?: [bigint, bigint];
+	pieces: PieceTransform[];
+}
+
+
 
 type MoveDraft = { startCoords: Coords, endCoords: Coords };
 
@@ -83,6 +108,15 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * Of course if we are taking into account connections between sub groups
  * and sub sub groups, the distance naturally becomes larger in order to
  * retain forks and forks of forks.
+ * 
+ * REQUIREMENTS:
+ * 
+ * * Must be OVER 2x larger than than the longest jumping jumper piece.
+ * This is so that they will remain connected to the same group when expanding the move back out.
+ * Jumping moves don't need extra attention other than making sure this is big enough.
+ * Code works automatically, even for hippogonal jumps!
+ * 
+ * * Must be divisible by 2, as this is divided by two in the code.
  */
 const MIN_ARBITRARY_DISTANCE = 20n;
 
@@ -92,7 +126,7 @@ const MIN_ARBITRARY_DISTANCE = 20n;
 
 
 
-const example_position = 'k0,0|r11945,23961|r-18234,912|R2189,-13741|R-32998,5012|R516,-28344|r-23840,6172|R19455,-42239|r-6029,-35102|R19285,22147|R-49887,-7341|R10344,-18493|R-22110,37777|r30391,-458|R10344,11234|r21089,18500|r-15000,-24611|r7777,-6000|r-8122,18888|R23600,301|r10344,-32000|r120,-24760|R-34999,-32990|R13557,8442|r-45123,16543|r12277,-12227|R-24000,-23500|R9381,-920|r-9000,3822|R38571,-17000|r-19261,10561|r49999,49999|r4,7|r-6,-9|R10,0|R0,-8|r-5,2|R-3,50000';
+const example_position = 'k5,5|R35,10';
 // const example_position = 'k0,0|Q0,0|N2000,4000';
 // const example_position = 'k0,0|Q0,0|N40,120';
 // const example_position = 'K0,0|Q5000,10000|Q5000,7000';
@@ -110,9 +144,37 @@ console.log("\nAfter:");
 console.log(newICN);
 console.log("\n");
 
+const chosenMove: MoveDraft = {
+	startCoords: [20n, 5n],
+	endCoords: [0n, 1n],
+};
+
+const expandedMove = expandMove(compressedPosition.axisOrders, compressedPosition.pieceTransformations, chosenMove);
+
+console.log(`\nChosen move:   Start: (${String(chosenMove.startCoords)})   End: (${String(chosenMove.endCoords)})`);
+console.log(`Expanded move:   Start: (${String(expandedMove.startCoords)})   End: (${String(expandedMove.endCoords)})\n`);
+
+
 
 
 // ================================ Implementation ================================
+
+
+
+/**
+ * What is an Axis value?
+ * 
+ * It's a number unique to each location a piece can be on a given axis.
+ * 
+ * For example, on the X axis, the axis value is the x coordinate of the piece.
+ * On the Y axis, the axis value is the y coordinate of the piece.
+ * On the positive diagonal, the axis value is y - x.
+ * On the negative diagonal, the axis value is y + x.
+ */
+
+/** Given a coordinate, returns the bigint value that represent the axis value for that piece. */
+function XAxisDeterminer(fakeEndCoords: Coords): bigint { return fakeEndCoords[0]; }
+function YAxisDeterminer(fakeEndCoords: Coords): bigint { return fakeEndCoords[1]; }
 
 
 
@@ -146,27 +208,12 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	// The position needs COMPRESSION.
 
-
-	/**
-	 * An ordering of the pieces on one axis (X/Y/pos-diag/neg-diag),
-	 * also storing what pieces are linked together (their axis values are close together).
-	 */
-	type AxisOrder = AxisGroup[];
-
-	/**
-	 * A group of pieces all linked on one axis (X/Y/pos-diag/neg-diag) 
-	 * due to being close together.
-	 */
-	type AxisGroup = {
-		range: [bigint, bigint];
-		pieces: PieceTransform[];
-	}
 	
 	/**
 	 * Orderings of the pieces on every axis of movement,
 	 * and how they are all connected together.
 	 */
-	const AllAxisOrders: Record<Vec2Key, AxisOrder> = {};
+	const AllAxisOrders: AxisOrders = {};
 
 	// Init the axis orders as empty
 	for (const vec2 of vectors.VECTORS_ORTHOGONAL) { // [[1,0], [0,1]]
@@ -289,9 +336,15 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 	for (const axisGroup of AllAxisOrders['1,0']) {
 		for (const piece of axisGroup.pieces) piece.transformedCoords[0] = currentX + piece.coords[0] - axisGroup.range[0]; // Add the piece's offset from the start of the group
 		
+		const axisGroupSize = axisGroup.range[1] - axisGroup.range[0];
+
+		// Set the group's transformed range.
+		// This is important for determining what groups we are interested in
+		// when we try to make a move in the compressed position.
+		axisGroup.transformedRange = [currentX, currentX + axisGroupSize];
+
 		// Increment so that the next x coordinate with a piece has
 		// what's considered an arbitrary spacing between them
-		const axisGroupSize = axisGroup.range[1] - axisGroup.range[0];
 		currentX += MIN_ARBITRARY_DISTANCE + axisGroupSize;
 	}
 
@@ -301,9 +354,15 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 	for (const axisGroup of AllAxisOrders['0,1']) {
 		for (const piece of axisGroup.pieces) piece.transformedCoords[1] = currentY + piece.coords[1] - axisGroup.range[0]; // Add the piece's offset from the start of the group
 		
+		const axisGroupSize = axisGroup.range[1] - axisGroup.range[0];
+
+		// Set the group's transformed range.
+		// This is important for determining what groups we are interested in
+		// when we try to make a move in the compressed position.
+		axisGroup.transformedRange = [currentY, currentY + axisGroupSize];
+
 		// Increment so that the next y coordinate with a piece has
 		// what's considered an arbitrary spacing between them
-		const axisGroupSize = axisGroup.range[1] - axisGroup.range[0];
 		currentY += MIN_ARBITRARY_DISTANCE + axisGroupSize;
 	}
 
@@ -323,6 +382,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	return {
 		position: compressedPosition,
+		axisOrders: AllAxisOrders,
 		pieceTransformations: pieces,
 	};
 }
@@ -336,59 +396,158 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
  * @param compressedPosition - The original uncompressed position
  * @param move - The decided upon move based on the compressed position
  */
-// function expandMove(pieceTransformations: PieceTransform[], move: DoubleMoveDraft): MoveDraft {
-// 	const startCoordsBigInt: Coords = [BigInt(move.startCoords[0]), BigInt(move.startCoords[1])];
-// 	const endCoordsBigInt: Coords = [BigInt(move.endCoords[0]), BigInt(move.endCoords[1])];
+function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransform[], move: MoveDraft): MoveDraft {
+	const startCoordsBigInt: Coords = [BigInt(move.startCoords[0]), BigInt(move.startCoords[1])];
+	const endCoordsBigInt: Coords = [BigInt(move.endCoords[0]), BigInt(move.endCoords[1])];
 
-// 	// Determine the piece's original position
+	// Determine the piece's original position
 
-// 	const originalPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords));
-// 	if (originalPiece === undefined) throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${JSON.stringify(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`);
+	const originalPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords));
+	if (originalPiece === undefined) throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${String(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`);
 
-// 	const originalStartCoords: Coords = originalPiece.coords;
+	const originalStartCoords: Coords = originalPiece.coords; // EASY! This is already given
 
-// 	/**
-// 	 * Determine the piece's intended destination square.
-// 	 * 
-// 	 * How do we do that?
-// 	 * 
-// 	 * A. If the piece is on the same rank/file/diagonal as another piece
-// 	 * in the compressed position, then its intended destination is the intersection
-// 	 * between the line of its movement vector through its original uncompressed start square,
-// 	 * and the rank/file/diagonal line going through that other piece.
-// 	 * 
-// 	 * There may potentially be multiple pieces in the compressed position that are on
-// 	 * its same ran/file/diagonal, but all that means is its a fork, and the final
-// 	 * uncompressed position should still fork both, so we only care about finding
-// 	 * the intersection between one of the pieces.
-// 	 * 
-// 	 * B. The piece isn't on the same rank/file/diagonal as another piece. It could have
-// 	 * wanted to move to an arbitrary location between ranks/files/diagonals with pieces,
-// 	 * where nothing threats it, not trying to threaten any pieces. Or it could be a finite mover,
-// 	 * in that case move it the same distance it wanted to.
-// 	 */
+	/**
+	 * Determine the piece's intended destination square.
+	 * 
+	 * How do we do that?
+	 * 
+	 * Determine if the piece is targetting any specific axis group.
+	 * We can then calculate the intersection of its movement vector
+	 * and the direction towards that group to determine its intended destination.
+	 * 
+	 * For now there aren't any gaps between groups, so it can't target an arbitrary
+	 * opening between gaps, its always got to be a little to the left or right of a group.
+	 * However, they can move arbitrarily far fast the farthest group,
+	 * so we will just move it the same distance it wanted to.
+	 */
 
-// 	// Did it capture a piece?
-// 	const capturedTransformedPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(pt.transformedCoords as Coords, endCoordsBigInt));
-// 	if (capturedTransformedPiece) return {
-// 		startCoords: originalStartCoords,
-// 		endCoords: capturedTransformedPiece.coords
-// 	};
+	// Did it capture a piece?
+	const capturedTransformedPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(pt.transformedCoords as Coords, endCoordsBigInt));
+	if (capturedTransformedPiece) { // EASY! Return the captured piece's original coords
+		return {
+			startCoords: originalStartCoords,
+			endCoords: capturedTransformedPiece.coords
+		};
+	}
 
-// 	// It didn't capture any piece
+	// It didn't capture any piece
+	// This is a little more complicated. But we will attach it to the nearest axis group.
 
-// 	// Expand lines out of its destination square in all directions except its movement vector
+	/** The direction the piece moved in. */
+	const vector: Vec2 = vectors.absVector(vectors.normalizeVector(coordutil.subtractCoords(endCoordsBigInt, startCoordsBigInt)));
+	const vec2Key: Vec2Key = vectors.getKeyFromVec2(vector);
+	// console.log("Original start coords:", originalStartCoords);
+	// console.log("Movement vector:", vector);
+	const movementLine: LineCoefficients = vectors.getLineGeneralFormFromCoordsAndVec(originalStartCoords, vector);
 
-// 	/** The direction the piece moved in. */
-// 	const vector = vectors.absVector(vectors.normalizeVector(coordutil.subtractCoords(endCoordsBigInt, startCoordsBigInt)));
+	const HALF_ARBITRARY_DISTANCE = MIN_ARBITRARY_DISTANCE / 2n;
 
-// 	const targetVectors = [...vectors.VECTORS_ORTHOGONAL].filter((vec2) => !coordutil.areCoordsEqual(vec2, vector));
+	let originalEndCoords: Coords | undefined;
 
-// 	// Eminate lines in all directions from the entity coords
-// 	const eminatingLines: LineCoefficients[] = targetVectors.map(vec2 => vectors.getLineGeneralFormFromCoordsAndVec(startCoordsBigInt, vec2));
+	// Search each axis group besides the direction it moved in
+
+	// Skip if our movement is perpendicular to that axis,
+	// its impossible for us to increase our axis value along it
+	// => not interested in threatening any of those groups.
+	if (vec2Key !== '0,1') determineIfMovedPieceInterestedInAxis('1,0', XAxisDeterminer);
+	if (vec2Key !== '1,0') determineIfMovedPieceInterestedInAxis('0,1', YAxisDeterminer);
+
+	function determineIfMovedPieceInterestedInAxis(
+		axis: '1,0' | '0,1',
+		// eslint-disable-next-line no-unused-vars
+		axisValueDeterminer: (fakeEndCoords: Coords) => bigint,
+	) {
+		if (originalEndCoords) return; // We already found the original end coords, no need to continue
+
+		const axisOrder = AllAxisOrders[axis];
+
+		const fakeEndCoordsAxisValue = axisValueDeterminer(endCoordsBigInt);
+		// console.log("fakeEndCoordsAxisValue:", fakeEndCoordsAxisValue);
+		// console.log('endCoords bigint:', endCoordsBigInt);
+
+		for (const axisGroup of axisOrder) {
+			if (fakeEndCoordsAxisValue + HALF_ARBITRARY_DISTANCE >= axisGroup.transformedRange![0] &&
+				fakeEndCoordsAxisValue - HALF_ARBITRARY_DISTANCE <= axisGroup.transformedRange![1]) {
+				// We found the group of interest this piece is targetting!
+				console.log(`Moved piece is interested in group on the ${axis} axis with range ${axisGroup.transformedRange}.   Original range ${axisGroup.range}`);
+
+				// The piece is on the same file as this axis group, so connect it to this axis group
+				// so its position remains relative to them when the position is expanded back out.
+
+				const offsetFromGroupStart = fakeEndCoordsAxisValue - axisGroup.transformedRange![0];
+				const actualEndCoordsAxisValue = axisGroup.range[0] + offsetFromGroupStart;
+				// console.log('offsetFromGroupStart:', offsetFromGroupStart);
+				// console.log('actualEndCoordsAxisValue:', actualEndCoordsAxisValue);
+				// The ACTUAL coordinates they moved to!
+				originalEndCoords = trueEndCoordsDeterminer(movementLine, axis, actualEndCoordsAxisValue);
+				break;
+			}
+		}
+		if (!originalEndCoords) {
+			// They didn't specifically target any group.
+			// They must have moved further left or right than any group.
+			if (fakeEndCoordsAxisValue + HALF_ARBITRARY_DISTANCE < axisOrder[0].transformedRange![0]) {
+				// They moved left of the leftmost group
+				console.log(`Moved piece wants to move left of the leftmost group on the ${axis} axis.`);
+
+				const distToLeftMostGroup = fakeEndCoordsAxisValue - axisOrder[0]!.transformedRange![0];
+				const actualEndCoordsAxisValue = axisOrder[0]!.range[0] + distToLeftMostGroup;
+				// The ACTUAL coordinates they moved to!
+				originalEndCoords = trueEndCoordsDeterminer(movementLine, axis, actualEndCoordsAxisValue);
+			} else if (fakeEndCoordsAxisValue - HALF_ARBITRARY_DISTANCE > axisOrder[axisOrder.length - 1]!.transformedRange![1]) {
+				// They moved right of the rightmost group
+				console.log(`Moved piece wants to move right of the rightmost group on the ${axis} axis.`);
+
+				const distToRightMostGroup = fakeEndCoordsAxisValue - axisOrder[axisOrder.length - 1]!.transformedRange![1];
+				const actualEndCoordsAxisValue = axisOrder[axisOrder.length - 1]!.range[1] + distToRightMostGroup;
+				// The ACTUAL coordinates they moved to!
+				originalEndCoords = trueEndCoordsDeterminer(movementLine, axis, actualEndCoordsAxisValue);
+			} else {
+				console.log(`Moved piece is not interested in any groups on the ${axis} axis.`);
+				console.log('fakeEndCoordsAxisValue:', fakeEndCoordsAxisValue);
+			}
+		}
+	}
+
+	function trueEndCoordsDeterminer(movementLine: LineCoefficients, axisOfGroupOfInterest: '1,0' | '0,1', targetAxisValue: bigint): Coords {
+		// console.log("Determining true end coords for axis:", axisOfGroupOfInterest, " with target axis value:", targetAxisValue);
+
+		const axisPerpendicularVec: Vec2 = vectors.getPerpendicularVector(vectors.getVec2FromKey(axisOfGroupOfInterest));
+
+		// I need to find the intersection point between the movement line,
+		// and the line of vector axisPerpendicularVec with the targetAxisValue.
+
+		// First determine the axisPerpendicularVec line with the targetAxisValue.
+		let intersectionLine: LineCoefficients;
+		if (axisOfGroupOfInterest === '1,0') {
+			// The line is vertical, so the x coordinate is targetAxisValue
+			intersectionLine = vectors.getLineGeneralFormFromCoordsAndVec([targetAxisValue, 0n], axisPerpendicularVec);
+		} else if (axisOfGroupOfInterest === '0,1') {
+			// The line is horizontal, so the y coordinate is targetAxisValue
+			intersectionLine = vectors.getLineGeneralFormFromCoordsAndVec([0n, targetAxisValue], axisPerpendicularVec);
+		} else throw Error(`Unknown axis of group of interest: ${axisOfGroupOfInterest}`);
+
+		// console.log("movementLine:", movementLine);
+		// console.log("intersectionLine:", intersectionLine);
+
+		// Now find the intersection point between the movement line and the intersection line.
+		const intersectionPoint: BDCoords | undefined = geometry.calcIntersectionPointOfLines(...movementLine, ...intersectionLine);
+		if (!intersectionPoint) throw Error(`Unable to find intersection point between movement line and group of interest!`);
+		if (!bd.areCoordsIntegers(intersectionPoint)) throw Error(`Intersection point between movement line and group of interest is not an integer coordinate!`);
+
+		return bd.coordsToBigInt(intersectionPoint);
+	}
+
+	if (!originalEndCoords) throw Error("Unable to determine the original end coordinates of the moved piece! ");
+
+	return {
+		startCoords: originalStartCoords,
+		endCoords: originalEndCoords
+	};
+}
 
 
-// }
 
 
 
