@@ -9,6 +9,7 @@
 
 
 import bimath from "../../util/bigdecimal/bimath.js";
+import jsutil from "../../util/jsutil.js";
 import bounds, { BoundingBox } from "../../util/math/bounds.js";
 import vectors, { LineCoefficients } from "../../util/math/vectors.js";
 import coordutil, { Coords, CoordsKey, DoubleCoords } from "../util/coordutil.js";
@@ -83,7 +84,7 @@ const UNSAFE_BOUND_BIGINT = 1000n;
  * and sub sub groups, the distance naturally becomes larger in order to
  * retain forks and forks of forks.
  */
-const GROUP_PAD_DISTANCE = 20n;
+const GROUP_PAD_DISTANCE = 40n;
 
 
 
@@ -91,7 +92,7 @@ const GROUP_PAD_DISTANCE = 20n;
 
 
 
-const example_position = 'k0,0|Q2000,4000';
+const example_position = 'k0,0|R1200,800|R-1500,-600|R900,-1300|R-700,1100|R300,-1300|R2000,0|R900,2100|R0,2300|R-2200,-2200|R2000,-600|R8000,12000|R-15000,4000|R18000,-6000|R-13000,-16000|R10000,9000|R-9500,14500|R12000,-18000|R-8000,-12000|R19000,2100|R-20000,-600';
 // const example_position = 'k0,0|Q0,0|N2000,4000';
 // const example_position = 'k0,0|Q0,0|N40,120';
 // const example_position = 'K0,0|Q5000,10000|Q5000,7000';
@@ -100,9 +101,14 @@ const parsedPosition = icnconverter.ShortToLong_Format(example_position);
 // console.log("parsedPosition:", JSON.stringify(parsedPosition.position, jsutil.stringifyReplacer));
 
 const compressedPosition = compressPosition(parsedPosition.position!);
-parsedPosition.position = compressedPosition.position;
+
+console.log("\nBefore:");
+console.log(example_position);
+
 const newICN = icnconverter.getShortFormPosition(compressedPosition.position, parsedPosition.state_global.specialRights!);
-console.log("compressedPosition:", newICN);
+console.log("\nAfter:");
+console.log(newICN);
+console.log("\n");
 
 
 
@@ -179,8 +185,8 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	// Choosing a smart start coord ensure the resulting position is centered on (0,0)
 	let currentY: bigint = BigInt(axisOrdering.y.length - 1) * -GROUP_PAD_DISTANCE / 2n;
-	for (const pieces of axisOrdering.x) {
-		for (const piece of pieces) piece.transformedCoords[0] = currentY;
+	for (const pieces of axisOrdering.y) {
+		for (const piece of pieces) piece.transformedCoords[1] = currentY;
 		
 		// Increment so that the next y coordinate with a piece has
 		// what's considered an arbitrary spacing between them
@@ -192,10 +198,11 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	const compressedPosition: Map<CoordsKey, number> = new Map();
 	for (const piece of pieces) {
-		if (!piece.transformedCoords[0] || !piece.transformedCoords[1]) throw Error(`Piece's transformed position is not entirely defined! Original piece location: ${JSON.stringify(piece.coords)}. Transformed location: ${JSON.stringify(piece.transformedCoords)}.`);
+		console.log(`Piece ${piece.type} at ${String(piece.coords)} transformed to ${String(piece.transformedCoords)}.`);
+		if (piece.transformedCoords[0] === undefined || piece.transformedCoords[1] === undefined) throw Error(`Piece's transformed position is not entirely defined! Original piece location: ${String(piece.coords)}. Transformed location: ${String(piece.transformedCoords)}.`);
 
 		const transformedCoordsKey = coordutil.getKeyFromCoords(piece.transformedCoords as Coords);
-		compressedPosition[transformedCoordsKey] = piece.type;
+		compressedPosition.set(transformedCoordsKey, piece.type);
 	}
 
 	return {
