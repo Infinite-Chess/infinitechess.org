@@ -351,9 +351,9 @@ function clamp(value: bigint, min: bigint, max: bigint): bigint {
  * This is faster than the Euclidean algorithm, especially for very large numbers.
  */
 function GCD(a: bigint, b: bigint) {
-    // We must work with positive numbers
-    a = abs(a);
-    b = abs(b);
+	// We must work with positive numbers
+	a = abs(a);
+	b = abs(b);
 
 	if (a === b) return a;
 	if (a === ZERO) return b;

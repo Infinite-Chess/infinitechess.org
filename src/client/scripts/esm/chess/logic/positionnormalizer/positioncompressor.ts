@@ -8,15 +8,8 @@
  */
 
 
-import bd from "../../../util/bigdecimal/bigdecimal.js";
-import bimath from "../../../util/bigdecimal/bimath.js";
-import jsutil from "../../../util/jsutil.js";
-import bounds, { BoundingBox } from "../../../util/math/bounds.js";
-import geometry from "../../../util/math/geometry.js";
-import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../../util/math/vectors.js";
-import coordutil, { BDCoords, Coords, CoordsKey, DoubleCoords } from "../../util/coordutil.js";
-import icnconverter, { _Move_Compact } from "../icn/icnconverter.js";
-import moveexpander from "./moveexpander.js";
+import vectors, { Vec2Key } from "../../../util/math/vectors.js";
+import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 
 
 
@@ -24,9 +17,13 @@ import moveexpander from "./moveexpander.js";
 
 
 
+/**
+ * A compressed position, along with the transformation info to be able to
+ * expand the chosen move back to the original position.
+ */
 interface CompressionInfo {
 	position: Map<CoordsKey, number>;
-	axisOrders: Record<Vec2Key, AxisOrder>;
+	axisOrders: AxisOrders;
 	/**
 	 * Contains information on each group, the group's
 	 * original position, and each piece in the group.
@@ -41,6 +38,7 @@ interface CompressionInfo {
 type PieceTransform = {
 	type: number;
 	coords: Coords;
+	/** Both coords will be fully defined after transformation is complete. */
 	transformedCoords: [bigint | undefined, bigint | undefined];
 };
 
@@ -69,26 +67,19 @@ type AxisGroup = {
 
 
 
-
-// interface Group {
-// 	/** The bounding box of this group. */
-// 	bounds: BoundingBox;
-// 	/** The center of the box */
-// 	center: Coords;
-// 	/** All pieces included in this group. */
-// 	pieces: Piece[];
-// 	/** How much the group has been shifted compared to the original, uncompressed input position. */
-// 	offset?: Coords;
-// }
-
-
-
 // ================================== Constants ==================================
 
 
 /**
  * Piece groups further than this many squares away from the origin
  * will be compressed closer to the origin.
+ * 
+ * IN THE FUTURE: Determine whether a position needs to be compressed or not
+ * BASED ON WHETHER intersections of groups, or intersections of intersections
+ * lie beyond Number.MAX_SAFE_INTEGER!
+ * 
+ * Actually it actually might be smarter to always normalize positions so engines
+ * have more floating point precision to work with.
  */
 const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
 // const UNSAFE_BOUND_BIGINT = 1000n;
@@ -121,48 +112,16 @@ const MIN_ARBITRARY_DISTANCE = 20n;
 
 
 
-// ================================ Testing Usage ================================
-
-
-
-const example_position = 'k5,5|R35,10';
-// const example_position = 'k0,0|Q0,0|N2000,4000';
-// const example_position = 'k0,0|Q0,0|N40,120';
-// const example_position = 'K0,0|Q5000,10000|Q5000,7000';
-
-const parsedPosition = icnconverter.ShortToLong_Format(example_position);
-// console.log("parsedPosition:", JSON.stringify(parsedPosition.position, jsutil.stringifyReplacer));
-
-const compressedPosition = compressPosition(parsedPosition.position!);
-
-console.log("\nBefore:");
-console.log(example_position);
-
-const newICN = icnconverter.getShortFormPosition(compressedPosition.position, parsedPosition.state_global.specialRights!);
-console.log("\nAfter:");
-console.log(newICN);
-console.log("\n");
-
-const chosenMove: _Move_Compact = {
-	startCoords: [20n, 5n],
-	endCoords: [0n, 1n],
-};
-
-const expandedMove = moveexpander.expandMove(compressedPosition.axisOrders, compressedPosition.pieceTransformations, chosenMove);
-
-console.log(`\nChosen move:   Start: (${String(chosenMove.startCoords)})   End: (${String(chosenMove.endCoords)})`);
-console.log(`Expanded move:   Start: (${String(expandedMove.startCoords)})   End: (${String(expandedMove.endCoords)})\n`);
-
-
-
-
 // ================================ Implementation ================================
 
 
 
-
-
-
+/**
+ * Compresses/normalizes a position. Reduces all arbitrary large distances
+ * to some small distance constant.
+ * Returns transformation info so that the chosen move from the compressed position
+ * can be expanded back to the original position.
+ */
 function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	// 1. List all pieces with their bigint arbitrary coordinates.
@@ -174,7 +133,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 		pieces.push({
 			type,
 			coords,
-			transformedCoords: [undefined, undefined],
+			transformedCoords: [undefined, undefined], // Initially undefined
 		});
 	});
 
@@ -193,20 +152,21 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	// The position needs COMPRESSION.
 
+
+	// ==================================== Construct Axis Orders & Groups ====================================
+
 	
 	/**
 	 * Orderings of the pieces on every axis of movement,
-	 * and how they are all connected together.
+	 * and how they are all grouped/connected together.
 	 */
 	const AllAxisOrders: AxisOrders = {};
 
 	// Init the axis orders as empty
-	for (const vec2 of vectors.VECTORS_ORTHOGONAL) { // [[1,0], [0,1]]
-		const vec2Key: Vec2Key = vectors.getKeyFromVec2(vec2); // '1,0' | '0,1'
-		AllAxisOrders[vec2Key] = [];
-	}
+	AllAxisOrders['1,0'] = []; // X axis
+	AllAxisOrders['0,1'] = []; // Y axis
 
-	// Order the pieces
+	// Order/group/connect the pieces
 
 	for (const piece of pieces) {
 		console.log(`\nAnalyzing piece at ${String(piece.coords)}...`);
@@ -214,16 +174,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 		registerPieceInAxisOrder(AllAxisOrders['0,1'], piece, piece.coords[1]);
 	}
 
-	// ONLY FOR LOGGING
-	console.log("\nAll axis orders after registering pieces:");
-	for (const vec2Key in AllAxisOrders) {
-		const axisOrder = AllAxisOrders[vec2Key];
-		console.log(`Axis order ${vec2Key}:`);
-		for (const axisGroup of axisOrder) {
-			console.log(`  Range: ${axisGroup.range}, Pieces: ${axisGroup.pieces.length}`);
-		}
-	}
-	
+	// Helper for registering a piece in any axis order.
 	function registerPieceInAxisOrder(axisOrder: AxisOrder, piece: PieceTransform, pieceAxisValue: bigint) {
 		console.log(`Axis value ${pieceAxisValue}`);
 
@@ -309,9 +260,27 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 		else console.log(`No merging needed, groups are not close enough.`);
 	}
 
-	// Now that the pieces are all in order,
 
-	// Let's determine their transformed coordinates.
+	// ONLY FOR LOGGING ---------------------------------------------
+	console.log("\nAll axis orders after registering pieces:");
+	for (const vec2Key in AllAxisOrders) {
+		const axisOrder = AllAxisOrders[vec2Key] as AxisOrder;
+		console.log(`Axis order ${vec2Key}:`);
+		for (const axisGroup of axisOrder) {
+			console.log(`  Range: ${axisGroup.range}, Pieces: ${axisGroup.pieces.length}`);
+		}
+	}
+	// --------------------------------------------------------------
+	
+
+
+	// ========================================= TRANSFORM PIECES =========================================
+
+
+	/**
+	 * Now that the pieces are all in order,
+	 * Let's determine their final transformed coordinates.
+	 */
 
 	console.log("\nTransforming pieces to final coordinates...");
 
@@ -353,6 +322,9 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 
 
+	// ================================ RETURN FINAL POSITION ================================
+
+
 	// Now create the final compressed position from all
 	// pieces known coord transformations
 
@@ -373,14 +345,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 }
 
 
-
-
-
-
-
-
-
-
+// ================================ HELPERS ================================
 
 
 /**
@@ -424,11 +389,8 @@ function binarySearchRange<T>(
 		}
 
 		// 2. Adjust search range.
-		if (value < lowMergeLimit) {
-			right = mid - 1;
-		} else { // highMergeLimit
-			left = mid + 1;
-		}
+		if (value < lowMergeLimit) right = mid - 1;
+		else left = mid + 1; // highMergeLimit
 	}
 
 	// 3. If the loop completes, the value was not found.
@@ -437,33 +399,8 @@ function binarySearchRange<T>(
 }
 
 
+// ===================================== EXPORTS =====================================
 
-/**
- * Returns the chebyshev distance from the provided coordinates to the bounds.
- * If the coordinates are within the bounds, returns 0.
- */
-// function getCoordsDistanceToBounds(coords: Coords, bounds: BoundingBox): bigint {
-// 	const boundsWidth = bounds.right - bounds.left;
-// 	const boundsHeight = bounds.bottom - bounds.top;
-
-// 	const xDistLeft = bimath.abs(coords[0] - bounds.left);
-// 	const xDistRight = bimath.abs(coords[0] - bounds.right);
-// 	const yDistBottom = bimath.abs(coords[1] - bounds.bottom);
-// 	const yDistTop = bimath.abs(coords[1] - bounds.top);
-
-// 	if (xDistLeft < boundsWidth && xDistRight < boundsWidth &&
-// 		yDistBottom < boundsHeight && yDistTop < boundsHeight) {
-// 		// The coordinates are within the bounds.
-// 		return 0n;
-// 	}
-
-// 	// The coordinates are outside the bounds.
-// 	// Return the chebyshev distance to the closest edge.
-// 	return bimath.max(
-// 		bimath.min(xDistLeft, xDistRight),
-// 		bimath.min(yDistBottom, yDistTop)
-// 	);
-// }
 
 export type {
 	AxisOrders,
@@ -472,5 +409,7 @@ export type {
 
 export default {
 	// Constants
-	MIN_ARBITRARY_DISTANCE
+	MIN_ARBITRARY_DISTANCE,
+	// Implementation
+	compressPosition,
 };
