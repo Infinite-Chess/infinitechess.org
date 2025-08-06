@@ -414,22 +414,22 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
  *          - If found, `found` is true and `index` is the position of the range in the array that it should be merged into.
  *          - If not found, `found` is false and `index` is the correct insertion point for a new range for the value.
  */
-function binarySearchRange<T, V extends number | bigint>(
+function binarySearchRange<T>(
 	sortedArray: T[],
 	// eslint-disable-next-line no-unused-vars
-	rangeExtractor: (element: T) => [V,V],
-	mergeRange: V,
-	value: V
+	rangeExtractor: (element: T) => [bigint,bigint],
+	mergeRange: bigint,
+	value: bigint
 ): { found: boolean; index: number; } {
 	let left: number = 0;
 	let right: number = sortedArray.length - 1;
 
 	while (left <= right) {
 		const mid: number = Math.floor((left + right) / 2);
-		const midRange: [V,V] = rangeExtractor(sortedArray[mid]);
+		const midRange: [bigint,bigint] = rangeExtractor(sortedArray[mid]);
 
-		const lowMergeLimit: V = midRange[0] - mergeRange;
-		const highMergeLimit: V = midRange[1] + mergeRange;
+		const lowMergeLimit: bigint = midRange[0] - mergeRange;
+		const highMergeLimit: bigint = midRange[1] + mergeRange;
 
 		// 1. Check for an exact match first.
 		if (value >= lowMergeLimit && value <= highMergeLimit) {
