@@ -254,6 +254,16 @@ function negateVector(vec2: Vec2): Vec2 {
 }
 
 /**
+ * Returns the absolute value of the provided vector.
+ * In the context of our game, positive vectors always point to the right,
+ * and if they are vertical then they always point up.
+ */
+function absVector(vec2: Vec2): Vec2 {
+	if (vec2[0] < 0n || vec2[0] === 0n && vec2[1] < 0n) return negateVector(vec2);
+	else return vec2;
+}
+
+/**
  * Normalizes a vector to its smallest possible integer components while preserving its direction.
  */
 function normalizeVector(vec2: Vec2): Vec2 {
@@ -366,6 +376,7 @@ export default {
 	dotProduct,
 	dotProductBD,
 	negateVector,
+	absVector,
 	normalizeVector,
 	getPerpendicularVector,
 	degreesToRadians,
