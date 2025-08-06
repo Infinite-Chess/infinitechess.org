@@ -347,16 +347,40 @@ function clamp(value: bigint, min: bigint, max: bigint): bigint {
 
 
 /**
- * Computes the greatest common divisor (GCD) of two BigInts using the Euclidean algorithm.
- * @param a The first BigInt.
- * @param b The second BigInt.
- * @returns The non-negative GCD of a and b.
+ * Calculates the gcd of two bigints using the binary GCD (or Stein's) algorithm.
+ * This is faster than the Euclidean algorithm, especially for very large numbers.
  */
-function GCD(a: bigint, b: bigint): bigint {
-	while (b !== ZERO) {
-		[a, b] = [b, a % b];
+function GCD(a: bigint, b: bigint) {
+    // We must work with positive numbers
+    a = abs(a);
+    b = abs(b);
+
+	if (a === b) return a;
+	if (a === ZERO) return b;
+	if (b === ZERO) return a;
+
+	// Strip out any shared factors of two beforehand (to be re-added at the end)
+	let sharedTwoFactors = ZERO;
+	while (!((a & ONE) | (b & ONE))) {
+		sharedTwoFactors++;
+		a >>= ONE;
+		b >>= ONE;
 	}
-	return abs(a);
+
+	while (a !== b && b > ONE) {
+		// Any remaining factors of two in either number are not important to the gcd and can be shifted away
+		while (!(a & ONE)) a >>= ONE;
+		while (!(b & ONE)) b >>= ONE;
+
+		// Standard Euclidean algorithm, maintaining a > b and avoiding division
+		if (b > a) [a, b] = [b, a];
+		else if (a === b) break;
+
+		a -= b;
+	}
+
+	// b is the gcd, after re-applying the shared factors of 2 removed earlier
+	return b << sharedTwoFactors;
 }
 
 /**
