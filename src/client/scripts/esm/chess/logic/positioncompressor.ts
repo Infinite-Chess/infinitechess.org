@@ -100,7 +100,9 @@ const parsedPosition = icnconverter.ShortToLong_Format(example_position);
 // console.log("parsedPosition:", JSON.stringify(parsedPosition.position, jsutil.stringifyReplacer));
 
 const compressedPosition = compressPosition(parsedPosition.position!);
-// console.log("compressedPosition:", JSON.stringify(compressedPosition.position, jsutil.stringifyReplacer));
+parsedPosition.position = compressedPosition.position;
+const newICN = icnconverter.getShortFormPosition(compressedPosition.position, parsedPosition.state_global.specialRights!);
+console.log("compressedPosition:", newICN);
 
 
 
@@ -132,7 +134,8 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	if (!needsCompression) {
 		console.log("No compression needed.");
-		return { position, groups: [] };
+		for (const piece of pieces) piece.transformedCoords = piece.coords;
+		return { position, pieceTransformations: pieces };
 	}
 
 	// The position needs COMPRESSION.
@@ -146,7 +149,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 	} = {
 		x: [],
 		y: [],
-	}
+	};
 
 	// Order the pieces
 
@@ -177,7 +180,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 	// Choosing a smart start coord ensure the resulting position is centered on (0,0)
 	let currentY: bigint = BigInt(axisOrdering.y.length - 1) * -GROUP_PAD_DISTANCE / 2n;
 	for (const pieces of axisOrdering.x) {
-		for (const piece of pieces) piece.transformedCoords[0] = currentX;
+		for (const piece of pieces) piece.transformedCoords[0] = currentY;
 		
 		// Increment so that the next y coordinate with a piece has
 		// what's considered an arbitrary spacing between them
@@ -198,7 +201,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 	return {
 		position: compressedPosition,
 		pieceTransformations: pieces,
-	}
+	};
 }
 
 
@@ -210,59 +213,59 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
  * @param compressedPosition - The original uncompressed position
  * @param move - The decided upon move based on the compressed position
  */
-function expandMove(pieceTransformations: PieceTransform[], move: DoubleMoveDraft): MoveDraft {
-	const startCoordsBigInt: Coords = [BigInt(move.startCoords[0]), BigInt(move.startCoords[1])];
-	const endCoordsBigInt: Coords = [BigInt(move.endCoords[0]), BigInt(move.endCoords[1])];
+// function expandMove(pieceTransformations: PieceTransform[], move: DoubleMoveDraft): MoveDraft {
+// 	const startCoordsBigInt: Coords = [BigInt(move.startCoords[0]), BigInt(move.startCoords[1])];
+// 	const endCoordsBigInt: Coords = [BigInt(move.endCoords[0]), BigInt(move.endCoords[1])];
 
-	// Determine the piece's original position
+// 	// Determine the piece's original position
 
-	const originalPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords));
-	if (originalPiece === undefined) throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${JSON.stringify(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`);
+// 	const originalPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords));
+// 	if (originalPiece === undefined) throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${JSON.stringify(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`);
 
-	const originalStartCoords: Coords = originalPiece.coords;
+// 	const originalStartCoords: Coords = originalPiece.coords;
 
-	/**
-	 * Determine the piece's intended destination square.
-	 * 
-	 * How do we do that?
-	 * 
-	 * A. If the piece is on the same rank/file/diagonal as another piece
-	 * in the compressed position, then its intended destination is the intersection
-	 * between the line of its movement vector through its original uncompressed start square,
-	 * and the rank/file/diagonal line going through that other piece.
-	 * 
-	 * There may potentially be multiple pieces in the compressed position that are on
-	 * its same ran/file/diagonal, but all that means is its a fork, and the final
-	 * uncompressed position should still fork both, so we only care about finding
-	 * the intersection between one of the pieces.
-	 * 
-	 * B. The piece isn't on the same rank/file/diagonal as another piece. It could have
-	 * wanted to move to an arbitrary location between ranks/files/diagonals with pieces,
-	 * where nothing threats it, not trying to threaten any pieces. Or it could be a finite mover,
-	 * in that case move it the same distance it wanted to.
-	 */
+// 	/**
+// 	 * Determine the piece's intended destination square.
+// 	 * 
+// 	 * How do we do that?
+// 	 * 
+// 	 * A. If the piece is on the same rank/file/diagonal as another piece
+// 	 * in the compressed position, then its intended destination is the intersection
+// 	 * between the line of its movement vector through its original uncompressed start square,
+// 	 * and the rank/file/diagonal line going through that other piece.
+// 	 * 
+// 	 * There may potentially be multiple pieces in the compressed position that are on
+// 	 * its same ran/file/diagonal, but all that means is its a fork, and the final
+// 	 * uncompressed position should still fork both, so we only care about finding
+// 	 * the intersection between one of the pieces.
+// 	 * 
+// 	 * B. The piece isn't on the same rank/file/diagonal as another piece. It could have
+// 	 * wanted to move to an arbitrary location between ranks/files/diagonals with pieces,
+// 	 * where nothing threats it, not trying to threaten any pieces. Or it could be a finite mover,
+// 	 * in that case move it the same distance it wanted to.
+// 	 */
 
-	// Did it capture a piece?
-	const capturedTransformedPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(pt.transformedCoords as Coords, endCoordsBigInt));
-	if (capturedTransformedPiece) return {
-		startCoords: originalStartCoords,
-		endCoords: capturedTransformedPiece.coords
-	}
+// 	// Did it capture a piece?
+// 	const capturedTransformedPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(pt.transformedCoords as Coords, endCoordsBigInt));
+// 	if (capturedTransformedPiece) return {
+// 		startCoords: originalStartCoords,
+// 		endCoords: capturedTransformedPiece.coords
+// 	};
 
-	// It didn't capture any piece
+// 	// It didn't capture any piece
 
-	// Expand lines out of its destination square in all directions except its movement vector
+// 	// Expand lines out of its destination square in all directions except its movement vector
 
-	/** The direction the piece moved in. */
-	const vector = vectors.absVector(vectors.normalizeVector(coordutil.subtractCoords(endCoordsBigInt, startCoordsBigInt)));
+// 	/** The direction the piece moved in. */
+// 	const vector = vectors.absVector(vectors.normalizeVector(coordutil.subtractCoords(endCoordsBigInt, startCoordsBigInt)));
 
-	const targetVectors = [...vectors.VECTORS_ORTHOGONAL].filter((vec2) => !coordutil.areCoordsEqual(vec2, vector));
+// 	const targetVectors = [...vectors.VECTORS_ORTHOGONAL].filter((vec2) => !coordutil.areCoordsEqual(vec2, vector));
 
-	// Eminate lines in all directions from the entity coords
-	const eminatingLines: LineCoefficients[] = targetVectors.map(vec2 => vectors.getLineGeneralFormFromCoordsAndVec(startCoordsBigInt, vec2));
+// 	// Eminate lines in all directions from the entity coords
+// 	const eminatingLines: LineCoefficients[] = targetVectors.map(vec2 => vectors.getLineGeneralFormFromCoordsAndVec(startCoordsBigInt, vec2));
 
 
-}
+// }
 
 
 
@@ -284,34 +287,34 @@ function expandMove(pieceTransformations: PieceTransform[], move: DoubleMoveDraf
  *          - If not found, `found` is false and `index` is the correct insertion point.
  */
 function binarySearch<T, V>(
-    sortedArray: T[],
-    valueExtractor: (element: T) => V,
-    value: V
+	sortedArray: T[],
+	valueExtractor: (element: T) => V,
+	value: V
 ): { found: boolean; index: number; } {
-    let left: number = 0;
-    let right: number = sortedArray.length - 1;
+	let left: number = 0;
+	let right: number = sortedArray.length - 1;
 
-    while (left <= right) {
-        const mid: number = Math.floor((left + right) / 2);
-        const midValue: V = valueExtractor(sortedArray[mid]);
+	while (left <= right) {
+		const mid: number = Math.floor((left + right) / 2);
+		const midValue: V = valueExtractor(sortedArray[mid]);
 
-        // 1. Check for an exact match first.
-        if (value === midValue) {
-            // Value already exists. Return its index and set found to true.
-            return { found: true, index: mid };
-        }
+		// 1. Check for an exact match first.
+		if (value === midValue) {
+			// Value already exists. Return its index and set found to true.
+			return { found: true, index: mid };
+		}
 
-        // 2. Adjust search range.
-        if (value < midValue) {
-            right = mid - 1;
-        } else {
-            left = mid + 1;
-        }
-    }
+		// 2. Adjust search range.
+		if (value < midValue) {
+			right = mid - 1;
+		} else {
+			left = mid + 1;
+		}
+	}
 
-    // 3. If the loop completes, the value was not found.
-    // 'left' is the correct index where it should be inserted.
-    return { found: false, index: left };
+	// 3. If the loop completes, the value was not found.
+	// 'left' is the correct index where it should be inserted.
+	return { found: false, index: left };
 }
 
 
