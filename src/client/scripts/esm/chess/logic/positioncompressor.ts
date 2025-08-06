@@ -8,10 +8,10 @@
  */
 
 
-import bd from "../../util/bigdecimal/bigdecimal.js";
 import bimath from "../../util/bigdecimal/bimath.js";
 import bounds, { BoundingBox } from "../../util/math/bounds.js";
-import coordutil, { Coords, CoordsKey } from "../util/coordutil.js";
+import vectors, { LineCoefficients } from "../../util/math/vectors.js";
+import coordutil, { Coords, CoordsKey, DoubleCoords } from "../util/coordutil.js";
 import icnconverter from "./icn/icnconverter.js";
 
 
@@ -26,8 +26,35 @@ interface CompressionInfo {
 	 * Contains information on each group, the group's
 	 * original position, and each piece in the group.
 	 */
-	groups: any
+	pieceTransformations: PieceTransform[]
 }
+
+/**
+ * Contains the information of where a piece started
+ * before compressing the position, and where they ended up.
+ */
+type PieceTransform = {
+	type: number;
+	coords: Coords;
+	transformedCoords: [bigint | undefined, bigint | undefined];
+};
+
+
+type DoubleMoveDraft = { startCoords: DoubleCoords, endCoords: DoubleCoords };
+
+type MoveDraft = { startCoords: Coords, endCoords: Coords };
+
+
+// interface Group {
+// 	/** The bounding box of this group. */
+// 	bounds: BoundingBox;
+// 	/** The center of the box */
+// 	center: Coords;
+// 	/** All pieces included in this group. */
+// 	pieces: Piece[];
+// 	/** How much the group has been shifted compared to the original, uncompressed input position. */
+// 	offset?: Coords;
+// }
 
 
 
@@ -59,17 +86,14 @@ const UNSAFE_BOUND_BIGINT = 1000n;
 const GROUP_PAD_DISTANCE = 20n;
 
 
-const TWO = bd.FromNumber(2.0);
-
-
 
 // ================================ Testing Usage ================================
 
 
 
 const example_position = 'k0,0|Q2000,4000';
-const example_position = 'k0,0|Q0,0|N2000,4000';
-const example_position = 'k0,0|Q0,0|N40,120';
+// const example_position = 'k0,0|Q0,0|N2000,4000';
+// const example_position = 'k0,0|Q0,0|N40,120';
 // const example_position = 'K0,0|Q5000,10000|Q5000,7000';
 
 const parsedPosition = icnconverter.ShortToLong_Format(example_position);
@@ -88,12 +112,15 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	// 1. List all pieces with their bigint arbitrary coordinates.
 
-	type Piece = { type: number; coords: Coords; };
-	const pieces: Piece[] = [];
+	const pieces: PieceTransform[] = [];
 
 	position.forEach((type, coordsKey) => {
 		const coords = coordutil.getCoordsFromKey(coordsKey);
-		pieces.push({ type, coords });
+		pieces.push({
+			type,
+			coords,
+			transformedCoords: [undefined, undefined],
+		});
 	});
 
 	// 2. Determine whether any piece lies beyond UNSAFE_BOUND_BIGINT.
@@ -110,58 +137,182 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 
 	// The position needs COMPRESSION.
 
-	// 3. Organize the pieces into groups based on their coordinates.
-
-	// What determines whether two pieces belong to the same group?
-	// They are 1 square adjacent
-
-	interface Group {
-		/** The bounding box of this group. */
-		bounds: BoundingBox;
-		/** The center of the box */
-		center: Coords;
-		/** All pieces included in this group. */
-		pieces: Piece[];
-		/** How much the group has been shifted compared to the original, uncompressed input position. */
-		offset?: Coords;
+	/** An array of pieces in order of one axis ascending. */
+	type AxisOrder = PieceTransform[][];
+	
+	const axisOrdering: {
+		x: AxisOrder;
+		y: AxisOrder;
+	} = {
+		x: [],
+		y: [],
 	}
 
-	const groups: Group[] = [];
+	// Order the pieces
 
-	pieces.forEach(piece => {
-		// Check if this is adjacent to any existing group. If so, add it to that group.
-		// Else, create a new group for this piece.
+	for (const piece of pieces) {
+		let { found, index } = binarySearch(axisOrdering.x, (pieces: PieceTransform[]) => pieces[0]!.coords[0], piece.coords[0]);
+		if (found) axisOrdering.x[index]!.push(piece);
+		else axisOrdering.x.splice(index, 0, [piece]);
 
-		for (const group of groups) {
-			const pieceDistanceToGroup = getCoordsDistanceToBounds(piece.coords, group.bounds);
-			if (pieceDistanceToGroup <= GROUP_PAD_DISTANCE) {
-				// The piece is adjacent to the group.
-				// Merge them.
-				group.pieces.push(piece);
-				bounds.expandBoxToContainSquare(group.bounds, piece.coords); // Mutating
-				group.center = calcCenterOfBoundingBox(group.bounds);
-				return;
-			}
-		}
+		({ found, index } = binarySearch(axisOrdering.y, (pieces: PieceTransform[]) => pieces[0]!.coords[1], piece.coords[1]));
+		if (found) axisOrdering.y[index]!.push(piece);
+		else axisOrdering.y.splice(index, 0, [piece]);
+	}
 
-		// The piece is not adjacent to any existing group.
-		// Create a new group for this piece.
-		const newGroup: Group = {
-			bounds: bounds.getBoxFromCoordsList([piece.coords]),
-			pieces: [piece],
-			center: piece.coords,
-		};
-		groups.push(newGroup);
-	});
+	// Now that the pieces are all in order,
 
-	console.log("Groups:", groups);
+	// Let's determine their transformed coordinates.
 
-	// Now that we have all groups. Shrink the position
+	// Choosing a smart start coord ensure the resulting position is centered on (0,0)
+	let currentX: bigint = BigInt(axisOrdering.x.length - 1) * -GROUP_PAD_DISTANCE / 2n;
+	for (const pieces of axisOrdering.x) {
+		for (const piece of pieces) piece.transformedCoords[0] = currentX;
+		
+		// Increment so that the next x coordinate with a piece has
+		// what's considered an arbitrary spacing between them
+		currentX += GROUP_PAD_DISTANCE;
+	}
 
-	
+	// Choosing a smart start coord ensure the resulting position is centered on (0,0)
+	let currentY: bigint = BigInt(axisOrdering.y.length - 1) * -GROUP_PAD_DISTANCE / 2n;
+	for (const pieces of axisOrdering.x) {
+		for (const piece of pieces) piece.transformedCoords[0] = currentX;
+		
+		// Increment so that the next y coordinate with a piece has
+		// what's considered an arbitrary spacing between them
+		currentY += GROUP_PAD_DISTANCE;
+	}
+
+	// Now create the final compressed position from all
+	// pieces known coord transformations
+
+	const compressedPosition: Map<CoordsKey, number> = new Map();
+	for (const piece of pieces) {
+		if (!piece.transformedCoords[0] || !piece.transformedCoords[1]) throw Error(`Piece's transformed position is not entirely defined! Original piece location: ${JSON.stringify(piece.coords)}. Transformed location: ${JSON.stringify(piece.transformedCoords)}.`);
+
+		const transformedCoordsKey = coordutil.getKeyFromCoords(piece.transformedCoords as Coords);
+		compressedPosition[transformedCoordsKey] = piece.type;
+	}
+
+	return {
+		position: compressedPosition,
+		pieceTransformations: pieces,
+	}
+}
+
+
+/**
+ * Takes a move that should have been calculated from the compressed position,
+ * and modifies its start and end coords so that it moves the original
+ * uncompressed position's piece, and so its destination coordinates still
+ * threaten all the same original pieces.
+ * @param compressedPosition - The original uncompressed position
+ * @param move - The decided upon move based on the compressed position
+ */
+function expandMove(pieceTransformations: PieceTransform[], move: DoubleMoveDraft): MoveDraft {
+	const startCoordsBigInt: Coords = [BigInt(move.startCoords[0]), BigInt(move.startCoords[1])];
+	const endCoordsBigInt: Coords = [BigInt(move.endCoords[0]), BigInt(move.endCoords[1])];
+
+	// Determine the piece's original position
+
+	const originalPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords));
+	if (originalPiece === undefined) throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${JSON.stringify(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`);
+
+	const originalStartCoords: Coords = originalPiece.coords;
+
+	/**
+	 * Determine the piece's intended destination square.
+	 * 
+	 * How do we do that?
+	 * 
+	 * A. If the piece is on the same rank/file/diagonal as another piece
+	 * in the compressed position, then its intended destination is the intersection
+	 * between the line of its movement vector through its original uncompressed start square,
+	 * and the rank/file/diagonal line going through that other piece.
+	 * 
+	 * There may potentially be multiple pieces in the compressed position that are on
+	 * its same ran/file/diagonal, but all that means is its a fork, and the final
+	 * uncompressed position should still fork both, so we only care about finding
+	 * the intersection between one of the pieces.
+	 * 
+	 * B. The piece isn't on the same rank/file/diagonal as another piece. It could have
+	 * wanted to move to an arbitrary location between ranks/files/diagonals with pieces,
+	 * where nothing threats it, not trying to threaten any pieces. Or it could be a finite mover,
+	 * in that case move it the same distance it wanted to.
+	 */
+
+	// Did it capture a piece?
+	const capturedTransformedPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(pt.transformedCoords as Coords, endCoordsBigInt));
+	if (capturedTransformedPiece) return {
+		startCoords: originalStartCoords,
+		endCoords: capturedTransformedPiece.coords
+	}
+
+	// It didn't capture any piece
+
+	// Expand lines out of its destination square in all directions except its movement vector
+
+	/** The direction the piece moved in. */
+	const vector = vectors.absVector(vectors.normalizeVector(coordutil.subtractCoords(endCoordsBigInt, startCoordsBigInt)));
+
+	const targetVectors = [...vectors.VECTORS_ORTHOGONAL].filter((vec2) => !coordutil.areCoordsEqual(vec2, vector));
+
+	// Eminate lines in all directions from the entity coords
+	const eminatingLines: LineCoefficients[] = targetVectors.map(vec2 => vectors.getLineGeneralFormFromCoordsAndVec(startCoordsBigInt, vec2));
+
 
 }
 
+
+
+
+
+
+
+
+/**
+ * Searches a sorted array (no duplicates) to see if a value exists. If it does not, it returns
+ * the correct index to insert the value to maintain the array's sorted order.
+ * @template T The type of elements in the array.
+ * @template V The type of the extracted value used for comparison (number | bigint).
+ * @param sortedArray The array, sorted in ascending order, without duplicates.
+ * @param valueExtractor A function that takes an element of type T and returns its value of type V.
+ * @param value The value of type V to search for.
+ * @returns An object with a 'found' boolean and the 'index'.
+ *          - If found, `found` is true and `index` is the position of the existing element.
+ *          - If not found, `found` is false and `index` is the correct insertion point.
+ */
+function binarySearch<T, V>(
+    sortedArray: T[],
+    valueExtractor: (element: T) => V,
+    value: V
+): { found: boolean; index: number; } {
+    let left: number = 0;
+    let right: number = sortedArray.length - 1;
+
+    while (left <= right) {
+        const mid: number = Math.floor((left + right) / 2);
+        const midValue: V = valueExtractor(sortedArray[mid]);
+
+        // 1. Check for an exact match first.
+        if (value === midValue) {
+            // Value already exists. Return its index and set found to true.
+            return { found: true, index: mid };
+        }
+
+        // 2. Adjust search range.
+        if (value < midValue) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+
+    // 3. If the loop completes, the value was not found.
+    // 'left' is the correct index where it should be inserted.
+    return { found: false, index: left };
+}
 
 
 
@@ -169,32 +320,26 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
  * Returns the chebyshev distance from the provided coordinates to the bounds.
  * If the coordinates are within the bounds, returns 0.
  */
-function getCoordsDistanceToBounds(coords: Coords, bounds: BoundingBox): bigint {
-	const boundsWidth = bounds.right - bounds.left;
-	const boundsHeight = bounds.bottom - bounds.top;
+// function getCoordsDistanceToBounds(coords: Coords, bounds: BoundingBox): bigint {
+// 	const boundsWidth = bounds.right - bounds.left;
+// 	const boundsHeight = bounds.bottom - bounds.top;
 
-	const xDistLeft = bimath.abs(coords[0] - bounds.left);
-	const xDistRight = bimath.abs(coords[0] - bounds.right);
-	const yDistBottom = bimath.abs(coords[1] - bounds.bottom);
-	const yDistTop = bimath.abs(coords[1] - bounds.top);
+// 	const xDistLeft = bimath.abs(coords[0] - bounds.left);
+// 	const xDistRight = bimath.abs(coords[0] - bounds.right);
+// 	const yDistBottom = bimath.abs(coords[1] - bounds.bottom);
+// 	const yDistTop = bimath.abs(coords[1] - bounds.top);
 
-	if (xDistLeft < boundsWidth && xDistRight < boundsWidth &&
-		yDistBottom < boundsHeight && yDistTop < boundsHeight) {
-		// The coordinates are within the bounds.
-		return 0n;
-	}
+// 	if (xDistLeft < boundsWidth && xDistRight < boundsWidth &&
+// 		yDistBottom < boundsHeight && yDistTop < boundsHeight) {
+// 		// The coordinates are within the bounds.
+// 		return 0n;
+// 	}
 
-	// The coordinates are outside the bounds.
-	// Return the chebyshev distance to the closest edge.
-	return bimath.max(
-		bimath.min(xDistLeft, xDistRight),
-		bimath.min(yDistBottom, yDistTop)
-	);
-}
+// 	// The coordinates are outside the bounds.
+// 	// Return the chebyshev distance to the closest edge.
+// 	return bimath.max(
+// 		bimath.min(xDistLeft, xDistRight),
+// 		bimath.min(yDistBottom, yDistTop)
+// 	);
+// }
 
-/**
- * Calculates the center of a bounding box.
- */
-function calcCenterOfBoundingBox(box: BoundingBox): Coords {
-	return [(box.left + box.right) / 2n, (box.bottom + box.top) / 2n];
-}
