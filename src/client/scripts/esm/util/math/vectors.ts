@@ -57,6 +57,14 @@ type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
 // Constants ----------------------------------------------------------------------
 
 
+/** All positive/absolute orthogonal vectors. */
+const VECTORS_ORTHOGONAL: Coords[] = [[1n,0n],[0n,1n]]
+/** All positive/absolute diagonal vectors. */
+const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
+/** The positive/absolute knightrider hippogonals. */
+const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
+
+
 const ZERO: BigDecimal = bd.FromBigInt(0n);
 const ONE: BigDecimal = bd.FromBigInt(1n);
 
@@ -254,6 +262,30 @@ function negateVector(vec2: Vec2): Vec2 {
 }
 
 /**
+ * Returns the absolute value of the provided vector.
+ * In the context of our game, positive vectors always point to the right,
+ * and if they are vertical then they always point up.
+ */
+function absVector(vec2: Vec2): Vec2 {
+	if (vec2[0] < 0n || vec2[0] === 0n && vec2[1] < 0n) return negateVector(vec2);
+	else return vec2;
+}
+
+/**
+ * Normalizes a vector to its smallest possible integer components while preserving its direction.
+ */
+function normalizeVector(vec2: Vec2): Vec2 {
+    // Calculate the GCD of all the components in the vector.
+	const gcd = bimath.GCD(vec2[0], vec2[1]);
+
+    // If the GCD is 0, it means all elements were 0
+    if (gcd === 0n) return [0n, 0n];
+    
+    // Divide each component by the GCD to get the smallest integer representation.
+	return [vec2[0] / gcd, vec2[1] / gcd]
+}
+
+/**
  * Calculates the normal (perpendicular) vector of a given 2D vector.
  */
 function getPerpendicularVector(vec2: Vec2): Vec2 {
@@ -332,6 +364,11 @@ function chebyshevDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): n
 
 
 export default {
+	// Constants
+	VECTORS_ORTHOGONAL,
+	VECTORS_DIAGONAL,
+	VECTORS_HIPPOGONAL,
+
 	// Construction
 	getKeyFromVec2,
 	getVec2FromKey,
@@ -352,6 +389,8 @@ export default {
 	dotProduct,
 	dotProductBD,
 	negateVector,
+	absVector,
+	normalizeVector,
 	getPerpendicularVector,
 	degreesToRadians,
 
