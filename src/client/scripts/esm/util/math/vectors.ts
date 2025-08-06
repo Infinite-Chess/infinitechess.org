@@ -57,6 +57,14 @@ type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
 // Constants ----------------------------------------------------------------------
 
 
+/** All positive/absolute orthogonal vectors. */
+const VECTORS_ORTHOGONAL: Coords[] = [[1n,0n],[0n,1n]]
+/** All positive/absolute diagonal vectors. */
+const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
+/** The positive/absolute knightrider hippogonals. */
+const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
+
+
 const ZERO: BigDecimal = bd.FromBigInt(0n);
 const ONE: BigDecimal = bd.FromBigInt(1n);
 
@@ -356,6 +364,11 @@ function chebyshevDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): n
 
 
 export default {
+	// Constants
+	VECTORS_ORTHOGONAL,
+	VECTORS_DIAGONAL,
+	VECTORS_HIPPOGONAL,
+
 	// Construction
 	getKeyFromVec2,
 	getVec2FromKey,
