@@ -254,6 +254,20 @@ function negateVector(vec2: Vec2): Vec2 {
 }
 
 /**
+ * Normalizes a vector to its smallest possible integer components while preserving its direction.
+ */
+function normalizeVector(vec2: Vec2): Vec2 {
+    // Calculate the GCD of all the components in the vector.
+	const gcd = bimath.GCD(vec2[0], vec2[1]);
+
+    // If the GCD is 0, it means all elements were 0
+    if (gcd === 0n) return [0n, 0n];
+    
+    // Divide each component by the GCD to get the smallest integer representation.
+	return [vec2[0] / gcd, vec2[1] / gcd]
+}
+
+/**
  * Calculates the normal (perpendicular) vector of a given 2D vector.
  */
 function getPerpendicularVector(vec2: Vec2): Vec2 {
@@ -352,6 +366,7 @@ export default {
 	dotProduct,
 	dotProductBD,
 	negateVector,
+	normalizeVector,
 	getPerpendicularVector,
 	degreesToRadians,
 
