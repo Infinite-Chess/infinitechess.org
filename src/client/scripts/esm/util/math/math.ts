@@ -20,10 +20,6 @@ type Color = [number,number,number,number];
 
 /**
  * Clamps a value between a minimum and a maximum value.
- * @param min - The minimum value.
- * @param max - The maximum value.
- * @param value - The value to clamp.
- * @returns The clamped value.
  */
 function clamp(value: number, min: number, max: number): number {
 	return value < min ? min : value > max ? max : value;
