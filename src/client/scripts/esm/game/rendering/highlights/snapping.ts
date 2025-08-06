@@ -48,10 +48,12 @@ import type { Color } from "../../../util/math/math.js";
 const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 36
 
 
-/** All default snapping vectors. */
-const VECTORS: Coords[] = [[1n,0n],[-1n,0n],[0n,1n],[0n,-1n],[1n,1n],[-1n,1n],[1n,-1n],[-1n,-1n]];
+/** All orthogonal vectors. */
+const VECTORS_ORTHOGONAL: Coords[] = [[1n,0n],[0n,1n]]
+/** All diagonal vectors. */
+const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
 /** The knightrider hippogonals. */
-const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[-1n,2n],[1n,-2n],[-1n,-2n],[2n,1n],[-2n,1n],[2n,-1n],[-2n,-1n]];
+const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
 
 /** The color of the line that shows you what entity your mouse is snapped to. */
 const SNAP_LINE_COLOR: Color = [0, 0, 1, 0.3];
@@ -303,7 +305,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// Allows snapping to all hippogonals, even the ones in 4D variants.
 	// const allPrimitiveSlidesInGame = boardsim.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
-	const searchVectors = boardsim.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
+	const searchVectors = boardsim.pieces.hippogonalsPresent ? [...VECTORS_ORTHOGONAL, ...VECTORS_DIAGONAL, ...VECTORS_HIPPOGONAL] : [...VECTORS_ORTHOGONAL ...VECTORS_DIAGONAL];
 
 
 	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority) ==================
@@ -510,8 +512,10 @@ function generateGhostImageModel(type: number, coords: DoubleCoords) {
 
 
 export default {
-	VECTORS,
+	VECTORS_ORTHOGONAL,
+	VECTORS_DIAGONAL,
 	VECTORS_HIPPOGONAL,
+	
 	getEntityWidthWorld,
 
 	getClosestEntityToWorld,

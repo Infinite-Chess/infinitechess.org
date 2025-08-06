@@ -262,7 +262,7 @@ function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: 
 	// Now we can use small numbers
 	const targetAngle = Math.atan2(normalizedVectorY, normalizedVectorX);
 
-	const searchVectors: Coords[] = searchHippogonals ? [...snapping.VECTORS, ...snapping.VECTORS_HIPPOGONAL] : [...snapping.VECTORS];
+	const searchVectors: Coords[] = searchHippogonals ? [...snapping.VECTORS_ORTHOGONAL, ...snapping.VECTORS_DIAGONAL, ...snapping.VECTORS_HIPPOGONAL] : [...snapping.VECTORS_ORTHOGONAL, ...snapping.VECTORS_DIAGONAL];
 
 	let minAbsoluteAngleDifference = Infinity;
 	// Initialize with the first vector
