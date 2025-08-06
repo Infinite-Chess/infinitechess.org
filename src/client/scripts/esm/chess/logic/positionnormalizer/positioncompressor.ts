@@ -8,14 +8,14 @@
  */
 
 
-import bd from "../../util/bigdecimal/bigdecimal.js";
-import bimath from "../../util/bigdecimal/bimath.js";
-import jsutil from "../../util/jsutil.js";
-import bounds, { BoundingBox } from "../../util/math/bounds.js";
-import geometry from "../../util/math/geometry.js";
-import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../util/math/vectors.js";
-import coordutil, { BDCoords, Coords, CoordsKey, DoubleCoords } from "../util/coordutil.js";
-import icnconverter from "./icn/icnconverter.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
+import bimath from "../../../util/bigdecimal/bimath.js";
+import jsutil from "../../../util/jsutil.js";
+import bounds, { BoundingBox } from "../../../util/math/bounds.js";
+import geometry from "../../../util/math/geometry.js";
+import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../../util/math/vectors.js";
+import coordutil, { BDCoords, Coords, CoordsKey, DoubleCoords } from "../../util/coordutil.js";
+import icnconverter from "../icn/icnconverter.js";
 
 
 
