@@ -8,7 +8,7 @@
  */
 
 
-import vectors, { Vec2Key } from "../../../util/math/vectors.js";
+import vectors, { Vec2, Vec2Key } from "../../../util/math/vectors.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 
 
@@ -40,6 +40,8 @@ type PieceTransform = {
 	coords: Coords;
 	/** Both coords will be fully defined after transformation is complete. */
 	transformedCoords: [bigint | undefined, bigint | undefined];
+	/** What groups it belongs to on each axis. */
+	axisGroups: Record<Vec2Key, number>;
 };
 
 
@@ -165,6 +167,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			type,
 			coords,
 			transformedCoords: [undefined, undefined], // Initially undefined
+			axisGroups: {}
 		});
 	});
 
@@ -205,17 +208,19 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	for (const piece of pieces) {
 		// console.log(`\nAnalyzing piece at ${String(piece.coords)}...`);
-		registerPieceInAxisOrder(AllAxisOrders['1,0'], piece, XAxisDeterminer(piece.coords));
-		registerPieceInAxisOrder(AllAxisOrders['0,1'], piece, YAxisDeterminer(piece.coords));
+		registerPieceInAxisOrder('1,0', piece, XAxisDeterminer(piece.coords));
+		registerPieceInAxisOrder('0,1', piece, YAxisDeterminer(piece.coords));
 		if (mode === 'diagonals') {
-			registerPieceInAxisOrder(AllAxisOrders['1,1'], piece, posDiagAxisDeterminer(piece.coords));
-			registerPieceInAxisOrder(AllAxisOrders['-1,1'], piece, negDiagAxisDeterminer(piece.coords));
+			registerPieceInAxisOrder('1,1', piece, posDiagAxisDeterminer(piece.coords));
+			registerPieceInAxisOrder('-1,1', piece, negDiagAxisDeterminer(piece.coords));
 		}
 	}
 
 	// Helper for registering a piece in any axis order.
-	function registerPieceInAxisOrder(axisOrder: AxisOrder, piece: PieceTransform, pieceAxisValue: bigint) {
+	function registerPieceInAxisOrder(axis: Vec2Key, piece: PieceTransform, pieceAxisValue: bigint) {
 		// console.log(`Axis value ${pieceAxisValue}`);
+
+		const axisOrder = AllAxisOrders[axis];
 
 		const { found: foundExistingGroup, index: groupIndex } = binarySearchRange(axisOrder, (axisGroup) => axisGroup.range, MIN_ARBITRARY_DISTANCE, pieceAxisValue);
 		if (foundExistingGroup) {
@@ -297,6 +302,23 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 
 		// else console.log(`No merging needed, groups are not close enough.`);
+	}
+
+	
+	// Declare what axis groups each piece belongs to.
+
+	declareAxisOrderPieceGroups('1,0');
+	declareAxisOrderPieceGroups('0,1');
+	if (mode === 'diagonals') {
+		declareAxisOrderPieceGroups('1,1');
+		declareAxisOrderPieceGroups('-1,1');
+	}
+	function declareAxisOrderPieceGroups(axis: Vec2Key) {
+		const axisOrder = AllAxisOrders[axis]!;
+		for (let groupIndex = 0; groupIndex < axisOrder.length; groupIndex++) {
+			const group = axisOrder[groupIndex]!;
+			for (const piece of group.pieces) piece.axisGroups[axis] = groupIndex;
+		}
 	}
 
 
