@@ -326,19 +326,27 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	console.log("\nSolving for orthogonal solution...");
 
-	const orthoKeys: Vec2Key[] = vectors.VECTORS_ORTHOGONAL.map((vec) => vectors.getKeyFromVec2(vec));
+	transformGroupsToDraftCoords(AllAxisOrders['1,0'], 0); // X axis
+	transformGroupsToDraftCoords(AllAxisOrders['0,1'], 1); // Y axis
 
-	for (const orthoKey of orthoKeys) {
-		const axisOrder = AllAxisOrders[orthoKey as Vec2Key];
+	function transformGroupsToDraftCoords(axisOrder: AxisOrder, axis: 0 | 1) {
+		let current: bigint = 0n;
 
-		let currentValue: bigint = 0n;
 		for (const group of axisOrder) {
+			// Update the group's transformed range
 			const groupSize = group.range[1] - group.range[0];
 			// Set the group's first draft transformed range.
-			group.transformedRange = [currentValue, currentValue + groupSize];
+			group.transformedRange = [current, current + groupSize];
+
+			// Update each piece's transformed coordinates
+			for (const piece of group.pieces) {
+				// Add the piece's offset from the start of the group
+				const offset = piece.coords[axis] - group.range[0];
+				piece.transformedCoords[axis] = group.transformedRange![0] + offset;
+			}
 
 			// Increment so that the next group has what's considered an arbitrary spacing between them
-			currentValue += MIN_ARBITRARY_DISTANCE + groupSize;
+			current += MIN_ARBITRARY_DISTANCE + groupSize;
 		}
 	}
 
@@ -348,35 +356,21 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 
 	// let iteration = 0;
-	// while (true) {
+	// let changeMade = true;
+
+	// while (changeMade === true) {
+	// 	iteration++;
+	// 	changeMade = false;
 	// 	console.log(`\nIteration ${iteration}...`);
 
-	// 	break;
+		
+
+
+		
 	// }
 
+	// console.log(`\nNo more changes made after ${iteration} iterations.`);
 
-
-	// ============================== Transform Pieces to Final Coordinates ==============================
-
-
-	// 3. Finalization:
-	// After the solver finishes, the transformedRange for each group is final.
-	// We can now calculate the final coordinates for each piece.
-	for (const group of AllAxisOrders['1,0']) { // X axis
-		for (const piece of group.pieces) {
-			// Add the piece's offset from the start of the group
-			const offset = piece.coords[0] - group.range[0];
-			piece.transformedCoords[0] = group.transformedRange![0] + offset;
-		}
-	}
-	for (const group of AllAxisOrders['0,1']) { // Y axis
-		// Set each of this group's piece's transformed coordinates
-		for (const piece of group.pieces) {
-			// Add the piece's offset from the start of the group
-			const offset = piece.coords[1] - group.range[0];
-			piece.transformedCoords[1] = group.transformedRange![0] + offset;
-		}
-	}
 
 
 	// ================================ RETURN FINAL POSITION ================================
