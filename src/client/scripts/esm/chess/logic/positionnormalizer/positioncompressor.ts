@@ -147,6 +147,11 @@ function negDiagAxisDeterminer(coords: Coords): bigint { return coords[1] + coor
  * to some small distance constant.
  * Returns transformation info so that the chosen move from the compressed position
  * can be expanded back to the original position.
+ * @param position - The position to compress, as a Map of coords to piece types.
+ * @param mode - The compression mode, either 'orthogonals' or 'diagonals'.
+ *     - 'orthogonals' require all pieces to remain in the same quadrant relative to other pieces.
+ *     - 'diagonals' require all pieces to remain in the same octant relative to other pieces.
+ *     - FUTURE: 'hipppogonal' require all pieces to remain in the same hexadecant relative to other pieces.
  */
 function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' | 'diagonals'): CompressionInfo {
 
@@ -199,7 +204,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// Order/group/connect the pieces
 
 	for (const piece of pieces) {
-		console.log(`\nAnalyzing piece at ${String(piece.coords)}...`);
+		// console.log(`\nAnalyzing piece at ${String(piece.coords)}...`);
 		registerPieceInAxisOrder(AllAxisOrders['1,0'], piece, XAxisDeterminer(piece.coords));
 		registerPieceInAxisOrder(AllAxisOrders['0,1'], piece, YAxisDeterminer(piece.coords));
 		if (mode === 'diagonals') {
@@ -210,7 +215,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	// Helper for registering a piece in any axis order.
 	function registerPieceInAxisOrder(axisOrder: AxisOrder, piece: PieceTransform, pieceAxisValue: bigint) {
-		console.log(`Axis value ${pieceAxisValue}`);
+		// console.log(`Axis value ${pieceAxisValue}`);
 
 		const { found: foundExistingGroup, index: groupIndex } = binarySearchRange(axisOrder, (axisGroup) => axisGroup.range, MIN_ARBITRARY_DISTANCE, pieceAxisValue);
 		if (foundExistingGroup) {
@@ -226,7 +231,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			};
 			axisOrder.splice(groupIndex, 0, newGroup);
 			
-			console.log(`Created new group for piece with axis value ${pieceAxisValue}.`);
+			// console.log(`Created new group for piece with axis value ${pieceAxisValue}.`);
 		}
 	}
 
@@ -240,7 +245,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// Push the piece to the axis group
 		axisGroup.pieces.push(piece);
 
-		console.log(`Pushing piece to group with range ${axisGroup.range}...`);
+		// console.log(`Pushing piece to group with range ${axisGroup.range}...`);
 
 		let sideExtended: -1 | 0 | 1 = 0; // -1 = left side extended, 0 = no extension, 1 = right extended
 
@@ -253,7 +258,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			sideExtended = 1; // Piece extended the group on the positive side
 		}
 
-		console.log(`New range: ${axisGroup.range}.`);
+		// console.log(`New range: ${axisGroup.range}.`);
 
 		return sideExtended;
 	}
@@ -275,23 +280,23 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			return;
 		}
 
-		console.log("Group 1:", firstGroup.range, "count: ", firstGroup?.pieces.length);
-		console.log("Group 2:", secondGroup.range, "count: ", secondGroup?.pieces.length);
+		// console.log("Group 1:", firstGroup.range, "count: ", firstGroup?.pieces.length);
+		// console.log("Group 2:", secondGroup.range, "count: ", secondGroup?.pieces.length);
 
 		if (firstGroup.range[1] + MIN_ARBITRARY_DISTANCE >= secondGroup.range[0]) { // Group ranges are touching or overlapping
 			// Merge second group into first group
 
-			console.log(`Merging groups into one...`);
+			// console.log(`Merging groups into one...`);
 
 			firstGroup.pieces.push(...secondGroup.pieces);
 			firstGroup.range[1] = secondGroup.range[1];
 			const secondGroupIndex = sideExtended === -1 ? extendedGroupIndex : adjacentGroupIndex;
 			axisOrder.splice(secondGroupIndex, 1);
 
-			console.log("Merged group:", firstGroup.range, "count: ", firstGroup.pieces.length);
+			// console.log("Merged group:", firstGroup.range, "count: ", firstGroup.pieces.length);
 		}
 
-		else console.log(`No merging needed, groups are not close enough.`);
+		// else console.log(`No merging needed, groups are not close enough.`);
 	}
 
 
@@ -307,53 +312,71 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// --------------------------------------------------------------
 	
 
+	// All pieces are now in order!
 
-	// ========================================= TRANSFORM PIECES =========================================
+
+	// ================================ ORTHOGONAL SOLUTION ================================
 
 
 	/**
-	 * Now that the pieces are all in order,
-	 * Let's determine their final transformed coordinates.
+	 * First solve the group's positions relative to each other orthogonally.
+	 * This is also the draft for the diagonal solution.
+	 * Later we will stretch the position.
 	 */
 
-	console.log("\nTransforming pieces to final coordinates...");
+	console.log("\nSolving for orthogonal solution...");
 
-	// Choosing a smart start coord ensure the resulting position is centered on (0,0)
-	// let currentX: bigint = BigInt(AllAxisOrders['1,0'].length - 1) * -MIN_ARBITRARY_DISTANCE / 2n;
-	let currentX: bigint = 0n;
-	for (const axisGroup of AllAxisOrders['1,0']) {
-		for (const piece of axisGroup.pieces) piece.transformedCoords[0] = currentX + piece.coords[0] - axisGroup.range[0]; // Add the piece's offset from the start of the group
-		
-		const axisGroupSize = axisGroup.range[1] - axisGroup.range[0];
+	const orthoKeys: Vec2Key[] = vectors.VECTORS_ORTHOGONAL.map((vec) => vectors.getKeyFromVec2(vec));
 
-		// Set the group's transformed range.
-		// This is important for determining what groups we are interested in
-		// when we try to make a move in the compressed position.
-		axisGroup.transformedRange = [currentX, currentX + axisGroupSize];
+	for (const orthoKey of orthoKeys) {
+		const axisOrder = AllAxisOrders[orthoKey as Vec2Key];
 
-		// Increment so that the next x coordinate with a piece has
-		// what's considered an arbitrary spacing between them
-		currentX += MIN_ARBITRARY_DISTANCE + axisGroupSize;
+		let currentValue: bigint = 0n;
+		for (const group of axisOrder) {
+			const groupSize = group.range[1] - group.range[0];
+			// Set the group's first draft transformed range.
+			group.transformedRange = [currentValue, currentValue + groupSize];
+
+			// Increment so that the next group has what's considered an arbitrary spacing between them
+			currentValue += MIN_ARBITRARY_DISTANCE + groupSize;
+		}
 	}
 
-	// Choosing a smart start coord ensure the resulting position is centered on (0,0)
-	// let currentY: bigint = BigInt(AllAxisOrders['0,1'].length - 1) * -MIN_ARBITRARY_DISTANCE / 2n;
-	let currentY: bigint = 0n;
-	for (const axisGroup of AllAxisOrders['0,1']) {
-		for (const piece of axisGroup.pieces) piece.transformedCoords[1] = currentY + piece.coords[1] - axisGroup.range[0]; // Add the piece's offset from the start of the group
-		
-		const axisGroupSize = axisGroup.range[1] - axisGroup.range[0];
 
-		// Set the group's transformed range.
-		// This is important for determining what groups we are interested in
-		// when we try to make a move in the compressed position.
-		axisGroup.transformedRange = [currentY, currentY + axisGroupSize];
+	// ================================= ITERATIVE DIAGONAL SOLVER =================================
 
-		// Increment so that the next y coordinate with a piece has
-		// what's considered an arbitrary spacing between them
-		currentY += MIN_ARBITRARY_DISTANCE + axisGroupSize;
+
+
+	// let iteration = 0;
+	// while (true) {
+	// 	console.log(`\nIteration ${iteration}...`);
+
+	// 	break;
+	// }
+
+
+
+	// ============================== Transform Pieces to Final Coordinates ==============================
+
+
+	// 3. Finalization:
+	// After the solver finishes, the transformedRange for each group is final.
+	// We can now calculate the final coordinates for each piece.
+	for (const group of AllAxisOrders['1,0']) { // X axis
+		for (const piece of group.pieces) {
+			// Add the piece's offset from the start of the group
+			const offset = piece.coords[0] - group.range[0];
+			piece.transformedCoords[0] = group.transformedRange![0] + offset;
+		}
 	}
-
+	for (const group of AllAxisOrders['0,1']) { // Y axis
+		// Set each of this group's piece's transformed coordinates
+		for (const piece of group.pieces) {
+			// Add the piece's offset from the start of the group
+			const offset = piece.coords[1] - group.range[0];
+			piece.transformedCoords[1] = group.transformedRange![0] + offset;
+		}
+	}
 
 
 	// ================================ RETURN FINAL POSITION ================================
@@ -364,7 +387,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	const compressedPosition: Map<CoordsKey, number> = new Map();
 	for (const piece of pieces) {
-		console.log(`Piece ${String(piece.coords)} transformed to ${String(piece.transformedCoords)}.`);
+		// console.log(`Piece ${String(piece.coords)} transformed to ${String(piece.transformedCoords)}.`);
 		if (piece.transformedCoords[0] === undefined || piece.transformedCoords[1] === undefined) throw Error(`Piece's transformed position is not entirely defined! Original piece location: ${String(piece.coords)}. Transformed location: ${String(piece.transformedCoords)}.`);
 
 		const transformedCoordsKey = coordutil.getKeyFromCoords(piece.transformedCoords as Coords);

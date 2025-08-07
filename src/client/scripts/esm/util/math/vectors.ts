@@ -58,7 +58,7 @@ type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
 
 
 /** All positive/absolute orthogonal vectors. */
-const VECTORS_ORTHOGONAL: Coords[] = [[1n,0n],[0n,1n]]
+const VECTORS_ORTHOGONAL: Coords[] = [[1n,0n],[0n,1n]];
 /** All positive/absolute diagonal vectors. */
 const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
 /** The positive/absolute knightrider hippogonals. */
