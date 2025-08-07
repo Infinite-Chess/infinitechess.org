@@ -8,6 +8,7 @@
  */
 
 
+import bimath from "../../../util/bigdecimal/bimath.js";
 import vectors, { Vec2, Vec2Key } from "../../../util/math/vectors.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 
@@ -110,7 +111,7 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in the code.
  */
-const MIN_ARBITRARY_DISTANCE = 40n;
+const MIN_ARBITRARY_DISTANCE = 20n;
 
 
 
@@ -304,7 +305,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// else console.log(`No merging needed, groups are not close enough.`);
 	}
 
-	
+
 	// Declare what axis groups each piece belongs to.
 
 	declareAxisOrderPieceGroups('1,0');
@@ -377,21 +378,120 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 
 
-	// let iteration = 0;
-	// let changeMade = true;
+	// Order the pieces by ascending positive diagonal axis value
+	// OF THEIR CURRENT TRANSFORMED COORDS.
+	// const piecesOrderedByPosDiag: PieceTransform[] = pieces.slice().sort((a, b) => {
+	// 	const aPosDiag = posDiagAxisDeterminer(a.transformedCoords as Coords);
+	// 	const bPosDiag = posDiagAxisDeterminer(b.transformedCoords as Coords);
+	// 	return aPosDiag < bPosDiag ? -1 : aPosDiag > bPosDiag ? 1 : 0;
+	// });
 
-	// while (changeMade === true) {
-	// 	iteration++;
-	// 	changeMade = false;
-	// 	console.log(`\nIteration ${iteration}...`);
-
-		
+	// console.log("\nPieces ordered by positive diagonal axis value:");
+	// console.log(piecesOrderedByPosDiag.map(piece => `${String(piece.transformedCoords)}`));
 
 
-		
-	// }
 
-	// console.log(`\nNo more changes made after ${iteration} iterations.`);
+	// ================================= ITERATIVE DIAGONAL SOLVER =================================
+
+	if (mode === 'diagonals') {
+		let iteration = 0;
+		let changeMade = true;
+		const ITERATION_WARNING_THRESHOLD = 100; // Increased for diagonal complexity
+
+		const iterationBreak = 20;
+
+		while (changeMade) {
+			iteration++;
+			if (iteration === iterationBreak) break; // FOR DEBUGGING PURPOSES ONLY
+			if (iteration > ITERATION_WARNING_THRESHOLD) throw Error(`Diagonal solver exceeded ${ITERATION_WARNING_THRESHOLD} iterations.`);
+			changeMade = false;
+			console.log(`\nIteration ${iteration}...`);
+
+			// --- U-AXIS RELATIONSHIP CHECK ---
+			// Iterate through every unique pair of pieces (A, B)
+			for (let i = 0; i < pieces.length; i++) {
+				for (let j = i + 1; j < pieces.length; j++) {
+					const pieceA = pieces[i];
+					const pieceB = pieces[j];
+
+					// Determine original U-axis ordering from their original coordinates
+					const u_first = posDiagAxisDeterminer(pieceA.coords);
+					const u_second = posDiagAxisDeterminer(pieceB.coords);
+
+					console.log(`Checking pieces ${String(pieceA.coords)} (u=${u_first}) and ${String(pieceB.coords)} (u=${u_second})...`);
+
+					// Determine which piece should come first on the U-axis
+					let firstPiece = pieceA;
+					let secondPiece = pieceB;
+					if (u_second < u_first) {
+						firstPiece = pieceB;
+						secondPiece = pieceA;
+					}
+
+					// Required spacing: If they are within MIN_ARBITRARY_DISTANCE, then the spacing remains the same,
+					// otherwise its equal to or greater than MIN_ARBITRARY_DISTANCE.
+					const original_u_distance = bimath.abs(u_second - u_first);
+					const requiredSpacing = bimath.min(original_u_distance, MIN_ARBITRARY_DISTANCE);
+					
+					// Get the actual transformed U-values from their current coordinates
+					const tu_first = posDiagAxisDeterminer(firstPiece.transformedCoords as Coords);
+					const tu_second = posDiagAxisDeterminer(secondPiece.transformedCoords as Coords);
+
+					console.log(`Transformed:   ${String(firstPiece.transformedCoords)} (tu=${tu_first}) and ${String(secondPiece.transformedCoords)} (tu=${tu_second}). Required spacing: ${requiredSpacing}. Current spacing: ${tu_second - tu_first}.`);
+
+					// Check for a violation
+					if (tu_second < tu_first + requiredSpacing) {
+						// VIOLATION FOUND! We need to push one of the pieces
+						const pushAmount = (tu_first + requiredSpacing) - tu_second;
+						console.log(`U-Violation: ${String(secondPiece.coords)} (tu=${tu_second}) must be pushed by ${pushAmount} because of ${String(firstPiece.coords)} (tu=${tu_first})`);
+
+						// If the 2nd pieces Y value is lower than 1st piece's Y value,
+						// then we can't push it up, as it would ripple pushing 1st piece up as well.
+						// Instead, we'd have to push the 1st piece's X value right.
+						if (secondPiece.transformedCoords[1]! < firstPiece.transformedCoords[1]!) {
+							console.log(`Pushing first piece's X value right by ${pushAmount}...`);
+							// To fix tu = ty - tx, we must increase tx.
+							const x_group_index_to_push = firstPiece.axisGroups['1,0'];
+
+							// Apply the ripple push to all affected pieces
+							const XAxisOrder = AllAxisOrders['1,0'];
+							for (let i = x_group_index_to_push; i < XAxisOrder.length; i++) {
+								const thisXGroup = XAxisOrder[i]!;
+								// Update the transformed range of this X-group
+								thisXGroup.transformedRange![0] += pushAmount;
+								thisXGroup.transformedRange![1] += pushAmount;
+								// Update the transformed coords of all pieces in this X-group
+								for (const pieceToPush of thisXGroup.pieces) {
+									pieceToPush.transformedCoords[0]! += pushAmount;
+								}
+							}
+						} else { // Safe to push the second piece up.
+							console.log(`Pushing second piece's Y value up by ${pushAmount}...`);
+							// To fix tu = ty - tx, we must increase ty.
+							// This push must be applied to the second piece's entire Y-group and all subsequent Y-groups.
+							const y_group_index_to_push = secondPiece.axisGroups['0,1'];
+
+							// Apply the ripple push to all affected pieces
+							const YAxisOrder = AllAxisOrders['0,1'];
+							for (let i = y_group_index_to_push; i < YAxisOrder.length; i++) {
+								const thisYGroup = YAxisOrder[i]!;
+								// Update the transformed range of this Y-group
+								thisYGroup.transformedRange![0] += pushAmount;
+								thisYGroup.transformedRange![1] += pushAmount;
+								// Update the transformed coords of all pieces in this Y-group
+								for (const pieceToPush of thisYGroup.pieces) {
+									pieceToPush.transformedCoords[1]! += pushAmount;
+								}
+							}
+						}
+						
+						changeMade = true;
+					} else console.log(`No U-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+				}
+			}
+		}
+		console.log(`\nU-axis converged after ${iteration} iterations.`);
+	}
 
 
 
