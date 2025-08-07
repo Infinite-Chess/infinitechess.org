@@ -8,14 +8,15 @@
  */
 
 
-import type { _Move_Compact } from "../icn/icnconverter";
-import type { Coords } from "../movesets";
+import type { _Move_Compact } from "../icn/icnconverter.js";
+import type { Coords } from "../movesets.js";
 
-import bd from "../../../util/bigdecimal/bigdecimal";
-import geometry from "../../../util/math/geometry";
-import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../../util/math/vectors";
-import coordutil, { BDCoords } from "../../util/coordutil";
-import positioncompressor, { AxisOrders, PieceTransform } from "./positioncompressor";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
+import geometry from "../../../util/math/geometry.js";
+import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../../util/math/vectors.js";
+import coordutil, { BDCoords } from "../../util/coordutil.js";
+import positioncompressor, { AxisOrders, PieceTransform } from "./positioncompressor.js";
+
 
 
 // ================================== HELPERS ==================================
@@ -34,9 +35,9 @@ import positioncompressor, { AxisOrders, PieceTransform } from "./positioncompre
  */
 
 /** Given a coordinate, returns the bigint value that represent the X-axis value for that piece. */
-function XAxisDeterminer(fakeEndCoords: Coords): bigint { return fakeEndCoords[0]; }
+function XAxisDeterminer(compressedEndCoords: Coords): bigint { return compressedEndCoords[0]; }
 /** Given a coordinate, returns the bigint value that represent the Y-axis value for that piece. */
-function YAxisDeterminer(fakeEndCoords: Coords): bigint { return fakeEndCoords[1]; }
+function YAxisDeterminer(compressedEndCoords: Coords): bigint { return compressedEndCoords[1]; }
 
 
 
@@ -61,6 +62,7 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 	const originalPiece = pieceTransformations.find((pt) => coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords));
 	if (originalPiece === undefined) throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${String(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`);
 
+	/** The true start coordinates of the piece they moved. */
 	const originalStartCoords: Coords = originalPiece.coords; // EASY! This is already given
 
 	/**
@@ -90,15 +92,17 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 	// It didn't capture any piece
 	// This is a little more complicated. But we will attach it to the nearest axis group.
 
-	/** The direction the piece moved in. */
+	/** The direction the piece moved in. We KNOW this is preserved when expanding back out! */
 	const vector: Vec2 = vectors.absVector(vectors.normalizeVector(coordutil.subtractCoords(endCoordsBigInt, startCoordsBigInt)));
 	const vec2Key: Vec2Key = vectors.getKeyFromVec2(vector);
 	// console.log("Original start coords:", originalStartCoords);
 	// console.log("Movement vector:", vector);
 	const movementLine: LineCoefficients = vectors.getLineGeneralFormFromCoordsAndVec(originalStartCoords, vector);
 
+	// Half the distance between groups so that we can pick the nearest one threatened.
 	const HALF_ARBITRARY_DISTANCE = positioncompressor.MIN_ARBITRARY_DISTANCE / 2n;
 
+	/** The true end coordinates they want to move to. */
 	let originalEndCoords: Coords | undefined;
 
 	// Search each axis group besides the direction it moved in
@@ -109,29 +113,36 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 	if (vec2Key !== '0,1') determineIfMovedPieceInterestedInAxis('1,0', XAxisDeterminer);
 	if (vec2Key !== '1,0') determineIfMovedPieceInterestedInAxis('0,1', YAxisDeterminer);
 
+	/**
+	 * Determines if the moved piece is interested in any group in the given axis.
+	 * If so, its final destination will still be relative to that group.
+	 */
 	function determineIfMovedPieceInterestedInAxis(
 		axis: '1,0' | '0,1',
 		// eslint-disable-next-line no-unused-vars
-		axisValueDeterminer: (fakeEndCoords: Coords) => bigint,
+		axisValueDeterminer: (compressedEndCoords: Coords) => bigint,
 	) {
-		if (originalEndCoords) return; // We already found the original end coords, no need to continue
+		if (originalEndCoords) {
+			console.log(`Moved piece already has end coords determined. Skipping axis ${axis}.`);
+			return; // We already found the original end coords, no need to continue
+		}
 
 		const axisOrder = AllAxisOrders[axis];
 
-		const fakeEndCoordsAxisValue = axisValueDeterminer(endCoordsBigInt);
-		// console.log("fakeEndCoordsAxisValue:", fakeEndCoordsAxisValue);
+		const compressedEndCoordsAxisValue = axisValueDeterminer(endCoordsBigInt);
+		// console.log("compressedEndCoordsAxisValue:", compressedEndCoordsAxisValue);
 		// console.log('endCoords bigint:', endCoordsBigInt);
 
 		for (const axisGroup of axisOrder) {
-			if (fakeEndCoordsAxisValue + HALF_ARBITRARY_DISTANCE >= axisGroup.transformedRange![0] &&
-				fakeEndCoordsAxisValue - HALF_ARBITRARY_DISTANCE <= axisGroup.transformedRange![1]) {
+			if (compressedEndCoordsAxisValue + HALF_ARBITRARY_DISTANCE >= axisGroup.transformedRange![0] &&
+				compressedEndCoordsAxisValue - HALF_ARBITRARY_DISTANCE <= axisGroup.transformedRange![1]) {
 				// We found the group of interest this piece is targetting!
 				console.log(`Moved piece is interested in group on the ${axis} axis with range ${axisGroup.transformedRange}.   Original range ${axisGroup.range}`);
 
 				// The piece is on the same file as this axis group, so connect it to this axis group
 				// so its position remains relative to them when the position is expanded back out.
 
-				const offsetFromGroupStart = fakeEndCoordsAxisValue - axisGroup.transformedRange![0];
+				const offsetFromGroupStart = compressedEndCoordsAxisValue - axisGroup.transformedRange![0];
 				const actualEndCoordsAxisValue = axisGroup.range[0] + offsetFromGroupStart;
 				// console.log('offsetFromGroupStart:', offsetFromGroupStart);
 				// console.log('actualEndCoordsAxisValue:', actualEndCoordsAxisValue);
@@ -143,25 +154,25 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 		if (!originalEndCoords) {
 			// They didn't specifically target any group.
 			// They must have moved further left or right than any group.
-			if (fakeEndCoordsAxisValue + HALF_ARBITRARY_DISTANCE < axisOrder[0].transformedRange![0]) {
+			if (compressedEndCoordsAxisValue + HALF_ARBITRARY_DISTANCE < axisOrder[0].transformedRange![0]) {
 				// They moved left of the leftmost group
 				console.log(`Moved piece wants to move left of the leftmost group on the ${axis} axis.`);
 
-				const distToLeftMostGroup = fakeEndCoordsAxisValue - axisOrder[0]!.transformedRange![0];
+				const distToLeftMostGroup = compressedEndCoordsAxisValue - axisOrder[0]!.transformedRange![0];
 				const actualEndCoordsAxisValue = axisOrder[0]!.range[0] + distToLeftMostGroup;
 				// The ACTUAL coordinates they moved to!
 				originalEndCoords = trueEndCoordsDeterminer(movementLine, axis, actualEndCoordsAxisValue);
-			} else if (fakeEndCoordsAxisValue - HALF_ARBITRARY_DISTANCE > axisOrder[axisOrder.length - 1]!.transformedRange![1]) {
+			} else if (compressedEndCoordsAxisValue - HALF_ARBITRARY_DISTANCE > axisOrder[axisOrder.length - 1]!.transformedRange![1]) {
 				// They moved right of the rightmost group
 				console.log(`Moved piece wants to move right of the rightmost group on the ${axis} axis.`);
 
-				const distToRightMostGroup = fakeEndCoordsAxisValue - axisOrder[axisOrder.length - 1]!.transformedRange![1];
+				const distToRightMostGroup = compressedEndCoordsAxisValue - axisOrder[axisOrder.length - 1]!.transformedRange![1];
 				const actualEndCoordsAxisValue = axisOrder[axisOrder.length - 1]!.range[1] + distToRightMostGroup;
 				// The ACTUAL coordinates they moved to!
 				originalEndCoords = trueEndCoordsDeterminer(movementLine, axis, actualEndCoordsAxisValue);
 			} else {
 				console.log(`Moved piece is not interested in any groups on the ${axis} axis.`);
-				console.log('fakeEndCoordsAxisValue:', fakeEndCoordsAxisValue);
+				console.log('compressedEndCoordsAxisValue:', compressedEndCoordsAxisValue);
 			}
 		}
 	}
