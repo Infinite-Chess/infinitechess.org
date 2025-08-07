@@ -111,7 +111,7 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in the code.
  */
-const MIN_ARBITRARY_DISTANCE = 20n;
+const MIN_ARBITRARY_DISTANCE = 40n;
 
 
 
@@ -398,11 +398,11 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		let changeMade = true;
 		const ITERATION_WARNING_THRESHOLD = 100; // Increased for diagonal complexity
 
-		const iterationBreak = 20;
+		const MAX_ITERATIONS = 20;
 
 		while (changeMade) {
 			iteration++;
-			if (iteration === iterationBreak) break; // FOR DEBUGGING PURPOSES ONLY
+			if (iteration > MAX_ITERATIONS) break; // FOR DEBUGGING PURPOSES ONLY
 			if (iteration > ITERATION_WARNING_THRESHOLD) throw Error(`Diagonal solver exceeded ${ITERATION_WARNING_THRESHOLD} iterations.`);
 			changeMade = false;
 			console.log(`\nIteration ${iteration}...`);
@@ -445,44 +445,18 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 						const pushAmount = (tu_first + requiredSpacing) - tu_second;
 						console.log(`U-Violation: ${String(secondPiece.coords)} (tu=${tu_second}) must be pushed by ${pushAmount} because of ${String(firstPiece.coords)} (tu=${tu_first})`);
 
-						// If the 2nd pieces Y value is lower than 1st piece's Y value,
-						// then we can't push it up, as it would ripple pushing 1st piece up as well.
-						// Instead, we'd have to push the 1st piece's X value right.
+						// If the 2nd piece's Y value is lower than 1st piece's Y value,
+						// then we can't push it up, as it would cause a paradoxical ripple.
+						// Instead, we achieve the same goal by pushing the 1st piece's X value right.
 						if (secondPiece.transformedCoords[1]! < firstPiece.transformedCoords[1]!) {
-							console.log(`Pushing first piece's X value right by ${pushAmount}...`);
-							// To fix tu = ty - tx, we must increase tx.
+							console.log(`Pushing first piece's X groups right by ${pushAmount}...`);
 							const x_group_index_to_push = firstPiece.axisGroups['1,0'];
+							ripplePush('1,0', x_group_index_to_push, pushAmount);
 
-							// Apply the ripple push to all affected pieces
-							const XAxisOrder = AllAxisOrders['1,0'];
-							for (let i = x_group_index_to_push; i < XAxisOrder.length; i++) {
-								const thisXGroup = XAxisOrder[i]!;
-								// Update the transformed range of this X-group
-								thisXGroup.transformedRange![0] += pushAmount;
-								thisXGroup.transformedRange![1] += pushAmount;
-								// Update the transformed coords of all pieces in this X-group
-								for (const pieceToPush of thisXGroup.pieces) {
-									pieceToPush.transformedCoords[0]! += pushAmount;
-								}
-							}
-						} else { // Safe to push the second piece up.
-							console.log(`Pushing second piece's Y value up by ${pushAmount}...`);
-							// To fix tu = ty - tx, we must increase ty.
-							// This push must be applied to the second piece's entire Y-group and all subsequent Y-groups.
+						} else { // It's safe to push the second piece up.
+							console.log(`Pushing second piece's Y groups up by ${pushAmount}...`);
 							const y_group_index_to_push = secondPiece.axisGroups['0,1'];
-
-							// Apply the ripple push to all affected pieces
-							const YAxisOrder = AllAxisOrders['0,1'];
-							for (let i = y_group_index_to_push; i < YAxisOrder.length; i++) {
-								const thisYGroup = YAxisOrder[i]!;
-								// Update the transformed range of this Y-group
-								thisYGroup.transformedRange![0] += pushAmount;
-								thisYGroup.transformedRange![1] += pushAmount;
-								// Update the transformed coords of all pieces in this Y-group
-								for (const pieceToPush of thisYGroup.pieces) {
-									pieceToPush.transformedCoords[1]! += pushAmount;
-								}
-							}
+							ripplePush('0,1', y_group_index_to_push, pushAmount);
 						}
 						
 						changeMade = true;
@@ -490,7 +464,28 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 				}
 			}
 		}
-		console.log(`\nU-axis converged after ${iteration} iterations.`);
+		console.log(`\nU-axis converged after ${iteration - 1} iterations.`);
+	}
+	
+	/**
+     * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
+     */
+	function ripplePush(axisToPush: '1,0' | '0,1', startingGroupIndex: number, pushAmount: bigint) {
+		const coordIndex = axisToPush === '1,0' ? 0 : 1;
+		const axisOrder = AllAxisOrders[axisToPush];
+
+		for (let i = startingGroupIndex; i < axisOrder.length; i++) {
+			const groupToUpdate = axisOrder[i];
+			
+			// Update the transformed range of this group
+			groupToUpdate.transformedRange![0] += pushAmount;
+			groupToUpdate.transformedRange![1] += pushAmount;
+			
+			// Update the transformed coords of all pieces in this group
+			for (const pieceToPush of groupToUpdate.pieces) {
+				pieceToPush.transformedCoords[coordIndex]! += pushAmount;
+			}
+		}
 	}
 
 
