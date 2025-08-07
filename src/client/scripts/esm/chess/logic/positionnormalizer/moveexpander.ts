@@ -19,28 +19,6 @@ import positioncompressor, { AxisOrders, PieceTransform } from "./positioncompre
 
 
 
-// ================================== HELPERS ==================================
-
-
-
-/**
- * What is an Axis value?
- * 
- * It's a number unique to each location a piece can be on a given axis.
- * 
- * For example, on the X axis, the axis value is the x coordinate of the piece.
- * On the Y axis, the axis value is the y coordinate of the piece.
- * On the positive diagonal, the axis value is y - x.
- * On the negative diagonal, the axis value is y + x.
- */
-
-/** Given a coordinate, returns the bigint value that represent the X-axis value for that piece. */
-function XAxisDeterminer(compressedEndCoords: Coords): bigint { return compressedEndCoords[0]; }
-/** Given a coordinate, returns the bigint value that represent the Y-axis value for that piece. */
-function YAxisDeterminer(compressedEndCoords: Coords): bigint { return compressedEndCoords[1]; }
-
-
-
 // ================================== MOVE EXPANDER ==================================
 
 
@@ -110,8 +88,8 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 	// Skip if our movement is perpendicular to that axis,
 	// its impossible for us to increase our axis value along it
 	// => not interested in threatening any of those groups.
-	if (vec2Key !== '0,1') determineIfMovedPieceInterestedInAxis('1,0', XAxisDeterminer);
-	if (vec2Key !== '1,0') determineIfMovedPieceInterestedInAxis('0,1', YAxisDeterminer);
+	if (vec2Key !== '0,1') determineIfMovedPieceInterestedInAxis('1,0', positioncompressor.XAxisDeterminer);
+	if (vec2Key !== '1,0') determineIfMovedPieceInterestedInAxis('0,1', positioncompressor.YAxisDeterminer);
 
 	/**
 	 * Determines if the moved piece is interested in any group in the given axis.

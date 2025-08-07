@@ -108,7 +108,33 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in the code.
  */
-const MIN_ARBITRARY_DISTANCE = 20n;
+const MIN_ARBITRARY_DISTANCE = 40n;
+
+
+
+// ================================== HELPERS ==================================
+
+
+
+/**
+ * What is an Axis value?
+ * 
+ * It's a number unique to each location a piece can be on a given axis.
+ * 
+ * For example, on the X axis, the axis value is the x coordinate of the piece.
+ * On the Y axis, the axis value is the y coordinate of the piece.
+ * On the positive diagonal, the axis value is y - x.
+ * On the negative diagonal, the axis value is y + x.
+ */
+
+/** Given a coordinate, returns the bigint value that represent the X-axis value for that piece. */
+function XAxisDeterminer(compressedEndCoords: Coords): bigint { return compressedEndCoords[0]; }
+/** Given a coordinate, returns the bigint value that represent the Y-axis value for that piece. */
+function YAxisDeterminer(compressedEndCoords: Coords): bigint { return compressedEndCoords[1]; }
+/** Given a coordinate, returns the bigint value that represent the positive diagonal axis value for that piece. */
+function posDiagAxisDeterminer(coords: Coords): bigint { return coords[1] - coords[0]; }
+/** Given a coordinate, returns the bigint value that represent the negative diagonal axis value for that piece. */
+function negDiagAxisDeterminer(coords: Coords): bigint { return coords[1] + coords[0]; }
 
 
 
@@ -122,7 +148,7 @@ const MIN_ARBITRARY_DISTANCE = 20n;
  * Returns transformation info so that the chosen move from the compressed position
  * can be expanded back to the original position.
  */
-function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
+function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' | 'diagonals'): CompressionInfo {
 
 	// 1. List all pieces with their bigint arbitrary coordinates.
 
@@ -165,13 +191,21 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 	// Init the axis orders as empty
 	AllAxisOrders['1,0'] = []; // X axis
 	AllAxisOrders['0,1'] = []; // Y axis
+	if (mode === 'diagonals') {
+		AllAxisOrders['1,1'] = []; // Positive diagonal axis
+		AllAxisOrders['-1,1'] = []; // Negative diagonal axis
+	}
 
 	// Order/group/connect the pieces
 
 	for (const piece of pieces) {
 		console.log(`\nAnalyzing piece at ${String(piece.coords)}...`);
-		registerPieceInAxisOrder(AllAxisOrders['1,0'], piece, piece.coords[0]);
-		registerPieceInAxisOrder(AllAxisOrders['0,1'], piece, piece.coords[1]);
+		registerPieceInAxisOrder(AllAxisOrders['1,0'], piece, XAxisDeterminer(piece.coords));
+		registerPieceInAxisOrder(AllAxisOrders['0,1'], piece, YAxisDeterminer(piece.coords));
+		if (mode === 'diagonals') {
+			registerPieceInAxisOrder(AllAxisOrders['1,1'], piece, posDiagAxisDeterminer(piece.coords));
+			registerPieceInAxisOrder(AllAxisOrders['-1,1'], piece, negDiagAxisDeterminer(piece.coords));
+		}
 	}
 
 	// Helper for registering a piece in any axis order.
@@ -345,7 +379,7 @@ function compressPosition(position: Map<CoordsKey, number>): CompressionInfo {
 }
 
 
-// ================================ HELPERS ================================
+// ================================ MATHEMATICAL ================================
 
 
 /**
@@ -410,6 +444,11 @@ export type {
 export default {
 	// Constants
 	MIN_ARBITRARY_DISTANCE,
+	// Helpers
+	XAxisDeterminer,
+	YAxisDeterminer,
+	posDiagAxisDeterminer,
+	negDiagAxisDeterminer,
 	// Implementation
 	compressPosition,
 };
