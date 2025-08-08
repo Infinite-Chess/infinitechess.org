@@ -109,7 +109,7 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * Jumping moves don't need extra attention other than making sure this is big enough.
  * Code works automatically, even for hippogonal jumps!
  * 
- * * Must be divisible by 2, as this is divided by two in the code.
+ * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
 // const MIN_ARBITRARY_DISTANCE = 40n;
 const MIN_ARBITRARY_DISTANCE = 5n;
