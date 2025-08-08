@@ -731,6 +731,28 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 		return totalError;
 	}
+	
+	/**
+	 * Calculates the sum of all errors on the board on a specific axis between every single pair of pieces.
+	 * This gives one GRAND score where the higher the score, the more incorrect the position is (on that axis),
+	 * and a score of 0n means the position is PERFECT and no pushes are necessary anymore to satisfy all constraints.
+	 */
+	function calculateTotalBoardAxisError(axisDeterminer: AxisDeterminer): bigint {
+		let totalError = 0n;
+		for (let i = 0; i < pieces.length; i++) {
+			for (let j = i + 1; j < pieces.length; j++) {
+				const pieceA = pieces[i];
+				const pieceB = pieces[j];
+
+				const vDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
+				const vDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
+
+				const pushAmount = calculatePushAmount(vDiff_Original, vDiff_Transformed);
+				totalError += calculateError(pushAmount);
+			}
+		}
+		return totalError;
+	}
 
 
 
