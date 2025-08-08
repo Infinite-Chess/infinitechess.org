@@ -599,8 +599,23 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// the constraint between piece A and piece B!
 		ripplePush(axis, secondPiece.axisGroups[axis], pushAmount, coordIndex);
 
+		/** The first group that comes after the first piece's group (which is immovable). */
+		const startingGroupIndex = firstPiece.axisGroups[axis] + 1;
+
+		/**
+		 * --- Identify the pieces relevant to THIS decision ---
+		 * The relevant pieces are all those in groups that could possibly be moved by the ripple push.
+		 * 
+		 * When calculating the total score of the position after this action
+		 * (and potential additional group pushes below), we must ONLY TAKE
+		 * into account all pieces that can potentially be affected by the pushes
+		 * we make! Pieces far below the first piece's group shouldn't be able to
+		 * veto potential improving pushes we can make to the groups nearby us now!
+		 */
+		const relevantPieces = getRelevantPieces(axis, startingGroupIndex);
+
 		// Calculate the total board error after this baseline push. This is our score to beat.
-		let minErrorSoFar = calculateTotalBoardAxisError(axisDeterminer);
+		let minErrorSoFar = calculateScopedAxisError(axisDeterminer, relevantPieces);
 		console.log("Checking if pushing more groups will improve the score: ", minErrorSoFar);
 		// The number of groups we've pushed since we pushed
 		// the group that resulted in the BEST state so far.
@@ -619,7 +634,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			pushGroup(groupToPush, pushAmount, coordIndex);
 
 			// Check the new total board error.
-			const currentError = calculateTotalBoardAxisError(axisDeterminer); // <-- Using the generic function
+			const currentError = calculateScopedAxisError(axisDeterminer, relevantPieces);
 
 			// If this new state is better, record it as the best one so far.
 			if (currentError < minErrorSoFar) {
@@ -638,14 +653,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// --- Phase 3: Rewind to the Optimal State ---
 		// The search is over. We know to rewind as many pushes as `pushesSinceLastBest`
 
-		for (let i = firstPiece.axisGroups[axis] + 1; i < firstPiece.axisGroups[axis] + 1 + pushesSinceLastBest; i++) {
+		for (let i = startingGroupIndex; i < startingGroupIndex + pushesSinceLastBest; i++) {
 			const groupToUndo = axisOrder[i];
 			// Undo the push by pushing with a negative amount.
 			pushGroup(groupToUndo, -pushAmount, coordIndex);
 		}
 
-		// Calculate the final total board error after all the pushes.
-		const finalError = calculateTotalBoardAxisError(axisDeterminer);
 		console.log("Number of extra groups pushed: ", secondPiece.axisGroups[axis] - firstPiece.axisGroups[axis] - 1 - pushesSinceLastBest);
 		console.log("Number of group pushes REWINDED: ", pushesSinceLastBest);
 	}
@@ -716,17 +729,35 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 	
 	/**
-	 * Calculates the sum of all errors on the board on a specific axis between every single pair of pieces.
-	 * This gives one GRAND score where the higher the score, the more incorrect the position is (on that axis),
-	 * and a score of 0n means the position is PERFECT and no pushes are necessary anymore to satisfy all constraints.
+	 * Gathers all pieces from a starting group index onwards on a given orthogonal axis.
+	 * @param axis The orthogonal axis ('1,0' for X, '0,1' for Y) to gather pieces from.
+	 * @param startingGroupIndex The index of the first group to include pieces from (inclusive).
+	 * @returns An array of all PieceTransform objects found.
 	 */
-	function calculateTotalBoardAxisError(axisDeterminer: AxisDeterminer): bigint {
-		let totalError = 0n;
-		for (let i = 0; i < pieces.length; i++) {
-			for (let j = i + 1; j < pieces.length; j++) {
-				const pieceA = pieces[i];
-				const pieceB = pieces[j];
+	function getRelevantPieces(axis: '1,0' | '0,1', startingGroupIndex: number): PieceTransform[] {
+		const relevantPieces: PieceTransform[] = [];
+		const axisOrder = AllAxisOrders[axis];
 
+		for (let i = startingGroupIndex; i < axisOrder.length; i++) {
+			relevantPieces.push(...axisOrder[i].pieces);
+		}
+		
+		return relevantPieces;
+	}
+
+	/**
+	 * Calculates the sum of all errors on the board on a specific axis between every single pair of pieces provided.
+	 * This gives one GRAND score where the higher the score, the more incorrect the pieces are relative
+	 * to each other (on that axis), and a score of 0n means the pieces are positioned PERFECT
+	 * relative to each other and no pushes are necessary anymore to satisfy all constraints between them.
+	 */
+	function calculateScopedAxisError(axisDeterminer: AxisDeterminer, relevantPieces: PieceTransform[]): bigint {
+		let totalError = 0n;
+		for (let i = 0; i < relevantPieces.length; i++) {
+			const pieceA = relevantPieces[i];
+			for (let j = i + 1; j < relevantPieces.length; j++) {
+				const pieceB = relevantPieces[j];
+				
 				const vDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
 				const vDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
 
@@ -736,7 +767,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 		return totalError;
 	}
-
 
 
 	// ================================ RETURN FINAL POSITION ================================
