@@ -597,7 +597,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// Perform the mandatory push on the second piece's group and all subsequent groups.
 		// We know this is REQUIRED because it is the ONLY action that will satisfy
 		// the constraint between piece A and piece B!
-		ripplePush(axis, secondPiece.axisGroups[axis], pushAmount);
+		ripplePush(axis, secondPiece.axisGroups[axis], pushAmount, coordIndex);
 
 		// Calculate the total board error after this baseline push. This is our score to beat.
 		let minErrorSoFar = calculateTotalBoardAxisError(axisDeterminer);
@@ -654,13 +654,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	/**
      * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
      */
-	function ripplePush(axisToPush: '1,0' | '0,1', startingGroupIndex: number, pushAmount: bigint) {
+	function ripplePush(axisToPush: '1,0' | '0,1', startingGroupIndex: number, pushAmount: bigint, coordIndex: 0 | 1) {
 		if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
 
 		const word = axisToPush === '1,0' ? 'RIGHT' : 'UP';
 		console.log(`Ripple pushing group of index ${startingGroupIndex} ${word} by ${pushAmount}...`);
 
-		const coordIndex = axisToPush === '1,0' ? 0 : 1;
 		const axisOrder = AllAxisOrders[axisToPush];
 
 		for (let i = startingGroupIndex; i < axisOrder.length; i++) {
