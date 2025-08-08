@@ -489,6 +489,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 					// --- V-AXIS RELATIONSHIP CHECK ---
 					{ // Use a block to keep variable names from colliding
+						const axisDeterminer = negDiagAxisDeterminer;
+
 						// Determine original V-axis ordering from their original coordinates
 						const firstPiece_v_Original = negDiagAxisDeterminer(pieceA.coords);
 						const secondPiece_v_Original = negDiagAxisDeterminer(pieceB.coords);
@@ -537,8 +539,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 							const Y_push_safe = (secondPiece.axisGroups['0,1'] > firstPiece.axisGroups['0,1']);
 
 							if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-							else if (X_push_safe) makeOptimalRipplePush('1,0', firstPiece, secondPiece, pushAmount);
-							else if (Y_push_safe) makeOptimalRipplePush('0,1', firstPiece, secondPiece, pushAmount);
+							else if (X_push_safe) makeOptimalRipplePush('1,0', firstPiece, secondPiece, pushAmount, axisDeterminer);
+							else if (Y_push_safe) makeOptimalRipplePush('0,1', firstPiece, secondPiece, pushAmount, axisDeterminer);
 							else throw Error("Neither push is safe. This is a logical deadlock. This case *should not happen* if the pieces are correctly ordered. If secondPiece comes after firstPiece on the V-axis, it must also come after it on at least one of the X or Y axes. Is there an error in the orthogonal solution?");
 							
 							changeMade = true;
@@ -552,8 +554,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 							const Y_push_safe = (firstPiece.axisGroups['0,1'] > secondPiece.axisGroups['0,1']);
 
 							if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-							else if (X_push_safe) makeOptimalRipplePush('1,0', secondPiece, firstPiece, -pushAmount);
-							else if (Y_push_safe) makeOptimalRipplePush('0,1', secondPiece, firstPiece, -pushAmount);
+							else if (X_push_safe) makeOptimalRipplePush('1,0', secondPiece, firstPiece, -pushAmount, axisDeterminer);
+							else if (Y_push_safe) makeOptimalRipplePush('0,1', secondPiece, firstPiece, -pushAmount, axisDeterminer);
 							else throw Error("Neither push is safe!");
 
 							changeMade = true;
@@ -578,56 +580,75 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	 * @param firstPiece 
 	 * @param secondPiece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group.
 	 */
-	function makeOptimalRipplePush(axis: '1,0' | '0,1', firstPiece: PieceTransform, secondPiece: PieceTransform, pushAmount: bigint) {
-
+	function makeOptimalRipplePush(
+		axis: '1,0' | '0,1',
+		firstPiece: PieceTransform,
+		secondPiece: PieceTransform,
+		pushAmount: bigint,
+		axisDeterminer: AxisDeterminer // <-- New parameter
+	) {
 		const word = axis === '1,0' ? 'RIGHT' : 'UP';
 		console.log(`Finding optimal ripple push for moving ${String(secondPiece.transformedCoords)} ${word} ${pushAmount}...\n`);
 
-		// GUARANTEED we're ripple pushing the second piece's group, followed by
-		// all groups after it so the orthogonal solution is preserved.
+		const coordIndex = axis === '1,0' ? 0 : 1;
+		const axisOrder = AllAxisOrders[axis];
+
+		// --- Phase 1: Baseline Push & Initial State ---
+		// Perform the mandatory push on the second piece's group and all subsequent groups.
+		// We know this is REQUIRED because it is the ONLY action that will satisfy
+		// the constraint between piece A and piece B!
 		ripplePush(axis, secondPiece.axisGroups[axis], pushAmount);
 
-		// Now that we have made the safest (and required) move.
-		// Let's analyze if more groups before second piece's group should be pushed as well.
-		// How do we know if they should be pushed?
-		// We compare all their piece's V-axis values to both the first and second piece's V-axis values.
-		// If pushing the group would net-bring their V-axis level of error closer to 0 (local minimum),
-		// then we push them as well!
-		// If it doesn't change their V-axis level of error, then we don't push them, and don't push any earlier groups either.
+		// Calculate the total board error after this baseline push. This is our score to beat.
+		let minErrorSoFar = calculateTotalBoardAxisError(axisDeterminer);
+		console.log("Current score: ", minErrorSoFar);
+		// The number of groups we've pushed since we pushed
+		// the group that resulted in the BEST state so far.
+		let pushesSinceLastBest = 0;
 
-		let previousGroupIndex = secondPiece.axisGroups[axis] - 1; // Group one-before second piece's group.
-		while (previousGroupIndex > firstPiece.axisGroups[axis]) { // For as long as we are after the first piece's group
-			const group = AllAxisOrders[axis][previousGroupIndex];
+		// --- Phase 2: The Search ---
+		// We will try pushing more groups, one by one, iterating backward.
 
-			const currentError = calculateErrorOfGroup(group, negDiagAxisDeterminer);
+		// Start from the group before the second piece's group.
+		// Iterate backward until we reach first piece's group (exclusive).
+		for (let i = secondPiece.axisGroups[axis] - 1; i > firstPiece.axisGroups[axis]; i--) { 
+			// i is the group index to try pushing next.
+			const groupToPush = axisOrder[i];
+			
+			// Apply the next incremental push.
+			pushGroup(groupToPush, pushAmount, coordIndex);
 
-			console.log(`Group range ${group.transformedRange} current error: ${currentError}`);
+			// Check the new total board error.
+			const currentError = calculateTotalBoardAxisError(axisDeterminer); // <-- Using the generic function
 
-			const coordIndex = axis === '1,0' ? 0 : 1; // 0 for X, 1 for Y
+			// If this new state is better, record it as the best one so far.
+			if (currentError < minErrorSoFar) {
+				console.log("New best score: ", currentError);
+				minErrorSoFar = currentError;
+				pushesSinceLastBest = 0; // Reset the count of pushes since last best
+			} else {
+				// DEBUG LOGGING
+				if (currentError === minErrorSoFar) console.log(`Group push didn't have an affect on the score.`);
 
-			// Now simulate pushing this group.
-			pushGroup(group, pushAmount, coordIndex);
-
-			// Recalculate their V-axis error amounts against the first and second piece.
-			const newError = calculateErrorOfGroup(group, negDiagAxisDeterminer);
-
-			console.log(`New error after pushing: ${newError}.`);
-
-			// If the error amounts are closer to 0, we accept the push.
-			// Otherwise if the error amounts worse,
-			// we undo the push, and stop iterating through previous groups.
-			if (newError > currentError) { // KEEP THIS > NOT >= As we need to see if pushing following groups would decrease the error.
-				// Undo the push
-				pushGroup(group, -pushAmount, coordIndex);
-				console.log(`Pushing group results in larger error, terminating further pushes.`);
-				break; // Stop iterating through previous groups.
+				// This position is not better than the best one so far...
+				pushesSinceLastBest++; // Increment the count of pushes since last best
 			}
-
-			console.log(`Pushed additional group successfully!`);
-
-			previousGroupIndex--;
 		}
-		console.log("End of optimal ripple push.");
+
+		// --- Phase 3: Rewind to the Optimal State ---
+		// The search is over. We know to rewind as many pushes as `pushesSinceLastBest`
+
+		for (let i = firstPiece.axisGroups[axis] + 1; i < firstPiece.axisGroups[axis] + 1 + pushesSinceLastBest; i++) {
+			const groupToUndo = axisOrder[i];
+			// Undo the push by pushing with a negative amount.
+			pushGroup(groupToUndo, -pushAmount, coordIndex);
+		}
+
+		// Calculate the final total board error after all the pushes.
+		const finalError = calculateTotalBoardAxisError(axisDeterminer);
+		console.log("Final V axis error after optimal push: ", finalError); // <-- GENERALIZE to U axis as well, later!!!!!
+		console.log("Number of extra groups pushed: ", secondPiece.axisGroups[axis] - firstPiece.axisGroups[axis] - 1 - pushesSinceLastBest);
+		console.log("Number of group pushes REWINDED: ", pushesSinceLastBest);
 	}
 	
 	/**
