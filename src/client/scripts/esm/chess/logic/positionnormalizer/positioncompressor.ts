@@ -715,42 +715,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	function calculateError(pushAmount: bigint) {
 		return bimath.abs(pushAmount);
 	}
-
-	/**
-	 * Sums the total axis error of a group's pieces against every other piece in the position.
-	 */
-	function calculateErrorOfGroup(group: AxisGroup, axisDeterminer: AxisDeterminer): bigint {
-
-		let totalError: bigint = 0n;
-
-		// For each piece within the group we are testing...
-		for (const pieceInGroup of group.pieces) {
-			const pieceInGroup_Original = axisDeterminer(pieceInGroup.coords);
-			const pieceInGroup_Transformed = axisDeterminer(pieceInGroup.transformedCoords as Coords);
-
-			// Compare it against every other piece in the entire position...
-			for (const otherPiece of pieces) {
-				// Don't compare a piece to itself.
-				if (pieceInGroup === otherPiece) continue;
-
-				const otherPiece_Original = axisDeterminer(otherPiece.coords);
-				const otherPiece_Transformed = axisDeterminer(otherPiece.transformedCoords as Coords);
-
-				// Determine the original and transformed differences on this axis.
-				const axisDiff_Original = pieceInGroup_Original - otherPiece_Original;
-				const axisDiff_Transformed = pieceInGroup_Transformed - otherPiece_Transformed;
-				
-				// Calculate the push amount needed to satisfy this single relationship.
-				const pushAmount = calculatePushAmount(axisDiff_Original, axisDiff_Transformed);
-				// The "error" is the magnitude of the required push.
-				const error = calculateError(pushAmount);
-				
-				totalError += error;
-			}
-		}
-
-		return totalError;
-	}
 	
 	/**
 	 * Calculates the sum of all errors on the board on a specific axis between every single pair of pieces.
