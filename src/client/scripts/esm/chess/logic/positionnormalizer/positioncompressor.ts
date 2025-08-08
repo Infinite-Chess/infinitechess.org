@@ -410,7 +410,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		const MAX_ITERATIONS = 100; // Increased for diagonal complexity
 
 		// FOR DEBUGGING
-		// const MAX_PUSHES = 1;
+		// const MAX_PUSHES = 9;
 		const MAX_PUSHES = 500;
 
 		loop: while (changeMade) {
@@ -601,7 +601,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 		// Calculate the total board error after this baseline push. This is our score to beat.
 		let minErrorSoFar = calculateTotalBoardAxisError(axisDeterminer);
-		console.log("Current score: ", minErrorSoFar);
+		console.log("Checking if pushing more groups will improve the score: ", minErrorSoFar);
 		// The number of groups we've pushed since we pushed
 		// the group that resulted in the BEST state so far.
 		let pushesSinceLastBest = 0;
@@ -646,7 +646,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 		// Calculate the final total board error after all the pushes.
 		const finalError = calculateTotalBoardAxisError(axisDeterminer);
-		console.log("Final V axis error after optimal push: ", finalError); // <-- GENERALIZE to U axis as well, later!!!!!
 		console.log("Number of extra groups pushed: ", secondPiece.axisGroups[axis] - firstPiece.axisGroups[axis] - 1 - pushesSinceLastBest);
 		console.log("Number of group pushes REWINDED: ", pushesSinceLastBest);
 	}
