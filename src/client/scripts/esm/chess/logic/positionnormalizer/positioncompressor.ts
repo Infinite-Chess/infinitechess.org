@@ -9,8 +9,9 @@
 
 
 import bimath from "../../../util/bigdecimal/bimath.js";
-import vectors, { Vec2, Vec2Key } from "../../../util/math/vectors.js";
+import { Vec2Key } from "../../../util/math/vectors.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
+import typeutil, { players as p, rawTypes as r } from "../../util/typeutil.js";
 
 
 
@@ -38,10 +39,14 @@ interface CompressionInfo {
  */
 type PieceTransform = {
 	type: number;
+	/** The original coordinates of the piece in the uncompressed position. */
 	coords: Coords;
-	/** Both coords will be fully defined after transformation is complete. */
+	/**
+	 * The pieces new coordinates in the transformed/compressed position.
+	 * Both coords will be fully defined after the orthogonal solution is finished.
+	 * */
 	transformedCoords: [bigint | undefined, bigint | undefined];
-	/** What groups it belongs to on each axis. */
+	/** A reference to what group indexes it belongs to on each axis. */
 	axisGroups: Record<Vec2Key, number>;
 };
 
@@ -146,6 +151,16 @@ const YAxisDeterminer: AxisDeterminer = (compressedEndCoords: Coords): bigint =>
 const posDiagAxisDeterminer: AxisDeterminer = (coords: Coords): bigint => coords[1] - coords[0];
 /** Given a coordinate, returns the bigint value that represent the negative diagonal axis value for that piece. */
 const negDiagAxisDeterminer: AxisDeterminer = (coords: Coords): bigint => coords[1] + coords[0];
+
+
+/** Helper to get the correct axis determiner function from its key. */
+function getAxisDeterminer(axisKey: Vec2Key): AxisDeterminer {
+	if (axisKey === '1,0') return XAxisDeterminer;
+	if (axisKey === '0,1') return YAxisDeterminer;
+	if (axisKey === '1,1') return posDiagAxisDeterminer;
+	if (axisKey === '-1,1') return negDiagAxisDeterminer;
+	throw new Error(`Unknown axis key: ${axisKey}`);
+}
 
 
 
@@ -428,8 +443,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			// --- U-AXIS RELATIONSHIP CHECK ---
 			// Iterate through every unique pair of pieces (A, B)
 			for (let i = 0; i < pieces.length; i++) {
+				const pieceA = pieces[i];
 				for (let j = i + 1; j < pieces.length; j++) {
-					const pieceA = pieces[i];
 					const pieceB = pieces[j];
 
 
@@ -757,7 +772,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			const pieceA = relevantPieces[i];
 			for (let j = i + 1; j < relevantPieces.length; j++) {
 				const pieceB = relevantPieces[j];
-				
+
 				const vDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
 				const vDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
 
@@ -772,13 +787,14 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// ================================ RETURN FINAL POSITION ================================
 
 
-	// Now create the final compressed position from all
-	// pieces known coord transformations
+	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
+	RecenterTransformedPosition(pieces, AllAxisOrders);
+
+	// Now create the final compressed position from all pieces known coord transformations
 
 	const compressedPosition: Map<CoordsKey, number> = new Map();
 	for (const piece of pieces) {
 		// console.log(`Piece ${String(piece.coords)} transformed to ${String(piece.transformedCoords)}.`);
-		if (piece.transformedCoords[0] === undefined || piece.transformedCoords[1] === undefined) throw Error(`Piece's transformed position is not entirely defined! Original piece location: ${String(piece.coords)}. Transformed location: ${String(piece.transformedCoords)}.`);
 
 		const transformedCoordsKey = coordutil.getKeyFromCoords(piece.transformedCoords as Coords);
 		compressedPosition.set(transformedCoordsKey, piece.type);
@@ -789,6 +805,58 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		axisOrders: AllAxisOrders,
 		pieceTransformations: pieces,
 	};
+}
+
+/**
+ * Translates the entire transformed position so tht the White King
+ * ends up on the same square it occupied in the original, uncompressed position.
+ * This doesn't affect the solution or topology at all.
+ * @param allPieces The list of all transformed pieces.
+ * @param allAxisOrders The AxisOrders object containing all axis groups of the transformed position.
+ */
+function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders: AxisOrders) {
+	// Define the type for a White King (you may need to import typeutil and players)
+	const whiteKingType = typeutil.buildType(r.KING, p.WHITE);
+
+	// 1. Find the White King in the list of pieces.
+	const whiteKing: PieceTransform | undefined = allPieces.find(p => p.type === whiteKingType);
+
+	if (!whiteKing) {
+		console.warn("Could not find White King to normalize position. Skipping translation.");
+		return;
+	}
+
+	// 2. Calculate the required translation vector (dx, dy).
+	const transformedKingCoords = whiteKing.transformedCoords as Coords;
+	const translationVector: Coords = [
+		whiteKing.coords[0] - transformedKingCoords[0],
+		whiteKing.coords[1] - transformedKingCoords[1]
+	];
+
+	console.log(`Normalizing position by translating all pieces by [${translationVector[0]}, ${translationVector[1]}] to match White King's original position.`);
+
+	// 3. Apply the translation to every piece's transformed coordinates.
+	for (const piece of allPieces) {
+		piece.transformedCoords[0]! += translationVector[0];
+		piece.transformedCoords[1]! += translationVector[1];
+	}
+
+	// 4. Apply the same translation to all axes' groups' transformedRange.
+	for (const axisKey in allAxisOrders) {
+		const axisOrder = allAxisOrders[axisKey as Vec2Key];
+		const axisDeterminer = getAxisDeterminer(axisKey as Vec2Key);
+
+		// Calculate how the translationVector translates on this specific axis.
+		// This is equivalent to axisDeterminer([dx, dy]) - axisDeterminer([0, 0]).
+		const pushAmount = axisDeterminer(translationVector);
+		
+		for (const group of axisOrder) {
+			if (group.transformedRange) {
+				group.transformedRange[0] += pushAmount;
+				group.transformedRange[1] += pushAmount;
+			}
+		}
+	}
 }
 
 
