@@ -671,8 +671,8 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 /**
  * 
  * @param axis 
- * @param firstPiece 
- * @param secondPiece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group.
+ * @param firstPiece - This piece isn't pushed by the ripple, nor is its group.
+ * @param secondPiece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group or prior.
  * @param pushAmount
  * @param axisDeterminer - What AxisDeterminer to use to calculate the error with the push. NOT the same as the direction of the push!!
  */
