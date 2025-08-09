@@ -74,6 +74,13 @@ type AxisGroup = {
 }
 
 
+/**
+ * Takes a pair of coordinates and returns a single
+ * value that is unique to the axis line that piece is on.
+ */
+// eslint-disable-next-line no-unused-vars
+type AxisDeterminer = (coords: Coords) => bigint;
+
 
 // ================================== Constants ==================================
 
@@ -120,46 +127,21 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
 const MIN_ARBITRARY_DISTANCE = 5n;
 
 
-
-// ================================== HELPERS ==================================
-
-
-
 /**
- * What is an Axis value?
+ * Each axis determiner, given a coordinate, will return the bigint value
+ * that represents the axis value on the given axis for that piece.
  * 
- * It's a number unique to each location a piece can be on a given axis.
- * 
- * For example, on the X axis, the axis value is the x coordinate of the piece.
- * On the Y axis, the axis value is the y coordinate of the piece.
- * On the positive diagonal, the axis value is y - x.
- * On the negative diagonal, the axis value is y + x.
+ * The axis value is an integer unique to all pieces that lie on the same axis line as it.
  */
-
-/**
- * Takes a pair of coordinates and returns a single
- * value that is unique to the axis line that piece is on.
- */
-// eslint-disable-next-line no-unused-vars
-type AxisDeterminer = (coords: Coords) => bigint;
-
-/** Given a coordinate, returns the bigint value that represent the X-axis value for that piece. */
-const XAxisDeterminer: AxisDeterminer = (compressedEndCoords: Coords): bigint => compressedEndCoords[0];
-/** Given a coordinate, returns the bigint value that represent the Y-axis value for that piece. */
-const YAxisDeterminer: AxisDeterminer = (compressedEndCoords: Coords): bigint => compressedEndCoords[1];
-/** Given a coordinate, returns the bigint value that represent the positive diagonal axis value for that piece. */
-const posDiagAxisDeterminer: AxisDeterminer = (coords: Coords): bigint => coords[1] - coords[0];
-/** Given a coordinate, returns the bigint value that represent the negative diagonal axis value for that piece. */
-const negDiagAxisDeterminer: AxisDeterminer = (coords: Coords): bigint => coords[1] + coords[0];
-
-
-/** Helper to get the correct axis determiner function from its key. */
-function getAxisDeterminer(axisKey: Vec2Key): AxisDeterminer {
-	if (axisKey === '1,0') return XAxisDeterminer;
-	if (axisKey === '0,1') return YAxisDeterminer;
-	if (axisKey === '1,1') return posDiagAxisDeterminer;
-	if (axisKey === '-1,1') return negDiagAxisDeterminer;
-	throw new Error(`Unknown axis key: ${axisKey}`);
+const AXIS_DETERMINERS = {
+	/** X Axis */
+	'1,0': (compressedEndCoords: Coords): bigint => compressedEndCoords[0],
+	/** Y Axis */
+	'0,1': (compressedEndCoords: Coords): bigint => compressedEndCoords[1],
+	/** Positive Diagonal Axis */
+	'1,1': (coords: Coords): bigint => coords[1] - coords[0],
+	/** Negative Diagonal Axis */
+	'1,-1': (coords: Coords): bigint => coords[1] + coords[0],
 }
 
 
@@ -225,26 +207,28 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	AllAxisOrders['0,1'] = []; // Y axis
 	if (mode === 'diagonals') {
 		AllAxisOrders['1,1'] = []; // Positive diagonal axis
-		AllAxisOrders['-1,1'] = []; // Negative diagonal axis
+		AllAxisOrders['1,-1'] = []; // Negative diagonal axis
 	}
 
 	// Order/group/connect the pieces
 
 	for (const piece of pieces) {
 		// console.log(`\nAnalyzing piece at ${String(piece.coords)}...`);
-		registerPieceInAxisOrder('1,0', piece, XAxisDeterminer(piece.coords));
-		registerPieceInAxisOrder('0,1', piece, YAxisDeterminer(piece.coords));
+		registerPieceInAxisOrder('1,0', piece);
+		registerPieceInAxisOrder('0,1', piece);
 		if (mode === 'diagonals') {
-			registerPieceInAxisOrder('1,1', piece, posDiagAxisDeterminer(piece.coords));
-			registerPieceInAxisOrder('-1,1', piece, negDiagAxisDeterminer(piece.coords));
+			registerPieceInAxisOrder('1,1', piece);
+			registerPieceInAxisOrder('1,-1', piece);
 		}
 	}
 
 	// Helper for registering a piece in any axis order.
-	function registerPieceInAxisOrder(axis: Vec2Key, piece: PieceTransform, pieceAxisValue: bigint) {
+	function registerPieceInAxisOrder(axis: '1,0' | '0,1' | '1,1' | '1,-1', piece: PieceTransform) {
 		// console.log(`Axis value ${pieceAxisValue}`);
 
 		const axisOrder = AllAxisOrders[axis];
+		const axisDeterminer = AXIS_DETERMINERS[axis];
+		const pieceAxisValue = axisDeterminer(piece.coords);
 
 		const { found: foundExistingGroup, index: groupIndex } = binarySearchRange(axisOrder, (axisGroup) => axisGroup.range, MIN_ARBITRARY_DISTANCE, pieceAxisValue);
 		if (foundExistingGroup) {
@@ -335,7 +319,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	declareAxisOrderPieceGroups('0,1');
 	if (mode === 'diagonals') {
 		declareAxisOrderPieceGroups('1,1');
-		declareAxisOrderPieceGroups('-1,1');
+		declareAxisOrderPieceGroups('1,-1');
 	}
 	function declareAxisOrderPieceGroups(axis: Vec2Key) {
 		const axisOrder = AllAxisOrders[axis]!;
@@ -503,12 +487,13 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 
 					// --- V-AXIS RELATIONSHIP CHECK ---
+					// Negative diagonal!
 					{ // Use a block to keep variable names from colliding
-						const axisDeterminer = negDiagAxisDeterminer;
+						const axisDeterminer = AXIS_DETERMINERS['1,-1'];
 
 						// Determine original V-axis ordering from their original coordinates
-						const firstPiece_v_Original = negDiagAxisDeterminer(pieceA.coords);
-						const secondPiece_v_Original = negDiagAxisDeterminer(pieceB.coords);
+						const firstPiece_v_Original = axisDeterminer(pieceA.coords);
+						const secondPiece_v_Original = axisDeterminer(pieceB.coords);
 
 						console.log(`\nChecking pieces ${String(pieceA.coords)} (v=${firstPiece_v_Original}) and ${String(pieceB.coords)} (v=${secondPiece_v_Original})...`);
 
@@ -525,8 +510,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 						const vDiff_Original = bimath.abs(secondPiece_v_Original - firstPiece_v_Original);
 						
 						// Get the actual transformed V-values
-						const tv_first = negDiagAxisDeterminer(firstPiece.transformedCoords as Coords);
-						const tv_second = negDiagAxisDeterminer(secondPiece.transformedCoords as Coords);
+						const tv_first = axisDeterminer(firstPiece.transformedCoords as Coords);
+						const tv_second = axisDeterminer(secondPiece.transformedCoords as Coords);
 
 						// The distance after transformation by the orthogonal solution.
 						// Could be negative if the second piece's TRANSFORMED V value is less
@@ -594,13 +579,15 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	 * @param axis 
 	 * @param firstPiece 
 	 * @param secondPiece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group.
+	 * @param pushAmount
+	 * @param axisDeterminer - What AxisDeterminer to use to calculate the error with the push. NOT the same as the direction of the push!!
 	 */
 	function makeOptimalRipplePush(
 		axis: '1,0' | '0,1',
 		firstPiece: PieceTransform,
 		secondPiece: PieceTransform,
 		pushAmount: bigint,
-		axisDeterminer: AxisDeterminer // <-- New parameter
+		axisDeterminer: AxisDeterminer
 	) {
 		const word = axis === '1,0' ? 'RIGHT' : 'UP';
 		console.log(`Finding optimal ripple push for moving ${String(secondPiece.transformedCoords)} ${word} ${pushAmount}...\n`);
@@ -773,10 +760,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			for (let j = i + 1; j < relevantPieces.length; j++) {
 				const pieceB = relevantPieces[j];
 
-				const vDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
-				const vDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
+				const axisDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
+				const axisDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
 
-				const pushAmount = calculatePushAmount(vDiff_Original, vDiff_Transformed);
+				const pushAmount = calculatePushAmount(axisDiff_Original, axisDiff_Transformed);
 				totalError += calculateError(pushAmount);
 			}
 		}
@@ -844,7 +831,7 @@ function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders:
 	// 4. Apply the same translation to all axes' groups' transformedRange.
 	for (const axisKey in allAxisOrders) {
 		const axisOrder = allAxisOrders[axisKey as Vec2Key];
-		const axisDeterminer = getAxisDeterminer(axisKey as Vec2Key);
+		const axisDeterminer = AXIS_DETERMINERS[axisKey];
 
 		// Calculate how the translationVector translates on this specific axis.
 		// This is equivalent to axisDeterminer([dx, dy]) - axisDeterminer([0, 0]).
@@ -925,11 +912,7 @@ export type {
 export default {
 	// Constants
 	MIN_ARBITRARY_DISTANCE,
-	// Helpers
-	XAxisDeterminer,
-	YAxisDeterminer,
-	posDiagAxisDeterminer,
-	negDiagAxisDeterminer,
+	AXIS_DETERMINERS,
 	// Implementation
 	compressPosition,
 };

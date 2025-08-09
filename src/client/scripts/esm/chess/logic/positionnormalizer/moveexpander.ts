@@ -88,24 +88,21 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 	// Skip if our movement is perpendicular to that axis,
 	// its impossible for us to increase our axis value along it
 	// => not interested in threatening any of those groups.
-	if (vec2Key !== '0,1') determineIfMovedPieceInterestedInAxis('1,0', positioncompressor.XAxisDeterminer);
-	if (vec2Key !== '1,0') determineIfMovedPieceInterestedInAxis('0,1', positioncompressor.YAxisDeterminer);
+	if (vec2Key !== '0,1') determineIfMovedPieceInterestedInAxis('1,0');
+	if (vec2Key !== '1,0') determineIfMovedPieceInterestedInAxis('0,1');
 
 	/**
 	 * Determines if the moved piece is interested in any group in the given axis.
 	 * If so, its final destination will still be relative to that group.
 	 */
-	function determineIfMovedPieceInterestedInAxis(
-		axis: '1,0' | '0,1',
-		// eslint-disable-next-line no-unused-vars
-		axisValueDeterminer: (compressedEndCoords: Coords) => bigint,
-	) {
+	function determineIfMovedPieceInterestedInAxis(axis: '1,0' | '0,1') {
 		if (originalEndCoords) {
 			console.log(`Moved piece already has end coords determined. Skipping axis ${axis}.`);
 			return; // We already found the original end coords, no need to continue
 		}
 
 		const axisOrder = AllAxisOrders[axis];
+		const axisValueDeterminer = positioncompressor.AXIS_DETERMINERS[axis];
 
 		const compressedEndCoordsAxisValue = axisValueDeterminer(endCoordsBigInt);
 		// console.log("compressedEndCoordsAxisValue:", compressedEndCoordsAxisValue);
