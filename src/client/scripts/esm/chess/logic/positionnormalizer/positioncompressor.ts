@@ -584,66 +584,18 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 
 				// --- V-AXIS RELATIONSHIP CHECK ---
 				// Negative diagonal!
-				{ // Use a block to keep variable names from colliding
-					const axisDeterminer = AXIS_DETERMINERS['1,-1'];
 
-					// Original axis values
-					const pieceA_Axis_Original = axisDeterminer(pieceA.coords);
-					const pieceB_Axis_Original = axisDeterminer(pieceB.coords);
-					// Current axis values (affected by running transformations)
-					const pieceA_Axis_Transformed = axisDeterminer(pieceA.transformedCoords as Coords);
-					const pieceB_Axis_Transformed = axisDeterminer(pieceB.transformedCoords as Coords);
+				const pushOccurred = comparePiecesOnDiagonal('1,-1', AllAxisOrders, pieceA, pieceB);
 
-					// Original spacing from pieceA to pieceB
-					const axisDiff_Original = pieceB_Axis_Original - pieceA_Axis_Original;
-					// Current spacing from pieceA to pieceB (affected by running transformations)
-					const vDiff_Transformed = pieceB_Axis_Transformed - pieceA_Axis_Transformed;
-
-					console.log(`\nChecking pieces ${String(pieceA.transformedCoords)} (tv=${pieceA_Axis_Transformed}) and ${String(pieceB.transformedCoords)} (tv=${pieceB_Axis_Transformed}). Original spacing: ${axisDiff_Original}. Current spacing: ${vDiff_Transformed}.`);
-
-					// How much pieceB should be moved to align with pieceA
-					const pushAmount: bigint = calculatePushAmount(axisDiff_Original, vDiff_Transformed);
-
-					// To increase a piece's negative diagonal axis values, we can push it in either the +X or +Y directions.
-					if (pushAmount > 0n) {
-						// Push pieceB +X/+Y
-						console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
-						pushPieceFromAnchor(pieceB, pieceA, pushAmount);
-					} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
-						// We can't push pieceB left/down, so instead we push pieceA.
-						// Push pieceA +X/+Y
-						console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
-						pushPieceFromAnchor(pieceA, pieceB, -pushAmount);
-					} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
-					
-					/**
-					 * Ripple pushes a piece to increase its negative diagonal axis value.
-					 * We can push on either the +X or +Y axis.
-					 * Which one we choose depends on what side the anchor piece is on,
-					 * as we can't push that, and ripple pushes will push it
-					 * if our piece's group is before the anchor's group.
-					 * @param piece - The piece to be ripple pushed in either the +X/+Y directions.
-					 * @param anchor - The piece acting as the anchor, this SHOULD NOT be affected by the push.
-					 */
-					function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, pushAmount: bigint) {
-						// I THINK due to the geometry, these are mutually exclusive... Throw an error if they ever are not so I know to patch it.
-						const X_push_safe = (piece.axisGroups['1,0'] > anchor.axisGroups['1,0']);
-						const Y_push_safe = (piece.axisGroups['0,1'] > anchor.axisGroups['0,1']);
-
-						if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-						else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
-						else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
-						else throw Error("Unexpected case!");
-						
-						changeMade = true;
-						pushCount++;
-					}
-
+				if (pushOccurred) {
+					pushCount++;
+					changeMade = true;
 					// DEBUGGING: Stop the iteration if we reached the max pushes
+					// Let's us review each push manually
 					if (pushCount >= MAX_PUSHES) {
 						console.log(`\nReached max pushes of ${MAX_PUSHES}. Stopping iteration.`);
 						break loop;
-					}
+					} // --------------------------------------------------------
 				}
 			}
 		}
@@ -652,8 +604,69 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 }
 
 /**
+ * Compares two piece axis values on a specific diagonal axis.
+ * If they are off when comparing to the original position,
+ * we calculate and perform an optimal ripple push that decreases
+ * the total error in the position the most.
+ * @param axis - What diagonal axis to compare the piece's axis values on.
+ * @returns Whether a ripple push happened.
+ */
+function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders, pieceA: PieceTransform, pieceB: PieceTransform): boolean {
+	const axisDeterminer = AXIS_DETERMINERS[axis];
+
+	// Original axis values
+	const pieceA_Axis_Original = axisDeterminer(pieceA.coords);
+	const pieceB_Axis_Original = axisDeterminer(pieceB.coords);
+	// Current axis values (affected by running transformations)
+	const pieceA_Axis_Transformed = axisDeterminer(pieceA.transformedCoords as Coords);
+	const pieceB_Axis_Transformed = axisDeterminer(pieceB.transformedCoords as Coords);
+
+	// Original spacing from pieceA to pieceB
+	const axisDiff_Original = pieceB_Axis_Original - pieceA_Axis_Original;
+	// Current spacing from pieceA to pieceB (affected by running transformations)
+	const vDiff_Transformed = pieceB_Axis_Transformed - pieceA_Axis_Transformed;
+
+	console.log(`\nChecking pieces ${String(pieceA.transformedCoords)} (tv=${pieceA_Axis_Transformed}) and ${String(pieceB.transformedCoords)} (tv=${pieceB_Axis_Transformed}). Original spacing: ${axisDiff_Original}. Current spacing: ${vDiff_Transformed}.`);
+
+	// How much pieceB should be moved to align with pieceA
+	const pushAmount: bigint = calculatePushAmount(axisDiff_Original, vDiff_Transformed);
+
+	// To increase a piece's negative diagonal axis values, we can push it in either the +X or +Y directions.
+	if (pushAmount > 0n) {
+		// Push pieceB +X/+Y
+		console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
+		pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders);
+	} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
+		// We can't push pieceB left/down, so instead we push pieceA right/up
+		// Push pieceA +X/+Y
+		console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
+		pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders);
+	} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+}
+
+/**
+ * Ripple pushes a piece to increase its negative diagonal axis value. <--- GENERALIZE THIS!!!!!!!!!!
+ * We can push on either the +X or +Y axis.
+ * Which one we choose depends on what side the anchor piece is on,
+ * as we can't push that, and ripple pushes will push it
+ * if our piece's group is before the anchor's group.
+ * @param piece - The piece to be ripple pushed in either the +X/+Y directions.
+ * @param anchor - The piece acting as the anchor, this SHOULD NOT be affected by the push.
+ */
+function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, pushAmount: bigint, axisDeterminer: AxisDeterminer, AllAxisOrders: AxisOrders) {
+	// I THINK due to the geometry, these are mutually exclusive... Throw an error if they ever are not so I know to patch it.
+	const X_push_safe = (piece.axisGroups['1,0'] > anchor.axisGroups['1,0']);
+	const Y_push_safe = (piece.axisGroups['0,1'] > anchor.axisGroups['0,1']);
+
+	if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
+	else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
+	else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
+	else throw Error("Unexpected case!");
+}
+
+/**
  * 
- * @param axis 
+ * @param axis - What X/Y axis to ripple push the groups on.
  * @param firstPiece - This piece isn't pushed by the ripple, nor is its group.
  * @param secondPiece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group or prior.
  * @param pushAmount
