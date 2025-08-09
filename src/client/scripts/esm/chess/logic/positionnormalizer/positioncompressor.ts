@@ -124,7 +124,7 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
 // const MIN_ARBITRARY_DISTANCE = 40n;
-const MIN_ARBITRARY_DISTANCE = 5n;
+const MIN_ARBITRARY_DISTANCE = 10n;
 
 
 /**
@@ -503,7 +503,7 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 	const MAX_ITERATIONS = 100;
 
 	// FOR DEBUGGING
-	// const MAX_PUSHES = 1;
+	// const MAX_PUSHES = 7;
 	const MAX_PUSHES = 500;
 
 	loop: while (changeMade) {
@@ -628,120 +628,69 @@ function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, push
 	const Y_push_safe = (piece.axisGroups['0,1'] > anchor.axisGroups['0,1']);
 
 	if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-	else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
-	else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
+	else if (X_push_safe) makeCollapsingRipplePush('1,0', AllAxisOrders, piece, pushAmount);
+	else if (Y_push_safe) makeCollapsingRipplePush('0,1', AllAxisOrders, piece, pushAmount);
 	else throw Error("Unexpected case! No push will close this V-violation! This happened once when the alg pushed a included a piece in a ripple push because it lowered the total score, but that push made it impossible to satisfy its connection with another piece, because it was grouped on one axis with it, making it impossible for the other piece to push in that direction to close the diagonal gap! Just because a push lowers the total score, doesn't mean it is the right push to make! We ONLY EVER need to make pushes we KNOW are correct! I think the way we can do this is by first making the minimum required push, yes, but we need to allow gaps created between X/Y groups to be filled by pieces pushing from behind. Those pieces pushing from behind should be able to fill the gap instead of ripple pushing EVERYTHING IN front of them! which would create infinite loops as that disrupts other alignments.");
 }
 
 /**
- * 
+ * Pushes a given piece's group in the specified X/Y direction by a specific amount.
+ * If there are any gaps in the X/Y axis groups to be filled behind it, it will do so,
+ * otherwise, it will ripple push all groups in front of it, too.
+ * In other words, subsequent groups will only be pushed by enough to ensure there
+ * is no overlap between the last pushed group and them.
  * @param axis - What X/Y axis to ripple push the groups on.
  * @param firstPiece - This piece isn't pushed by the ripple, nor is its group.
- * @param secondPiece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group or prior.
- * @param pushAmount
+ * @param piece - The piece of which group we are GUARANTEED to push. We will see if its optimal to push groups immediately before it, but not firstPiece's group or prior.
+ * @param pushAmount - The amount to push the piece's group by. Subsequent groups will only be pushed enough to ensure there aren't any overlaps in groups.
  * @param axisDeterminer - What AxisDeterminer to use to calculate the error with the push. NOT the same as the direction of the push!!
  */
-function makeOptimalRipplePush(
+function makeCollapsingRipplePush(
 	axis: '1,0' | '0,1',
 	AllAxisOrders: AxisOrders,
-	firstPiece: PieceTransform,
-	secondPiece: PieceTransform,
+	piece: PieceTransform,
 	pushAmount: bigint,
-	axisDeterminer: AxisDeterminer
 ) {
+	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
+
 	const word = axis === '1,0' ? 'RIGHT' : 'UP';
-	console.log(`Finding optimal ripple push for moving ${String(secondPiece.transformedCoords)} ${word} ${pushAmount}...\n`);
+	console.log(`Finding optimal ripple push for moving ${String(piece.transformedCoords)} ${word} ${pushAmount}...\n`);
 
 	const coordIndex = axis === '1,0' ? 0 : 1;
 	const axisOrder = AllAxisOrders[axis];
 
-	// --- Phase 1: Baseline Push & Initial State ---
-	// Perform the mandatory push on the second piece's group and all subsequent groups.
-	// We know this is REQUIRED because it is the ONLY action that will satisfy
+	console.log(`Ripple pushing group of index ${piece.axisGroups[axis]} ${word} by ${pushAmount}...`);
+
+	// Perform the mandatory push on the piece's group and contionally, subsequent groups.
+	// If subsequent groups can fill a gap in this axis, they will. They just don't like to overlap.
+	
+	// We know this push is REQUIRED because it is the ONLY action that will satisfy
 	// the constraint between piece A and piece B!
-	ripplePush(axis, axisOrder, secondPiece.axisGroups[axis], pushAmount, coordIndex);
 
-	/** The first group that comes after the first piece's group (which is immovable). */
-	const startingGroupIndex = firstPiece.axisGroups[axis] + 1;
+	// First, push the group of the piece that is mandatory to be pushed.
+	const mandatoryGroup = axisOrder[piece.axisGroups[axis]];
+	pushGroup(mandatoryGroup, pushAmount, coordIndex);
 
-	/**
-	 * --- Identify the pieces relevant to THIS decision ---
-	 * The relevant pieces are all those in groups that could possibly be moved by the ripple push.
-	 * 
-	 * When calculating the total score of the position after this action
-	 * (and potential additional group pushes below), we must ONLY TAKE
-	 * into account all pieces that can potentially be affected by the pushes
-	 * we make! Pieces far below the first piece's group shouldn't be able to
-	 * veto potential improving pushes we can make to the groups nearby us now!
-	 */
-	const relevantPieces = getRelevantPieces(axisOrder, startingGroupIndex);
-
-	// Calculate the total board error after this baseline push. This is our score to beat.
-	let minErrorSoFar = calculateScopedAxisError(relevantPieces, axisDeterminer);
-	console.log("Checking if pushing more groups will improve the score: ", minErrorSoFar);
-	// The number of groups we've pushed since we pushed
-	// the group that resulted in the BEST state so far.
-	let pushesSinceLastBest = 0;
-
-	// --- Phase 2: The Search ---
-	// We will try pushing more groups, one by one, iterating backward.
-
-	// Start from the group before the second piece's group.
-	// Iterate backward until we reach first piece's group (exclusive).
-	for (let i = secondPiece.axisGroups[axis] - 1; i > firstPiece.axisGroups[axis]; i--) { 
-		// i is the group index to try pushing next.
-		const groupToPush = axisOrder[i];
-		
-		// Apply the next incremental push.
-		pushGroup(groupToPush, pushAmount, coordIndex);
-
-		// Check the new total board error.
-		const currentError = calculateScopedAxisError(relevantPieces, axisDeterminer);
-
-		// If this new state is better, record it as the best one so far.
-		if (currentError < minErrorSoFar) {
-			console.log("New best score: ", currentError);
-			minErrorSoFar = currentError;
-			pushesSinceLastBest = 0; // Reset the count of pushes since last best
-		} else {
-			// DEBUG LOGGING
-			if (currentError === minErrorSoFar) console.log(`Group push didn't have an affect on the score.`);
-
-			// This position is not better than the best one so far...
-			pushesSinceLastBest++; // Increment the count of pushes since last best
-		}
-	}
-
-	// --- Phase 3: Rewind to the Optimal State ---
-	// The search is over. We know to rewind as many pushes as `pushesSinceLastBest`
-
-	for (let i = startingGroupIndex; i < startingGroupIndex + pushesSinceLastBest; i++) {
-		const groupToUndo = axisOrder[i];
-		// Undo the push by pushing with a negative amount.
-		pushGroup(groupToUndo, -pushAmount, coordIndex);
-	}
-
-	console.log("Number of extra groups pushed: ", secondPiece.axisGroups[axis] - firstPiece.axisGroups[axis] - 1 - pushesSinceLastBest);
-	console.log("Number of group pushes REWINDED: ", pushesSinceLastBest);
-}
-
-/**
- * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
- * @param axisToPush 
- * @param axisOrder 
- * @param startingGroupIndex - This group and all following groups will be pushed by the same amount.
- * @param pushAmount 
- * @param coordIndex 
- */
-function ripplePush(axisToPush: '1,0' | '0,1', axisOrder: AxisOrder, startingGroupIndex: number, pushAmount: bigint, coordIndex: 0 | 1) {
-	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
-
-	const word = axisToPush === '1,0' ? 'RIGHT' : 'UP';
-	console.log(`Ripple pushing group of index ${startingGroupIndex} ${word} by ${pushAmount}...`);
-
-	for (let i = startingGroupIndex; i < axisOrder.length; i++) {
+	// Next, we're going to iterate through all subsequent groups,
+	// IF THEY NOW OVERLAP with the last pushed group, we push
+	// them right too, by the minimum amount to make their range start
+	// line up with the range end of the last pushed group.
+	let lastPushedGroup = mandatoryGroup;
+	for (let i = piece.axisGroups[axis] + 1; i < axisOrder.length; i++) {
 		const groupToUpdate = axisOrder[i];
-		pushGroup(groupToUpdate, pushAmount, coordIndex);
+
+		// If the last pushed group and this group now overlap, we need to push this group too,
+		// enough so that it starts at the end of the last pushed group's range end.
+		if (groupToUpdate.transformedRange![0] < lastPushedGroup.transformedRange![1] + MIN_ARBITRARY_DISTANCE) {
+			// Calculate how much to push this group by so that it starts at the end of the last pushed group's range.
+			const pushAmount = lastPushedGroup.transformedRange![1] + MIN_ARBITRARY_DISTANCE - groupToUpdate.transformedRange![0];
+			console.log(`Pushing next group by ${pushAmount} to avoid overlap.`);
+			pushGroup(groupToUpdate, pushAmount, coordIndex);
+			lastPushedGroup = groupToUpdate; // Update the last pushed group
+		} else {
+			// No more groups to push, as they are not overlapping anymore.
+			break;
+		}
 	}
 }
 
@@ -788,49 +737,35 @@ function calculatePushAmount(axisDiff_Original: bigint, axisDiff_Transformed: bi
 	return 0n; // No push needed
 }
 
-/**
- * Gathers all pieces from a starting group index onwards on a given orthogonal axis.
- * @param axis The orthogonal axis ('1,0' for X, '0,1' for Y) to gather pieces from.
- * @param startingGroupIndex The index of the first group to include pieces from (inclusive).
- * @returns An array of all PieceTransform objects found.
- */
-function getRelevantPieces(axisOrder: AxisOrder, startingGroupIndex: number): PieceTransform[] {
-	const relevantPieces: PieceTransform[] = [];
-	for (let i = startingGroupIndex; i < axisOrder.length; i++) {
-		relevantPieces.push(...axisOrder[i].pieces);
-	}
-	return relevantPieces;
-}
+// /**
+//  * Takes a push amount and returns the level of error it has (absolute value).
+//  */
+// function calculateError(pushAmount: bigint) {
+// 	return bimath.abs(pushAmount);
+// }
 
-/**
- * Takes a push amount and returns the level of error it has (absolute value).
- */
-function calculateError(pushAmount: bigint) {
-	return bimath.abs(pushAmount);
-}
+// /**
+//  * Calculates the sum of all errors on the board on a specific axis between every single pair of pieces.
+//  * This gives one GRAND score where the higher the score, the more incorrect the pieces are relative
+//  * to each other (on that axis), and a score of 0n means the pieces are positioned PERFECT
+//  * relative to each other and no pushes are necessary anymore to satisfy all constraints between them.
+//  */
+// function calculateScopedAxisError(pieces: PieceTransform[], axisDeterminer: AxisDeterminer): bigint {
+// 	let totalError = 0n;
+// 	for (let i = 0; i < pieces.length; i++) {
+// 		const pieceA = pieces[i];
+// 		for (let j = i + 1; j < pieces.length; j++) {
+// 			const pieceB = pieces[j];
 
-/**
- * Calculates the sum of all errors on the board on a specific axis between every single pair of pieces provided.
- * This gives one GRAND score where the higher the score, the more incorrect the pieces are relative
- * to each other (on that axis), and a score of 0n means the pieces are positioned PERFECT
- * relative to each other and no pushes are necessary anymore to satisfy all constraints between them.
- */
-function calculateScopedAxisError(relevantPieces: PieceTransform[], axisDeterminer: AxisDeterminer): bigint {
-	let totalError = 0n;
-	for (let i = 0; i < relevantPieces.length; i++) {
-		const pieceA = relevantPieces[i];
-		for (let j = i + 1; j < relevantPieces.length; j++) {
-			const pieceB = relevantPieces[j];
+// 			const axisDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
+// 			const axisDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
 
-			const axisDiff_Original = axisDeterminer(pieceA.coords) - axisDeterminer(pieceB.coords);
-			const axisDiff_Transformed = axisDeterminer(pieceA.transformedCoords as Coords) - axisDeterminer(pieceB.transformedCoords as Coords);
-
-			const pushAmount = calculatePushAmount(axisDiff_Original, axisDiff_Transformed);
-			totalError += calculateError(pushAmount);
-		}
-	}
-	return totalError;
-}
+// 			const pushAmount = calculatePushAmount(axisDiff_Original, axisDiff_Transformed);
+// 			totalError += calculateError(pushAmount);
+// 		}
+// 	}
+// 	return totalError;
+// }
 
 
 // ======================================== RECENTERING TRANFORMED POSITION ========================================

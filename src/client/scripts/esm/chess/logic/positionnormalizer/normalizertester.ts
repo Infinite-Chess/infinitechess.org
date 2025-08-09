@@ -13,7 +13,7 @@ import positioncompressor from "./positioncompressor";
 
 // 1000n: UNEXPECTED CASE Can't make valid push to close V-violation
 // 500n-200n: INFINITE LOOP
-const example_position = 'Q-1214,8032|n-594,9261|R4939,1877|B-2227,-3463|b-6210,553|q-8440,1848|N6323,-2171|r8431,671|n-3601,-7208|B4522,209|R-8722,-9556|Q-4978,-100|b1854,-9810|N5564,4021|q2312,-1722|r-6410,9360|n2938,-831|B-7724,-2190|Q9019,3540|R-1125,-6378';
+// const example_position = 'Q-1214,8032|n-594,9261|R4939,1877|B-2227,-3463|b-6210,553|q-8440,1848|N6323,-2171|r8431,671|n-3601,-7208|B4522,209|R-8722,-9556|Q-4978,-100|b1854,-9810|N5564,4021|q2312,-1722|r-6410,9360|n2938,-831|B-7724,-2190|Q9019,3540|R-1125,-6378';
 
 // const example_position = 'Q-120,850|n-125,858|B4200,-7320|b4207,-7313|R-7821,5110|r-7815,5118|q9012,-442|N-311,-9980|n-318,-9989|B7345,1442|b7336,1436|R-2599,-6288'; // Heart
 
@@ -29,8 +29,9 @@ const example_position = 'Q-1214,8032|n-594,9261|R4939,1877|B-2227,-3463|b-6210,
 // const example_position = 'k0,0|Q-10000,5000|R-20000,1000|R-20000,2000|R-20000,3000|R-20000,4000'; // Diagonal test FLIPPED
 // const example_position = 'K0,0|q834,1191|R-2240,6303|n4201,-889|b-1719,-8260|Q9329,-214'; // 5 random pieces
 // const example_position = 'K0,0|q-120,125|R-30,60|r-30,90'; // INFINITE LOOP for the V relationship checks PATCHED
-// const example_position = 'K0,0|q-125,120|R-30,60|r-30,90'; // INFINITE LOOP for the V relationship checks PATCHED
+const example_position = 'K0,0|q-125,120|R-30,60|r-30,90'; // INFINITE LOOP for the V relationship checks PATCHED
 // const example_position = 'K0,0|q-120,120|R-30,60|r-30,90'; // Simpler version of above
+// const example_position = 'K0,33|q30,0';
 // const example_position = 'K0,30|q33,0';
 // const example_position = 'K0,30|q30,0';
 
