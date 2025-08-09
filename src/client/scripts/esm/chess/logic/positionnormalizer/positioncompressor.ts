@@ -527,60 +527,21 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 			for (let j = i + 1; j < pieces.length; j++) {
 				const pieceB = pieces[j];
 
+				// --- U-AXIS RELATIONSHIP CHECK ---
+				// Positive diagonal!
 
-				// --- V-AXIS RELATIONSHIP CHECK ---
-				// { // Use a block to keep variable names from colliding
-				// 	// Determine original U-axis ordering from their original coordinates
-				// 	const u_first = posDiagAxisDeterminer(pieceA.coords);
-				// 	const u_second = posDiagAxisDeterminer(pieceB.coords);
+				// let pushOccurred = comparePiecesOnDiagonal('1,1', AllAxisOrders, pieceA, pieceB);
 
-				// 	console.log(`Checking pieces ${String(pieceA.coords)} (u=${u_first}) and ${String(pieceB.coords)} (u=${u_second})...`);
-
-				// 	// Determine which piece should come first on the U-axis
-				// 	let firstPiece = pieceA;
-				// 	let secondPiece = pieceB;
-				// 	if (u_second < u_first) {
-				// 		firstPiece = pieceB;
-				// 		secondPiece = pieceA;
-				// 	}
-
-				// 	// Required spacing: If they are within MIN_ARBITRARY_DISTANCE, then the spacing remains the same,
-				// 	// otherwise its equal to or greater than MIN_ARBITRARY_DISTANCE.
-				// 	const original_u_distance = bimath.abs(u_second - u_first);
-				// 	const requiredSpacing = bimath.min(original_u_distance, MIN_ARBITRARY_DISTANCE);
-					
-				// 	// Get the actual transformed U-values from their current coordinates
-				// 	const tu_first = posDiagAxisDeterminer(firstPiece.transformedCoords as Coords);
-				// 	const tu_second = posDiagAxisDeterminer(secondPiece.transformedCoords as Coords);
-
-				// 	console.log(`Transformed:   ${String(firstPiece.transformedCoords)} (tu=${tu_first}) and ${String(secondPiece.transformedCoords)} (tu=${tu_second}). Required spacing: ${requiredSpacing}. Current spacing: ${tu_second - tu_first}.`);
-
-				// 	// Check for a violation
-				// 	if (tu_second < tu_first + requiredSpacing) {
-				// 		// VIOLATION FOUND! We need to push one of the pieces
-				// 		const pushAmount = (tu_first + requiredSpacing) - tu_second;
-				// 		console.log(`U-Violation: ${String(secondPiece.coords)} (tu=${tu_second}) must be pushed by ${pushAmount} because of ${String(firstPiece.coords)} (tu=${tu_first})`);
-
-				// 		const is_Y_push_safe = (secondPiece.axisGroups['0,1'] > firstPiece.axisGroups['0,1']);
-
-				// 		// If the 2nd piece's Y value is lower than 1st piece's Y value,
-				// 		// then we can't push it up, as it would cause a paradoxical ripple.
-				// 		// Instead, we achieve the same goal by pushing the 1st piece's X value right.
-				// 		if (is_Y_push_safe) { // It's safe to push the second piece up.
-				// 			console.log(`Pushing second piece's Y groups up by ${pushAmount}...`);
-				// 			const y_group_index_to_push = secondPiece.axisGroups['0,1'];
-				// 			ripplePush('0,1', y_group_index_to_push, pushAmount);
-				// 		} else {  // Push the first piece right instead.
-				// 			console.log(`Pushing first piece's X groups right by ${pushAmount}...`);
-				// 			const x_group_index_to_push = firstPiece.axisGroups['1,0'];
-				// 			ripplePush('1,0', x_group_index_to_push, pushAmount);
-				// 		}
-						
-				// 		changeMade = true;
-				// 	} else console.log(`No U-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+				// if (pushOccurred) {
+				// 	pushCount++;
+				// 	changeMade = true;
+				// 	// DEBUGGING: Stop the iteration if we reached the max pushes
+				// 	// Let's us review each push manually
+				// 	if (pushCount >= MAX_PUSHES) {
+				// 		console.log(`\nReached max pushes of ${MAX_PUSHES}. Stopping iteration.`);
+				// 		break loop;
+				// 	} // --------------------------------------------------------
 				// }
-
-
 
 				// --- V-AXIS RELATIONSHIP CHECK ---
 				// Negative diagonal!
@@ -631,17 +592,23 @@ function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders
 	// How much pieceB should be moved to align with pieceA
 	const pushAmount: bigint = calculatePushAmount(axisDiff_Original, vDiff_Transformed);
 
-	// To increase a piece's negative diagonal axis values, we can push it in either the +X or +Y directions.
-	if (pushAmount > 0n) {
-		// Push pieceB +X/+Y
-		console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
-		pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders);
-	} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
-		// We can't push pieceB left/down, so instead we push pieceA right/up
-		// Push pieceA +X/+Y
-		console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
-		pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders);
-	} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+	if (axis === '1,1') {
+		// To increase a piece's negative diagonal axis values, we can push it in either the +X or +Y directions.
+		if (pushAmount > 0n) {
+			// Push pieceB +X/+Y
+			console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
+			pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders);
+		} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
+			// We can't push pieceB left/down, so instead we push pieceA right/up
+			// Push pieceA +X/+Y
+			console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
+			pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders);
+		} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+	} else if (axis === '1,-1') {
+
+		throw Error("Don't know how to push pieces to align positive diagonal yet!");
+
+	} else throw Error(`Unsupported diagonal axis ${axis}!`)
 }
 
 /**
@@ -758,6 +725,11 @@ function makeOptimalRipplePush(
 
 /**
  * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
+ * @param axisToPush 
+ * @param axisOrder 
+ * @param startingGroupIndex - This group and all following groups will be pushed by the same amount.
+ * @param pushAmount 
+ * @param coordIndex 
  */
 function ripplePush(axisToPush: '1,0' | '0,1', axisOrder: AxisOrder, startingGroupIndex: number, pushAmount: bigint, coordIndex: 0 | 1) {
 	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
