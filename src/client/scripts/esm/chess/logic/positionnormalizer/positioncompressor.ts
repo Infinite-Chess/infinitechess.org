@@ -281,7 +281,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 
 	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
-	RecenterTransformedPosition(pieces, AllAxisOrders);
+	// RecenterTransformedPosition(pieces, AllAxisOrders);
 
 	// Now create the final compressed position from all pieces known coord transformations
 	const compressedPosition: Map<CoordsKey, number> = new Map();
@@ -503,7 +503,7 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 	const MAX_ITERATIONS = 100;
 
 	// FOR DEBUGGING
-	// const MAX_PUSHES = 9;
+	// const MAX_PUSHES = 1;
 	const MAX_PUSHES = 500;
 
 	loop: while (changeMade) {
@@ -520,7 +520,6 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 		changeMade = false;
 		console.log(`\nIteration ${iteration}...`);
 
-		// --- U-AXIS RELATIONSHIP CHECK ---
 		// Iterate through every unique pair of pieces (A, B)
 		for (let i = 0; i < pieces.length; i++) {
 			const pieceA = pieces[i];
@@ -587,30 +586,30 @@ function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders
 	// Current spacing from pieceA to pieceB (affected by running transformations)
 	const vDiff_Transformed = pieceB_Axis_Transformed - pieceA_Axis_Transformed;
 
-	console.log(`\nChecking pieces ${String(pieceA.transformedCoords)} (tv=${pieceA_Axis_Transformed}) and ${String(pieceB.transformedCoords)} (tv=${pieceB_Axis_Transformed}). Original spacing: ${axisDiff_Original}. Current spacing: ${vDiff_Transformed}.`);
+	console.log(`Checking pieces ${String(pieceA.transformedCoords)} (tv=${pieceA_Axis_Transformed}) and ${String(pieceB.transformedCoords)} (tv=${pieceB_Axis_Transformed}). Original spacing: ${axisDiff_Original}. Current spacing: ${vDiff_Transformed}.`);
 
 	// How much pieceB should be moved to align with pieceA
 	const pushAmount: bigint = calculatePushAmount(axisDiff_Original, vDiff_Transformed);
 
 	if (axis === '1,1') {
+
+		throw Error("Don't know how to push pieces to align positive diagonal yet!");
+
+	} else if (axis === '1,-1') {
 		// To increase a piece's negative diagonal axis values, we can push it in either the +X or +Y directions.
 		if (pushAmount > 0n) {
 			// Push pieceB +X/+Y
-			console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
+			console.log(`V-Violation: piece B must be pushed +X/+Y by ${pushAmount}!`);
 			pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders);
 			return true; // A push occurred
 		} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
 			// We can't push pieceB left/down, so instead we push pieceA right/up
 			// Push pieceA +X/+Y
-			console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
+			console.log(`V-Violation: piece A must be pushed +X/+Y by ${-pushAmount}!`);
 			pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders);
 			return true; // A push occurred
 		} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
 		return false; // No push occurred
-	} else if (axis === '1,-1') {
-
-		throw Error("Don't know how to push pieces to align positive diagonal yet!");
-
 	} else throw Error(`Unsupported diagonal axis ${axis}!`);
 }
 
@@ -631,7 +630,7 @@ function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, push
 	if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
 	else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
 	else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
-	else throw Error("Unexpected case!");
+	else throw Error("Unexpected case! No push will close this V-violation! This happened once when the alg pushed a included a piece in a ripple push because it lowered the total score, but that push made it impossible to satisfy its connection with another piece, because it was grouped on one axis with it, making it impossible for the other piece to push in that direction to close the diagonal gap! Just because a push lowers the total score, doesn't mean it is the right push to make! We ONLY EVER need to make pushes we KNOW are correct! I think the way we can do this is by first making the minimum required push, yes, but we need to allow gaps created between X/Y groups to be filled by pieces pushing from behind. Those pieces pushing from behind should be able to fill the gap instead of ripple pushing EVERYTHING IN front of them! which would create infinite loops as that disrupts other alignments.");
 }
 
 /**
