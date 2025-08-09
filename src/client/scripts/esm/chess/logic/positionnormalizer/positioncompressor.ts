@@ -500,7 +500,7 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 	let iteration = 0;
 	let pushCount = 0;
 	let changeMade = true;
-	const MAX_ITERATIONS = 100; // Increased for diagonal complexity
+	const MAX_ITERATIONS = 100;
 
 	// FOR DEBUGGING
 	// const MAX_PUSHES = 9;
@@ -513,6 +513,8 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 			console.error(`Diagonal solver exceeded ${MAX_ITERATIONS} iterations.`);
 			break;
 			// -----------------
+			// In production, throw an error because we never want to have
+			// an engine analyze an imperfect compressed position! Force us to patch the bug.
 			// throw Error(`Diagonal solver exceeded ${MAX_ITERATIONS} iterations.`);
 		}
 		changeMade = false;
@@ -585,76 +587,57 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 				{ // Use a block to keep variable names from colliding
 					const axisDeterminer = AXIS_DETERMINERS['1,-1'];
 
-					// Determine original V-axis ordering from their original coordinates
-					const firstPiece_v_Original = axisDeterminer(pieceA.coords);
-					const secondPiece_v_Original = axisDeterminer(pieceB.coords);
+					// Original axis values
+					const pieceA_Axis_Original = axisDeterminer(pieceA.coords);
+					const pieceB_Axis_Original = axisDeterminer(pieceB.coords);
+					// Current axis values (affected by running transformations)
+					const pieceA_Axis_Transformed = axisDeterminer(pieceA.transformedCoords as Coords);
+					const pieceB_Axis_Transformed = axisDeterminer(pieceB.transformedCoords as Coords);
 
-					console.log(`\nChecking pieces ${String(pieceA.coords)} (v=${firstPiece_v_Original}) and ${String(pieceB.coords)} (v=${secondPiece_v_Original})...`);
+					// Original spacing from pieceA to pieceB
+					const axisDiff_Original = pieceB_Axis_Original - pieceA_Axis_Original;
+					// Current spacing from pieceA to pieceB (affected by running transformations)
+					const vDiff_Transformed = pieceB_Axis_Transformed - pieceA_Axis_Transformed;
 
-					// Ensure the 2nd piece comes later on the V-axis than the 1st piece.
-					// So that its expected distance will be positive.
-					let firstPiece = pieceA;
-					let secondPiece = pieceB;
-					if (secondPiece_v_Original < firstPiece_v_Original) {
-						firstPiece = pieceB;
-						secondPiece = pieceA;
-					}
+					console.log(`\nChecking pieces ${String(pieceA.transformedCoords)} (tv=${pieceA_Axis_Transformed}) and ${String(pieceB.transformedCoords)} (tv=${pieceB_Axis_Transformed}). Original spacing: ${axisDiff_Original}. Current spacing: ${vDiff_Transformed}.`);
 
-					// Required spacing
-					const vDiff_Original = bimath.abs(secondPiece_v_Original - firstPiece_v_Original);
-					
-					// Get the actual transformed V-values
-					const tv_first = axisDeterminer(firstPiece.transformedCoords as Coords);
-					const tv_second = axisDeterminer(secondPiece.transformedCoords as Coords);
+					// How much pieceB should be moved to align with pieceA
+					const pushAmount: bigint = calculatePushAmount(axisDiff_Original, vDiff_Transformed);
 
-					// The distance after transformation by the orthogonal solution.
-					// Could be negative if the second piece's TRANSFORMED V value is less
-					// than the first piece's. (It's original V value is gauranteed greater)
-					const vDiff_Transformed = tv_second - tv_first;
-
-					console.log(`Transformed:   ${String(firstPiece.transformedCoords)} (tv=${tv_first}) and ${String(secondPiece.transformedCoords)} (tv=${tv_second}). Original spacing: ${vDiff_Original}. Current spacing: ${vDiff_Transformed}.`);
-
-					// A positive push amount means we should push the second piece.
-					// A negative push amount means we should push the first piece.
-					// A zero push amount means no change is needed.
-					const pushAmount: bigint = calculatePushAmount(vDiff_Original, vDiff_Transformed);
-
-					// Check for a violation
-
-					if (pushAmount > 0n) { // Second piece needs to be pushed in +X/+Y direction
-						// VIOLATION FOUND!
+					// To increase a piece's negative diagonal axis values, we can push it in either the +X or +Y directions.
+					if (pushAmount > 0n) {
+						// Push pieceB +X/+Y
 						console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
-
-						// Whether pushing on the second piece is safe (won't ripple-push the FIRST piece too!)
-						// It is impossible for both of these to be true, as if the second piece in in the
-						// top right quadrant, yet not connected to X/Y groups, then its V distance should also
-						// be great enough to not be connected, so it shouldn't require any additional pushing.
-						const X_push_safe = (secondPiece.axisGroups['1,0'] > firstPiece.axisGroups['1,0']);
-						const Y_push_safe = (secondPiece.axisGroups['0,1'] > firstPiece.axisGroups['0,1']);
+						pushPieceFromAnchor(pieceB, pieceA, pushAmount);
+					} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
+						// We can't push pieceB left/down, so instead we push pieceA.
+						// Push pieceA +X/+Y
+						console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
+						pushPieceFromAnchor(pieceA, pieceB, -pushAmount);
+					} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+					
+					/**
+					 * Ripple pushes a piece to increase its negative diagonal axis value.
+					 * We can push on either the +X or +Y axis.
+					 * Which one we choose depends on what side the anchor piece is on,
+					 * as we can't push that, and ripple pushes will push it
+					 * if our piece's group is before the anchor's group.
+					 * @param piece - The piece to be ripple pushed in either the +X/+Y directions.
+					 * @param anchor - The piece acting as the anchor, this SHOULD NOT be affected by the push.
+					 */
+					function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, pushAmount: bigint) {
+						// I THINK due to the geometry, these are mutually exclusive... Throw an error if they ever are not so I know to patch it.
+						const X_push_safe = (piece.axisGroups['1,0'] > anchor.axisGroups['1,0']);
+						const Y_push_safe = (piece.axisGroups['0,1'] > anchor.axisGroups['0,1']);
 
 						if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-						else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, firstPiece, secondPiece, pushAmount, axisDeterminer);
-						else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, firstPiece, secondPiece, pushAmount, axisDeterminer);
-						else throw Error("Neither push is safe. This is a logical deadlock. This case *should not happen* if the pieces are correctly ordered. If secondPiece comes after firstPiece on the V-axis, it must also come after it on at least one of the X or Y axes. Is there an error in the orthogonal solution?");
+						else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
+						else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, anchor, piece, pushAmount, axisDeterminer);
+						else throw Error("Unexpected case!");
 						
 						changeMade = true;
 						pushCount++;
-					} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
-						// VIOLATION FOUND!
-						console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
-
-						// I THINK these are mutually exclusive... Throw an error if they are not.
-						const X_push_safe = (firstPiece.axisGroups['1,0'] > secondPiece.axisGroups['1,0']);
-						const Y_push_safe = (firstPiece.axisGroups['0,1'] > secondPiece.axisGroups['0,1']);
-
-						if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-						else if (X_push_safe) makeOptimalRipplePush('1,0', AllAxisOrders, secondPiece, firstPiece, -pushAmount, axisDeterminer);
-						else if (Y_push_safe) makeOptimalRipplePush('0,1', AllAxisOrders, secondPiece, firstPiece, -pushAmount, axisDeterminer);
-						else throw Error("Neither push is safe!");
-
-						changeMade = true;
-						pushCount++;
-					} else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+					}
 
 					// DEBUGGING: Stop the iteration if we reached the max pushes
 					if (pushCount >= MAX_PUSHES) {
@@ -795,7 +778,7 @@ function pushGroup(group: AxisGroup, pushAmount: bigint, coordIndex: 0 | 1) {
  * so that its axis value matches the original position when compared to one other piece.
  * If the piece's current transformed position is further than the MIN_ARBITRARY_DISTANCE
  * required, then no push amount is necessary (0n).
- * @param axisDiff_Original - The axis difference the two pieces had in the original position.
+ * @param axisDiff_Original - The axis difference the two pieces had in the original position. May be negative.
  * @param axisDiff_Transformed - The axis difference the two pieces have in the CURRENT transformed position.
  * @returns The amount to push the piece by so it matches the original v difference in the original position, or 0n if no push is needed. May be negative.
  */
