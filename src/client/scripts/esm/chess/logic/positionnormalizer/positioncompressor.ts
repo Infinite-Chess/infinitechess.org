@@ -142,7 +142,7 @@ const AXIS_DETERMINERS = {
 	'1,1': (coords: Coords): bigint => coords[1] - coords[0],
 	/** Negative Diagonal Axis */
 	'1,-1': (coords: Coords): bigint => coords[1] + coords[0],
-}
+};
 
 
 
@@ -598,17 +598,20 @@ function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders
 			// Push pieceB +X/+Y
 			console.log(`V-Violation: SECOND piece must be pushed +X/+Y by ${pushAmount}!`);
 			pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders);
+			return true; // A push occurred
 		} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
 			// We can't push pieceB left/down, so instead we push pieceA right/up
 			// Push pieceA +X/+Y
 			console.log(`V-Violation: FIRST piece must be pushed +X/+Y by ${-pushAmount}!`);
 			pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders);
+			return true; // A push occurred
 		} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
+		return false; // No push occurred
 	} else if (axis === '1,-1') {
 
 		throw Error("Don't know how to push pieces to align positive diagonal yet!");
 
-	} else throw Error(`Unsupported diagonal axis ${axis}!`)
+	} else throw Error(`Unsupported diagonal axis ${axis}!`);
 }
 
 /**
