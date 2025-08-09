@@ -12,7 +12,7 @@ import { getMemberDataByCriteria } from "../database/memberManager.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 import type { Response } from "express";
-import type { AuthenticatedRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../../types.js";
 
 
 
@@ -25,7 +25,7 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
  * Responds to the request to fetch top (N = n_players) players of leaderboard
  * leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
  */
-const getLeaderboardData = async(req: AuthenticatedRequest, res: Response) => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
+const getLeaderboardData = async(req: IdentifiedRequest, res: Response) => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
 
 	/** ID of leaderboard to be fetched */
 	const leaderboard_id = Number(req.params["leaderboard_id"]) as Leaderboard;

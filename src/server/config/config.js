@@ -57,18 +57,10 @@ const allowedOrigins = [ // Allowed sites
     'https://www.google.com'
 ];
 
-// Session tokens expiry times ------------------------------------------------------
-
-const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
-const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
-const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-
 /**
  * The maximum number of logging sessions a user can have at
  * one time before creating new sessions will terminate old sessions.
- * */
+ */
 const sessionCap = 10;
 
 
@@ -102,9 +94,6 @@ export {
 	GAME_VERSION,
 	useOriginWhitelist,
 	allowedOrigins,
-	refreshTokenExpiryMillis,
-	minTimeToWaitToRenewRefreshTokensMillis,
-	accessTokenExpiryMillis,
 	sessionCap,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,

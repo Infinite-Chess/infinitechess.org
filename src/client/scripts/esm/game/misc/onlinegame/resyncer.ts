@@ -12,9 +12,8 @@
  */
 
 
-// @ts-ignore
 import type { FullGame } from "../../../chess/logic/gamefile.js";
-import type { GameUpdateMessage, ServerGameMoveMessage } from "./onlinegamerouter.js";
+import type { GameUpdateMessage, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
 
@@ -30,6 +29,7 @@ import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import animation from "../../rendering/animation.js";
 import guiclock from "../../gui/guiclock.js";
+import { animateMove } from "../../chess/graphicalchanges.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -154,8 +154,8 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 		onlinegame.onMovePlayed({ isOpponents: opponentPlayedThisMove });
         
 		const isLastMove = i === moves.length - 1;		// Animate only if it's the last move.
-		const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks: isLastMove});
-		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
+		const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks: isLastMove });
+		if (isLastMove) animateMove(move.changes, true); // Only animate on the last forwarded move.
 
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;

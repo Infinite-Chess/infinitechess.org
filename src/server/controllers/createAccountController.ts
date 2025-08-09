@@ -1,4 +1,6 @@
 
+// src/server/controllers/createAccountController.ts
+
 /*
  * This module handles create account form data,
  * verifying the data, creating the account,
@@ -9,13 +11,13 @@
  */
 
 
-import uuid from '../../client/scripts/esm/util/uuid.js';
+import crypto from 'crypto';
+import { Request, Response } from 'express';
+
 // @ts-ignore
 import bcrypt from 'bcrypt';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
-// @ts-ignore
-import { isEmailBanned } from '../middleware/banned.js';
 // @ts-ignore
 import { sendEmailConfirmation } from './sendMail.js';
 // @ts-ignore
@@ -24,11 +26,8 @@ import { handleLogin } from './loginController.js';
 import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManager.js';
 // @ts-ignore
 import emailValidator from 'node-email-verifier';
-// @ts-ignore
-import { Request, Response } from 'express';
-// @ts-ignore
-import { addUserToPlayerStatsTable } from '../database/playerStatsManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { isEmailBanned } from '../middleware/banned.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -128,7 +127,13 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (!await doEmailFormatChecks(email, req, res)) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
-	await generateAccount({ username, email, password }); // { success, result: { lastInsertRowid } }
+	const generationResult = await generateAccount({ username, email, password });
+
+	if (!generationResult.success) {
+		// If we failed to create the account, send the reason.
+		res.status(409).json({ 'conflict': "Could not generate account. " + generationResult.reason});
+		return;
+	}
 
 	// Create new login session! They just created an account, so log them in!
 	// This will handle our response/redirect too for us!
@@ -140,35 +145,33 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
  * Regex tests are skipped.
  * @returns If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
  */
-async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<number | undefined> {
+async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<{ success: true, user_id: number } | { success: false, reason: string }> {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
-	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID_Base62(8) });
+	
+	const { is_verified, verification_code, is_verification_notified } = autoVerify ? {
+		is_verified: 1 as 0 | 1,
+		verification_code: null,
+		is_verification_notified: 1 as 0 | 1,
+	} : { // Don't auto verify them
+		is_verified: 0 as 0 | 1,
+		verification_code: crypto.randomBytes(24).toString('base64url'),
+		is_verification_notified: 0 as 0 | 1,
+	};
 
-	const membersResult = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
-	if (!membersResult.success) {
-		// Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
-		logEventsAndPrint(`Failed to create new member "${username}".`, 'errLog.txt');
-		return;
-	}
-    
-	// Add the newly created user to the player_stats table
-	const user_id = membersResult.result.lastInsertRowid;
-	const playerStatsResult = addUserToPlayerStatsTable(user_id);
-	if (!playerStatsResult.success) {
-		logEventsAndPrint(`Failed to add user "${username}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt');
-		return;
+	const creationResult = addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified);
+	if (!creationResult.success) {
+		// Failure to create (username or email taken)
+		logEventsAndPrint(`Failed to create new member "${username}": ${creationResult.reason}`, 'errLog.txt');
+		return creationResult;
 	}
 
 	logEventsAndPrint(`Created new member: ${username}`, 'newMemberLog.txt');
 
 	// SEND EMAIL CONFIRMATION
-	if (!autoVerify) {
-		const user_id = membersResult.result.lastInsertRowid;
-		sendEmailConfirmation(user_id);
-	}
+	if (!autoVerify) sendEmailConfirmation(creationResult.user_id);
 
-	return membersResult.result.lastInsertRowid;
+	return creationResult;
 }
 
 /**

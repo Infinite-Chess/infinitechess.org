@@ -4,7 +4,7 @@
  */
 
 import type { FullGame } from "../../../chess/logic/gamefile.js";
-import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
+import type { OpponentsMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
@@ -18,6 +18,9 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import premoves from "../../chess/premoves.js";
+import specialrighthighlights from "../../rendering/highlights/specialrighthighlights.js";
+import { animateMove } from "../../chess/graphicalchanges.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
@@ -74,6 +77,9 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 		return onlinegame.reportOpponentsMove(reason);
 	}
 
+	// Rewind all premoves to get the real game state for legality check
+	premoves.rewindPremoves(gamefile, mesh);
+
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
@@ -85,9 +91,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	// Forward the move...
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
-
-	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
+	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
 
 	// Edit the clocks
 	
@@ -106,6 +110,16 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
+
+	// We should probably have this last, since this will make another move AFTER handling our opponent's move here.
+	// And it'd be weird to process that move before this opponent's move is fully processed.
+	premoves.onYourMove(gamefile, mesh);
+	specialrighthighlights.onMove(); // Updates the model after the opponent's move.
+
+	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
+	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.
+	// Above we premoves.rewindPremoves(), and premoves.onYourMove() applies them again, so this must be after them!
+	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
 

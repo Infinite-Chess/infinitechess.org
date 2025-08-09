@@ -10,6 +10,7 @@ const devTimeControls = ['15+2'];
 /**
  * Returns true if the provided time control is valid.
  * If false, that means somebody is time control (e.g. "600+6").
+ * @param {string} time_control - The time control to check.
  * @returns {boolean} *true* if it is valid.
  */
 function isClockValueValid(time_control) {

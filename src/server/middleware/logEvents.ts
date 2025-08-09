@@ -48,7 +48,7 @@ async function logEvents(message: string, logName: string) {
  */
 async function logEventsAndPrint(message: string, logName: string) {
 	console.error(message);
-	logEvents(message, logName);
+	await logEvents(message, logName);
 }
 
 /** Middleware that logs the incoming request, then calls `next()`. */

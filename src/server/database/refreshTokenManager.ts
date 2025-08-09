@@ -8,10 +8,9 @@
 
 
 import db from './database.js';
+import { refreshTokenExpiryMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 // @ts-ignore
 import { getClientIP } from '../utility/IP.js';
-// @ts-ignore
-import { refreshTokenExpiryMillis } from '../config/config.js';
 
 
 import type { Request } from 'express';
@@ -28,6 +27,7 @@ export type RefreshTokenRecord = {
     created_at: number;
     /** The Unix timestamp, in milliseconds, when the token will expire. */
     expires_at: number;
+    /** The last known IP address the user used this refresh token from. */
     ip_address: string | null;
 };
 

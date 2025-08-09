@@ -1,4 +1,8 @@
 {
+	"64": {
+		"note": "Added undo_edit and redo_edit on lines 310-311.",
+		"changes": []
+	},
 	"63": {
 		"note": "Deleted password_reset_message 133",
 		"changes": []

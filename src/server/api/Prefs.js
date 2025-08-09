@@ -15,7 +15,7 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
-const validPrefs = ['theme', 'legal_moves', 'animations', 'lingering_annotations'];
+const validPrefs = ['theme', 'legal_moves', 'animations', 'lingering_annotations', 'premove_enabled'];
 const legal_move_shapes = ['squares', 'dots'];
 
 
@@ -34,11 +34,6 @@ const legal_move_shapes = ['squares', 'dots'];
  * @param {Function} next - The Express next middleware function.
  */
 function setPrefsCookie(req, res, next) {
-	if (!req.cookies) {
-		logEventsAndPrint("req.cookies must be parsed before setting preferences cookie!", 'errLog.txt');
-		return next();
-	}
-
 	// We don't have to worry about the request being for a resource because those have already been served.
 	// The only scenario this request could be for now is an HTML or fetch API request
 	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
@@ -47,7 +42,8 @@ function setPrefsCookie(req, res, next) {
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab preferences of other users this way, but there's no harm in that.
-	const memberInfoCookieStringified = req.cookies.memberInfo;
+	const cookies = req.cookies;
+	const memberInfoCookieStringified = cookies.memberInfo;
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
 	let memberInfoCookie; // { user_id, username }
@@ -121,15 +117,10 @@ function getPrefs(userId) {
 
 /**
  * Route that Handles a POST request to update user preferences in the database.
- * @param {Object} req - Express request object
+ * @param {import("../../types.js").IdentifiedRequest} req - Express request object
  * @param {Object} res - Express response object
  */
 function postPrefs(req, res) {
-	if (!req.memberInfo) { // { user_id, username, roles }
-		logEventsAndPrint("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt');
-		return res.status(500).json({ message: "Server Error: No Authorization"});
-	}
-
 	if (!req.memberInfo.signedIn) {
 		logEventsAndPrint("User tried to save preferences when they weren't signed in!", 'errLog.txt');
 		return res.status(401).json({ message: "Can't save preferences, not signed in."});
@@ -182,6 +173,9 @@ function arePrefsValid(preferences) {
 
 		// 6. Check the lingering_annotations property is a boolean
 		if (key === 'lingering_annotations' && typeof value !== 'boolean') return false;
+
+		// 7. Check the premove_enabled property is a boolean
+		if (key === 'premove_enabled' && typeof value !== 'boolean') return false;
 	}
 
 	// If all checks pass, preferences are valid

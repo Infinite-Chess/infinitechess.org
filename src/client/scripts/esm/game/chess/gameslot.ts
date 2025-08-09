@@ -11,7 +11,7 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
-import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 import type { FullGame } from "../../chess/logic/gamefile.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
@@ -44,6 +44,8 @@ import guiclock from "../gui/guiclock.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
+import premoves from "./premoves.js";
+import { animateMove } from "./graphicalchanges.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -81,7 +83,7 @@ interface LoadOptions {
  * Typically used if we're pasting a game, or reloading an online one. */
 interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: ServerGameMovesMessage,
+	moves?: ServerGameMoveMessage[],
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions,
 	/** The conclusion of the game, if loading an online game that has already ended. */
@@ -226,7 +228,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
 		if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
 		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
-		movesequence.animateMove(lastmove, true);
+		animateMove(lastmove.changes, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
 
@@ -263,6 +265,7 @@ function unloadGame() {
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
 	annotations.onGameUnload(); // Clear all user-drawn highlights
+	premoves.onGameUnload(); // Clear all premoves
 }
 
 /**
@@ -309,6 +312,7 @@ function concludeGame() {
 	guigameinfo.gameEnd(basegame.gameConclusion);
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
+	premoves.onGameConclude();
 	guipause.onReceiveGameConclusion();
 
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion).victor; // undefined if aborted

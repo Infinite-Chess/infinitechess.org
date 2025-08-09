@@ -1,3 +1,6 @@
+
+// src/client/scripts/esm/util/timeutil.ts
+
 /**
  * This script contains utility methods for working with dates and timestamps.
  * 

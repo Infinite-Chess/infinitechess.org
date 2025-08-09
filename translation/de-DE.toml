@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "62"
+version = "64"
 maintainer = "estetique_bs"
 
 [header]
@@ -130,7 +130,6 @@ reveal_info = "Kontoinformationen anzeigen"
 account_info_heading = "Kontoinformationen"
 email = "E-Mail:"
 delete_account = "Konto löschen"
-password_reset_message = ["Um Ihren Benutzernamen, Ihre E-Mail oder Ihr Passwort zu ändern, ", "kontaktieren Sie uns."]
 
 [member.badge-tooltips]
 checkmate_bronze = "Schachmatt-Veteran: 50% aller Übungs-Schachmattes lösen."
@@ -308,6 +307,8 @@ erase = "Anmerkungen löschen"
 collapse = "Anmerkungen einklappen"
 rewind_move = "Zug zurückspulen"
 forward_move = "Zug vorspulen"
+undo_edit = "Rückgängig" # Board editor
+redo_edit = "Wiederherstellen" # Board editor
 pause = "Pause"
 undo = "Zug rückgängig machen" # Checkmate practice game
 restart = "Spiel neu starten" # Checkmate practice game

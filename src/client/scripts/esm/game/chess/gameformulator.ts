@@ -8,7 +8,7 @@ import gamefile from '../../chess/logic/gamefile.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
 import { CoordsKey } from '../../chess/util/coordutil.js';
-import { ServerGameMoveMessage } from '../misc/onlinegame/onlinegamerouter.js';
+import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import type { FullGame } from '../../chess/logic/gamefile.js';
 import type { VariantOptions } from '../../chess/logic/initvariant.js';

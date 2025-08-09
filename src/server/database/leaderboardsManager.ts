@@ -1,8 +1,11 @@
+
+// src/server/database/leaderboardsManager.ts
+
 /**
  * This script handles queries to the leaderboards table.
  */
 
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
@@ -35,48 +38,45 @@ type Rating = { value: number, confident: boolean}
 
 
 /**
- * Adds a user entry to a specific leaderboard
- * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
- * @param leaderboard_id - The id for the specific leaderboard.
- * @param elo - The new elo value for the player
- * @param rd - The new rating deviation for the player
- * @returns A result object indicating success or failure.
+ * The core logic for adding a user to a leaderboard.
+ * This function is "unsafe" as it throws errors on failure, making it
+ * suitable for use inside a database transaction.
+ * @throws {SqliteError} If the database query fails. The error's `code` property
+ *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
  */
-function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
-	// Changed table name, added leaderboard_id column
+function addUserToLeaderboard_core(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): RunResult {
 	const query = `
 	INSERT INTO leaderboards (
 		user_id,
 		leaderboard_id,
 		elo,
 		rating_deviation
-		-- elo and rating_deviation will use DB defaults
 		-- rd_last_update_date will be NULL by default
 	) VALUES (?, ?, ?, ?)
 	`;
+	// This will throw on failure, which is what we want for a transaction.
+	return db.run(query, [user_id, leaderboard_id, elo, rd]);
+}
 
+/**
+ * Safely adds a user entry to a specific leaderboard.
+ * This wraps the core logic in a try/catch block, making it safe for standalone use.
+ * @returns A result object indicating success or failure.
+ */
+function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
 	try {
-		// Execute the query with the provided values
-		// Added leaderboard_id to parameters
-		const result = db.run(query, [user_id, leaderboard_id, elo, rd]);
-
-		// Return success result
+		const result = addUserToLeaderboard_core(user_id, leaderboard_id, elo, rd);
 		return { success: true, result };
-
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Updated log message
 		logEventsAndPrint(`Error adding user "${user_id}" to leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 
-		// Return an error message
-		let reason = 'Failed to add user to ratings table.';
+		let reason = 'Failed to add user to leaderboard.';
 		if (error instanceof Error && 'code' in error) {
-			// Example check for better-sqlite3 specific error codes
 			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
 				reason = 'User ID does not exist in the members table.';
 			} else if (error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				// Now checks the composite primary key
-				reason = `User ID already exists on leaderboard.`;
+				reason = `User ID already exists on this leaderboard.`;
 			}
 		}
 		return { success: false, reason };
@@ -84,16 +84,13 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo:
 }
 
 /**
- * Updates the rating values for a player on a specific leaderboard.
- * Also updates the rd_last_update_date to the current time.
- * @param user_id - The id for the user
- * @param leaderboard_id - The id for the specific leaderboard.
- * @param elo - The new elo value for the player
- * @param rd - The new rating deviation for the player
- * @returns A result object indicating success or failure.
+ * The core logic for updating a player's rating.
+ * This function is "unsafe" as it throws errors on failure, making it
+ * suitable for use inside a database transaction which can catch the
+ * error and roll back.
+ * @throws {Error} If the user is not found or if the database query fails.
  */
-function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): ModifyQueryResult {
-	// Changed table name, column names, added leaderboard_id to WHERE, added rd_last_update_date update
+function updatePlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): RunResult {
 	const query = `
 	UPDATE leaderboards
 	SET elo = ?,
@@ -101,27 +98,30 @@ function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderbo
 		rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
 	WHERE user_id = ? AND leaderboard_id = ?
 	`;
+	const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
+
+	// If the UPDATE affected no rows, it's a critical failure for a transaction.
+	// We must throw an error to trigger a rollback.
+	if (result.changes === 0) {
+		throw new Error(`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`);
+	}
+	return result;
+}
+
+/**
+ * Safely updates the rating values for a player on a specific leaderboard.
+ * This wraps the core logic in a try/catch block, making it safe for
+ * standalone use, such as in background jobs or admin tools.
+ * @returns A result object indicating success or failure.
+ */
+function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): ModifyQueryResult {
 	try {
-		// Execute the query, added leaderboard_id to parameters
-		const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
-
-		// Check if any row was actually updated
-		if (result.changes === 0) {
-			// Updated reason message
-			const reason = `User with ID "${user_id}" not found on leaderboard "${leaderboard_id} for update.`;
-			logEvents(reason, 'errLog.txt'); // Log quietly
-			return { success: false, reason };
-		}
-
-		// Return success result
+		const result = updatePlayerLeaderboardRating_core(user_id, leaderboard_id, elo, rd);
 		return { success: true, result };
-
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error modifying leaderboard ratings data for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
-
-		// Return an error message
-		return { success: false, reason: `Database error updating ratings for user ${user_id} on leaderboard ${leaderboard_id}.` };
+		return { success: false, reason: message };
 	}
 }
 
@@ -170,29 +170,32 @@ type PlayerLeaderboardRating = {
 };
 
 /**
- * Gets the rating values for a player on a specific leaderboard.
- * @param user_id - The id for the user
- * @param leaderboard_id - The id for the specific leaderboard.
- * @returns The player's leaderboard entry object or undefined if not found or on error.
+ * The core logic for getting a player's rating. Throws on failure.
+ * @throws {SqliteError} If the database query fails.
  */
-function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
-	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
+function getPlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
+	// This will throw an error if the query fails.
+	return db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
+}
 
+/**
+ * Safely gets the rating values for a player on a specific leaderboard.
+ * This wraps the core logic in a try/catch block to prevent crashes.
+ * @returns The player's leaderboard entry object or undefined if not found or on error.
+ */
+function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
 	try {
-		// Execute the query with user_id and leaderboard_id parameters
-		// Added leaderboard_id to parameters
-		const row = db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
-		return row; // Returns the record or undefined if not found
+		return getPlayerLeaderboardRating_core(user_id, leaderboard_id);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
 		logEventsAndPrint(`Error getting leaderboard rating data for member "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
-		return undefined; // Return undefined on error
+		return undefined;
 	}
 }
 
@@ -353,9 +356,12 @@ function updateAllRatingDeviationsofLeaderboardTable() {
 // Updated export names to be more descriptive
 export {
 	addUserToLeaderboard,
+	addUserToLeaderboard_core,
 	updatePlayerLeaderboardRating,
+	updatePlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
+	getPlayerLeaderboardRating_core,
 	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,

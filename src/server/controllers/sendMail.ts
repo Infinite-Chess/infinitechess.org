@@ -7,8 +7,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
-import type { Verification } from './verifyAccountController.js';
-import { AuthenticatedRequest } from '../../types.js';
+import { IdentifiedRequest } from '../../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Type Definitions ---
@@ -23,8 +22,10 @@ interface MemberRecord {
 	joined?: string;
 	last_seen?: string;
 	login_count?: number;
+	is_verified?: 0 | 1;
+	verification_code?: string | null;
+	is_verification_notified?: 0 | 1;
 	preferences?: string | null;
-	verification?: string | null;
 	username_history?: string | null;
 	checkmates_beaten?: string;
 }
@@ -32,6 +33,15 @@ interface MemberRecord {
 // --- Module Setup ---
 const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
 const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
+const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
+
+/**
+ * Who our sent emails will appear as if they're from.
+ * 
+ * For this to work, it must be added as a "Send mail as"
+ * alias in our Gmail account.
+ */
+const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
 
 const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
 	? nodemailer.createTransport({
@@ -71,7 +81,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	const mailOptions = {
-		from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+		from: `"Infinite Chess" <${FROM}>`,
 		to: recipientEmail,
 		subject: 'Your Password Reset Request',
 		html: createEmailHtmlWrapper('Password Reset Request', content)
@@ -92,29 +102,33 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
  * @param user_id - The ID of the user to send the verification email to.
  */
 async function sendEmailConfirmation(user_id: number): Promise<void> {
-	const memberData = getMemberDataByCriteria(['username', 'email', 'verification'], 'user_id',user_id) as MemberRecord;
+	const memberData = getMemberDataByCriteria(
+		['username', 'email', 'is_verified', 'verification_code'],
+		'user_id',
+		user_id
+	) as MemberRecord;
 
 	if (!memberData.username || !memberData.email) {
-		logEventsAndPrint(`Unable to send email confirmation of non-existent member of id (${user_id})!`, 'errLog.txt');
+		logEventsAndPrint(`Unable to send email confirmation for non-existent member of id (${user_id})!`, 'errLog.txt');
 		return;
 	}
-	
-	if (!memberData.verification) {
-		logEventsAndPrint(`No verification data found for user_id (${user_id}). Cannot send confirmation email.`, 'errLog.txt');
+
+	// Check the new 'is_verified' column directly.
+	if (memberData.is_verified === 1) {
+		console.log(`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`);
 		return;
 	}
-	
+
+	// An unverified user MUST have a verification code.
+	if (!memberData.verification_code) {
+		logEventsAndPrint(`User ${memberData.username} (ID: ${user_id}) is unverified but has no verification code. Cannot send email.`, 'errLog.txt');
+		return;
+	}
+
 	try {
-		const verificationJS: Verification = JSON.parse(memberData.verification);
-
-		if (verificationJS.verified) {
-			console.log(`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`);
-			return;
-		}
-
-		// Construct verification URL using the utility
+		// Construct verification URL using the new 'verification_code' column
 		const baseUrl = getAppBaseUrl();
-		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
+		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${memberData.verification_code}`).toString();
 
 		if (!transporter) {
 			console.log("Email environment variables not specified. Not sending email confirmation.");
@@ -123,13 +137,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		}
 
 		const content = `
-			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account:</p>
+			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
+			<p style="font-size: 16px; color: #555;">If this takes you to the login page, then as soon as you log in, your account will be verified.</p>
 			<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
 		const mailOptions = {
-			from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+			from: `"Infinite Chess" <${FROM}>`,
 			to: memberData.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content)
@@ -145,7 +160,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 };
 
 /** API to resend the verification email. */
-function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
+function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		res.status(401).json({ message: 'You must be signed in to perform this action.' });
 		return;
@@ -181,7 +196,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		}
 
 		const mailOptions = {
-			from: `Infinite Chess <${EMAIL_USERNAME}>`,
+			from: `Infinite Chess <${FROM}>`,
 			to: EMAIL_USERNAME,
 			subject: messageSubject,
 			text: messageText

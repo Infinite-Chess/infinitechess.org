@@ -1,4 +1,6 @@
 
+// src/server/database/database.ts
+
 /*
  * This module provides utility functions for managing SQLite database operations 
  * using the `better-sqlite3` library.
@@ -76,27 +78,23 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	return stmt.all(...params) as T[];
 }
 
-type QueryObject = { query: string; params: any[]; };
-
-/**
- * Executes multiple queries in a single transaction for better performance.
- * @param queries - An array of query objects containing SQL and parameters.
- * @returns - An array of results for each query in the transaction.
- */
-function transaction(queries: QueryObject[]): Database.RunResult[] {
-	const transaction = db.transaction((queries) => {
-		return queries.map(({ query, params }: QueryObject) => {
-			const stmt = prepareStatement(query);
-			return stmt.run(...params);
-		});
-	});
-	return transaction(queries);
-}
-
 /** Closes the database connection. */
 function close() {
 	db.close();
 	console.log('Closed database.');
+}
+
+/** Checks if a column exists in a table. */
+function columnExists(tableName: string, columnName: string): boolean {
+	try {
+		// PRAGMA queries are special and should not use the statement cache.
+		// We access the raw db instance's prepare method directly.
+		const result = db.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name = ?`).get(tableName, columnName);
+		return !!result;
+	} catch (error) {
+		console.error(`Error checking if column ${columnName} exists in ${tableName}:`, error);
+		return false;
+	}
 }
 
 
@@ -106,6 +104,6 @@ export default {
 	run,
 	get,
 	all,
-	transaction,
 	close,
+	columnExists,
 };

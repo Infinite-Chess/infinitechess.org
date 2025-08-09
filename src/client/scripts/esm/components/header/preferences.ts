@@ -17,7 +17,7 @@ import type { Color } from "../../util/math.js";
 
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_mode'];
+const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled'];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
@@ -45,7 +45,7 @@ let preferences: Preferences;
 // The legal moves shape preference
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
-const default_premove_enabled: boolean = false; // Change this to true when premoves are implemented.
+const default_premove_enabled: boolean = true;
 /** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
@@ -190,10 +190,13 @@ function getPremoveEnabled(): boolean {
 	return preferences.premove_enabled ?? default_premove_enabled;
 }
 
-function setPremoveMode(premove_mode: boolean): void {
-	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
-	preferences.premove_enabled = premove_mode;
+function setPremoveMode(value: boolean): void {
+	if (typeof value !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
+	preferences.premove_enabled = value;
 	savePreferences();
+
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('premoves-toggle', { detail: value }));
 }
 
 function getAnimationsMode(): boolean {
@@ -240,6 +243,7 @@ function setLingeringAnnotationsMode(value: boolean) {
 	preferences.lingering_annotations = value;
 	onChangeMade();
 	savePreferences();
+
 	// Dispatch an event so that the game code can detect it, if present.
 	document.dispatchEvent(new CustomEvent('lingering-annotations-toggle', { detail: value }));
 }
@@ -449,7 +453,7 @@ export default {
 	setLegalMovesShape,
 	getDragEnabled,
 	setDragEnabled,
-	getPremoveMode: getPremoveEnabled,
+	getPremoveEnabled,
 	setPremoveMode,
 	getAnimationsMode,
 	setAnimationsMode,

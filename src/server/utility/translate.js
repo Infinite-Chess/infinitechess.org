@@ -29,8 +29,10 @@ function setSupportedLanguages(list) { supportedLanguages = list; }
  * @returns {string} The language to be used.
  */
 function getLanguageToServe(req) {
-	let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
-	if (!supportedLanguages.includes(language)) language = req.cookies.i18next; // Query param language not supported
+	const cookies = req.cookies;
+	
+	let language = req.query.lng || cookies.i18next || req.i18n.resolvedLanguage;
+	if (!supportedLanguages.includes(language)) language = cookies.i18next; // Query param language not supported
 	if (!supportedLanguages.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
 	if (!supportedLanguages.includes(language)) language = defaultLanguage; // Resolved language from i18next not supported
 	return language;

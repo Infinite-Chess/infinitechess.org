@@ -12,9 +12,11 @@ import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import jsutil from '../../util/jsutil.js';
+import typeutil from '../../chess/util/typeutil.js';
+import { animateMove } from '../chess/graphicalchanges.js';
+import premoves from '../chess/premoves.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
-import typeutil from '../../chess/util/typeutil.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -159,6 +161,9 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
+	// Rewind all premoves to get the real game state before making any other board changes
+	premoves.rewindPremoves(gamefile, mesh);
+
 	// Go to latest move before making a new move
 	movesequence.viewFront(gamefile, mesh);
 	/**
@@ -171,7 +176,11 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+
+	// We should probably have this last, since this will make another move AFTER handling our engine's move here.
+	// And it'd be weird to process that move before this engine's move is fully processed.
+	premoves.onYourMove(gamefile, mesh);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

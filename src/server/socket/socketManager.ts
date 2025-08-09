@@ -7,15 +7,11 @@
  * And unsubbing a socket from subscriptions.
  */
 
-import socketUtility from "./socketUtility.js";
-import { sendSocketMessage } from "./sendSocketMessage.js";
-import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
 import { printIncomingAndClosingSockets } from "../config/config.js";
-// @ts-ignore
-import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
-// @ts-ignore
-import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
+import { handleUnsubbing } from "./generalrouter.js";
+import socketUtility from "./socketUtility.js";
+import uuid from "../../client/scripts/esm/util/uuid.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -64,8 +60,8 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 function addConnectionToConnectionLists(ws: CustomWebSocket) {
 	websocketConnections[ws.metadata.id] = ws;
 	addConnectionToList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Add IP connection
-	addConnectionToList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Add session connection
-	addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
+	if (ws.metadata.cookies.jwt) addConnectionToList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Add session connection
+	if (ws.metadata.memberInfo.signedIn) addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
 
 	startTimerToExpireSocket(ws);
 	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
@@ -77,8 +73,7 @@ function addConnectionToConnectionLists(ws: CustomWebSocket) {
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to add to the collection.
  */
-function addConnectionToList(collection: { [key: string]: string[] }, key: number | string | undefined, id: string) {
-	if (key === undefined) return; // No key, no operation
+function addConnectionToList(collection: { [key: string]: string[] }, key: number | string, id: string) {
 	if (!collection[key]) collection[key] = []; // Initialize the array if it doesn't exist
 	collection[key].push(id); // Add the socket ID to the list
 }
@@ -96,8 +91,8 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
 function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string) {
 	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Remove IP connection
-	removeConnectionFromList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Remove session connection
-	removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
+	if (ws.metadata.cookies.jwt) removeConnectionFromList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Remove session connection
+	if (ws.metadata.memberInfo.signedIn) removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
 
 	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
 	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
@@ -109,7 +104,7 @@ function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, 
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to remove from the collection.
  */
-function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number | undefined, id: string) {
+function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number, id: string) {
 	if (key === undefined || !collection[key]) return; // No key or collection doesn't exist
 	const index = collection[key].indexOf(id);
 	if (index !== -1) {
@@ -215,28 +210,11 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 	if (!ws.metadata.subscriptions) return; // No subscriptions
 
 	const subscriptions = ws.metadata.subscriptions;
-	const subscriptionsKeys = Object.keys(subscriptions);
+	const subscriptionsKeys = Object.keys(subscriptions) as (Array<keyof typeof subscriptions>);
 	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, closureNotByChoice);
 }
 
-// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws: CustomWebSocket, key: string, closureNotByChoice?: boolean) {
-	// What are they wanting to unsubscribe from updates from?
-	switch (key) {
-		case "invites":
-			// Unsubscribe them from the invites list
-			unsubFromInvitesList(ws, closureNotByChoice);
-			break;
-		case "game":
-			// If the unsub is not by choice (network interruption instead of closing tab), then we give them
-			// a 5 second cushion before starting an auto-resignation timer
-			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
-			break;
-		default:
-			console.log(`Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
-			return sendSocketMessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`);
-	}
-}
+
 
 
 // Miscellaneous ---------------------------------------------------------------------------

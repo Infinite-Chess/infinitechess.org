@@ -8,13 +8,13 @@
 
 
 import type { FullGame } from "../../chess/logic/gamefile.js";
-import type { Move, MoveDraft} from "../../chess/logic/movepiece.js";
+import type { Edit, Move, MoveDraft} from "../../chess/logic/movepiece.js";
 
 
 import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
-import { animatableChanges, meshChanges } from "./graphicalchanges.js";
+import { animateMove, meshChanges } from "./graphicalchanges.js";
 import moveutil from "../../chess/util/moveutil.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
@@ -45,20 +45,7 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	/**
-	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
-	 * if so, we need to completely regenerate all piece models.
-	 * Otherwise, we run graphical changes as normal.
-	 * 
-	 * We have to regenerate ALL types here, not just the ones whos type ranges
-	 * were affected, because other pieces may still need graphical changes
-	 * from the move's changes! For example, pawn deleted that promoted.
-	 */
-	if (mesh) { // Mesh is generated
-		if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
-		else boardchanges.runChanges(mesh, move.changes, meshChanges, true); // Graphical changes
-		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
-	}
+	if (mesh) runMeshChanges(boardsim, mesh, move, true);
 	
 	// GUI changes
 	updateGui(false);
@@ -80,9 +67,25 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	// of the hovered arrows often changes.
 	// Erase the list so they can be regenerated next frame with the correct color.
 	arrowlegalmovehighlights.reset();
-	specialrighthighlights.onMove();
 
 	return move;
+}
+
+/**
+ * Wrapper for performing the graphical mesh changes of an edit.
+ * 
+ * If the newlyRegenerated flag is present, indicating the organized pieces were regenerated,
+ * than we instead need to regenerate all piece models.
+ * Otherwise, we run graphical changes as normal.
+ * 
+ * We have to regenerate ALL types here, not just the ones whos type ranges
+ * were affected, because other pieces may still need graphical changes
+ * from the move's changes! For example, pawn deleted that promoted.
+ */
+function runMeshChanges(boardsim: FullGame["boardsim"], mesh: Mesh, edit: Edit, forward: boolean) {
+	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
+	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
+	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
 /**
@@ -158,35 +161,8 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 	
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
-	animateMove(move, forward); // Animate
+	animateMove(move.changes, forward); // Animate
 	updateGui(true);
-}
-
-
-// Animating ---------------------------------------------------------------------------------------------------------------
-
-
-/**
- * Animates a given move.
- * We don't use boardchanges because custom functionality is needed.
- * @param move the move to animate
- * @param forward whether this is a forward or back animation
- * @param animateMain Whether the main piece targeted by the move should be animated. All secondary pieces are guaranteed animated. If this is false, the main piece animation will be instantanious, only playing the SOUND.
- */
-function animateMove(move: Move, forward = true, animateMain = true) {
-	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
-	let clearanimations = true; // The first animation of a turn should clear prev turns animation
-
-	// TODO: figure out a way to animate multiple moves of the same piece
-	// Keyframing or smth
-
-	// How does the rose animate?
-	for (const change of move.changes) {
-		if (!(change.action in funcs)) continue; // There is no animation change function for this type of Change
-		const instant = change.main && !animateMain; // Whether the animation should be instantanious, only playing the SOUND.
-		funcs[change.action]!(change, instant, clearanimations); // Call the animation function
-		clearanimations = false;
-	}
 }
 
 /**
@@ -213,5 +189,5 @@ export default {
 	viewMove,
 	viewFront,
 	viewIndex,
-	animateMove,
+	runMeshChanges,
 };

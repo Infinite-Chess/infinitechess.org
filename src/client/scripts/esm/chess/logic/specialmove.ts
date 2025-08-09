@@ -8,7 +8,7 @@ import { rawTypes } from '../util/typeutil.js';
 
 import type { RawTypeGroup } from '../util/typeutil.js';
 import type { Coords } from '../util/coordutil.js';
-import type { Move } from './movepiece.js';
+import type { Edit, MoveDraft } from './movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './gamefile.js';
 
@@ -19,7 +19,10 @@ import type { Board } from './gamefile.js';
  * Function that queues all of the changes a special move makes when executed.
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: Move) => boolean;
+type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveDraftEdit) => boolean;
+
+/** All properties of the Move that special move functions need to access */
+interface MoveDraftEdit extends MoveDraft, Edit {}
 
 /**
  * An object storing the squares in the immediate vicinity
@@ -33,7 +36,7 @@ type SpecialVicinity = RawTypeGroup<Coords[]>
 // it does NOT calculate if they're legal.
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
-const defaultSpecialMoves = {
+const defaultSpecialMoves: RawTypeGroup<SpecialMoveFunction> = {
 	[rawTypes.KING]: kings,
 	[rawTypes.ROYALCENTAUR]: kings,
 	[rawTypes.PAWN]: pawns,
@@ -54,26 +57,32 @@ const defaultSpecialMoves = {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(boardsim: Board, piece: Piece, move: Move) {
+function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
 
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	// Move the king to new square
 	const moveChanges = move.changes;
-	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
+	const kingCapturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
+	// CASTLING CAN CAPTURE A PIECE IF IT'S A PREMOVE!!!
+	if (kingCapturedPiece) boardchanges.queueCapture(moveChanges, true, kingCapturedPiece); // Capture piece
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 
 	// Move the rook to new square
 	const pieceToCastleWith = boardutil.getPieceFromCoords(boardsim.pieces, specialTag.coord)!;
 	const landSquare: Coords = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
-	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
+	const rookCapturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, landSquare);
+	// CASTLING CAN CAPTURE A PIECE IF IT'S A PREMOVE!!!
+	if (rookCapturedPiece) boardchanges.queueCapture(moveChanges, false, rookCapturedPiece); // Capture piece
+	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare);
 
 	// Special move was executed!
 	// (There is no captured piece with castling)
 	return true;
 }
 
-function pawns(boardsim: Board, piece: Piece, move: Move) {
+function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
@@ -89,12 +98,8 @@ function pawns(boardsim: Board, piece: Piece, move: Move) {
 
 	// Delete the piece captured
 
-	if (capturedPiece) {
-		boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece);
-	} else {
-		// Move the pawn
-		boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
-	}
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, capturedPiece);
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 
 	if (promotionTag) {
 		// Delete original pawn
@@ -108,12 +113,12 @@ function pawns(boardsim: Board, piece: Piece, move: Move) {
 }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
-function roses(boardsim: Board, piece: Piece, move: Move) {
+function roses(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	// Delete the piece captured
-	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);
-	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, true, capturedPiece);
+	boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
 
 	// Special move was executed!
 	return true;
@@ -139,6 +144,7 @@ export default {
 };	
 
 export type {
+	MoveDraftEdit,
 	SpecialMoveFunction,
-	SpecialVicinity
+	SpecialVicinity,
 };

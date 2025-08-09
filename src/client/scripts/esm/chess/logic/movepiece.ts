@@ -11,7 +11,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../../game/misc/onlinegame/onlinegamerouter.js';
+import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
 
 
@@ -111,23 +111,26 @@ interface MoveDraft extends _Move_Compact {
 	path?: path,
 }
 
-/**
- * Contains all properties a {@link MoveDraft} has, and more.
- * Including the changes it made to the board, the gamefile
- * state before and after the move, etc.
- */
-interface Move extends MoveDraft, BaseMove {
-	/** The type of piece moved */
-	type: number,
+/** Information about some change on the chessboard, either by a move or some other property change (e.g. as used in the board editor) */
+interface Edit {
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
 	changes: Array<Change>,
 	/** The state of the move is used to know how to modify specific gamefile
 	 * properties when forwarding/rewinding this move. */
-	state: MoveState,
+	state: MoveState
+}
+
+/**
+ * Contains all properties a {@link MoveDraft} and a {@link Edit} has, and more.
+ * Including the changes it made to the board, the gamefile
+ * state before and after the move, etc.
+ */
+interface Move extends Edit, MoveDraft, BaseMove {
+	/** The type of piece moved */
+	type: number,
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
-
 	flags: {
 		/** Whether the move delivered check. */
 		check: boolean,
@@ -188,7 +191,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 		// The actual function will return whether a special move was actually made or not.
 		// If a special move IS made, we skip the normal move piece method.
 		if (rawType in boardsim.specialMoves) specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
-		if (!specialMoveMade) calcMovesChanges(boardsim, piece, move); // Move piece regularly (no special tag)
+		if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveDraft, move); // Move piece regularly (no special tag)
 
 		// Must be set before calling queueIncrementMoveRuleStateChange()
 		move.flags.capture = boardchanges.wasACapture(move);
@@ -210,11 +213,11 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
  * @param piece - The piece that's being moved
  * @param move - The move that's being made
  */
-function calcMovesChanges(boardsim: Board, piece: Piece, move: Move) {
-	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
+function calcMovesChanges(boardsim: Board, piece: Piece, moveDraft: _Move_Compact, edit: Edit) {
+	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.endCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
-	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(edit.changes, true, capturedPiece);
+	boardchanges.queueMovePiece(edit.changes, true, piece, moveDraft.endCoords);
 }
 
 /**
@@ -227,22 +230,20 @@ function calcMovesChanges(boardsim: Board, piece: Piece, move: Move) {
  * This will upgrade the repetition algorithm to not delay declaring a draw
  * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
-	move.changes.forEach(change => {
+function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit) {
+	edit.changes.forEach(change => {
 		if (change.action === 'move') {
 			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
+			state.createSpecialRightsState(edit, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
 		} else if (change.action === 'capture') {
-			// Delete the special rights off the start coords AND the capture coords, if there are ones.
-			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
-			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
-			state.createSpecialRightsState(move, captureCoordsKey, boardsim.state.global.specialRights.has(captureCoordsKey), false);
+			 // Future protection if the captured piece is ever not on the move's endCoords
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(edit, captureCoordsKey, boardsim.state.global.specialRights.has(captureCoordsKey), false);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
 			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, coordsKey, boardsim.state.global.specialRights.has(coordsKey), false);
+			state.createSpecialRightsState(edit, coordsKey, boardsim.state.global.specialRights.has(coordsKey), false);
 		}
 	});
 }
@@ -287,23 +288,34 @@ function makeMove(gamefile: FullGame, move: Move) {
 }
 
 /**
- * Applies a move's board changes to the gamefile, no graphical changes.
- * Also updates the gamefile's `moveIndex`.
+ * Applies a move's board changes to the gamefile, and updates moveIndex.
+ * No graphical changes.
  * @param gamefile 
  * @param move 
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: FullGame, move: Move , forward = true, { global = false } = {}) {
+function applyMove(gamefile: FullGame, move: Move, forward = true, { global = false } = {}) {
 	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
 	const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	state.applyMove(gamefile.boardsim.state, move.state, forward, { globalChange: global }); // Apply the State of the move
+	applyEdit(gamefile, move, forward, global); // Apply the board changes
+}
 
-	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
+/**
+ * Applies a edits board changes to the gamefile.
+ * If we're applying a board editor's move's edits, then global should be true.
+ * @param gamefile - The gamefile to apply the edit to.
+ * @param edit - The edit to apply, which contains the changes and state of the move. 
+ * @param global - If true, we will also apply this move's global state changes to the gamefile. Should be true if the edit is from a board editor move.
+ * @param forward - Whether the move's board changes should be applied forward or backward.
+ */
+function applyEdit(gamefile: FullGame, edit: Edit, forward: boolean, global: boolean) {
+	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: global }); // Apply the State of the move
+	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
@@ -341,7 +353,7 @@ function createCheckState(gamefile: FullGame, move: Move ) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMovesMessage) {
+function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMoveMessage[]) {
 	if (gamefile.boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
@@ -387,7 +399,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 
 	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
+	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves, false);
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
@@ -408,6 +420,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
 function rewindMove(gamefile: FullGame) {
+	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(gamefile.boardsim.moves, gamefile.boardsim.state.local.moveIndex);
 
 	applyMove(gamefile, move, false, { global: true });
@@ -486,6 +499,7 @@ function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): strin
 
 export type {
 	Move,
+	Edit,
 	BaseMove,
 	MoveDraft,
 	CoordsSpecial,
@@ -499,11 +513,14 @@ export type {
 
 export default {
 	generateMove,
+	calcMovesChanges,
+	queueSpecialRightDeletionStateChanges,
 	makeMove,
 	updateTurn,
 	goToMove,
 	makeAllMovesInGame,
 	applyMove,
+	applyEdit,
 	rewindMove,
 	simulateMoveWrapper,
 	getSimulatedConclusion,

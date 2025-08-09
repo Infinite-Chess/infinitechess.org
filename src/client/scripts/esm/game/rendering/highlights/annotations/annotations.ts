@@ -16,6 +16,7 @@ import drawrays from "./drawrays.js";
 import coordutil from "../../../../chess/util/coordutil.js";
 import { Mouse } from "../../../input.js";
 import mouse from "../../../../util/mouse.js";
+import boardeditor from "../../../misc/boardeditor.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
@@ -126,20 +127,15 @@ function clearAnnotes(annotes: Annotes) {
 
 /** Main Adds/deletes annotations */
 function update() {
+	// Do not allow new annotations to be drawn (via right mouse click) if the board editor is using a drawing tool
+	if (boardeditor.isBoardEditorUsingDrawingTool()) return;
+
 	const annotes = getRelevantAnnotes();
 
 	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);
 	drawsquares.update(annotes.Squares);
 	drawrays.update(annotes.Rays);
-}
-
-/** Collapses all annotations if we clicked the board. */
-function testIfCollapsed() {
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
-		Collapse();
-	}
 }
 
 /**
@@ -208,7 +204,6 @@ export default {
 	getRays,
 
 	update,
-	testIfCollapsed,
 	Collapse,
 	onPieceSelection,
 	onGameUnload,

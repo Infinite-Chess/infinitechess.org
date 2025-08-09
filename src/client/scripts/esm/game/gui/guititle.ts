@@ -4,6 +4,7 @@
  */
 
 import guipractice from './guipractice.js';
+import guiboardeditor from './guiboardeditor.js';
 import gui from './gui.js';
 // @ts-ignore
 import guiguide from './guiguide.js';
@@ -45,14 +46,18 @@ function initListeners() {
 	element_play.addEventListener('click', callback_Play);
 	element_practice.addEventListener('click', callback_Practice);
 	element_guide.addEventListener('click', callback_Guide);
-	element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	// element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	// ENABLE WHEN board editor is ready
+	element_boardEditor.addEventListener('click', callback_BoardEditor);
 }
 
 function closeListeners() {
 	element_play.removeEventListener('click', callback_Play);
 	element_practice.removeEventListener('click', callback_Practice);
 	element_guide.removeEventListener('click', callback_Guide);
-	element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	// element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	// ENABLE WHEN board editor is ready
+	element_boardEditor.removeEventListener('click', callback_BoardEditor);
 }
 
 function callback_Play(event: Event) {
@@ -60,14 +65,19 @@ function callback_Play(event: Event) {
 	guiplay.open();
 }
 
-
 function callback_Practice(event: Event) {
 	close();
 	guipractice.open();
 }
+
 function callback_Guide(event: Event) {
 	close();
 	guiguide.open();
+}
+
+function callback_BoardEditor(event: Event) {
+	close();
+	guiboardeditor.open();
 }
 
 

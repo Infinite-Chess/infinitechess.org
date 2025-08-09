@@ -24,8 +24,7 @@ import winconutil from "../../../client/scripts/esm/chess/util/winconutil.js";
 
 
 import type { RefreshTokenRecord } from "../../database/refreshTokenManager.js";
-// @ts-ignore
-import type { Game } from '../TypeDefinitions.js';
+import type { Game } from './gameutility.js';
 
 
 
@@ -135,15 +134,19 @@ async function measureRatingAbuseAfterGame(game: Game) {
 	if (!game.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
 	// the game will NOT have added an entry in the leaderboards table for the players!
-	if (winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor === undefined) return;
+	if (winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion!).victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
 	const leaderboard_id = VariantLeaderboards[game.variant];
 	if (leaderboard_id === undefined) return;
 
-	for (const playerStr in game.players) {
-		const user_id = game.players[playerStr].identifier.user_id;
-		const username = game.players[playerStr].identifier.member;
+	for (const [playerStr, player] of Object.entries(game.players)) {
+		if (!player.identifier.signedIn) {
+			await logEventsAndPrint(`Unexpected: Player "${playerStr}" is not signed in. Game: ${JSON.stringify(game)}`,'errLog.txt');
+			continue;
+		}
+		const user_id = player.identifier.user_id;
+		const username = player.identifier.username;
 		if (user_id === undefined || username === undefined) {
 			await logEventsAndPrint(`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt');
 			continue;

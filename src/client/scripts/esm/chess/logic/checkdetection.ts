@@ -151,7 +151,7 @@ function doesSpecialAttackSquare(gamefile: FullGame, square: CoordsSpecial, frie
 
 			const moveset = legalmoves.getPieceMoveset(boardsim, pieceOnSquare.type);
 			const specialPiecesLegalMoves = legalmoves.getEmptyLegalMoves(moveset);
-			legalmoves.appendSpecialMoves(gamefile, pieceOnSquare, moveset, specialPiecesLegalMoves);
+			legalmoves.appendSpecialMoves(gamefile, pieceOnSquare, moveset, specialPiecesLegalMoves, false);
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 

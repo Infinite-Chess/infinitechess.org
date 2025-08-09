@@ -6,7 +6,7 @@
 
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
-import type { PlayerRatingChangeInfo } from '../misc/onlinegame/onlinegamerouter.js';
+import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 
 
@@ -21,6 +21,7 @@ import enginegame from '../misc/enginegame.js';
 import { PlayerGroup, players } from '../../chess/util/typeutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import metadata from '../../chess/util/metadata.js';
+import boardeditor from '../misc/boardeditor.js';
 
 
 
@@ -132,13 +133,15 @@ function clearUsernameContainers() {
 	// console.log("Clearing username containers");
 
 	// Stop any running number animations
-	usernamecontainer_white!.animationCancels.forEach(fn => fn());
-	usernamecontainer_black!.animationCancels.forEach(fn => fn());
-
-	usernamecontainer_white!.element.remove();
-	usernamecontainer_black!.element.remove();
+	usernamecontainer_white?.animationCancels.forEach(fn => fn());
+	usernamecontainer_white?.element.remove();
 	usernamecontainer_white = undefined;
+
+	// Stop any running number animations
+	usernamecontainer_black?.animationCancels.forEach(fn => fn());
+	usernamecontainer_black?.element.remove();
 	usernamecontainer_black = undefined;
+	
 }
 
 function initListeners_Gamecontrol() {
@@ -208,7 +211,7 @@ function toggle() {
  * which determines the svg of the username container, and whether it should hyperlink or not.
  */
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_type: 'player' | 'guest' | 'engine', black_type: 'player' | 'guest' | 'engine' } {
-	if (gameloader.getTypeOfGameWeIn() === 'local') {
+	if (gameloader.getTypeOfGameWeIn() === 'local' || boardeditor.areInBoardEditor()) {
 		return {
 			white: translations['player_name_white_generic'],
 			black: translations['player_name_black_generic'],
@@ -233,7 +236,7 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 			white_type: metadata.White === translations['you_indicator'] ? 'guest' : 'engine',
 			black_type: metadata.Black === translations['you_indicator'] ? 'guest' : 'engine',
 		};
-	} else throw Error('Cannot get player names for game when not in a local, online, or engine game.');
+	} else throw Error('Cannot get player names for game when not in a local, board editor, online, or engine game.');
 }
 
 /**

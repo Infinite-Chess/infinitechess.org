@@ -22,7 +22,6 @@ import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
-import { CreateInputListener, InputListener } from '../input.js';
 import boarddrag from '../rendering/boarddrag.js';
 import boardpos from '../rendering/boardpos.js';
 import controls from '../misc/controls.js';
@@ -31,10 +30,13 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import guiclock from '../gui/guiclock.js';
+import boardeditor from '../misc/boardeditor.js';
+import mouse from '../../util/mouse.js';
+import premoves from './premoves.js';
+import boardtiles from '../rendering/boardtiles.js';
+import { CreateInputListener, InputListener, Mouse } from '../input.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
-import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import webgl from '../rendering/webgl.js';
 // @ts-ignore
@@ -43,6 +45,9 @@ import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
+
+import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { Mesh } from '../rendering/piecemodels.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -105,6 +110,10 @@ function update() {
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
 
+	// NEEDS TO BE BEFORE selection.update() and boarddrag.checkIfBoardGrabbed()
+	// because the drawing tools of the boad editor might take precedence and claim the left mouse click
+	boardeditor.update();
+
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
 	selection.update();
@@ -125,11 +134,12 @@ function update() {
 	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	snapping.teleportToEntitiesIfClicked(); // AFTER snapping.updateEntitiesHovered()
 	snapping.teleportToSnapIfClicked();
+	premoves.update(gamefile, mesh); // BEFORE annotations update(), since if right click cancels premoves, we don't want to draw arrows.
 	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
 
 	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
-	annotations.testIfCollapsed();
+	testIfEmptyBoardRegionClicked(gamefile, mesh); // If we clicked an empty region of the board, collapse annotations and cancel premoves.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardGrabbed();
@@ -139,6 +149,21 @@ function update() {
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
 
 	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
+}
+
+/**
+ * Tests if by clicking an empty region of the board,
+ * we need to clear premoves and collapse annotations.
+ */
+function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined) {
+	if (boardeditor.isBoardEditorUsingDrawingTool()) return; // Don't collapse if the board editor is using a drawing tool
+
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		mouse.claimMouseClick(Mouse.LEFT);
+
+		premoves.cancelPremoves(gamefile, mesh);
+		annotations.Collapse();
+	}
 }
 
 function render() {

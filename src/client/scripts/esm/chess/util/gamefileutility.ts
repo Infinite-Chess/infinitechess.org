@@ -99,6 +99,7 @@ function doGameOverChecks(gamefile: FullGame) {
 function getStartingAreaBox(boardsim: Board) {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
+	if (coordsList.length === 0) coordsList.push([1,1], [8,8]); // use the [1,1]-[8,8] area as a fallback
 	return math.getBoxFromCoordsList(coordsList);
 }
 
@@ -148,6 +149,12 @@ function getPlayerCount(basegame: Game) {
 	return new Set(basegame.gameRules.turnOrder).size;
 }
 
+/** Calculates the unique players in the turn order, in the order they appear. */
+function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
+	// Using a Set removes duplicates before converting to an array
+	return [...new Set(turnOrder)];
+}
+
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -161,5 +168,6 @@ export default {
 	doGameOverChecks,
 	getStartingAreaBox,
 	getPlayerCount,
+	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
 };

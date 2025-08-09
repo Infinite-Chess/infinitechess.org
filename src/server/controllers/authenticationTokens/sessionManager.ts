@@ -7,116 +7,47 @@
 
 // @ts-ignore
 import { deletePreferencesCookie } from '../../api/Prefs.js';
-// @ts-ignore
-import { signRefreshToken } from './tokenSigner.js';
-// @ts-ignore
-import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from '../../config/config.js';
+import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTokenIP } from '../../database/refreshTokenManager.js';
+import { addRefreshToken, deleteRefreshToken } from '../../database/refreshTokenManager.js';
 
 
 import type { Request, Response } from 'express';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 
+const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
+
+
 // Renewing & Revoking Sessions --------------------------------------------------------------------
 
 
-/**
- * Checks if a member has a specific refresh token and that it's not expired.
- * If they do, and it wasn't recently issued, we automatically
- * refresh it by giving them a new refresh cookie.
- * 
- * @param userId - The user ID of the member whose refresh tokens are to be checked.
- * @param username - The username of the user.
- * @param roles - The roles the user has.
- * @param token - The refresh token to check.
- * @param IP - The IP address they are connecting from.
- * @param req - The request object.
- * @param res - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
- * @returns - Returns true if the member has the refresh token, false otherwise.
- */
-export function doesMemberHaveRefreshToken_RenewSession(
-	userId: number,
-	username: string,
-	roles: string[] | null,
-	token: string,
-	IP: string | undefined,
+/** Makes sure a user's session is still fresh, renewing it if it's older than a day. */
+export function freshenSession(
 	req: Request,
-	res: Response
-): boolean {
-	// 1. Find the token in the database. This is a single, indexed query.
-	const tokenRecord = findRefreshToken(token);
-
-	// 2. If not found, the token is invalid.
-	if (!tokenRecord) {
-		return false;
-	}
-
-	// 3. Security Check: Does the token belong to the user who claims it?
-	if (tokenRecord.user_id !== userId) {
-		logEventsAndPrint(`SECURITY: User ID mismatch for refresh token! Claimed: ${userId}, Actual: ${tokenRecord.user_id}, Token: ${token}`, 'hackLog.txt');
-		// CRITICAL: Invalidate this mismatched token immediately.
-		deleteRefreshToken(token);
-		return false;
-	}
-
-	// 4. Check if the token is expired.
-	if (tokenRecord.expires_at < Date.now()) {
-		// The token is expired, remove it from the database for cleanup.
-		deleteRefreshToken(token);
-		return false;
-	}
-
-	// 5. Update the IP address if it has changed.
-	const IP_New: string | null = IP || null;
-	if (IP_New !== tokenRecord.ip_address) {
-		updateRefreshTokenIP(token, IP_New);
-	}
-
-	// 6. The token is valid. Decide whether to renew the session.
-	renewSession(req, res, userId, username, roles, tokenRecord);
-
-	return true;
-}
-
-/**
- * Renews a player's login session if enough time has passed.
- * @param req - The Request object.
- * @param res - The Response object.
- * @param userId - The unique id of the user in the database.
- * @param username - The username of the user.
- * @param roles - The roles the user has.
- * @param tokenRecord - The existing, valid token record from the database.
- */
-function renewSession(
-	req: Request | undefined,
-	res: Response | undefined,
-	userId: number,
+	res: Response,
+	user_id: number,
 	username: string,
 	roles: string[] | null,
 	tokenRecord: RefreshTokenRecord
 ): void {
-	// Only renew if we have a response object to send the cookie back.
-	if (!req || !res) return;
-	
 	const timeSinceCreated = Date.now() - tokenRecord.created_at;
 	if (timeSinceCreated < minTimeToWaitToRenewRefreshTokensMillis) return;
 
 	console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`);
 
 	// Create the new token BEFORE touching the database.
-	const newToken = signRefreshToken(userId, username, roles);
+	const newToken = signRefreshToken(user_id, username, roles);
 
 	// Atomically swap the old token for the new one.
 	// In a high-concurrency environment, this should be a single transaction.
 	// For now, sequential operations are acceptable.
 	deleteRefreshToken(tokenRecord.token);
-	addRefreshToken(req, userId, newToken);
+	addRefreshToken(req, user_id, newToken);
 
 	// Send the new token to the user in their cookies.
-	createSessionCookies(res, userId, username, newToken);
+	createSessionCookies(res, user_id, username, newToken);
 }
 
 /**
@@ -171,36 +102,10 @@ export function revokeSession(res: Response): void {
  * @param refreshToken - The refresh token to be stored in the cookie.
  */
 function createSessionCookies(res: Response, userId: number, username: string, refreshToken: string): void {
-	createRefreshTokenCookie(res, refreshToken);
-	createMemberInfoCookie(res, userId, username);
-}
-
-/**
- * Deletes the cookies that store session information.
- * @param res - The response object.
- */
-function deleteSessionCookies(res: Response): void {
-	deleteRefreshTokenCookie(res);
-	deleteMemberInfoCookie(res);
-}
-
-/**
- * Creates and sets an HTTP-only cookie containing the refresh token.
- * @param res - The response object.
- * @param refreshToken - The refresh token to be stored in the cookie.
- */
-function createRefreshTokenCookie(res: Response, refreshToken: string): void {
+	// Create and sets an HTTP-only cookie containing the refresh token.
 	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true.
 	res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'none', secure: true, maxAge: refreshTokenExpiryMillis });
-}
-
-/**
- * Deletes the HTTP-only refresh token cookie.
- * @param res - The response object.
- */
-function deleteRefreshTokenCookie(res: Response): void {
-	// Clear the 'jwt' cookie by setting the same options as when it was created.
-	res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
+	createMemberInfoCookie(res, userId, username);
 }
 
 /**
@@ -210,7 +115,7 @@ function deleteRefreshTokenCookie(res: Response): void {
  * @param userId - The ID of the user.
  * @param username - The username of the user.
  */
-function createMemberInfoCookie(res: Response, userId: number, username:string): void {
+function createMemberInfoCookie(res: Response, userId: number, username: string): void {
 	// Create an object with member info
 	const now = Date.now();
 	const expires = now + refreshTokenExpiryMillis;
@@ -222,10 +127,12 @@ function createMemberInfoCookie(res: Response, userId: number, username:string):
 }
 
 /**
- * Deletes the memberInfo cookie.
+ * Deletes the cookies that store session information.
  * @param res - The response object.
  */
-function deleteMemberInfoCookie(res: Response): void {
+function deleteSessionCookies(res: Response): void {
+	// Clear the HTTP-only 'jwt' cookie by setting the same options as when it was created.
+	res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
 	// Clear the 'memberInfo' cookie by setting the same options as when it was created.
 	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'none', secure: true });
 }
