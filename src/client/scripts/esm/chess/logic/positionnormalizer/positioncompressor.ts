@@ -123,8 +123,8 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
-// const MIN_ARBITRARY_DISTANCE = 40n;
-const MIN_ARBITRARY_DISTANCE = 5n;
+const MIN_ARBITRARY_DISTANCE = 40n;
+// const MIN_ARBITRARY_DISTANCE = 10n;
 
 
 /**
@@ -545,7 +545,7 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 				// --- V-AXIS RELATIONSHIP CHECK ---
 				// Negative diagonal!
 
-				const pushOccurred = comparePiecesOnDiagonal('1,-1', AllAxisOrders, pieces, pieceA, pieceB);
+				const pushOccurred = comparePiecesOnDiagonal('1,-1', AllAxisOrders, pieceA, pieceB);
 
 				if (pushOccurred) {
 					pushCount++;
@@ -571,7 +571,12 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
  * @param axis - What diagonal axis to compare the piece's axis values on.
  * @returns Whether a ripple push happened.
  */
-function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders, pieces: PieceTransform[], pieceA: PieceTransform, pieceB: PieceTransform): boolean {
+function comparePiecesOnDiagonal(
+	axis: '1,1' | '1,-1',
+	AllAxisOrders: AxisOrders,
+	pieceA: PieceTransform,
+	pieceB: PieceTransform,
+): boolean {
 	const axisDeterminer = AXIS_DETERMINERS[axis];
 
 	// Original axis values
@@ -600,13 +605,13 @@ function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders
 		if (pushAmount > 0n) {
 			// Push pieceB +X/+Y
 			console.log(`V-Violation: piece B must be pushed +X/+Y by ${pushAmount}!`);
-			pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders, pieces);
+			pushPieceFromAnchor(pieceB, pieceA, pushAmount, axisDeterminer, AllAxisOrders);
 			return true; // A push occurred
 		} else if (pushAmount < 0n) { // First piece needs to be pushed in +X/+Y direction
 			// We can't push pieceB left/down, so instead we push pieceA right/up
 			// Push pieceA +X/+Y
 			console.log(`V-Violation: piece A must be pushed +X/+Y by ${-pushAmount}!`);
-			pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders, pieces);
+			pushPieceFromAnchor(pieceA, pieceB, -pushAmount, axisDeterminer, AllAxisOrders);
 			return true; // A push occurred
 		} // else console.log(`No V-violation found for pieces ${String(firstPiece.coords)} and ${String(secondPiece.coords)}.`);
 		return false; // No push occurred
@@ -622,8 +627,13 @@ function comparePiecesOnDiagonal(axis: '1,1' | '1,-1', AllAxisOrders: AxisOrders
  * @param piece - The piece to be ripple pushed in either the +X/+Y directions.
  * @param anchor - The piece acting as the anchor, this SHOULD NOT be affected by the push.
  */
-function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, pushAmount: bigint, axisDeterminer: AxisDeterminer, AllAxisOrders: AxisOrders, pieces: PieceTransform[]) {
-
+function pushPieceFromAnchor(
+	piece: PieceTransform,
+	anchor: PieceTransform,
+	pushAmount: bigint,
+	axisDeterminer: AxisDeterminer,
+	AllAxisOrders: AxisOrders,
+) {
 	// Prioritize pushing the piece's group TOWARDS the anchor piece's group,
 	// BUT ONLY AS FAR until it touches it. Then we spend the remaining push amount
 	// on the other axis
@@ -642,6 +652,7 @@ function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, push
 		if (pushAmountTowardsAnchor > 0n && piece.axisGroups['1,0'] !== 0) { // Don't allow pushing this group if they are the first on the axis (anchor to zero).
 			console.log(`There is some gap to fill!`);
 			makeCollapsingRipplePush('1,0', AllAxisOrders, piece, pushAmountTowardsAnchor);
+			pushAmount -= pushAmountTowardsAnchor;
 			console.log(`Remaining gap: ${pushAmount}`);
 		} // else there was no gap to fill, so we don't push towards the anchor piece group.
 	} else if (Y_push_is_towards_anchor) {
@@ -672,8 +683,11 @@ function pushPieceFromAnchor(piece: PieceTransform, anchor: PieceTransform, push
 	const Y_push_safe = piece.axisGroups['0,1'] > anchor.axisGroups['0,1'];
 
 	if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
+	// else if (X_push_safe) ripplePush('1,0', AllAxisOrders, piece.axisGroups['1,0'], pushAmount, pushAction);
 	else if (X_push_safe) makeCollapsingRipplePush('1,0', AllAxisOrders, piece, pushAmount);
+	// else if (Y_push_safe) ripplePush('0,1', AllAxisOrders, piece.axisGroups['0,1'], pushAmount, pushAction);
 	else if (Y_push_safe) makeCollapsingRipplePush('0,1', AllAxisOrders, piece, pushAmount);
+
 	else throw Error("Unexpected case!");
 }
 
@@ -710,6 +724,29 @@ function calculateGapBetweenGroups(axis: '1,0' | '0,1', AllAxisOrders: AxisOrder
 	}
 
 	return totalGap;
+}
+
+/**
+ * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
+ * @param axisToPush 
+ * @param axisOrder 
+ * @param startingGroupIndex - This group and all following groups will be pushed by the same amount.
+ * @param pushAmount 
+ * @param coordIndex 
+ */
+function ripplePush(axisToPush: '1,0' | '0,1', AllAxisOrders: AxisOrders, startingGroupIndex: number, pushAmount: bigint) {
+	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
+
+	const coordIndex = axisToPush === '1,0' ? 0 : 1;
+	const axisOrder = AllAxisOrders[axisToPush];
+
+	const word = axisToPush === '1,0' ? 'RIGHT' : 'UP';
+	console.log(`Ripple pushing group of index ${startingGroupIndex} ${word} by ${pushAmount}...`);
+
+	for (let i = startingGroupIndex; i < axisOrder.length; i++) {
+		const groupToPush = axisOrder[i];
+		pushGroup(groupToPush, pushAmount, coordIndex);
+	}
 }
 
 /**
@@ -843,6 +880,37 @@ function calculatePushAmount(axisDiff_Original: bigint, axisDiff_Transformed: bi
 // 		}
 // 	}
 // 	return totalError;
+// }
+
+// /**
+//  * Calculates the topology of the board on a specific diagonal axis.
+//  * This is used for comparing against after doing some pushes
+//  * to detect if we've starting infinite repeating.
+//  * @param axis 
+//  * @param AllAxisOrders 
+//  */
+// function calculateBoardTopology(pieces: PieceTransform[], axisDeterminer: AxisDeterminer): bigint[] {
+
+// 	const topology: bigint[] = [];
+
+// 	// Calculate the spacing between each pair of pieces on the board.
+// 	for (let i = 0; i < pieces.length; i++) {
+// 		const pieceA = pieces[i];
+// 		const pieceA_AxisValue = axisDeterminer(pieceA.transformedCoords as Coords);
+// 		for (let j = i + 1; j < pieces.length; j++) {
+// 			const pieceB = pieces[j];
+// 			const pieceB_AxisValue = axisDeterminer(pieceB.transformedCoords as Coords);
+
+// 			let axisDiff = pieceB_AxisValue - pieceA_AxisValue;
+
+// 			// Cap the axisDiff to the +-MIN_ARBITRARY_DISTANCE
+// 			axisDiff = bimath.clamp(axisDiff, -MIN_ARBITRARY_DISTANCE, MIN_ARBITRARY_DISTANCE);
+
+// 			topology.push(axisDiff);
+// 		}
+// 	}
+
+// 	return topology;
 // }
 
 
