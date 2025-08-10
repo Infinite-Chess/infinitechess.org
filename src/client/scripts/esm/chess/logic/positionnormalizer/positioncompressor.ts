@@ -123,8 +123,8 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
-const MIN_ARBITRARY_DISTANCE = 40n;
-// const MIN_ARBITRARY_DISTANCE = 10n;
+// const MIN_ARBITRARY_DISTANCE = 40n;
+const MIN_ARBITRARY_DISTANCE = 10n;
 
 
 /**
@@ -497,14 +497,50 @@ function TransformToOrthogonalSolution(axisOrder: AxisOrder, coordIndex: 0 | 1) 
  */
 function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrders) {
 
+
+	/**
+	 * Here's what I need to do:
+	 * 
+	 * Iterate through the pieces in ascending order of their
+	 * negative diagonal axis value is IN THE ORIGINAL POSITION.
+	 * 
+	 * For each of them, iterate through all other pieces randomly.
+	 * (potential optimization in future: iterate through ascending groups,
+	 * it shouldn't matter what order I go in as long as we use collapsing ripple
+	 * pushes so that laterpushes can fill in the gaps if we pushed higher pieces sooner).
+	 * 
+	 * For each of them, correct their alignment, preferring to collapse
+	 * gap first, then pushing away from the anchor for remaining error.
+	 * 
+	 */
+
+
+	// let piece = pieces.find(p => coordutil.areCoordsEqual(p.transformedCoords as Coords, [80n, 80n]))!;
+	// makeCollapsingRipplePush('0,1', AllAxisOrders, piece, 80n);
+
+	// return;
+
+
 	let iteration = 0;
-	let pushCount = 0;
 	let changeMade = true;
-	const MAX_ITERATIONS = 100;
+	let pushCount = 0;
 
 	// FOR DEBUGGING
-	// const MAX_PUSHES = 7;
+	const MAX_ITERATIONS = 100;
+	// const MAX_PUSHES = 4;
 	const MAX_PUSHES = 500;
+
+	// Order the pieces by ascending negative diagonal axis value
+	// OF THEIR ORIGINAL POSITION.
+	const axisDeterminer = AXIS_DETERMINERS['1,-1'];
+	const piecesOrderedByNegDiag: PieceTransform[] = pieces.slice().sort((a, b) => {
+		const aAxis = axisDeterminer(a.coords);
+		const bAxis = axisDeterminer(b.coords);
+		return bimath.compare(aAxis, bAxis);
+	});
+
+	// console.log("\nPieces ordered by positive diagonal axis value:");
+	// console.log(piecesOrderedByPosDiag.map(piece => `${String(piece.transformedCoords)}`));
 
 	loop: while (changeMade) {
 		iteration++;
@@ -520,32 +556,14 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 		changeMade = false;
 		console.log(`\nIteration ${iteration}...`);
 
-		// Iterate through every unique pair of pieces (A, B)
-		for (let i = 0; i < pieces.length; i++) {
-			const pieceA = pieces[i];
-			for (let j = i + 1; j < pieces.length; j++) {
-				const pieceB = pieces[j];
+		// Iterate through every unique pair of pieces (A, B) in ascending SHOULD-BE negative diagonal axis value order.
+		for (let i = 0; i < piecesOrderedByNegDiag.length; i++) {
+			const piece = piecesOrderedByNegDiag[i];
+			console.log(`\nNext V-axis piece: ${String(piece.transformedCoords)}`);
+			for (let j = i + 1; j < piecesOrderedByNegDiag.length; j++) {
+				const otherPiece = piecesOrderedByNegDiag[j];
 
-				// --- U-AXIS RELATIONSHIP CHECK ---
-				// Positive diagonal!
-
-				// let pushOccurred = comparePiecesOnDiagonal('1,1', AllAxisOrders, pieces, pieceA, pieceB);
-
-				// if (pushOccurred) {
-				// 	pushCount++;
-				// 	changeMade = true;
-				// 	// DEBUGGING: Stop the iteration if we reached the max pushes
-				// 	// Let's us review each push manually
-				// 	if (pushCount >= MAX_PUSHES) {
-				// 		console.log(`\nReached max pushes of ${MAX_PUSHES}. Stopping iteration.`);
-				// 		break loop;
-				// 	} // --------------------------------------------------------
-				// }
-
-				// --- V-AXIS RELATIONSHIP CHECK ---
-				// Negative diagonal!
-
-				const pushOccurred = comparePiecesOnDiagonal('1,-1', AllAxisOrders, pieceA, pieceB);
+				const pushOccurred = comparePiecesOnDiagonal('1,-1', AllAxisOrders, piece, otherPiece);
 
 				if (pushOccurred) {
 					pushCount++;
@@ -559,8 +577,11 @@ function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrd
 				}
 			}
 		}
+
 	}
-	console.log(`\n${iteration - 1} iterations and ${pushCount} pushes needed to converge the UV-axis!`);
+
+	// console.log(`\n${iteration - 1} iterations and ${pushCount} pushes needed to converge the UV-axis!`);
+	console.log(`\n${pushCount} pushes needed to converge the UV-axis!`);
 }
 
 /**
@@ -634,39 +655,39 @@ function pushPieceFromAnchor(
 	axisDeterminer: AxisDeterminer,
 	AllAxisOrders: AxisOrders,
 ) {
-	// Prioritize pushing the piece's group TOWARDS the anchor piece's group,
-	// BUT ONLY AS FAR until it touches it. Then we spend the remaining push amount
-	// on the other axis
+	// 1st Priority: Close any immediate gaps between the piece and the anchor,
+	// but DON'T push so far that we end up having to ripple push other groups,
+	// potentially disrupting them! This may not satisfy all the push requirement, don't worry.
 
 	const X_push_is_towards_anchor = piece.axisGroups['1,0'] < anchor.axisGroups['1,0'];
 	const Y_push_is_towards_anchor = piece.axisGroups['0,1'] < anchor.axisGroups['0,1'];
 	console.log(`X push is towards anchor: ${X_push_is_towards_anchor}, Y push is towards anchor: ${Y_push_is_towards_anchor}.`);
 
-	if (X_push_is_towards_anchor && Y_push_is_towards_anchor) throw Error("Unexpected case!");
+	if (X_push_is_towards_anchor && Y_push_is_towards_anchor) throw Error("Unexpected case! Both true.");
 	else if (X_push_is_towards_anchor) {
 		// Push the piece's group right, but only as far as it needs to go to touch the anchor piece's group.
-		const gapBetweenXGroups = calculateGapBetweenGroups('1,0', AllAxisOrders, anchor.axisGroups['1,0'], piece.axisGroups['1,0']);
-		console.log(`Gap between X groups: ${gapBetweenXGroups}.`);
+		const gapBetweenXGroups = calculateCollapsableGap('1,0', AllAxisOrders, piece.axisGroups['1,0']);
+		console.log(`Immediately available X gap: ${gapBetweenXGroups}.`);
 		const pushAmountTowardsAnchor = bimath.min(pushAmount, gapBetweenXGroups);
 		console.log(`Push amount towards anchor: ${pushAmountTowardsAnchor}.`);
 		if (pushAmountTowardsAnchor > 0n && piece.axisGroups['1,0'] !== 0) { // Don't allow pushing this group if they are the first on the axis (anchor to zero).
 			console.log(`There is some gap to fill!`);
-			makeCollapsingRipplePush('1,0', AllAxisOrders, piece, pushAmountTowardsAnchor);
+			ripplePush('1,0', AllAxisOrders, piece, pushAmountTowardsAnchor);
 			pushAmount -= pushAmountTowardsAnchor;
-			console.log(`Remaining gap: ${pushAmount}`);
+			console.log(`Remaining pushAmount: ${pushAmount}`);
 		} // else there was no gap to fill, so we don't push towards the anchor piece group.
 	} else if (Y_push_is_towards_anchor) {
 		// Push the piece's group up, but only as far as it needs to go to touch the anchor piece's group.
-		const gapBetweenYGroups = calculateGapBetweenGroups('0,1', AllAxisOrders, anchor.axisGroups['0,1'], piece.axisGroups['0,1']);
-		console.log(`Gap between Y groups: ${gapBetweenYGroups}.`);
+		const gapBetweenYGroups = calculateCollapsableGap('0,1', AllAxisOrders, piece.axisGroups['0,1']);
+		console.log(`Immediately available Y gap: ${gapBetweenYGroups}.`);
 		const pushAmountTowardsAnchor = bimath.min(pushAmount, gapBetweenYGroups);
 		if (pushAmountTowardsAnchor > 0n && piece.axisGroups['0,1'] !== 0) { // Don't allow pushing this group if they are the first on the axis (anchor to zero).
 			console.log(`There is some gap to fill!`);
-			makeCollapsingRipplePush('0,1', AllAxisOrders, piece, pushAmountTowardsAnchor); // Push up
+			ripplePush('0,1', AllAxisOrders, piece, pushAmountTowardsAnchor); // Push up
 			pushAmount -= pushAmountTowardsAnchor;
-			console.log(`Remaining gap: ${pushAmount}`);
+			console.log(`Remaining pushAmount: ${pushAmount}`);
 		} // else there was no gap to fill, so we don't push towards the anchor piece group.
-	} else throw Error("Unexpected case!");
+	} else throw Error("Unexpected case! Neither true.");
 
 	// Early exit if no push amount is left.
 	if (pushAmount <= 0n) {
@@ -674,21 +695,136 @@ function pushPieceFromAnchor(
 		return;
 	}
 
-	// Spend the remaining push amount in the only other direction that can be pushed.
+	// 2nd Priority: Push in the opposite direction of the anchor piece's group.
+	// HOWEVER, if our force push would rippl push any group that has a piece
+	// that is IN OR BEFORE the anchor's diagonal group, then DON'T FORCE PUSH!
+	// Instead, consume any gap of all groups between the piece's group and the anchor's group,
 
-	// Now, these pushes (away from the anchor's group) are considered
-	// safe to make AS LONG AS they don't MATCH the anchor's group!
 	// I THINK due to the geometry, these are mutually exclusive... Throw an error if they ever are not so I know to patch it.
 	const X_push_safe = piece.axisGroups['1,0'] > anchor.axisGroups['1,0'];
 	const Y_push_safe = piece.axisGroups['0,1'] > anchor.axisGroups['0,1'];
 
-	if (X_push_safe && Y_push_safe) throw Error("Unexpected case!");
-	// else if (X_push_safe) ripplePush('1,0', AllAxisOrders, piece.axisGroups['1,0'], pushAmount, pushAction);
-	else if (X_push_safe) makeCollapsingRipplePush('1,0', AllAxisOrders, piece, pushAmount);
-	// else if (Y_push_safe) ripplePush('0,1', AllAxisOrders, piece.axisGroups['0,1'], pushAmount, pushAction);
-	else if (Y_push_safe) makeCollapsingRipplePush('0,1', AllAxisOrders, piece, pushAmount);
+	force_push: {
+		// If this piece was pushed away from the anchor's group, what groups would that affect?
 
-	else throw Error("Unexpected case!");
+		if (X_push_safe && Y_push_safe) throw Error("Unexpected case! Both true.");
+		else if (X_push_safe) {
+			// Calculate what a force push away from the anchor piece's group would push any group
+			// that has atleast one piece that is in or before the anchor's diagonal group.
+			const affectedXGroups = getAffectedGroupIndices('1,0', AllAxisOrders, piece, pushAmount);
+
+			// If any of these affected groups have a piece that is in or before the anchor's diagonal group,
+			// then we can't force push, as it would break their alignment we solved earlier.
+			const affectedGroups = affectedXGroups.map(index => AllAxisOrders['1,0'][index]);
+			const forcePushIsBreaking = affectedGroups.some(affectedGroup => {
+				return affectedGroup.pieces.some(p => p.axisGroups['1,-1'] <= anchor.axisGroups['1,-1']);
+			}) && piece.axisGroups['1,-1'] !== anchor.axisGroups['1,-1']; // EXCEPTION: If the piece is in the same diagonal group as the anchor, then it's okay to push still because we need to align them.
+			if (forcePushIsBreaking) {
+				console.log(`Force push in X direction would break alignment of earlier groups! Skipping...`);
+				break force_push;
+			}
+
+			ripplePush('1,0', AllAxisOrders, piece, pushAmount);
+			return;
+
+		} else if (Y_push_safe) {
+			// Calculate what a force push away from the anchor piece's group would push any group
+			// that has atleast one piece that is in or before the anchor's diagonal group.
+			const affectedYGroups = getAffectedGroupIndices('0,1', AllAxisOrders, piece, pushAmount);
+
+			// If any of these affected groups have a piece that is in or before the anchor's diagonal group,
+			// then we can't force push, as it would break their alignment we solved earlier.
+			const affectedGroups = affectedYGroups.map(index => AllAxisOrders['0,1'][index]);
+			const forcePushIsBreaking = affectedGroups.some(affectedGroup => {
+				return affectedGroup.pieces.some(p => p.axisGroups['1,-1'] <= anchor.axisGroups['1,-1']);
+			}) && piece.axisGroups['1,-1'] !== anchor.axisGroups['1,-1']; // EXCEPTION: If the piece is in the same diagonal group as the anchor, then it's okay to push still because we need to align them.
+			if (forcePushIsBreaking) {
+				console.log(`Force push in Y direction would break alignment of earlier groups! Skipping...`);
+				break force_push;
+			}
+
+			ripplePush('0,1', AllAxisOrders, piece, pushAmount);
+			return;
+
+		} else throw Error("Unexpected case! Neither true.");
+	}
+
+	// At this stage, since we can't force ripple push, we MUST collapse any available gaps
+	// between the piece's group and the anchor's group!
+	if (X_push_is_towards_anchor) {
+		// Push the piece's group right, but only as far as it needs to go to touch the anchor piece's group.
+		const gapBetweenXGroups = calculateGapBetweenGroups('1,0', AllAxisOrders, piece.axisGroups['1,0'], anchor.axisGroups['1,0']); // <-- KEY DIFFERENCE FROM EARLIER!!! which used calculateCollapsableGap()
+		console.log(`Gap between X groups: ${gapBetweenXGroups}.`);
+		const pushAmountTowardsAnchor = bimath.min(pushAmount, gapBetweenXGroups);
+		console.log(`Push amount towards anchor: ${pushAmountTowardsAnchor}.`);
+		if (pushAmountTowardsAnchor > 0n) {
+			if (piece.axisGroups['1,0'] === 0) throw Error("Shouldn't be pushing group that's anchored to zero!");
+			console.log(`There is some gap to fill!`);
+			ripplePush('1,0', AllAxisOrders, piece, pushAmountTowardsAnchor);
+			pushAmount -= pushAmountTowardsAnchor;
+			console.log(`Remaining gap: ${pushAmount}`);
+		} else {
+			// else there was no gap to fill, so it's LITERALLY IMPOSSIBLE to push towards the anchor piece group
+			// as we will end up PUSHING the anchor's group itself, which doesn't accomplish anything.
+			// And force ripple pushing in the opposite direction would break the alignment of earlier groups.
+			// SO WHAT DO WE DO?!?!?!?!?!?!?!?!?
+			console.log("ABSOLUTELY no more room to collapse gap between piece & anchor groups. FORCED to ripple push in the opposite direction, even though that will break previous alignments!");
+		} 
+	} else if (Y_push_is_towards_anchor) {
+		// Push the piece's group up, but only as far as it needs to go to touch the anchor piece's group.
+		const gapBetweenYGroups = calculateGapBetweenGroups('0,1', AllAxisOrders, piece.axisGroups['0,1'], anchor.axisGroups['0,1']); // <-- KEY DIFFERENCE FROM EARLIER!!! which used calculateCollapsableGap()
+		console.log(`Gap between Y groups: ${gapBetweenYGroups}.`);
+		const pushAmountTowardsAnchor = bimath.min(pushAmount, gapBetweenYGroups);
+		if (pushAmountTowardsAnchor > 0n) {
+			if (piece.axisGroups['0,1'] === 0) throw Error("Shouldn't be pushing group that's anchored to zero!");
+			console.log(`There is some gap to fill!`);
+			ripplePush('0,1', AllAxisOrders, piece, pushAmountTowardsAnchor); // Push up
+			pushAmount -= pushAmountTowardsAnchor;
+			console.log(`Remaining gap: ${pushAmount}`);
+		} else {
+			// else there was no gap to fill, so it's LITERALLY IMPOSSIBLE to push towards the anchor piece group
+			// as we will end up PUSHING the anchor's group itself, which doesn't accomplish anything.
+			// And force ripple pushing in the opposite direction would break the alignment of earlier groups.
+			// SO WHAT DO WE DO?!?!?!?!?!?!?!?!?
+			console.log("ABSOLUTELY no more room to collapse gap between piece & anchor groups. FORCED to ripple push in the opposite direction, even though that will break previous alignments!");
+		}
+	}
+
+	// Early exit if no push amount is left.
+	if (pushAmount <= 0n) {
+		console.log(`Closing remaining gap absorbed entirity of pushAmount :)`);
+		return;
+	}
+
+	// Now we know there is ZERO remaining gap between the piece's group and the anchor's group,
+	// so we are ABSOLUTELY FORCED to ripple push in the opposite direction,
+	// even though that will break the alignment of earlier groups!
+	// This is the ONLY WAY REMAINING to ensure the two piece's diagonal axis values are aligned!
+	if (X_push_safe) ripplePush('1,0', AllAxisOrders, piece, pushAmount);
+	else if (Y_push_safe) ripplePush('0,1', AllAxisOrders, piece, pushAmount);
+}
+
+/**
+ * Calculates the collapsible gap between a group and the group immediately following it on a given axis.
+ * This gives the amount the group can be pushed WITHOUT AFFECTING FOLLOWING GROUPS!
+ * @param axis - The orthogonal axis ('1,0' or '0,1') to measure the gap on.
+ * @param groupIndex - The index of the group to check how much it can be pushed.
+ * @returns The collapsible gap size as a non-negative bigint. Returns 0n if there is no collapsible space.
+ */
+function calculateCollapsableGap(axis: '1,0' | '0,1', AllAxisOrders: AxisOrders, groupIndex: number): bigint {
+	const axisOrder = AllAxisOrders[axis];
+
+	const currentGroup = axisOrder[groupIndex];
+	const nextGroup = axisOrder[groupIndex + 1]!;
+
+	// The gap is the space between the end of the current group and the start of the next,
+	// minus the required padding. This is the amount of space that a push can "collapse".
+	const gap = nextGroup.transformedRange![0] - currentGroup.transformedRange![1] - MIN_ARBITRARY_DISTANCE;
+	
+	// The gap should never be negative in a valid state, but if it is, there's no collapsible space.
+	if (gap < 0n) throw Error("Overlapping groups!"); // Safety check
+	
+	return gap;
 }
 
 /**
@@ -726,28 +862,29 @@ function calculateGapBetweenGroups(axis: '1,0' | '0,1', AllAxisOrders: AxisOrder
 	return totalGap;
 }
 
-/**
- * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
- * @param axisToPush 
- * @param axisOrder 
- * @param startingGroupIndex - This group and all following groups will be pushed by the same amount.
- * @param pushAmount 
- * @param coordIndex 
- */
-function ripplePush(axisToPush: '1,0' | '0,1', AllAxisOrders: AxisOrders, startingGroupIndex: number, pushAmount: bigint) {
-	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
+// VERSION THAT PUSHES ALL GROUPS AFTERWARD EQUALLY, WITHOUT ABSORBING GAPS
+// /**
+//  * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
+//  * @param axisToPush 
+//  * @param axisOrder 
+//  * @param startingGroupIndex - This group and all following groups will be pushed by the same amount.
+//  * @param pushAmount 
+//  * @param coordIndex 
+//  */
+// function ripplePush(axisToPush: '1,0' | '0,1', AllAxisOrders: AxisOrders, startingGroupIndex: number, pushAmount: bigint) {
+// 	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
 
-	const coordIndex = axisToPush === '1,0' ? 0 : 1;
-	const axisOrder = AllAxisOrders[axisToPush];
+// 	const coordIndex = axisToPush === '1,0' ? 0 : 1;
+// 	const axisOrder = AllAxisOrders[axisToPush];
 
-	const word = axisToPush === '1,0' ? 'RIGHT' : 'UP';
-	console.log(`Ripple pushing group of index ${startingGroupIndex} ${word} by ${pushAmount}...`);
+// 	const word = axisToPush === '1,0' ? 'RIGHT' : 'UP';
+// 	console.log(`Ripple pushing group of index ${startingGroupIndex} ${word} by ${pushAmount}...`);
 
-	for (let i = startingGroupIndex; i < axisOrder.length; i++) {
-		const groupToPush = axisOrder[i];
-		pushGroup(groupToPush, pushAmount, coordIndex);
-	}
-}
+// 	for (let i = startingGroupIndex; i < axisOrder.length; i++) {
+// 		const groupToPush = axisOrder[i];
+// 		pushGroup(groupToPush, pushAmount, coordIndex);
+// 	}
+// }
 
 /**
  * Pushes a given piece's group in the specified X/Y direction by a specific amount.
@@ -761,7 +898,7 @@ function ripplePush(axisToPush: '1,0' | '0,1', AllAxisOrders: AxisOrders, starti
  * @param pushAmount - The amount to push the piece's group by. Subsequent groups will only be pushed enough to ensure there aren't any overlaps in groups.
  * @param axisDeterminer - What AxisDeterminer to use to calculate the error with the push. NOT the same as the direction of the push!!
  */
-function makeCollapsingRipplePush(
+function ripplePush(
 	axis: '1,0' | '0,1',
 	AllAxisOrders: AxisOrders,
 	piece: PieceTransform,
@@ -774,7 +911,7 @@ function makeCollapsingRipplePush(
 	const coordIndex = axis === '1,0' ? 0 : 1;
 	const axisOrder = AllAxisOrders[axis];
 
-	console.log(`Collapse pushing group of piece ${String(piece.transformedCoords)} ${word} by ${pushAmount}...`);
+	console.log(`Ripple pushing group of piece ${String(piece.transformedCoords)} ${word} by ${pushAmount}...`);
 
 	// Perform the mandatory push on the piece's group and contionally, subsequent groups.
 	// If subsequent groups can fill a gap in this axis, they will. They just don't like to overlap.
@@ -807,6 +944,63 @@ function makeCollapsingRipplePush(
 			break;
 		}
 	}
+}
+
+/**
+ * Simulates a collapsing ripple push to determine which groups on a given axis would be moved.
+ * This function does not modify any state.
+ * 
+ * @param axis - The orthogonal axis ('1,0' or '0,1') on which the push would happen.
+ * @param AllAxisOrders - The main data structure containing all axis groups.
+ * @param piece - The `PieceTransform` object whose group is the starting point of the push.
+ * @param pushAmount - The amount by which the `piece`'s group would be pushed.
+ * @returns An array of numbers, representing the indices of the groups on the specified `axis` that would be moved by the push.
+ */
+function getAffectedGroupIndices(
+	axis: '1,0' | '0,1',
+	AllAxisOrders: AxisOrders,
+	piece: PieceTransform,
+	pushAmount: bigint,
+): number[] {
+	const axisOrder = AllAxisOrders[axis];
+	const affectedIndices: number[] = [];
+
+	// A collapsing ripple push only occurs for positive amounts.
+	if (pushAmount <= 0n) throw Error(`pushAmount must be positive, got ${pushAmount}.`);
+
+	// The group containing the piece is the mandatory start of the ripple.
+	const mandatoryGroupIndex = piece.axisGroups[axis];
+	const mandatoryGroup = axisOrder[mandatoryGroupIndex]!;
+	affectedIndices.push(mandatoryGroupIndex);
+
+	// This variable tracks the new end position of the last group that was conceptually pushed.
+	// We initialize it with the mandatory group's new end position.
+	let lastPushedGroupEnd = mandatoryGroup.transformedRange![1] + pushAmount;
+
+	// Iterate through all subsequent groups to see if they get caught in the ripple.
+	for (let i = mandatoryGroupIndex + 1; i < axisOrder.length; i++) {
+		const groupToUpdate = axisOrder[i];
+		
+		// The required starting position for this group to avoid overlap with the pushed previous group.
+		const requiredStartPos = lastPushedGroupEnd + MIN_ARBITRARY_DISTANCE;
+
+		// Check if this group now overlaps with the (conceptually) pushed previous group.
+		if (groupToUpdate.transformedRange![0] < requiredStartPos) {
+			// This group is affected. Add its index to the list.
+			affectedIndices.push(i);
+
+			// Calculate how much this group would be pushed by to resolve the overlap.
+			const pushForThisGroup = requiredStartPos - groupToUpdate.transformedRange![0];
+			
+			// Update the conceptual end position for the next iteration's check.
+			lastPushedGroupEnd = groupToUpdate.transformedRange![1] + pushForThisGroup;
+		} else {
+			// The ripple stops here, as this group is far enough away and won't be pushed.
+			break;
+		}
+	}
+
+	return affectedIndices;
 }
 
 /**
