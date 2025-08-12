@@ -269,10 +269,13 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		for (let j = i + 1; j < pieces.length; j++) {
 			const pieceB = pieces[j]!;
 
-			const pairConstraints = deriveConstraintsForPair(pieceA, pieceB, AllAxisOrders);
+			const pairConstraints = deriveConstraintsForPair(pieceA, pieceB);
 			allConstraints.push(...pairConstraints);
 		}
 	}
+
+	console.log("All constraints derived:");
+	console.log(allConstraints);
 
 
 
@@ -464,11 +467,135 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
  * requirements for them on the X and Y axes.
  * @returns An array of Constraint objects.
  */
-function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform, AllAxisOrders: AxisOrders
-): Constraint[] {
-	// TODO: Implement the logic from our documented algorithm.
-	// For now, return an empty array.
-	return [];
+function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform): Constraint[] {
+	
+	// --- 1. Establish Base Separation Rules ---
+
+	// To keep calculations consistent, we'll calculate separations relative
+	// to pieceA. The final `dx` and `dy` will be positive, but these initial
+	// values can be negative to indicate direction.
+	const x_sep_A_to_B = BigInt(pieceB.axisGroups['1,0']! - pieceA.axisGroups['1,0']!) * MIN_ARBITRARY_DISTANCE;
+	const y_sep_A_to_B = BigInt(pieceB.axisGroups['0,1']! - pieceA.axisGroups['0,1']!) * MIN_ARBITRARY_DISTANCE;
+
+	// For the V-axis, we must handle the special case where pieces are in the same group.
+	const vAxisDeterminer = AXIS_DETERMINERS['1,-1'];
+	const v_groupIndexA = pieceA.axisGroups['1,-1']!;
+	const v_groupIndexB = pieceB.axisGroups['1,-1']!;
+
+	let v_separation_type: 'exact' | 'min' = 'min';
+	let v_sep_A_to_B: bigint;
+
+	if (v_groupIndexA === v_groupIndexB) {
+		v_separation_type = 'exact';
+		// The separation must be exactly their original separation.
+		const vA_original = vAxisDeterminer(pieceA.coords);
+		const vB_original = vAxisDeterminer(pieceB.coords);
+		v_sep_A_to_B = vB_original - vA_original;
+	} else {
+		v_separation_type = 'min';
+		v_sep_A_to_B = (BigInt(v_groupIndexB - v_groupIndexA)) * MIN_ARBITRARY_DISTANCE;
+	}
+
+	// --- 2. Solve the System of Inequalities ---
+
+	const finalSeparations = solveSeparationSystem(
+		x_sep_A_to_B,
+		y_sep_A_to_B,
+		v_sep_A_to_B,
+		v_separation_type
+	);
+
+	// --- 3. Generate Constraint Objects ---
+
+	const constraints: Constraint[] = [];
+
+	const x_groupA = pieceA.axisGroups['1,0']!;
+	const x_groupB = pieceB.axisGroups['1,0']!;
+
+	if (x_groupA !== x_groupB) {
+		// The pieces are in different X-groups, so we need a constraint.
+		const from = Math.min(x_groupA, x_groupB);
+		const to = Math.max(x_groupA, x_groupB);
+		constraints.push({ from, to, weight: finalSeparations.dx, axis: 'x' });
+	}
+
+	const y_groupA = pieceA.axisGroups['0,1']!;
+	const y_groupB = pieceB.axisGroups['0,1']!;
+
+	if (y_groupA !== y_groupB) {
+		// The pieces are in different Y-groups, so we need a constraint.
+		const from = Math.min(y_groupA, y_groupB);
+		const to = Math.max(y_groupA, y_groupB);
+		constraints.push({ from, to, weight: finalSeparations.dy, axis: 'y' });
+	}
+
+	// Finally, return the array of constraints for this pair.
+	return constraints;
+}
+
+function solveSeparationSystem(
+	base_x_sep: bigint,
+	base_y_sep: bigint,
+	base_v_sep: bigint,
+	v_type: 'exact' | 'min'
+): { dx: bigint, dy: bigint } {
+
+	// Let dx and dy be the absolute, non-negative separations.
+	let dx = bimath.abs(base_x_sep);
+	let dy = bimath.abs(base_y_sep);
+
+	// Formulate the V-axis rule in terms of dx and dy.
+	// The V-axis is (x+y). The separation between A and B is Vb - Va.
+	// (xB' + yB') - (xA' + yA') = (xB' - xA') + (yB' - yA')
+	// The signs of the terms depend on the original group ordering.
+	const x_sign = base_x_sep >= 0n ? 1n : -1n;
+	const y_sign = base_y_sep >= 0n ? 1n : -1n;
+
+	// The V-rule is: (x_sign * dx) + (y_sign * dy)  (must be >= or ==)  base_v_sep
+
+	if (v_type === 'exact') {
+		// Example: dx - dy = 5
+		// We need to find the smallest dx and dy that satisfy this AND their base rules.
+		// Let's test two possibilities.
+
+		// Possibility 1: Assume dy is at its minimum. What must dx be?
+		const required_dx = base_v_sep - (y_sign * dy);
+		if (x_sign * required_dx >= dx) {
+			dx = x_sign * required_dx; // This works if the result is positive
+		}
+
+		// Possibility 2: Assume dx is at its minimum. What must dy be?
+		const required_dy = base_v_sep - (x_sign * dx);
+		if (y_sign * required_dy >= dy) {
+			dy = y_sign * required_dy; // This works if the result is positive
+		}
+
+	} else { // v_type is 'min'
+		// Example: dx - dy >= 20.
+		// Check if the current minimums already satisfy the rule.
+		const current_v_sep = (x_sign * dx) + (y_sign * dy);
+        
+		if (base_v_sep > 0n && current_v_sep < base_v_sep) {
+			// There is a shortfall. Add it to the positive term.
+			const shortfall = base_v_sep - current_v_sep;
+			if (x_sign > 0n) {
+				dx += shortfall;
+			} else { // y_sign must be > 0n
+				dy += shortfall;
+			}
+		} else if (base_v_sep < 0n && current_v_sep > base_v_sep) {
+			// There is a shortfall (e.g. current is -10, required is <= -20).
+			// Add the negative shortfall to the negative term.
+			const shortfall = base_v_sep - current_v_sep; // This will be negative
+			if (x_sign < 0n) {
+				dx -= shortfall; // dx is absolute, so this increases it
+			} else { // y_sign must be < 0n
+				dy -= shortfall;
+			}
+		}
+	}
+
+	return { dx, dy };
 }
 
 
