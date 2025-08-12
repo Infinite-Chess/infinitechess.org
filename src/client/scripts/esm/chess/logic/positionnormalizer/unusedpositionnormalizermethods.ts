@@ -1,4 +1,41 @@
 
+
+
+// ======================================== ORTHOGONAL SOLVER ========================================
+
+
+// /**
+//  * On either the X or Y axis groups, initially sets each's transformedRange,
+//  * and their pieces' transformed coordinates according to the position's
+//  * orthogonal compressed solution.
+//  */
+// function TransformToOrthogonalSolution(axisOrder: AxisOrder, coordIndex: 0 | 1) {
+// 	let current: bigint = 0n;
+
+// 	for (const group of axisOrder) {
+// 		// Update the group's transformed range
+// 		const groupSize = group.range[1] - group.range[0];
+// 		// Set the group's first draft transformed range.
+// 		group.transformedRange = [current, current + groupSize];
+
+// 		// Update each piece's transformed coordinates
+// 		for (const piece of group.pieces) {
+// 			// Add the piece's offset from the start of the group
+// 			const offset = piece.coords[coordIndex] - group.range[0];
+// 			piece.transformedCoords[coordIndex] = group.transformedRange![0] + offset;
+// 		}
+
+// 		// Increment so that the next group has what's considered an arbitrary spacing between them
+// 		current += MIN_ARBITRARY_DISTANCE + groupSize;
+// 	}
+// }
+
+
+// ======================================== HELPERS ========================================
+
+
+
+
 // /**
 //  * Calculates the amount a piece should be pushed to align with another piece.
 //  * It returns zero if the minimum space requirement is met already.

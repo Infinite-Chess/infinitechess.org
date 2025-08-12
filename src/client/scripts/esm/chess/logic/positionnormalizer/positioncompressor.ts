@@ -82,6 +82,18 @@ type AxisGroup = {
 type AxisDeterminer = (coords: Coords) => bigint;
 
 
+/**
+ * A constraint that must be satisfied by the final group positions.
+ * `pos(to) - pos(from) >= weight`
+ */
+interface Constraint {
+    from: number; // group index
+    to: number;   // group index
+    weight: bigint;
+    axis: 'x' | 'y';
+}
+
+
 // ================================== Constants ==================================
 
 
@@ -244,37 +256,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// --------------------------------------------------------------
 	
 
-	// ================================ ORTHOGONAL SOLUTION ================================
+	// ================================ PHASE 2: DERIVE ALL CONSTRAINTS ================================
 
 
-	// console.log("\nSolving for orthogonal solution...");
+	
 
-	/**
-	 * First solve the group's positions relative to each other orthogonally.
-	 * This is also the draft for the diagonal solution.
-	 * Later we will stretch the position to solve those.
-	 */
-
-	TransformToOrthogonalSolution(AllAxisOrders['1,0'], 0); // X axis
-	TransformToOrthogonalSolution(AllAxisOrders['0,1'], 1); // Y axis
-
-
-	// ================================= ITERATIVE DIAGONAL SOLVER =================================
-
-
-	// Order the pieces by ascending positive diagonal axis value
-	// OF THEIR CURRENT TRANSFORMED COORDS.
-	// const piecesOrderedByPosDiag: PieceTransform[] = pieces.slice().sort((a, b) => {
-	// 	const aPosDiag = posDiagAxisDeterminer(a.transformedCoords as Coords);
-	// 	const bPosDiag = posDiagAxisDeterminer(b.transformedCoords as Coords);
-	// 	return aPosDiag < bPosDiag ? -1 : aPosDiag > bPosDiag ? 1 : 0;
-	// });
-
-	// console.log("\nPieces ordered by positive diagonal axis value:");
-	// console.log(piecesOrderedByPosDiag.map(piece => `${String(piece.transformedCoords)}`));
-
-
-	if (mode === 'diagonals') IterativeDiagonalSolve(pieces, AllAxisOrders);
+	
 
 
 	// ================================ RETURN FINAL POSITION ================================
@@ -454,82 +441,6 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 		const group = axisOrder[groupIndex]!;
 		for (const piece of group.pieces) piece.axisGroups[axis] = groupIndex;
 	}
-}
-
-
-// ======================================== ORTHOGONAL SOLVER ========================================
-
-
-/**
- * On either the X or Y axis groups, initially sets each's transformedRange,
- * and their pieces' transformed coordinates according to the position's
- * orthogonal compressed solution.
- */
-function TransformToOrthogonalSolution(axisOrder: AxisOrder, coordIndex: 0 | 1) {
-	let current: bigint = 0n;
-
-	for (const group of axisOrder) {
-		// Update the group's transformed range
-		const groupSize = group.range[1] - group.range[0];
-		// Set the group's first draft transformed range.
-		group.transformedRange = [current, current + groupSize];
-
-		// Update each piece's transformed coordinates
-		for (const piece of group.pieces) {
-			// Add the piece's offset from the start of the group
-			const offset = piece.coords[coordIndex] - group.range[0];
-			piece.transformedCoords[coordIndex] = group.transformedRange![0] + offset;
-		}
-
-		// Increment so that the next group has what's considered an arbitrary spacing between them
-		current += MIN_ARBITRARY_DISTANCE + groupSize;
-	}
-}
-
-
-// ======================================== ITERATIVE DIAGONAL SOLVER ========================================
-
-
-/**
- * To solve the diagonal solutions, we must make incremental pushes, or stretches,
- * to the orthogonal solution, retaining the orthogonal solution, while satisfying
- * more and more diagonal contraints, decreasing the total error until it's zero.
- */
-function IterativeDiagonalSolve(pieces: PieceTransform[], AllAxisOrders: AxisOrders) {
-
-
-	/**
-	 * Here's what I need to do:
-	 * 
-	 * Iterate through the pieces in ascending order of their
-	 * negative diagonal axis value is IN THE ORIGINAL POSITION.
-	 * 
-	 * For each of them, iterate through all other pieces randomly.
-	 * (potential optimization in future: iterate through ascending groups,
-	 * it shouldn't matter what order I go in as long as we use collapsing ripple
-	 * pushes so that laterpushes can fill in the gaps if we pushed higher pieces sooner).
-	 * 
-	 * For each of them, correct their alignment, preferring to collapse
-	 * gap first, then pushing away from the anchor for remaining error.
-	 * 
-	 */
-
-
-	// let piece = pieces.find(p => coordutil.areCoordsEqual(p.transformedCoords as Coords, [80n, 80n]))!;
-	// makeCollapsingRipplePush('0,1', AllAxisOrders, piece, 80n);
-
-	// return;
-
-	// Order the pieces by ascending negative diagonal axis value
-	// OF THEIR ORIGINAL POSITION.
-	// const axisDeterminer = AXIS_DETERMINERS['1,-1'];
-	// const piecesOrderedByNegDiag: PieceTransform[] = pieces.slice().sort((a, b) => {
-	// 	const aAxis = axisDeterminer(a.coords);
-	// 	const bAxis = axisDeterminer(b.coords);
-	// 	return bimath.compare(aAxis, bAxis);
-	// });
-
-	throw Error("Iterative diagonal solver not implemented yet!");
 }
 
 
