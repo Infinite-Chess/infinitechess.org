@@ -33,12 +33,14 @@ import positioncompressor from "./positioncompressor";
 // const example_position = 'K0,0|q-120,125|R-30,60|r-30,90'; // INFINITE LOOP for the V relationship checks PATCHED
 // const example_position = 'K0,0|q-125,120|R-30,60|r-30,90'; // INFINITE LOOP for the V relationship checks PATCHED
 // const example_position = 'K0,0|q-120,120|R-30,60|r-30,90'; // Simpler version of above
-// const example_position = 'n-5,60|q0,60|r40,40|K60,0';
+// const example_position = 'n5,60|q0,60|r40,40|K60,0'; // first fail
+const example_position = 'n-5,60|q0,60|r40,40|K60,0';
 // const example_position = 'q0,60|r40,40|K60,0';
 // const example_position = 'K0,33|q30,0';
 // const example_position = 'K0,30|q33,0';
 // const example_position = 'K0,30|q30,0';
-const example_position = "q0,50|k80,0";
+// const example_position = "q0,50|k80,0";
+// const example_position = "q0,150|k80,0";
 
 const parsedPosition = icnconverter.ShortToLong_Format(example_position);
 // console.log("parsedPosition:", JSON.stringify(parsedPosition.position, jsutil.stringifyReplacer));

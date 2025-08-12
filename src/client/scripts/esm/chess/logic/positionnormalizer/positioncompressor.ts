@@ -269,7 +269,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		for (let j = i + 1; j < pieces.length; j++) {
 			const pieceB = pieces[j]!;
 
-			const pairConstraints = deriveConstraintsForPair(pieceA, pieceB);
+			const pairConstraints = deriveConstraintsForPair(pieceA, pieceB, AllAxisOrders);
 			allConstraints.push(...pairConstraints);
 		}
 	}
@@ -500,7 +500,7 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
  * requirements for them on the X and Y axes.
  * @returns An array of Constraint objects.
  */
-function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform): Constraint[] {
+function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform, AllAxisOrders: AxisOrders): Constraint[] {
 	
 	// --- 1. Establish Base Separation Rules ---
 
@@ -538,28 +538,63 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 		v_separation_type
 	);
 
-	// --- 3. Generate Constraint Objects ---
+	// --- 3. Generate Constraint Objects (REVISED) ---
 
 	const constraints: Constraint[] = [];
 
-	const x_groupA = pieceA.axisGroups['1,0']!;
-	const x_groupB = pieceB.axisGroups['1,0']!;
+	// Get the group indices for both pieces on the X-axis.
+	const x_groupA_idx = pieceA.axisGroups['1,0']!;
+	const x_groupB_idx = pieceB.axisGroups['1,0']!;
 
-	if (x_groupA !== x_groupB) {
+	if (x_groupA_idx !== x_groupB_idx) {
 		// The pieces are in different X-groups, so we need a constraint.
-		const from = Math.min(x_groupA, x_groupB);
-		const to = Math.max(x_groupA, x_groupB);
-		constraints.push({ from, to, weight: finalSeparations.dx, axis: 'x' });
+		// First, determine which piece is in the group with the smaller index.
+		const pieceLeft = (x_groupA_idx < x_groupB_idx) ? pieceA : pieceB;
+		const pieceRight = (x_groupA_idx < x_groupB_idx) ? pieceB : pieceA;
+
+		// Get the original groups to calculate offsets.
+		const groupLeft = AllAxisOrders['1,0'][pieceLeft.axisGroups['1,0']!]!;
+		const groupRight = AllAxisOrders['1,0'][pieceRight.axisGroups['1,0']!]!;
+
+		// Calculate each piece's offset from the start of its original group.
+		const offsetLeft = pieceLeft.coords[0] - groupLeft.range[0];
+		const offsetRight = pieceRight.coords[0] - groupRight.range[0];
+
+		// The required separation between the groups is adjusted by the offsets.
+		// pos(GroupRight) - pos(GroupLeft) >= piece_sep + offset_in_GroupLeft - offset_in_GroupRight
+		const adjustedWeight = finalSeparations.dx + offsetLeft - offsetRight;
+
+		constraints.push({ 
+			from: pieceLeft.axisGroups['1,0']!, 
+			to: pieceRight.axisGroups['1,0']!, 
+			weight: adjustedWeight, 
+			axis: 'x' 
+		});
 	}
 
-	const y_groupA = pieceA.axisGroups['0,1']!;
-	const y_groupB = pieceB.axisGroups['0,1']!;
+	// Now do the same for the Y-axis.
+	const y_groupA_idx = pieceA.axisGroups['0,1']!;
+	const y_groupB_idx = pieceB.axisGroups['0,1']!;
 
-	if (y_groupA !== y_groupB) {
+	if (y_groupA_idx !== y_groupB_idx) {
 		// The pieces are in different Y-groups, so we need a constraint.
-		const from = Math.min(y_groupA, y_groupB);
-		const to = Math.max(y_groupA, y_groupB);
-		constraints.push({ from, to, weight: finalSeparations.dy, axis: 'y' });
+		const pieceBottom = (y_groupA_idx < y_groupB_idx) ? pieceA : pieceB;
+		const pieceTop = (y_groupA_idx < y_groupB_idx) ? pieceB : pieceA;
+
+		const groupBottom = AllAxisOrders['0,1'][pieceBottom.axisGroups['0,1']!]!;
+		const groupTop = AllAxisOrders['0,1'][pieceTop.axisGroups['0,1']!]!;
+
+		const offsetBottom = pieceBottom.coords[1] - groupBottom.range[0];
+		const offsetTop = pieceTop.coords[1] - groupTop.range[0];
+		
+		const adjustedWeight = finalSeparations.dy + offsetBottom - offsetTop;
+
+		constraints.push({ 
+			from: pieceBottom.axisGroups['0,1']!, 
+			to: pieceTop.axisGroups['0,1']!, 
+			weight: adjustedWeight, 
+			axis: 'y' 
+		});
 	}
 
 	// Finally, return the array of constraints for this pair.
