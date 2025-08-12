@@ -261,7 +261,19 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	
 
-	
+	const allConstraints: Constraint[] = [];
+
+	// 1. Iterate through all unique pairs of pieces
+	for (let i = 0; i < pieces.length; i++) {
+		const pieceA = pieces[i]!;
+		for (let j = i + 1; j < pieces.length; j++) {
+			const pieceB = pieces[j]!;
+
+			const pairConstraints = deriveConstraintsForPair(pieceA, pieceB, AllAxisOrders);
+			allConstraints.push(...pairConstraints);
+		}
+	}
+
 
 
 	// ================================ RETURN FINAL POSITION ================================
@@ -442,6 +454,25 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 		for (const piece of group.pieces) piece.axisGroups[axis] = groupIndex;
 	}
 }
+
+
+// ==================================== HELPERS FOR SOLVER ====================================
+
+
+/**
+ * Analyzes a single pair of pieces to derive the definitive separation
+ * requirements for them on the X and Y axes.
+ * @returns An array of Constraint objects.
+ */
+function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform, AllAxisOrders: AxisOrders
+): Constraint[] {
+	// TODO: Implement the logic from our documented algorithm.
+	// For now, return an empty array.
+	return [];
+}
+
+
+// ============================================================================================
 
 
 interface SeparationRequirement {
