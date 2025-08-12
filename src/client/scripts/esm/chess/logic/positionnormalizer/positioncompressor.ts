@@ -274,25 +274,58 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 	}
 
-	console.log("All constraints derived:");
-	console.log(allConstraints);
+	// 1. Separate the master list of constraints by axis.
+	const xConstraints = allConstraints.filter(c => c.axis === 'x');
+	const yConstraints = allConstraints.filter(c => c.axis === 'y');
 
+	console.log(`\nAll X group contraints:`);
+	console.log(xConstraints);
+	console.log(`\nAll Y group contraints:`);
+	console.log(yConstraints);
 
+	// 2. Solve for the final positions of each group on each axis.
+	const xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
+	const yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, yConstraints);
 
-	// ================================ RETURN FINAL POSITION ================================
+	// ==================================== Phase 4: Final Coordinate Assembly ====================================
 
-
-	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
-	// RecenterTransformedPosition(pieces, AllAxisOrders);
-
-	// Now create the final compressed position from all pieces known coord transformations
+	// 1. Assemble the final compressed position from the solved group positions.
 	const compressedPosition: Map<CoordsKey, number> = new Map();
+
 	for (const piece of pieces) {
-		// console.log(`Piece ${String(piece.coords)} transformed to ${String(piece.transformedCoords)}.`);
+		// a. Identify the piece's X and Y groups.
+		const xGroupIndex = piece.axisGroups['1,0']!;
+		const yGroupIndex = piece.axisGroups['0,1']!;
+
+		// b. Look up the solved position for each group.
+		const xGroupPos = xGroupPositions.get(xGroupIndex);
+		const yGroupPos = yGroupPositions.get(yGroupIndex);
+		
+		// Safety check: a group position should always be found if the graph is connected.
+		if (xGroupPos === undefined || yGroupPos === undefined) {
+			throw new Error(`Could not solve for position of piece at ${piece.coords}`);
+		}
+
+		// c. Calculate the piece's original offset within its group. This preserves
+		//    the internal structure of multi-piece groups.
+		const originalXGroup = AllAxisOrders['1,0'][xGroupIndex]!;
+		const originalYGroup = AllAxisOrders['0,1'][yGroupIndex]!;
+		
+		const offsetX = piece.coords[0] - originalXGroup.range[0];
+		const offsetY = piece.coords[1] - originalYGroup.range[0];
+
+		// d. The final coordinate is the group's solved position plus the piece's offset.
+		piece.transformedCoords = [xGroupPos + offsetX, yGroupPos + offsetY];
+
+		// e. Add the final coordinate and piece type to our output map.
 		const transformedCoordsKey = coordutil.getKeyFromCoords(piece.transformedCoords as Coords);
 		compressedPosition.set(transformedCoordsKey, piece.type);
 	}
 
+	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
+	// RecenterTransformedPosition(pieces, AllAxisOrders);
+
+	// 2. Return the complete compression information, which is used to expand moves later.
 	return {
 		position: compressedPosition,
 		axisOrders: AllAxisOrders,
@@ -596,6 +629,49 @@ function solveSeparationSystem(
 	}
 
 	return { dx, dy };
+}
+
+/**
+ * Finds the most compact arrangement for a set of groups that satisfies all
+ * given difference constraints using the Bellman-Ford algorithm.
+ * This is used to solve for the final positions of all groups on one axis.
+ * @param numGroups The number of groups on the axis.
+ * @param constraints The list of all constraints that must be satisfied.
+ * @returns A map from group index to its final solved position.
+ */
+function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Map<number, bigint> {
+	// 1. Initialize positions. Only the starting group has a known position.
+	// A group not in the map is considered "unreached" or at -infinity.
+	const positions = new Map<number, bigint>();
+	if (numGroups > 0) positions.set(0, 0n); // The first group is our anchor at the origin.
+
+	// 2. Apply Bellman-Ford: Relax edges repeatedly.
+	// We loop N-1 times, where N is the number of groups.
+	for (let i = 0; i < numGroups - 1; i++) {
+		let changed = false;
+		for (const constraint of constraints) {
+			const { from, to, weight } = constraint;
+
+			// Only proceed if the 'from' node has a known position.
+			if (!positions.has(from)) continue;
+
+			const fromPos = positions.get(from)!;
+			const potentialNewPos = fromPos + weight;
+			const toPos = positions.get(to);
+
+			// Relaxation step: Is the path through 'from' better?
+			// "Better" means either the 'to' node hasn't been reached yet,
+			// or the new path is longer than the existing one.
+			if (toPos === undefined || potentialNewPos > toPos) {
+				positions.set(to, potentialNewPos);
+				changed = true;
+			}
+		}
+		// Optimization: If a full pass makes no changes, the system is solved.
+		if (!changed) break;
+	}
+
+	return positions;
 }
 
 
