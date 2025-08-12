@@ -539,40 +539,13 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 		y_sep_A_to_B -= (groupY_B.range[1] - YAxisDeterminer(pieceB.coords)) + (groupY_A.range[0] - YAxisDeterminer(pieceA.coords));
 	}
 
-	// console.log("X separation:", x_sep_A_to_B);
-	// console.log("Y separation:", y_sep_A_to_B);
-
 	// For the V-axis, we must handle the special case where pieces are in the same group.
 	const vAxisDeterminer = AXIS_DETERMINERS['1,-1'];
 
-	// const v_groupIndexA = pieceA.axisGroups['1,-1']!;
-	// const v_groupIndexB = pieceB.axisGroups['1,-1']!;
-	// const groupV_A = AllAxisOrders['1,-1'][v_groupIndexA]!;
-	// const groupV_B = AllAxisOrders['1,-1'][v_groupIndexB]!;
-	// const pieceA_V_AxisValue = vAxisDeterminer(pieceA.coords);
-	// const pieceB_V_AxisValue = vAxisDeterminer(pieceB.coords);
-
 	// eslint-disable-next-line prefer-const
 	let { separation: v_sep_A_to_B, type: v_separation_type } = calculateRequiredAxisSeparation(pieceA, pieceB, vAxisDeterminer, '1,-1', AllAxisOrders);
-	// console.log("V separation:", v_sep_A_to_B, "Type:", v_separation_type);
-
-	// Convert the V axis separation to be relative to their groups, instead of the pieces.
-	// Subtract from v_separation the distances from the start v piece to the end of the group,
-	// and the distance from the start of the group to the end v piece.
-	// if (v_groupIndexA < v_groupIndexB) {
-	// 	v_sep_A_to_B -= (groupV_A.range[1] - pieceA_V_AxisValue) + (groupV_B.range[0] - pieceB_V_AxisValue);
-	// } else { // v_groupIndexA > v_groupIndexB
-	// 	v_sep_A_to_B -= (groupV_B.range[1] - pieceB_V_AxisValue) + (groupV_A.range[0] - pieceA_V_AxisValue);
-	// }
 
 	// --- 2. Solve the System of Inequalities ---
-
-	// console.log("All separations for pair:", {
-	// 	x_sep_A_to_B,
-	// 	y_sep_A_to_B,
-	// 	v_sep_A_to_B,
-	// 	v_separation_type
-	// });
 
 	const finalSeparations = solveSeparationSystem(
 		x_sep_A_to_B,
@@ -613,9 +586,6 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 			weight: adjustedWeight, 
 			axis: 'x' 
 		};
-
-		// console.log("Adding X constraint:", constraint);
-
 		constraints.push(constraint);
 	}
 
@@ -642,9 +612,6 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 			weight: adjustedWeight, 
 			axis: 'y' 
 		};
-
-		// console.log("Adding Y constraint:", constraint);
-
 		constraints.push(constraint);
 	}
 
@@ -754,7 +721,10 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 			}
 		}
 		// Optimization: If a full pass makes no changes, the system is solved.
-		if (!changed) break;
+		if (!changed) {
+			console.log(`Bellman-Ford algorithm early exiting after iteration ${i}`)
+			break;
+		}
 	}
 
 	return positions;
