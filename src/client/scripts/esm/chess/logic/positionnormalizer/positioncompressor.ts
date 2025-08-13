@@ -139,8 +139,8 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
-const MIN_ARBITRARY_DISTANCE = 40n;
-// const MIN_ARBITRARY_DISTANCE = 10n;
+// const MIN_ARBITRARY_DISTANCE = 40n;
+const MIN_ARBITRARY_DISTANCE = 10n;
 
 
 /**
@@ -282,10 +282,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	const xConstraints = allConstraints.filter(c => c.axis === '1,0');
 	const yConstraints = allConstraints.filter(c => c.axis === '0,1');
 
-	// console.log(`\nAll X group contraints:`);
-	// console.log(xConstraints);
-	// console.log(`\nAll Y group contraints:`);
-	// console.log(yConstraints);
+	console.log(`\nAll X group contraints:`);
+	console.log(xConstraints);
+	console.log(`\nAll Y group contraints:`);
+	console.log(yConstraints);
 
 	// 2. Solve for the final positions of each group on each axis.
 	let xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
@@ -295,10 +295,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// Since each axes' solution is dependant on the positioning of the groups on the opposite axis,
 	// we must iteratively update each axis' constraints, until they stop changing.
 
-	const MAX_ITERATIONS = 1000;
+	const MAX_ITERATIONS = 100;
 	// DEBUGGING
-	// const PREFERRED_ITERATIONS = 0;
-	const PREFERRED_ITERATIONS = 1000;
+	const PREFERRED_ITERATIONS = 1;
+	// const PREFERRED_ITERATIONS = 100;
 
 	let iteration = 0;
 	let changeMade = true;
@@ -342,19 +342,22 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 		// If any position has changed, keep iterating!
 		if (!areGroupPositionsEqual(xGroupPositions, newXGroupPositions)) {
-			changeMade = true;
 			console.log("X Group Positions changed after updating all constraints!");
-		} if (!areGroupPositionsEqual(yGroupPositions, newYGroupPositions)) {
+			changeMade = true;
+		}
+		if (!areGroupPositionsEqual(yGroupPositions, newYGroupPositions)) {
 			console.log("Y Group Positions changed after updating all constraints!");
 			changeMade = true;
 		}
 
-		// if (changeMade) {
-		// 	console.log(`\nNew X group contraints:`);
-		// 	console.log(newXConstraints);
-		// 	console.log(`\nNew Y group contraints:`);
-		// 	console.log(newYConstraints);
-		// }
+		if (changeMade) {
+			console.log(`\nNew X group contraints:`);
+			console.log(newXConstraints);
+			console.log(`\nNew Y group contraints:`);
+			console.log(newYConstraints);
+		} else {
+			console.log("No changes made to group positions this iteration.");
+		}
 
 		xGroupPositions = newXGroupPositions;
 		yGroupPositions = newYGroupPositions;
@@ -599,6 +602,9 @@ function upgradeConstraintsForPair(
 	
 	const piecesXSeparation = getPiecesAxisSeparation('1,0', xGroupPositions);
 	const piecesYSeparation = getPiecesAxisSeparation('0,1', yGroupPositions);
+
+	// console.log(`Pieces X separation: ${piecesXSeparation}`);
+	// console.log(`Pieces Y separation: ${piecesYSeparation}`);
 	
 	/** Calculates required piece X/Y separation from the provided groupPositions. */
 	function getPiecesAxisSeparation(axis: '1,0' | '0,1', groupPositions: Map<number, bigint>) {
@@ -673,16 +679,23 @@ function getGroupConstraintsForRequiredPieceSeparations(
 
 	// --- 2. Solve the System of Inequalities ---
 
+	// console.log("Pre separations:");
+	// console.log(`X separation: ${x_separation}`);
+	// console.log(`Y separation: ${y_separation}`);
+	// console.log(`V separation: ${v_separation} (${v_separation_type})`);
+
 	/**
 	 * Gives the updated required dx and dy separations between the pieces, as Coords.
 	 * SATISFIES V-axis separations.
 	 */
-	const finalSeparations: Coords = solveSeparationSystem(
+	const finalSeparations: Coords = updateMinDxDyBasedRequiredV(
 		x_separation,
 		y_separation,
 		v_separation,
 		v_separation_type
 	);
+
+	// console.log(`Final separations after solving system: ${finalSeparations}\n`);
 
 	// --- 3. Generate Constraint Objects ---
 
@@ -807,7 +820,7 @@ function updateMinDxDyBasedRequiredV(
 		// Calculate the v_change
 		if (required_v_sep > 0n && v_sep < required_v_sep) {
 			// Positive side, increase up to the minimum
-			if (can_increase_dx && can_increase_dy) throw Error("Unexpected case! Could increase min dx or dy, can't choose between the two!");
+			if (can_increase_dx && can_increase_dy) console.warn("Unexpected case! Could increase min dx or dy, can't choose between the two!");
 			else if (can_increase_dx) {
 				// Increase dx to match the required V separation.
 				x_sep += required_v_change;
@@ -872,7 +885,7 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 		}
 		// Optimization: If a full pass makes no changes, the system is solved.
 		if (!changed) {
-			console.log(`Bellman-Ford algorithm early exiting after i = ${i}. Number of groups: ${numGroups}`);
+			// console.log(`Bellman-Ford algorithm early exiting after i = ${i}. Number of groups: ${numGroups}`);
 			break;
 		}
 	}
