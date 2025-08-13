@@ -89,8 +89,12 @@ type AxisDeterminer = (coords: Coords) => bigint;
 interface Constraint {
     from: number; // group index
     to: number;   // group index
+	/**
+	 * The start ranges (range[0]) of the groups must be atleast this far apart.
+	 * This is NOT the padding between them.
+	 */
     weight: bigint;
-    axis: 'x' | 'y';
+    axis: '1,0' | '0,1';
 }
 
 
@@ -275,8 +279,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 
 	// 1. Separate the master list of constraints by axis.
-	const xConstraints = allConstraints.filter(c => c.axis === 'x');
-	const yConstraints = allConstraints.filter(c => c.axis === 'y');
+	const xConstraints = allConstraints.filter(c => c.axis === '1,0');
+	const yConstraints = allConstraints.filter(c => c.axis === '0,1');
 
 	console.log(`\nAll X group contraints:`);
 	console.log(xConstraints);
@@ -284,13 +288,88 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	console.log(yConstraints);
 
 	// 2. Solve for the final positions of each group on each axis.
-	const xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
-	const yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, yConstraints);
+	let xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
+	let yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, yConstraints);
+
+	// Now we have the initial DRAFT group positions.
+	// Since each axes' solution is dependant on the positioning of the groups on the opposite axis,
+	// we must iteratively update each axis' constraints, until they stop changing.
+
+	const MAX_ITERATIONS = 100;
+	// DEBUGGING
+	const PREFERRED_ITERATIONS = 1;
+	// const PREFERRED_ITERATIONS = 100;
+
+	let iteration = 0;
+	let changeMade = true;
+
+	while (changeMade) {
+		changeMade = false;
+		iteration++;
+		if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
+
+		console.log(`\nIteration ${iteration}...`)
+		
+		// Update the X constraints based on the minimum distances between Y groups
+		const newConstraints: Constraint[] = [];
+
+		// Iterate through all unique pairs of pieces
+		for (let i = 0; i < pieces.length; i++) {
+			const pieceA = pieces[i]!;
+			for (let j = i + 1; j < pieces.length; j++) {
+				const pieceB = pieces[j]!;
+
+				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xGroupPositions, yGroupPositions, AllAxisOrders);
+				newConstraints.push(...pairConstraints);
+			}
+		}
+
+		// Separate the master list of constraints by axis.
+		const newXConstraints = newConstraints.filter(c => c.axis === '1,0');
+		const newYConstraints = newConstraints.filter(c => c.axis === '0,1');
+
+		// Update the solved X & Y group positions with the new required constraints
+		const newXGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, newXConstraints);
+		const newYGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, newYConstraints);
+
+		// If any position has changed, keep iterating!
+		if (!areGroupPositionsEqual(xGroupPositions, newXGroupPositions)) {
+			changeMade = true;
+			console.log("X Group Positions changed after updating all constraints!");
+		} if (!areGroupPositionsEqual(yGroupPositions, newYGroupPositions)) {
+			console.log("Y Group Positions changed after updating all constraints!");
+			changeMade = true;
+		}
+
+		if (changeMade) {
+			console.log(`\nNew X group contraints:`);
+			console.log(xConstraints);
+			console.log(`\nNew Y group contraints:`);
+			console.log(yConstraints);
+		}
+
+		xGroupPositions = newXGroupPositions;
+		yGroupPositions = newYGroupPositions;
+		
+		if (iteration >= PREFERRED_ITERATIONS) {
+			console.log(`Loop reached preferred iterations of ${PREFERRED_ITERATIONS}. Stopping early...`);
+			break;
+		}
+	}
+
+	console.log(`Convergence reached after ${iteration} iterations!`);
+
+
 
 	// ==================================== Phase 4: Final Coordinate Assembly ====================================
 
+
+
 	// 1. Assemble the final compressed position from the solved group positions.
 	const compressedPosition: Map<CoordsKey, number> = new Map();
+
+	const XAxisDeterminer = AXIS_DETERMINERS['1,0'];
+	const YAxisDeterminer = AXIS_DETERMINERS['0,1'];
 
 	for (const piece of pieces) {
 		// a. Identify the piece's X and Y groups.
@@ -302,17 +381,15 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		const yGroupPos = yGroupPositions.get(yGroupIndex);
 		
 		// Safety check: a group position should always be found if the graph is connected.
-		if (xGroupPos === undefined || yGroupPos === undefined) {
-			throw new Error(`Could not solve for position of piece at ${piece.coords}`);
-		}
+		if (xGroupPos === undefined || yGroupPos === undefined) throw new Error(`Could not solve for position of piece at ${piece.coords}`);
 
 		// c. Calculate the piece's original offset within its group. This preserves
 		//    the internal structure of multi-piece groups.
 		const originalXGroup = AllAxisOrders['1,0'][xGroupIndex]!;
 		const originalYGroup = AllAxisOrders['0,1'][yGroupIndex]!;
 		
-		const offsetX = piece.coords[0] - originalXGroup.range[0];
-		const offsetY = piece.coords[1] - originalYGroup.range[0];
+		const offsetX = XAxisDeterminer(piece.coords) - originalXGroup.range[0];
+		const offsetY = YAxisDeterminer(piece.coords) - originalYGroup.range[0];
 
 		// d. The final coordinate is the group's solved position plus the piece's offset.
 		piece.transformedCoords = [xGroupPos + offsetX, yGroupPos + offsetY];
@@ -323,6 +400,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 
 	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
+	// ISN'T required for engines, but may be nice for visuals.
+	// Commented-out for decreasing the script size.
 	// RecenterTransformedPosition(pieces, AllAxisOrders);
 
 	// 2. Return the complete compression information, which is used to expand moves later.
@@ -496,155 +575,155 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 
 
 /**
+ * Analyzes two pieces, and does almost all the same things that deriveConstraintsForPair() does,
+ * except instead of calculating x_sep_A_to_B and y_sep_A_to_B from the number of groups between
+ * them, we grab the minimum distance required from the xGroupPositions, as we know those are required!
+ * @param pieceA 
+ * @param pieceB 
+ * @param xGroupPositions 
+ * @param yGroupPositions 
+ * @param AllAxisOrders 
+ */
+function upgradeConstraintsForPair(
+	pieceA: PieceTransform,
+	pieceB: PieceTransform,
+	xGroupPositions: Map<number, bigint>,
+	yGroupPositions: Map<number, bigint>,
+	AllAxisOrders: AxisOrders
+): Constraint[] {
+
+	// console.log(`\Deriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
+	
+	const piecesXSeparation = getPiecesAxisSeparation('1,0', xGroupPositions);
+	const piecesYSeparation = getPiecesAxisSeparation('0,1', yGroupPositions);
+	
+	/** Calculates required piece X/Y separation from the provided groupPositions. */
+	function getPiecesAxisSeparation(axis: '1,0' | '0,1', groupPositions: Map<number, bigint>) {
+		const axisDeterminer = AXIS_DETERMINERS[axis];
+
+		const pieceAGroupIndex = pieceA.axisGroups[axis];
+		const pieceBGroupIndex = pieceB.axisGroups[axis];
+		const pieceAGroup = AllAxisOrders[axis][pieceAGroupIndex];
+		const pieceBGroup = AllAxisOrders[axis][pieceBGroupIndex];
+
+		/**
+		 * The minimum required distance from group A to group B,
+		 * based on the running groupPosition we have.
+		 */
+		const groupsXSeparation = groupPositions.get(pieceBGroupIndex)! - groupPositions.get(pieceAGroupIndex)!;
+
+		// Add the offsets from the start of their groups
+		const pieceAGroupStartOffset = axisDeterminer(pieceA.coords) - pieceAGroup.range[0];
+		const pieceBGroupStartOffset = axisDeterminer(pieceB.coords) - pieceBGroup.range[0];
+		const piecesSeparation = groupsXSeparation - pieceAGroupStartOffset + pieceBGroupStartOffset;
+
+		return piecesSeparation;
+	}
+
+	// eslint-disable-next-line prefer-const
+	let { separation: piecesVSeparation, type: piecesVSeparationType } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
+
+	return getGroupConstraintsForRequiredPieceSeparations(
+		pieceA, pieceB,
+		piecesXSeparation, piecesYSeparation,
+		piecesVSeparation, piecesVSeparationType,
+		AllAxisOrders
+	)
+}
+
+/**
  * Analyzes a single pair of pieces to derive the definitive separation
  * requirements for them on the X and Y axes.
  * @returns An array of Constraint objects.
  */
 function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform, AllAxisOrders: AxisOrders): Constraint[] {
 
-	// console.log(`\nPair: ${pieceA.coords} and ${pieceB.coords}`);
+	// console.log(`\nDeriving initial constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
-	// --- 1. Establish Base Separation Rules ---
-
-	const XAxisDeterminer = AXIS_DETERMINERS['1,0'];
-	const YAxisDeterminer = AXIS_DETERMINERS['0,1'];
-
-	// To keep calculations consistent, we'll calculate separations relative
-	// to pieceA. The final `dx` and `dy` will be positive, but these initial
-	// values can be negative to indicate direction.
-	// const x_sep_A_to_B = BigInt(pieceB.axisGroups['1,0']! - pieceA.axisGroups['1,0']!) * MIN_ARBITRARY_DISTANCE   + distToGroupEndX_A + distFromGroupStartToPieceX_B;
-	// const y_sep_A_to_B = BigInt(pieceB.axisGroups['0,1']! - pieceA.axisGroups['0,1']!) * MIN_ARBITRARY_DISTANCE   + distToGroupEndY_A + distFromGroupStartToPieceY_B;
-	let { separation: x_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, XAxisDeterminer, '1,0', AllAxisOrders);
-	let { separation: y_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, YAxisDeterminer, '0,1', AllAxisOrders);
-
-	// Subtract the distances from the start of the group to the end of the piece,
-	// and the distance from the start of the piece to the end of the group.
-	const x_groupIndexA = pieceA.axisGroups['1,0']!;
-	const x_groupIndexB = pieceB.axisGroups['1,0']!;
-	const groupX_A = AllAxisOrders['1,0'][x_groupIndexA]!;
-	const groupX_B = AllAxisOrders['1,0'][x_groupIndexB]!;
-	if (x_groupIndexA < x_groupIndexB) {
-		x_sep_A_to_B -= (groupX_A.range[1] - XAxisDeterminer(pieceA.coords)) + (groupX_B.range[0] - XAxisDeterminer(pieceB.coords));
-	} else { // x_groupIndexA > x_groupIndexB
-		x_sep_A_to_B -= (groupX_B.range[1] - XAxisDeterminer(pieceB.coords)) + (groupX_A.range[0] - XAxisDeterminer(pieceA.coords));
-	}
-
-	const y_groupIndexA = pieceA.axisGroups['0,1']!;
-	const y_groupIndexB = pieceB.axisGroups['0,1']!;
-	const groupY_A = AllAxisOrders['0,1'][y_groupIndexA]!;
-	const groupY_B = AllAxisOrders['0,1'][y_groupIndexB]!;
-	if (y_groupIndexA < y_groupIndexB) {
-		y_sep_A_to_B -= (groupY_A.range[1] - YAxisDeterminer(pieceA.coords)) + (groupY_B.range[0] - YAxisDeterminer(pieceB.coords));
-	} else { // y_groupIndexA > y_groupIndexB
-		y_sep_A_to_B -= (groupY_B.range[1] - YAxisDeterminer(pieceB.coords)) + (groupY_A.range[0] - YAxisDeterminer(pieceA.coords));
-	}
-
-	// console.log("X separation:", x_sep_A_to_B);
-	// console.log("Y separation:", y_sep_A_to_B);
-
-	// For the V-axis, we must handle the special case where pieces are in the same group.
-	const vAxisDeterminer = AXIS_DETERMINERS['1,-1'];
-
-	// const v_groupIndexA = pieceA.axisGroups['1,-1']!;
-	// const v_groupIndexB = pieceB.axisGroups['1,-1']!;
-	// const groupV_A = AllAxisOrders['1,-1'][v_groupIndexA]!;
-	// const groupV_B = AllAxisOrders['1,-1'][v_groupIndexB]!;
-	// const pieceA_V_AxisValue = vAxisDeterminer(pieceA.coords);
-	// const pieceB_V_AxisValue = vAxisDeterminer(pieceB.coords);
+	let { separation: x_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,0', AllAxisOrders);
+	let { separation: y_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '0,1', AllAxisOrders);
 
 	// eslint-disable-next-line prefer-const
-	let { separation: v_sep_A_to_B, type: v_separation_type } = calculateRequiredAxisSeparation(pieceA, pieceB, vAxisDeterminer, '1,-1', AllAxisOrders);
-	// console.log("V separation:", v_sep_A_to_B, "Type:", v_separation_type);
+	let { separation: v_sep_A_to_B, type: v_separation_type } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
 
-	// Convert the V axis separation to be relative to their groups, instead of the pieces.
-	// Subtract from v_separation the distances from the start v piece to the end of the group,
-	// and the distance from the start of the group to the end v piece.
-	// if (v_groupIndexA < v_groupIndexB) {
-	// 	v_sep_A_to_B -= (groupV_A.range[1] - pieceA_V_AxisValue) + (groupV_B.range[0] - pieceB_V_AxisValue);
-	// } else { // v_groupIndexA > v_groupIndexB
-	// 	v_sep_A_to_B -= (groupV_B.range[1] - pieceB_V_AxisValue) + (groupV_A.range[0] - pieceA_V_AxisValue);
-	// }
+	return getGroupConstraintsForRequiredPieceSeparations(
+		pieceA, pieceB,
+		x_sep_A_to_B, y_sep_A_to_B,
+		v_sep_A_to_B, v_separation_type,
+		AllAxisOrders
+	)
+}
+
+/**
+ * Calculates the required constraints between two pieces,
+ * given the required separations on every axis we have.
+ */
+function getGroupConstraintsForRequiredPieceSeparations(
+	pieceA: PieceTransform,
+	pieceB: PieceTransform,
+	x_separation: bigint,
+	y_separation: bigint,
+	v_separation: bigint,
+	v_separation_type: 'exact' | 'min',
+	AllAxisOrders: AxisOrders
+): Constraint[] {
 
 	// --- 2. Solve the System of Inequalities ---
 
-	// console.log("All separations for pair:", {
-	// 	x_sep_A_to_B,
-	// 	y_sep_A_to_B,
-	// 	v_sep_A_to_B,
-	// 	v_separation_type
-	// });
-
-	const finalSeparations = solveSeparationSystem(
-		x_sep_A_to_B,
-		y_sep_A_to_B,
-		v_sep_A_to_B,
+	/**
+	 * Gives the updated required dx and dy separations between the pieces, as Coords.
+	 * SATISFIES V-axis separations.
+	 */
+	const finalSeparations: Coords = solveSeparationSystem(
+		x_separation,
+		y_separation,
+		v_separation,
 		v_separation_type
 	);
 
-	// --- 3. Generate Constraint Objects (REVISED) ---
+	// --- 3. Generate Constraint Objects ---
 
 	const constraints: Constraint[] = [];
+	
+	generateGroupConstraintFromPieceSeparations(finalSeparations[0], '1,0');
+	generateGroupConstraintFromPieceSeparations(finalSeparations[1], '1,0');
 
-	// Get the group indices for both pieces on the X-axis.
-	const x_groupA_idx = pieceA.axisGroups['1,0']!;
-	const x_groupB_idx = pieceB.axisGroups['1,0']!;
+	/**
+	 * Takes required separations betweeen 2 PIECES, and transforms them
+	 * to be relative to their group range starts, then pushes that constraint.
+	 */
+	function generateGroupConstraintFromPieceSeparations(finalSeparation: bigint, axis: '1,0' | '0,1'): Constraint | undefined {
+		const axisDeterminer = AXIS_DETERMINERS[axis];
+		// Get the group indices for both pieces on the X-axis.
+		const x_groupA_idx = pieceA.axisGroups[axis]!;
+		const x_groupB_idx = pieceB.axisGroups[axis]!;
 
-	if (x_groupA_idx !== x_groupB_idx) {
+		// No constraints needed if they are in the same group. They are linked together!
+		if (x_groupA_idx === x_groupB_idx) return;
+
 		// The pieces are in different X-groups, so we need a constraint.
+
 		// First, determine which piece is in the group with the smaller index.
-		const pieceLeft = (x_groupA_idx < x_groupB_idx) ? pieceA : pieceB;
-		const pieceRight = (x_groupA_idx < x_groupB_idx) ? pieceB : pieceA;
+		const firstPiece = (x_groupA_idx < x_groupB_idx) ? pieceA : pieceB;
+		const secondPiece = (x_groupA_idx < x_groupB_idx) ? pieceB : pieceA;
 
 		// Get the original groups to calculate offsets.
-		const groupLeft = AllAxisOrders['1,0'][pieceLeft.axisGroups['1,0']!]!;
-		const groupRight = AllAxisOrders['1,0'][pieceRight.axisGroups['1,0']!]!;
+		const firstGroup = AllAxisOrders[axis][firstPiece.axisGroups[axis]!]!;
+		const secondGroup = AllAxisOrders[axis][secondPiece.axisGroups[axis]!]!;
 
 		// Calculate each piece's offset from the start of its original group.
-		const offsetLeft = pieceLeft.coords[0] - groupLeft.range[0];
-		const offsetRight = pieceRight.coords[0] - groupRight.range[0];
+		const firstPieceOffset = axisDeterminer(firstPiece.coords) - firstGroup.range[0];
+		const secondPieceOffset = axisDeterminer(secondPiece.coords) - secondGroup.range[0];
 
 		// The required separation between the groups is adjusted by the offsets.
-		// pos(GroupRight) - pos(GroupLeft) >= piece_sep + offset_in_GroupLeft - offset_in_GroupRight
-		const adjustedWeight = finalSeparations.dx + offsetLeft - offsetRight;
+		const adjustedWeight = finalSeparation + firstPieceOffset - secondPieceOffset;
 
 		const constraint: Constraint = { 
-			from: pieceLeft.axisGroups['1,0']!, 
-			to: pieceRight.axisGroups['1,0']!, 
+			from: firstPiece.axisGroups[axis]!, 
+			to: secondPiece.axisGroups[axis]!, 
 			weight: adjustedWeight, 
-			axis: 'x' 
+			axis,
 		};
-
-		// console.log("Adding X constraint:", constraint);
-
-		constraints.push(constraint);
-	}
-
-	// Now do the same for the Y-axis.
-	const y_groupA_idx = pieceA.axisGroups['0,1']!;
-	const y_groupB_idx = pieceB.axisGroups['0,1']!;
-
-	if (y_groupA_idx !== y_groupB_idx) {
-		// The pieces are in different Y-groups, so we need a constraint.
-		const pieceBottom = (y_groupA_idx < y_groupB_idx) ? pieceA : pieceB;
-		const pieceTop = (y_groupA_idx < y_groupB_idx) ? pieceB : pieceA;
-
-		const groupBottom = AllAxisOrders['0,1'][pieceBottom.axisGroups['0,1']!]!;
-		const groupTop = AllAxisOrders['0,1'][pieceTop.axisGroups['0,1']!]!;
-
-		const offsetBottom = pieceBottom.coords[1] - groupBottom.range[0];
-		const offsetTop = pieceTop.coords[1] - groupTop.range[0];
-		
-		const adjustedWeight = finalSeparations.dy + offsetBottom - offsetTop;
-
-		const constraint: Constraint = { 
-			from: pieceBottom.axisGroups['0,1']!, 
-			to: pieceTop.axisGroups['0,1']!, 
-			weight: adjustedWeight, 
-			axis: 'y' 
-		};
-
-		// console.log("Adding Y constraint:", constraint);
-
 		constraints.push(constraint);
 	}
 
@@ -652,12 +731,16 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 	return constraints;
 }
 
+/**
+ * Receives required X, Y, and V separations, and returns the updated
+ * X & Y separation that also satisfy the V separation.
+ */
 function solveSeparationSystem(
 	base_x_sep: bigint,
 	base_y_sep: bigint,
 	base_v_sep: bigint,
 	v_type: 'exact' | 'min'
-): { dx: bigint, dy: bigint } {
+): Coords {
 
 	// Let dx and dy be the absolute, non-negative separations.
 	let dx = bimath.abs(base_x_sep);
@@ -679,15 +762,11 @@ function solveSeparationSystem(
 
 		// Possibility 1: Assume dy is at its minimum. What must dx be?
 		const required_dx = base_v_sep - (y_sign * dy);
-		if (x_sign * required_dx >= dx) {
-			dx = x_sign * required_dx; // This works if the result is positive
-		}
+		if (x_sign * required_dx >= dx) dx = x_sign * required_dx; // This works if the result is positive
 
 		// Possibility 2: Assume dx is at its minimum. What must dy be?
 		const required_dy = base_v_sep - (x_sign * dx);
-		if (y_sign * required_dy >= dy) {
-			dy = y_sign * required_dy; // This works if the result is positive
-		}
+		if (y_sign * required_dy >= dy) dy = y_sign * required_dy; // This works if the result is positive
 
 	} else { // v_type === 'min'
 		// Example: dx - dy >= 20.
@@ -697,24 +776,18 @@ function solveSeparationSystem(
 		if (base_v_sep > 0n && current_v_sep < base_v_sep) {
 			// There is a shortfall. Add it to the positive term.
 			const shortfall = base_v_sep - current_v_sep;
-			if (x_sign > 0n) {
-				dx += shortfall;
-			} else { // y_sign must be > 0n
-				dy += shortfall;
-			}
+			if (x_sign > 0n) dx += shortfall;
+			else dy += shortfall; // y_sign must be > 0n
 		} else if (base_v_sep < 0n && current_v_sep > base_v_sep) {
 			// There is a shortfall (e.g. current is -10, required is <= -20).
 			// Add the negative shortfall to the negative term.
 			const shortfall = base_v_sep - current_v_sep; // This will be negative
-			if (x_sign < 0n) {
-				dx -= shortfall; // dx is absolute, so this increases it
-			} else { // y_sign must be < 0n
-				dy -= shortfall;
-			}
+			if (x_sign < 0n) dx -= shortfall; // dx is absolute, so this increases it
+			else dy -= shortfall; // y_sign must be < 0n
 		}
 	}
 
-	return { dx, dy };
+	return [dx,dy];
 }
 
 /**
@@ -727,7 +800,7 @@ function solveSeparationSystem(
  */
 function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Map<number, bigint> {
 	// 1. Initialize positions. Only the starting group has a known position.
-	// A group not in the map is considered "unreached" or at -infinity.
+	// A group not in the map is considered "unreached"
 	const positions = new Map<number, bigint>();
 	if (numGroups > 0) positions.set(0, 0n); // The first group is our anchor at the origin.
 
@@ -739,6 +812,7 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 			const { from, to, weight } = constraint;
 
 			// Only proceed if the 'from' node has a known position.
+			// On the first iteration, only start points of group 0 are defined.
 			if (!positions.has(from)) continue;
 
 			const fromPos = positions.get(from)!;
@@ -754,10 +828,24 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 			}
 		}
 		// Optimization: If a full pass makes no changes, the system is solved.
-		if (!changed) break;
+		if (!changed) {
+			console.log(`Bellman-Ford algorithm early exiting after i = ${i}. Number of groups: ${numGroups}`)
+			break;
+		}
 	}
 
 	return positions;
+}
+
+
+/** Tests if two maps containing group positions on the X/Y axis are equivalent. */
+function areGroupPositionsEqual(groupPositions1: Map<number, bigint>, groupPositions2: Map<number, bigint>): boolean {
+	if (groupPositions1.size !== groupPositions2.size) return false;
+	for (const [groupNumber, g1_position] of groupPositions1.entries()) {
+		const g2_position = groupPositions2.get(groupNumber)
+		if (g1_position !== g2_position) return false;
+	}
+	return true;
 }
 
 
@@ -778,14 +866,17 @@ interface SeparationRequirement {
  * Determines if the separation should be "tight" (an exact value)
  * or "loose" (a minimum distance), based on whether the pieces are in the same
  * axis group or different ones.
+ * 
+ * Only takes into account number of groups between them, doesn't take into account
+ * other constraints.
  */
 function calculateRequiredAxisSeparation(
 	pieceA: PieceTransform,
 	pieceB: PieceTransform,
-	axisDeterminer: AxisDeterminer,
 	axis: '1,0' | '0,1' | '1,1' | '1,-1',
 	AllAxisOrders: AxisOrders
 ): SeparationRequirement {
+	const axisDeterminer = AXIS_DETERMINERS[axis];
 	const axisOrder = AllAxisOrders[axis];
 
 	const groupIndexA = pieceA.axisGroups[axis];
@@ -837,10 +928,17 @@ function calculateRequiredAxisSeparation(
 	};
 }
 
+function fea() {
+	
+}
+
 
 // ======================================== RECENTERING TRANFORMED POSITION ========================================
 
 
+
+// ISN'T required for engines, but may be nice for visuals.
+// Commented-out for decreasing the script size.
 /**
  * Translates the entire transformed position so tht the White King
  * ends up on the same square it occupied in the original, uncompressed position.
