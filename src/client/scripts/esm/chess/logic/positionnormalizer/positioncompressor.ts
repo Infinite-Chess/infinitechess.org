@@ -697,6 +697,11 @@ function getGroupConstraintsForRequiredPieceSeparations(
 	 */
 	function generateGroupConstraintFromPieceSeparations(finalSeparation: bigint, axis: '1,0' | '0,1'): Constraint | undefined {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
+
+		// Since we reorder the groups below so that the left-most group is always first,
+		// it ensures the separation is always positive.
+		finalSeparation = bimath.abs(finalSeparation);
+
 		// Get the group indices for both pieces on the X-axis.
 		const x_groupA_idx = pieceA.axisGroups[axis]!;
 		const x_groupB_idx = pieceB.axisGroups[axis]!;
