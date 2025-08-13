@@ -324,12 +324,12 @@ function generateLegalMoves(lf: FullGame, player: Player): MoveDraft[] {
 		// These 5 lines do almost everything legalmoves.calculateAll() does, but without the check pruning
 		const moveset = legalmoves.getPieceMoveset(lf.boardsim, piece.type);
 		const moves = legalmoves.getEmptyLegalMoves(moveset);
-		legalmoves.appendCalculatedMoves(lf.boardsim, piece, moveset, moves);
-		legalmoves.appendSpecialMoves(lf, piece, moveset, moves);
-		legalMovesResult = legalmoves.calculateAll(lf, piece);
+		legalmoves.appendPotentialMoves(piece, moveset, moves);
+		legalmoves.removeObstructedMoves(lf.boardsim, piece, moveset, moves);
+		legalmoves.appendSpecialMoves(lf, piece, moveset, moves, false);
 
 		// --- Fast-path for Individual Moves ---
-		const individualMoves = legalMovesResult.individual;
+		const individualMoves = moves.individual;
 		if (individualMoves && individualMoves.length > 0) {
 			for (let j = 0; j < individualMoves.length; j++) {
 				const endCoords = individualMoves[j]!;
@@ -361,7 +361,7 @@ function generateLegalMoves(lf: FullGame, player: Player): MoveDraft[] {
 		}
 
 		// --- Calculate Sliding Moves (directional) ---
-		const slidingMoves = legalMovesResult.sliding;
+		const slidingMoves = moves.sliding;
 		if (slidingMoves && Object.keys(slidingMoves).length > 0) {
 			// Reuse array to avoid allocations with proper typing
 			slidingDirections = [] as Array<[number, number, number, number]>;

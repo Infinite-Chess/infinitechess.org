@@ -331,7 +331,7 @@ function negamax(lf: FullGame, depth: number, alpha: number, beta: number, data:
 			const nullMoveDraft: MoveDraft = {
 				startCoords: kingCoords,
 				endCoords: kingCoords,
-			}
+			};
 			const nullMove = movepiece.generateMove(lf, nullMoveDraft);
 			movepiece.makeMove(lf, nullMove); 
 			
