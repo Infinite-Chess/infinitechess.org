@@ -931,10 +931,6 @@ function calculateRequiredAxisSeparation(
 	};
 }
 
-function fea() {
-	
-}
-
 
 // ======================================== RECENTERING TRANFORMED POSITION ========================================
 
