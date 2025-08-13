@@ -282,10 +282,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	const xConstraints = allConstraints.filter(c => c.axis === '1,0');
 	const yConstraints = allConstraints.filter(c => c.axis === '0,1');
 
-	console.log(`\nAll X group contraints:`);
-	console.log(xConstraints);
-	console.log(`\nAll Y group contraints:`);
-	console.log(yConstraints);
+	// console.log(`\nAll X group contraints:`);
+	// console.log(xConstraints);
+	// console.log(`\nAll Y group contraints:`);
+	// console.log(yConstraints);
 
 	// 2. Solve for the final positions of each group on each axis.
 	let xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
@@ -295,10 +295,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// Since each axes' solution is dependant on the positioning of the groups on the opposite axis,
 	// we must iteratively update each axis' constraints, until they stop changing.
 
-	const MAX_ITERATIONS = 100;
+	const MAX_ITERATIONS = 1000;
 	// DEBUGGING
-	const PREFERRED_ITERATIONS = 1;
-	// const PREFERRED_ITERATIONS = 100;
+	// const PREFERRED_ITERATIONS = 0;
+	const PREFERRED_ITERATIONS = 1000;
 
 	let iteration = 0;
 	let changeMade = true;
@@ -306,9 +306,17 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	while (changeMade) {
 		changeMade = false;
 		iteration++;
-		if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
+		// if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
+		if (iteration >= MAX_ITERATIONS) {
+			console.error("Max iterations!");
+			break;
+		}
+		if (iteration > PREFERRED_ITERATIONS) {
+			console.log(`Loop reached preferred iterations of ${PREFERRED_ITERATIONS}. Stopping early...`);
+			break;
+		}
 
-		console.log(`\nIteration ${iteration}...`)
+		console.log(`\nIteration ${iteration}...`);
 		
 		// Update the X constraints based on the minimum distances between Y groups
 		const newConstraints: Constraint[] = [];
@@ -341,20 +349,15 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			changeMade = true;
 		}
 
-		if (changeMade) {
-			console.log(`\nNew X group contraints:`);
-			console.log(xConstraints);
-			console.log(`\nNew Y group contraints:`);
-			console.log(yConstraints);
-		}
+		// if (changeMade) {
+		// 	console.log(`\nNew X group contraints:`);
+		// 	console.log(newXConstraints);
+		// 	console.log(`\nNew Y group contraints:`);
+		// 	console.log(newYConstraints);
+		// }
 
 		xGroupPositions = newXGroupPositions;
 		yGroupPositions = newYGroupPositions;
-		
-		if (iteration >= PREFERRED_ITERATIONS) {
-			console.log(`Loop reached preferred iterations of ${PREFERRED_ITERATIONS}. Stopping early...`);
-			break;
-		}
 	}
 
 	console.log(`Convergence reached after ${iteration} iterations!`);
@@ -592,7 +595,7 @@ function upgradeConstraintsForPair(
 	AllAxisOrders: AxisOrders
 ): Constraint[] {
 
-	// console.log(`\Deriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
+	// console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
 	const piecesXSeparation = getPiecesAxisSeparation('1,0', xGroupPositions);
 	const piecesYSeparation = getPiecesAxisSeparation('0,1', yGroupPositions);
@@ -610,7 +613,7 @@ function upgradeConstraintsForPair(
 		 * The minimum required distance from group A to group B,
 		 * based on the running groupPosition we have.
 		 */
-		const groupsXSeparation = groupPositions.get(pieceBGroupIndex)! - groupPositions.get(pieceAGroupIndex)!;
+		const groupsXSeparation: bigint = groupPositions.get(pieceBGroupIndex)! - groupPositions.get(pieceAGroupIndex)!;
 
 		// Add the offsets from the start of their groups
 		const pieceAGroupStartOffset = axisDeterminer(pieceA.coords) - pieceAGroup.range[0];
@@ -628,7 +631,7 @@ function upgradeConstraintsForPair(
 		piecesXSeparation, piecesYSeparation,
 		piecesVSeparation, piecesVSeparationType,
 		AllAxisOrders
-	)
+	);
 }
 
 /**
@@ -640,8 +643,8 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 
 	// console.log(`\nDeriving initial constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
-	let { separation: x_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,0', AllAxisOrders);
-	let { separation: y_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '0,1', AllAxisOrders);
+	const { separation: x_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,0', AllAxisOrders);
+	const { separation: y_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '0,1', AllAxisOrders);
 
 	// eslint-disable-next-line prefer-const
 	let { separation: v_sep_A_to_B, type: v_separation_type } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
@@ -651,7 +654,7 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 		x_sep_A_to_B, y_sep_A_to_B,
 		v_sep_A_to_B, v_separation_type,
 		AllAxisOrders
-	)
+	);
 }
 
 /**
@@ -686,7 +689,7 @@ function getGroupConstraintsForRequiredPieceSeparations(
 	const constraints: Constraint[] = [];
 	
 	generateGroupConstraintFromPieceSeparations(finalSeparations[0], '1,0');
-	generateGroupConstraintFromPieceSeparations(finalSeparations[1], '1,0');
+	generateGroupConstraintFromPieceSeparations(finalSeparations[1], '0,1');
 
 	/**
 	 * Takes required separations betweeen 2 PIECES, and transforms them
@@ -829,7 +832,7 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 		}
 		// Optimization: If a full pass makes no changes, the system is solved.
 		if (!changed) {
-			console.log(`Bellman-Ford algorithm early exiting after i = ${i}. Number of groups: ${numGroups}`)
+			console.log(`Bellman-Ford algorithm early exiting after i = ${i}. Number of groups: ${numGroups}`);
 			break;
 		}
 	}
@@ -842,7 +845,7 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 function areGroupPositionsEqual(groupPositions1: Map<number, bigint>, groupPositions2: Map<number, bigint>): boolean {
 	if (groupPositions1.size !== groupPositions2.size) return false;
 	for (const [groupNumber, g1_position] of groupPositions1.entries()) {
-		const g2_position = groupPositions2.get(groupNumber)
+		const g2_position = groupPositions2.get(groupNumber);
 		if (g1_position !== g2_position) return false;
 	}
 	return true;
