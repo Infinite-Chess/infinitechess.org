@@ -279,17 +279,13 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 
 	// 1. Separate the master list of constraints by axis.
-	const xConstraints = allConstraints.filter(c => c.axis === '1,0');
-	const yConstraints = allConstraints.filter(c => c.axis === '0,1');
+	let xConstraints = allConstraints.filter(c => c.axis === '1,0');
+	let yConstraints = allConstraints.filter(c => c.axis === '0,1');
 
 	console.log(`\nAll X group contraints:`);
 	console.log(xConstraints);
 	console.log(`\nAll Y group contraints:`);
 	console.log(yConstraints);
-
-	// 2. Solve for the final positions of each group on each axis.
-	let xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
-	let yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, yConstraints);
 
 	// Now we have the initial DRAFT group positions.
 	// Since each axes' solution is dependant on the positioning of the groups on the opposite axis,
@@ -327,7 +323,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			for (let j = i + 1; j < pieces.length; j++) {
 				const pieceB = pieces[j]!;
 
-				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xGroupPositions, yGroupPositions, AllAxisOrders);
+				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xConstraints, yConstraints, AllAxisOrders);
 				newConstraints.push(...pairConstraints);
 			}
 		}
@@ -335,10 +331,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// Separate the master list of constraints by axis.
 		const newXConstraints = newConstraints.filter(c => c.axis === '1,0');
 		const newYConstraints = newConstraints.filter(c => c.axis === '0,1');
-
-		// Update the solved X & Y group positions with the new required constraints
-		const newXGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, newXConstraints);
-		const newYGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, newYConstraints);
 
 		// If any position has changed, keep iterating!
 		if (!areGroupPositionsEqual(xGroupPositions, newXGroupPositions)) {
@@ -359,9 +351,13 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			console.log("No changes made to group positions this iteration.");
 		}
 
-		xGroupPositions = newXGroupPositions;
-		yGroupPositions = newYGroupPositions;
+		xConstraints = newXConstraints;
+		yConstraints = newYConstraints;
 	}
+
+	// 2. Solve for the final positions of each group on each axis.
+	let xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
+	let yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, yConstraints);
 
 	console.log(`Convergence reached after ${iteration} iterations!`);
 
@@ -593,38 +589,45 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 function upgradeConstraintsForPair(
 	pieceA: PieceTransform,
 	pieceB: PieceTransform,
-	xGroupPositions: Map<number, bigint>,
-	yGroupPositions: Map<number, bigint>,
+	xConstraints: Constraint[],
+	yConstraints: Constraint[],
 	AllAxisOrders: AxisOrders
 ): Constraint[] {
 
 	// console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
-	const piecesXSeparation = getPiecesAxisSeparation('1,0', xGroupPositions);
-	const piecesYSeparation = getPiecesAxisSeparation('0,1', yGroupPositions);
+	const piecesXSeparation = getPiecesAxisSeparation('1,0', xConstraints);
+	const piecesYSeparation = getPiecesAxisSeparation('0,1', yConstraints);
 
 	// console.log(`Pieces X separation: ${piecesXSeparation}`);
 	// console.log(`Pieces Y separation: ${piecesYSeparation}`);
 	
 	/** Calculates required piece X/Y separation from the provided groupPositions. */
-	function getPiecesAxisSeparation(axis: '1,0' | '0,1', groupPositions: Map<number, bigint>) {
+	function getPiecesAxisSeparation(axis: '1,0' | '0,1', constraints: Constraint[]): bigint {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
+		const axisOrder = AllAxisOrders[axis];
 
 		const pieceAGroupIndex = pieceA.axisGroups[axis];
 		const pieceBGroupIndex = pieceB.axisGroups[axis];
+
 		const pieceAGroup = AllAxisOrders[axis][pieceAGroupIndex];
 		const pieceBGroup = AllAxisOrders[axis][pieceBGroupIndex];
 
+		// No change if they're in the same group.
+		if (pieceAGroupIndex === pieceBGroupIndex) return 0n;
+
+		const numGroups = axisOrder[axis].length;
+
 		/**
 		 * The minimum required distance from group A to group B,
-		 * based on the running groupPosition we have.
+		 * based on the longest path in the constraint graph.
 		 */
-		const groupsXSeparation: bigint = groupPositions.get(pieceBGroupIndex)! - groupPositions.get(pieceAGroupIndex)!;
-
+		const groupsSeparation = findLongestPath(pieceAGroupIndex, pieceBGroupIndex, constraints, numGroups);
+		
 		// Add the offsets from the start of their groups
 		const pieceAGroupStartOffset = axisDeterminer(pieceA.coords) - pieceAGroup.range[0];
 		const pieceBGroupStartOffset = axisDeterminer(pieceB.coords) - pieceBGroup.range[0];
-		const piecesSeparation = groupsXSeparation - pieceAGroupStartOffset + pieceBGroupStartOffset;
+		const piecesSeparation = groupsSeparation - pieceAGroupStartOffset + pieceBGroupStartOffset;
 
 		return piecesSeparation;
 	}
@@ -891,6 +894,34 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 	}
 
 	return positions;
+}
+
+/**
+ * Finds the longest path (minimum required separation) between two nodes
+ * in a constraint graph.
+ */
+function findLongestPath(fromGroup: number, toGroup: number, constraints: Constraint[], numGroups: number): bigint {
+    // 1. Initialize distances. All are -Infinity except the start node.
+    const distances = new Map<number, bigint>();
+    distances.set(fromGroup, 0n);
+
+    // 2. Relax edges repeatedly (Bellman-Ford logic)
+    for (let i = 0; i < numGroups - 1; i++) {
+        for (const constraint of constraints) {
+            if (!distances.has(constraint.from)) continue;
+
+            const newDist = distances.get(constraint.from)! + constraint.weight;
+            const oldDist = distances.get(constraint.to);
+            
+            if (oldDist === undefined || newDist > oldDist) {
+                distances.set(constraint.to, newDist);
+            }
+        }
+    }
+
+    // 3. Return the calculated distance to the target group.
+    // If it's unreachable, it means there is no constraint path, so separation is 0.
+    return distances.get(toGroup) ?? 0n;
 }
 
 
