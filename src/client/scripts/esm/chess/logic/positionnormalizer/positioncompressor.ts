@@ -736,61 +736,96 @@ function getGroupConstraintsForRequiredPieceSeparations(
 
 /**
  * Receives required X, Y, and V separations, and returns the updated
- * X & Y separation that also satisfy the V separation.
+ * X & Y separations if and only if the V-rule imposes a new,
+ * mathematically forced minimum on one of them. If EITHER X or Y
+ * can be increased/decreased to satisfy the V-rule, it will skip it,
+ * as that requires a choice, so as far as we know, we don't know
+ * which is REQUIRED.
  */
-function solveSeparationSystem(
-	base_x_sep: bigint,
-	base_y_sep: bigint,
-	base_v_sep: bigint,
-	v_type: 'exact' | 'min'
+function updateMinDxDyBasedRequiredV(
+    x_sep: bigint,
+    y_sep: bigint,
+    required_v_sep: bigint,
+    v_type: 'exact' | 'min'
 ): Coords {
+	const axixDeterminer = AXIS_DETERMINERS['1,-1'];
 
-	// Let dx and dy be the absolute, non-negative separations.
-	let dx = bimath.abs(base_x_sep);
-	let dy = bimath.abs(base_y_sep);
+	// While dx or dy may be negative, depending on the piece order.
+	// The RULE is we cannot shrink the separation closer to zero,
+	// it must only ever expand!
 
-	// Formulate the V-axis rule in terms of dx and dy.
-	// The V-axis is (x+y). The separation between A and B is Vb - Va.
-	// (xB' + yB') - (xA' + yA') = (xB' - xA') + (yB' - yA')
-	// The signs of the terms depend on the original group ordering.
-	const x_sign = base_x_sep >= 0n ? 1n : -1n;
-	const y_sign = base_y_sep >= 0n ? 1n : -1n;
+	const x_sep_positive = x_sep >= 0n;
+	const y_sep_positive = y_sep >= 0n;
 
-	// The V-rule is: (x_sign * dx) + (y_sign * dy)  (must be >= or ==)  base_v_sep
+	const can_increase_dx = x_sep_positive;
+	const can_increase_dy = y_sep_positive;
+	const can_decrease_dx = !x_sep_positive;
+	const can_decrease_dy = !y_sep_positive;
+
+	// What is the current V separation?
+	const v_sep = axixDeterminer([x_sep, y_sep]);
+
+	// If the V separation is already satisfied, no need to adjust.
+	if (v_sep === required_v_sep) return [x_sep, y_sep];
+
+	const required_v_change = required_v_sep - v_sep;
 
 	if (v_type === 'exact') {
-		// Example: dx - dy = 5
-		// We need to find the smallest dx and dy that satisfy this AND their base rules.
-		// Let's test two possibilities.
-
-		// Possibility 1: Assume dy is at its minimum. What must dx be?
-		const required_dx = base_v_sep - (y_sign * dy);
-		if (x_sign * required_dx >= dx) dx = x_sign * required_dx; // This works if the result is positive
-
-		// Possibility 2: Assume dx is at its minimum. What must dy be?
-		const required_dy = base_v_sep - (x_sign * dx);
-		if (y_sign * required_dy >= dy) dy = y_sign * required_dy; // This works if the result is positive
-
-	} else { // v_type === 'min'
-		// Example: dx - dy >= 20.
-		// Check if the current minimums already satisfy the rule.
-		const current_v_sep = (x_sign * dx) + (y_sign * dy);
-        
-		if (base_v_sep > 0n && current_v_sep < base_v_sep) {
-			// There is a shortfall. Add it to the positive term.
-			const shortfall = base_v_sep - current_v_sep;
-			if (x_sign > 0n) dx += shortfall;
-			else dy += shortfall; // y_sign must be > 0n
-		} else if (base_v_sep < 0n && current_v_sep > base_v_sep) {
-			// There is a shortfall (e.g. current is -10, required is <= -20).
-			// Add the negative shortfall to the negative term.
-			const shortfall = base_v_sep - current_v_sep; // This will be negative
-			if (x_sign < 0n) dx -= shortfall; // dx is absolute, so this increases it
-			else dy -= shortfall; // y_sign must be < 0n
+		// If the V separation is an exact equality, we must adjust one of the axes
+		// to match the required V separation exactly.
+		if (required_v_change > 0n) { // We must increase it
+			// Need to increase either dx or dy
+			// However it can only grow away from zero.
+			// If it's positive it must increase, if it's negative it must decrease.
+			if (can_increase_dx && can_increase_dy) throw Error("Unexpected case! Could increase min dx or dy, can't choose between the two!");
+			else if (can_increase_dx) {
+				// Increase dx to match the required V separation.
+				x_sep += required_v_change;
+			} else if (can_increase_dy) {
+				// Increase dy to match the required V separation.
+				y_sep += required_v_change;
+			} else throw Error("Unexpected case! Can't increase dx or dy.");
+		} else { // required_v_change < 0n => We must decrease it
+			// Need to either decrease dx or dy
+			// ONLY POSSIBLE if one is negative.
+			if (can_decrease_dx && can_decrease_dy) throw Error("Unexpected case! Could decrease min dx or dy, can't choose between the two!");
+			else if (can_decrease_dx) {
+				// Decrease dx to match the required V separation.
+				x_sep += required_v_change; // This will be negative, so it decreases dx.
+			} else if (can_decrease_dy) {
+				// Decrease dy to match the required V separation.
+				y_sep += required_v_change; // This will be negative, so it decreases dy.
+			} else throw Error("Unexpected case! Can't decrease dx or dy.");
 		}
+	} else { // v_type is 'min'
+
+		// Calculate the v_change
+		if (required_v_sep > 0n && v_sep < required_v_sep) {
+			// Positive side, increase up to the minimum
+			if (can_increase_dx && can_increase_dy) throw Error("Unexpected case! Could increase min dx or dy, can't choose between the two!");
+			else if (can_increase_dx) {
+				// Increase dx to match the required V separation.
+				x_sep += required_v_change;
+			} else if (can_increase_dy) {
+				// Increase dy to match the required V separation.
+				y_sep += required_v_change;
+			} else throw Error("Unexpected case! Can't increase dx or dy.");
+		} else if (required_v_sep < 0n && v_sep > required_v_sep) {
+			// Negative side, decrease down to the minimum
+			// if (can_decrease_dx && can_decrease_dy) throw Error("Unexpected case! Could decrease min dx or dy, can't choose between the two!");
+			if (can_decrease_dx && can_decrease_dy) console.warn("Could decrease min dx or dy, can't choose between the two!");
+			else if (can_decrease_dx) {
+				// Decrease dx to match the required V separation.
+				x_sep += required_v_change; // This will be negative, so it decreases dx.
+			} else if (can_decrease_dy) {
+				// Decrease dy to match the required V separation.
+				y_sep += required_v_change; // This will be negative, so it decreases dy.
+			} else throw Error("Unexpected case! Can't decrease dx or dy.");
+		} // else it already satisfies the minimum.
 	}
 
-	return [dx,dy];
+	// Return the new updated MINIMUM REQUIRED dx and dy.
+	return [x_sep, y_sep];
 }
 
 /**
