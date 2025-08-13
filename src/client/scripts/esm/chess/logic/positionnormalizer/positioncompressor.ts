@@ -870,65 +870,64 @@ interface SeparationRequirement {
  * or "loose" (a minimum distance), based on whether the pieces are in the same
  * axis group or different ones.
  * 
- * Only takes into account number of groups between them, doesn't take into account
- * other constraints.
+ * Only takes into account number of groups between them, and their widths,
+ * doesn't take into account other constraints.
  */
 function calculateRequiredAxisSeparation(
-	pieceA: PieceTransform,
-	pieceB: PieceTransform,
-	axis: '1,0' | '0,1' | '1,1' | '1,-1',
-	AllAxisOrders: AxisOrders
+    pieceA: PieceTransform,
+    pieceB: PieceTransform,
+    axis: '1,0' | '0,1' | '1,1' | '1,-1',
+    AllAxisOrders: AxisOrders
 ): SeparationRequirement {
-	const axisDeterminer = AXIS_DETERMINERS[axis];
-	const axisOrder = AllAxisOrders[axis];
+    const axisDeterminer = AXIS_DETERMINERS[axis];
+    const axisOrder = AllAxisOrders[axis];
 
-	const groupIndexA = pieceA.axisGroups[axis];
-	const groupIndexB = pieceB.axisGroups[axis];
+    const groupIndexA = pieceA.axisGroups[axis]!;
+    const groupIndexB = pieceB.axisGroups[axis]!;
 
-	const axisValueA = axisDeterminer(pieceA.coords);
-	const axisValueB = axisDeterminer(pieceB.coords);
-
-	// Case 1: Pieces are in the same group.
+    // Case 1: Pieces are in the same group. Separation is exact.
 	// The distance between them is "tight" and must be preserved exactly.
-	if (groupIndexA === groupIndexB) {
-		return {
-			separation: axisValueB - axisValueA,
-			type: 'exact',
-		};
-	}
+    if (groupIndexA === groupIndexB) {
+        return {
+            separation: axisDeterminer(pieceB.coords) - axisDeterminer(pieceA.coords),
+            type: 'exact',
+        };
+    }
 
-	// Case 2: Pieces are in different groups.
+    // Case 2: Pieces are in different groups. Separation is a minimum.
 	// The distance is "loose" and is defined by the space between their groups,
 	// plus the distance from the piece's axis value to the edge of their group's range.
-    
-	const groupA = axisOrder[groupIndexA];
-	const groupB = axisOrder[groupIndexB];
 
-	// The number of full groups sitting *between* the two pieces' groups. Can be negative
-	const distInGroups = groupIndexB - groupIndexA;
+    const startIdx = Math.min(groupIndexA, groupIndexB);
+    const endIdx = Math.max(groupIndexA, groupIndexB);
 
-	// Start with the total minimum separation from the gaps between groups.
-	// If they are adjacent (groupsBetween = 0), this is 1 * MIN_ARBITRARY_DISTANCE.
-	// If there is 1 group between, this is 2 * MIN_ARBITRARY_DISTANCE.
-	let minSeparation = MIN_ARBITRARY_DISTANCE * BigInt(distInGroups); // Can be negative
+    let requiredSeparation = 0n;
 
-	if (distInGroups > 0n) {
-		// Add the distance from the first piece to the end of its group's range.
-		// The range end is the maximum value in the group.
-		minSeparation += groupA.range[1] - axisValueA;
+    // Add the distance from the first piece to the edge of its group.
+    const pieceInStartGroup = groupIndexA === startIdx ? pieceA : pieceB;
+    requiredSeparation += (axisOrder[startIdx]!.range[1] - axisDeterminer(pieceInStartGroup.coords));
 
-		// Add the distance from the start of the second group's range to the second piece.
-		// The range start is the minimum value in the group.
-		minSeparation += axisValueB - groupB.range[0];
-	} else { // distInGroups < 0n
-		minSeparation -= groupB.range[1] - axisValueB;
-		minSeparation -= axisValueA - groupA.range[0];
-	}
+	// Add the padding to the next group
+	requiredSeparation += MIN_ARBITRARY_DISTANCE;
 
-	return {
-		separation: minSeparation,
-		type: 'min',
-	};
+    // For every intervening group, add its width, plus another MIN_ARBITRARY_DISTANCE padding to the next group.
+    for (let i = startIdx + 1; i < endIdx; i++) {
+        const interveningGroup = axisOrder[i]!;
+		const groupWidth = interveningGroup.range[1] - interveningGroup.range[0];
+        requiredSeparation += groupWidth + MIN_ARBITRARY_DISTANCE;
+    }
+
+    // Add the distance from the start of the last group to the second piece.
+    const pieceInEndGroup = groupIndexA === endIdx ? pieceA : pieceB;
+    requiredSeparation += (axisDeterminer(pieceInEndGroup.coords) - axisOrder[endIdx]!.range[0]);
+
+    // Ensure the final sign is correct based on the original piece order.
+    if (groupIndexB < groupIndexA) requiredSeparation *= -1n;
+
+    return {
+        separation: requiredSeparation,
+        type: 'min',
+    };
 }
 
 
