@@ -141,7 +141,7 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
-const MIN_ARBITRARY_DISTANCE = 50n;
+const MIN_ARBITRARY_DISTANCE = 100n;
 // const MIN_ARBITRARY_DISTANCE = 10n;
 
 
@@ -287,8 +287,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	const xConstraintMap = buildConstraintMap(currentXConstraints);
 	const yConstraintMap = buildConstraintMap(currentYConstraints);
 
-	console.log(`\nInitial X group constraints:`, currentXConstraints);
-	console.log(`Initial Y group constraints:`, currentYConstraints);
+	// console.log(`\nInitial X group constraints:`, currentXConstraints);
+	// console.log(`Initial Y group constraints:`, currentYConstraints);
 
 	console.log(`\nInitial X constraint map:`, xConstraintMap);
 	console.log(`Initial Y constraint map:`, yConstraintMap);
@@ -306,6 +306,15 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	let diagonalSatisfied = true; // Assume diagonal constraints are satisfied until proven otherwise
 
 	while (changeMade || !diagonalSatisfied) {
+		/**
+		 * Only true after further iterations stop changing constraints, but diagonals are not satisfied.
+		 * We iterate one more time, but we force ONE constraint to make a choice which direction
+		 * to increase to satisfy one additional diagonal constraint, then we iterate again and see
+		 * if the constraints keep changing.
+		 */
+		const resolveAmbiguities = !changeMade && !diagonalSatisfied;
+		if (resolveAmbiguities) console.warn("Iterating again... Resolving ambiguities...");
+
 		changeMade = false;
 		diagonalSatisfied = true;
 		iteration++;
@@ -325,17 +334,18 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		const xAllPairsPaths = calculateAllPairsLongestPaths(currentXConstraints, AllAxisOrders['1,0'].length);
 		const yAllPairsPaths = calculateAllPairsLongestPaths(currentYConstraints, AllAxisOrders['0,1'].length);
 
-		console.log(`\nX All Pairs Paths:`, xAllPairsPaths);
-		console.log(`Y All Pairs Paths:`, yAllPairsPaths);
+		// console.log(`\nX All Pairs Paths:`, xAllPairsPaths);
+		// console.log(`Y All Pairs Paths:`, yAllPairsPaths);
 
 		// Iterate through all unique pairs of pieces to find new or stronger constraints
-		for (let i = 0; i < pieces.length; i++) {
+		outer: for (let i = 0; i < pieces.length; i++) {
 			const pieceA = pieces[i]!;
 			for (let j = i + 1; j < pieces.length; j++) {
 				const pieceB = pieces[j]!;
 
-				const results = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders);
+				const results = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders, resolveAmbiguities);
 				const pairConstraints = results.constraints;
+				const choiceMade = results.choiceMade;
 				if (!results.diagonalSatisfied) diagonalSatisfied = false;
 				
 				// For each potential new constraint, try to update our master maps
@@ -347,6 +357,11 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 						changeMade = true;
 					}
 				}
+
+				if (choiceMade) {
+					console.warn(`CHOICE MADE for pair ${pieceA.coords} and ${pieceB.coords}. Termining iteration early.`);
+					break outer;
+				}
 			}
 		}
 
@@ -354,8 +369,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		currentYConstraints = convertMapToArray(yConstraintMap, '0,1');
 		
 		if (changeMade) {
-			console.log("New X constraints:", currentXConstraints);
-			console.log("New Y constraints:", currentYConstraints);
+			console.log("New X constraints:", xConstraintMap);
+			console.log("New Y constraints:", yConstraintMap);
 		} else {
 			console.log("\nNo constraints changed this iteration.");
 		}
@@ -592,14 +607,19 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
  * @param xGroupPositions 
  * @param yGroupPositions 
  * @param AllAxisOrders 
+ * @param resolveAmbiguities - Set to true if, when we encounter a case where we could either adjust
+ * 							   dx OR dy to satisfy a diagonal constraint, to EXPLICITLY choose to adjust
+ * 							   one of them, instead of the default which is leaving dx & dy unchanged.
+ * @returns An object containing the new constraints and whether the diagonal constraints were satisfied.
  */
 function upgradeConstraintsForPair(
 	pieceA: PieceTransform,
 	pieceB: PieceTransform,
 	xAllPairsPaths: Map<number, Map<number, bigint>>,
 	yAllPairsPaths: Map<number, Map<number, bigint>>,
-	AllAxisOrders: AxisOrders
-): { constraints: Constraint[], diagonalSatisfied: boolean; } {
+	AllAxisOrders: AxisOrders,
+	resolveAmbiguities: boolean,
+): { constraints: Constraint[], diagonalSatisfied: boolean; choiceMade: boolean; } {
 
 	console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
@@ -644,7 +664,8 @@ function upgradeConstraintsForPair(
 		pieceA, pieceB,
 		piecesXSeparation, piecesYSeparation,
 		piecesVSeparation, piecesVSeparationType,
-		AllAxisOrders
+		AllAxisOrders,
+		resolveAmbiguities
 	);
 }
 
@@ -667,13 +688,25 @@ function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform
 		pieceA, pieceB,
 		x_sep_A_to_B, y_sep_A_to_B,
 		v_sep_A_to_B, v_separation_type,
-		AllAxisOrders
+		AllAxisOrders,
+		false // resolveAmbiguities is false for first pass
 	).constraints;
 }
 
 /**
  * Calculates the required constraints between two pieces,
  * given the required separations on every axis we have.
+ * @param pieceA 
+ * @param pieceB 
+ * @param x_separation 
+ * @param y_separation 
+ * @param v_separation 
+ * @param v_separation_type 
+ * @param AllAxisOrders 
+ * @param resolveAmbiguities - Set to true if, when we encounter a case where we could either adjust
+ * 							   dx OR dy to satisfy a diagonal constraint, to EXPLICITLY choose to adjust
+ * 							   one of them, instead of the default which is leaving dx & dy unchanged.
+ * @returns 
  */
 function getGroupConstraintsForRequiredPieceSeparations(
 	pieceA: PieceTransform,
@@ -682,8 +715,9 @@ function getGroupConstraintsForRequiredPieceSeparations(
 	y_separation: bigint,
 	v_separation: bigint,
 	v_separation_type: 'exact' | 'min',
-	AllAxisOrders: AxisOrders
-): { constraints: Constraint[], diagonalSatisfied: boolean; } {
+	AllAxisOrders: AxisOrders,
+	resolveAmbiguities: boolean,
+): { constraints: Constraint[], diagonalSatisfied: boolean; choiceMade: boolean; } {
 
 	// --- 2. Solve the System of Inequalities ---
 
@@ -697,11 +731,13 @@ function getGroupConstraintsForRequiredPieceSeparations(
 		x_separation,
 		y_separation,
 		v_separation,
-		v_separation_type
+		v_separation_type,
+		resolveAmbiguities
 	);
 
 	const finalSeparations: Coords = finalSeparationResults.dxy;
 	const diagonalSatisfied = finalSeparationResults.diagonalSatisfied;
+	const choiceMade = finalSeparationResults.choiceMade;
 
 	console.log(`Final separations after updating dx dy: ${finalSeparations}\n`);
 
@@ -757,7 +793,7 @@ function getGroupConstraintsForRequiredPieceSeparations(
 	}
 
 	// Finally, return the array of constraints for this pair.
-	return { constraints, diagonalSatisfied };
+	return { constraints, diagonalSatisfied, choiceMade };
 }
 
 /**
@@ -767,17 +803,27 @@ function getGroupConstraintsForRequiredPieceSeparations(
  * can be increased/decreased to satisfy the V-rule, it will skip it,
  * as that requires a choice, so as far as we know, we don't know
  * which is REQUIRED.
+ * @param x_sep 
+ * @param y_sep 
+ * @param required_v_sep 
+ * @param v_type 
+ * @param resolveAmbiguities - Set to true if, when we encounter a case where we could either adjust
+ * 							   dx OR dy to satisfy a diagonal constraint, to EXPLICITLY choose to adjust
+ * 							   one of them, instead of the default which is leaving dx & dy unchanged.
+ * @returns 
  */
 function updateMinDxDyBasedRequiredV(
     x_sep: bigint,
     y_sep: bigint,
     required_v_sep: bigint,
-    v_type: 'exact' | 'min'
-): { dxy: Coords; diagonalSatisfied: boolean; } {
+    v_type: 'exact' | 'min',
+    resolveAmbiguities: boolean
+): { dxy: Coords; diagonalSatisfied: boolean; choiceMade: boolean; } {
 	const axixDeterminer = AXIS_DETERMINERS['1,-1'];
 
 	/** Whether the diagonal constraints are satified by the return dx and dy constraints. */
 	let diagonalSatisfied = true;
+	let choiceMade = false;
 
 	// While dx or dy may be negative, depending on the piece order.
 	// The RULE is we cannot shrink the separation closer to zero,
@@ -795,7 +841,7 @@ function updateMinDxDyBasedRequiredV(
 	const v_sep = axixDeterminer([x_sep, y_sep]);
 
 	// If the V separation is already satisfied, no need to adjust.
-	if (v_sep === required_v_sep) return { dxy: [x_sep, y_sep], diagonalSatisfied };
+	if (v_sep === required_v_sep) return { dxy: [x_sep, y_sep], diagonalSatisfied, choiceMade };
 
 	const required_v_change = required_v_sep - v_sep;
 
@@ -832,8 +878,14 @@ function updateMinDxDyBasedRequiredV(
 		if (required_v_sep > 0n && v_sep < required_v_sep) {
 			// Positive side, increase up to the minimum
 			if (can_increase_dx && can_increase_dy) {
-				console.warn("Unexpected case! Could increase min dx or dy, can't choose between the two!");
-				diagonalSatisfied = false; // We can't choose, so for now the diagonal won't be satisfied.
+				if (resolveAmbiguities) {
+					console.warn("CHOOSING to increase dx to satisfy the V separation!");
+					x_sep += required_v_change; // Deterministic rule: always modify X when we're told to make a choice.
+					choiceMade = true;
+				} else {
+					console.warn("Unexpected case! Could increase min dx or dy, can't choose between the two!");
+					diagonalSatisfied = false; // We can't choose, so for now the diagonal won't be satisfied.
+				}
 			} else if (can_increase_dx) {
 				// Increase dx to match the required V separation.
 				x_sep += required_v_change;
@@ -845,8 +897,14 @@ function updateMinDxDyBasedRequiredV(
 			// Negative side, decrease down to the minimum
 			// if (can_decrease_dx && can_decrease_dy) throw Error("Unexpected case! Could decrease min dx or dy, can't choose between the two!");
 			if (can_decrease_dx && can_decrease_dy) {
-				console.warn("Could decrease min dx or dy, can't choose between the two!");
-				diagonalSatisfied = false; // We can't choose, so for now the diagonal won't be satisfied.
+				if (resolveAmbiguities) {
+					console.warn("CHOOSING to decrease dx to satisfy the V separation!");
+					x_sep += required_v_change; // Deterministic rule: always modify X when we're told to make a choice.
+					choiceMade = true;
+				} else {
+					console.warn("Could decrease min dx or dy, can't choose between the two!");
+					diagonalSatisfied = false; // We can't choose, so for now the diagonal won't be satisfied.
+				}
 			} else if (can_decrease_dx) {
 				// Decrease dx to match the required V separation.
 				x_sep += required_v_change; // This will be negative, so it decreases dx.
@@ -858,7 +916,7 @@ function updateMinDxDyBasedRequiredV(
 	}
 
 	// Return the new updated MINIMUM REQUIRED dx and dy.
-	return { dxy: [x_sep, y_sep], diagonalSatisfied };
+	return { dxy: [x_sep, y_sep], diagonalSatisfied, choiceMade };
 }
 
 /**
