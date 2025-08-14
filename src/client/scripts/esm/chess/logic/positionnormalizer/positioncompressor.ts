@@ -281,22 +281,22 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 
 	// 1. Separate the master list of constraints by axis.
-	let xConstraints = allConstraints.filter(c => c.axis === '1,0');
-	let yConstraints = allConstraints.filter(c => c.axis === '0,1');
+	let currentXConstraints = allConstraints.filter(c => c.axis === '1,0');
+	let currentYConstraints = allConstraints.filter(c => c.axis === '0,1');
+	// 1. Convert the initial list of constraints into canonical maps.
+	const xConstraintMap = buildConstraintMap(currentXConstraints);
+	const yConstraintMap = buildConstraintMap(currentYConstraints);
 
-	console.log(`\nAll X group contraints:`);
-	console.log(xConstraints);
-	console.log(`\nAll Y group contraints:`);
-	console.log(yConstraints);
+	console.log(`\nInitial X group constraints:`, currentXConstraints);
+	console.log(`\nInitial Y group constraints:`, currentYConstraints);
 
-	// Now we have the initial DRAFT group positions.
-	// Since each axes' solution is dependant on the positioning of the groups on the opposite axis,
-	// we must iteratively update each axis' constraints, until they stop changing.
+	// Since each axis's solution is dependant on the constraints of the other,
+	// we must iteratively update the constraints until they stop changing.
 
 	const MAX_ITERATIONS = 100;
 	// DEBUGGING
-	const PREFERRED_ITERATIONS = 1;
-	// const PREFERRED_ITERATIONS = 100;
+	// const PREFERRED_ITERATIONS = 1;
+	const PREFERRED_ITERATIONS = 100;
 
 	let iteration = 0;
 	let changeMade = true;
@@ -306,7 +306,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		iteration++;
 		// if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
 		if (iteration >= MAX_ITERATIONS) {
-			console.error("Max iterations!");
+			console.error("Max iterations reached!");
 			break;
 		}
 		if (iteration > PREFERRED_ITERATIONS) {
@@ -315,53 +315,44 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 
 		console.log(`\nIteration ${iteration}...`);
-		
-		// Update the X constraints based on the minimum distances between Y groups
-		const newConstraints: Constraint[] = [];
 
-		// Iterate through all unique pairs of pieces
+
+		// Iterate through all unique pairs of pieces to find new or stronger constraints
 		for (let i = 0; i < pieces.length; i++) {
 			const pieceA = pieces[i]!;
 			for (let j = i + 1; j < pieces.length; j++) {
 				const pieceB = pieces[j]!;
 
-				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xConstraints, yConstraints, AllAxisOrders);
-				newConstraints.push(...pairConstraints);
+				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, currentXConstraints, currentYConstraints, AllAxisOrders);
+				
+				// For each potential new constraint, try to update our master maps
+				for (const newConstraint of pairConstraints) {
+					const mapToUpdate = newConstraint.axis === '1,0' ? xConstraintMap : yConstraintMap;
+					if (updateConstraintInMap(mapToUpdate, newConstraint)) {
+						// If the map was updated, it means we found a stronger requirement.
+						// We must continue the while loop to re-evaluate all pairs.
+						changeMade = true;
+					}
+				}
 			}
 		}
 
-		// Separate the master list of constraints by axis.
-		const newXConstraints = newConstraints.filter(c => c.axis === '1,0');
-		const newYConstraints = newConstraints.filter(c => c.axis === '0,1');
-
-		// If any position has changed, keep iterating!
-		if (!areGroupPositionsEqual(xGroupPositions, newXGroupPositions)) {
-			console.log("X Group Positions changed after updating all constraints!");
-			changeMade = true;
-		}
-		if (!areGroupPositionsEqual(yGroupPositions, newYGroupPositions)) {
-			console.log("Y Group Positions changed after updating all constraints!");
-			changeMade = true;
-		}
-
+		currentXConstraints = convertMapToArray(xConstraintMap, '1,0');
+		currentYConstraints = convertMapToArray(yConstraintMap, '0,1');
+		
 		if (changeMade) {
-			console.log(`\nNew X group contraints:`);
-			console.log(newXConstraints);
-			console.log(`\nNew Y group contraints:`);
-			console.log(newYConstraints);
+			console.log("New X constraints:", currentXConstraints);
+			console.log("New Y constraints:", currentYConstraints);
 		} else {
-			console.log("No changes made to group positions this iteration.");
+			console.log("No constraints changed this iteration.");
 		}
-
-		xConstraints = newXConstraints;
-		yConstraints = newYConstraints;
 	}
 
-	// 2. Solve for the final positions of each group on each axis.
-	let xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, xConstraints);
-	let yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, yConstraints);
-
 	console.log(`Convergence reached after ${iteration} iterations!`);
+
+	// 2. Solve for the final group positions using the converged constraint maps.
+	const xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, currentXConstraints);
+	const yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, currentYConstraints);
 
 
 
