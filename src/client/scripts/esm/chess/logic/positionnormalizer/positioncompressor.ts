@@ -889,45 +889,6 @@ function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Ma
 	return positions;
 }
 
-/**
- * Finds the longest path (minimum required separation) between two nodes
- * in a constraint graph.
- */
-function findLongestPath(fromGroup: number, toGroup: number, constraints: Constraint[], numGroups: number): bigint {
-    // 1. Initialize distances. All are -Infinity except the start node.
-    const distances = new Map<number, bigint>();
-    distances.set(fromGroup, 0n);
-
-    // 2. Relax edges repeatedly (Bellman-Ford logic)
-    for (let i = 0; i < numGroups - 1; i++) {
-        for (const constraint of constraints) {
-            if (!distances.has(constraint.from)) continue;
-
-            const newDist = distances.get(constraint.from)! + constraint.weight;
-            const oldDist = distances.get(constraint.to);
-            
-            if (oldDist === undefined || newDist > oldDist) {
-                distances.set(constraint.to, newDist);
-            }
-        }
-    }
-
-    // 3. Return the calculated distance to the target group.
-    // If it's unreachable, it means there is no constraint path, so separation is 0.
-    return distances.get(toGroup) ?? 0n;
-}
-
-
-/** Tests if two maps containing group positions on the X/Y axis are equivalent. */
-function areGroupPositionsEqual(groupPositions1: Map<number, bigint>, groupPositions2: Map<number, bigint>): boolean {
-	if (groupPositions1.size !== groupPositions2.size) return false;
-	for (const [groupNumber, g1_position] of groupPositions1.entries()) {
-		const g2_position = groupPositions2.get(groupNumber);
-		if (g1_position !== g2_position) return false;
-	}
-	return true;
-}
-
 
 // ============================================================================================
 
@@ -1055,6 +1016,38 @@ function updateConstraintInMap(map: ConstraintMap, newConstraint: Constraint): b
         return true; // A change was made
     }
     return false; // No change was made
+}
+
+/**
+ * Pre-calculates the longest path between all pairs of groups for a given axis.
+ * @returns A map where the key is the 'from' group index, and the value is another
+ *          map where the key is the 'to' group index and the value is the longest path weight.
+ */
+function calculateAllPairsLongestPaths(constraints: Constraint[], numGroups: number): Map<number, Map<number, bigint>> {
+    const allDistances = new Map<number, Map<number, bigint>>();
+
+    // Run a single-source longest path algorithm from every group as the source.
+    for (let startGroup = 0; startGroup < numGroups; startGroup++) {
+        const distancesFromStart = new Map<number, bigint>();
+        distancesFromStart.set(startGroup, 0n);
+
+        // Bellman-Ford relaxation
+        for (let i = 0; i < numGroups - 1; i++) {
+            for (const constraint of constraints) {
+                if (!distancesFromStart.has(constraint.from)) continue;
+
+                const newDist = distancesFromStart.get(constraint.from)! + constraint.weight;
+                const oldDist = distancesFromStart.get(constraint.to);
+
+                if (oldDist === undefined || newDist > oldDist) {
+                    distancesFromStart.set(constraint.to, newDist);
+                }
+            }
+        }
+        allDistances.set(startGroup, distancesFromStart);
+    }
+
+    return allDistances;
 }
 
 
