@@ -97,6 +97,8 @@ interface Constraint {
     axis: '1,0' | '0,1';
 }
 
+type ConstraintMap = Map<string, bigint>; // Key is `${from},${to}`
+
 
 // ================================== Constants ==================================
 
@@ -1012,6 +1014,56 @@ function calculateRequiredAxisSeparation(
         separation: requiredSeparation,
         type: 'min',
     };
+}
+
+
+// ======================================== CONSTRAINT MAP HELPERS ========================================
+
+
+/**
+ * Takes an array of constraints and converts it into a canonical map,
+ * ensuring that for any pair of groups, only the strongest (largest weight)
+ * constraint is kept.
+ */
+function buildConstraintMap(constraints: Constraint[]): ConstraintMap {
+    const map: ConstraintMap = new Map();
+    for (const constraint of constraints) {
+        const key = `${constraint.from},${constraint.to}`;
+        const existingWeight = map.get(key);
+        if (existingWeight === undefined || constraint.weight > existingWeight) {
+            map.set(key, constraint.weight);
+        }
+    }
+    return map;
+}
+
+/**
+ * Converts a canonical constraint map back into an array of Constraint objects,
+ * which can be used by the solver functions.
+ */
+function convertMapToArray(map: ConstraintMap, axis: '1,0' | '0,1'): Constraint[] {
+    const constraints: Constraint[] = [];
+    for (const [key, weight] of map.entries()) {
+        const [from, to] = key.split(',').map(Number);
+        constraints.push({ from: from!, to: to!, weight, axis });
+    }
+    return constraints;
+}
+
+/**
+ * Updates a constraint map with a new potential constraint.
+ * If the new constraint is stronger than an existing one, it updates the map.
+ * @returns `true` if the map was changed, `false` otherwise.
+ */
+function updateConstraintInMap(map: ConstraintMap, newConstraint: Constraint): boolean {
+    const key = `${newConstraint.from},${newConstraint.to}`;
+    const existingWeight = map.get(key);
+
+    if (existingWeight === undefined || newConstraint.weight > existingWeight) {
+        map.set(key, newConstraint.weight);
+        return true; // A change was made
+    }
+    return false; // No change was made
 }
 
 
