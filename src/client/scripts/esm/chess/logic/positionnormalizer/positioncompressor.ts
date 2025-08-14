@@ -596,7 +596,7 @@ function upgradeConstraintsForPair(
 	AllAxisOrders: AxisOrders
 ): Constraint[] {
 
-	// console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
+	console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
 	const piecesXSeparation = getPiecesAxisSeparation('1,0', xAllPairsPaths);
 	const piecesYSeparation = getPiecesAxisSeparation('0,1', yAllPairsPaths);
@@ -682,10 +682,7 @@ function getGroupConstraintsForRequiredPieceSeparations(
 
 	// --- 2. Solve the System of Inequalities ---
 
-	// console.log("Pre separations:");
-	// console.log(`X separation: ${x_separation}`);
-	// console.log(`Y separation: ${y_separation}`);
-	// console.log(`V separation: ${v_separation} (${v_separation_type})`);
+	console.log(`dx dy dv: ${x_separation}, ${y_separation}, ${v_separation} (${v_separation_type})`);
 
 	/**
 	 * Gives the updated required dx and dy separations between the pieces, as Coords.
@@ -698,7 +695,7 @@ function getGroupConstraintsForRequiredPieceSeparations(
 		v_separation_type
 	);
 
-	// console.log(`Final separations after solving system: ${finalSeparations}\n`);
+	console.log(`Final separations after updating dx dy: ${finalSeparations}\n`);
 
 	// --- 3. Generate Constraint Objects ---
 
