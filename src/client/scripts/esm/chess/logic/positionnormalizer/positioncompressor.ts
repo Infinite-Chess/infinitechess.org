@@ -94,7 +94,7 @@ interface Constraint {
 	 * This is NOT the padding between them.
 	 */
     weight: bigint;
-    axis: '1,0' | '0,1';
+    axis: '1,0' | '0,1' | '1,1' | '1,-1';
 }
 
 type ConstraintMap = Map<string, bigint>; // Key is `${from},${to}`
@@ -621,7 +621,7 @@ function upgradeConstraintsForPair(
 	resolveAmbiguities: boolean,
 ): { constraints: Constraint[], diagonalSatisfied: boolean; choiceMade: boolean; } {
 
-	console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
+	// console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
 	const piecesXSeparation = getPiecesAxisSeparation('1,0', xAllPairsPaths);
 	const piecesYSeparation = getPiecesAxisSeparation('0,1', yAllPairsPaths);
@@ -721,7 +721,7 @@ function getGroupConstraintsForRequiredPieceSeparations(
 
 	// --- 2. Solve the System of Inequalities ---
 
-	console.log(`dx dy dv: ${x_separation}, ${y_separation}, ${v_separation} (${v_separation_type})`);
+	// console.log(`dx dy dv: ${x_separation}, ${y_separation}, ${v_separation} (${v_separation_type})`);
 
 	/**
 	 * Gives the updated required dx and dy separations between the pieces, as Coords.
@@ -739,7 +739,7 @@ function getGroupConstraintsForRequiredPieceSeparations(
 	const diagonalSatisfied = finalSeparationResults.diagonalSatisfied;
 	const choiceMade = finalSeparationResults.choiceMade;
 
-	console.log(`Final separations after updating dx dy: ${finalSeparations}\n`);
+	// console.log(`Final separations after updating dx dy: ${finalSeparations}\n`);
 
 	// --- 3. Generate Constraint Objects ---
 
@@ -1070,7 +1070,7 @@ function buildConstraintMap(constraints: Constraint[]): ConstraintMap {
  * Converts a canonical constraint map back into an array of Constraint objects,
  * which can be used by the solver functions.
  */
-function convertMapToArray(map: ConstraintMap, axis: '1,0' | '0,1'): Constraint[] {
+function convertMapToArray(map: ConstraintMap, axis: '1,0' | '0,1' | '1,1' | '1,-1'): Constraint[] {
     const constraints: Constraint[] = [];
     for (const [key, weight] of map.entries()) {
         const [from, to] = key.split(',').map(Number);
