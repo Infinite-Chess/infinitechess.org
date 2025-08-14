@@ -34,6 +34,7 @@ const example_position = 'k0,0|R18000,-6000|R12000,-18000|R1204,804'; // Simpler
 // const example_position = 'K0,0|R-30,60|r-30,65|R-30,120';
 // const example_position = 'K0,0|q-150,150|R-30,60|r-30,90|R-30,120'; // 3 rooks in between
 // const example_position = 'K0,0|q-110,125|R-30,60|r-30,90'; // 2 rooks in between, queen WAY up
+// const example_position = 'b-140,-30|K0,0|q-120,125|R-30,60|r-30,90'; // Same as below but with an extra bishop
 // const example_position = 'K0,0|q-120,125|R-30,60|r-30,90'; // 2 rooks in between, queen 5 up
 // const example_position = 'K0,0|q-125,120|R-30,60|r-30,90'; // 2 rooks in between, queen 5 left
 // const example_position = 'K0,0|q-120,120|R-30,60|r-30,90'; // 2 rooks in between

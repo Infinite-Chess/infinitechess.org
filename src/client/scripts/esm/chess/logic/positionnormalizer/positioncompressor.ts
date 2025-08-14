@@ -141,8 +141,8 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
-// const MIN_ARBITRARY_DISTANCE = 40n;
-const MIN_ARBITRARY_DISTANCE = 10n;
+const MIN_ARBITRARY_DISTANCE = 50n;
+// const MIN_ARBITRARY_DISTANCE = 10n;
 
 
 /**
@@ -288,14 +288,17 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	const yConstraintMap = buildConstraintMap(currentYConstraints);
 
 	console.log(`\nInitial X group constraints:`, currentXConstraints);
-	console.log(`\nInitial Y group constraints:`, currentYConstraints);
+	console.log(`Initial Y group constraints:`, currentYConstraints);
+
+	console.log(`\nInitial X constraint map:`, xConstraintMap);
+	console.log(`Initial Y constraint map:`, yConstraintMap);
 
 	// Since each axis's solution is dependant on the constraints of the other,
 	// we must iteratively update the constraints until they stop changing.
 
 	const MAX_ITERATIONS = 100;
 	// DEBUGGING
-	// const PREFERRED_ITERATIONS = 1;
+	// const PREFERRED_ITERATIONS = 0;
 	const PREFERRED_ITERATIONS = 100;
 
 	let iteration = 0;
@@ -316,6 +319,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 		console.log(`\nIteration ${iteration}...`);
 
+		// Pre-calculate all longest paths for this iteration for huge performance gain.
+		const xAllPairsPaths = calculateAllPairsLongestPaths(currentXConstraints, AllAxisOrders['1,0'].length);
+		const yAllPairsPaths = calculateAllPairsLongestPaths(currentYConstraints, AllAxisOrders['0,1'].length);
+
+		console.log(`\nX All Pairs Paths:`, xAllPairsPaths);
+		console.log(`Y All Pairs Paths:`, yAllPairsPaths);
 
 		// Iterate through all unique pairs of pieces to find new or stronger constraints
 		for (let i = 0; i < pieces.length; i++) {
@@ -323,7 +332,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			for (let j = i + 1; j < pieces.length; j++) {
 				const pieceB = pieces[j]!;
 
-				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, currentXConstraints, currentYConstraints, AllAxisOrders);
+				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders);
 				
 				// For each potential new constraint, try to update our master maps
 				for (const newConstraint of pairConstraints) {
@@ -344,7 +353,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			console.log("New X constraints:", currentXConstraints);
 			console.log("New Y constraints:", currentYConstraints);
 		} else {
-			console.log("No constraints changed this iteration.");
+			console.log("\nNo constraints changed this iteration.");
 		}
 	}
 
@@ -582,21 +591,21 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 function upgradeConstraintsForPair(
 	pieceA: PieceTransform,
 	pieceB: PieceTransform,
-	xConstraints: Constraint[],
-	yConstraints: Constraint[],
+	xAllPairsPaths: Map<number, Map<number, bigint>>,
+	yAllPairsPaths: Map<number, Map<number, bigint>>,
 	AllAxisOrders: AxisOrders
 ): Constraint[] {
 
 	// console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
-	const piecesXSeparation = getPiecesAxisSeparation('1,0', xConstraints);
-	const piecesYSeparation = getPiecesAxisSeparation('0,1', yConstraints);
+	const piecesXSeparation = getPiecesAxisSeparation('1,0', xAllPairsPaths);
+	const piecesYSeparation = getPiecesAxisSeparation('0,1', yAllPairsPaths);
 
 	// console.log(`Pieces X separation: ${piecesXSeparation}`);
 	// console.log(`Pieces Y separation: ${piecesYSeparation}`);
 	
-	/** Calculates required piece X/Y separation from the provided groupPositions. */
-	function getPiecesAxisSeparation(axis: '1,0' | '0,1', constraints: Constraint[]): bigint {
+	/** Calculates required piece X/Y separation from the pre-calculated longest path maps. */
+	function getPiecesAxisSeparation(axis: '1,0' | '0,1', allPairsPaths: Map<number, Map<number, bigint>>): bigint {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
 		const axisOrder = AllAxisOrders[axis];
 
@@ -606,20 +615,18 @@ function upgradeConstraintsForPair(
 		const pieceAGroup = AllAxisOrders[axis][pieceAGroupIndex];
 		const pieceBGroup = AllAxisOrders[axis][pieceBGroupIndex];
 
-		// No change if they're in the same group.
-		if (pieceAGroupIndex === pieceBGroupIndex) return 0n;
-
-		const numGroups = axisOrder[axis].length;
-
 		/**
 		 * The minimum required distance from group A to group B,
-		 * based on the longest path in the constraint graph.
+		 * looked up instantly from our pre-calculated map.
 		 */
-		const groupsSeparation = findLongestPath(pieceAGroupIndex, pieceBGroupIndex, constraints, numGroups);
+		const groupsSeparation = allPairsPaths.get(pieceAGroupIndex)!.get(pieceBGroupIndex) ?? -allPairsPaths.get(pieceBGroupIndex)!.get(pieceAGroupIndex)!;
+		if (groupsSeparation === undefined) throw Error(`No separation found for groups ${pieceAGroupIndex} and ${pieceBGroupIndex} on axis ${axis}.`);
 		
-		// Add the offsets from the start of their groups
+		// Adjust the group separation by the pieces' offsets within their groups.
+		// This works even if they are in the same group.
 		const pieceAGroupStartOffset = axisDeterminer(pieceA.coords) - pieceAGroup.range[0];
 		const pieceBGroupStartOffset = axisDeterminer(pieceB.coords) - pieceBGroup.range[0];
+		
 		const piecesSeparation = groupsSeparation - pieceAGroupStartOffset + pieceBGroupStartOffset;
 
 		return piecesSeparation;
