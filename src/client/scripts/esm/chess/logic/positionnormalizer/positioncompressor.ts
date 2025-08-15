@@ -145,8 +145,8 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * 
  * * Must be divisible by 2, as this is divided by two in moveexpander.ts
  */
-const MIN_ARBITRARY_DISTANCE = 100n;
-// const MIN_ARBITRARY_DISTANCE = 10n;
+// const MIN_ARBITRARY_DISTANCE = 100n;
+const MIN_ARBITRARY_DISTANCE = 10n;
 
 
 /**
@@ -269,8 +269,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// ================================ PHASE 2: DERIVE ALL CONSTRAINTS ================================
 
 
-	
-
 	const allConstraints: Constraint[] = [];
 
 	// 1. Iterate through all unique pairs of pieces
@@ -294,82 +292,198 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// console.log(`\nInitial X group constraints:`, currentXConstraints);
 	// console.log(`Initial Y group constraints:`, currentYConstraints);
 
-	console.log(`\nInitial X constraint map:`, xConstraintMap);
-	console.log(`Initial Y constraint map:`, yConstraintMap);
+	// console.log(`\nInitial X constraint map:`, xConstraintMap);
+	// console.log(`Initial Y constraint map:`, yConstraintMap);
 
-	// Since each axis's solution is dependant on the constraints of the other,
-	// we must iteratively update the constraints until they stop changing.
+	let xGroupPositions: Map<number, bigint>;
+	let yGroupPositions: Map<number, bigint>;
 
-	const MAX_ITERATIONS = 1000;
-	// DEBUGGING
-	// const PREFERRED_ITERATIONS = 1;
-	const PREFERRED_ITERATIONS = 1000;
-
-	let iteration = 0;
-	let changeMade = true;
-
-	while (changeMade) {
-		changeMade = false;
-		iteration++;
-		// if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
-		if (iteration >= MAX_ITERATIONS) {
-			console.error("Max iterations reached!");
+	// Outer loop
+	let outerIterations = 0;
+	const MAX_OUTER_ITERATIONS = 2; // Safety limit to prevent infinite loops
+	while (true) {
+		outerIterations++;
+		if (outerIterations > MAX_OUTER_ITERATIONS) {
+			console.error("Max outer iterations reached! Breaking out of loop.");
 			break;
-		}
-		if (iteration > PREFERRED_ITERATIONS) {
-			console.log(`Loop reached preferred iterations of ${PREFERRED_ITERATIONS}. Stopping early...`);
-			break;
-		}
-
-		console.log(`\nIteration ${iteration}...\n`);
-
-		// Pre-calculate all longest paths for this iteration for huge performance gain.
-		const xAllPairsPaths = calculateAllPairsLongestPaths(currentXConstraints, AllAxisOrders['1,0'].length);
-		const yAllPairsPaths = calculateAllPairsLongestPaths(currentYConstraints, AllAxisOrders['0,1'].length);
-
-		// console.log(`\nX All Pairs Paths:`, xAllPairsPaths);
-		// console.log(`Y All Pairs Paths:`, yAllPairsPaths);
-
-		// Iterate through all unique pairs of pieces to find new or stronger constraints
-		for (let i = 0; i < pieces.length; i++) {
-			const pieceA = pieces[i]!;
-			for (let j = i + 1; j < pieces.length; j++) {
-				const pieceB = pieces[j]!;
-
-				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders);
-				
-				// For each potential new constraint, try to update our master maps
-				for (const newConstraint of pairConstraints) {
-					const mapToUpdate = newConstraint.axis === '1,0' ? xConstraintMap
-									  : newConstraint.axis === '0,1' ? yConstraintMap
-									  : (() => { throw new Error(`Unknown axis: ${newConstraint.axis}`); })();
-					if (updateConstraintInMap(mapToUpdate, newConstraint)) {
-						// If the map was updated, it means we found a stronger requirement.
-						// We must continue the while loop to re-evaluate all pairs.
-						changeMade = true;
-					}
-				}
-			}
 		}
 
 		currentXConstraints = convertMapToArray(xConstraintMap, '1,0');
 		currentYConstraints = convertMapToArray(yConstraintMap, '0,1');
-		
-		if (changeMade) {
-			console.log("New X constraints:", xConstraintMap);
-			console.log("New Y constraints:", yConstraintMap);
-		} else {
-			console.log("No constraints changed this iteration.");
+
+		// Since each axis's solution is dependant on the constraints of the other,
+		// we must iteratively update the constraints until they stop changing.
+
+		const MAX_ITERATIONS = 1000;
+		// DEBUGGING
+		// const PREFERRED_ITERATIONS = 1;
+		const PREFERRED_ITERATIONS = 1000;
+
+		let iteration = 0;
+		let changeMade = true;
+
+		while (changeMade) {
+			changeMade = false;
+			iteration++;
+			// if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
+			if (iteration >= MAX_ITERATIONS) {
+				console.error("Max iterations reached!");
+				break;
+			}
+			if (iteration > PREFERRED_ITERATIONS) {
+				console.log(`Loop reached preferred iterations of ${PREFERRED_ITERATIONS}. Stopping early...`);
+				break;
+			}
+
+			console.log(`\nIteration ${iteration}...\n`);
+
+			// Pre-calculate all longest paths for this iteration for huge performance gain.
+			const xAllPairsPaths = calculateAllPairsLongestPaths(currentXConstraints, AllAxisOrders['1,0'].length);
+			const yAllPairsPaths = calculateAllPairsLongestPaths(currentYConstraints, AllAxisOrders['0,1'].length);
+
+			// console.log(`\nX All Pairs Paths:`, xAllPairsPaths);
+			// console.log(`Y All Pairs Paths:`, yAllPairsPaths);
+
+			// Iterate through all unique pairs of pieces to find new or stronger constraints
+			for (let i = 0; i < pieces.length; i++) {
+				const pieceA = pieces[i]!;
+				for (let j = i + 1; j < pieces.length; j++) {
+					const pieceB = pieces[j]!;
+
+					const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders);
+					
+					// For each potential new constraint, try to update our master maps
+					for (const newConstraint of pairConstraints) {
+						const mapToUpdate = newConstraint.axis === '1,0' ? xConstraintMap
+										  : newConstraint.axis === '0,1' ? yConstraintMap
+										  : (() => { throw new Error(`Unknown axis: ${newConstraint.axis}`); })();
+						if (updateConstraintInMap(mapToUpdate, newConstraint)) {
+							// If the map was updated, it means we found a stronger requirement.
+							// We must continue the while loop to re-evaluate all pairs.
+							changeMade = true;
+						}
+					}
+				}
+			}
+
+			currentXConstraints = convertMapToArray(xConstraintMap, '1,0');
+			currentYConstraints = convertMapToArray(yConstraintMap, '0,1');
+			
+			if (changeMade) {
+				// console.log("New X constraints:", xConstraintMap);
+				// console.log("New Y constraints:", yConstraintMap);
+				console.log("Constraints changed.");
+			} else {
+				console.log("No constraints changed this iteration.");
+			}
 		}
+
+		console.log(`Constraints convergence reached after ${iteration} iterations!`);
+
+		// 2. Solve for the final group positions using the converged constraint maps.
+		xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, currentXConstraints);
+		yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, currentYConstraints);
+
+
+		// Loop through pairs and check for violations.
+
+		console.log("\nLooping through the solved positions to check for violations...\n");
+
+		let violationFound = false;
+
+		outer: for (let i = 0; i < pieces.length; i++) {
+			const pieceA = pieces[i]!;
+			for (let j = i + 1; j < pieces.length; j++) {
+				const pieceB = pieces[j]!;
+
+				// console.log(`Checking pieces at ${pieceA.coords} and ${pieceB.coords}...`);
+
+				const pieceA_x_pos = getSolvedPieceAxisPosition(pieceA, '1,0', xGroupPositions, AllAxisOrders);
+				const pieceB_x_pos = getSolvedPieceAxisPosition(pieceB, '1,0', xGroupPositions, AllAxisOrders);
+				const actual_dx = pieceB_x_pos - pieceA_x_pos;
+
+				const pieceA_y_pos = getSolvedPieceAxisPosition(pieceA, '0,1', yGroupPositions, AllAxisOrders);
+				const pieceB_y_pos = getSolvedPieceAxisPosition(pieceB, '0,1', yGroupPositions, AllAxisOrders);
+				const actual_dy = pieceB_y_pos - pieceA_y_pos;
+
+				const vSeparation = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
+				const actual_v_sep = actual_dy + actual_dx;
+
+				// console.log(`Piece A at ${pieceA.coords} has solved position: [${pieceA_x_pos}, ${pieceA_y_pos}]`);
+				// console.log(`Piece B at ${pieceB.coords} has solved position: [${pieceB_x_pos}, ${pieceB_y_pos}]`);
+				// console.log("Actual dx:", actual_dx, "dy:", actual_dy);
+				// console.log("Actual v-separation:", actual_v_sep);
+
+				let isViolated = false;
+				if (vSeparation.type === 'exact') {
+					if (actual_v_sep !== vSeparation.separation) isViolated = true;
+				} else { // type is 'min'
+					if (vSeparation.separation > 0n && actual_v_sep < vSeparation.separation) isViolated = true;
+					else if (vSeparation.separation < 0n && actual_v_sep > vSeparation.separation) isViolated = true;
+				}
+
+				if (!isViolated) continue;
+
+				// IS a violation...
+
+				const pushAmount = vSeparation.separation - actual_v_sep;
+				console.log(`V-Violation between pieces at ${pieceA.coords} and ${pieceB.coords}!`);
+				console.log(`Violation! V-sep required: ${vSeparation.separation}, actual: ${actual_v_sep}. Pushing by ${pushAmount}`);
+
+				let dx_positive = actual_dx >= 0n;
+				let dy_positive = actual_dy >= 0n;
+
+				let newConstraint: Constraint | undefined;
+
+				if (pushAmount < 0n) {
+					// Artificially swaps the pieces
+					dx_positive = !dx_positive;
+					dy_positive = !dy_positive;
+				}
+
+				if (dx_positive && dy_positive) {
+					// Piece B is up-right of piece A.
+					// Which means we can increase the X or Y constraint to push it.
+					// Deterministically apply the correction to the X-axis.
+					// (could potentially push to the Y-axis, or both evenly)
+					console.log("Could apply to X or Y axis, but choosing X axis.");
+					const new_required_dx = actual_dx + pushAmount;
+					newConstraint = createGroupConstraint(pieceA, pieceB, new_required_dx, '1,0', AllAxisOrders);
+				} else if (dx_positive) {
+					// Piece B is up-left of piece A, and the y difference is negative.
+					// Which means increasing the Y constraint will actually
+					// make it closer to zero, which won't do anything.
+					// Deterministically apply the correction to the X-axis.
+					console.log("Can only apply to X-axis.");
+					const new_required_dx = actual_dx + pushAmount;
+					newConstraint = createGroupConstraint(pieceA, pieceB, new_required_dx, '1,0', AllAxisOrders);
+				} else if (dy_positive) {
+					// The piece is down-right of the other piece, and the x difference is negative.
+					// Which means increasing the X constraint will actually
+					// make it closer to zero, which won't do anything.
+					// Deterministically apply the correction to the Y-axis.
+					console.log("Can only apply to Y-axis.");
+					const new_required_dy = actual_dy + pushAmount;
+					newConstraint = createGroupConstraint(pieceA, pieceB, new_required_dy, '0,1', AllAxisOrders);
+				} else throw Error("Unexpected case!");
+
+				if (!newConstraint) throw Error("Violation did not create a new constraint!");
+
+				const constraintMap = newConstraint.axis === '1,0' ? xConstraintMap
+									: newConstraint.axis === '0,1' ? yConstraintMap
+									: (() => { throw new Error(`Unknown axis: ${newConstraint.axis}`); })();
+				// We'll update the map and break here.
+				updateConstraintInMap(constraintMap, newConstraint);
+				violationFound = true;
+				break outer; // Break out of both loops
+			}
+		}
+
+		if (!violationFound) break; // Solution is valid, exit the outer loop.
 	}
 
-	console.log(`Convergence reached after ${iteration} iterations!`);
 
-	// 2. Solve for the final group positions using the converged constraint maps.
-	const xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, currentXConstraints);
-	const yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, currentYConstraints);
-
-
+	console.log("\nNo more violations found in generated position!");
 
 	// ==================================== Phase 4: Final Coordinate Assembly ====================================
 
@@ -387,8 +501,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		const yGroupIndex = piece.axisGroups['0,1']!;
 
 		// b. Look up the solved position for each group.
-		const xGroupPos = xGroupPositions.get(xGroupIndex);
-		const yGroupPos = yGroupPositions.get(yGroupIndex);
+		const xGroupPos = xGroupPositions!.get(xGroupIndex);
+		const yGroupPos = yGroupPositions!.get(yGroupIndex);
 		
 		// Safety check: a group position should always be found if the graph is connected.
 		if (xGroupPos === undefined || yGroupPos === undefined) throw new Error(`Could not solve for position of piece at ${piece.coords}`);
@@ -583,6 +697,24 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 
 // ==================================== HELPERS FOR SOLVER ====================================
 
+
+/**
+ * Calculates the final coordinate of a piece on a specific axis,
+ * using the solved positions of the groups.
+ */
+function getSolvedPieceAxisPosition(
+	piece: PieceTransform,
+	axis: OrthoAxis,
+	groupPositions: Map<number, bigint>,
+	AllAxisOrders: AxisOrders
+): bigint {
+	const axisDeterminer = AXIS_DETERMINERS[axis];
+	const groupIndex = piece.axisGroups[axis]!;
+	const groupPos = groupPositions.get(groupIndex)!;
+	const originalGroup = AllAxisOrders[axis][groupIndex]!;
+	const offset = axisDeterminer(piece.coords) - originalGroup.range[0];
+	return groupPos + offset;
+}
 
 /**
  * Analyzes two pieces, and does almost all the same things that deriveConstraintsForPair() does,
@@ -781,7 +913,7 @@ function strengthenXYRequirements(
 		if (required_v_sep.separation > 0n && current_v_sep < required_v_sep.separation) {
 			// Positive side, increase up to the minimum
 			if (can_increase_dx && can_increase_dy) {
-				console.warn("Could increase min dx or dy, can't choose between the two!");
+				// console.warn("Could increase min dx or dy, can't choose between the two!");
 			} else if (can_increase_dx) {
 				// Increase dx to match the required V separation.
 				strengthenedXSeparation += required_v_change;
@@ -793,7 +925,7 @@ function strengthenXYRequirements(
 			// Negative side, decrease down to the minimum
 			// if (can_decrease_dx && can_decrease_dy) throw Error("Unexpected case! Could decrease min dx or dy, can't choose between the two!");
 			if (can_decrease_dx && can_decrease_dy) {
-				console.warn("Could decrease min dx or dy, can't choose between the two!");
+				// console.warn("Could decrease min dx or dy, can't choose between the two!");
 			} else if (can_decrease_dx) {
 				// Decrease dx to match the required V separation.
 				strengthenedXSeparation += required_v_change; // This will be negative, so it decreases dx.
