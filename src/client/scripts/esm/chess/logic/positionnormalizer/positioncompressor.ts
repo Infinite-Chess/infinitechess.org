@@ -81,6 +81,10 @@ type AxisGroup = {
 // eslint-disable-next-line no-unused-vars
 type AxisDeterminer = (coords: Coords) => bigint;
 
+type OrthoAxis = '1,0' | '0,1'; // X or Y axis
+type DiagAxis = '1,1' | '1,-1'; // Positive or negative diagonal axis
+type Axis = OrthoAxis | DiagAxis; // Any axis
+
 
 /**
  * A constraint that must be satisfied by the final group positions.
@@ -94,7 +98,7 @@ interface Constraint {
 	 * This is NOT the padding between them.
 	 */
     weight: bigint;
-    axis: '1,0' | '0,1' | '1,1' | '1,-1';
+    axis: OrthoAxis;
 }
 
 type ConstraintMap = Map<string, bigint>; // Key is `${from},${to}`
@@ -296,27 +300,16 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// Since each axis's solution is dependant on the constraints of the other,
 	// we must iteratively update the constraints until they stop changing.
 
-	const MAX_ITERATIONS = 100;
+	const MAX_ITERATIONS = 1000;
 	// DEBUGGING
-	// const PREFERRED_ITERATIONS = 0;
-	const PREFERRED_ITERATIONS = 100;
+	// const PREFERRED_ITERATIONS = 1;
+	const PREFERRED_ITERATIONS = 1000;
 
 	let iteration = 0;
 	let changeMade = true;
-	let diagonalSatisfied = true; // Assume diagonal constraints are satisfied until proven otherwise
 
-	while (changeMade || !diagonalSatisfied) {
-		/**
-		 * Only true after further iterations stop changing constraints, but diagonals are not satisfied.
-		 * We iterate one more time, but we force ONE constraint to make a choice which direction
-		 * to increase to satisfy one additional diagonal constraint, then we iterate again and see
-		 * if the constraints keep changing.
-		 */
-		const resolveAmbiguities = !changeMade && !diagonalSatisfied;
-		if (resolveAmbiguities) console.warn("Iterating again... Resolving ambiguities...");
-
+	while (changeMade) {
 		changeMade = false;
-		diagonalSatisfied = true;
 		iteration++;
 		// if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
 		if (iteration >= MAX_ITERATIONS) {
@@ -328,7 +321,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			break;
 		}
 
-		console.log(`\nIteration ${iteration}...`);
+		console.log(`\nIteration ${iteration}...\n`);
 
 		// Pre-calculate all longest paths for this iteration for huge performance gain.
 		const xAllPairsPaths = calculateAllPairsLongestPaths(currentXConstraints, AllAxisOrders['1,0'].length);
@@ -338,29 +331,23 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		// console.log(`Y All Pairs Paths:`, yAllPairsPaths);
 
 		// Iterate through all unique pairs of pieces to find new or stronger constraints
-		outer: for (let i = 0; i < pieces.length; i++) {
+		for (let i = 0; i < pieces.length; i++) {
 			const pieceA = pieces[i]!;
 			for (let j = i + 1; j < pieces.length; j++) {
 				const pieceB = pieces[j]!;
 
-				const results = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders, resolveAmbiguities);
-				const pairConstraints = results.constraints;
-				const choiceMade = results.choiceMade;
-				if (!results.diagonalSatisfied) diagonalSatisfied = false;
+				const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders);
 				
 				// For each potential new constraint, try to update our master maps
 				for (const newConstraint of pairConstraints) {
-					const mapToUpdate = newConstraint.axis === '1,0' ? xConstraintMap : yConstraintMap;
+					const mapToUpdate = newConstraint.axis === '1,0' ? xConstraintMap
+									  : newConstraint.axis === '0,1' ? yConstraintMap
+									  : (() => { throw new Error(`Unknown axis: ${newConstraint.axis}`); })();
 					if (updateConstraintInMap(mapToUpdate, newConstraint)) {
 						// If the map was updated, it means we found a stronger requirement.
 						// We must continue the while loop to re-evaluate all pairs.
 						changeMade = true;
 					}
-				}
-
-				if (choiceMade) {
-					console.warn(`CHOICE MADE for pair ${pieceA.coords} and ${pieceB.coords}. Termining iteration early.`);
-					break outer;
 				}
 			}
 		}
@@ -372,12 +359,11 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			console.log("New X constraints:", xConstraintMap);
 			console.log("New Y constraints:", yConstraintMap);
 		} else {
-			console.log("\nNo constraints changed this iteration.");
+			console.log("No constraints changed this iteration.");
 		}
 	}
 
 	console.log(`Convergence reached after ${iteration} iterations!`);
-	if (!diagonalSatisfied) console.warn("All diagonal constraints were not satisfied.");
 
 	// 2. Solve for the final group positions using the converged constraint maps.
 	const xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, currentXConstraints);
@@ -444,7 +430,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
  * Adds a piece to the respective axis, connecting it to any nearby pieces on the same axis,
  * either joining their group, merging nearby groups, or creating its own new group.
  */
-function registerPieceInAxisOrder(axis: '1,0' | '0,1' | '1,1' | '1,-1', AllAxisOrders: AxisOrders, piece: PieceTransform) {
+function registerPieceInAxisOrder(axis: Axis, AllAxisOrders: AxisOrders, piece: PieceTransform) {
 	// console.log(`Axis value ${pieceAxisValue}`);
 
 	const axisOrder = AllAxisOrders[axis];
@@ -607,9 +593,6 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
  * @param xGroupPositions 
  * @param yGroupPositions 
  * @param AllAxisOrders 
- * @param resolveAmbiguities - Set to true if, when we encounter a case where we could either adjust
- * 							   dx OR dy to satisfy a diagonal constraint, to EXPLICITLY choose to adjust
- * 							   one of them, instead of the default which is leaving dx & dy unchanged.
  * @returns An object containing the new constraints and whether the diagonal constraints were satisfied.
  */
 function upgradeConstraintsForPair(
@@ -618,21 +601,19 @@ function upgradeConstraintsForPair(
 	xAllPairsPaths: Map<number, Map<number, bigint>>,
 	yAllPairsPaths: Map<number, Map<number, bigint>>,
 	AllAxisOrders: AxisOrders,
-	resolveAmbiguities: boolean,
-): { constraints: Constraint[], diagonalSatisfied: boolean; choiceMade: boolean; } {
+): Constraint[] {
 
 	// console.log(`\nDeriving NEW constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
 	
-	const piecesXSeparation = getPiecesAxisSeparation('1,0', xAllPairsPaths);
-	const piecesYSeparation = getPiecesAxisSeparation('0,1', yAllPairsPaths);
+	const piecesXSeparation = getUpdatedPiecesAxisSeparation('1,0', xAllPairsPaths);
+	const piecesYSeparation = getUpdatedPiecesAxisSeparation('0,1', yAllPairsPaths);
 
-	// console.log(`Pieces X separation: ${piecesXSeparation}`);
-	// console.log(`Pieces Y separation: ${piecesYSeparation}`);
+	// console.log("Pieces X separation:", piecesXSeparation);
+	// console.log("Pieces Y separation:", piecesYSeparation);
 	
 	/** Calculates required piece X/Y separation from the pre-calculated longest path maps. */
-	function getPiecesAxisSeparation(axis: '1,0' | '0,1', allPairsPaths: Map<number, Map<number, bigint>>): bigint {
+	function getUpdatedPiecesAxisSeparation(axis: Axis, allPairsPaths: Map<number, Map<number, bigint>>): SeparationRequirement {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
-		const axisOrder = AllAxisOrders[axis];
 
 		const pieceAGroupIndex = pieceA.axisGroups[axis];
 		const pieceBGroupIndex = pieceB.axisGroups[axis];
@@ -640,12 +621,21 @@ function upgradeConstraintsForPair(
 		const pieceAGroup = AllAxisOrders[axis][pieceAGroupIndex];
 		const pieceBGroup = AllAxisOrders[axis][pieceBGroupIndex];
 
+		if (pieceAGroup === pieceBGroup) {
+			// If they're in the same group, the separation is exact and based on original coordinates.
+			const separation = axisDeterminer(pieceB.coords) - axisDeterminer(pieceA.coords);
+			return { separation, type: 'exact' };
+		}
+
 		/**
 		 * The minimum required distance from group A to group B,
 		 * looked up instantly from our pre-calculated map.
 		 */
+		if (allPairsPaths.get(pieceAGroupIndex)!.get(pieceBGroupIndex) === undefined && 
+			allPairsPaths.get(pieceBGroupIndex)!.get(pieceAGroupIndex) === undefined) {
+			throw Error(`No separation found for groups ${pieceAGroupIndex} and ${pieceBGroupIndex} on axis ${axis}.`);
+		}
 		const groupsSeparation = allPairsPaths.get(pieceAGroupIndex)!.get(pieceBGroupIndex) ?? -allPairsPaths.get(pieceBGroupIndex)!.get(pieceAGroupIndex)!;
-		if (groupsSeparation === undefined) throw Error(`No separation found for groups ${pieceAGroupIndex} and ${pieceBGroupIndex} on axis ${axis}.`);
 		
 		// Adjust the group separation by the pieces' offsets within their groups.
 		// This works even if they are in the same group.
@@ -654,18 +644,14 @@ function upgradeConstraintsForPair(
 		
 		const piecesSeparation = groupsSeparation - pieceAGroupStartOffset + pieceBGroupStartOffset;
 
-		return piecesSeparation;
+		return { separation: piecesSeparation, type: 'min' };
 	}
 
-	// eslint-disable-next-line prefer-const
-	let { separation: piecesVSeparation, type: piecesVSeparationType } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
-
-	return getGroupConstraintsForRequiredPieceSeparations(
+	// 2. Pass the results to the central helper.
+	return generateConstraintsForPair(
 		pieceA, pieceB,
 		piecesXSeparation, piecesYSeparation,
-		piecesVSeparation, piecesVSeparationType,
 		AllAxisOrders,
-		resolveAmbiguities
 	);
 }
 
@@ -675,125 +661,53 @@ function upgradeConstraintsForPair(
  * @returns An array of Constraint objects.
  */
 function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform, AllAxisOrders: AxisOrders): Constraint[] {
-
 	// console.log(`\nDeriving initial constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
-	
-	const { separation: x_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,0', AllAxisOrders);
-	const { separation: y_sep_A_to_B } = calculateRequiredAxisSeparation(pieceA, pieceB, '0,1', AllAxisOrders);
 
-	// eslint-disable-next-line prefer-const
-	let { separation: v_sep_A_to_B, type: v_separation_type } = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
+	const xSeparation = calculateRequiredAxisSeparation(pieceA, pieceB, '1,0', AllAxisOrders);
+	const ySeparation = calculateRequiredAxisSeparation(pieceA, pieceB, '0,1', AllAxisOrders);
 
-	return getGroupConstraintsForRequiredPieceSeparations(
-		pieceA, pieceB,
-		x_sep_A_to_B, y_sep_A_to_B,
-		v_sep_A_to_B, v_separation_type,
-		AllAxisOrders,
-		false // resolveAmbiguities is false for first pass
-	).constraints;
+	// console.log("X separation:", xSeparation);
+	// console.log("Y separation:", ySeparation);
+
+	// This automatically strengthens the X and Y separations based on the V requirement.
+	return generateConstraintsForPair(pieceA, pieceB, xSeparation, ySeparation, AllAxisOrders);
 }
 
 /**
- * Calculates the required constraints between two pieces,
- * given the required separations on every axis we have.
- * @param pieceA 
- * @param pieceB 
- * @param x_separation 
- * @param y_separation 
- * @param v_separation 
- * @param v_separation_type 
- * @param AllAxisOrders 
- * @param resolveAmbiguities - Set to true if, when we encounter a case where we could either adjust
- * 							   dx OR dy to satisfy a diagonal constraint, to EXPLICITLY choose to adjust
- * 							   one of them, instead of the default which is leaving dx & dy unchanged.
- * @returns 
+ * The core logic for generating constraints for a piece pair, using pre-calculated
+ * separation requirements from any source (initial or iterative).
  */
-function getGroupConstraintsForRequiredPieceSeparations(
+function generateConstraintsForPair(
 	pieceA: PieceTransform,
 	pieceB: PieceTransform,
-	x_separation: bigint,
-	y_separation: bigint,
-	v_separation: bigint,
-	v_separation_type: 'exact' | 'min',
+	xSep: SeparationRequirement,
+	ySep: SeparationRequirement,
 	AllAxisOrders: AxisOrders,
-	resolveAmbiguities: boolean,
-): { constraints: Constraint[], diagonalSatisfied: boolean; choiceMade: boolean; } {
-
-	// --- 2. Solve the System of Inequalities ---
-
-	// console.log(`dx dy dv: ${x_separation}, ${y_separation}, ${v_separation} (${v_separation_type})`);
-
-	/**
-	 * Gives the updated required dx and dy separations between the pieces, as Coords.
-	 * SATISFIES V-axis separations.
-	 */
-	const finalSeparationResults = updateMinDxDyBasedRequiredV(
-		x_separation,
-		y_separation,
-		v_separation,
-		v_separation_type,
-		resolveAmbiguities
-	);
-
-	const finalSeparations: Coords = finalSeparationResults.dxy;
-	const diagonalSatisfied = finalSeparationResults.diagonalSatisfied;
-	const choiceMade = finalSeparationResults.choiceMade;
-
-	// console.log(`Final separations after updating dx dy: ${finalSeparations}\n`);
-
-	// --- 3. Generate Constraint Objects ---
-
+): Constraint[] {
 	const constraints: Constraint[] = [];
-	
-	generateGroupConstraintFromPieceSeparations(finalSeparations[0], '1,0');
-	generateGroupConstraintFromPieceSeparations(finalSeparations[1], '0,1');
 
-	/**
-	 * Takes required separations betweeen 2 PIECES, and transforms them
-	 * to be relative to their group range starts, then pushes that constraint.
-	 */
-	function generateGroupConstraintFromPieceSeparations(finalSeparation: bigint, axis: '1,0' | '0,1'): Constraint | undefined {
-		const axisDeterminer = AXIS_DETERMINERS[axis];
+	// 1. Calculate the V-separation implied by the current X and Y requirements.
 
-		// Since we reorder the groups below so that the left-most group is always first,
-		// it ensures the separation is always positive.
-		finalSeparation = bimath.abs(finalSeparation);
+	const vSep = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
 
-		// Get the group indices for both pieces on the X-axis.
-		const x_groupA_idx = pieceA.axisGroups[axis]!;
-		const x_groupB_idx = pieceB.axisGroups[axis]!;
+	// console.log('xSep:', xSep);
+	// console.log('ySep:', ySep);
+	// console.log('vSep:', vSep);
 
-		// No constraints needed if they are in the same group. They are linked together!
-		if (x_groupA_idx === x_groupB_idx) return;
+	// Strengthen X/Y based on Negative Diagonal ('1,-1')
+	const [strengthenedX, strengthenedY] = strengthenXYRequirements(xSep, ySep, vSep);
 
-		// The pieces are in different X-groups, so we need a constraint.
+	// Create the final group-level constraints
 
-		// First, determine which piece is in the group with the smaller index.
-		const firstPiece = (x_groupA_idx < x_groupB_idx) ? pieceA : pieceB;
-		const secondPiece = (x_groupA_idx < x_groupB_idx) ? pieceB : pieceA;
+	const xConstraint = createGroupConstraint(pieceA, pieceB, strengthenedX, '1,0', AllAxisOrders);
+	if (xConstraint) constraints.push(xConstraint);
 
-		// Get the original groups to calculate offsets.
-		const firstGroup = AllAxisOrders[axis][firstPiece.axisGroups[axis]!]!;
-		const secondGroup = AllAxisOrders[axis][secondPiece.axisGroups[axis]!]!;
+	const yConstraint = createGroupConstraint(pieceA, pieceB, strengthenedY, '0,1', AllAxisOrders);
+	if (yConstraint) constraints.push(yConstraint);
 
-		// Calculate each piece's offset from the start of its original group.
-		const firstPieceOffset = axisDeterminer(firstPiece.coords) - firstGroup.range[0];
-		const secondPieceOffset = axisDeterminer(secondPiece.coords) - secondGroup.range[0];
+	// console.log(`Generated constraints for pair ${pieceA.coords} and ${pieceB.coords}:`, constraints);
 
-		// The required separation between the groups is adjusted by the offsets.
-		const adjustedWeight = finalSeparation + firstPieceOffset - secondPieceOffset;
-
-		const constraint: Constraint = { 
-			from: firstPiece.axisGroups[axis]!, 
-			to: secondPiece.axisGroups[axis]!, 
-			weight: adjustedWeight, 
-			axis,
-		};
-		constraints.push(constraint);
-	}
-
-	// Finally, return the array of constraints for this pair.
-	return { constraints, diagonalSatisfied, choiceMade };
+	return constraints;
 }
 
 /**
@@ -803,34 +717,20 @@ function getGroupConstraintsForRequiredPieceSeparations(
  * can be increased/decreased to satisfy the V-rule, it will skip it,
  * as that requires a choice, so as far as we know, we don't know
  * which is REQUIRED.
- * @param x_sep 
- * @param y_sep 
- * @param required_v_sep 
- * @param v_type 
- * @param resolveAmbiguities - Set to true if, when we encounter a case where we could either adjust
- * 							   dx OR dy to satisfy a diagonal constraint, to EXPLICITLY choose to adjust
- * 							   one of them, instead of the default which is leaving dx & dy unchanged.
- * @returns 
  */
-function updateMinDxDyBasedRequiredV(
-    x_sep: bigint,
-    y_sep: bigint,
-    required_v_sep: bigint,
-    v_type: 'exact' | 'min',
-    resolveAmbiguities: boolean
-): { dxy: Coords; diagonalSatisfied: boolean; choiceMade: boolean; } {
+function strengthenXYRequirements(
+	x_sep: SeparationRequirement,
+	y_sep: SeparationRequirement,
+	required_v_sep: SeparationRequirement,
+): Coords {
 	const axixDeterminer = AXIS_DETERMINERS['1,-1'];
-
-	/** Whether the diagonal constraints are satified by the return dx and dy constraints. */
-	let diagonalSatisfied = true;
-	let choiceMade = false;
 
 	// While dx or dy may be negative, depending on the piece order.
 	// The RULE is we cannot shrink the separation closer to zero,
 	// it must only ever expand!
 
-	const x_sep_positive = x_sep >= 0n;
-	const y_sep_positive = y_sep >= 0n;
+	const x_sep_positive = x_sep.separation >= 0n;
+	const y_sep_positive = y_sep.separation >= 0n;
 
 	const can_increase_dx = x_sep_positive;
 	const can_increase_dy = y_sep_positive;
@@ -838,14 +738,17 @@ function updateMinDxDyBasedRequiredV(
 	const can_decrease_dy = !y_sep_positive;
 
 	// What is the current V separation?
-	const v_sep = axixDeterminer([x_sep, y_sep]);
+	const current_v_sep = axixDeterminer([x_sep.separation, y_sep.separation]);
 
 	// If the V separation is already satisfied, no need to adjust.
-	if (v_sep === required_v_sep) return { dxy: [x_sep, y_sep], diagonalSatisfied, choiceMade };
+	if (current_v_sep === required_v_sep.separation) return [x_sep.separation, y_sep.separation];
 
-	const required_v_change = required_v_sep - v_sep;
+	const required_v_change = required_v_sep.separation - current_v_sep;
 
-	if (v_type === 'exact') {
+	let strengthenedXSeparation = x_sep.separation;
+	let strengthenedYSeparation = y_sep.separation;
+
+	if (required_v_sep.type === 'exact') {
 		// If the V separation is an exact equality, we must adjust one of the axes
 		// to match the required V separation exactly.
 		if (required_v_change > 0n) { // We must increase it
@@ -855,10 +758,10 @@ function updateMinDxDyBasedRequiredV(
 			if (can_increase_dx && can_increase_dy) throw Error("Unexpected case! Could increase min dx or dy, can't choose between the two!");
 			else if (can_increase_dx) {
 				// Increase dx to match the required V separation.
-				x_sep += required_v_change;
+				strengthenedXSeparation += required_v_change;
 			} else if (can_increase_dy) {
 				// Increase dy to match the required V separation.
-				y_sep += required_v_change;
+				strengthenedYSeparation += required_v_change;
 			} else throw Error("Unexpected case! Can't increase dx or dy.");
 		} else { // required_v_change < 0n => We must decrease it
 			// Need to either decrease dx or dy
@@ -866,57 +769,43 @@ function updateMinDxDyBasedRequiredV(
 			if (can_decrease_dx && can_decrease_dy) throw Error("Unexpected case! Could decrease min dx or dy, can't choose between the two!");
 			else if (can_decrease_dx) {
 				// Decrease dx to match the required V separation.
-				x_sep += required_v_change; // This will be negative, so it decreases dx.
+				strengthenedXSeparation += required_v_change; // This will be negative, so it decreases dx.
 			} else if (can_decrease_dy) {
 				// Decrease dy to match the required V separation.
-				y_sep += required_v_change; // This will be negative, so it decreases dy.
+				strengthenedYSeparation += required_v_change; // This will be negative, so it decreases dy.
 			} else throw Error("Unexpected case! Can't decrease dx or dy.");
 		}
 	} else { // v_type is 'min'
 
 		// Calculate the v_change
-		if (required_v_sep > 0n && v_sep < required_v_sep) {
+		if (required_v_sep.separation > 0n && current_v_sep < required_v_sep.separation) {
 			// Positive side, increase up to the minimum
 			if (can_increase_dx && can_increase_dy) {
-				if (resolveAmbiguities) {
-					console.warn("CHOOSING to increase dx to satisfy the V separation!");
-					x_sep += required_v_change; // Deterministic rule: always modify X when we're told to make a choice.
-					choiceMade = true;
-				} else {
-					console.warn("Unexpected case! Could increase min dx or dy, can't choose between the two!");
-					diagonalSatisfied = false; // We can't choose, so for now the diagonal won't be satisfied.
-				}
+				console.warn("Could increase min dx or dy, can't choose between the two!");
 			} else if (can_increase_dx) {
 				// Increase dx to match the required V separation.
-				x_sep += required_v_change;
+				strengthenedXSeparation += required_v_change;
 			} else if (can_increase_dy) {
 				// Increase dy to match the required V separation.
-				y_sep += required_v_change;
+				strengthenedYSeparation += required_v_change;
 			} else throw Error("Unexpected case! Can't increase dx or dy.");
-		} else if (required_v_sep < 0n && v_sep > required_v_sep) {
+		} else if (required_v_sep.separation < 0n && current_v_sep > required_v_sep.separation) {
 			// Negative side, decrease down to the minimum
 			// if (can_decrease_dx && can_decrease_dy) throw Error("Unexpected case! Could decrease min dx or dy, can't choose between the two!");
 			if (can_decrease_dx && can_decrease_dy) {
-				if (resolveAmbiguities) {
-					console.warn("CHOOSING to decrease dx to satisfy the V separation!");
-					x_sep += required_v_change; // Deterministic rule: always modify X when we're told to make a choice.
-					choiceMade = true;
-				} else {
-					console.warn("Could decrease min dx or dy, can't choose between the two!");
-					diagonalSatisfied = false; // We can't choose, so for now the diagonal won't be satisfied.
-				}
+				console.warn("Could decrease min dx or dy, can't choose between the two!");
 			} else if (can_decrease_dx) {
 				// Decrease dx to match the required V separation.
-				x_sep += required_v_change; // This will be negative, so it decreases dx.
+				strengthenedXSeparation += required_v_change; // This will be negative, so it decreases dx.
 			} else if (can_decrease_dy) {
 				// Decrease dy to match the required V separation.
-				y_sep += required_v_change; // This will be negative, so it decreases dy.
+				strengthenedYSeparation += required_v_change; // This will be negative, so it decreases dy.
 			} else throw Error("Unexpected case! Can't decrease dx or dy.");
 		} // else it already satisfies the minimum.
 	}
 
 	// Return the new updated MINIMUM REQUIRED dx and dy.
-	return { dxy: [x_sep, y_sep], diagonalSatisfied, choiceMade };
+	return [strengthenedXSeparation, strengthenedYSeparation];
 }
 
 /**
@@ -987,62 +876,64 @@ interface SeparationRequirement {
  * 
  * Only takes into account number of groups between them, and their widths,
  * doesn't take into account other constraints.
+ * 
+ * CAN BE NEGATIVE depending on the piece order.
  */
 function calculateRequiredAxisSeparation(
-    pieceA: PieceTransform,
-    pieceB: PieceTransform,
-    axis: '1,0' | '0,1' | '1,1' | '1,-1',
-    AllAxisOrders: AxisOrders
+	pieceA: PieceTransform,
+	pieceB: PieceTransform,
+	axis: Axis,
+	AllAxisOrders: AxisOrders
 ): SeparationRequirement {
-    const axisDeterminer = AXIS_DETERMINERS[axis];
-    const axisOrder = AllAxisOrders[axis];
+	const axisDeterminer = AXIS_DETERMINERS[axis];
+	const axisOrder = AllAxisOrders[axis];
 
-    const groupIndexA = pieceA.axisGroups[axis]!;
-    const groupIndexB = pieceB.axisGroups[axis]!;
+	const groupIndexA = pieceA.axisGroups[axis]!;
+	const groupIndexB = pieceB.axisGroups[axis]!;
 
-    // Case 1: Pieces are in the same group. Separation is exact.
+	// Case 1: Pieces are in the same group. Separation is exact.
 	// The distance between them is "tight" and must be preserved exactly.
-    if (groupIndexA === groupIndexB) {
-        return {
-            separation: axisDeterminer(pieceB.coords) - axisDeterminer(pieceA.coords),
-            type: 'exact',
-        };
-    }
+	if (groupIndexA === groupIndexB) {
+		return {
+			separation: axisDeterminer(pieceB.coords) - axisDeterminer(pieceA.coords),
+			type: 'exact',
+		};
+	}
 
-    // Case 2: Pieces are in different groups. Separation is a minimum.
+	// Case 2: Pieces are in different groups. Separation is a minimum.
 	// The distance is "loose" and is defined by the space between their groups,
 	// plus the distance from the piece's axis value to the edge of their group's range.
 
-    const startIdx = Math.min(groupIndexA, groupIndexB);
-    const endIdx = Math.max(groupIndexA, groupIndexB);
+	const startIdx = Math.min(groupIndexA, groupIndexB);
+	const endIdx = Math.max(groupIndexA, groupIndexB);
 
-    let requiredSeparation = 0n;
+	let requiredSeparation = 0n;
 
-    // Add the distance from the first piece to the edge of its group.
-    const pieceInStartGroup = groupIndexA === startIdx ? pieceA : pieceB;
-    requiredSeparation += (axisOrder[startIdx]!.range[1] - axisDeterminer(pieceInStartGroup.coords));
+	// Add the distance from the first piece to the edge of its group.
+	const pieceInStartGroup = groupIndexA === startIdx ? pieceA : pieceB;
+	requiredSeparation += (axisOrder[startIdx]!.range[1] - axisDeterminer(pieceInStartGroup.coords));
 
 	// Add the padding to the next group
 	requiredSeparation += MIN_ARBITRARY_DISTANCE;
 
-    // For every intervening group, add its width, plus another MIN_ARBITRARY_DISTANCE padding to the next group.
-    for (let i = startIdx + 1; i < endIdx; i++) {
-        const interveningGroup = axisOrder[i]!;
+	// For every intervening group, add its width, plus another MIN_ARBITRARY_DISTANCE padding to the next group.
+	for (let i = startIdx + 1; i < endIdx; i++) {
+		const interveningGroup = axisOrder[i]!;
 		const groupWidth = interveningGroup.range[1] - interveningGroup.range[0];
-        requiredSeparation += groupWidth + MIN_ARBITRARY_DISTANCE;
-    }
+		requiredSeparation += groupWidth + MIN_ARBITRARY_DISTANCE;
+	}
 
-    // Add the distance from the start of the last group to the second piece.
-    const pieceInEndGroup = groupIndexA === endIdx ? pieceA : pieceB;
-    requiredSeparation += (axisDeterminer(pieceInEndGroup.coords) - axisOrder[endIdx]!.range[0]);
+	// Add the distance from the start of the last group to the second piece.
+	const pieceInEndGroup = groupIndexA === endIdx ? pieceA : pieceB;
+	requiredSeparation += (axisDeterminer(pieceInEndGroup.coords) - axisOrder[endIdx]!.range[0]);
 
-    // Ensure the final sign is correct based on the original piece order.
-    if (groupIndexB < groupIndexA) requiredSeparation *= -1n;
+	// Ensure the final sign is correct based on the original piece order.
+	if (groupIndexB < groupIndexA) requiredSeparation *= -1n;
 
-    return {
-        separation: requiredSeparation,
-        type: 'min',
-    };
+	return {
+		separation: requiredSeparation,
+		type: 'min',
+	};
 }
 
 
@@ -1055,28 +946,28 @@ function calculateRequiredAxisSeparation(
  * constraint is kept.
  */
 function buildConstraintMap(constraints: Constraint[]): ConstraintMap {
-    const map: ConstraintMap = new Map();
-    for (const constraint of constraints) {
-        const key = `${constraint.from},${constraint.to}`;
-        const existingWeight = map.get(key);
-        if (existingWeight === undefined || constraint.weight > existingWeight) {
-            map.set(key, constraint.weight);
-        }
-    }
-    return map;
+	const map: ConstraintMap = new Map();
+	for (const constraint of constraints) {
+		const key = `${constraint.from},${constraint.to}`;
+		const existingWeight = map.get(key);
+		if (existingWeight === undefined || constraint.weight > existingWeight) {
+			map.set(key, constraint.weight);
+		}
+	}
+	return map;
 }
 
 /**
  * Converts a canonical constraint map back into an array of Constraint objects,
  * which can be used by the solver functions.
  */
-function convertMapToArray(map: ConstraintMap, axis: '1,0' | '0,1' | '1,1' | '1,-1'): Constraint[] {
-    const constraints: Constraint[] = [];
-    for (const [key, weight] of map.entries()) {
-        const [from, to] = key.split(',').map(Number);
-        constraints.push({ from: from!, to: to!, weight, axis });
-    }
-    return constraints;
+function convertMapToArray(map: ConstraintMap, axis: OrthoAxis): Constraint[] {
+	const constraints: Constraint[] = [];
+	for (const [key, weight] of map.entries()) {
+		const [from, to] = key.split(',').map(Number);
+		constraints.push({ from: from!, to: to!, weight, axis });
+	}
+	return constraints;
 }
 
 /**
@@ -1085,14 +976,14 @@ function convertMapToArray(map: ConstraintMap, axis: '1,0' | '0,1' | '1,1' | '1,
  * @returns `true` if the map was changed, `false` otherwise.
  */
 function updateConstraintInMap(map: ConstraintMap, newConstraint: Constraint): boolean {
-    const key = `${newConstraint.from},${newConstraint.to}`;
-    const existingWeight = map.get(key);
+	const key = `${newConstraint.from},${newConstraint.to}`;
+	const existingWeight = map.get(key);
 
-    if (existingWeight === undefined || newConstraint.weight > existingWeight) {
-        map.set(key, newConstraint.weight);
-        return true; // A change was made
-    }
-    return false; // No change was made
+	if (existingWeight === undefined || newConstraint.weight > existingWeight) {
+		map.set(key, newConstraint.weight);
+		return true; // A change was made
+	}
+	return false; // No change was made
 }
 
 /**
@@ -1101,30 +992,73 @@ function updateConstraintInMap(map: ConstraintMap, newConstraint: Constraint): b
  *          map where the key is the 'to' group index and the value is the longest path weight.
  */
 function calculateAllPairsLongestPaths(constraints: Constraint[], numGroups: number): Map<number, Map<number, bigint>> {
-    const allDistances = new Map<number, Map<number, bigint>>();
+	const allDistances = new Map<number, Map<number, bigint>>();
 
-    // Run a single-source longest path algorithm from every group as the source.
-    for (let startGroup = 0; startGroup < numGroups; startGroup++) {
-        const distancesFromStart = new Map<number, bigint>();
-        distancesFromStart.set(startGroup, 0n);
+	// Run a single-source longest path algorithm from every group as the source.
+	for (let startGroup = 0; startGroup < numGroups; startGroup++) {
+		const distancesFromStart = new Map<number, bigint>();
+		distancesFromStart.set(startGroup, 0n);
 
-        // Bellman-Ford relaxation
-        for (let i = 0; i < numGroups - 1; i++) {
-            for (const constraint of constraints) {
-                if (!distancesFromStart.has(constraint.from)) continue;
+		// Bellman-Ford relaxation
+		for (let i = 0; i < numGroups - 1; i++) {
+			for (const constraint of constraints) {
+				if (!distancesFromStart.has(constraint.from)) continue;
 
-                const newDist = distancesFromStart.get(constraint.from)! + constraint.weight;
-                const oldDist = distancesFromStart.get(constraint.to);
+				const newDist = distancesFromStart.get(constraint.from)! + constraint.weight;
+				const oldDist = distancesFromStart.get(constraint.to);
 
-                if (oldDist === undefined || newDist > oldDist) {
-                    distancesFromStart.set(constraint.to, newDist);
-                }
-            }
-        }
-        allDistances.set(startGroup, distancesFromStart);
-    }
+				if (oldDist === undefined || newDist > oldDist) {
+					distancesFromStart.set(constraint.to, newDist);
+				}
+			}
+		}
+		allDistances.set(startGroup, distancesFromStart);
+	}
 
-    return allDistances;
+	return allDistances;
+}
+
+/**
+ * Creates a single group-level constraint based on a required separation between two pieces.
+ */
+function createGroupConstraint(
+	pieceA: PieceTransform,
+	pieceB: PieceTransform,
+	requiredSeparation: bigint,
+	axis: OrthoAxis,
+	AllAxisOrders: AxisOrders
+): Constraint | undefined {
+	const axisDeterminer = AXIS_DETERMINERS[axis];
+	const axisOrder = AllAxisOrders[axis];
+
+	const groupA_idx = pieceA.axisGroups[axis]!;
+	const groupB_idx = pieceB.axisGroups[axis]!;
+
+	// No constraint needed for pieces in the same group; their relative position is fixed.
+	if (groupA_idx === groupB_idx) return;
+
+	// To create a canonical constraint, always go from the smaller group index to the larger.
+	const fromPiece = groupA_idx < groupB_idx ? pieceA : pieceB;
+	const toPiece = groupA_idx < groupB_idx ? pieceB : pieceA;
+	const fromGroupIdx = fromPiece.axisGroups[axis]!;
+	const toGroupIdx = toPiece.axisGroups[axis]!;
+
+	// Ensure the separation sign matches the new `from -> to` direction.
+	// const directionalSeparation = groupA_idx < groupB_idx ? requiredSeparation : -requiredSeparation;
+	// This is always going to be positive if the groups are in ascending order.
+	const directionalSeparation = bimath.abs(requiredSeparation);
+
+	const fromGroup = axisOrder[fromGroupIdx]!;
+	const toGroup = axisOrder[toGroupIdx]!;
+
+	const fromPieceOffset = axisDeterminer(fromPiece.coords) - fromGroup.range[0];
+	const toPieceOffset = axisDeterminer(toPiece.coords) - toGroup.range[0];
+
+	// The required separation between the groups' start points is:
+	// weight = pos(to) - pos(from) >= piece_sep + offset(from) - offset(to)
+	const weight = directionalSeparation + fromPieceOffset - toPieceOffset;
+
+	return { from: fromGroupIdx, to: toGroupIdx, weight, axis };
 }
 
 

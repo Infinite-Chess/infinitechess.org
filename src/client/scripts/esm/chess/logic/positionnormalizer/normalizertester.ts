@@ -24,13 +24,14 @@ import positioncompressor from "./positioncompressor";
 // const example_position = 'B-2227,-3463|b-6210,553|q-8440,1848|n-3601,-7208'; // TEST THIS TOO
 // const example_position = 'Q-9032,1442|B3841,-6672|R-7210,5142|q912,8475|B-6112,2033|R-1278,-9880|Q-4468,755'; // Infinity repetition triangle FORCED TO calculate group's error against all other pieces!
 // const example_position = 'k0,0|R1200,800|R-1500,-600|R900,-1300|R-700,1100|R300,-1300|R2000,0|R900,2100|R0,2300|R-2200,-2200|R2000,-600|R8000,12000|R-15000,4000|R18000,-6000|R-13000,-16000|R10000,9000|R-9500,14500|R12000,-18000|R-8000,-12000|R19000,2100|R-20000,-600|R905,-1295|R1204,804|R-1504,-596|R295,-1304|R-705,1097'; // Orthogonal test  BROKEN ON < 6 ARBITRARY DISTANCE!!!!! ALSO BROKEN ON 1000n!!!!! PATCHED since calculateScopedAxisError()
+const example_position = 'k0,0|R1200,800|R-1500,-600|R-700,1100|R2000,0|R900,2100|R0,2300|R2000,-600|R-1504,-596'; // INFINITE LOOP with constraints when resolving ambiguity
 // const example_position = 'k0,0|R900,2100|R0,2300|R18000,-6000|R12000,-18000|R1204,804|R295,-1304|R-705,1097'; // FIRST NOT WORKING
 // const example_position = 'k0,0|R18000,-6000|R12000,-18000|R1204,804'; // Simpler of above
-const example_position = 'k0,0|R12000,-18000|R18000,-6000|R1204,804'; // Rotated of above
+// const example_position = 'k0,0|R12000,-18000|R18000,-6000|R1204,804'; // Rotated of above
 // const example_position = 'k0,0|Q10000,5000|R20000,1000|R20000,2000|R20000,3000|R20000,4000'; // Diagonal test
 // const example_position = 'k0,0|Q-10000,5000|R-20000,1000|R-20000,2000|R-20000,3000|R-20000,4000'; // Diagonal test FLIPPED
 // const example_position = 'K0,0|q834,1191|R-2240,6303|n4201,-889|b-1719,-8260|Q9329,-214'; // 5 random pieces BROKEN
-// const example_position = 'K0,0|q834,1191|R-2240,6303'; // 5 random pieces BROKEN
+// const example_position = 'K0,0|q834,1191|R-2240,6303'; // 3 pieces of above USED TO BE BROKEN
 // const example_position = 'K0,0|q-150,150|R-30,60|r-30,64|R-30,120';
 // const example_position = 'K0,0|R-30,60|r-30,65|R-30,120';
 // const example_position = 'K0,0|q-150,150|R-30,60|r-30,90|R-30,120'; // 3 rooks in between
