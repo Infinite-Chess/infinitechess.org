@@ -12,6 +12,9 @@ import bimath from "../../../util/bigdecimal/bimath.js";
 import { Vec2Key } from "../../../util/math/vectors.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import typeutil, { players as p, rawTypes as r } from "../../util/typeutil.js";
+// Linear Programming Solver!
+import { Model, solve } from "yalps";
+
 
 
 
@@ -100,8 +103,6 @@ interface Constraint {
     weight: bigint;
     axis: OrthoAxis;
 }
-
-type ConstraintMap = Map<string, bigint>; // Key is `${from},${to}`
 
 
 // ================================== Constants ==================================
@@ -268,223 +269,91 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	// ================================ PHASE 2: DERIVE ALL CONSTRAINTS ================================
 
+	
 
-	const allConstraints: Constraint[] = [];
+	// Translate the constraints into a linear programming model for solving.
 
-	// 1. Iterate through all unique pairs of pieces
-	for (let i = 0; i < pieces.length; i++) {
-		const pieceA = pieces[i]!;
-		for (let j = i + 1; j < pieces.length; j++) {
-			const pieceB = pieces[j]!;
 
-			const pairConstraints = deriveConstraintsForPair(pieceA, pieceB, AllAxisOrders);
-			allConstraints.push(...pairConstraints);
+
+	const model: Model = {
+		direction: 'minimize',
+		objective: 'manhatten_norm', // The objective function to minimize
+		constraints: {
+			// An equation
+			piece1_X_constraint: { min: 10 }, // The right hand side of the equation:   >= 10
+			piece1_Y_constraint: { min: 10 },
+		},
+		variables: {
+			piece1_X: { manhatten_norm: 1,   piece1_X_constraint: 1 }, // A list of what equations this variable is a part of (a column in), and the coefficient it gets (1 for addition, -1 for subtraction).
+			piece1_Y: { manhatten_norm: 1,   piece1_Y_constraint: 1 },
+		},
+	};
+
+	addConstraintToModel(model, 'piece1_U_constraint', [
+		{ variable: 'piece1_Y', coefficient: 1 },
+		{ variable: 'piece1_X', coefficient: -1 }
+	], 'equal', 10);
+
+	const solution = solve(model, {
+		includeZeroVariables: true, // Include variables that are zero in the solution
+	});
+
+	type Column = {
+		variable: string; // The name of the variable
+		coefficient: number; // The coefficient of the variable in the equation
+	}
+
+	/**
+	 * 
+	 * @param model 
+	 * @param name - The name of the constraint equation
+	 * @param columns 
+	 * @param type 
+	 * @param value 
+	 */
+	function addConstraintToModel(model: Model, name: string, columns: Column[], type: 'equal' | 'min' | 'max', value: number): void {
+		// Add the equation
+		model.constraints[name] = { [type]: value };
+		// Add the variables as columns to it
+		for (const column of columns) {
+			// Initialize first if not already
+			if (!model.variables[column.variable]) model.variables[column.variable] = { [model.objective!]: 1 };
+			model.variables[column.variable][name] = column.coefficient;
 		}
 	}
 
-	// 1. Separate the master list of constraints by axis.
-	let currentXConstraints = allConstraints.filter(c => c.axis === '1,0');
-	let currentYConstraints = allConstraints.filter(c => c.axis === '0,1');
-	// 1. Convert the initial list of constraints into canonical maps.
-	const xConstraintMap = buildConstraintMap(currentXConstraints);
-	const yConstraintMap = buildConstraintMap(currentYConstraints);
 
-	// console.log(`\nInitial X group constraints:`, currentXConstraints);
-	// console.log(`Initial Y group constraints:`, currentYConstraints);
+	// console.log("Solution status:", solution.status);
+	console.log("Solution:", solution);
 
-	// console.log(`\nInitial X constraint map:`, xConstraintMap);
-	// console.log(`Initial Y constraint map:`, yConstraintMap);
-
-	let xGroupPositions: Map<number, bigint>;
-	let yGroupPositions: Map<number, bigint>;
-
-	// Outer loop
-	let outerIterations = 0;
-	const MAX_OUTER_ITERATIONS = 2; // Safety limit to prevent infinite loops
-	while (true) {
-		outerIterations++;
-		if (outerIterations > MAX_OUTER_ITERATIONS) {
-			console.error("Max outer iterations reached! Breaking out of loop.");
-			break;
-		}
-
-		currentXConstraints = convertMapToArray(xConstraintMap, '1,0');
-		currentYConstraints = convertMapToArray(yConstraintMap, '0,1');
-
-		// Since each axis's solution is dependant on the constraints of the other,
-		// we must iteratively update the constraints until they stop changing.
-
-		const MAX_ITERATIONS = 1000;
-		// DEBUGGING
-		// const PREFERRED_ITERATIONS = 1;
-		const PREFERRED_ITERATIONS = 1000;
-
-		let iteration = 0;
-		let changeMade = true;
-
-		while (changeMade) {
-			changeMade = false;
-			iteration++;
-			// if (iteration >= MAX_ITERATIONS) throw Error("Max iterations!");
-			if (iteration >= MAX_ITERATIONS) {
-				console.error("Max iterations reached!");
-				break;
-			}
-			if (iteration > PREFERRED_ITERATIONS) {
-				console.log(`Loop reached preferred iterations of ${PREFERRED_ITERATIONS}. Stopping early...`);
-				break;
-			}
-
-			console.log(`\nIteration ${iteration}...\n`);
-
-			// Pre-calculate all longest paths for this iteration for huge performance gain.
-			const xAllPairsPaths = calculateAllPairsLongestPaths(currentXConstraints, AllAxisOrders['1,0'].length);
-			const yAllPairsPaths = calculateAllPairsLongestPaths(currentYConstraints, AllAxisOrders['0,1'].length);
-
-			// console.log(`\nX All Pairs Paths:`, xAllPairsPaths);
-			// console.log(`Y All Pairs Paths:`, yAllPairsPaths);
-
-			// Iterate through all unique pairs of pieces to find new or stronger constraints
-			for (let i = 0; i < pieces.length; i++) {
-				const pieceA = pieces[i]!;
-				for (let j = i + 1; j < pieces.length; j++) {
-					const pieceB = pieces[j]!;
-
-					const pairConstraints = upgradeConstraintsForPair(pieceA, pieceB, xAllPairsPaths, yAllPairsPaths, AllAxisOrders);
-					
-					// For each potential new constraint, try to update our master maps
-					for (const newConstraint of pairConstraints) {
-						const mapToUpdate = newConstraint.axis === '1,0' ? xConstraintMap
-										  : newConstraint.axis === '0,1' ? yConstraintMap
-										  : (() => { throw new Error(`Unknown axis: ${newConstraint.axis}`); })();
-						if (updateConstraintInMap(mapToUpdate, newConstraint)) {
-							// If the map was updated, it means we found a stronger requirement.
-							// We must continue the while loop to re-evaluate all pairs.
-							changeMade = true;
-						}
-					}
-				}
-			}
-
-			currentXConstraints = convertMapToArray(xConstraintMap, '1,0');
-			currentYConstraints = convertMapToArray(yConstraintMap, '0,1');
-			
-			if (changeMade) {
-				// console.log("New X constraints:", xConstraintMap);
-				// console.log("New Y constraints:", yConstraintMap);
-				console.log("Constraints changed.");
-			} else {
-				console.log("No constraints changed this iteration.");
-			}
-		}
-
-		console.log(`Constraints convergence reached after ${iteration} iterations!`);
-
-		// 2. Solve for the final group positions using the converged constraint maps.
-		xGroupPositions = solveConstraintSystem(AllAxisOrders['1,0'].length, currentXConstraints);
-		yGroupPositions = solveConstraintSystem(AllAxisOrders['0,1'].length, currentYConstraints);
-
-
-		// Loop through pairs and check for violations.
-
-		console.log("\nLooping through the solved positions to check for violations...\n");
-
-		let violationFound = false;
-
-		outer: for (let i = 0; i < pieces.length; i++) {
-			const pieceA = pieces[i]!;
-			for (let j = i + 1; j < pieces.length; j++) {
-				const pieceB = pieces[j]!;
-
-				// console.log(`Checking pieces at ${pieceA.coords} and ${pieceB.coords}...`);
-
-				const pieceA_x_pos = getSolvedPieceAxisPosition(pieceA, '1,0', xGroupPositions, AllAxisOrders);
-				const pieceB_x_pos = getSolvedPieceAxisPosition(pieceB, '1,0', xGroupPositions, AllAxisOrders);
-				const actual_dx = pieceB_x_pos - pieceA_x_pos;
-
-				const pieceA_y_pos = getSolvedPieceAxisPosition(pieceA, '0,1', yGroupPositions, AllAxisOrders);
-				const pieceB_y_pos = getSolvedPieceAxisPosition(pieceB, '0,1', yGroupPositions, AllAxisOrders);
-				const actual_dy = pieceB_y_pos - pieceA_y_pos;
-
-				const vSeparation = calculateRequiredAxisSeparation(pieceA, pieceB, '1,-1', AllAxisOrders);
-				const actual_v_sep = actual_dy + actual_dx;
-
-				// console.log(`Piece A at ${pieceA.coords} has solved position: [${pieceA_x_pos}, ${pieceA_y_pos}]`);
-				// console.log(`Piece B at ${pieceB.coords} has solved position: [${pieceB_x_pos}, ${pieceB_y_pos}]`);
-				// console.log("Actual dx:", actual_dx, "dy:", actual_dy);
-				// console.log("Actual v-separation:", actual_v_sep);
-
-				let isViolated = false;
-				if (vSeparation.type === 'exact') {
-					if (actual_v_sep !== vSeparation.separation) isViolated = true;
-				} else { // type is 'min'
-					if (vSeparation.separation > 0n && actual_v_sep < vSeparation.separation) isViolated = true;
-					else if (vSeparation.separation < 0n && actual_v_sep > vSeparation.separation) isViolated = true;
-				}
-
-				if (!isViolated) continue;
-
-				// IS a violation...
-
-				const pushAmount = vSeparation.separation - actual_v_sep;
-				console.log(`V-Violation between pieces at ${pieceA.coords} and ${pieceB.coords}!`);
-				console.log(`Violation! V-sep required: ${vSeparation.separation}, actual: ${actual_v_sep}. Pushing by ${pushAmount}`);
-
-				let dx_positive = actual_dx >= 0n;
-				let dy_positive = actual_dy >= 0n;
-
-				let newConstraint: Constraint | undefined;
-
-				if (pushAmount < 0n) {
-					// Artificially swaps the pieces
-					dx_positive = !dx_positive;
-					dy_positive = !dy_positive;
-				}
-
-				if (dx_positive && dy_positive) {
-					// Piece B is up-right of piece A.
-					// Which means we can increase the X or Y constraint to push it.
-					// Deterministically apply the correction to the X-axis.
-					// (could potentially push to the Y-axis, or both evenly)
-					console.log("Could apply to X or Y axis, but choosing X axis.");
-					const new_required_dx = actual_dx + pushAmount;
-					newConstraint = createGroupConstraint(pieceA, pieceB, new_required_dx, '1,0', AllAxisOrders);
-				} else if (dx_positive) {
-					// Piece B is up-left of piece A, and the y difference is negative.
-					// Which means increasing the Y constraint will actually
-					// make it closer to zero, which won't do anything.
-					// Deterministically apply the correction to the X-axis.
-					console.log("Can only apply to X-axis.");
-					const new_required_dx = actual_dx + pushAmount;
-					newConstraint = createGroupConstraint(pieceA, pieceB, new_required_dx, '1,0', AllAxisOrders);
-				} else if (dy_positive) {
-					// The piece is down-right of the other piece, and the x difference is negative.
-					// Which means increasing the X constraint will actually
-					// make it closer to zero, which won't do anything.
-					// Deterministically apply the correction to the Y-axis.
-					console.log("Can only apply to Y-axis.");
-					const new_required_dy = actual_dy + pushAmount;
-					newConstraint = createGroupConstraint(pieceA, pieceB, new_required_dy, '0,1', AllAxisOrders);
-				} else throw Error("Unexpected case!");
-
-				if (!newConstraint) throw Error("Violation did not create a new constraint!");
-
-				const constraintMap = newConstraint.axis === '1,0' ? xConstraintMap
-									: newConstraint.axis === '0,1' ? yConstraintMap
-									: (() => { throw new Error(`Unknown axis: ${newConstraint.axis}`); })();
-				// We'll update the map and break here.
-				updateConstraintInMap(constraintMap, newConstraint);
-				violationFound = true;
-				break outer; // Break out of both loops
-			}
-		}
-
-		if (!violationFound) break; // Solution is valid, exit the outer loop.
+	if (solution.status !== 'optimal') {
+		console.error("The unified solver could not find a feasible solution.");
+		throw new Error("Unified LP solver failed. Constraints may be contradictory.");
 	}
 
+	// The solution object contains the solved X & Y positions for every single piece.
+	// Extract all the variables...
 
-	console.log("\nNo more violations found in generated position!");
+	type variableName = `x-${number}` | `y-${number}`;
 
+	for (const [variableName, value] of solution.variables) {
+		const [axis, pieceIndexStr] = variableName.split('-');
+		const pieceIndex = Number(pieceIndexStr);
+
+
+		if (axis === 'x') {
+			const groupIndex = parseInt(variableName.substring(1), 10);
+			// ...
+		} else if (axis === 'y') {
+			const groupIndex = parseInt(variableName.substring(1), 10);
+			// ...
+		} else throw Error("Unknown axis.");
+	}
+
+	// console.log("Solved X Positions:", xGroupPositions);
+	// console.log("Solved Y Positions:", yGroupPositions);
+
+	
 	// ==================================== Phase 4: Final Coordinate Assembly ====================================
 
 
@@ -699,24 +568,6 @@ function addPieceGroupReferencesForAxis(axis: Vec2Key, AllAxisOrders: AxisOrders
 
 
 /**
- * Calculates the final coordinate of a piece on a specific axis,
- * using the solved positions of the groups.
- */
-function getSolvedPieceAxisPosition(
-	piece: PieceTransform,
-	axis: OrthoAxis,
-	groupPositions: Map<number, bigint>,
-	AllAxisOrders: AxisOrders
-): bigint {
-	const axisDeterminer = AXIS_DETERMINERS[axis];
-	const groupIndex = piece.axisGroups[axis]!;
-	const groupPos = groupPositions.get(groupIndex)!;
-	const originalGroup = AllAxisOrders[axis][groupIndex]!;
-	const offset = axisDeterminer(piece.coords) - originalGroup.range[0];
-	return groupPos + offset;
-}
-
-/**
  * Analyzes two pieces, and does almost all the same things that deriveConstraintsForPair() does,
  * except instead of calculating x_sep_A_to_B and y_sep_A_to_B from the number of groups between
  * them, we grab the minimum distance required from the xGroupPositions, as we know those are required!
@@ -785,24 +636,6 @@ function upgradeConstraintsForPair(
 		piecesXSeparation, piecesYSeparation,
 		AllAxisOrders,
 	);
-}
-
-/**
- * Analyzes a single pair of pieces to derive the definitive separation
- * requirements for them on the X and Y axes.
- * @returns An array of Constraint objects.
- */
-function deriveConstraintsForPair(pieceA: PieceTransform, pieceB: PieceTransform, AllAxisOrders: AxisOrders): Constraint[] {
-	// console.log(`\nDeriving initial constraints for piece ${pieceA.coords} and ${pieceB.coords}`);
-
-	const xSeparation = calculateRequiredAxisSeparation(pieceA, pieceB, '1,0', AllAxisOrders);
-	const ySeparation = calculateRequiredAxisSeparation(pieceA, pieceB, '0,1', AllAxisOrders);
-
-	// console.log("X separation:", xSeparation);
-	// console.log("Y separation:", ySeparation);
-
-	// This automatically strengthens the X and Y separations based on the V requirement.
-	return generateConstraintsForPair(pieceA, pieceB, xSeparation, ySeparation, AllAxisOrders);
 }
 
 /**
@@ -940,53 +773,6 @@ function strengthenXYRequirements(
 	return [strengthenedXSeparation, strengthenedYSeparation];
 }
 
-/**
- * Finds the most compact arrangement for a set of groups that satisfies all
- * given difference constraints using the Bellman-Ford algorithm.
- * This is used to solve for the final positions of all groups on one axis.
- * @param numGroups The number of groups on the axis.
- * @param constraints The list of all constraints that must be satisfied.
- * @returns A map from group index to its final solved position.
- */
-function solveConstraintSystem(numGroups: number, constraints: Constraint[]): Map<number, bigint> {
-	// 1. Initialize positions. Only the starting group has a known position.
-	// A group not in the map is considered "unreached"
-	const positions = new Map<number, bigint>();
-	if (numGroups > 0) positions.set(0, 0n); // The first group is our anchor at the origin.
-
-	// 2. Apply Bellman-Ford: Relax edges repeatedly.
-	// We loop N-1 times, where N is the number of groups.
-	for (let i = 0; i < numGroups - 1; i++) {
-		let changed = false;
-		for (const constraint of constraints) {
-			const { from, to, weight } = constraint;
-
-			// Only proceed if the 'from' node has a known position.
-			// On the first iteration, only start points of group 0 are defined.
-			if (!positions.has(from)) continue;
-
-			const fromPos = positions.get(from)!;
-			const potentialNewPos = fromPos + weight;
-			const toPos = positions.get(to);
-
-			// Relaxation step: Is the path through 'from' better?
-			// "Better" means either the 'to' node hasn't been reached yet,
-			// or the new path is longer than the existing one.
-			if (toPos === undefined || potentialNewPos > toPos) {
-				positions.set(to, potentialNewPos);
-				changed = true;
-			}
-		}
-		// Optimization: If a full pass makes no changes, the system is solved.
-		if (!changed) {
-			// console.log(`Bellman-Ford algorithm early exiting after i = ${i}. Number of groups: ${numGroups}`);
-			break;
-		}
-	}
-
-	return positions;
-}
-
 
 // ============================================================================================
 
@@ -1070,85 +856,6 @@ function calculateRequiredAxisSeparation(
 
 
 // ======================================== CONSTRAINT MAP HELPERS ========================================
-
-
-/**
- * Takes an array of constraints and converts it into a canonical map,
- * ensuring that for any pair of groups, only the strongest (largest weight)
- * constraint is kept.
- */
-function buildConstraintMap(constraints: Constraint[]): ConstraintMap {
-	const map: ConstraintMap = new Map();
-	for (const constraint of constraints) {
-		const key = `${constraint.from},${constraint.to}`;
-		const existingWeight = map.get(key);
-		if (existingWeight === undefined || constraint.weight > existingWeight) {
-			map.set(key, constraint.weight);
-		}
-	}
-	return map;
-}
-
-/**
- * Converts a canonical constraint map back into an array of Constraint objects,
- * which can be used by the solver functions.
- */
-function convertMapToArray(map: ConstraintMap, axis: OrthoAxis): Constraint[] {
-	const constraints: Constraint[] = [];
-	for (const [key, weight] of map.entries()) {
-		const [from, to] = key.split(',').map(Number);
-		constraints.push({ from: from!, to: to!, weight, axis });
-	}
-	return constraints;
-}
-
-/**
- * Updates a constraint map with a new potential constraint.
- * If the new constraint is stronger than an existing one, it updates the map.
- * @returns `true` if the map was changed, `false` otherwise.
- */
-function updateConstraintInMap(map: ConstraintMap, newConstraint: Constraint): boolean {
-	const key = `${newConstraint.from},${newConstraint.to}`;
-	const existingWeight = map.get(key);
-
-	if (existingWeight === undefined || newConstraint.weight > existingWeight) {
-		map.set(key, newConstraint.weight);
-		return true; // A change was made
-	}
-	return false; // No change was made
-}
-
-/**
- * Pre-calculates the longest path between all pairs of groups for a given axis.
- * @returns A map where the key is the 'from' group index, and the value is another
- *          map where the key is the 'to' group index and the value is the longest path weight.
- */
-function calculateAllPairsLongestPaths(constraints: Constraint[], numGroups: number): Map<number, Map<number, bigint>> {
-	const allDistances = new Map<number, Map<number, bigint>>();
-
-	// Run a single-source longest path algorithm from every group as the source.
-	for (let startGroup = 0; startGroup < numGroups; startGroup++) {
-		const distancesFromStart = new Map<number, bigint>();
-		distancesFromStart.set(startGroup, 0n);
-
-		// Bellman-Ford relaxation
-		for (let i = 0; i < numGroups - 1; i++) {
-			for (const constraint of constraints) {
-				if (!distancesFromStart.has(constraint.from)) continue;
-
-				const newDist = distancesFromStart.get(constraint.from)! + constraint.weight;
-				const oldDist = distancesFromStart.get(constraint.to);
-
-				if (oldDist === undefined || newDist > oldDist) {
-					distancesFromStart.set(constraint.to, newDist);
-				}
-			}
-		}
-		allDistances.set(startGroup, distancesFromStart);
-	}
-
-	return allDistances;
-}
 
 /**
  * Creates a single group-level constraint based on a required separation between two pieces.
