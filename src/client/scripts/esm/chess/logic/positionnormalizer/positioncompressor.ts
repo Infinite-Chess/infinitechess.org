@@ -8,18 +8,16 @@
  */
 
 
+import type { Vec2Key } from "../../../util/math/vectors.js";
+
+import { solve, Model } from "yalps"; // Linear Programming Solver!
+
 import bimath from "../../../util/bigdecimal/bimath.js";
-import { Vec2Key } from "../../../util/math/vectors.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import typeutil, { players as p, rawTypes as r } from "../../util/typeutil.js";
-// Linear Programming Solver!
-import { Model, solve } from "yalps";
-
-
 
 
 // ============================== Type Definitions ==============================
-
 
 
 /**
@@ -47,7 +45,7 @@ type PieceTransform = {
 	/**
 	 * The pieces new coordinates in the transformed/compressed position.
 	 * Both coords will be fully defined after the orthogonal solution is finished.
-	 * */
+	 */
 	transformedCoords: [bigint | undefined, bigint | undefined];
 };
 
@@ -82,27 +80,30 @@ type AxisGroup = {
 // eslint-disable-next-line no-unused-vars
 type AxisDeterminer = (coords: Coords) => bigint;
 
-type OrthoAxis = '1,0' | '0,1'; // X or Y axis
-type DiagAxis = '1,1' | '1,-1'; // Positive or negative diagonal axis
-type Axis = OrthoAxis | DiagAxis; // Any axis
+/** All orthogonal axes. */
+type OrthoAxis = '1,0' | '0,1';
+/** All diagonal axes. */
+type DiagAxis = '1,1' | '1,-1';
+/** Any axis. */
+type Axis = OrthoAxis | DiagAxis;
 
 
 /**
  * A variable name in the Linear Programming Model.
  * 
- * The first letter is what axis the piece coord is for.
+ * The first letter is what axis the piece coord is for. (u/v is only used in constraint names)
  * After the `-` is the index of the piece in its sorted list.
  */
 type VariableName = `x-${number}` | `y-${number}` | `u-${number}` | `v-${number}`;
 
 /**
  * One column in a constraint of the Linear Programming Model.
- * 
- * It contains the variable, and its coefficient (usually 1 or -1)
  */
 type Column = {
-	variable: string; // The name of the variable
-	coefficient: number; // The coefficient of the variable in the equation
+	/** The name of the variable */
+	variable: string;
+	/** The coefficient of the variable in the constraint equation. Usually 1 or -1.  */
+	coefficient: number; // 
 }
 
 
@@ -129,6 +130,8 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * link them together, so that that axis or diagonal will not be
  * broken when compressing the position.
  * 
+ * They will receive equality constrains instead of inequality constraints.
+ * 
  * This is also considered the minimum distance for a distance
  * to be considered arbitrary. After all, almost never do we move a
  * short range piece over 20 squares in a game, so the difference
@@ -141,7 +144,7 @@ const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
  * REQUIREMENTS:
  * 
  * * Must be OVER 2x larger than than the longest jumping jumper piece.
- * This is so that they will remain connected to the same group when expanding the move back out.
+ * This is so that they will remain connected to the same group when expanding/lifting the move back out.
  * Jumping moves don't need extra attention other than making sure this is big enough.
  * Code works automatically, even for hippogonal jumps!
  * 
@@ -178,7 +181,7 @@ const AXIS_DETERMINERS = {
  * Compresses/normalizes a position. Reduces all arbitrary large distances
  * to some small distance constant.
  * Returns transformation info so that the chosen move from the compressed position
- * can be expanded back to the original position.
+ * can be expanded/lifted back to the original position.
  * @param position - The position to compress, as a Map of coords to piece types.
  * @param mode - The compression mode, either 'orthogonals' or 'diagonals'.
  *     - 'orthogonals' require all pieces to remain in the same quadrant relative to other pieces.
@@ -187,7 +190,7 @@ const AXIS_DETERMINERS = {
  */
 function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' | 'diagonals'): CompressionInfo {
 
-	// 1. List all pieces with their bigint arbitrary coordinates.
+	// List all pieces with their bigint arbitrary coordinates.
 
 	const pieces: PieceTransform[] = [];
 
@@ -200,8 +203,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		});
 	});
 
-	// 2. Determine whether any piece lies beyond UNSAFE_BOUND_BIGINT.
-	// If not, we don't need to compress the position.
+	// Determine if the position even needs compression by
+	// seeing whether any piece lies beyond UNSAFE_BOUND_BIGINT.
 
 	// const needsCompression = pieces.some(piece =>
 	// 	bimath.abs(piece.coords[0]) > UNSAFE_BOUND_BIGINT || bimath.abs(piece.coords[1]) > UNSAFE_BOUND_BIGINT
@@ -213,10 +216,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// 	return { position, pieceTransformations: pieces };
 	// }
 
-	// The position needs COMPRESSION.
 
-
-	// ==================================== Construct Axis Orders & Groups ====================================
+	// ==================================== Construct Axis Orders, Order Pieces ====================================
 
 	
 	/**
@@ -225,13 +226,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	 */
 	const AllAxisOrders: AxisOrders = {};
 
-	/**
-	 * All pieces, organized in ascending order on every axis.
-	 */
+	/** All pieces, organized in ascending order on every axis. */
 	const OrderedPieces: Record<Vec2Key, PieceTransform[]> = {};
 
 	// Init the Axis Orders
-
 	processAxis('1,0');
 	processAxis('0,1');
 	if (mode === 'diagonals') {
@@ -239,11 +237,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		processAxis('1,-1');
 	}
 
+	/** Helper for constructing the axisOrder and ordered pieces of one axis. */
 	function processAxis(axis: Axis): void {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
 
 		// First sort the pieces by ascending axis value
-		const sortedPieces: PieceTransform[] = pieces.slice();
+		const sortedPieces: PieceTransform[] = pieces.slice(); // Shallow copy
 		sortedPieces.sort((a, b) => bimath.compare(axisDeterminer(a.coords), axisDeterminer(b.coords)));
 		OrderedPieces[axis] = sortedPieces;
 
@@ -255,9 +254,9 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		for (const piece of sortedPieces) {
 			const currentAxisValue = axisDeterminer(piece.coords);
 			
-			// If the axis value is less than or equal to MIN_ARBITRARY_DISTANCE from the current group being pushed to,
-			// add it to that group and extend its range.
-			// Else start a new group
+			// If the axis value is less than or equal to MIN_ARBITRARY_DISTANCE from the current
+			// group being pushed to range's END, add it to that group and extend its range.
+			// Else, start a new group.
 
 			if (currentGroup === null || currentAxisValue - currentGroup.range[1] > MIN_ARBITRARY_DISTANCE) {
 				// Start a new group
@@ -267,6 +266,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 			// Add the piece to the current running group
 			currentGroup.pieces.push(piece);
+			// Update its range
 			currentGroup.range[1] = currentAxisValue;
 		}
 	}
@@ -286,7 +286,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// --------------------------------------------------------------
 	
 
-	// ================================ PHASE 2: DERIVE ALL CONSTRAINTS ================================
+	// ================================ MODEL CONSTRAINTS ================================
 
 	
 	// Initiate the linear programming model for solving.
@@ -314,7 +314,8 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	 */
 	const pieceToVarNames = new Map<PieceTransform, Record<Vec2Key, VariableName>>();
 
-	// ANCHOR: Add constraints to anchor the first X and Y pieces at 0.
+	// ANCHOR: Add constraints to anchor the first X and Y pieces at 0. -------------
+
 	const firstXVarName = getVariableName('1,0', 0);
 	addConstraintToModel(model, `${firstXVarName}_anchor`, [
 		{ variable: firstXVarName, coefficient: 1 },
@@ -325,13 +326,17 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		{ variable: firstYVarName, coefficient: 1 },
 	], 'equal', 0);
 
+	// -------------------------------------------------------------------------------
+
 	// Add all the constraints between our piece coordinates to the model.
 
 	// For each sorted piece on a specific axis, add a constraint to that piece and the previous piece
 	createConstraintsForAxis('1,0');
 	createConstraintsForAxis('0,1');
 	if (mode === 'diagonals') {
-		// Populate the piece to varName map.
+		// When using diagonals, first populate the piece to varName map first.
+		// We need this because a piece's index in the organized diagonal list
+		// is not the same as its index in the orthogonal lists.
 		populatePieceVarNames('1,0');
 		populatePieceVarNames('0,1');
 
@@ -339,6 +344,10 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		createConstraintsForAxis('1,-1');
 	}
 
+	/**
+	 * Helper for creating and adding the constraints between each
+	 * adjacent piece on one specific axis to the linear programming model.
+	 */
 	function createConstraintsForAxis(axis: Axis) {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
 		const sortedPieces = OrderedPieces[axis];
@@ -355,20 +364,22 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			let constraint: number;
 			const difference = secondPieceAxisValue - firstPieceAxisValue;
 			if (difference <= MIN_ARBITRARY_DISTANCE) {
+				// EXACT constraint (same group)
 				type = 'equal';
 				constraint = Number(difference);
 			} else {
+				// MINIMUM constraint (different groups, over MIN_ARBITRARY_DISTANCE apart)
 				type = 'min';
 				constraint = Number(MIN_ARBITRARY_DISTANCE);
 			}
 
 			if (axis === '1,0' || axis === '0,1') {
-				// What does the constraint look like if this is the X axis?
 				const firstPieceVarName = getVariableName(axis, i - 1);
 				const secondPieceVarName = getVariableName(axis, i);
 
 				const constraintName = getConstraintName(secondPieceVarName);
 
+				// What does the constraint look like on the X/Y axis?
 				// Desired:			   thisPieceXY >= prevPieceXY + 10
 				// To get that we do:  thisPieceXY - prevPieceXY >= 10
 
@@ -387,6 +398,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 				const firstPiece = sortedPieces[i - 1];
 				const secondPiece = sortedPieces[i];
 
+				// Get the variable names for the piece's X and Y coordinates from the X & Y ordered lists.
 				const firstPieceVars = pieceToVarNames.get(firstPiece)!;
 				const secondPieceVars = pieceToVarNames.get(secondPiece)!;
 
@@ -398,7 +410,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 				const constraintName = getConstraintName(getVariableName(axis, i));
 
 				if (axis === '1,1') {
-					// What does the constraint look like if this is the V axis?
+					// What does the constraint look like if this is the U axis?
 					// U axis value (positive diagonal) is determined by:  Y - X
 					// Desired:			   thisPieceY - thisPieceX >= prevPieceY - prevPieceX + 10
 					// To get that we do:  thisPieceY - thisPieceX - prevPieceY + prevPieceX >= 10
@@ -431,6 +443,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 	}
 
+	/** Helper for constructing {@link pieceToVarNames}. */
 	function populatePieceVarNames(axis: '0,1' | '1,0') {
 		OrderedPieces[axis].forEach((piece, index) => {
 			const varName = getVariableName(axis, index);
@@ -461,15 +474,14 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 
 	
-	// ==================================== Phase 4: Final Coordinate Assembly ====================================
+	// ==================================== Transformed Coordinate Assembly ====================================
 
 	
 	// The solution object contains the solved X & Y positions for every single piece.
-	// Extract all the variables...
+	// Extract all the variables.
 
 	for (const [variableName, value] of solution.variables) {
-		const [axis, pieceIndexStr] = variableName.split('-');
-		const pieceIndex = Number(pieceIndexStr);
+		const [axis, pieceIndex] = (variableName as VariableName).split('-');
 
 		if (axis === 'x') {
 			const sortedPieces = OrderedPieces['1,0'];
@@ -491,22 +503,26 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		const axisDeterminer = AXIS_DETERMINERS[axisKey as Axis];
 
 		for (const group of axisOrder) {
-			// Get the axis value for the first piece in the group as a starting point.
-			let minAxisValue = axisDeterminer(group.pieces[0]!.transformedCoords as Coords);
-			let maxAxisValue = minAxisValue;
+			let start: bigint | null = null;
+			let end: bigint | null = null;
 
-			// Iterate through the rest of the pieces in the group to find the true min and max.
-			for (let i = 1; i < group.pieces.length; i++) {
+			// Iterate through the pieces in the group to find the min and max axis values.
+			for (let i = 0; i < group.pieces.length; i++) {
 				const piece = group.pieces[i]!;
 				const axisValue = axisDeterminer(piece.transformedCoords as Coords);
-				if (axisValue < minAxisValue) minAxisValue = axisValue;
-				if (axisValue > maxAxisValue) maxAxisValue = axisValue;
+				if (start === null || axisValue < start) start = axisValue;
+				if (end === null || axisValue > end) end = axisValue;
 			}
 			
 			// Set the calculated transformed range for the group.
-			group.transformedRange = [minAxisValue, maxAxisValue];
+			group.transformedRange = [start!, end!];
 		}
 	}
+
+	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
+	// ISN'T required for engines, but may be nice for visuals.
+	// Commented-out for decreasing the script size.
+	// RecenterTransformedPosition(pieces, AllAxisOrders);
 
 	// Assemble the final compressed position from the solved piece's transformed coordinates.
 
@@ -517,12 +533,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		compressedPosition.set(transformedCoordsKey, piece.type);
 	}
 
-	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
-	// ISN'T required for engines, but may be nice for visuals.
-	// Commented-out for decreasing the script size.
-	// RecenterTransformedPosition(pieces, AllAxisOrders);
-
-	// 2. Return the complete compression information, which is used to expand moves later.
+	// Return the complete compression information, which is used to expand the chosen move, later.
 	return {
 		position: compressedPosition,
 		axisOrders: AllAxisOrders,
@@ -531,7 +542,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 }
 
 
-// ==================================== MODEL HELPERS ====================================
+// ========================================== MODEL HELPERS ==========================================
 
 
 /**
@@ -549,21 +560,20 @@ function getConstraintName(varName: VariableName) {
 }
 
 /**
+ * Helper for adding a constraint to the running linear programming model.
  * 
- * @param model 
- * @param name - The name of the constraint equation
- * @param columns 
- * @param type 
- * @param value 
+ * Creates the variable in the model if it doesn't exist yet, adds the constraint,
+ * and updates the variable's columns its included in.
  */
-function addConstraintToModel(model: Model, name: string, columns: Column[], type: 'equal' | 'min' | 'max', value: number): void {
+function addConstraintToModel(model: Model, constraint_name: string, columns: Column[], type: 'equal' | 'min' | 'max', value: number): void {
 	// Add the equation
-	model.constraints[name] = { [type]: value };
+	model.constraints[constraint_name] = { [type]: value };
 	// Add the variables as columns to it
 	for (const column of columns) {
 		// Initialize first if not already
 		if (!model.variables[column.variable]) model.variables[column.variable] = {};
-		model.variables[column.variable][name] = column.coefficient;
+		// Include the variable in the column of the constraint function
+		model.variables[column.variable][constraint_name] = column.coefficient;
 	}
 }
 
@@ -627,7 +637,7 @@ function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders:
 }
 
 
-// ===================================== EXPORTS =====================================
+// ========================================= EXPORTS =========================================
 
 
 export type {
@@ -639,6 +649,6 @@ export default {
 	// Constants
 	MIN_ARBITRARY_DISTANCE,
 	AXIS_DETERMINERS,
-	// Implementation
+	// Main Function
 	compressPosition,
 };

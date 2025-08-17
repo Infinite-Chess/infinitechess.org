@@ -47,8 +47,8 @@ const example_position = '[Event "Casual local Classical infinite chess game"] [
 const parsedPosition = icnconverter.ShortToLong_Format(example_position);
 // console.log("parsedPosition:", JSON.stringify(parsedPosition.position, jsutil.stringifyReplacer));
 
-const compressedPosition = positioncompressor.compressPosition(parsedPosition.position!, 'orthogonals');
-// const compressedPosition = positioncompressor.compressPosition(parsedPosition.position!, 'diagonals');
+// const compressedPosition = positioncompressor.compressPosition(parsedPosition.position!, 'orthogonals');
+const compressedPosition = positioncompressor.compressPosition(parsedPosition.position!, 'diagonals');
 
 console.log("\nBefore:");
 console.log(example_position);
