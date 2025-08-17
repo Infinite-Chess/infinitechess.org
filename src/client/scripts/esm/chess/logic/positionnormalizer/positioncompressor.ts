@@ -247,8 +247,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		sortedPieces.sort((a, b) => bimath.compare(axisDeterminer(a.coords), axisDeterminer(b.coords)));
 		OrderedPieces[axis] = sortedPieces;
 
-		console.log(`Sorted pieces on axis ${axis}:`, sortedPieces);
-
 		const axisOrder: AxisOrder = [];
 		AllAxisOrders[axis] = axisOrder;
 
@@ -277,14 +275,14 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	// All pieces are now in order!
 
 	// ONLY FOR LOGGING ---------------------------------------------
-	console.log("\nAll axis orders after registering pieces:");
-	for (const vec2Key in AllAxisOrders) {
-		const axisOrder = AllAxisOrders[vec2Key] as AxisOrder;
-		console.log(`Axis order ${vec2Key}:`);
-		for (const axisGroup of axisOrder) {
-			console.log(`  Range: ${axisGroup.range}, Pieces: ${axisGroup.pieces.length}`);
-		}
-	}
+	// console.log("\nAll axis orders after registering pieces:");
+	// for (const vec2Key in AllAxisOrders) {
+	// 	const axisOrder = AllAxisOrders[vec2Key] as AxisOrder;
+	// 	console.log(`Axis order ${vec2Key}:`);
+	// 	for (const axisGroup of axisOrder) {
+	// 		console.log(`  Range: ${axisGroup.range}, Pieces: ${axisGroup.pieces.length}`);
+	// 	}
+	// }
 	// --------------------------------------------------------------
 	
 
@@ -302,9 +300,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			// piece1_Y_constraint: { min: 10 },
 		},
 		variables: {
-			// piece1_X: { manhatten_norm: 1,   piece1_X_constraint: 1 }, // A list of what equations this variable is a part of (a column in), and the coefficient it gets (1 for addition, -1 for subtraction).
+			// piece1_X: { manhatten_norm: 1,   piece1_X_constraint: 1 }, // A list of what equations (constraints) this variable is a part of (a column in), and the coefficient it gets (1 for addition, -1 for subtraction).
 			// piece1_Y: { manhatten_norm: 1,   piece1_Y_constraint: 1 },
 		},
+		// Enforces all variables to be integers.
+		// Without this, sometimes the solution's piece coordinates will be at half squares.
+		integers: true,
 	};
 
 	/**
@@ -314,7 +315,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	const pieceToVarNames = new Map<PieceTransform, Record<Vec2Key, VariableName>>();
 
 	// ANCHOR: Add constraints to anchor the first X and Y pieces at 0.
-	// ARE THESE NEEDED???
 	const firstXVarName = getVariableName('1,0', 0);
 	addConstraintToModel(model, `${firstXVarName}_anchor`, [
 		{ variable: firstXVarName, coefficient: 1 },
@@ -441,14 +441,19 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 
 	// Solve the Model
 
+	console.time("Solved");
+
 	const solution = solve(model, {
 		// Include variables that are zero in the solution.
-		// Our first piece's coords are anchored to zero so we need those.
+		// We need piece coords even if they are at 0!
 		includeZeroVariables: true,
 	});
 
-	// console.log("Solution status:", solution.status);
-	console.log("Solution:", solution);
+	console.timeEnd("Solved");
+
+	console.log("Solution status:", solution.status);
+	// The score of the solution. This is the sum of the furthest piece's X and Y coordinates.
+	console.log("Result:", solution.result);
 
 	if (solution.status !== 'optimal') {
 		console.error("The unified solver could not find a feasible solution.");
@@ -470,12 +475,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			const sortedPieces = OrderedPieces['1,0'];
 			const piece = sortedPieces[pieceIndex]!;
 			// Set its transformed X coord.
-			piece.transformedCoords[0] = BigInt(value); // Should we round here???
+			piece.transformedCoords[0] = BigInt(value);
 		} else if (axis === 'y') {
 			const sortedPieces = OrderedPieces['0,1'];
 			const piece = sortedPieces[pieceIndex]!;
 			// Set its transformed Y coord.
-			piece.transformedCoords[1] = BigInt(value); // Should we round here???
+			piece.transformedCoords[1] = BigInt(value);
 		} else throw Error("Unknown axis.");
 	}
 
