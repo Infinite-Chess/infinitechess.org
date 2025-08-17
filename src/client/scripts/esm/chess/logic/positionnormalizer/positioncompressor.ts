@@ -313,9 +313,21 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	 */
 	const pieceToVarNames = new Map<PieceTransform, Record<Vec2Key, VariableName>>();
 
-	// Add all the constraints between our piece coordinates to the model.
-	// For each sorted piece on a specific axis, add a constraint to that piece and the previous piece
+	// ANCHOR: Add constraints to anchor the first X and Y pieces at 0.
+	// ARE THESE NEEDED???
+	const firstXVarName = getVariableName('1,0', 0);
+	addConstraintToModel(model, `${firstXVarName}_anchor`, [
+		{ variable: firstXVarName, coefficient: 1 },
+	], 'equal', 0);
 
+	const firstYVarName = getVariableName('0,1', 0);
+	addConstraintToModel(model, `${firstYVarName}_anchor`, [
+		{ variable: firstYVarName, coefficient: 1 },
+	], 'equal', 0);
+
+	// Add all the constraints between our piece coordinates to the model.
+	
+	// For each sorted piece on a specific axis, add a constraint to that piece and the previous piece
 	createConstraintsForAxis('1,0');
 	createConstraintsForAxis('0,1');
 	if (mode === 'diagonals') {
@@ -467,13 +479,34 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		} else throw Error("Unknown axis.");
 	}
 
+	// Calculate the new, transformed range, for each group on each axis.
+	// Needed for the moveexpander knows what group your move is targeting.
+	for (const axisKey in AllAxisOrders) {
+		const axisOrder = AllAxisOrders[axisKey as Vec2Key];
+		const axisDeterminer = AXIS_DETERMINERS[axisKey as Axis];
+
+		for (const group of axisOrder) {
+			// Get the axis value for the first piece in the group as a starting point.
+			let minAxisValue = axisDeterminer(group.pieces[0]!.transformedCoords as Coords);
+			let maxAxisValue = minAxisValue;
+
+			// Iterate through the rest of the pieces in the group to find the true min and max.
+			for (let i = 1; i < group.pieces.length; i++) {
+				const piece = group.pieces[i]!;
+				const axisValue = axisDeterminer(piece.transformedCoords as Coords);
+				if (axisValue < minAxisValue) minAxisValue = axisValue;
+				if (axisValue > maxAxisValue) maxAxisValue = axisValue;
+			}
+			
+			// Set the calculated transformed range for the group.
+			group.transformedRange = [minAxisValue, maxAxisValue];
+		}
+	}
+
 	// Assemble the final compressed position from the solved piece's transformed coordinates.
 
 	const compressedPosition: Map<CoordsKey, number> = new Map();
 	for (const piece of pieces) {
-		// Safety check
-		if (piece.transformedCoords[0] === undefined || piece.transformedCoords[1] === undefined) throw Error("Not all pieces transformedCoords were set.");
-
 		// Add the final coordinate and piece type to our output map.
 		const transformedCoordsKey = coordutil.getKeyFromCoords(piece.transformedCoords as Coords);
 		compressedPosition.set(transformedCoordsKey, piece.type);
