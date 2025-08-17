@@ -344,6 +344,15 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		createConstraintsForAxis('1,-1');
 	}
 
+	/** Helper for constructing {@link pieceToVarNames}. */
+	function populatePieceVarNames(axis: '0,1' | '1,0') {
+		OrderedPieces[axis].forEach((piece, index) => {
+			const varName = getVariableName(axis, index);
+			if (!pieceToVarNames.has(piece)) pieceToVarNames.set(piece, {});
+			pieceToVarNames.get(piece)![axis] = varName;
+		});
+	}
+
 	/**
 	 * Helper for creating and adding the constraints between each
 	 * adjacent piece on one specific axis to the linear programming model.
@@ -443,15 +452,6 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 	}
 
-	/** Helper for constructing {@link pieceToVarNames}. */
-	function populatePieceVarNames(axis: '0,1' | '1,0') {
-		OrderedPieces[axis].forEach((piece, index) => {
-			const varName = getVariableName(axis, index);
-			if (!pieceToVarNames.has(piece)) pieceToVarNames.set(piece, {});
-			pieceToVarNames.get(piece)![axis] = varName;
-		});
-	}
-
 	// Solve the Model
 
 	console.time("Solved");
@@ -519,7 +519,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 	}
 
-	// Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
+	// [Optional] Shift the entire solution so that the White King is in its original spot! (Doesn't break the solution/topology)
 	// ISN'T required for engines, but may be nice for visuals.
 	// Commented-out for decreasing the script size.
 	// RecenterTransformedPosition(pieces, AllAxisOrders);
