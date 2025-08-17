@@ -457,19 +457,13 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		if (axis === 'x') {
 			const sortedPieces = OrderedPieces['1,0'];
 			const piece = sortedPieces[pieceIndex]!;
-			// Find the piece in the original, unsorted, transformed pieces array
-			const originalPiece = pieces.find((op) => coordutil.areCoordsEqual(op.coords, piece.coords));
-			if (!originalPiece) throw Error("Unable to find original piece.");
 			// Set its transformed X coord.
-			originalPiece.transformedCoords[0] = BigInt(value);
+			piece.transformedCoords[0] = BigInt(value);
 		} else if (axis === 'y') {
 			const sortedPieces = OrderedPieces['0,1'];
 			const piece = sortedPieces[pieceIndex]!;
-			// Find the piece in the original, unsorted, transformed pieces array
-			const originalPiece = pieces.find((op) => coordutil.areCoordsEqual(op.coords, piece.coords));
-			if (!originalPiece) throw Error("Unable to find original piece.");
 			// Set its transformed Y coord.
-			originalPiece.transformedCoords[1] = BigInt(value);
+			piece.transformedCoords[1] = BigInt(value);
 		} else throw Error("Unknown axis.");
 	}
 
