@@ -307,12 +307,22 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		},
 	};
 
+	/**
+	 * A map containing a reference to each piece's Model X & Y coord variable names.
+	 * Only used if we are in diagonals mode.
+	 */
+	const pieceToVarNames = new Map<PieceTransform, Record<Vec2Key, VariableName>>();
+
 	// Add all the constraints between our piece coordinates to the model.
 	// For each sorted piece on a specific axis, add a constraint to that piece and the previous piece
 
 	createConstraintsForAxis('1,0');
 	createConstraintsForAxis('0,1');
 	if (mode === 'diagonals') {
+		// Populate the piece to varName map.
+		populatePieceVarNames('1,0');
+		populatePieceVarNames('0,1');
+
 		createConstraintsForAxis('1,1');
 		createConstraintsForAxis('1,-1');
 	}
@@ -361,12 +371,17 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 				// on the X/Y axes. This naturally tries to shrink the position.
 				const lastPiece = i === sortedPieces.length - 1;
 				if (lastPiece) model.variables[secondPieceVarName][model.objective!] = 1;
-				
 			} else if (axis === '1,1' || axis === '1,-1') {
-				const firstPieceVarNameX = getVariableName('1,0', i - 1);
-				const firstPieceVarNameY = getVariableName('0,1', i - 1);
-				const secondPieceVarNameX = getVariableName('1,0', i);
-				const secondPieceVarNameY = getVariableName('0,1', i);
+				const firstPiece = sortedPieces[i - 1];
+				const secondPiece = sortedPieces[i];
+
+				const firstPieceVars = pieceToVarNames.get(firstPiece)!;
+				const secondPieceVars = pieceToVarNames.get(secondPiece)!;
+
+				const firstPieceVarNameX = firstPieceVars['1,0']!;
+				const firstPieceVarNameY = firstPieceVars['0,1']!;
+				const secondPieceVarNameX = secondPieceVars['1,0']!;
+				const secondPieceVarNameY = secondPieceVars['0,1']!;
 
 				const constraintName = getConstraintName(getVariableName(axis, i));
 
@@ -404,6 +419,13 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 		}
 	}
 
+	function populatePieceVarNames(axis: '0,1' | '1,0') {
+		OrderedPieces[axis].forEach((piece, index) => {
+			const varName = getVariableName(axis, index);
+			if (!pieceToVarNames.has(piece)) pieceToVarNames.set(piece, {});
+			pieceToVarNames.get(piece)![axis] = varName;
+		});
+	}
 
 	// Solve the Model
 
