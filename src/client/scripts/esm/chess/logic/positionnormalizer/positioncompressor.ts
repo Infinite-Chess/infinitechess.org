@@ -326,7 +326,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	], 'equal', 0);
 
 	// Add all the constraints between our piece coordinates to the model.
-	
+
 	// For each sorted piece on a specific axis, add a constraint to that piece and the previous piece
 	createConstraintsForAxis('1,0');
 	createConstraintsForAxis('0,1');
@@ -470,12 +470,12 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 			const sortedPieces = OrderedPieces['1,0'];
 			const piece = sortedPieces[pieceIndex]!;
 			// Set its transformed X coord.
-			piece.transformedCoords[0] = BigInt(value);
+			piece.transformedCoords[0] = BigInt(value); // Should we round here???
 		} else if (axis === 'y') {
 			const sortedPieces = OrderedPieces['0,1'];
 			const piece = sortedPieces[pieceIndex]!;
 			// Set its transformed Y coord.
-			piece.transformedCoords[1] = BigInt(value);
+			piece.transformedCoords[1] = BigInt(value); // Should we round here???
 		} else throw Error("Unknown axis.");
 	}
 
