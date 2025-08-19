@@ -1,6 +1,6 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "46"
+version = "64"
 maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
@@ -593,3 +593,4 @@ ws-game_aborted_cheating = "Jogo cancelado por provável trapaça."
 ws-cannot_resign_finished_game = "Não é possível abandonar o jogo, pois ele já terminou."
 ws-invalid_code = "Código Inválido" # O código do convite não corresponde a nenhum convite existente
 ws-game_aborted = "Jogo Cancelado" # O convite foi cancelado enquanto você clicava nele
+
