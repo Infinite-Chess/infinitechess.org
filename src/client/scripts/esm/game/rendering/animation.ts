@@ -22,10 +22,9 @@ import vectors, { Vec3 } from '../../util/math/vectors.js';
 import { createModel, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../chess/util/typeutil.js';
+import meshes from './meshes.js';
 // @ts-ignore
 import perspective from './perspective.js';
-// @ts-ignore
-import shapes from './shapes.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -325,7 +324,7 @@ function renderTransparentSquares(): void {
 		const hidesData: number[] = [];
 		const segment = getCurrentSegment(animation);
 		forEachActiveKeyframe(animation.hideKeyframes, segment, v => {
-			v.forEach(coord => hidesData.push(...shapes.QuadWorld_Color(coord, color)));
+			v.forEach(coord => hidesData.push(...meshes.QuadWorld_Color(coord, color)));
 		});
 		return hidesData; 
 	});

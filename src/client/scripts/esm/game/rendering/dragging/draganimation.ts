@@ -31,8 +31,7 @@ import boardtiles from "../boardtiles.js";
 import primitives from "../primitives.js";
 import { listener_overlay } from "../../chess/game.js";
 import { Mouse } from "../../input.js";
-// @ts-ignore
-import shapes from "../shapes.js";
+import meshes from "../meshes.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore
@@ -226,7 +225,7 @@ function renderTransparentSquare() {
 	if (!startCoords) return;
 
 	const color: Color = [0,0,0,0];
-	const data = shapes.QuadWorld_Color(startCoords, color); // Hide orginal piece
+	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
 	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
 }
 
@@ -289,7 +288,7 @@ function genPieceModel(): BufferModel | undefined {
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isMouseTouch(Mouse.LEFT);
-	const { left, right, bottom, top } = shapes.getCoordBoxWorld(hoveredCoords!);
+	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();

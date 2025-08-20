@@ -46,8 +46,6 @@ import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import perspective from '../perspective.js';
 // @ts-ignore
 import transition from '../transition.js';
-// @ts-ignore
-import shapes from '../shapes.js';
 
 
 // Type Definitions --------------------------------------------------------------------

@@ -18,8 +18,7 @@ import type { Color } from "../../util/math/math.js";
 
 import board from "./boardtiles.js";
 import primitives from "./primitives.js";
-// @ts-ignore
-import shapes from "./shapes.js";
+import meshes from "./meshes.js";
 
 
 // Variables ------------------------------------------------------------------------------
@@ -84,7 +83,7 @@ function getDataLegalMoveSquare(color: Color): number[] {
 	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
-	return shapes.QuadModel_Color(coords, color);
+	return meshes.QuadModel_Color(coords, color);
 }
 
 /**
@@ -214,7 +213,7 @@ function getDataPlusSign(color: Color): number[] {
  * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
  */
 function getDataTexture(inverted: boolean): number[] {
-	let { left, right, bottom, top } = shapes.getCoordBoxModel([0,0]);
+	let { left, right, bottom, top } = meshes.getCoordBoxModel([0,0]);
 	if (inverted) {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top

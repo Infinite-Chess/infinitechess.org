@@ -3,9 +3,8 @@
 
 
 /**
- * This script generates mesh vertex data, given coordinates, color, and/or texture.
- * 
- * Definitions:
+ * This script can generate mesh vertex data for common shapes,
+ * given game info such as coordinates, color, and textures.
  * 
  * [Model Space] - REQUIRES position and scale transformations when rendering.
  * [World Space] - DOES NOT require positional or scale transformations when rendering.

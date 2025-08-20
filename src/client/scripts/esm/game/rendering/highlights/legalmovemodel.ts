@@ -31,12 +31,11 @@ import geometry, { IntersectionPoint } from '../../../util/math/geometry.js';
 import bounds, { BoundingBoxBD } from '../../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
+import meshes from '../meshes.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
-// @ts-ignore
-import shapes from '../shapes.js';
 
 
 // Type Definitions ------------------------------------------------------------
@@ -585,7 +584,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
  */
 function renderOutlineofRenderBox() {
 	const color: Color = [1,0,1, 1];
-	const data = shapes.RectWorld(boundingBoxOfRenderRange, color);
+	const data = meshes.RectWorld(boundingBoxOfRenderRange, color);
 
 	createModel(data, 2, "LINE_LOOP", true).render();
 }
