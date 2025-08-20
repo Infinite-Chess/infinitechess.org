@@ -36,7 +36,7 @@ function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined) {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords) {
-	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, [1, 1, 1, ghostOpacity]);
+	const data = shapes.QuadWorld_ColorTexture(coords, type, [1, 1, 1, ghostOpacity]);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }

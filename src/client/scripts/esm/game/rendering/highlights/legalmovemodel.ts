@@ -585,7 +585,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
  */
 function renderOutlineofRenderBox() {
 	const color: Color = [1,0,1, 1];
-	const data = shapes.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);
+	const data = shapes.RectWorld(boundingBoxOfRenderRange, color);
 
 	createModel(data, 2, "LINE_LOOP", true).render();
 }

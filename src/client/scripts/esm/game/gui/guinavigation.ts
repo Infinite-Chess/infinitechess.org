@@ -155,7 +155,7 @@ function updateElement_Coords() {
 
 	const boardPos = boardpos.getBoardPos();
 	const mouseTile = mouse.getTileMouseOver_Integer();
-	const squareCenter = boardtiles.gsquareCenter();
+	const squareCenter = boardtiles.getSquareCenter();
 
 	// Tile camera is over
 	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)

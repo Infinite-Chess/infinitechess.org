@@ -53,7 +53,7 @@ function convertWorldSpaceToCoords_Rounded(worldCoords: DoubleCoords): Coords {
 
 /** Returns the integer coordinate that contains the floating point coordinate provided. */
 function roundCoord(coord: BigDecimal): BigDecimal {
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = board.getSquareCenter();
 	return bd.floor(bd.add(coord, squareCenter));
 }
 
@@ -62,9 +62,9 @@ function roundCoords(coords: BDCoords): Coords {
 	return [bd.toBigInt(roundCoord(coords[0])), bd.toBigInt(roundCoord(coords[1]))];
 }
 
-// Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
+// Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.getSquareCenter().
 function convertCoordToWorldSpace(coords: BDCoords, position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale()): DoubleCoords {
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = board.getSquareCenter();
 
 	const halfMinusSquareCenter = bd.subtract(HALF, squareCenter);
 

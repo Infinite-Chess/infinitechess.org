@@ -22,7 +22,7 @@ import guipromotion from '../gui/guipromotion.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import { createModel } from './buffermodel.js';
 // @ts-ignore
@@ -40,9 +40,9 @@ import { gl } from './webgl.js';
 
 
 
-const ONE = bigdecimal.FromNumber(1.0);
-const TWO = bigdecimal.FromNumber(2.0);
-const TEN = bigdecimal.FromNumber(10);
+const ONE = bd.FromNumber(1.0);
+const TWO = bd.FromNumber(2.0);
+const TEN = bd.FromNumber(10);
 
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
@@ -50,7 +50,7 @@ let tilesTexture_2: WebGLTexture; // Opaque, no mipmaps
 /** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
 let tilesTexture_256mips: WebGLTexture;
 
-const squareCenter: BigDecimal = bigdecimal.FromNumber(0.5); // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
+const squareCenter: number = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
 
 /**
  * The *exact* bounding box of the board currently visible on the canvas.
@@ -118,18 +118,22 @@ function getRelativeZ() {
 	return perspective.getEnabled() ? perspectiveMode_z : 0;
 }
 
-function gsquareCenter() {
+function getSquareCenter() {
+	return bd.FromNumber(squareCenter);
+}
+
+function getSquareCenterAsNumber() {
 	return squareCenter;
 }
 
 function gtileWidth_Pixels(): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox();
-	const factor1: BigDecimal = bigdecimal.FromNumber(camera.canvas.height * 0.5 / screenBoundingBox.top);
-	const tileWidthPixels_Physical = bigdecimal.multiply_floating(factor1, boardpos.getBoardScale()); // Greater for retina displays
+	const factor1: BigDecimal = bd.FromNumber(camera.canvas.height * 0.5 / screenBoundingBox.top);
+	const tileWidthPixels_Physical = bd.multiply_floating(factor1, boardpos.getBoardScale()); // Greater for retina displays
 
-	const divisor = bigdecimal.FromNumber(window.devicePixelRatio);
-	const tileWidthPixels_Virtual = bigdecimal.divide_floating(tileWidthPixels_Physical, divisor);
+	const divisor = bd.FromNumber(window.devicePixelRatio);
+	const tileWidthPixels_Virtual = bd.divide_floating(tileWidthPixels_Physical, divisor);
 
 	return tileWidthPixels_Virtual;
 }
@@ -172,10 +176,12 @@ function recalcBoundingBox() {
  * @returns The rounded bounding box
  */
 function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
-	const left = bigdecimal.floor(bigdecimal.add(src.left, squareCenter)); // floor(left + squareCenter)
-	const right = bigdecimal.ceil(bigdecimal.add(bigdecimal.subtract(src.right, ONE), squareCenter)); // ceil(right - 1 + squareCenter)
-	const bottom = bigdecimal.floor(bigdecimal.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
-	const top = bigdecimal.ceil(bigdecimal.add(bigdecimal.subtract(src.top, ONE), squareCenter)); // ceil(top - 1 + squareCenter)
+	const squareCenter = getSquareCenter();
+
+	const left = bd.floor(bd.add(src.left, squareCenter)); // floor(left + squareCenter)
+	const right = bd.ceil(bd.add(bd.subtract(src.right, ONE), squareCenter)); // ceil(right - 1 + squareCenter)
+	const bottom = bd.floor(bd.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
+	const top = bd.ceil(bd.add(bd.subtract(src.top, ONE), squareCenter)); // ceil(top - 1 + squareCenter)
     
 	return { left, right, bottom, top };
 }
@@ -187,17 +193,17 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
 function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): BufferModel | undefined {
 	const boardScale = boardpos.getBoardScale();
 	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
-	const relativeScaleWhen1TileIs1VirtualPixel = bigdecimal.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
-	if (bigdecimal.compare(relativeScaleWhen1TileIs1VirtualPixel, scaleWhen1TileIs1VirtualPixel) < 0) {
+	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
+	if (bd.compare(relativeScaleWhen1TileIs1VirtualPixel, scaleWhen1TileIs1VirtualPixel) < 0) {
 		// STOP rendering to avoid glitches! Too small
-		console.log(`Skipping generating board model of zoom ${bigdecimal.toNumber(zoom)}. Scale is too small.`);
+		console.log(`Skipping generating board model of zoom ${bd.toNumber(zoom)}. Scale is too small.`);
 		return;
 	}
 
 	const boardTexture = isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
-	const zoomTimesScale = bigdecimal.toNumber(bigdecimal.multiply_floating(boardScale, zoom));
+	const zoomTimesScale = bd.toNumber(bd.multiply_floating(boardScale, zoom));
 	const zoomTimesScaleTwo = zoomTimesScale * 2;
 
 	const inPerspective = perspective.getEnabled();
@@ -213,12 +219,14 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 
 	/** Calculates the texture coords for one axis (X/Y) of the tiles model. */
 	function getAxisTexCoords(boardPos: BigDecimal, start: number, end: number) {
-		const boardPosAdjusted: BigDecimal = bigdecimal.add(boardPos, squareCenter);
-		const addend1: BigDecimal = bigdecimal.divide_fixed(boardPosAdjusted, zoom);
-		const addend2: BigDecimal = bigdecimal.FromNumber(start / zoomTimesScale);
+		const squareCenter = getSquareCenter();
+
+		const boardPosAdjusted: BigDecimal = bd.add(boardPos, squareCenter);
+		const addend1: BigDecimal = bd.divide_fixed(boardPosAdjusted, zoom);
+		const addend2: BigDecimal = bd.FromNumber(start / zoomTimesScale);
 		
-		const sum: BigDecimal = bigdecimal.add(addend1, addend2);
-		const mod2: number = bigdecimal.toNumber(bigdecimal.mod(sum, TWO));
+		const sum: BigDecimal = bd.add(addend1, addend2);
+		const mod2: number = bd.toNumber(bd.mod(sum, TWO));
 		const texstart: number = mod2 / 2;
 
 		const diff = end - start;
@@ -336,7 +344,7 @@ function render() {
 function renderFractalBoards() {
 	const z = getRelativeZ();
 
-	const e = -bigdecimal.log10(boardpos.getBoardScale());
+	const e = -bd.log10(boardpos.getBoardScale());
 
 	const startE = 0.5; // 0.5   lower = starts coming in quicker
 	if (e < startE) return;
@@ -350,7 +358,7 @@ function renderFractalBoards() {
 	// console.log(firstInterval, zeroCount)
 
 	// Most-zoomed out board
-	let zoom = bigdecimal.power(TEN, zeroCount);
+	let zoom = bd.power(TEN, zeroCount);
 	let x = (firstInterval - e) / length;
 	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
 	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
@@ -361,7 +369,7 @@ function renderFractalBoards() {
 
 	// To divide a bigdecimal by 10^3, we just subtract 3 from the exponent
 	zeroCount -= 3;
-	zoom = bigdecimal.power(TEN, zeroCount);
+	zoom = bd.power(TEN, zeroCount);
 	x = (firstInterval - e) / length; // 0 - 1
 	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
 	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
@@ -405,10 +413,10 @@ function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scal
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 
 	function getAxisEdges(position: BigDecimal, screenEnd: number): [BigDecimal, BigDecimal] {
-		const screenEndBD = bigdecimal.FromNumber(screenEnd);
-		const distToEdgeInSquares: BigDecimal = bigdecimal.divide_floating(screenEndBD, scale);
-		const start = bigdecimal.subtract(position, distToEdgeInSquares);
-		const end = bigdecimal.add(position, distToEdgeInSquares);
+		const screenEndBD = bd.FromNumber(screenEnd);
+		const distToEdgeInSquares: BigDecimal = bd.divide_floating(screenEndBD, scale);
+		const start = bd.subtract(position, distToEdgeInSquares);
+		const end = bd.add(position, distToEdgeInSquares);
 		return [start, end];
 	}
 
@@ -426,19 +434,20 @@ function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scal
 function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD { // ~18
 	const position = boardpos.getBoardPos();
 	const scale = boardpos.getBoardScale();
-	const rangeOfViewBD = bigdecimal.FromNumber(rangeOfView);
-	const renderDistInSquares = bigdecimal.divide_floating(rangeOfViewBD, scale);
+	const rangeOfViewBD = bd.FromNumber(rangeOfView);
+	const renderDistInSquares = bd.divide_floating(rangeOfViewBD, scale);
 
 	return {
-		left: bigdecimal.subtract(position[0], renderDistInSquares),
-		right: bigdecimal.add(position[0], renderDistInSquares),
-		bottom: bigdecimal.subtract(position[1], renderDistInSquares),
-		top: bigdecimal.add(position[1], renderDistInSquares),
+		left: bd.subtract(position[0], renderDistInSquares),
+		right: bd.add(position[0], renderDistInSquares),
+		bottom: bd.subtract(position[1], renderDistInSquares),
+		top: bd.add(position[1], renderDistInSquares),
 	};
 }
 
 export default {
-	gsquareCenter,
+	getSquareCenter,
+	getSquareCenterAsNumber,
 	gtileWidth_Pixels,
 	recalcVariables,
 	roundAwayBoundingBox,

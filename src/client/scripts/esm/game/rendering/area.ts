@@ -99,7 +99,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD { // { left, right
 	const navHeight = topNavHeight + bottomNavHeight;
 	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
 
-	const squareCenter = boardtiles.gsquareCenter();
+	const squareCenter = boardtiles.getSquareCenter();
 	const squareCenterInvertedBD = bigdecimal.subtract(ONE, squareCenter);
 
 	// Round to the furthest away edge of the square.
