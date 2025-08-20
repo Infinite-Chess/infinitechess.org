@@ -1,7 +1,7 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "46"
-maintainer = "Emerson P. Machado" # The_Skeleton on discord
+version = "64"
+maintainer = "" # No current maintainer
 
 [header]
 home = "Xadrez Infinito"
@@ -11,6 +11,7 @@ login = "Entrar"
 profile = "Perfil"
 createaccount = "Criar conta"
 logout = "Sair"
+leaderboard = "Classificação"
 
 [header.settings]
 language = "Idioma"
@@ -21,6 +22,8 @@ legalmoves-dots = "Pontos" # Pontos e triângulos de 4 cantos
 selection = "Selection"
 selection-drag = "Arrastar peças"
 selection-premove = "Premoves"
+selection-animations = "Animações"
+selection-lingering_annotations = "Anotações Persistentes"
 perspective = "Perspectiva" # Modo da perspectiva
 perspective-mouse-sensitivity = "Sensibilidade do Mouse"
 perspective-fov = "Campo de Visão"
@@ -36,6 +39,12 @@ language = "Idioma"
 [member.javascript]
 js-confirm_delete = "Tem certeza de que deseja excluir sua conta? Isso NÃO PODE ser desfeito! Clique em OK para digitar sua senha."
 js-enter_password = "Digite sua senha para excluir PERMANENTEMENTE sua conta:"
+
+[leaderboard.javascript]
+supported_variants = "Essa tabela de Classificação é usada para seguintes variantes:"
+rank = "Classificação"
+player = "Jogador"
+rating = "Rating"
 
 [index]
 title = "Xadrez Infinito | Início - O Site Oficial" # The tab title
@@ -85,9 +94,6 @@ variants_credits = [
 ]
 textures_heading = "Texturas"
 textures_licensed_under = "texturas licenciadas sob a licença"
-textures_credits = [
-"Gold coin por Quolte.",
-]
 sounds_heading = "Sons"
 sounds_credits = [
 ["Alguns sons são fornecidos pelo", "sob a"],
@@ -105,7 +111,8 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chinês Tradicional por ", "Heinrich Xiao", ".",
 	"Polonês por ", "Tymon Becella", ".", # Apsurt
 	"Português por ", "Emerson P. Machado", ".", # The_Skeleton on discord
-	"Espanhol por ", "xa31er", "."
+	"Espanhol por ", "xa31er", ".",
+	"Alemão por ", "Estetique", "."
 ]
 
 [member]
@@ -116,11 +123,13 @@ verify_confirm = "Obrigado! Sua conta foi verificada"
 joined = "Ingressou:"
 seen = ["Visto:", " desde de"]
 practice_progress = "Progresso no modo Prática:"
+ranked_elo = "Rating:"
+infinity_leaderboard_position = "Rank Global:"
+infinity_leaderboard_rating_deviation = "Desvio de Rating:"
 reveal_info = "Mostre informações da conta"
 account_info_heading = "Informações da conta"
 email = "Email:"
 delete_account = "Deletar conta"
-password_reset_message = ["Para mudar seu nome de usuário, email or senha, ", "Contate-nos."]
 
 [member.badge-tooltips]
 checkmate_bronze = "Veterano do Xeque-mate: Complete 50% de todos os confrontos de prática."
@@ -141,10 +150,24 @@ js-username_tooshort = "O nome de usuário deve ter pelo menos 3 caracteres"
 js-username_wrongenc = "O nome de usuário deve conter apenas letras de A-Z e números de 0-9"
 js-email_invalid = "Este não é um email válido"
 js-email_inuse = "Este email já está em uso"
+
+[reset-password.javascript]
+js-pwd_no_match = "As senhas não são iguais."
+reset-password = "Resetar Senha"
+processing = "Processando..."
+network-error = "Ocorreu um erro de rede. Tente novamente."
+
+[password-validation]
 js-pwd_incorrect_format = "A senha está em um formato incorreto"
 js-pwd_too_short = "A senha deve ter mais de 6 caracteres"
 js-pwd_too_long = "A senha não pode ter mais de 72 caracteres"
 js-pwd_not_pwd = "A senha não deve ser 'password'"
+
+[leaderboard]
+title = "Classificação"
+inactive_players = "Jogadores inativos com alta incerteza de rating são excluídos da tabela de classificação."
+your_global_ranking = "Seu Rank Global:"
+show_more = "Mostrar mais..."
 
 [play]
 title = "Xadrez Infinito - Jogar" # The tab title
@@ -279,8 +302,13 @@ code = "Código"
 undo_transition = "Voltar transição"
 expand_fit_all = "Expandir para caber tudo"
 recenter = "Recentralizar"
+annotations = "Mostrar anotações"
+erase = "Apagar anotações"
+collapse = "Colapsar anotações"
 rewind_move = "Lance anterior"
 forward_move = "Próximo lance"
+undo_edit = "Desfazer" # Board editor
+redo_edit = "Refazer" # Board editor
 pause = "Pausar"
 undo = "Voltar lance" # Checkmate practice game
 restart = "Recomeçar partida" # Checkmate practice game
@@ -302,6 +330,7 @@ question = "Aceitar oferta de empate?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Convidado)"
 you_indicator = "(Você)"
+engine_indicator = "Computador"
 player_name_white_generic = "Brancas"
 player_name_black_generic = "Pretas"
 white_to_move = "Brancas jogam"
@@ -351,6 +380,7 @@ checkmate_gold_unearned = "Complete 100% de todos os xeque-mate de prática para
 [play.javascript.copypaste]
 copied_game = "Jogo copiado para a área de transferência!"
 cannot_paste_in_public = "Não é possível colar o jogo em uma partida pública!"
+cannot_paste_in_rated = "Não é possível colar o jogo em uma partida com rating!"
 cannot_paste_in_engine = "Não é possível colar o jogo em uma partida com Engine!"
 cannot_paste_after_moves = "Não é possível colar o jogo depois que os movimentos são feitos!"
 clipboard_denied = "Permissão negada para a área de transferência. Pode ser seu navegador."
@@ -379,7 +409,6 @@ regenerated_pieces = "Peças regeneradas."
 [play.javascript.invites]
 move_mouse = "Mova o mouse para reconectar."
 cannot_cancel = "Não é possível cancelar um convite de ID indefinido."
-you_indicator = "(Você)"
 you_are_white = "Você: Brancas"
 you_are_black = "Você: Pretas"
 random = "Aleatório"
@@ -426,7 +455,6 @@ insuffmat = "Material insuficiente"
 royalcapture = "Captura da realeza"
 allroyalscaptured = "Todas peças da realeza capturadas"
 allpiecescaptured = "Todas peças capturadas"
-threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Desistência"
 agreement = "Acordo" 
@@ -442,7 +470,6 @@ you_disconnect = "Você venceu por desconexão!"
 you_royalcapture = "Você venceu por captura da realeza!"
 you_allroyalscaptured = "Você venceu por capturar todas as peças da realeza!"
 you_allpiecescaptured = "Você venceu por capturar todas as peças!"
-you_threecheck = "Você venceu por 3-xeques!"
 you_koth = "Você venceu Rei da Colina!"
 you_generic = "Você venceu!"
 draw_stalemate = "Empate por afogamento!"
@@ -459,30 +486,24 @@ opponent_disconnect = "Você perdeu por desconexão!"
 opponent_royalcapture = "Você perdeu por captura da realeza!"
 opponent_allroyalscaptured = "Você perdeu por pendurar todas as peças da realeza!"
 opponent_allpiecescaptured = "Você perdeu por pendurar todas as peças!"
-opponent_threecheck = "Você perdeu por 3-xeques!"
 opponent_koth = "Você perdeu por Rei da Colina!"
 opponent_generic = "Você perdeu!"
 white_checkmate = "Brancas vencem por xeque-mate!"
 black_checkmate = "Pretas vencem por xeque-mate!"
-bug_checkmate = "Isso é um bug, por favor, informe. Jogo encerrado por xeque-mate."
 white_time = "Brancas vencem por tempo!"
 black_time = "Pretas vencem por tempo!"
-bug_time = "Isso é um bug, por favor, informe. Jogo encerrado por tempo esgotado."
+white_resignation = "Brancas vencem por desistência!"
+black_resignation = "Pretas vencem por desistência!"
+white_disconnect = "Brancas vencem por desconexão!"
+black_disconnect = "Pretas vencem por desconexão!"
 white_royalcapture = "Brancas vencem por captura da realeza!"
 black_royalcapture = "Pretas vencem por captura da realeza!"
-bug_royalcapture = "Isso é um bug, por favor, informe. Jogo encerrado por captura da realeza"
 white_allroyalscaptured = "Brancas vencem por capturar todas as peças da realeza!"
 black_allroyalscaptured = "Pretas vencem por capturar todas as peças da realeza!"
-bug_allroyalscaptured = "Isso é um bug, por favor, informe. Jogo encerrado por captura de todas as peças da realeza"
 white_allpiecescaptured = "Brancas vencem por capturar todas as peças!"
 black_allpiecescaptured = "Pretas vencem por capturar todas as peças!"
-bug_allpiecescaptured = "Isso é um bug, por favor, informe. Jogo encerrado por captura de todas as peças"
-white_threecheck = "Brancas vencem por 3-xeques!"
-black_threecheck = "Pretas Vencem por 3-xeques!"
-bug_threecheck = "Isso é um bug, por favor, informe. Jogo encerrado por 3-xeques."
 white_koth = "Brancas ganham por Rei da Colina!"
 black_koth = "Pretas ganham por Rei da Colina!"
-bug_koth = "Isso é um bug, por favor, informe. Jogo encerrado por Rei da Colina."
 bug_generic = "Isso é um bug, por favor, informe!"
 
 [terms] # Traduções estão desativadas por enquanto, a única lingua permitida é en-US
@@ -496,7 +517,7 @@ parents_paragraphs = [
 "Atualmente, os membros não podem definir sua própria foto de perfil. Há um plano para permitir esse recurso. Nesse momento, faremos o possível para evitar fotos de perfil inadequadas",
 ]
 fair_play_header = "Jogo limpo"
-fair_play_paragraph1 = ["Não é possível criar mais de uma conta. Se quiser alterar o endereço de e-mail associado à sua conta, ", "entre em contato conosco."].
+fair_play_paragraph1 = ["Não é possível criar mais de uma conta."].
 fair_play_paragraph2 = "Para manter o jogo divertido e justo para todos, você NÃO deve:"
 fair_play_rules = [
 "Modificar ou manipular o código de qualquer forma, incluindo, mas não se limitando a: Usar comandos de console, substituições locais, scripts personalizados, modificar solicitações http, etc. Isso pode ser feito para interromper intencionalmente o jogo ou para lhe dar uma vantagem.",
@@ -536,11 +557,24 @@ update = "(Última atualização: 7/13/24. Adicionado o aviso de que todos os jo
 thanks = "Muito obrigado!"
 
 [login]
-title = "Entrar"
-username = "Nome de usuário:"
+title = "Entrar" # The tab name
+username = "Usuário:"
 password = "Senha:"
-forgot_password = ["Esqueceu a senha? ", "Envie um e-mail."]
 login_button = "Entrar"
+send_reset_link = "Enviar Link de Redefinição"
+forgot_question = "Esqueceu a Senha?"
+back_to_login = "Voltar ao Login"
+forgot_instruction = "Por favor, insira o endereço de e-mail associado à sua conta."
+
+[login.javascript]
+network-error = "A network error occurred. Please try again."
+
+[reset_password]
+title = "Redefinir sua Senha"
+instruction = "Por favor digite sua Senha e confirme sua nova Senha."
+new_password = "Nova Senha"
+confirm_password = "Confirmar Senha"
+submit_button = "Redefinir sua Senha"
 
 [error-pages] # Mensagens de erro mostradas em algumas páginas, explicando o que houve de errado
 400_message = "Parâmetros inválidos foram recebidos."
@@ -553,17 +587,15 @@ more_dev_logs = ["Mais registros de desenvolvimento são postados no ", "discord
 
 [server.javascript]
 ws-invalid_username = "Nome de Usuário é inválido"
-ws-incorrect_password = "Senha está incorreta"
-ws-username_and_password_required = "Nome de usuário e senha são necessários."
-ws-username_and_password_string = "Nome de usuário e senha devem ser uma string."
+ws-incorrect_password = "Senha incorreta"
 ws-login_failure_retry_in = "Falha no login, tente novamente em"
-ws-seconds = "segundos" # unidade de tempo
-ws-second = "segundo" # unidade de tempo
+ws-seconds = "segundos"
+ws-second = "segundo"
 ws-username_length = "Nome de usuário deve ter de 3 a 20 caracteres"
 ws-username_letters = "Nome de usuário deve conter apenas letras de A-Z e números de 0-9"
-ws-username_taken = "Esse nome de usuário já foi escolhido"
+ws-username_taken = "Esse nome de usuário já está em uso"
 ws-username_bad_word = "Esse nome de usuário contém uma palavra que não é permitida"
-ws-username_reserved = "Esse nome de usuário já está reservado"
+ws-username_reserved = "Esse nome de usuário é reservado"
 ws-email_too_long = "Seu e-mail é muito loooooooongo."
 ws-email_invalid = "Este não é um e-mail válido"
 ws-email_in_use = "Este e-mail já está em uso"
@@ -571,25 +603,23 @@ ws-email_domain_invalid = "Domínio Inválido."
 ws-you_are_banned = "Você foi banido."
 ws-password_length = "A senha deve ter entre 6-72 caracteres"
 ws-password_format = "A senha está em um formato incorreto"
-ws-password_password = "A senha não deve ser 'password'"
-ws-member_not_found = "Membro não encontrado"
-ws-forbidden_wrong_account = "Proibido. Esta não é sua conta."
+ws-password_password = "A senha não pode ser 'password'"
+ws-password-reset-link-sent = "Se existir uma conta com esse e-mail, um link de redefinição de senha foi enviado."
+ws-password-change-success = "A senha foi redefinida com sucesso. Você será redirecionado para a página de login em breve."
+ws-password-reset-token-invalid = "O token de redefinição de senha é inválido ou expirou."
+ws-forbidden_wrong_account = "Proibido. Esta não é a sua conta."
 ws-deleting_account_not_found = "Falha ao excluir a conta. Conta não encontrada."
-ws-server_error = "Desculpe, houve um erro no servidor! Por favor, volte."
-ws-unable_to_identify_client_ip = "Não é possível identificar o endereço IP do cliente"
-ws-you_are_banned_by_server = "Você foi banido"
-ws-too_many_requests_to_server = "Muitas solicitações. Tente novamente em breve."
-ws-bad_request = "Solitação ruim"
+ws-deleting_account_in_game = "Você não pode excluir sua conta enquanto estiver conectado a um jogo online."
+ws-server_error = "Desculpe, ocorreu um erro no servidor! Por favor, volte."
 ws-not_found = "404 Não Encontrado"
 ws-forbidden = "Proibido."
 ws-already_in_game = "Você já está em um jogo."
-ws-server_restarting = "O servidor está reiniciando em" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
-ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente mais tarde" # Pode ser alterado à vontade para mudar a mensagem exibida.
-ws-minutes = "minutos" # unidade de tempo
-ws-minute = "minuto" # unidade de tempo
-ws-no_abort_game_over = "Não é possível cancelar o jogo, pois ele já terminou."
-ws-no_abort_after_moves = "Não é possível cancelar o jogo, pois duas jogadas foram realizadas.."
-ws-game_aborted_cheating = "Jogo cancelado por provável trapaça."
-ws-cannot_resign_finished_game = "Não é possível abandonar o jogo, pois ele já terminou."
-ws-invalid_code = "Código Inválido" # O código do convite não corresponde a nenhum convite existente
-ws-game_aborted = "Jogo Cancelado" # O convite foi cancelado enquanto você clicava nele
+ws-server_restarting = "O servidor reiniciará em"
+ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente mais tarde"
+ws-minutes = "minutos"
+ws-minute = "minuto"
+ws-game_aborted_cheating = "Jogo abortado por provável trapaça."
+ws-cannot_resign_finished_game = "Não é possível desistir do jogo, ele já terminou."
+ws-invalid_code = "Código Inválido"
+ws-game_aborted = "Jogo abortado."
+ws-rated_invite_verification_needed = "Para jogar ranqueado, você precisa estar logado em uma conta verificada."
