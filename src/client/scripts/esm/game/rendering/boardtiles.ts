@@ -176,6 +176,8 @@ function recalcBoundingBox() {
  * @returns The rounded bounding box
  */
 function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
+	const squareCenter = getSquareCenter();
+
 	const left = bd.floor(bd.add(src.left, squareCenter)); // floor(left + squareCenter)
 	const right = bd.ceil(bd.add(bd.subtract(src.right, ONE), squareCenter)); // ceil(right - 1 + squareCenter)
 	const bottom = bd.floor(bd.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
@@ -217,6 +219,8 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 
 	/** Calculates the texture coords for one axis (X/Y) of the tiles model. */
 	function getAxisTexCoords(boardPos: BigDecimal, start: number, end: number) {
+		const squareCenter = getSquareCenter();
+
 		const boardPosAdjusted: BigDecimal = bd.add(boardPos, squareCenter);
 		const addend1: BigDecimal = bd.divide_fixed(boardPosAdjusted, zoom);
 		const addend2: BigDecimal = bd.FromNumber(start / zoomTimesScale);

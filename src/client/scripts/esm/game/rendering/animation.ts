@@ -325,7 +325,7 @@ function renderTransparentSquares(): void {
 		const hidesData: number[] = [];
 		const segment = getCurrentSegment(animation);
 		forEachActiveKeyframe(animation.hideKeyframes, segment, v => {
-			v.forEach(coord => hidesData.push(...shapes.getTransformedDataQuad_Color_FromCoord(coord, color)));
+			v.forEach(coord => hidesData.push(...shapes.QuadWorld_Color(coord, color)));
 		});
 		return hidesData; 
 	});

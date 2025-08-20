@@ -225,8 +225,8 @@ function cancelDragging() {
 function renderTransparentSquare() {
 	if (!startCoords) return;
 
-	const color = [0,0,0,0];
-	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
+	const color: Color = [0,0,0,0];
+	const data = shapes.QuadWorld_Color(startCoords, color); // Hide orginal piece
 	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
 }
 
@@ -289,7 +289,7 @@ function genPieceModel(): BufferModel | undefined {
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isMouseTouch(Mouse.LEFT);
-	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
+	const { left, right, bottom, top } = shapes.getCoordBoxWorld(hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();

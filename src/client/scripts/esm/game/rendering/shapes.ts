@@ -38,7 +38,7 @@ const ONE = bd.FromBigInt(1n);
  * [Model Space] Returns a bounding box of a square.
  * @param coords - Must be within double bounds because it should only be for model vertice data.
  */
-function getBoundingBoxOfCoord(coords: DoubleCoords): DoubleBoundingBox {
+function getCoordBoxModel(coords: DoubleCoords): DoubleBoundingBox {
 	const squareCenter = boardtiles.getSquareCenterAsNumber();
 	const left = coords[0] - squareCenter;
 	const bottom = coords[1] - squareCenter;
@@ -50,7 +50,7 @@ function getBoundingBoxOfCoord(coords: DoubleCoords): DoubleBoundingBox {
 /**
  * [World Space] Returns a bounding box of a square.
  */
-function getTransformedBoundingBoxOfSquare(coords: Coords): DoubleBoundingBox {
+function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 	const boardPos = boardpos.getBoardPos();
 	const boardScale = boardpos.getBoardScaleAsNumber();
 
@@ -116,39 +116,43 @@ function applyWorldTransformationsToBoundingBox(boundingBox: BoundingBoxBD): Dou
 /**
  * [Model Space] Generates the vertex data of a square highlight, given the coords and color.
  */
-function getDataQuad_Color_FromCoord(coords: DoubleCoords, color: Color): number[] {
-	const { left, bottom, right, top } = getBoundingBoxOfCoord(coords);
+function QuadModel_Color(coords: DoubleCoords, color: Color): number[] {
+	const { left, bottom, right, top } = getCoordBoxModel(coords);
 	return primitives.Quad_Color(left, bottom, right, top, color);
 }
 
 /**
  * [World Space] Generates the vertex data of a square highlight, given the coords and color.
  */
-function getTransformedDataQuad_Color_FromCoord(coords: Coords, color: Color): number[] {
-	const { left, bottom, right, top } = getTransformedBoundingBoxOfSquare(coords);
+function QuadWorld_Color(coords: Coords, color: Color): number[] {
+	const { left, bottom, right, top } = getCoordBoxWorld(coords);
 	return primitives.Quad_Color(left, bottom, right, top, color);
-}
-
-/**
- * [World Space, LINE_LOOP] Generates the vertex data of a rectangle outline.
- */
-function getDataRect_FromTileBoundingBox(boundingBox: BoundingBox, color: Color): number[] {
-	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
-	return primitives.Rect(left, bottom, right, top, color);
 }
 
 /**
  * [World Space] Generates the vertex data of a colored texture.
  */
-function getDataQuad_ColorTexture_FromCoordAndType(coords: Coords, type: number, color: Color): number[] {
+function QuadWorld_ColorTexture(coords: Coords, type: number, color: Color): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
-	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
+	const { left, right, bottom, top } = getCoordBoxWorld(coords);
 	const [ r, g, b, a ] = color;
 
 	return primitives.Quad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
 }
+
+/**
+ * [World Space, LINE_LOOP] Generates the vertex data of a rectangle outline.
+ */
+function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
+	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
+	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
+	return primitives.Rect(left, bottom, right, top, color);
+}
+
+
+// Transforming Vertices ---------------------------------------------------------------
+
 
 /** Applies a rotational & translational transformation to an array of points. */
 // function applyTransformToPoints(points: DoubleCoords[], rotation: number, translation: DoubleCoords): DoubleCoords[] {
@@ -170,14 +174,16 @@ function getDataQuad_ColorTexture_FromCoordAndType(coords: Coords, type: number,
 // }
 
 
+// Exports -----------------------------------------------------------------------
+
 
 export default {
 	// Square Bounds
-	getBoundingBoxOfCoord,
-	getTransformedBoundingBoxOfSquare,
+	getCoordBoxModel,
+	getCoordBoxWorld,
 	// Mesh Data
-	getDataQuad_Color_FromCoord,
-	getTransformedDataQuad_Color_FromCoord,
-	getDataRect_FromTileBoundingBox,
-	getDataQuad_ColorTexture_FromCoordAndType,
+	QuadModel_Color,
+	QuadWorld_Color,
+	QuadWorld_ColorTexture,
+	RectWorld,
 };
