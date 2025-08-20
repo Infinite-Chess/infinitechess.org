@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/instancedshapes.ts
+
 /**
  * This script calculates the vertex data of a single instance
  * of several different kinds of shapes.
@@ -11,7 +13,7 @@
  */
 
 
-import type { Coords } from "../../chess/util/coordutil.js";
+import type { Coords, DoubleCoords } from "../../chess/util/coordutil.js";
 import type { Color } from "../../util/math/math.js";
 
 import board from "./boardtiles.js";
@@ -79,7 +81,7 @@ const PLUS_SIGN = {
  * @returns The vertex data for the legal move square.
  */
 function getDataLegalMoveSquare(color: Color): number[] {
-	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
 	return shapes.getDataQuad_Color_FromCoord(coords, color);
@@ -92,17 +94,16 @@ function getDataLegalMoveSquare(color: Color): number[] {
  */
 function getDataLegalMoveDot(color: Color): number[] {
 	// eslint-disable-next-line prefer-const
-	let [r, g, b, a] = color;
-	a += DOTS.OPACITY_OFFSET; // Add the offset
-	a = Math.min(a, 1); // Cap it
+	color[3] += DOTS.OPACITY_OFFSET; // Add the offset
+	color[3] = Math.min(color[3], 1); // Cap it
 
 	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
-	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
-	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
+	const x = coords[0] + (1 - board.getSquareCenterAsNumber()) - 0.5;
+	const y = coords[1] + (1 - board.getSquareCenterAsNumber()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
-	return shapes.getDataCircle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, r, g, b, a);
+	return primitives.Circle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, color);
 }
 
 /**
@@ -118,7 +119,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	a = Math.min(a + CORNER_TRIS.OPACITY_OFFSET, 1);
 
 	// Calculate visual center position (original [0,0] instance adjusted for board centering)
-	const boardCenterAdjust = (1 - board.gsquareCenter()) - 0.5;
+	const boardCenterAdjust = (1 - board.getSquareCenterAsNumber()) - 0.5;
 	const centerX = boardCenterAdjust;
 	const centerY = boardCenterAdjust;
 
@@ -226,7 +227,6 @@ function getDataTexture(inverted: boolean): number[] {
  * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
  */
 function getDataColoredTexture(color: Color, inverted: boolean): number[] {
-	// let { left, right, bottom, top } = shapes.getBoundingBoxOfCoord([0,0]);
 	let left = -0.5;
 	let right = 0.5;
 	let bottom = -0.5;

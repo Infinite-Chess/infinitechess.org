@@ -52,7 +52,7 @@ function render(): void {
 		right = (bd.toNumber(bd.subtract(startPositionBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}
 
-	const squareCenterNum = bd.toNumber(boardtiles.gsquareCenter());
+	const squareCenterNum = boardtiles.getSquareCenterAsNumber();
 	const color: Color = [0,0,0,1];
 	const vertexData: number[] = [];
 

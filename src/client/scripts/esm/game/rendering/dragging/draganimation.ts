@@ -327,7 +327,7 @@ function getBoxFrameData(coords: Coords): number[] {
 	// We should be able to work with scale converted to a number
 	// because we don't drag pieces when zoomed out far.
 	const boardScale: number = boardpos.getBoardScaleAsNumber();
-	const squareCenter = bd.toNumber(boardtiles.gsquareCenter());
+	const squareCenter = boardtiles.getSquareCenter();
 	const edgeWidth = 0.07 * boardScale;
 	const color = themes.getPropertyOfTheme(preferences.getTheme(), 'boxOutlineColor');
 

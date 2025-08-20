@@ -374,8 +374,6 @@ function updateBoundingBoxesOfVisibleScreen() {
 
 	// If any part of the square is on screen, this box rounds outward to contain it.
 	boundingBoxInt = boardtiles.roundAwayBoundingBox(boundingBoxFloat);
-	// Expand the bounding box so that it contains the whole of the squares.
-	boundingBoxInt = shapes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxInt);
 
 	/**
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the

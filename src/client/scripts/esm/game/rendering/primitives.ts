@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/bufferdata.ts
+// src/client/scripts/esm/game/rendering/primitives.ts
 
 /**
  * This script contains methods for obtaining the vertex array data
@@ -130,24 +130,21 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 	const data: number[] = [];
 
 	for (let i = 0; i < resolution; i++) {
+		// Current and next angle positions
 		const theta = (i / resolution) * 2 * Math.PI;
 		const nextTheta = ((i + 1) / resolution) * 2 * Math.PI;
 
-		const centerX = x;
-		const centerY = y;
-
-		const thisX = x + radius * Math.cos(theta);
-		const thisY = y + radius * Math.sin(theta);
-
-		const nextX = x + radius * Math.cos(nextTheta);
-		const nextY = y + radius * Math.sin(nextTheta);
+		// Position of current and next points on the circumference
+		const x1 = x + radius * Math.cos(theta);
+		const y1 = y + radius * Math.sin(theta);
+		const x2 = x + radius * Math.cos(nextTheta);
+		const y2 = y + radius * Math.sin(nextTheta);
 
 		// Center point
-		data.push(centerX, centerY, r, g, b, a);
-
+		data.push(x, y, r, g, b, a);
 		// Points around the circle
-		data.push(thisX, thisY, r, g, b, a);
-		data.push(nextX, nextY, r, g, b, a);
+		data.push(x1, y1, r, g, b, a);
+		data.push(x2, y2, r, g, b, a);
 	}
 
 	return data;

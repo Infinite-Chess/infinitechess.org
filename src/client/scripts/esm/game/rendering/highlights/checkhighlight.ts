@@ -48,7 +48,7 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 	const data: number[] = [];
 	for (let i = 0; i < royalsInCheck.length; i++) {
 		const thisRoyalInCheckCoordsBD: BDCoords = bd.FromCoords(royalsInCheck[i]!);
-		// This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.gsquareCenter()
+		// This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.getSquareCenter()
 		// Create a math function for returning the world-space point of the CENTER of the provided coordinate!
 		const worldSpaceCoord = space.convertCoordToWorldSpace(thisRoyalInCheckCoordsBD);
 		const x = worldSpaceCoord[0];
