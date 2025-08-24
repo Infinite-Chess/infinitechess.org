@@ -1,28 +1,30 @@
 
-// Import Start
-import math from '../../util/math/math.js';
-// Import End
+// src/client/scripts/esm/game/rendering/texture.ts
 
-/** This script loads textures. */
 
-// Init a texture from an element from the document. Can be called from any script.
+/**
+ * This script loads textures.
+ * Init a texture from an element from the document. Can be called from any script.
+ */
+
 
 /**
  * Creates a texture object from either an HTML `<img>` element or the ID of such an element, which can be bound before rendering.
- * @param {WebGL2RenderingContext} gl - The webgl context being used
- * @param {HTMLImageElement|string} textureElementOrID - Either the HTML `<img>` element itself or the ID of the `<img>` element.
- * @param {Object} options - An object that may contain the `useMipmaps` property, which is *false* by default.
- * @returns {WebGLTexture} The texture object.
+ * @param gl - The webgl context being used
+ * @param textureElementOrID - Either the HTML `<img>` element itself or the ID of the `<img>` element.
+ * @param options - An object that may contain the `useMipmaps` property, which is *false* by default.
+ * @returns The texture object.
  */
-function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
+function loadTexture(gl: WebGL2RenderingContext, textureElementOrID: HTMLImageElement | string, { useMipmaps = false }: { useMipmaps?: boolean } = {}): WebGLTexture {
 
 	// If a string is passed, assume it's an ID and get the element
-	let textureElement = textureElementOrID;
+	let textureElement: HTMLImageElement;
+	
 	if (typeof textureElementOrID === 'string') {
-		textureElement = document.getElementById(textureElementOrID);
-		if (!textureElement) {
-			throw new Error(`No element found with ID: '${textureElementOrID}'`);
-		}
+		textureElement = document.getElementById(textureElementOrID) as HTMLImageElement;
+		if (!textureElement) throw new Error(`No element found with ID: '${textureElementOrID}'`);
+	} else {
+		textureElement = textureElementOrID;
 	}
 
 	// Ensure the element is an HTMLImageElement
@@ -42,7 +44,7 @@ function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
 	const srcType = gl.UNSIGNED_BYTE;
 	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, textureElement);
 
-	const isPowerOf2 = math.isPowerOfTwo(textureElement.naturalWidth) && isPowerOfTwo(textureElement.naturalHeight);
+	const isPowerOf2 = isPowerOfTwo(textureElement.naturalWidth) && isPowerOfTwo(textureElement.naturalHeight);
 	if (!isPowerOf2 && useMipmaps) {
 		console.error(`Image dimensions are not a power of two! Unable to use mipmaps. Dimensions: ${textureElement.naturalWidth}x${textureElement.naturalHeight}`);
 	}
@@ -84,9 +86,10 @@ function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
  * 
  * It does this efficiently by using bitwise operations.
  */
-function isPowerOfTwo(value) {
+function isPowerOfTwo(value: number): boolean {
 	return (value & (value - 1)) === 0;
 }
+
 
 export default {
 	loadTexture,
