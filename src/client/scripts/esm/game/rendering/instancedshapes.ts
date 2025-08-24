@@ -13,7 +13,7 @@
  */
 
 
-import type { Coords, DoubleCoords } from "../../chess/util/coordutil.js";
+import type { DoubleCoords } from "../../chess/util/coordutil.js";
 import type { Color } from "../../util/math/math.js";
 
 import board from "./boardtiles.js";
@@ -61,7 +61,7 @@ const CORNER_TRIS = {
  */
 const PLUS_SIGN = {
 	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
-	POSITION: [0.3, 0.3] as Coords, // Default: [0.3, 0.3]
+	POSITION: [0.3, 0.3] as DoubleCoords, // Default: [0.3, 0.3]
 	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
 	ARM_LENGTH: 0.4, // Default: 0.4
 	/** Width of the plus sign arms */
@@ -92,11 +92,10 @@ function getDataLegalMoveSquare(color: Color): number[] {
  * @returns The vertex data for the "legal move dot" (circle).
  */
 function getDataLegalMoveDot(color: Color): number[] {
-	// eslint-disable-next-line prefer-const
 	color[3] += DOTS.OPACITY_OFFSET; // Add the offset
 	color[3] = Math.min(color[3], 1); // Cap it
 
-	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
 	const x = coords[0] + (1 - board.getSquareCenterAsNumber()) - 0.5;
 	const y = coords[1] + (1 - board.getSquareCenterAsNumber()) - 0.5;

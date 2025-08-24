@@ -72,6 +72,7 @@ interface Animation {
 
 
 const ZERO = bd.FromBigInt(0n);
+const ONE = bd.FromBigInt(1n);
 
 /** Config for the splines. */
 const SPLINES: {
@@ -400,10 +401,10 @@ function renderAnimations() {
  * Roses's have a higher spline resolution, so they cram a lot more segments
  * in between each waypoint.
  * @param animation - The animation to calculate the current segment for.
- * @param maxDistB4Teleport  - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ * @param maxDistB4TeleportNumber  - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
  * @returns The animation's segment progress
  */
-function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): number {
+function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal = bd.FromNumber(MAX_DISTANCE_BEFORE_TELEPORT)): number {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
@@ -411,20 +412,19 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANC
 	const easedT = math.easeInOut(t);
 	const easedTBD = bd.FromNumber(easedT);
 
-	const maxDistB4TeleportBD = bd.FromNumber(maxDistB4Teleport);
-
 	/** The total distance along the animation path the animated piece should currently be at. */
 	let targetDistance: BigDecimal;
-	if (bd.compare(animation.totalDistance, maxDistB4TeleportBD) <= 0) { // Total distance is short enough to animate the whole path
+	if (bd.compare(animation.totalDistance, maxDistB4Teleport) <= 0) { // Total distance is short enough to animate the whole path
 		targetDistance = bd.multiply_fixed(animation.totalDistance, easedTBD);
 	} else { // The total distance is great enough to merit teleporting: Skip the middle of the path
 		if (easedT < 0.5) {
 			// First half
-			targetDistance = bd.FromNumber(easedT * maxDistB4Teleport);
+			targetDistance = bd.multiply_fixed(maxDistB4Teleport, easedTBD);
 		} else { // easedT >= 0.5
 			// Second half: animate final portion of path
-			const portionFromEnd = bd.FromNumber((maxDistB4Teleport / 2) - (easedT - 0.5) * maxDistB4Teleport);
-			targetDistance = bd.subtract(animation.totalDistance, portionFromEnd);
+			const inverseEasedT = bd.subtract(easedTBD, ONE);
+			const targetDistance_FromEnd = bd.multiply_fixed(maxDistB4Teleport, inverseEasedT);
+			targetDistance = bd.subtract(animation.totalDistance, targetDistance_FromEnd);
 		}
 	}
 

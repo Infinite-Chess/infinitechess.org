@@ -82,7 +82,7 @@ let projMatrix: Mat4; // Same for every shader program
 let viewMatrix: Mat4;
 
 // Returns devMode-sensitive camera position.
-function getPosition(ignoreDevmode?: boolean): Position {
+function getPosition(ignoreDevmode?: boolean): Vec3 {
 	return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? position_devMode : position);
 }
 

@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/shapes.ts
+// src/client/scripts/esm/game/rendering/meshes.ts
 
 
 /**
