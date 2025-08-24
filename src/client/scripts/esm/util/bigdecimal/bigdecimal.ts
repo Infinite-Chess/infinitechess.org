@@ -964,36 +964,13 @@ function areCoordsIntegers(coords: BDCoords): boolean {
 	return isInteger(coords[0]) && isInteger(coords[1]);
 }
 
-/**
- * Calculates the base-10 logarithm of a BigDecimal's value, returning a standard `number`.
- * SHOULD ONLY ever be called with a bigdecimal using floating point operations,
- * as those have a fixed mantissa size!
- * It operates by casting the `bigint` mantissa to a standard `Number`, therefore
- * bounded by the precision of a 64-bit float.
- */
+/** Calculates the base-10 logarithm of a BigDecimal. */
 function log10(bd: BigDecimal): number {
-	const mantissa = bd.bigint;
-	const exponent = bd.divex;
-
-	const mantissaAsNumber = Number(mantissa);
-
-	// VALIDATE the cast. If it results in Infinity, the mantissa was too large.
-	// This prevents silent precision loss.
-	if (!isFinite(mantissaAsNumber)) throw new Error("Cannot calculate log10 of bigdecimal: The 'bigint' mantissa is too large to be safely cast to a standard Number.");
-
-	// Let Math.log10 efficiently handle the number.
-	const log10OfMantissa = Math.log10(mantissaAsNumber);
-
-	// Calculate the contribution of the exponent.
-	const log10OfScale = exponent * LOG10_OF_2;
-
-	// Apply the logarithm quotient rule and return the final numeric value.
-	return log10OfMantissa - log10OfScale;
+	// Use the change of base formula: log10(x) = ln(x) / ln(10).
+	return ln(bd) / Math.LN10;
 }
 
-/**
- * Calculates the natural logarithm (base e) of a BigDecimal's value.
- */
+/** Calculates the natural logarithm (base e) of a BigDecimal's value. */
 function ln(bd: BigDecimal): number {
 	if (bd.bigint < ZERO) return NaN;
 	if (bd.bigint === ZERO) return -Infinity;
