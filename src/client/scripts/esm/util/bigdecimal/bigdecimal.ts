@@ -970,8 +970,6 @@ function areCoordsIntegers(coords: BDCoords): boolean {
  * as those have a fixed mantissa size!
  * It operates by casting the `bigint` mantissa to a standard `Number`, therefore
  * bounded by the precision of a 64-bit float.
- * @param bd The BigDecimal.
- * @returns The base-10 logarithm of the input's value as a standard `number`.
  */
 function log10(bd: BigDecimal): number {
 	const mantissa = bd.bigint;
@@ -991,6 +989,20 @@ function log10(bd: BigDecimal): number {
 
 	// Apply the logarithm quotient rule and return the final numeric value.
 	return log10OfMantissa - log10OfScale;
+}
+
+/**
+ * Calculates the natural logarithm (base e) of a BigDecimal's value.
+ */
+function ln(bd: BigDecimal): number {
+	if (bd.bigint < ZERO) return NaN;
+	if (bd.bigint === ZERO) return -Infinity;
+
+	// Use the formula: ln(bigint / 2^divex) = ln(bigint) - (divex * ln(2))
+	const logOfMantissa = bimath.ln(bd.bigint);
+	const logOfScale = bd.divex * Math.LN2;
+
+	return logOfMantissa - logOfScale;
 }
 
 
@@ -1377,6 +1389,7 @@ export default {
 	isInteger,
 	areCoordsIntegers,
 	log10,
+	ln,
 	// Conversions and Utility
 	toBigInt,
 	coordsToBigInt,
