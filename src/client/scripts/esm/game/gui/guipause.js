@@ -53,6 +53,10 @@ const element_perspective = document.getElementById('toggleperspective');
  */
 function areWePaused() { return isPaused; }
 
+/**
+ * 
+ * @returns {HTMLElement}
+ */
 function getelement_perspective() {
 	return element_perspective;
 }
