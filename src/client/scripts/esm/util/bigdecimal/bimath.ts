@@ -31,7 +31,7 @@ function abs(bigint: bigint): bigint {
 
 // EVERYTHING COMMENTED OUT I AM UNSURE IF WE WILL NEED.
 
-/** Calculates the integer logarithm base 2 of a BigInt. */
+/** [INTEGER] Calculates the integer logarithm base 2 of a BigInt. */
 function log2(bigint: bigint): number {
 	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
 	if (bigint < ZERO) return NaN;
@@ -42,16 +42,34 @@ function log2(bigint: bigint): number {
 	return bitLength_bisection(bigint) - 1;
 }
 
-/**
-* Calculates the logarithm base 10 of the specified BigInt. Returns an integer.
-* @param bigint - The BigInt. 0+
-* @returns The logarithm to base 10
-*/
-function log10(bigint: bigint): number {
-	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
+/** [CONTINUOUS] Calculates the natural logarithm (base e) of a BigInt. */
+function ln(bigint: bigint): number {
 	if (bigint < ZERO) return NaN;
+	if (bigint === ZERO) return -Infinity;
 
-	return bigint.toString(10).length - 1;
+	const bitLen = bitLength_bisection(bigint);
+
+	// The maximum exponent for a standard IEEE 754 double is 1023.
+	// Therefore, any BigInt with a bit length of 1024 or more will overflow to Infinity.
+	// For anything smaller, direct conversion is the fastest and simplest path.
+	if (bitLen < 1024) return Math.log(Number(bigint));
+
+	// Manual method based on base-2 logarithms.
+	// N = m * 2^e  =>  ln(N) = ln(m) + e*ln(2)
+
+	// 1. The base-2 exponent 'e' is the bit length minus one.
+	const exponent = bitLen - 1;
+
+	// 2. To get the mantissa 'm', we extract the 53 most significant bits.
+	const precisionBits = 53; // JS number (double) has 53 bits of mantissa precision.
+	const shift = BigInt(bitLen - precisionBits);
+	const mantissaInt = Number(bigint >> shift);
+
+	// 3. Normalize the integer mantissa to the range [1.0, 2.0).
+	const mantissa = mantissaInt / (2 ** (precisionBits - 1));
+
+	// 4. Apply the logarithm formula.
+	return Math.log(mantissa) + exponent * Math.LN2;
 }
 
 // /**
@@ -410,8 +428,7 @@ function LCM(array: bigint[]): bigint {
 export default {
 	abs,
 	log2,
-	log10,
-	// logN,
+	ln,
 	// getLeastSignificantBits,
 	// getBitAtPositionFromRight,
 	toDebugBinaryString,
