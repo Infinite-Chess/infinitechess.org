@@ -9,9 +9,9 @@
  */
 
 
-import type { Coords } from "../chess/util/coordutil.js";
+import type { DoubleCoords } from "../chess/util/coordutil.js";
+
 import docutil from "../util/docutil.js";
-import type { Vec2 } from "../util/math.js";
 
 const Mouse = {
 	LEFT: 0,
@@ -64,7 +64,7 @@ interface InputListener {
 	getMouseId(button: MouseButton): string | undefined;
 	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
 	// eslint-disable-next-line no-unused-vars
-	getMousePosition(button: MouseButton): Coords | undefined;
+	getMousePosition(button: MouseButton): DoubleCoords | undefined;
 	/** Whether the given mouse button simulated a full CLICK this frame. */
 	// eslint-disable-next-line no-unused-vars
 	isMouseClicked(button: MouseButton): boolean;
@@ -82,19 +82,19 @@ interface InputListener {
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-    getPointerPos(pointerId?: string): Coords | undefined;
+    getPointerPos(pointerId?: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-	getPointerDelta(pointerId: string): Vec2 | undefined;
+	getPointerDelta(pointerId: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-	getPointerVel(pointerId: string): Vec2 | undefined;
+	getPointerVel(pointerId: string): DoubleCoords | undefined;
 	/** Returns the ids of all existing pointers. */
 	getAllPointerIds(): string[];
 	/** Returns all existing pointers. */
@@ -120,7 +120,7 @@ interface InputListener {
     element: HTMLElement | typeof document;
 }
 
-type PointerHistory = { pos: Coords, time: number }[];
+type PointerHistory = { pos: DoubleCoords, time: number }[];
 
 /** Options for simulated clicks */
 const CLICK_THRESHOLDS = {
@@ -158,12 +158,12 @@ type Pointer = {
 	 * since touches won't exist if their no longer held down.
 	 */
 	isHeld: boolean;
-	position: Coords;
+	position: DoubleCoords;
 	/** How many pixels the pointer has moved since last frame. */
-	delta: Vec2;
+	delta: DoubleCoords;
 	/** Used for calculating velocity */
 	positionHistory: PointerHistory;
-	velocity: Vec2;
+	velocity: DoubleCoords;
 };
 
 /**
@@ -194,7 +194,7 @@ interface ClickInfo {
 	 * Also Used for calculating simulated clicks, when touch events
 	 * don't provide delta from lift to down.
 	 */
-	posDown?: Coords;
+	posDown?: DoubleCoords;
 	/**
 	 * How much the mouse has ABSOLUTELY moved since the last click down.
 	 * ONLY USED FOR CALCULATING SIMULATED CLICKS AND DOUBLE CLICK DRAGS,
@@ -205,12 +205,12 @@ interface ClickInfo {
 	 * 
 	 * This can only be positive, not negative.
 	 */
-	deltaSinceDown: Coords;
+	deltaSinceDown: DoubleCoords;
 	/**
 	 * The last known position of the last active pointer for this mouse button.
 	 * UPDATES ON DOWN AND UP, NOT ON MOVE.
 	 */
-	position?: Coords;
+	position?: DoubleCoords;
 	/** Whether this frame incurred the start of a double click drag */
 	doubleClickDrag: boolean;
 }
@@ -427,7 +427,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	 * 
 	 * If the pointer moves too much, don't simulate a click.
 	 */
-	function updateDeltaSinceDownForPointer(pointerId: string, delta: Vec2) {
+	function updateDeltaSinceDownForPointer(pointerId: string, delta: DoubleCoords) {
 		// Update the delta (deltaSinceDown) for simulated mouse clicks
 		Object.values(Mouse).forEach((targetButton) => {
 			const targetButtonInfo = clickInfo[targetButton];
@@ -703,7 +703,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
  * Converts the mouse coordinates to be relative to the
  * element bounding box instead of absolute to the whole page.
  */
-function getRelativeMousePosition(coords: Coords, element: HTMLElement | typeof document): Coords {
+function getRelativeMousePosition(coords: DoubleCoords, element: HTMLElement | typeof document): DoubleCoords {
 	if (element instanceof Document) return coords; // No need to adjust if we're listening on the document.
 	const rect = element.getBoundingClientRect();
 	return [

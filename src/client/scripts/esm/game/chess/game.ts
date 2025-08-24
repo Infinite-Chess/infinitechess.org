@@ -7,6 +7,9 @@
 
 
 
+import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { Mesh } from '../rendering/piecemodels.js';
+
 import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
 import highlights from '../rendering/highlights/highlights.js';
@@ -34,6 +37,7 @@ import boardeditor from '../misc/boardeditor.js';
 import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';
+import promotionlines from '../rendering/promotionlines.js';
 import { CreateInputListener, InputListener, Mouse } from '../input.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
@@ -43,11 +47,6 @@ import webgl from '../rendering/webgl.js';
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
-// @ts-ignore
-import promotionlines from '../rendering/promotionlines.js';
-
-import type { FullGame } from '../../chess/logic/gamefile.js';
-import type { Mesh } from '../rendering/piecemodels.js';
 
 
 // Variables -------------------------------------------------------------------------------

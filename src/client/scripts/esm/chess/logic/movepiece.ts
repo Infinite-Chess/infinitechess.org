@@ -24,10 +24,8 @@ import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
-import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
-// @ts-ignore
 import wincondition from './wincondition.js';
 
 
@@ -69,7 +67,7 @@ type promotion = number;
 /** A special move tag for castling. */
 type castle = {
 	/** 1 => King castled right   2 => King castled left */
-	dir: 1 | -1,
+	dir: 1n | -1n,
 	/** The coordinate of the piece the king castled with, usually a rook. */
 	coord: Coords
 }
@@ -455,11 +453,18 @@ function goToMove(boardsim: Board, index: number, callback: (move: Move ) => voi
 	if (boardsim.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
 
 	while (i !== index) {
-		i = math.moveTowards(i, index, 1);
+		i = moveTowards(i, index, 1);
 		const move = boardsim.moves[i + offset];
 		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
 		callback(move);
 	}
+}
+
+/**
+ * Starts with `s`, steps it by +-`progress` towards `e`, then returns that number.
+ */
+function moveTowards(s: number, e: number, progress: number): number {
+	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }
 
 
