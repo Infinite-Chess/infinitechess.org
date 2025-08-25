@@ -970,7 +970,7 @@ function log10(bd: BigDecimal): number {
 	return ln(bd) / Math.LN10;
 }
 
-/** Calculates the natural logarithm (base e) of a BigDecimal's value. */
+/** Calculates the natural logarithm (base e) of a BigDecimal. */
 function ln(bd: BigDecimal): number {
 	if (bd.bigint < ZERO) return NaN;
 	if (bd.bigint === ZERO) return -Infinity;
@@ -980,6 +980,44 @@ function ln(bd: BigDecimal): number {
 	const logOfScale = bd.divex * Math.LN2;
 
 	return logOfMantissa - logOfScale;
+}
+
+/**
+ * Calculates the exponential function e^bd (the inverse of the natural logarithm).
+ * This is computed using a Taylor Series expansion for arbitrary precision.
+ * @param bd The BigDecimal exponent.
+ * @param mantissaBits The precision of the result in bits.
+ * @returns A new BigDecimal representing e^bd.
+ */
+function exp(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+	// The Taylor series for e^x is Σ (x^n / n!) from n=0 to infinity.
+	// We can compute this iteratively: term_n = term_{n-1} * (x / n)
+
+	// Initialize sum and the first term (x^0 / 0! = 1)
+	let sum = FromBigInt(1n, mantissaBits);
+	let term = clone(sum);
+	let lastSum = FromBigInt(0n, mantissaBits);
+
+	const MAX_ITERATIONS = 1000; // Safety break to prevent infinite loops
+
+	for (let n = 1; n < MAX_ITERATIONS; n++) {
+		const n_bd = FromBigInt(BigInt(n), mantissaBits);
+
+		// Calculate the next term: term = term * (bd / n)
+		const bd_div_n = divide_floating(bd, n_bd, mantissaBits);
+		term = multiply_floating(term, bd_div_n, mantissaBits);
+		
+		// Add the new term to the sum
+		sum = add(sum, term);
+
+		// Check for convergence. If the sum hasn't changed, we're done.
+		if (areEqual(sum, lastSum)) return sum;
+
+		lastSum = clone(sum);
+	}
+
+	console.warn(`bigdecimal.exp() may not have fully converged after ${MAX_ITERATIONS} iterations.`);
+	return sum;
 }
 
 
@@ -1367,6 +1405,7 @@ export default {
 	areCoordsIntegers,
 	log10,
 	ln,
+	exp,
 	// Conversions and Utility
 	toBigInt,
 	coordsToBigInt,
