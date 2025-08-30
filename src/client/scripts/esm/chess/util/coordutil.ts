@@ -104,6 +104,16 @@ function copyCoords(coords: Coords): Coords {
 }
 
 /**
+ * Makes a deep copy of the provided BigDecimal coordinates
+ */
+function copyBDCoords(coords: BDCoords): BDCoords {
+	return [
+		bd.clone(coords[0]),
+		bd.clone(coords[1])
+	]
+}
+
+/**
  * Interpolates between two coordinates.
  * @param start - The starting coordinate.
  * @param end - The ending coordinate.
@@ -141,6 +151,7 @@ export default {
 	subtractCoords,
 	subtractBDCoords,
 	copyCoords,
+	copyBDCoords,
 	lerpCoords,
 	lerpCoordsDouble,
 };
