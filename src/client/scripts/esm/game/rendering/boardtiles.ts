@@ -358,7 +358,7 @@ function renderFractalBoards() {
 	// console.log(firstInterval, zeroCount)
 
 	// Most-zoomed out board
-	let zoom = bd.power(TEN, zeroCount);
+	let zoom = bd.powerInt(TEN, zeroCount);
 	let x = (firstInterval - e) / length;
 	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
 	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
@@ -369,7 +369,7 @@ function renderFractalBoards() {
 
 	// To divide a bigdecimal by 10^3, we just subtract 3 from the exponent
 	zeroCount -= 3;
-	zoom = bd.power(TEN, zeroCount);
+	zoom = bd.powerInt(TEN, zeroCount);
 	x = (firstInterval - e) / length; // 0 - 1
 	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
 	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);

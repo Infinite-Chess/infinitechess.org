@@ -272,29 +272,29 @@ function bitLength_bisection(x: bigint): number {
 	return i + 32 - Math.clz32(Number(a));
 }
 
-/**
- * Calculates the bit length of a bigint using a fast `toString(16)` and `Math.clz32` trick.
- * It is 4x faster than {@link bitLength_toString}.
- */
-function bitLength_hex(n: bigint): number {
-	if (n === ZERO) return 0;
-	if (n < ZERO) n = -n;
+// /**
+//  * Calculates the bit length of a bigint using a fast `toString(16)` and `Math.clz32` trick.
+//  * It is 4x faster than {@link bitLength_toString}.
+//  */
+// function bitLength_hex(n: bigint): number {
+// 	if (n === ZERO) return 0;
+// 	if (n < ZERO) n = -n;
 
-	const hexLength = n.toString(16).length;
-	const i = (hexLength - 1) * 4;
-	return i + (32 - Math.clz32(Number(n >> BigInt(i))));
-}
+// 	const hexLength = n.toString(16).length;
+// 	const i = (hexLength - 1) * 4;
+// 	return i + (32 - Math.clz32(Number(n >> BigInt(i))));
+// }
 
 
-/**
- * Calculates the bit length of a bigint using the simple `toString(2)` method.
- * This is the most readable but least performant method.
- */
-function bitLength_toString(n: bigint): number {
-	if (n === ZERO) return 0;
-	if (n < ZERO) n = -n;
-	return n.toString(2).length;
-}
+// /**
+//  * Calculates the bit length of a bigint using the simple `toString(2)` method.
+//  * This is the most readable but least performant method.
+//  */
+// function bitLength_toString(n: bigint): number {
+// 	if (n === ZERO) return 0;
+// 	if (n < ZERO) n = -n;
+// 	return n.toString(2).length;
+// }
 
 
 /**

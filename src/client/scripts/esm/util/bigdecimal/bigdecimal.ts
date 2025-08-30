@@ -658,18 +658,18 @@ function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * Calculates the integer power of a BigDecimal (base^exp).
  * This uses the "exponentiation by squaring" algorithm for efficiency.
  */
-function power(base: BigDecimal, exp: number): BigDecimal {
+function powerInt(base: BigDecimal, exp: number): BigDecimal {
 	if (!Number.isInteger(exp)) throw new Error("Exponent must be an integer.");
 
 	// Handle negative exponents by inverting the base: base^-n = (1/base)^n
 	if (exp < 0) {
-		const ONE = FromNumber(1.0);
+		const ONE = FromBigInt(1n);
 		// Use floating-point division for a precise reciprocal
 		const invertedBase = divide_floating(ONE, base);
-		return power(invertedBase, -exp);
+		return powerInt(invertedBase, -exp);
 	}
     
-	let res = FromNumber(1.0); // Start with the identity element for multiplication
+	let res = FromBigInt(1n); // Start with the identity element for multiplication
 	let currentPower = base;   // Start with base^1
 
 	while (exp > 0) {
@@ -682,6 +682,49 @@ function power(base: BigDecimal, exp: number): BigDecimal {
 	}
 
 	return res;
+}
+
+/**
+ * Calculates the power of a BigDecimal to any exponent (base^exp).
+ * This works for integer and fractional exponents by using the identity:
+ * base^exp = e^(exp * ln(base)).
+ * If the exponent is an integer, it automatically uses the more efficient integer power function.
+ * @param base The base BigDecimal.
+ * @param exponent The exponent BigDecimal.
+ * @param mantissaBits The precision of the result in bits.
+ * @returns A new BigDecimal representing base^exp.
+ */
+function pow(base: BigDecimal, exponent: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+	// 1. Handle edge cases
+	if (base.bigint < ZERO && !isInteger(exponent)) {
+		throw new Error("Power of a negative base to a non-integer exponent results in a complex number, which is not supported.");
+	}
+	if (base.bigint === ZERO) {
+		if (exponent.bigint > ZERO) return { bigint: ZERO, divex: 0 }; // 0^positive = 0
+		if (exponent.bigint < ZERO) throw new Error("0 raised to a negative power is undefined (division by zero).");
+		return FromBigInt(ONE, mantissaBits); // 0^0 is conventionally 1
+	}
+	// If the exponent is an integer, use the more efficient integer power function.
+	if (isInteger(exponent)) {
+		const expAsNumber = toNumber(exponent);
+		return powerInt(base, expAsNumber);
+	}
+
+	// 2. Calculate ln(base) as a standard JavaScript number.
+	const logOfBase = ln(base);
+    
+	// 3. Convert the exponent to a standard number to multiply. This is a potential precision loss
+	//    if the exponent itself is a massive BigDecimal, but is a practical simplification.
+	const exponentAsNumber = toNumber(exponent);
+
+	// 4. Multiply: exponent * ln(base)
+	const product = exponentAsNumber * logOfBase;
+    
+	// 5. Convert the resulting number back to a BigDecimal to be used in exp().
+	const productBD = FromNumber(product, mantissaBits);
+
+	// 6. Calculate the final result: e^(product)
+	return exp(productBD, mantissaBits);
 }
 
 /**
@@ -1387,7 +1430,8 @@ export default {
 	divide_fixed,
 	divide_floating,
 	mod,
-	power,
+	powerInt,
+	pow,
 	sqrt,
 	hypot,
 	abs,
