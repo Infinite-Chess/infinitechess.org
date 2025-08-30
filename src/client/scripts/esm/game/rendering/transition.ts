@@ -1,5 +1,12 @@
 
-// Import Start
+// src/client/scripts/esm/game/rendering/transition.ts
+
+/**
+ * This class handles the smooth animation of teleporting from one location to another
+ * when clicking on our Expand, Recenter, or Undo Transition buttons.
+ */
+
+
 import perspective from './perspective.js';
 import area from './area.js';
 import camera from './camera.js';
@@ -8,53 +15,53 @@ import boardtiles from './boardtiles.js';
 import frametracker from './frametracker.js';
 import boarddrag from './boarddrag.js';
 import boardpos from './boardpos.js';
-// Import End
+import coordutil, { BDCoords, DoubleCoords } from '../../chess/util/coordutil.js';
+import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
-"use strict";
 
-/**
- * This class handles the smooth animation of teleporting from one location to another
- * when clicking on our Expand, Recenter, or Undo Transition buttons.
- */
+interface Teleport {
+	endCoords: BDCoords;
+	endScale: BigDecimal;
+	isPanTel?: boolean; // If true, this is a panning transition, not a zooming one
+}
 
-const teleportHistory = [];
+
+
+const teleportHistory: Teleport[] = [];
 const historyCap = 20;
 
 const baseSpeed = 600; // default 700
 const speedPerE = 70; // Milliseconds per 1E of zoom   default 70
 const perspectiveMultiplier = 1.3;
-let speed; // 1000 Milliseconds. Time it takes to teleport
+let speed: number; // 1000 Milliseconds. Time it takes to teleport
 
 const maxPanTelDistB4Teleport = 90;
 
-/**
- * Duration, in milliseconds, of all *panning* transition type.
- * @type {number}
- */
+/** Duration, in milliseconds, of all *panning* transition type. */
 const panTelSpeed = 800;
 
-let startTime;
-let isZoomOut;
-let isPanTel;
+let startTime: number;
+let isZoomOut: boolean;
+let isPanTel: boolean;
 
-let startCoords;
-let endCoords;
-let diffCoords;
+let startCoords: BDCoords;
+let endCoords: BDCoords;
+let diffCoords: BDCoords;
 
-let startScale;
-let endScale;
-let startE;
-let endE;
-let diffE;
+let startScale: BigDecimal;
+let endScale: BigDecimal;
+let startE: number;
+let endE: number;
+let diffE: number;
 
-let startWorldSpace;
-let endWorldSpace;
-let diffWorldSpace;
+let startWorldSpace: DoubleCoords;
+let endWorldSpace: DoubleCoords;
+let diffWorldSpace: DoubleCoords;
 
 let isTeleporting = false; // Set to true when we're currently animating. For the duration, ignore navigation controls
-let secondTeleport;
+let secondTeleport: Teleport | undefined;
 
-function teleport(tel1, tel2, ignoreHistory) { // tel2 can be undefined, if only 1
+function teleport(tel1: Teleport, tel2?: Teleport, ignoreHistory: boolean = false): void { // tel2 can be undefined, if only 1
 
 	if (!ignoreHistory) pushToTelHistory({ endCoords: boardpos.getBoardPos(), endScale: boardpos.getBoardScale(), isPanTel: false });
 
@@ -84,8 +91,8 @@ function teleport(tel1, tel2, ignoreHistory) { // tel2 can be undefined, if only
 
 	// Scale
 
-	startE = Math.log(startScale); // We're using base E
-	endE = Math.log(endScale);
+	startE = bd.ln(startScale); // We're using base E
+	endE = bd.ln(endScale);
 	diffE = endE - startE;
 
 	const multiplier = perspective.getEnabled() ? perspectiveMultiplier : 1;
@@ -135,7 +142,8 @@ function updateNormal(equaY) {
 
 	// Smoothly transition E, then convert back to scale
 	const newE = startE + diffE * equaY;
-	const newScale = Math.pow(Math.E, newE);
+	const E_CONSTANT = bd.FromNumber(Math.E);
+	const newScale = bd.pow(E_CONSTANT, newE);
 	boardpos.setBoardScale(newScale);
 
 	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
@@ -144,12 +152,14 @@ function updateNormal(equaY) {
 	const targetCoords = isZoomOut ? startCoords : endCoords;
 
 	// Calculate new world-space
-	const newWorldX = startWorldSpace[0] + diffWorldSpace[0] * equaY;
-	const newWorldY = startWorldSpace[1] + diffWorldSpace[1] * equaY;
+	const newWorldX = bd.FromNumber(startWorldSpace[0] + diffWorldSpace[0] * equaY);
+	const newWorldY = bd.FromNumber(startWorldSpace[1] + diffWorldSpace[1] * equaY);
 	// Convert to board position
 	const boardScale = boardpos.getBoardScale();
-	const newX = targetCoords[0] - (newWorldX / boardScale);
-	const newY = targetCoords[1] - (newWorldY / boardScale);
+	const shiftX = bd.divide_floating(newWorldX, boardScale);
+	const shiftY = bd.divide_floating(newWorldY, boardScale);
+	const newX = bd.subtract(targetCoords[0], shiftX);
+	const newY = bd.subtract(targetCoords[1], shiftY);
 
 	boardpos.setBoardPos([newX, newY]);
 }
@@ -158,11 +168,13 @@ function updatePanTel(equaX, equaY) {
 
 	// What is the scale?
 	// What is the maximum distance we should pan b4 teleporting to the other half?
-	const maxDist = maxPanTelDistB4Teleport / boardpos.getBoardScale();
-	const greaterThanMaxDist = Math.abs(diffCoords[0]) > maxDist || Math.abs(diffCoords[1]) > maxDist;
+	const boardScale = boardpos.getBoardScale();
+	const maxPanTelDistB4TeleportBD = bd.FromNumber(maxPanTelDistB4Teleport);
+	const maxDist = bd.divide_floating(maxPanTelDistB4TeleportBD, boardScale);
+	const greaterThanMaxDist = bd.compare(bd.abs(diffCoords[0]), maxDist) > 0 || bd.compare(bd.abs(diffCoords[1]), maxDist) > 0;
 
-	let newX;
-	let newY;
+	let newX: BigDecimal;
+	let newY: BigDecimal;
 
 	if (!greaterThanMaxDist) {
 
