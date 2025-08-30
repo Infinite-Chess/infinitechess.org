@@ -5,12 +5,29 @@
  * ZERO dependancies.
  */
 
+import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
+
+import bd from "../../util/bigdecimal/bigdecimal";
+
 
 // Type Definitions ------------------------------------------------------------
 
 
-/** A length-2 array of coordinates: `[x,y]` */
-type Coords = [number,number];
+/**
+ * A length-2 array of coordinates: `[x,y]`
+ * Contains infinite precision integers, represented as BigInt.
+ */
+type Coords = [bigint,bigint];
+
+/**
+ * A pair of arbitrarily large coordinates WITH decimal precision included.
+ * Typically used for calculating graphics on the cpu-side.
+ * BD = BigDecimal
+ */
+type BDCoords = [BigDecimal, BigDecimal]
+
+/** For when we don't need arbitrary size. */
+type DoubleCoords = [number, number]
 
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
@@ -20,36 +37,17 @@ type Coords = [number,number];
  * This will never be in scientific notation. However, moves beyond
  * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
-type CoordsKey = `${number},${number}`;
+type CoordsKey = `${bigint},${bigint}`;
     
 
 // Functions -------------------------------------------------------------------
 
 
-/**
- * Checks if both the x-coordinate and the y-coordinate of a point are integers.
- */
-function areCoordsIntegers(coords: Coords): boolean {
-	return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
-}
-
-// /**
-//  * ALTERNATIVE to {@link areCoordsIntegers}, if we end up having floating point imprecision problems!
-//  *
-//  * Checks if a number is effectively an integer considering floating point imprecision.
-//  * @param {number} num - The number to check.
-//  * @param {number} [epsilon=Number.EPSILON] - The tolerance for floating point imprecision.
-//  * @returns {boolean} - Returns true if the number is effectively an integer, otherwise false.
-//  */
-// function isEffectivelyInteger(num, epsilon = Number.EPSILON) {
-//     return Math.abs(num - Math.round(num)) < epsilon;
-// }
-
 /** Returns the key string of the coordinates: [x,y] => 'x,y' */
 function getKeyFromCoords(coords: Coords): CoordsKey {
 	// Casting to BigInt and back to a string avoids scientific notation.
 	// toFixed(0) doesn't work for numbers above 10^21
-	return `${BigInt(coords[0])},${BigInt(coords[1])}` as CoordsKey;
+	return `${coords[0]},${coords[1]}` as CoordsKey;
 }
 
 /**
@@ -58,7 +56,7 @@ function getKeyFromCoords(coords: Coords): CoordsKey {
  * @returns The coordinates of the piece, [x,y]
  */
 function getCoordsFromKey(key: CoordsKey): Coords {
-	return key.split(',').map(Number) as Coords;
+	return key.split(',').map(BigInt) as Coords;
 }
 
 /**  Returns true if the coordinates are equal. */
@@ -66,14 +64,16 @@ function areCoordsEqual(coord1: Coords, coord2: Coords): boolean {
 	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
 }
 
+/** Returns true if the BigDecimal coordinates are equal. */
+function areBDCoordsEqual(coord1: BDCoords, coord2: BDCoords): boolean {
+	return bd.areEqual(coord1[0], coord2[0]) && bd.areEqual(coord1[1], coord2[1]);
+}
+
 /**
  * Adds two coordinate pairs together component-wise.
  */
-function addCoordinates(coord1: Coords, coord2: Coords): Coords {
-	return [
-		coord1[0] + coord2[0],
-		coord1[1] + coord2[1]
-	];
+function addCoords(coord1: Coords, coord2: Coords): Coords {
+	return [coord1[0] + coord2[0], coord1[1] + coord2[1]];
 }
 
 /**
@@ -82,11 +82,18 @@ function addCoordinates(coord1: Coords, coord2: Coords): Coords {
  * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
  * @returns The resulting coordinate pair after subtracting.
  */
-function subtractCoordinates(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
-	return [
-		minuendCoord[0] - subtrahendCoord[0],
-		minuendCoord[1] - subtrahendCoord[1]
-	];
+function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
+	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
+}
+
+/**
+ * Subtracts two coordinate pairs together component-wise.
+ * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
+ * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
+ * @returns The resulting coordinate pair after subtracting.
+ */
+function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BDCoords {
+	return [bd.subtract(minuendCoord[0], subtrahendCoord[0]), bd.subtract(minuendCoord[1], subtrahendCoord[1])];
 }
 
 /**
@@ -102,27 +109,45 @@ function copyCoords(coords: Coords): Coords {
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
  */
-function lerpCoords(start: Coords, end: Coords, t: number): Coords {
-	return [
-      start[0] + (end[0] - start[0]) * t,
-      start[1] + (end[1] - start[1]) * t,
-    ];
+function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
+	const bddiff: BDCoords = subtractBDCoords(end, start);
+	const bdt: BigDecimal = bd.FromNumber(t);
+	const travelX = bd.multiply_fixed(bddiff[0], bdt);
+	const travelY = bd.multiply_fixed(bddiff[1], bdt);
+
+	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
+}
+
+/**
+ * {@link lerpCoords} but for DoubleCoords.
+ */
+function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): DoubleCoords {
+	const diffX = end[0] - start[0];
+	const diffY = end[1] - start[1];
+	const travelX = diffX * t;
+	const travelY = diffY * t;
+
+	return [start[0] + travelX, start[1] + travelY];
 }
 
 
 
 export default {
-	areCoordsIntegers,
 	getKeyFromCoords,
 	getCoordsFromKey,
 	areCoordsEqual,
-	addCoordinates,
-	subtractCoordinates,
+	areBDCoordsEqual,
+	addCoords,
+	subtractCoords,
+	subtractBDCoords,
 	copyCoords,
 	lerpCoords,
+	lerpCoordsDouble,
 };
 
 export type {
 	Coords,
+	BDCoords,
+	DoubleCoords,
 	CoordsKey,
 };

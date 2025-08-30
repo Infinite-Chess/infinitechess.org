@@ -21,10 +21,8 @@ import websocket from "../websocket.js";
 import stats from "../gui/stats.js";
 // @ts-ignore
 import statustext from "../gui/statustext.js";
-// @ts-ignore
-import copypastegame from "../chess/copypastegame.js";
+import copygame from "../chess/copygame.js";
 import docutil from "../../util/docutil.js";
-import math, { Vec2 } from "../../util/math.js";
 import mouse from "../../util/mouse.js";
 import { listener_document } from "../chess/game.js";
 import guipromotion from "../gui/guipromotion.js";
@@ -39,11 +37,13 @@ import guinavigation from "../gui/guinavigation.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
 import boardeditor from "./boardeditor.js";
+import vectors from "../../util/math/vectors.js";
 
 
 import type { Mesh } from "../rendering/piecemodels.js";
-import type { Coords } from "../../chess/util/coordutil.js";
+import type { DoubleCoords } from "../../chess/util/coordutil.js";
 import type { FullGame } from "../../chess/logic/gamefile.js";
+
 
 // Constants -------------------------------------------------------------------
 
@@ -132,11 +132,11 @@ function detectPanning() {
 
 
 /** Accelerates the given pan velocity in the provided vector direction. */
-function accelPanVel(panVel: Vec2, angleDegs: number): Vec2 {
+function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const baseAngle = -perspective.getRotZ();
 	const dirOfTravel = baseAngle + angleDegs;
-	const angleRad = math.degreesToRadians(dirOfTravel);
-	const XYComponents: Vec2 = math.getXYComponents_FromAngle(angleRad);
+	const angleRad = vectors.degreesToRadians(dirOfTravel);
+	const XYComponents: DoubleCoords = vectors.getXYComponents_FromAngle(angleRad);
 	const accelToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
 	panVel[0] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[0];
 	panVel[1] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[1];
@@ -145,7 +145,7 @@ function accelPanVel(panVel: Vec2, angleDegs: number): Vec2 {
 
 
 /** Deccelerates the given pan velocity towards zero, without skipping past it. */
-function deccelPanVel(panVel: Vec2): Vec2 {
+function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 	if (panVel[0] === 0 && panVel[1] === 0) return panVel; // Already stopped
 
 	const rateToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
@@ -156,7 +156,7 @@ function deccelPanVel(panVel: Vec2): Vec2 {
 	
 	const ratio = newHyp / hyp;
 
-	const newPanVel: Coords = [panVel[0] * ratio, panVel[1] * ratio];
+	const newPanVel: DoubleCoords = [panVel[0] * ratio, panVel[1] * ratio];
 	
 	return newPanVel;
 }
@@ -238,7 +238,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
 	if (listener_document.isKeyDown('Digit3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (listener_document.isKeyDown('Digit5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (listener_document.isKeyDown('Digit5')) copygame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (listener_document.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();

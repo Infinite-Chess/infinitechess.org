@@ -58,7 +58,7 @@ function getVariantGamerules(metadata: MetaData, options?: VariantOptions): Game
  * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. 
  * @param [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
 */
-function getPieceMovesets(metadata: MetaData, slideLimit?: number): { pieceMovesets: RawTypeGroup<() => PieceMoveset>, specialMoves: RawTypeGroup<SpecialMoveFunction> } {
+function getPieceMovesets(metadata: MetaData, slideLimit?: bigint): { pieceMovesets: RawTypeGroup<() => PieceMoveset>, specialMoves: RawTypeGroup<SpecialMoveFunction> } {
 	// The movesets and methods for detecting and executing special moves
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
