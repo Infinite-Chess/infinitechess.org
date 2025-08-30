@@ -690,40 +690,33 @@ function powerInt(base: BigDecimal, exp: number): BigDecimal {
  * base^exp = e^(exp * ln(base)).
  * If the exponent is an integer, it automatically uses the more efficient integer power function.
  * @param base The base BigDecimal.
- * @param exponent The exponent BigDecimal.
+ * @param exponent The exponent BigDecimal. Potential precision loss if the exponent came from a BigDecimal with extremely high precision.
  * @param mantissaBits The precision of the result in bits.
  * @returns A new BigDecimal representing base^exp.
  */
-function pow(base: BigDecimal, exponent: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+function pow(base: BigDecimal, exponent: number, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
 	// 1. Handle edge cases
-	if (base.bigint < ZERO && !isInteger(exponent)) {
+	if (base.bigint < ZERO && !Number.isInteger(exponent)) {
 		throw new Error("Power of a negative base to a non-integer exponent results in a complex number, which is not supported.");
 	}
 	if (base.bigint === ZERO) {
-		if (exponent.bigint > ZERO) return { bigint: ZERO, divex: 0 }; // 0^positive = 0
-		if (exponent.bigint < ZERO) throw new Error("0 raised to a negative power is undefined (division by zero).");
+		if (exponent > 0) return { bigint: ZERO, divex: 0 }; // 0^positive = 0
+		if (exponent < 0) throw new Error("0 raised to a negative power is undefined (division by zero).");
 		return FromBigInt(ONE, mantissaBits); // 0^0 is conventionally 1
 	}
 	// If the exponent is an integer, use the more efficient integer power function.
-	if (isInteger(exponent)) {
-		const expAsNumber = toNumber(exponent);
-		return powerInt(base, expAsNumber);
-	}
+	if (Number.isInteger(exponent)) return powerInt(base, exponent);
 
 	// 2. Calculate ln(base) as a standard JavaScript number.
 	const logOfBase = ln(base);
-    
-	// 3. Convert the exponent to a standard number to multiply. This is a potential precision loss
-	//    if the exponent itself is a massive BigDecimal, but is a practical simplification.
-	const exponentAsNumber = toNumber(exponent);
 
-	// 4. Multiply: exponent * ln(base)
-	const product = exponentAsNumber * logOfBase;
+	// 3. Multiply: exponent * ln(base)
+	const product = exponent * logOfBase;
     
-	// 5. Convert the resulting number back to a BigDecimal to be used in exp().
+	// 4. Convert the resulting number back to a BigDecimal to be used in exp().
 	const productBD = FromNumber(product, mantissaBits);
 
-	// 6. Calculate the final result: e^(product)
+	// 5. Calculate the final result: e^(product)
 	return exp(productBD, mantissaBits);
 }
 
