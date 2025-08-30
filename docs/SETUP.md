@@ -129,7 +129,7 @@ Installing this extension is not required, but highly recommended. It allows you
 
 ## Step 7 (optional): Setting up the email service ##
 
-While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails (planned) until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
+While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
 
 To do this, I recommend creating a brand new gmail account for this purpose. This account will be used to send emails on behalf of your locally running Infinite Chess server.
 
