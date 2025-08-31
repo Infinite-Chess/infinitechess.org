@@ -60,6 +60,7 @@ let boundingBoxFloat: BoundingBoxBD;
  * The bounding box of the board currently visible on the canvas,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
+ * CONTAINS INTEGER SQUARE VALUES. No floating points!
  */
 let boundingBox: BoundingBoxBD;
 /**
@@ -148,6 +149,7 @@ function gboundingBoxFloat(): BoundingBoxBD {
 /**
  * Returns a copy of the board bounding box, rounded away from the center
  * of the canvas to encapsulate the whole of any partially visible squares.
+ * CONTAINS INTEGER SQUARE VALUES. No floating points!
  * @returns The board bounding box
  */
 function gboundingBox(debugMode = camera.getDebug()): BoundingBoxBD {
