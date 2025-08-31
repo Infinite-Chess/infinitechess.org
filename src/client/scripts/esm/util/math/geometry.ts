@@ -7,11 +7,11 @@
  */
 
 
-import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil";
-import bd, { BigDecimal } from "../bigdecimal/bigdecimal";
-import vectors, { LineCoefficientsBD, Ray, Vec2 } from "./vectors";
+import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil.js";
+import bd, { BigDecimal } from "../bigdecimal/bigdecimal.js";
+import vectors, { LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
 
-import type { BoundingBoxBD } from "./bounds";
+import type { BoundingBoxBD } from "./bounds.js";
 
 
 // Type Definitions -----------------------------------------------------------

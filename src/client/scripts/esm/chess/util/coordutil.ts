@@ -5,9 +5,7 @@
  * ZERO dependancies.
  */
 
-import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
-
-import bd from "../../util/bigdecimal/bigdecimal";
+import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -120,7 +118,7 @@ function copyBDCoords(coords: BDCoords): BDCoords {
 	return [
 		bd.clone(coords[0]),
 		bd.clone(coords[1])
-	]
+	];
 }
 
 /**

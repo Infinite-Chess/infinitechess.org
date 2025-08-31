@@ -7,10 +7,10 @@
  */
 
 
+import bimath from "../bigdecimal/bimath.js";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal.js";
 
 import type { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
-import bimath from "../bigdecimal/bimath";
 
 
 // Type Definitions -----------------------------------------------------------
