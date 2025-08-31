@@ -73,7 +73,7 @@ function getAudioContext(): AudioContext {
  * And we put the javascript inline in the html to start it loading quicker,
  * because otherwise our sound only starts loading AFTER everything single script has loaded.
  * @param audioCtx 
- * @param decodedBuffer 
+ * @param decodedBuffer - The decoded buffer of the loaded sound spritesheet.
  */
 function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer) {
 	audioContext = audioCtx;
