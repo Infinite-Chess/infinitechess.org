@@ -136,7 +136,7 @@ function getOffset() {
 function updateRenderRange(): boolean {
 
 	// Determine if our camera/screen exceeds the boundary of our render range box...
-	if (!isViewRangeContainedInRenderRange()) return false; // No change needed
+	if (isViewRangeContainedInRenderRange()) return false; // No change needed
 
 	// Regenerate the legal move highlights render range bounding box
 
