@@ -68,6 +68,8 @@ const ONE: bigint = 1n;
 const FIVE: bigint = 5n;
 const TEN: bigint = 10n;
 
+const E: BigDecimal = FromNumber(Math.E);
+
 
 // Config ===========================================================
 
@@ -1407,6 +1409,8 @@ function getEffectiveDecimalPlaces(bd: BigDecimal): number {
 
 
 export default {
+	E,
+	
 	// NewBigDecimal_FromString,
 	FromNumber,
 	FromBigInt,
