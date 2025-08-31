@@ -8,6 +8,7 @@ import gameslot from "../../chess/gameslot.js";
 import afk from "./afk.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import sound from "../sound.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
 // @ts-ignore
 import loadbalancer from "../loadbalancer.js";
 
@@ -76,7 +77,8 @@ function scheduleMoveSound_timeoutID() {
 	if (!loadbalancer.isPageHidden()) return; // Don't schedule it if the page is already visible
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!.basegame)) return;
 	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
-	moveSound_timeoutID = setTimeout(sound.playSound_move, timeNextSoundFromNow, 0);
+	const ZERO = bd.FromBigInt(0n);
+	moveSound_timeoutID = setTimeout(() => sound.playSound_move(ZERO), timeNextSoundFromNow);
 }
 
 function cancelMoveSound() {

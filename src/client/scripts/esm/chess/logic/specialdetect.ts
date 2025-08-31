@@ -12,6 +12,7 @@ import checkresolver from './checkresolver.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
 import { players, rawTypes } from '../util/typeutil.js';
 // Import End
 
@@ -343,16 +344,21 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 				}
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
+				const coordsBD = bd.FromCoords(coords);
+				const coordPathBD = bd.FromCoords(coord.path![1]!);
+				const newCoordPathBD = bd.FromCoords(newCoord.path[1]!);
+
 				const centerOfPlay = bounds.calcCenterOfBoundingBox(boardsim.startSnapshot.box);
-				const vectorToCenter = vectors.calculateVectorFromPoints(coords, centerOfPlay);
-				const existingCoordVector = vectors.calculateVectorFromPoints(coords, coord.path![1]!);
-				const newCoordVector = vectors.calculateVectorFromPoints(coords, newCoord.path[1]!);
+				const vectorToCenter = vectors.calculateVectorFromBDPoints(coordsBD, centerOfPlay);
+				const existingCoordVector = vectors.calculateVectorFromBDPoints(coordsBD, coordPathBD);
+				const newCoordVector = vectors.calculateVectorFromBDPoints(coordsBD, newCoordPathBD);
 				// Whichever's dot product scores higher is the one that curves more towards the center
-				const existingCoordDotProd = vectors.dotProduct(existingCoordVector, vectorToCenter);
-				const newCoordDotProd = vectors.dotProduct(newCoordVector, vectorToCenter);
-				if (existingCoordDotProd > newCoordDotProd) individualMoves[i] = coord; // Existing move's path curves more towards the center
-				else if (existingCoordDotProd < newCoordDotProd) individualMoves[i] = newCoord; // New move's path curves more towards the center
-				else if (existingCoordDotProd === newCoordDotProd) { // BOTH point equally point towards the origin.
+				const existingCoordDotProd = vectors.dotProductBD(existingCoordVector, vectorToCenter);
+				const newCoordDotProd = vectors.dotProductBD(newCoordVector, vectorToCenter);
+				const compareResult = bd.compare(existingCoordDotProd, newCoordDotProd);
+				if (compareResult > 0) individualMoves[i] = coord; // Existing move's path curves more towards the center
+				else if (compareResult < 0) individualMoves[i] = newCoord; // New move's path curves more towards the center
+				else { // BOTH point equally point towards the origin.
 					// JUST pick a random one!
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 				}
