@@ -5,156 +5,155 @@ import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import sound from "./sound.js";
 
 /**
- * This script
+ * This script is in charge of playing game sound effects.
+ * It takes variables such as distances pieces moved
+ * so it can deduce the correct sound play options when
+ * calling {@link sound.playSound}.
  */
 
 
 // Constants --------------------------------------------------------------------------
 
 
+/** Config for successive, or rapidly played move sounds. */
+const SUCCESSIVE_MOVES_CONFIG = {
+	/** If move sounds are played within this time, they get delayed until this amount time has passed, in milliseconds.
+	 * This is to prevent sounds from playing at the exact same time, such as the king & rook while castling. */
+	gap: 35,
+	/** The threshold in milliseconds to count two move sounds as successive. */
+	threshold: 60,
+	/** The volume dampener for successive move sounds. */
+	dampener: 0.5,
+};
+/** Config for controlling moves' reverb effect. */
+const REVERB_CONFIG = {
+	/** The maximum volume the reverb effect of a piece move can reach. */
+	volume: 3.5,
+	/** The duration of moves' reverb effects, in seconds. */
+	duration: 1.5,
+	/** The minimum distance a piece needs to move for a reverb effect to gradually increase in volume. */
+	minDist: 15,
+	/** The distance a piece needs to move for the reverb effect to be at its max volume. */
+	maxDist: 80,
+};
 
-const bellDist = bd.FromBigInt(1_000_000n); // Distance to start playing the bell gong!
-const minReverbDist = 15; // 15 Reverb will *start increasing in volume
-const maxReverbDist = 80; // 80 Reverb will sound the loudest at this distance!
-const maxReverbVol = 3.5;
-const reverbDuration = 1.5;
+/** Config for the bell gong sound effect when moves are extremely large. */
+const BELL_CONFIG = {
+	/** The distance a piece needs to move for the bell sound to play. */
+	minDist: bd.FromBigInt(1_000_000n),
+	/** The volume of the bell gongs. */
+	volume: 0.6,
+};
 
-// How much quieter are moves when "dampened" (fast forwarding)?
-const amountToDampenMoves = 0.5;
-const amountToDampenBell = 0.5;
+/** Config for playing premove sound effects. */
+const PREMOVE_CONFIG = {
+	/** Premove sounds are played faster so they sound more like a click. */
+	volume: 0.5,
+	/** Premove sounds are slightly quieter. */
+	playbackRate: 1.5,
+};
 
-// Premove constants
-const playbackRatePremoves = 1.5; // Premove sounds are played faster, so they sound more like a click.
-const volumeDampenerPremoves = 0.5; // Premove sounds are slightly quieter
+
+// Variables --------------------------------------------------------------------------
 
 
-/** Timestamp of the last time {@link playSound_move} or {@link playSound_capture} was called. */
+/** Timestamp of the last played move sound. */
 let timeLastMoveOrCaptureSound = 0;
-/** If move/capture sounds are played within this time, they get delayed until this time has passed.
- * This is to prevent sounds from playing at the same time, such as castling. */
-const minMillisBetwMoveOrCaptureSounds = 35;
-/** If move/capture sounds are played within this time, they get dampened */
-const dampenThresholdMillis = 60;
 
 
 // Playing Sounds -----------------------------------------------------------------------------
 
 
-// Sounds
-
-function playSound_move(distanceMoved: BigDecimal, premove = false) {
+/**
+ * Plays a piece move sound effect.
+ * Automatically handles effects such as capture, reverb, bell, dampening, etc.
+ * @param distanceMoved - How far the piece moved.
+ * @param capture - Whether this move made a capture.
+ * @param premove - Whether this move is a premove.
+ */
+function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
-	timeLastMoveOrCaptureSound = now; // Update timestamp *after* checking
+	timeLastMoveOrCaptureSound = now;
 
-	// Determine if we should add delay (sounds played at same time)
-	const delay = (Math.max(0, minMillisBetwMoveOrCaptureSounds - timeSinceLastMoveSoundPlayed)) / 1000;
+	const soundEffectName = capture ? 'capture' : 'move';
 
-	// Determine if we should dampen the sound (sounds played too rapidly)
-	const shouldDampen = timeSinceLastMoveSoundPlayed < dampenThresholdMillis;
+	// Determine if we should add delay (sounds played at same time, such as the king & rook while castling)
+	const delaySecs = (Math.max(0, SUCCESSIVE_MOVES_CONFIG.gap - timeSinceLastMoveSoundPlayed)) / 1000;
 
-	const playBell = bd.compare(distanceMoved, bellDist) >= 0;
-	const dampener = shouldDampen && playBell ? amountToDampenBell : shouldDampen ? amountToDampenMoves : 1;
-	const volume = 1 * dampener * (premove ? volumeDampenerPremoves : 1); // Premoves are slightly quieter
-	const playbackRate = premove ? playbackRatePremoves : 1; // Premove moves are played faster, so they sound more like a click.
+	// Determine if we should dampen the sound (sounds played successively, close together)
+	const shouldDampen = timeSinceLastMoveSoundPlayed < SUCCESSIVE_MOVES_CONFIG.threshold;
+	const successiveDampener = shouldDampen ? SUCCESSIVE_MOVES_CONFIG.dampener : 1; // Successively played moves are quieter
+	const premoveDampener = premove ? PREMOVE_CONFIG.volume : 1; // Premoves are slightly quieter
+	const dampener = successiveDampener * premoveDampener; // Total dampener
+	const volume = 1 * dampener;
+
+	const playbackRate = premove ? PREMOVE_CONFIG.playbackRate : 1; // Premove moves are played faster, so they sound more like a click.
 	// eslint-disable-next-line prefer-const
-	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
+	let { reverbVolume, reverbDuration } = calculateReverbOptions(distanceMoved);
 	if (reverbVolume) reverbVolume *= dampener;
-	sound.playSound('move', { volume, reverbVolume, reverbDuration, delay, playbackRate });
 
-	if (playBell) {
-		const bellVolume = 0.6 * dampener;
-		sound.playSound('bell', { volume: bellVolume, delay, playbackRate });
+	sound.playSound(soundEffectName, { volume, reverbVolume, reverbDuration, delay: delaySecs, playbackRate });
+
+	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
+		const bellVolume = BELL_CONFIG.volume * dampener;
+		sound.playSound('bell', { volume: bellVolume, delay: delaySecs, playbackRate });
 	}
 }
 
-function playSound_capture(distanceMoved: BigDecimal, premove = false) {
-	// Update the time since the last move sound was played
-	const now = Date.now();
-	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
-	timeLastMoveOrCaptureSound = now; // Update timestamp *after* checking
-
-	// Determine if we should add delay (sounds played at same time)
-	const delay = (Math.max(0, minMillisBetwMoveOrCaptureSounds - timeSinceLastMoveSoundPlayed)) / 1000;
-	
-	// Determine if we should dampen the sound (sounds played too rapidly)
-	const shouldDampen = timeSinceLastMoveSoundPlayed < dampenThresholdMillis;
-
-	const playBell = bd.compare(distanceMoved, bellDist) >= 0;
-	const dampener = shouldDampen && playBell ? amountToDampenBell : shouldDampen ? amountToDampenMoves : 1;
-	const volume = 1 * dampener * (premove ? volumeDampenerPremoves : 1); // Premoves are slightly quieter
-	const playbackRate = premove ? playbackRatePremoves : 1; // Premove captures are played faster, so they sound more like a click.
-	// eslint-disable-next-line prefer-const
-	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
-	if (reverbVolume) reverbVolume *= dampener;
-	sound.playSound('capture', { volume, reverbVolume, reverbDuration, delay, playbackRate });
-
-	if (playBell) {
-		const bellVolume = 0.6 * dampener;
-		sound.playSound('bell', { volume: bellVolume, delay, playbackRate });
-	}
-}
-
-// Returns { reverbVol, reverbDur } from provided distance Chebyshev distance the piece moved;
-function calculateReverbVolDurFromDistance(distanceMoved: BigDecimal) {
-	const x = (distanceMoved - minReverbDist) / (maxReverbDist - minReverbDist); // 0-1
+/** Takes the distance a piece moved, and returns applicable reverbVol and reverbDur options. */
+function calculateReverbOptions(distanceMoved: BigDecimal): { reverbVolume: number, reverbDuration: number } | { reverbVolume: undefined, reverbDuration: undefined } {
+	const distanceMovedNum = bd.toNumber(distanceMoved);
+	const x = (distanceMovedNum - REVERB_CONFIG.minDist) / (REVERB_CONFIG.maxDist - REVERB_CONFIG.minDist); // 0-1
 	if (x <= 0) return { reverbVolume: undefined, reverbDuration: undefined };
-	else if (x >= 1) return { reverbVolume: maxReverbVol, reverbDuration };
+	else if (x >= 1) return { reverbVolume: REVERB_CONFIG.volume, reverbDuration: REVERB_CONFIG.duration };
 
-	function equation(x: number) { return x; } // Linear for now
+	const reverbVolume = REVERB_CONFIG.volume * x; // No easing applied, for now
 
-	const y = equation(x);
-
-	const reverbVolume = maxReverbVol * y;
-
-	return { reverbVolume, reverbDuration };
+	return { reverbVolume, reverbDuration: REVERB_CONFIG.duration };
 }
 
-function playSound_gamestart() {
+function playGamestart() {
 	return sound.playSound('gamestart', { volume: 0.4 });
 }
 
-function playSound_win(delay?: number) {
+function playWin(delay?: number) {
 	return sound.playSound('win', { volume: 0.7, delay });
 }
 
-function playSound_draw(delay?: number) {
+function playDraw(delay?: number) {
 	return sound.playSound('draw', { volume: 0.7, delay });
 }
 
-// function playSound_drawOffer(delay) {
-//     return sound.playSound('draw_offer', { volume: 0.7, delay })
-// }
-
-function playSound_loss(delay?: number) {
+function playLoss(delay?: number) {
 	return sound.playSound('loss', { volume: 0.7, delay });
 }
 
-function playSound_lowtime() {
+function playLowtime() {
 	return sound.playSound('lowtime');
 }
 
-function playSound_drum() {
+function playDrum() {
 	const soundName = Math.random() > 0.5 ? 'drum1' : 'drum2'; // Randomly choose which drum. They sound ever slightly different.
 	return sound.playSound(soundName, { volume: 0.7 });
 }
 
-function playSound_tick(
-	{
-		volume,
-		fadeInDuration,
-		offset
-	}: {
-		volume?: number
-		fadeInDuration?: number,
-		offset?: number
-	} = {}
-) {
+/** Plays a few clock ticks at 1 minute remaining. */
+function playTick({
+	volume,
+	fadeInDuration,
+	offset
+}: {
+	volume?: number
+	fadeInDuration?: number,
+	offset?: number
+} = {}) {
 	return sound.playSound('tick', { volume, offset, fadeInDuration }); // Default volume: 0.07
 }
 
-function playSound_ticking(
+/** Plays the ticking ambience during the last 10 seconds of timer remaining. */
+function playTicking(
 	{
 		fadeInDuration,
 		offset
@@ -166,41 +165,39 @@ function playSound_ticking(
 	return sound.playSound('ticking', { volume: 0.18, offset, fadeInDuration });
 }
 
-function playSound_viola_c3({ volume }: { volume?: number } = {}) {
+function playViola_c3({ volume }: { volume?: number } = {}) {
 	return sound.playSound('viola_staccato_c3', { volume });
 }
 
-function playSound_violin_c4() {
+function playViolin_c4() {
 	return sound.playSound('violin_staccato_c4', { volume: 0.9 });
 }
 
-function playSound_marimba() {
+function playMarimba() {
 	const audioName = Math.random() > 0.15 ? 'marimba_c2_soft' : 'marimba_c2';
 	return sound.playSound(audioName, { volume: 0.4 });
 }
 
-function playSound_base() {
+function playBase() {
 	return sound.playSound('base_staccato_c2', { volume: 0.8 });
 }
 
 
+// Exports ------------------------------------------------------------------------------
+
 
 export default {
-	getAudioContext,
-	initAudioContext,
-	playSound_gamestart,
-	playSound_move,
-	playSound_capture,
-	playSound_lowtime,
-	playSound_win,
-	playSound_draw,
-	// playSound_drawOffer,
-	playSound_loss,
-	playSound_drum,
-	playSound_tick,
-	playSound_ticking,
-	playSound_viola_c3,
-	playSound_violin_c4,
-	playSound_marimba,
-	playSound_base
+	playMove,
+	playGamestart,
+	playWin,
+	playDraw,
+	playLoss,
+	playLowtime,
+	playDrum,
+	playTick,
+	playTicking,
+	playViola_c3,
+	playViolin_c4,
+	playMarimba,
+	playBase
 };

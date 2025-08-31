@@ -39,7 +39,6 @@ import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
-import sound from "../misc/sound.js";
 import guiclock from "../gui/guiclock.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
@@ -54,6 +53,7 @@ import board from "../rendering/boardtiles.js";
 import transition from "../rendering/transition.js";
 import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
+import gamesound from "../misc/gamesound.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -159,7 +159,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
-	sound.playSound_gamestart();
+	gamesound.playGamestart();
 
 	/**
 	 * Next start loading the GRAPHICAL stuff...
@@ -316,12 +316,12 @@ function concludeGame() {
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {
-		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
+		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);
+		else gamesound.playDraw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
-		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
+		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor()) gamesound.playWin(delayToPlayConcludeSoundSecs);
+		else if (victor === players.NEUTRAL || !victor) gamesound.playDraw(delayToPlayConcludeSoundSecs);
+		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
 	}
 	
 	// Set the Result and Condition metadata

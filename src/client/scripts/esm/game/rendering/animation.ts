@@ -8,13 +8,15 @@ import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../util/math/math.js';
 
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 import arrows from './arrows/arrows.js';
 import frametracker from './frametracker.js';
 import math from '../../util/math/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import boardpos from './boardpos.js';
-import sound from '../misc/sound.js';
+import gamesound from '../misc/gamesound.js';
 import instancedshapes from './instancedshapes.js';
 import piecemodels from './piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -24,8 +26,6 @@ import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../chess/util/typeutil.js';
 import meshes from './meshes.js';
 import perspective from './perspective.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -160,7 +160,7 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	if (new Set([...typesInvolved, ...typeutil.SVGLESS_TYPES]).size < typesInvolved.size + typeutil.SVGLESS_TYPES.size) instant = true; // Instant animations still play the sound
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
-	if (instant) return playSoundOfDistance(totalDistance, showKeyframes.size !== 0, premove);
+	if (instant) return gamesound.playMove(totalDistance, showKeyframes.size !== 0, premove);
 
 	
 
@@ -269,18 +269,8 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation) {
-	playSoundOfDistance(animation.totalDistance, animation.showKeyframes.size !== 0, animation.premove);
+	gamesound.playMove(animation.totalDistance, animation.showKeyframes.size !== 0, animation.premove);
 	animation.soundPlayed = true;
-}
-
-/**
- * Plays the sound of a move.
- * @param distance - The distance the piece traveled.
- * @param captured - Whether the animation involved a capture.
- */
-function playSoundOfDistance(distance: BigDecimal, captured: boolean, premove: boolean) {
-	if (captured) sound.playSound_capture(distance, premove);
-	else sound.playSound_move(distance, premove);
 }
 
 
