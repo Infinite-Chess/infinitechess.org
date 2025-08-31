@@ -58,19 +58,6 @@ interface BigDecimal {
 }
 
 
-// Constants ========================================================
-
-
-const LOG10_OF_2: number = Math.log10(2); // ≈ 0.30103
-
-const ZERO: bigint = 0n;
-const ONE: bigint = 1n;
-const FIVE: bigint = 5n;
-const TEN: bigint = 10n;
-
-const E: BigDecimal = FromNumber(Math.E);
-
-
 // Config ===========================================================
 
 
@@ -115,6 +102,19 @@ const powersOfTwoList: number[] = (() => {
  * BigDecimals with divexs THAT big need special care!
  */
 const MAX_DIVEX_BEFORE_INFINITY: number = powersOfTwoList.length - 1; // 1023
+
+
+// Constants ========================================================
+
+
+const LOG10_OF_2: number = Math.log10(2); // ≈ 0.30103
+
+const ZERO: bigint = 0n;
+const ONE: bigint = 1n;
+const FIVE: bigint = 5n;
+const TEN: bigint = 10n;
+
+const E: BigDecimal = FromNumber(Math.E);
 
 
 // Big Decimal Contructor =============================================================
@@ -1432,15 +1432,16 @@ export type {
 
 
 
-// const n1 = 155.66;
+// const n1 = 5.66;
 // const bd1: BigDecimal = FromNumber(n1);
 // console.log(`${n1} converted into a BigDecimal:`);
 // printInfo(bd1);
 
-// const n2: number = 5.56;
-// const bd2: BigDecimal = FromNumber(n2);
-// console.log(`\n${n2} converted into a BigDecimal:`);
-// printInfo(bd2);
+// const n2: number = -5.1;
+// // const bd2: BigDecimal = FromNumber(n2);
+// const answer = ln(bd1);
+// console.log(`\nNatural log of ${n1}: ${answer}`);
+// // printInfo(answer);
 
 // console.log(`Starting sqrt test on ${n1}...`);
 // const bd3 = sqrt(bd1);
