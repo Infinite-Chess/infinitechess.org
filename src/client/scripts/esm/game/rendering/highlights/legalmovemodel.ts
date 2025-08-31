@@ -179,19 +179,21 @@ function isViewRangeContainedInRenderRange() {
         getBoundingBoxOfPerspectiveView() :
         boardtiles.gboundingBoxFloat();
 
+	const floatingRenderRangeBox = boardtiles.convertIntegerBoundingBoxToFloating(boundingBoxOfRenderRange);
+
 	// In 2D mode, we also care about whether the
 	// camera box is significantly smaller than our render range.
 	if (!perspective.getEnabled()) {
 		// We can cast to number since we're confident it's going to be small (we are zoomed in)
 		const width: number = bd.toNumber(bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left));
-		const renderRangeWidth: number = bd.toNumber(bd.subtract(boundingBoxOfRenderRange.right, boundingBoxOfRenderRange.left)) + 1;
+		const renderRangeWidth: number = bd.toNumber(bd.subtract(floatingRenderRangeBox.right, floatingRenderRangeBox.left));
 
 		// multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
 		if (width * multiplier * multiplier < renderRangeWidth) return false;
 	}
 
 	// Whether the camera view box exceeds the boundaries of the render range
-	return bounds.boxContainsBox(boundingBoxOfRenderRange, boundingBoxOfView);
+	return bounds.boxContainsBox(floatingRenderRangeBox, boundingBoxOfView);
 }
 
 /** [PERSPECTIVE] Returns our approximate camera view range bounding box. */

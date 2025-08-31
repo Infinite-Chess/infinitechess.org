@@ -187,7 +187,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
 }
 
 /**
- * Expands the edges of the box, would should contain integer squares for values,
+ * Expands the edges of the box, which should contain integer squares for values,
  * to encapsulate the whole of the squares on their edges.
  * Turns it into a floating point edge.
  */
