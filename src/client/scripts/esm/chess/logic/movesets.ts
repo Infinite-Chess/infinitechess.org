@@ -128,7 +128,7 @@ function defaultIgnoreFunction() {
  * @returns Object containing the movesets of all pieces except pawns.
  */
 function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
-	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
+	if (typeof slideLimit !== 'number' && slideLimit !== null) throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
 		// Finitely moving
