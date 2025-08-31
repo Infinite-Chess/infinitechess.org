@@ -18,9 +18,10 @@ import boardtiles from "./boardtiles.js";
 import boardpos from "./boardpos.js";
 import spritesheet from "./spritesheet.js";
 import primitives from "./primitives.js";
-import coordutil, { Coords, DoubleCoords } from "../../chess/util/coordutil.js";
-import bd from "../../util/bigdecimal/bigdecimal.js";
 import perspective from "./perspective.js";
+import { Vec3 } from "../../util/math/vectors.js";
+import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
 
 
 // Constants -------------------------------------------------------------------------
@@ -170,6 +171,32 @@ function RectWorld(boundingBox: BoundingBoxBD, color: Color): number[] {
 // }
 
 
+// Other Generic Rendering Methods -------------------------------------------------------
+
+
+/**
+ * Returns a model's transformed position that should be used when rendering its buffer model.
+ * 
+ * Any model that has a bigint offset, should be able to subtract that offset
+ * from our board position to obtain a number small emough for the gpu to render.
+ * 
+ * Typically this will always include numbers smaller than 10,000
+ */
+function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
+	function getAxis(position: BigDecimal, offset: bigint): number {
+		const offsetBD = bd.FromBigInt(offset);
+		return bd.toNumber(bd.subtract(offsetBD, position));
+	}
+
+	return [
+		// offset - boardPos
+		getAxis(boardPos[0], modelOffset[0]),
+		getAxis(boardPos[1], modelOffset[1]),
+		z
+	];
+}
+
+
 // Exports -----------------------------------------------------------------------
 
 
@@ -182,4 +209,6 @@ export default {
 	QuadWorld_Color,
 	QuadWorld_ColorTexture,
 	RectWorld,
+	// Other Generic Rendering Methods
+	getModelPosition,
 };

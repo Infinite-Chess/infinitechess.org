@@ -10,6 +10,8 @@ import type { Color } from "../../../util/math/math.js";
 import type { Vec3 } from "../../../util/math/vectors.js";
 
 
+// @ts-ignore
+import statustext from "../../gui/statustext.js";
 import gameslot from "../../chess/gameslot.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
@@ -17,11 +19,9 @@ import legalmovemodel from "./legalmovemodel.js";
 import boardpos from "../boardpos.js";
 import legalmoveshapes from "../instancedshapes.js";
 import piecemodels from "../piecemodels.js";
-import arrowlegalmovehighlights from "../arrows/arrowlegalmovehighlights.js";
 import squarerendering from "./squarerendering.js";
+import meshes from "../meshes.js";
 import { BufferModelInstanced, createModel_Instanced } from "../buffermodel.js";
-// @ts-ignore
-import statustext from "../../gui/statustext.js";
 
 
 
@@ -90,7 +90,7 @@ function renderSpecialRights() {
 
 	const boardPos: BDCoords = boardpos.getBoardPos();
 	const offset: Coords = legalmovemodel.getOffset();
-	const position: Vec3 = arrowlegalmovehighlights.getModelPosition(boardPos, offset, 0);
+	const position: Vec3 = meshes.getModelPosition(boardPos, offset, 0);
 	const boardScale: number = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 

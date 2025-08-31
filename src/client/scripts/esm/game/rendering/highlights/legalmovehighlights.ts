@@ -23,8 +23,9 @@ import boardpos from '../boardpos.js';
 import piecemodels from '../piecemodels.js';
 import legalmoveshapes from '../instancedshapes.js';
 import legalmovemodel from './legalmovemodel.js';
-import { BufferModelInstanced, createModel_Instanced } from '../buffermodel.js';
 import camera from '../camera.js';
+import meshes from '../meshes.js';
+import { BufferModelInstanced, createModel_Instanced } from '../buffermodel.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -151,7 +152,7 @@ function renderSelectedPieceLegalMoves() {
 
 	const boardPos: BDCoords = boardpos.getBoardPos();
 	// Add the model's offset
-	const position = arrowlegalmovehighlights.getModelPosition(boardPos, legalmovemodel.getOffset(), 0);
+	const position = meshes.getModelPosition(boardPos, legalmovemodel.getOffset(), 0);
 	const boardScale: number = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 	

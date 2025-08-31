@@ -21,11 +21,11 @@ import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
-import arrowlegalmovehighlights from './arrows/arrowlegalmovehighlights.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
+import perspective from './perspective.js';
+import meshes from './meshes.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
-import perspective from './perspective.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -394,7 +394,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece) {
 function renderAll(boardsim: Board, mesh: Mesh) {
 
 	const boardPos = boardpos.getBoardPos();
-	const position = arrowlegalmovehighlights.getModelPosition(boardPos, mesh.offset, Z);
+	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 

@@ -19,8 +19,8 @@ import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 import variant from "../../../../chess/variants/variant.js";
 import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
-import arrowlegalmovehighlights from "../../arrows/arrowlegalmovehighlights.js";
 import legalmovemodel from "../legalmovemodel.js";
+import meshes from "../../meshes.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
@@ -429,7 +429,7 @@ function genAndRenderRays(rays: Ray[], color: Color) {
 	} else { // Zoomed in, render rays as infinite legal move highlights
 		const boardPos: BDCoords = boardpos.getBoardPos();
 		const model_Offset: Coords = legalmovemodel.getOffset();
-		const position = arrowlegalmovehighlights.getModelPosition(boardPos, model_Offset, 0);
+		const position = meshes.getModelPosition(boardPos, model_Offset, 0);
 		const boardScale: number = boardpos.getBoardScaleAsNumber();
 		const scale: Vec3 = [boardScale, boardScale, 1];
 

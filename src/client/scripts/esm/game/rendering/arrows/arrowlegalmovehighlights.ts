@@ -21,10 +21,11 @@ import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
 import boardpos from "../boardpos.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
-import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
-import coordutil, { BDCoords, Coords } from "../../../chess/util/coordutil.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
+import coordutil, { Coords } from "../../../chess/util/coordutil.js";
 import legalmovemodel from "../highlights/legalmovemodel.js";
 import arrows, { ArrowPiece } from "./arrows.js";
+import meshes from "../meshes.js";
 
 
 // Type Definitions -------------------------------------------------------------------------------------------
@@ -141,7 +142,7 @@ function renderEachHoveredPieceLegalMoves() {
 
 	const boardPos = boardpos.getBoardPos();
 	const model_Offset = legalmovemodel.getOffset();
-	const position: Vec3 = getModelPosition(boardPos, model_Offset, 0);
+	const position: Vec3 = meshes.getModelPosition(boardPos, model_Offset, 0);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
@@ -183,28 +184,6 @@ function reset() {
 }
 
 
-
-/**
- * Any model that has a bigint offset, should be able to subtract that offset
- * from our board position to obtain a number small emough for the gpu to render.
- * 
- * Typically this will always include numbers smaller than 10,000
- */
-function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
-	function getAxis(position: BigDecimal, offset: bigint): number {
-		const offsetBD = bd.FromBigInt(offset);
-		return bd.toNumber(bd.subtract(offsetBD, position));
-	}
-
-	return [
-		// offset - boardPos
-		getAxis(boardPos[0], modelOffset[0]),
-		getAxis(boardPos[1], modelOffset[1]),
-		z
-	];
-}
-
-
 // -------------------------------------------------------------------------------------------------------------
 
 
@@ -213,7 +192,4 @@ export default {
 	reset,
 	renderEachHoveredPieceLegalMoves,
 	regenModelsOfHoveredPieces,
-
-	// TODO: Move to a better location???
-	getModelPosition,
 };
