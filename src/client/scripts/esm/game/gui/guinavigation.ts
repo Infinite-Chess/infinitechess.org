@@ -285,7 +285,7 @@ function callback_CoordsChange() {
 }
 
 function callback_Back() {
-	transition.telToPrevTel();
+	transition.undoTransition();
 }
 
 function callback_Expand() {

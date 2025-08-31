@@ -83,7 +83,7 @@ function updateNavControls() {
 
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
-	if (transition.areWeTeleporting()) return; // Exit if teleporting
+	if (transition.areTransitioning()) return; // Exit if teleporting
 
 	// Keyboard
 	detectPanning(); // Movement (WASD)

@@ -8,7 +8,7 @@
  * {@link transition} where to teleport to.
  */
 
-import transition from './transition.js';
+import transition, { ZoomTransition } from './transition.js';
 import camera from './camera.js';
 import boardtiles from './boardtiles.js';
 import math from '../../util/math/math.js';
@@ -219,7 +219,7 @@ function initTelFromCoordsList(coordsList: Coords[]): void {
 
 function initTelFromUnpaddedBox(box: BoundingBoxBD): void {
 	const thisArea = calculateFromUnpaddedBox(box);
-	initTelFromArea(thisArea);
+	initTelFromArea(thisArea, false);
 }
 
 /**
@@ -227,7 +227,7 @@ function initTelFromUnpaddedBox(box: BoundingBoxBD): void {
  * @param thisArea - The area object to teleport to
  * @param [ignoreHistory] Whether to forget adding this teleport to the teleport history.
  */
-function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
+function initTelFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	const thisAreaBox = thisArea.boundingBox;
 
 	const startCoords = boardpos.getBoardPos();
@@ -262,11 +262,11 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 		// }
 	}
 
-	const tel1 = firstArea ? { endCoords: firstArea.coords, endScale: firstArea.scale } : undefined;
-	const tel2 = { endCoords: thisArea.coords, endScale: thisArea.scale };
+	const trans1: ZoomTransition | undefined = firstArea ? { destinationCoords: firstArea.coords, destinationScale: firstArea.scale } : undefined;
+	const trans2: ZoomTransition = { destinationCoords: thisArea.coords, destinationScale: thisArea.scale };
 
-	if (tel1) transition.teleport(tel1, tel2, ignoreHistory);
-	else transition.teleport(tel2, null, ignoreHistory);
+	if (trans1) transition.zoomTransition(trans1, trans2, ignoreHistory);
+	else transition.zoomTransition(trans2, undefined, ignoreHistory);
 }
 
 /**
