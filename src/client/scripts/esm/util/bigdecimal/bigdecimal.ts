@@ -1117,13 +1117,15 @@ function toNumber(bd: BigDecimal) {
 	if (bd.divex >= 0) {
 		if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
 		const mantissaAsNumber = Number(bd.bigint);
-		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
+		// I think we should allow the cast to become Infinity?
+		// if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
 		return mantissaAsNumber / powersOfTwoList[bd.divex]!;
 	} else { // divex is negative
 		const exp = -bd.divex;
 		if (exp > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the positive exponent is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
 		const mantissaAsNumber = Number(bd.bigint);
-		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
+		// I think we should allow the cast to become Infinity?
+		// if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
 		return mantissaAsNumber * powersOfTwoList[exp]!;
 	}
 }
