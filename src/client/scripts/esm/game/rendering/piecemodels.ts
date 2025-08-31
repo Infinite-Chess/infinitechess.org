@@ -214,7 +214,7 @@ function castInstanceDataToFloat32(instanceData: InstanceData): Float32Array {
 	// Iterate through the source array once and place the converted value directly into the result array.
 	// This single-pass approach is much faster than methods like .map(), which create a temporary intermediate array.
 	for (let i: number = 0; i < instanceData.length; i++) {
-		const value: bigint | null = instanceData[i];
+		const value: bigint | null = instanceData[i]!;
 
 		if (value === null) {
 			// Convert null to NaN. When used as a vertex position, NaN values are typically

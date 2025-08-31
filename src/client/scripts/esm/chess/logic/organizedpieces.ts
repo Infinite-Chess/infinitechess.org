@@ -300,8 +300,8 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?
 		// Copy existing data block
 		const copyLength = range.end - range.start;
 		for (let i = 0; i < copyLength; i++) {
-			newXPositions[newStart + i] = o.XPositions[range.start + i];
-			newYPositions[newStart + i] = o.YPositions[range.start + i];
+			newXPositions[newStart + i] = o.XPositions[range.start + i]!;
+			newYPositions[newStart + i] = o.YPositions[range.start + i]!;
 		}
 		newTypes.set(o.types.subarray(range.start, range.end), newStart);
 
@@ -560,7 +560,7 @@ function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
 
 /** Splits the `C` value out of the line key */
 function getCFromKey(lineKey: LineKey): bigint {
-	return BigInt(lineKey.split('|')[0]);
+	return BigInt(lineKey.split('|')[0]!);
 }
 
 /**

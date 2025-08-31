@@ -6,7 +6,7 @@
 
 import type { BufferModel } from './buffermodel.js';
 import type { Color } from '../../util/math/math.js';
-import type { BDCoords } from '../../chess/util/coordutil.js';
+import type { BDCoords, DoubleCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import type { BoundingBoxBD } from '../../util/math/bounds.js';
 
@@ -217,7 +217,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const boardPos = boardpos.getBoardPos();
 
 	/** Calculates the texture coords for one axis (X/Y) of the tiles model. */
-	function getAxisTexCoords(boardPos: BigDecimal, start: number, end: number) {
+	function getAxisTexCoords(boardPos: BigDecimal, start: number, end: number): DoubleCoords {
 		const squareCenter = getSquareCenter();
 
 		const boardPosAdjusted: BigDecimal = bd.add(boardPos, squareCenter);

@@ -289,8 +289,14 @@ function callback_Back() {
 
 function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+
 	// Add the square annotation highlights, too.
-	allCoords.push(...snapping.getAnnoteSnapPoints(false));
+
+	// THIS ROUNDS RAY intersections to the nearest integer coordinate, so the resulting area may be imperfect!!!!!
+	// I don't think it matters to much.
+	const annoteSnapPoints = snapping.getAnnoteSnapPoints(false).map(sp => bd.coordsToBigInt(sp));
+
+	allCoords.push(...annoteSnapPoints);
 	if (allCoords.length === 0) allCoords.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
 	area.initTelFromCoordsList(allCoords);
 }

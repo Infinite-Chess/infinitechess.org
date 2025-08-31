@@ -340,7 +340,7 @@ function pushSliding(
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
         
-		pushSlide(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, limits, legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
+		pushSlide(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile!, intsect2Tile!, limits, legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
 	}
 }
 
@@ -481,7 +481,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 	// Is the piece off screen in the opposite direction of the step?
 	if (intsect1.positiveDotProduct) {
 		// Adjust the start square to be the first square we land on after intsect1.
-		const axisDistToIntsect1: BigDecimal = bd.subtract(intsect1[axis], coordsBD[axis]);
+		const axisDistToIntsect1: BigDecimal = bd.subtract(intsect1.coords[axis], coordsBD[axis]);
 		const distInSteps: bigint = bd.toBigInt(bd.ceil(bd.divide_fixed(axisDistToIntsect1, stepBD[axis]))); // Minimum number of steps to overtake the first intersection.
 		startCoords = [
 			coords[0] + step[0] * distInSteps,
@@ -557,7 +557,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
         
-		const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(ray.start, ray.vector, intsect1Tile, intsect2Tile, null, true);
+		const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(ray.start, ray.vector, intsect1Tile!, intsect2Tile!, null, true);
 		if (iterationInfo === undefined) continue; // Technically should never happen for rays since they are never blocked.
 
 		const { startCoordsOffset, iterationCount } = iterationInfo;

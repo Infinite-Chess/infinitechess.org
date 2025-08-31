@@ -54,6 +54,20 @@ interface MetaData {
 	Termination?: string,
 }
 
+/** All valid metadata names. */
+type MetadataKey = keyof MetaData;
+
+
+
+/**
+ * Helper function that uses generics to link the metadata key to its value type.
+ * Inside the function typescript doesn't error when we are transferring the property.
+ */
+function copyMetadataField<K extends MetadataKey>(target: MetaData, source: MetaData, key: K) {
+	// TS knows that target[key] and source[key] have the same type: MetaData[K]
+	target[key] = source[key];
+}
+
 
 
 /**
@@ -114,6 +128,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 
 
 export default {
+	copyMetadataField,
 	getResultFromVictor,
 	getGameConclusionFromResultAndTermination,
 	getWhiteBlackElo,
@@ -123,4 +138,5 @@ export default {
 
 export type {
 	MetaData,
+	MetadataKey,
 };

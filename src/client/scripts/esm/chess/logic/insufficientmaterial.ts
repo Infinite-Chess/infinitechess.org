@@ -147,7 +147,7 @@ function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
  * @param tuple - tuple of two numbers
  * @returns sum of tuple entries
  */
-function sum_tuple_coords(tuple: number[]): number {
+function sum_tuple_coords(tuple: [number,number]): number {
 	return tuple[0] + tuple[1];
 }
 

@@ -57,11 +57,11 @@ function generateCubicSplineCoefficients(points: bigint[]): { a: BigDecimal, b: 
 	const superDiag: BigDecimal[] = new Array(n - 3).fill(ONE);
 	const cSolution = thomasAlgorithm(subDiag, mainDiag, superDiag, rhs);
 
-	for (let i = 1; i <= n - 2; i++) c[i] = cSolution[i - 1];
+	for (let i = 1; i <= n - 2; i++) c[i] = cSolution[i - 1]!;
 
 	// Compute d and b coefficients
 	for (let i = 0; i < n - 1; i++) {
-		d[i] = bd.divide_fixed((bd.subtract(c[i + 1], c[i])), THREE); // d[i] = (c[i + 1] - c[i]) / 3;
+		d[i] = bd.divide_fixed((bd.subtract(c[i + 1]!, c[i]!)), THREE); // d[i] = (c[i + 1] - c[i]) / 3;
 		// (points[i + 1]! - points[i]!) - (2 * c[i]! + c[i + 1]!) / 3
 		const b_subtrahend = bd.FromBigInt(points[i + 1]! - points[i]!); // points[i + 1]! - points[i]!
 		const dividend = bd.add(bd.multiply_fixed(c[i]!, TWO), c[i + 1]!); // 2 * c[i]! + c[i + 1]!
@@ -69,7 +69,7 @@ function generateCubicSplineCoefficients(points: bigint[]): { a: BigDecimal, b: 
 		b[i] = bd.subtract(b_subtrahend, quotient); // // (points[i + 1]! - points[i]!) - (2 * c[i]! + c[i + 1]!) / 3
 	}
 
-	return a.map((aVal, i) => ({ a: aVal, b: b[i], c: c[i], d: d[i] }));
+	return a.map((aVal, i) => ({ a: aVal, b: b[i]!, c: c[i]!, d: d[i]! }));
 }
 
 /**

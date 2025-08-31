@@ -25,6 +25,8 @@ import docutil from '../../util/docutil.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 
+import type { Color } from '../../util/math/math.js';
+
 
 /** Whether perspective mode is enabled. */
 let enabled = false;
@@ -43,7 +45,7 @@ const distToRenderBoard = 1500; // Default 1500. When changing this, also change
 // Crosshair
 const crosshairThickness = 2.5; // Default: 2.5
 const crosshairWidth = 18; // Default: 16.7
-const crosshairColor = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
+const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
 /** The buffer model of the mouse crosshair when in perspective mode. */
 let crosshairModel: BufferModel;
 
@@ -55,7 +57,7 @@ function getRotZ() { return rotZ; }
 function getIsViewingBlackPerspective() { return isViewingBlackPerspective; }
 
 function toggle(): void {
-	if (!docutil.isMouseSupported()) return statustext.showStatus(translations.rendering.perspective_mode_on_desktop);
+	if (!docutil.isMouseSupported()) return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
@@ -65,7 +67,7 @@ function enable(): void {
 	if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
 	enabled = true;
 
-	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.on}`;
+	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].on}`;
 
 	guipause.callback_Resume();
 
@@ -73,7 +75,7 @@ function enable(): void {
 
 	initCrosshairModel();
 
-	statustext.showStatus(translations.rendering.movement_tutorial);
+	statustext.showStatus(translations['rendering'].movement_tutorial);
 }
 
 function disable(): void {
@@ -84,7 +86,7 @@ function disable(): void {
 	// document.exitPointerLock()
 	guipause.callback_Resume();
 
-	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
+	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].off}`;
     
 	const viewWhitePerspective = gameslot.areInGame() ? gameslot.isLoadedGameViewingWhitePerspective() : true;
 	resetRotations(viewWhitePerspective);

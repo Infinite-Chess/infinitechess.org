@@ -363,7 +363,7 @@ function renderAnimations() {
 	function processPiece(type: number, coords: BDCoords) {
 		const relativePosition: DoubleCoords = bd.coordsToDoubles(coordutil.subtractBDCoords(coords, boardPos));
 		if (!(type in instanceData)) instanceData[type] = []; // Initialize
-		instanceData[type].push(...relativePosition);
+		instanceData[type]!.push(...relativePosition);
 	}
 
 	// Render all

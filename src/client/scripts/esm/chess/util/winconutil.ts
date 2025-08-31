@@ -78,7 +78,7 @@ function getVictorAndConditionFromGameConclusion(gameConclusion: string): { cond
 
 	return {
 		victor: Number(victorStr) as Player,
-		condition,
+		condition: condition!,
 	};
 }
 
@@ -91,9 +91,9 @@ function getVictorAndConditionFromGameConclusion(gameConclusion: string): { cond
 function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
 	if (condition === 'moverule') { // One exception
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
+		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
 	}
-	return translations.termination[condition] as string;
+	return translations['termination'][condition] as string;
 }
 
 export default {

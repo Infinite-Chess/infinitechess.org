@@ -6,6 +6,7 @@
  */
 
 
+// @ts-ignore
 import statustext from '../gui/statustext.js';
 import docutil from '../../util/docutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
@@ -47,7 +48,7 @@ function copyGame(copySinglePosition: boolean): void {
 	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, { skipPosition, compact: false, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
     
 	docutil.copyToClipboard(shortformat);
-	statustext.showStatus(translations.copypaste.copied_game);
+	statustext.showStatus(translations['copypaste'].copied_game);
 }
 
 
