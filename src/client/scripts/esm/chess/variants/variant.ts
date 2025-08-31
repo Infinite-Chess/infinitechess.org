@@ -418,7 +418,7 @@ function getVariantGameRuleModifications(metadata: VariantContext): GameRuleModi
  * @returns The gamerules
  */
 function getGameRules(modifications: GameRuleModifications = {}): GameRules { // { slideLimit, promotionRanks, position }
-	const gameRules: any = {
+	const gameRules: GameRules = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || jsutil.deepCopyObject(defaultWinConditions),
 		turnOrder: modifications.turnOrder || jsutil.deepCopyObject(defaultTurnOrder),
