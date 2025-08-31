@@ -51,16 +51,13 @@ import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
 import bd from "../../util/bigdecimal/bigdecimal.js";
 import board from "../rendering/boardtiles.js";
+import transition from "../rendering/transition.js";
+import perspective from "../rendering/perspective.js";
+import area from "../rendering/area.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
-import transition from "../rendering/transition.js";
-// @ts-ignore
-import area from "../rendering/area.js";
-// @ts-ignore
 import guipause from "../gui/guipause.js";
-// @ts-ignore
-import perspective from "../rendering/perspective.js";
 
 // Type Definitions ----------------------------------------------------------
 

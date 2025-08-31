@@ -14,9 +14,7 @@ import vectors from "../../util/math/vectors.js";
 import coordutil from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../chess/game.js";
-// @ts-ignore
 import perspective from "./perspective.js";
-// @ts-ignore
 import transition from "./transition.js";
 
 
@@ -75,7 +73,7 @@ function isBoardDragging(): boolean {
 
 /** Checks if the board needs to be grabbed by any new pointers pressed down this frame. */
 function checkIfBoardGrabbed() {
-	if (perspective.getEnabled() || transition.areWeTeleporting() || guipromotion.isUIOpen()) return;
+	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen()) return;
 
 	// For every new pointer touched down / created this frame...
 	for (const pointerId of [...listener_overlay.getPointersDown()]) {

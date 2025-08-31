@@ -42,9 +42,7 @@ import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
-// @ts-ignore
 import perspective from '../perspective.js';
-// @ts-ignore
 import transition from '../transition.js';
 
 
@@ -754,7 +752,7 @@ function teleportToPieceIfClicked(piece: ArrowPiece, pieceWorld: DoubleCoords, v
 				// The target teleport coords
 				const telCoords = geometry.calcIntersectionPointOfLinesBD(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
 
-				transition.panTel(startCoords, telCoords);
+				transition.panTransition(telCoords, false);
 			} else { // Mouse down
 				listener.claimMouseDown(button); // Don't let the board be dragged by this mouse down, or start drawing an arrow by this finger down
 			}

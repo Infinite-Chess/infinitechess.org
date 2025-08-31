@@ -15,7 +15,6 @@ import jsutil from '../../util/jsutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 import premoves from '../chess/premoves.js';
-// @ts-ignore
 import perspective from '../rendering/perspective.js';
 
 // Type Definitions -------------------------------------------------------------

@@ -8,15 +8,13 @@
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
-import perspective from "./perspective.js";
-// @ts-ignore
-import transition from "./transition.js";
-// @ts-ignore
-import camera from "./camera.js";
-// @ts-ignore
 import loadbalancer from "../misc/loadbalancer.js";
+import camera from "./camera.js";
+import perspective from "./perspective.js";
+import transition from "./transition.js";
 import frametracker from "./frametracker.js";
 import jsutil from "../../util/jsutil.js";
+import coordutil from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 
 
@@ -63,7 +61,7 @@ const limitToDampScale = 0.000_01; // We need to soft limit the scale so the gam
 
 
 function getBoardPos(): BDCoords {
-	return [...boardPos]; // Copies
+	return coordutil.copyBDCoords(boardPos);
 }
 
 function getBoardScale() {
@@ -140,6 +138,7 @@ function setScaleVel(newScaleVel: number) {
 // Other Utility --------------------------------------------------------
 
 
+/** Erases all board pan & scale velocity. */
 function eraseMomentum() {
 	panVel = [0,0];
 	scaleVel = 0;
@@ -175,7 +174,7 @@ function isScaleSmallForInvisibleTiles() {
 // Called from game.updateBoard()
 function update() {
 	if (guipause.areWePaused()) return; // Exit if paused
-	if (transition.areWeTeleporting()) return; // Exit if we are teleporting
+	if (transition.areTransitioning()) return; // Exit if we are teleporting
 	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
 
 	panBoard();

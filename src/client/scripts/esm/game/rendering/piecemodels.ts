@@ -25,7 +25,6 @@ import arrowlegalmovehighlights from './arrows/arrowlegalmovehighlights.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
-// @ts-ignore
 import perspective from './perspective.js';
 
 // Type Definitions ---------------------------------------------------------------------------------

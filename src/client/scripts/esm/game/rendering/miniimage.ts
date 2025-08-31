@@ -26,10 +26,9 @@ import selection from '../chess/selection.js';
 import jsutil from '../../util/jsutil.js';
 import boardtiles from './boardtiles.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
+import perspective from './perspective.js';
 // @ts-ignore
 import webgl from './webgl.js';
-// @ts-ignore
-import perspective from './perspective.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 

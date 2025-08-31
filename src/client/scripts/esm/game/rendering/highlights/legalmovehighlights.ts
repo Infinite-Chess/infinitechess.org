@@ -24,7 +24,6 @@ import piecemodels from '../piecemodels.js';
 import legalmoveshapes from '../instancedshapes.js';
 import legalmovemodel from './legalmovemodel.js';
 import { BufferModelInstanced, createModel_Instanced } from '../buffermodel.js';
-// @ts-ignore
 import camera from '../camera.js';
 
 

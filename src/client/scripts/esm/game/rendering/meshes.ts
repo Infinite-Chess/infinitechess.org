@@ -20,7 +20,6 @@ import primitives from "./primitives.js";
 import coordutil, { Coords, DoubleCoords } from "../../chess/util/coordutil.js";
 import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../util/math/bounds.js";
 import bd from "../../util/bigdecimal/bigdecimal.js";
-// @ts-ignore
 import perspective from "./perspective.js";
 
 

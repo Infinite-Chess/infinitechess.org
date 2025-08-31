@@ -5,6 +5,10 @@
  * It also manages all renderd entities when zoomed out.
  */
 
+// @ts-ignore
+import guipause from "../../gui/guipause.js";
+import transition from "../transition.js";
+import perspective from "../perspective.js";
 import miniimage from "../miniimage.js";
 import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
@@ -19,21 +23,16 @@ import coordutil from "../../../chess/util/coordutil.js";
 import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
-import bounds from "../../../util/math/bounds.js";
 import geometry from "../../../util/math/geometry.js";
 import jsutil from "../../../util/jsutil.js";
 import primitives from "../primitives.js";
+import area from "../area.js";
+import bounds, { BoundingBoxBD } from "../../../util/math/bounds.js";
 import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../../chess/game.js";
 import { Mouse } from "../../input.js";
 import { createModel } from "../buffermodel.js";
-// @ts-ignore
-import transition from "../transition.js";
-// @ts-ignore
-import perspective from "../perspective.js";
-// @ts-ignore
-import guipause from "../../gui/guipause.js";
 
 
 import type { BDCoords, Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
@@ -153,7 +152,7 @@ function teleportToEntitiesIfClicked() {
 
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		mouse.claimMouseClick(Mouse.LEFT);
-		transition.initTransitionToCoordsList(allEntitiesHovered);
+		transition.zoomTransitionToCoordsList(allEntitiesHovered);
 	} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Allows second finger to grab the board
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
@@ -354,8 +353,10 @@ function teleportToSnapIfClicked() {
 		if (snap === undefined) return; // No snap to teleport to
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
 			mouse.claimMouseClick(Mouse.LEFT);
-			transition.initTransitionToCoordsList([snap.coords]);
-		} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) {
+			const snapBoundingBox: BoundingBoxBD = { left: snap.coords[0], right: snap.coords[0], bottom: snap.coords[1], top: snap.coords[1] };
+			const transitionArea = area.calculateFromUnpaddedBox(snapBoundingBox);
+			transition.zoomTransitionToArea(transitionArea);
+		} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Latter condition ensures if a board pinch starts then prioritize board dragging
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 		}
 	}

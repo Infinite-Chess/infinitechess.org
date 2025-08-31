@@ -28,9 +28,6 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
-import { rawTypes, players } from '../../chess/util/typeutil.js';
-import { listener_document, listener_overlay } from './game.js';
-import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import boarddrag from '../rendering/boarddrag.js';
@@ -41,18 +38,18 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import premoves from "../chess/premoves.js";
 import boardeditor from '../misc/boardeditor.js';
+import transition from '../rendering/transition.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import specialdetect from '../../chess/logic/specialdetect.js';
+import perspective from '../rendering/perspective.js';
 import { animateMove } from './graphicalchanges.js';
+import { rawTypes, players } from '../../chess/util/typeutil.js';
+import { listener_document, listener_overlay } from './game.js';
+import { Mouse } from '../input.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
-import specialdetect from '../../chess/logic/specialdetect.js';
-// @ts-ignore
-import perspective from '../rendering/perspective.js';
-// @ts-ignore
-import transition from '../rendering/transition.js';
-// @ts-ignore
 import statustext from '../gui/statustext.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -151,7 +148,7 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (boardpos.areZoomedOut() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
+	if (boardpos.areZoomedOut() || transition.areTransitioning() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
 		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased()) draganimation.dropPiece(); // Drop it without moving it.
