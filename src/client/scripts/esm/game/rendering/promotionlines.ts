@@ -47,9 +47,11 @@ function render(): void {
 		// In editor mode, the promotion lines extend to the edges of the screen
 		({ left, right } = camera.getScreenBoundingBox(false));
 	} else {
-		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim);
-		left = (bd.toNumber(bd.subtract(startPositionBox.left, position[0])) - EXTRA_LENGTH) * scale;
-		right = (bd.toNumber(bd.subtract(startPositionBox.right, position[0])) + EXTRA_LENGTH) * scale;
+		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim); // Integer box
+		// Round the box away to encapsulate the entirity of all squares
+		const floatingBox = boardtiles.convertIntegerBoundingBoxToFloating(startPositionBox);
+		left = (bd.toNumber(bd.subtract(floatingBox.left, position[0])) - EXTRA_LENGTH) * scale;
+		right = (bd.toNumber(bd.subtract(floatingBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}
 
 	const squareCenterNum = boardtiles.getSquareCenterAsNumber();
@@ -64,8 +66,8 @@ function render(): void {
 			const rankBD = bd.FromBigInt(rank);
 			const relativeRank: number = bd.toNumber(bd.subtract(rankBD, position[1])); // Subtract our board position
 
-			const bottom = relativeRank - squareCenterNum + yShift - THICKNESS;
-			const top = relativeRank - squareCenterNum + yShift + THICKNESS;
+			const bottom = (relativeRank - squareCenterNum + yShift - THICKNESS) * scale;
+			const top = (relativeRank - squareCenterNum + yShift + THICKNESS) * scale;
 			vertexData.push(...primitives.Quad_Color(left, bottom, right, top, color));
 		});
 	}

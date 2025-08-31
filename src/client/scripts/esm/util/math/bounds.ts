@@ -200,6 +200,14 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 }
 
 
+// Debugging --------------------------------------------------------
+
+
+function printBDBox(box: BoundingBoxBD): void {
+	console.log(`Box: left=${bd.toNumber(box.left)}, right=${bd.toNumber(box.right)}, bottom=${bd.toNumber(box.bottom)}, top=${bd.toNumber(box.top)}`);
+}
+
+
 // Exports ----------------------------------------------------------
 
 
@@ -218,6 +226,9 @@ export default {
 	boxContainsSquare,
 	boxContainsSquareBD,
 	calcCenterOfBoundingBox,
+
+	// Debugging
+	printBDBox,
 };
 
 export type {

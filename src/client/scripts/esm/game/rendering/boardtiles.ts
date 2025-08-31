@@ -171,6 +171,7 @@ function recalcBoundingBox() {
 /**
  * Returns a new board bounding box, with its edges rounded away from the
  * center of the canvas to encapsulate the whole of any squares partially included.
+ * STILL IS AN INTEGER BOUNDING BOX, 
  * @param src - The source board bounding box
  * @returns The rounded bounding box
  */
@@ -182,6 +183,22 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
 	const bottom = bd.floor(bd.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
 	const top = bd.ceil(bd.add(bd.subtract(src.top, ONE), squareCenter)); // ceil(top - 1 + squareCenter)
     
+	return { left, right, bottom, top };
+}
+
+/**
+ * Expands the edges of the box, would should contain integer squares for values,
+ * to encapsulate the whole of the squares on their edges.
+ * Turns it into a floating point edge.
+ */
+function convertIntegerBoundingBoxToFloating(src: BoundingBoxBD): BoundingBoxBD {
+	const squareCenter = getSquareCenter();
+
+	const left = bd.subtract(src.left, squareCenter); // left - squareCenter)
+	const right = bd.add(bd.subtract(src.right, squareCenter), ONE); // right - squareCenter + 1
+	const bottom = bd.subtract(src.bottom, squareCenter); // bottom - squareCenter)
+	const top = bd.add(bd.subtract(src.top, squareCenter), ONE); // top - squareCenter + 1
+	
 	return { left, right, bottom, top };
 }
 
@@ -450,6 +467,7 @@ export default {
 	gtileWidth_Pixels,
 	recalcVariables,
 	roundAwayBoundingBox,
+	convertIntegerBoundingBoxToFloating,
 	gboundingBox,
 	gboundingBoxFloat,
 	updateTheme,

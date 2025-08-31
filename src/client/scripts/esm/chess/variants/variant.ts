@@ -426,7 +426,7 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules { //
 
 	// GameRules that have a dedicated ICN spot...
 	if (modifications.promotionRanks !== null) { // Either undefined (use default), or custom
-		gameRules.promotionRanks = modifications.promotionRanks || { [p.WHITE]: [8], [p.BLACK]: [1] };
+		gameRules.promotionRanks = modifications.promotionRanks || { [p.WHITE]: [8n], [p.BLACK]: [1n] };
 		if (!modifications.promotionsAllowed) throw new Error("When overriding promotionRanks, you must also override promotionsAllowed!");
 		gameRules.promotionsAllowed = modifications.promotionsAllowed;
 	}
