@@ -6,31 +6,31 @@
 import type { BDCoords, Coords, CoordsKey, DoubleCoords } from '../../chess/util/coordutil.js';
 
 
+// @ts-ignore
+import webgl from './webgl.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import gameslot from '../chess/gameslot.js';
-import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
-import { players, TypeGroup } from '../../chess/util/typeutil.js';
-import boardutil, { Piece } from '../../chess/util/boardutil.js';
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
 import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import vectors from '../../util/math/vectors.js';
-import { Color } from '../../util/math/math.js';
 import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import jsutil from '../../util/jsutil.js';
 import boardtiles from './boardtiles.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
-// @ts-ignore
-import webgl from './webgl.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import { Color } from '../../util/math/math.js';
+import boardutil, { Piece } from '../../chess/util/boardutil.js';
+import { players, TypeGroup } from '../../chess/util/typeutil.js';
+import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 
 
 // Variables --------------------------------------------------------------

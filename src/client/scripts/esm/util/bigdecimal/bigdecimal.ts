@@ -117,45 +117,6 @@ const powersOfTwoList: number[] = (() => {
 const MAX_DIVEX_BEFORE_INFINITY: number = powersOfTwoList.length - 1; // 1023
 
 
-// Helpers ====================================================================
-
-
-/**
- * Returns the specified bigint power of 2 when called.
- * This has a dynamic internal list that, when a power of 2 is requested that is does not have,
- * it will calculate more powers of 2 up to the requested power!
- * @param power - The power of 2 to retrieve
- * @returns The bigint power of 2 requested
- */
-const getBigintPowerOfTwo: (power: number) => bigint = (function() {
-
-	// Initiate the list
-	const powersOfTwo: bigint[] = [];
-	let currentPower: bigint = ONE;
-	const MAX_VALUE: bigint = BigInt(Number.MAX_VALUE);
-	while (currentPower < MAX_VALUE) {
-		powersOfTwo.push(currentPower);
-		currentPower <<= ONE;
-	}
-
-	// Adds more powers of 2 until we reach the provided power
-	function addMorePowers(powerCap: number): void {
-		console.log(`Adding more bigint powers of 2, up to 2^${powerCap}!`);
-		for (let i = powersOfTwo.length - 1; i <= powerCap - 1; i++) {
-			const thisPower = powersOfTwo[i]!;
-			powersOfTwo[i + 1] = thisPower << ONE;
-		}
-	}
-
-	// Return a function that, when called, returns the specified power of 2
-	return (power: number): bigint => {
-		// Do we have enough powers of two in store?
-		if (power > powersOfTwo.length - 1) addMorePowers(power);
-		return powersOfTwo[power]!;
-	};
-})();
-
-
 // Big Decimal Contructor =============================================================
 
 

@@ -67,7 +67,7 @@ const ZOOM_TRANSITION_DURATION_MILLIS = {
 	MULTIPLIER: 70, // Default: 70
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	PERSPECTIVE_MULTIPLIER: 1.3,
-}
+};
 
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
@@ -79,7 +79,7 @@ const PAN_TRANSITION_CONFIG = {
 	 * in world space units (not affected by board scale).
 	 */
 	MAX_PAN_DISTANCE: 90,
-}
+};
 
 
 const ONE = bd.FromBigInt(1n);
@@ -338,7 +338,7 @@ function updatePanningTransition(t: number, easedT: number): void {
 		const xRatio = bd.divide_floating(maxDistSquares, bd.abs(differenceCoords[0]));
 		const yRatio = bd.divide_floating(maxDistSquares, bd.abs(differenceCoords[1]));
 
-		let ratio = bd.compare(xRatio, yRatio) < 0 ? xRatio : yRatio;
+		const ratio = bd.compare(xRatio, yRatio) < 0 ? xRatio : yRatio;
 
 		difference[0] = bd.multiply_floating(difference[0], ratio);
 		difference[1] = bd.multiply_floating(difference[1], ratio);
@@ -407,4 +407,4 @@ export default {
 
 export type {
 	ZoomTransition,
-}
+};

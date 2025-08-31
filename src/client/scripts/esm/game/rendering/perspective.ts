@@ -14,7 +14,7 @@ import statustext from '../gui/statustext.js';
 import guipause from '../gui/guipause.js';
 // @ts-ignore
 import webgl from './webgl.js';
-import camera from './camera.js';
+import camera, { Mat4 } from './camera.js';
 import { BufferModel, createModel } from './buffermodel.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
@@ -144,7 +144,7 @@ function update(): void {
 }
 
 // Applies perspective rotation to default camera viewMatrix
-function applyRotations(viewMatrix: number[]): void {
+function applyRotations(viewMatrix: Mat4): void {
 	if (haveZeroRotation()) return; // No perspective rotation
 
 	const cameraPos = camera.getPosition(); // devMode-sensitive

@@ -316,6 +316,10 @@ function getScaleWhenZoomedOut(): BigDecimal {
 
 
 
+export type {
+	Mat4,
+};
+
 export default {
 	getPosition,
 	canvas,

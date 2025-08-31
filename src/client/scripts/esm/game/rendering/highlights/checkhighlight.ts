@@ -18,6 +18,7 @@ import { BufferModel, createModel } from '../buffermodel.js';
 
 import type { Board } from '../../../chess/logic/gamefile.js';
 import type { BDCoords, Coords } from '../../../chess/util/coordutil.js';
+import type { Color } from '../../../util/math/math.js';
 
 
 // Functions -----------------------------------------------------------------------
@@ -39,7 +40,7 @@ function render(boardsim: Board) {
  */
 function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 	const color = preferences.getCheckHighlightColor(); // [r,g,b,a]
-	const colorOfPerimeter: number[] = [color[0],color[1],color[2], 0]; // Same color, but zero opacity
+	const colorOfPerimeter: Color = [color[0], color[1], color[2],  0]; // Same color, but zero opacity
 
 	const outRad = 0.65 * boardpos.getBoardScaleAsNumber();
 	const inRad = 0.3 * boardpos.getBoardScaleAsNumber();

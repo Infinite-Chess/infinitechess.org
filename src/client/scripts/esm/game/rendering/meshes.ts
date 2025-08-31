@@ -12,13 +12,13 @@
 
 
 import type { Color } from "../../util/math/math.js";
+import type { BoundingBoxBD, DoubleBoundingBox } from "../../util/math/bounds.js";
 
 import boardtiles from "./boardtiles.js";
 import boardpos from "./boardpos.js";
 import spritesheet from "./spritesheet.js";
 import primitives from "./primitives.js";
 import coordutil, { Coords, DoubleCoords } from "../../chess/util/coordutil.js";
-import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../util/math/bounds.js";
 import bd from "../../util/bigdecimal/bigdecimal.js";
 import perspective from "./perspective.js";
 
@@ -75,16 +75,14 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
  * [Model Space] If you have say a bounding box from coordinate [1,1] to [9,9],
  * this will round that outwards from [0.5,0.5] to [9.5,9.5].
  */
-function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBox): BoundingBoxBD {
-	const boxBD = bounds.castBoundingBoxToBigDecimal(boundingBox);
-
+function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBoxBD): BoundingBoxBD {
 	const squareCenter = boardtiles.getSquareCenter();
 	const inverseSquareCenter = bd.subtract(ONE, squareCenter);
 
-	const left = bd.subtract(boxBD.left, squareCenter);
-	const right = bd.add(boxBD.right, inverseSquareCenter);
-	const bottom = bd.subtract(boxBD.bottom, squareCenter);
-	const top = bd.add(boxBD.top, inverseSquareCenter);
+	const left = bd.subtract(boundingBox.left, squareCenter);
+	const right = bd.add(boundingBox.right, inverseSquareCenter);
+	const bottom = bd.subtract(boundingBox.bottom, squareCenter);
+	const top = bd.add(boundingBox.top, inverseSquareCenter);
 
 	return { left, bottom, right, top };
 }
@@ -142,7 +140,7 @@ function QuadWorld_ColorTexture(coords: Coords, type: number, color: Color): num
 /**
  * [World Space, LINE_LOOP] Generates the vertex data of a rectangle outline.
  */
-function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
+function RectWorld(boundingBox: BoundingBoxBD, color: Color): number[] {
 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
 	return primitives.Rect(left, bottom, right, top, color);
