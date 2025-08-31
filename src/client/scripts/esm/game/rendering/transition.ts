@@ -217,6 +217,15 @@ function panTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
  */
 function zoomTransitionToCoordsList(coordsList: Coords[]) {
 	const theArea: Area = area.calculateFromCoordsList(coordsList);
+	zoomTransitionToArea(theArea);
+}
+
+/**
+ * Starts a Zooming Transition to a predefined Area.
+ * 
+ * Will not incur a following transition if the area is not on screen.
+ */
+function zoomTransitionToArea(theArea: Area) {
 	const trans: ZoomTransition = {
 		destinationCoords: theArea.coords,
 		destinationScale: theArea.scale,
@@ -386,6 +395,7 @@ export default {
 	areTransitioning,
 	zoomTransition,
 	zoomTransitionToCoordsList,
+	zoomTransitionToArea,
 	undoTransition,
 	// Updating
 	update,

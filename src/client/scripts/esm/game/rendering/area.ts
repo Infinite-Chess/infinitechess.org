@@ -50,7 +50,7 @@ const paddingMiniimage: number = 0.2; // The padding to use when miniimages are 
 /**
  * The minimum number of squares that should be visible when transitioning somewhere. 
  * This is so that it doesn't zoom too close-up on a single piece or small group.
- * */
+ */
 const areaMinHeightSquares: number = 17; // Divided by screen width
 
 // Just the action of adding padding, changes the required scale to have that amount of padding,
