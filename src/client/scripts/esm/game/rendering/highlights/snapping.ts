@@ -6,11 +6,9 @@
  */
 
 // @ts-ignore
-import transition from "../transition.js";
-// @ts-ignore
-import perspective from "../perspective.js";
-// @ts-ignore
 import guipause from "../../gui/guipause.js";
+import transition from "../transition.js";
+import perspective from "../perspective.js";
 import miniimage from "../miniimage.js";
 import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";

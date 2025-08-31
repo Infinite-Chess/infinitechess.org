@@ -39,14 +39,12 @@ import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';
 import promotionlines from '../rendering/promotionlines.js';
 import { CreateInputListener, InputListener, Mouse } from '../input.js';
+import transition from '../rendering/transition.js';
+import perspective from '../rendering/perspective.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
 import webgl from '../rendering/webgl.js';
-// @ts-ignore
-import perspective from '../rendering/perspective.js';
-// @ts-ignore
-import transition from '../rendering/transition.js';
 
 
 // Variables -------------------------------------------------------------------------------

@@ -25,14 +25,13 @@ import texturecache from '../../chess/rendering/texturecache.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import { createModel } from './buffermodel.js';
+import perspective from './perspective.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
 import texture from './texture.js';
 // @ts-ignore
 import style from '../gui/style.js';
-// @ts-ignore
-import perspective from './perspective.js';
 // @ts-ignore
 import camera from './camera.js';
 // @ts-ignore

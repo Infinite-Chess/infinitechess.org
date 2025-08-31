@@ -21,9 +21,7 @@ import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 
 
-// @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
 import transition from "../rendering/transition.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";

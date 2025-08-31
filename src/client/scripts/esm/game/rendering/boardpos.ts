@@ -8,13 +8,10 @@
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
-import perspective from "./perspective.js";
-// @ts-ignore
-import transition from "./transition.js";
-// @ts-ignore
-import camera from "./camera.js";
-// @ts-ignore
 import loadbalancer from "../misc/loadbalancer.js";
+import camera from "./camera.js";
+import perspective from "./perspective.js";
+import transition from "./transition.js";
 import frametracker from "./frametracker.js";
 import jsutil from "../../util/jsutil.js";
 import coordutil from "../../chess/util/coordutil.js";

@@ -13,7 +13,6 @@
  */
 
 
-// @ts-ignore
 import camera from "../rendering/camera.js";
 import boardpos from '../rendering/boardpos.js';
 import bd from "../../util/bigdecimal/bigdecimal.js";

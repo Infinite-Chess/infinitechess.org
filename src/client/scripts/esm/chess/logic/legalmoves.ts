@@ -4,7 +4,6 @@
  */
 
 
-// @ts-ignore
 import specialdetect from './specialdetect.js';
 import winconutil from '../util/winconutil.js';
 import movepiece from './movepiece.js';

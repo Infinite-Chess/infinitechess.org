@@ -23,7 +23,6 @@ import { createModel, createModel_Instanced_GivenAttribInfo } from './buffermode
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../chess/util/typeutil.js';
 import meshes from './meshes.js';
-// @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';

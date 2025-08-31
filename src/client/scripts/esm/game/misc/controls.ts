@@ -8,23 +8,18 @@
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
-import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import transition from "../rendering/transition.js";
-// @ts-ignore
 import loadbalancer from "./loadbalancer.js";
-// @ts-ignore
-import camera from "../rendering/camera.js";
 // @ts-ignore
 import websocket from "../websocket.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
 import statustext from "../gui/statustext.js";
+import camera from "../rendering/camera.js";
+import perspective from "../rendering/perspective.js";
 import copygame from "../chess/copygame.js";
 import docutil from "../../util/docutil.js";
 import mouse from "../../util/mouse.js";
-import { listener_document } from "../chess/game.js";
 import guipromotion from "../gui/guipromotion.js";
 import boarddrag from "../rendering/boarddrag.js";
 import boardpos from "../rendering/boardpos.js";
@@ -38,6 +33,8 @@ import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
 import boardeditor from "./boardeditor.js";
 import vectors from "../../util/math/vectors.js";
+import transition from "../rendering/transition.js";
+import { listener_document } from "../chess/game.js";
 
 
 import type { Mesh } from "../rendering/piecemodels.js";

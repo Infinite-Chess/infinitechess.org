@@ -6,7 +6,6 @@
 import typeutil from '../util/typeutil.js';
 import vectors from '../../util/math/vectors.js';
 import { rawTypes } from '../util/typeutil.js';
-// @ts-ignore
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import isprime from '../../util/isprime.js';

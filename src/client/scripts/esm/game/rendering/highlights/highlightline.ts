@@ -5,7 +5,6 @@
  */
 
 
-// @ts-ignore
 import perspective from '../perspective.js';
 import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';

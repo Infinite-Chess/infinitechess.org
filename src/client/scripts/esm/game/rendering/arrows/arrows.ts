@@ -42,9 +42,7 @@ import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
-// @ts-ignore
 import perspective from '../perspective.js';
-// @ts-ignore
 import transition from '../transition.js';
 
 

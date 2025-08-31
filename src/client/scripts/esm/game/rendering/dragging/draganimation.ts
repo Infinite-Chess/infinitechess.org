@@ -32,9 +32,7 @@ import primitives from "../primitives.js";
 import { listener_overlay } from "../../chess/game.js";
 import { Mouse } from "../../input.js";
 import meshes from "../meshes.js";
-// @ts-ignore
 import perspective from "../perspective.js";
-// @ts-ignore
 import camera from "../camera.js";
 
 

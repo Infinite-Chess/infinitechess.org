@@ -14,9 +14,7 @@ import vectors from "../../util/math/vectors.js";
 import coordutil from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../chess/game.js";
-// @ts-ignore
 import perspective from "./perspective.js";
-// @ts-ignore
 import transition from "./transition.js";
 
 
