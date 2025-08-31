@@ -97,6 +97,16 @@ function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BD
 }
 
 /**
+ * Subtracts two coordinate pairs together component-wise.
+ * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
+ * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
+ * @returns The resulting coordinate pair after subtracting.
+ */
+function subtractDoubleCoords(minuendCoord: DoubleCoords, subtrahendCoord: DoubleCoords): DoubleCoords {
+	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
+}
+
+/**
  * Makes a deep copy of the provided coordinates
  */
 function copyCoords(coords: Coords): Coords {
@@ -150,6 +160,7 @@ export default {
 	addCoords,
 	subtractCoords,
 	subtractBDCoords,
+	subtractDoubleCoords,
 	copyCoords,
 	copyBDCoords,
 	lerpCoords,
