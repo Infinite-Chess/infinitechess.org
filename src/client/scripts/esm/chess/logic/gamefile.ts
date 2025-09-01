@@ -35,7 +35,7 @@ interface Snapshot {
 	state_global: GlobalGameState,
 	/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
 	fullMove: number,
-	/** The bounding box surrounding the starting position, without padding.*/
+	/** The bounding box surrounding the starting position, without padding. INTEGER coords, not floating. */
 	box: BoundingBoxBD
 }
 
@@ -86,9 +86,10 @@ type Board = {
 	vicinity: Record<CoordsKey, RawType[]>
 
 	/**
-	 * If a world border exists in the current game (not dependant on variant, but dependant on game mode, such as engine),
-	 * this is the chebyshev distance from the origin (0,0) the border wall BEGINS.
-	 * So if the worldBorder if 100n, the furthest a piece can go is 99 squares away from the origin.
+	 * If a world border exists in the current game (not dependant on variant,
+	 * but dependant on game mode, such as engine), this is the distance the
+	 * border is from the furthest pieces on each edge in the starting position.
+	 * This is so the position is symmetrical and fair.
 	 */
 	worldBorder?: bigint
 } & EditorDependent

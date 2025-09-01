@@ -15,7 +15,7 @@ import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
-import bounds from '../../util/math/bounds.js';
+import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { players } from '../util/typeutil.js';
@@ -211,7 +211,7 @@ function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMove
 			if (lines === undefined) continue;
 			const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 			const key = organizedpieces.getKeyFromLine(line, piece.coords);
-			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color, boardsim.worldBorder);
+			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color, boardsim.worldBorder);
 		};
 	};
 }
@@ -265,7 +265,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, 
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
-	return slide_CalcLegalLimit(blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor, boardsim.worldBorder);
+	return slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor, boardsim.worldBorder);
 }
 
 /**
@@ -314,7 +314,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim: Board, individualMo
  * @param color - The color of friendlies
  */
 function slide_CalcLegalLimit(
-	blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], step: Vec2,
+	boardsim: Board, blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], step: Vec2,
 	slideMoveset: SlideLimits, coords: Coords, color: Player, worldBorder: bigint | undefined
 ): SlideLimits {
 	// The default slide is [null, null] (Infinity in both directions),
@@ -326,7 +326,7 @@ function slide_CalcLegalLimit(
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
-	if (worldBorder !== undefined) enforceWorldBorderOnSlideLimit(limit, worldBorder, coords, step, axis); // Mutating
+	if (worldBorder !== undefined) enforceWorldBorderOnSlideLimit(boardsim, limit, worldBorder, coords, step, axis); // Mutating
 	else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
@@ -365,16 +365,20 @@ function slide_CalcLegalLimit(
 }
 
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
-function enforceWorldBorderOnSlideLimit(limit: SlideLimits, worldBorder: bigint, coords: Coords, step: Vec2, axis: 0 | 1): void {
-	const playableRegion = bounds.castBoundingBoxToBigDecimal({
-		// Add 1 to each of these to convert from world border edge to playable region edge
-		left: -worldBorder + 1n,
-		right: worldBorder - 1n,
-		bottom: -worldBorder + 1n,
-		top: worldBorder - 1n
-	});
+function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, worldBorder: bigint, coords: Coords, step: Vec2, axis: 0 | 1): void {
+	// To keep the board symmetric and fair. The world border should be precisely
+	// `worldBorder` many squares away from the furthest piece on each side.
+	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBDBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
+	const distanceToFurthestPlayableEdge = bd.FromBigInt(worldBorder - 1n);
 
-	// What are the intersections this step makes with the world border box?
+	const playableRegion: BoundingBoxBD = {
+		left: bd.subtract(startingPositionBox.left, distanceToFurthestPlayableEdge),
+		right: bd.add(startingPositionBox.right, distanceToFurthestPlayableEdge),
+		bottom: bd.subtract(startingPositionBox.bottom, distanceToFurthestPlayableEdge),
+		top: bd.add(startingPositionBox.top, distanceToFurthestPlayableEdge)
+	};
+
+	// What are the intersections this step makes with the playable region box?
 	const coordsBD = bd.FromCoords(coords);
 	const stepBD = bd.FromCoords(step);
 	const negatedStepBD = vectors.negateBDVector(stepBD);
@@ -397,7 +401,7 @@ function enforceWorldBorderOnSlideLimit(limit: SlideLimits, worldBorder: bigint,
 	function getStepsToReachPoint(origin: BDCoords, destination: BDCoords, step: BDCoords, axis: 0 | 1): bigint {
 		// How many steps would it take to reach this point?
 		const distanceToPoint: BigDecimal = bd.subtract(destination[axis], origin[axis]);
-		// The maximum number of steps we can take before exceeding the point (can land directly on it)
+		// The maximum number of steps we can take before exceeding the point (inclusive to the point)
 		return bd.toBigInt(bd.floor(bd.divide_fixed(distanceToPoint, step[axis]))); // Always positive
 	}
 

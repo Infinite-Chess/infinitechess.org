@@ -207,6 +207,7 @@ function ln(bigint: bigint): number {
 /**
  * Returns a bigint's binary representation in an easy-to-read string format,
  * displaying all bits in the underlying 64‑bit chunks.
+ * Example output: "0b_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000 (1-chunk, 8 bytes, 64 bits)"
  */
 function toDebugBinaryString(bigint: bigint): string {
 	// 1. Handle the zero case cleanly.

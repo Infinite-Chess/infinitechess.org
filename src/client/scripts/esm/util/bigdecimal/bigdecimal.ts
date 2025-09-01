@@ -1241,7 +1241,7 @@ function toExactString(bd: BigDecimal): string {
  * Converts a BigDecimal to a human-readable string, rounded to its
  * "effective" number of decimal places. This trims extraneous digits that
  * arise from the binary-to-decimal conversion, providing a cleaner output.
- * For the exact stored value, use `toExactString()`.
+ * For the exact stored value, use {@link toExactString}.
  * @param bd The BigDecimal to convert.
  * @returns The effectively rounded number as a string.
  */
