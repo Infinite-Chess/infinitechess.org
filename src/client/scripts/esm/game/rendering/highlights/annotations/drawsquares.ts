@@ -153,7 +153,7 @@ function render(highlights: Square[]) {
 	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 
 	// If we're zoomed out, then the size of the highlights is constant.
-	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
+	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScaleAsNumber();
 
 	// Render preset squares (only if zoomed in)
 	if (!boardpos.areZoomedOut() && presetSquares.length > 0) squarerendering.genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
