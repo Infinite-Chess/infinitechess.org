@@ -1144,7 +1144,8 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	 * rotation offset (1 number)
 	 */
 
-	const angle = Math.atan2(...vectors.convertVectorToDoubles(vector));
+	const vectorAsDoubles = vectors.convertVectorToDoubles(vector);
+	const angle = Math.atan2(vectorAsDoubles[1], vectorAsDoubles[0]); // Y value first
 	//								position		  color	 rotation
 	instanceData_Arrows.push(...arrow.worldLocation, 0,0,0,a, angle);
 }
