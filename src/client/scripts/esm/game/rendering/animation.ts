@@ -411,7 +411,7 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal =
 			targetDistance = bd.multiply_fixed(maxDistB4Teleport, easedTBD);
 		} else { // easedT >= 0.5
 			// Second half: animate final portion of path
-			const inverseEasedT = bd.subtract(easedTBD, ONE);
+			const inverseEasedT = bd.subtract(ONE, easedTBD);
 			const targetDistance_FromEnd = bd.multiply_fixed(maxDistB4Teleport, inverseEasedT);
 			targetDistance = bd.subtract(animation.totalDistance, targetDistance_FromEnd);
 		}
