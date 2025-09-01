@@ -842,9 +842,13 @@ function areEqual(bd1: BigDecimal, bd2: BigDecimal): boolean {
 	return compare(bd1, bd2) === 0;
 }
 
-/** Negates a BigDecimal */
+/**
+ * Negates a BigDecimal.
+ * 
+ * Non-mutating; returns a new BigDecimal.
+ */
 function negate(bd: BigDecimal): BigDecimal {
-	return { bigint: -bd.bigint, divex: bd.divex, };
+	return { bigint: -bd.bigint, divex: bd.divex };
 }
 
 /** Returns the smaller of two BigDecimals. */

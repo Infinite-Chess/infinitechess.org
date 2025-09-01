@@ -255,10 +255,19 @@ function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
 /**
  * Negates the provided length-2 vector so it points in the opposite direction
  * 
- * Non-destructive. Returns a new vector.
+ * Non-mutating. Returns a new vector.
  */
 function negateVector(vec2: Vec2): Vec2 {
 	return [-vec2[0],-vec2[1]];
+}
+
+/**
+ * Negates the provided length-2 BigDecimal vector so it points in the opposite direction
+ * 
+ * Non-mutating. Returns a new vector.
+ */
+function negateBDVector(vec2: BDCoords): BDCoords {
+	return [bd.negate(vec2[0]), bd.negate(vec2[1])];
 }
 
 /**
@@ -389,6 +398,7 @@ export default {
 	dotProduct,
 	dotProductBD,
 	negateVector,
+	negateBDVector,
 	absVector,
 	normalizeVector,
 	getPerpendicularVector,

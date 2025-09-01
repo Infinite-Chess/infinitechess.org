@@ -9,18 +9,21 @@ import winconutil from '../util/winconutil.js';
 import movepiece from './movepiece.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
-import typeutil, { players } from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
+import geometry from '../../util/math/geometry.js';
+import bounds from '../../util/math/bounds.js';
+import vectors from '../../util/math/vectors.js';
+import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import typeutil, { players } from '../util/typeutil.js';
 import { rawTypes as r } from '../util/typeutil.js';
-
 
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { CoordsKey, Coords } from '../util/coordutil.js';
+import type { CoordsKey, Coords, BDCoords } from '../util/coordutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
@@ -208,7 +211,7 @@ function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMove
 			if (lines === undefined) continue;
 			const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 			const key = organizedpieces.getKeyFromLine(line, piece.coords);
-			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
+			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color, boardsim.worldBorder);
 		};
 	};
 }
@@ -262,7 +265,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, 
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
-	return slide_CalcLegalLimit(blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
+	return slide_CalcLegalLimit(blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor, boardsim.worldBorder);
 }
 
 /**
@@ -305,20 +308,27 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim: Board, individualMo
  * @param blockingFunc - The function that will check if each piece on the same line needs to block the piece
  * @param o
  * @param line - The list of pieces on this line 
- * @param direction - The direction of the line: `[dx,dy]` 
+ * @param step - The direction of the line: `[dx,dy]` 
  * @param slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
  * @param coords - The coordinates of the piece with the specified slideMoveset.
  * @param color - The color of friendlies
  */
 function slide_CalcLegalLimit(
-	blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], direction: Vec2,
-	slideMoveset: SlideLimits, coords: Coords, color: Player
+	blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], step: Vec2,
+	slideMoveset: SlideLimits, coords: Coords, color: Player, worldBorder: bigint | undefined
 ): SlideLimits {
-	// The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
+	// The default slide is [null, null] (Infinity in both directions),
+	// change that if there are any pieces blocking our path!
+	// The first index is always negative if it's not null (Infinity)
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
-	const axis = direction[0] === 0n ? 1 : 0; 
+	const axis = step[0] === 0n ? 1 : 0; 
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
+
+	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
+	if (worldBorder !== undefined) enforceWorldBorderOnSlideLimit(limit, worldBorder, coords, step, axis); // Mutating
+	else console.error("No world border set, skipping world border slide limit check.");
+
 	// Iterate through all pieces on same line
 	for (const idx of line) {
 
@@ -334,7 +344,7 @@ function slide_CalcLegalLimit(
 		if (blockResult === 0) continue; // Not blocked
 
 		// Is the piece to the left of us or right of us?
-		const thisPieceSteps = (thisPiece.coords[axis] - coords[axis]) / direction[axis];
+		const thisPieceSteps = (thisPiece.coords[axis] - coords[axis]) / step[axis]; // Can be negative
 		if (thisPieceSteps < 0) { // To our left
 
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
@@ -352,6 +362,50 @@ function slide_CalcLegalLimit(
 		} // else this is us, don't do anything.
 	}
 	return limit;
+}
+
+/** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
+function enforceWorldBorderOnSlideLimit(limit: SlideLimits, worldBorder: bigint, coords: Coords, step: Vec2, axis: 0 | 1): void {
+	const playableRegion = bounds.castBoundingBoxToBigDecimal({
+		// Add 1 to each of these to convert from world border edge to playable region edge
+		left: -worldBorder + 1n,
+		right: worldBorder - 1n,
+		bottom: -worldBorder + 1n,
+		top: worldBorder - 1n
+	});
+
+	// What are the intersections this step makes with the world border box?
+	const coordsBD = bd.FromCoords(coords);
+	const stepBD = bd.FromCoords(step);
+	const negatedStepBD = vectors.negateBDVector(stepBD);
+
+	// These are in order of ascending dot product.
+	const intersections = geometry.findLineBoxIntersections(coordsBD, step, playableRegion).map(i => i.coords);
+	if (intersections.length < 2) throw Error("Number of intersections slide direction makes with border is less than 2!");
+	const [intsect1, intsect2] = intersections;
+
+	const stepsToIntsect1 = getStepsToReachPoint(coordsBD, intsect1!, negatedStepBD, axis); // Always positive
+	const stepsToIntsect2 = getStepsToReachPoint(coordsBD, intsect2!, stepBD,        axis); // Always positive
+
+	/**
+	 * @param origin 
+	 * @param destination 
+	 * @param step - Can be negated. MUST BE IN THE direction towards the destination!
+	 * @param axis - Whether to use the x or y axis in arithmetic (can't use x if x step is 0)
+	 * @returns A number of steps (always positive) it would take to reach the destination from the origin using the step provided.
+	 */
+	function getStepsToReachPoint(origin: BDCoords, destination: BDCoords, step: BDCoords, axis: 0 | 1): bigint {
+		// How many steps would it take to reach this point?
+		const distanceToPoint: BigDecimal = bd.subtract(destination[axis], origin[axis]);
+		// The maximum number of steps we can take before exceeding the point (can land directly on it)
+		return bd.toBigInt(bd.floor(bd.divide_fixed(distanceToPoint, step[axis]))); // Always positive
+	}
+
+	// Shorten our slide limit to not exceed the world border
+	if (limit[0] === null || -stepsToIntsect1 > limit[0]) limit[0] = -stepsToIntsect1;
+	if (limit[1] === null ||  stepsToIntsect2 < limit[1]) limit[1] =  stepsToIntsect2;
+
+	console.log("New limit after blocked by world border:", limit);
 }
 
 /**

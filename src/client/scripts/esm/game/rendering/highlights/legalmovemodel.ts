@@ -4,6 +4,8 @@
 /**
  * [ZOOMED IN] This script handles the model
  * generation of piece's legal move highlights.
+ * 
+ * That also includes Rays.
  */
 
 import type { Player } from '../../../chess/util/typeutil.js';
