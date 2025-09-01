@@ -527,11 +527,10 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
  */
 function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: Vec2, pieceCoords: Coords, coords: Coords, ignoreFunc: IgnoreFunction): boolean {
 	const axis = direction[0] === 0n ? 1 : 0;
-	const coordMag = coords[axis];
-	console.log("slide limits doesn't have a negative in index 0, right?", slideMoveset);
-	const min: bigint | null = slideMoveset[0] === null ? null : pieceCoords[axis] + -direction[axis] * slideMoveset[0];
-	const max: bigint | null = slideMoveset[1] === null ? null : pieceCoords[axis] +  direction[axis] * slideMoveset[1];
-	return (min === null || coordMag >= min) && (max === null || coordMag <= max) && ignoreFunc(pieceCoords, coords);
+	const coord = coords[axis];
+	const min: bigint | null = slideMoveset[0] === null ? null : pieceCoords[axis] + direction[axis] * slideMoveset[0]; // No need to negate direction because slideMoveset[0] is always negative
+	const max: bigint | null = slideMoveset[1] === null ? null : pieceCoords[axis] + direction[axis] * slideMoveset[1];
+	return (min === null || coord >= min) && (max === null || coord <= max) && ignoreFunc(pieceCoords, coords);
 }
 
 /**
