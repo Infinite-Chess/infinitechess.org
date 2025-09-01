@@ -450,7 +450,7 @@ function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: B
 		}
 
 		// Check if the intersection at t_top is on the edge
-		const x_at_top = bd.add(bd.multiply_fixed(t_top, bd_dy), bd_x0);
+		const x_at_top = bd.add(bd.multiply_fixed(t_top, bd_dx), bd_x0);
 		if (bd.compare(x_at_top, left) >= 0 && bd.compare(x_at_top, right) <= 0) {
 			valid_t_values.push(t_top);
 		}
