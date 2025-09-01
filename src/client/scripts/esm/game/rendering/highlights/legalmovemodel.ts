@@ -443,9 +443,6 @@ function pushRay(
 	// Recursively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
-		targetCoords[0] += step[0];
-		targetCoords[1] += step[1];
-
 		legal: if (ignoreFunc(coords, targetCoords)) { // Ignore function PASSED. (Is a prime square for huygens)
 
 			// If we're brute force checking each move for check, do that here. (royal queen, or colinear pins)
@@ -459,6 +456,8 @@ function pushRay(
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
 		
+		targetCoords[0] += step[0];
+		targetCoords[1] += step[1];
 		// The mesh-offset adjusted coords we're checking
 		startCoordsOffset[0] += step[0];
 		startCoordsOffset[1] += step[1];
