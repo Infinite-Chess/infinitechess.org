@@ -842,6 +842,11 @@ function areEqual(bd1: BigDecimal, bd2: BigDecimal): boolean {
 	return compare(bd1, bd2) === 0;
 }
 
+/** Tests whether a BigDecimal is equivalent to zero. */
+function isZero(bd: BigDecimal): boolean {
+	return bd.bigint === ZERO;
+}
+
 /**
  * Negates a BigDecimal.
  * 
@@ -1403,6 +1408,7 @@ export default {
 	setExponent,
 	compare,
 	areEqual,
+	isZero,
 	negate,
 	min,
 	max,
