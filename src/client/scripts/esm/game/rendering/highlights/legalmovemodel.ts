@@ -441,7 +441,7 @@ function pushRay(
 	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
 
 	// Recursively adds the coords to the instance data list, shifting by the step size.
-	const targetCoords: Coords = startCoords;
+	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
 		targetCoords[0] += step[0];
 		targetCoords[1] += step[1];
@@ -459,6 +459,7 @@ function pushRay(
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
 		
+		// The mesh-offset adjusted coords we're checking
 		startCoordsOffset[0] += step[0];
 		startCoordsOffset[1] += step[1];
 	}
