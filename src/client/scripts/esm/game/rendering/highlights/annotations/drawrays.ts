@@ -270,10 +270,14 @@ function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: 
 		...vectors.VECTORS_ORTHOGONAL,
 		...vectors.VECTORS_DIAGONAL
 	];
+	// Add the negation of all vectors
+	for (let i = searchVectors.length - 1; i >= 0; i--) {
+		searchVectors.push(vectors.negateVector(searchVectors[i]!));
+	}
 
 	let minAbsoluteAngleDifference = Infinity;
 	// Initialize with the first vector
-	let closestVector: Coords = searchVectors[0]!; 
+	let closestVector: Coords = searchVectors[0]!;
 
 	for (const predefinedVector of searchVectors) {
 		const predifinedVectorDouble: DoubleCoords = vectors.convertVectorToDoubles(predefinedVector);
