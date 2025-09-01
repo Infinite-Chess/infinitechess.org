@@ -333,20 +333,19 @@ function updatePanningTransition(t: number, easedT: number): void {
 		// 1st half or 2nd half?
 		const firstHalf = t < 0.5;
 		const neg = firstHalf ? ONE : NEGONE;
-		const actualEquaY = bd.FromNumber(firstHalf ? easedT : 1 - easedT);
+		const actualEasedT = bd.FromNumber(firstHalf ? easedT : 1 - easedT);
 
-		const xRatio = bd.divide_floating(maxDistSquares, bd.abs(differenceCoords[0]));
-		const yRatio = bd.divide_floating(maxDistSquares, bd.abs(differenceCoords[1]));
-
-		const ratio = bd.compare(xRatio, yRatio) < 0 ? xRatio : yRatio;
+		// Need to pick one that is non-zero to avoid division by zero
+		const nonZeroDiff = bd.isZero(difference[0]) ? bd.abs(difference[1]) : bd.abs(difference[0]);
+		const ratio = bd.divide_floating(maxDistSquares, nonZeroDiff);
 
 		difference[0] = bd.multiply_floating(difference[0], ratio);
 		difference[1] = bd.multiply_floating(difference[1], ratio);
 
 		const target = firstHalf ? originCoords : destinationCoords;
 
-		const addX = bd.multiply_floating(bd.multiply_floating(difference[0], actualEquaY), neg);
-		const addY = bd.multiply_floating(bd.multiply_floating(difference[1], actualEquaY), neg);
+		const addX = bd.multiply_floating(bd.multiply_floating(difference[0], actualEasedT), neg);
+		const addY = bd.multiply_floating(bd.multiply_floating(difference[1], actualEasedT), neg);
 
 		newX = bd.add(target[0], addX);
 		newY = bd.add(target[1], addY);
