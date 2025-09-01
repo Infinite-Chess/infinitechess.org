@@ -204,6 +204,7 @@ export default {
 	// Square Bounds
 	getCoordBoxModel,
 	getCoordBoxWorld,
+	applyWorldTransformationsToBoundingBox,
 	// Mesh Data
 	QuadModel_Color,
 	QuadWorld_Color,

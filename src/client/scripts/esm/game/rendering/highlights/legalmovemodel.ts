@@ -34,6 +34,8 @@ import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import camera from '../camera.js';
+import primitives from '../primitives.js';
+import bimath from '../../../util/bigdecimal/bimath.js';
 
 
 // Type Definitions ------------------------------------------------------------
@@ -374,7 +376,7 @@ function pushSlide(
 ) {
 	// Right moveset...
 
-	if (!intsect2.positiveDotProduct) {
+	if (intsect2.positiveDotProduct) {
 		// The start coords are either on screen, or the ray points towards the screen
 		pushRay(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1, intsect2, limits[1], ignoreFunc, gamefile, friendlyColor, brute);
 	} // else the start coords are off screen and ray points in the opposite direction of the screen
@@ -394,9 +396,11 @@ function pushSlide(
 		positiveDotProduct: !intsect1.positiveDotProduct,
 	};
 
-	if (!negVecIntsect2.positiveDotProduct) {
+	if (negVecIntsect2.positiveDotProduct) {
 		// The start coords are either on screen, or the ray points towards the screen
-		pushRay(instanceData_NonCapture, instanceData_Capture, coords, negStep, negVecIntsect1, negVecIntsect2, limits[0], ignoreFunc, gamefile, friendlyColor, brute);
+		// The first index of slide limit is always negative
+		const absoluteSlideLimit = limits[0] === null ? null : bimath.abs(limits[0]);
+		pushRay(instanceData_NonCapture, instanceData_Capture, coords, negStep, negVecIntsect1, negVecIntsect2, absoluteSlideLimit, ignoreFunc, gamefile, friendlyColor, brute);
 	} // else the start coords are off screen and ray points in the opposite direction of the screen
 }
 
@@ -429,7 +433,7 @@ function pushRay(
 ) {
 	if (limit === 0n) return; // Can't slide any spaces this ray's direction
 
-	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, true);
+	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, false);
 	if (!iterationInfo) return; // None of the piece's slide is visible on screen, skip.
 
 	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
@@ -582,8 +586,20 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
  * Will only be visible if camera debug mode is on, as this is normally outside of the screen edge.
  */
 function renderOutlineofRenderBox() {
-	const color: Color = [1,0,1, 1];
+	// const color: Color = [1,0,1, 1]; // Magenta
+	const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
 	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
+
+	createModel(data, 2, "LINE_LOOP", true).render();
+}
+
+/**
+ * [DEBUG] Renders an outline of the provided floating point bounding box.
+ */
+function renderOutlineofFloatingBox(box: BoundingBoxBD) {
+	const color: Color = [0.65,0.15,0, 1];
+	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(box);
+	const data = primitives.Rect(left, bottom, right, top, color);
 
 	createModel(data, 2, "LINE_LOOP", true).render();
 }
@@ -602,4 +618,5 @@ export default {
 	genModelForRays,
 	// Rendering
 	renderOutlineofRenderBox,
+	renderOutlineofFloatingBox,
 };

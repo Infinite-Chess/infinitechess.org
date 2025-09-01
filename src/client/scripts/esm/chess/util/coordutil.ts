@@ -149,6 +149,17 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 }
 
 
+// Debugging --------------------------------------------------------------------
+
+
+function stringifyBDCoords(coords: BDCoords): string {
+	return `(${bd.toNumber(coords[0])}, ${bd.toNumber(coords[1])})`;
+}
+
+
+// Exports --------------------------------------------------------------------
+
+
 
 export default {
 	getKeyFromCoords,
@@ -163,6 +174,8 @@ export default {
 	copyBDCoords,
 	lerpCoords,
 	lerpCoordsDouble,
+	// Debugging
+	stringifyBDCoords,
 };
 
 export type {
