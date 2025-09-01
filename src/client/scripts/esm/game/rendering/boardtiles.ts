@@ -126,9 +126,9 @@ function getSquareCenterAsNumber() {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels(): BigDecimal {
+function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
-	const screenBoundingBox = camera.getScreenBoundingBox();
+	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 	const factor1: BigDecimal = bd.FromNumber(camera.canvas.height * 0.5 / screenBoundingBox.top);
 	const tileWidthPixels_Physical = bd.multiply_floating(factor1, boardpos.getBoardScale()); // Greater for retina displays
 
