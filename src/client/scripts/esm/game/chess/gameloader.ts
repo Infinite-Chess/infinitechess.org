@@ -145,6 +145,7 @@ async function startLocalGame(options: {
 		// additional: { editor: true }
 		// Enable to test world border in local games
 		// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
+		// additional: { worldBorder: BigInt(15) }
 	})
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));

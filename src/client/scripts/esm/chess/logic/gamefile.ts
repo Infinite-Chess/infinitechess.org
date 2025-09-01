@@ -87,9 +87,10 @@ type Board = {
 
 	/**
 	 * If a world border exists in the current game (not dependant on variant,
-	 * but dependant on game mode, such as engine), this is the distance the
-	 * border is from the furthest pieces on each edge in the starting position.
+	 * but dependant on game mode, such as engine), this is the width of extra
+	 * available play area next to the furthest piece on each side of the starting position.
 	 * This is so the position is symmetrical and fair.
+	 * For example, if the play position is 8x8, and the worldBorder is 10, then the playable area is 28x28.
 	 */
 	worldBorder?: bigint
 } & EditorDependent

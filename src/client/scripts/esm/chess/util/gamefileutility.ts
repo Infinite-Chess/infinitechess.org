@@ -166,7 +166,7 @@ function getPlayableRegionBox(boardsim: Board): BoundingBoxBD {
 	// To keep the board symmetric and fair. The world border should be precisely
 	// `worldBorder` many squares away from the furthest piece on each side.
 	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBDBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
-	const distanceToFurthestPlayableEdge = bd.FromBigInt(boardsim.worldBorder - 1n);
+	const distanceToFurthestPlayableEdge = bd.FromBigInt(boardsim.worldBorder);
 
 	return {
 		left: bd.subtract(startingPositionBox.left, distanceToFurthestPlayableEdge),
