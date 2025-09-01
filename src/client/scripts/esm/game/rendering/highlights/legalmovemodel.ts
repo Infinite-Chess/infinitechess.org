@@ -219,7 +219,7 @@ function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	// New improved method of calculating render bounding box
 
-	const boardBoundingBox = boardtiles.gboundingBox();
+	const boardBoundingBox = boardtiles.gboundingBox(false);
 	const width: number = bd.toNumber(bd.subtract(boardBoundingBox.right, boardBoundingBox.left)) + 1; // Need to +1 since the board bounding box just includes the integer squares, not floating point edges.
 	const height: number = bd.toNumber(bd.subtract(boardBoundingBox.top, boardBoundingBox.bottom)) + 1;
 
