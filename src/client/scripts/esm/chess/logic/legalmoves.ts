@@ -211,7 +211,7 @@ function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMove
 			if (lines === undefined) continue;
 			const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 			const key = organizedpieces.getKeyFromLine(line, piece.coords);
-			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color, boardsim.worldBorder);
+			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color);
 		};
 	};
 }
@@ -265,7 +265,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, 
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
-	return slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor, boardsim.worldBorder);
+	return slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
 }
 
 /**
@@ -314,8 +314,8 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim: Board, individualMo
  * @param color - The color of friendlies
  */
 function slide_CalcLegalLimit(
-	boardsim: Board, blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], step: Vec2,
-	slideMoveset: SlideLimits, coords: Coords, color: Player, worldBorder: bigint | undefined
+	boardsim: Board, blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[],
+	step: Vec2, slideMoveset: SlideLimits, coords: Coords, color: Player
 ): SlideLimits {
 	// The default slide is [null, null] (Infinity in both directions),
 	// change that if there are any pieces blocking our path!
@@ -326,7 +326,7 @@ function slide_CalcLegalLimit(
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
-	if (worldBorder !== undefined) enforceWorldBorderOnSlideLimit(boardsim, limit, worldBorder, coords, step, axis); // Mutating
+	if (boardsim.worldBorder !== undefined) enforceWorldBorderOnSlideLimit(boardsim, limit, coords, step, axis); // Mutating
 	else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
