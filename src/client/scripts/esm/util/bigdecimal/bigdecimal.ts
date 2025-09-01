@@ -62,20 +62,18 @@ interface BigDecimal {
 
 
 /**
- * The default additional number of bits used as working precision
- * for all Big Decimals, on top of the minimum precision needed for
- * the true value to round to the desired value.
+ * The default number of bits dedicated to the decimal portion of the BigDecimal.
  * 
- * The minimum number of bits used to store decimal bits in BigDecimals.
  * Without working precision, small numbers parsed into BigDecimals would lose some precision.
  * For example, 3.1 divex 4 ==> 3.125. Now even though 3.125 DOES round to 3.1,
  * it means we'll very quickly lose a lot of accuracy when performing arithmetic!
  * The user expects that, when they pass in 3.1, the resulting BigDecimal should be AS CLOSE to 3.1 as possible!!
  * With a DEFAULT_WORKING_PRECISION of 50 bits, 3.1 divex 50 ==> 3.10000000000000142, which is A LOT closer to 3.1!
- * I arbitrarily chose 50 bits for the minimum, because that gives us about 15 digits of precision,
- * which is about how much javascript's doubles give us.
+ * 
+ * 23 bits approximately matches float32 precision, giving us about 7 decimal places.
+ * 53 bits approximately matches float64 precision, giving us about 16 decimal places.
  */
-const DEFAULT_WORKING_PRECISION = 23; // Default: 53 (matches javascript's double precision)   23: float32 precision
+const DEFAULT_WORKING_PRECISION = 23;
 
 /**
  * The maximum divex a BigDecimal is allowed to have.

@@ -212,9 +212,9 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const boardScale = boardpos.getBoardScale();
 	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
 	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
-	if (bd.compare(relativeScaleWhen1TileIs1VirtualPixel, scaleWhen1TileIs1VirtualPixel) < 0) {
+	if (bd.compare(boardScale, relativeScaleWhen1TileIs1VirtualPixel) < 0) {
 		// STOP rendering to avoid glitches! Too small
-		console.log(`Skipping generating board model of zoom ${bd.toNumber(zoom)}. Scale is too small.`);
+		// console.log(`Skipping generating board model of zoom ${bd.toNumber(zoom)}. Scale is too small.`);
 		return;
 	}
 
