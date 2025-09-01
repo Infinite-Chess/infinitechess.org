@@ -329,6 +329,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	function updateClickInfoDown(targetButton: MouseButton, e: MouseEvent | Touch) {
 		// console.log("Mouse down: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
+		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 		const pointerId = e instanceof MouseEvent ? 'mouse' : e.identifier.toString(); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.pointerId = pointerId;
 		targetButtonInfo.isDown = true;
@@ -354,7 +355,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// Mouse has been down atleast once before.
 			// Now we now posDown will be defined, so we can calculate the distance to that last click down.
 			// Works for 2D mode, desktop & mobile
-			const posDown = clickInfo[targetButton].posDown;
+			const posDown = targetButtonInfo.posDown;
 			const distMoved = posDown ? Math.max(
 				Math.abs(posDown[0] - relativeMousePos[0]),
 				Math.abs(posDown[1] - relativeMousePos[1])
@@ -381,6 +382,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	function updateClickInfoUp(targetButton: MouseButton, e: MouseEvent | Touch) {
 		// console.log("Mouse up: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
+		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 		const pointerId = e instanceof MouseEvent ? 'mouse' : e.identifier.toString(); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.pointerId = pointerId;
 		targetButtonInfo.isDown = false;
@@ -396,25 +398,25 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		if (pointers[pointerId]) pointers[pointerId].isHeld = false; // Mark the pointer as no longer held down
 
 		// Update click --------------
-		const mouseHistory = clickInfo[targetButton].timeDownMillisHistory;
+		const mouseHistory = targetButtonInfo.timeDownMillisHistory;
 		const timePassed = Date.now() - (mouseHistory[mouseHistory.length - 1] ?? 0); // Since the latest click
 		const TIME_MILLIS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.TIME_MILLIS : CLICK_THRESHOLDS.TOUCH.TIME_MILLIS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 		if (timePassed < TIME_MILLIS) {
 			// Works for 2D mode, desktop & mobile
-			const posDown = clickInfo[targetButton].posDown;
+			const posDown = targetButtonInfo.posDown;
 			const distMoved = posDown ? Math.max(
 				Math.abs(posDown[0] - relativeMousePos[0]),
 				Math.abs(posDown[1] - relativeMousePos[1])
 			) : 0; // No click down to compare to. This can happen if you click down offscreen.
 			// Works for 3D mode, desktop (mouse is locked in place then)
 			const delta = Math.max(
-				clickInfo[targetButton].deltaSinceDown[0],
-				clickInfo[targetButton].deltaSinceDown[1]
+				targetButtonInfo.deltaSinceDown[0],
+				targetButtonInfo.deltaSinceDown[1]
 			);
 			// console.log("Mouse delta: ", delta);
 			const MOVE_VPIXELS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS : CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) {
-				clickInfo[targetButton].clicked = true;
+				targetButtonInfo.clicked = true;
 				// console.log("Mouse clicked: ", MouseNames[targetButton]);
 			}
 		} // --------------
