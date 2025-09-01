@@ -896,8 +896,8 @@ function executeArrowShifts() {
 				// Determine the line's dot product with the screen box.
 				// Flip the vector if need be, to point it in the right direction.
 				const thisPieceIntersections = geometry.findLineBoxIntersections(piece.coords, line, boundingBoxFloat!); // should THIS BE FLOAT???
-				// MAYBE NOT NEEDED AFTER UPGRADING THE LOGIC to bigints?
-				// if (thisPieceIntersections.length < 2) continue; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
+				if (thisPieceIntersections.length < 2) continue; // Slide direction doesn't intersect with screen box, no arrow needed
+
 				const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	
 				if (positiveDotProduct) line = vectors.negateVector(line);
 				// At what point does it intersect the screen?
