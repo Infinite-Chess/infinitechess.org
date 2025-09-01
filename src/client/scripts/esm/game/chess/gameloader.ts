@@ -143,6 +143,8 @@ async function startLocalGame(options: {
 		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
 		 */
 		// additional: { editor: true }
+		// Enable to test world border in local games
+		// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
 	})
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
@@ -255,7 +257,12 @@ async function startEngineGame(options: {
 		metadata,
 		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
-		additional: { variantOptions: options.variantOptions }
+		additional: {
+			variantOptions: options.variantOptions,
+			// Engine games have a world border enabled so as to keep
+			// the position within safe floating point range.
+			worldBorder: BigInt(Number.MAX_SAFE_INTEGER)
+		}
 	});
 
 	/** A promise that resolves when the engine script has been fetched. */

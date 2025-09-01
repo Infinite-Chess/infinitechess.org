@@ -1,3 +1,4 @@
+
 import type { ClockData, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
 import type { MetaData } from "../util/metadata.js";
@@ -11,6 +12,7 @@ import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
 import type { BoundingBoxBD } from "../../util/math/bounds.js";
+
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
 import jsutil from "../../util/jsutil.js";
@@ -24,6 +26,7 @@ import checkdetection from "./checkdetection.js";
 import gamerules from "../variants/gamerules.js";
 import wincondition from "./wincondition.js";
 import bounds from "../../util/math/bounds.js";
+import { Additional } from "../../game/chess/gameslot.js";
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -81,6 +84,13 @@ type Board = {
 
 	specialVicinity: Record<CoordsKey, RawType[]>
 	vicinity: Record<CoordsKey, RawType[]>
+
+	/**
+	 * If a world border exists in the current game (not dependant on variant, but dependant on game mode, such as engine),
+	 * this is the chebyshev distance from the origin (0,0) the border wall BEGINS.
+	 * So if the worldBorder if 100n, the furthest a piece can go is 99 squares away from the origin.
+	 */
+	worldBorder?: bigint
 } & EditorDependent
 
 /** Some information should be left out when the editor is being used as it will slow processing down */
@@ -128,7 +138,7 @@ function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConcl
 }
 
 /** Creates a new {@link Board} object from provided arguements */
-function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false): Board {
+function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false, worldBorder?: bigint): Board {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(gameRules, metadata, variantOptions);
 
 	const state: GameState = {
@@ -166,8 +176,6 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	const colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(pieceMovesets, pieces.slides);
 
-	const refSnapshot = startSnapshot;
-
 	// Have to assign it this weird way to make typescript happy.
 	// We don't have to cast to EditorDependent this way.
 	const editorDependentVars: EditorDependent = editor ? {
@@ -175,7 +183,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		startSnapshot: undefined
 	} : {
 		editor: false,
-		startSnapshot: refSnapshot
+		startSnapshot
 	};
 
 	return {
@@ -189,6 +197,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
+		worldBorder,
 		...editorDependentVars
 	};
 }
@@ -219,16 +228,10 @@ function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMov
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
  */
-function initFullGame(metadata: MetaData, { variantOptions, moves, gameConclusion, editor, clockValues }: {
-	variantOptions?: VariantOptions,
-	moves?: ServerGameMoveMessage[],
-	gameConclusion?: string,
-	editor?: boolean,
-	clockValues?: ClockValues
-} = {}): FullGame {
-	const basegame = initGame(metadata, variantOptions, gameConclusion, clockValues);
-	const boardsim = initBoard(basegame.gameRules, basegame.metadata, variantOptions, editor);
-	return loadGameWithBoard(basegame, boardsim, moves, gameConclusion);
+function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame {
+	const basegame = initGame(metadata, additional.variantOptions, additional.gameConclusion, additional.clockValues);
+	const boardsim = initBoard(basegame.gameRules, basegame.metadata, additional.variantOptions, additional.editor, additional.worldBorder);
+	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
 }
 
 export type {

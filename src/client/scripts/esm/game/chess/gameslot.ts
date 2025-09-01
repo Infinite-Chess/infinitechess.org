@@ -88,6 +88,11 @@ interface Additional {
 	clockValues?: ClockValues,
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor?: boolean,
+	/**
+	 * If present, the resulting gamefile will have a world border at this distance on all sides from the origin (0,0).
+	 * It is NOT equidistant from all sides of the current position.
+	 */
+	worldBorder?: bigint,
 }
 
 // Variables ---------------------------------------------------------------
