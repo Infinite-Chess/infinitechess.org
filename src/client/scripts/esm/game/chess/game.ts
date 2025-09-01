@@ -41,6 +41,7 @@ import promotionlines from '../rendering/promotionlines.js';
 import { CreateInputListener, InputListener, Mouse } from '../input.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
+import border from '../rendering/border.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -166,11 +167,24 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 function render() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
-	boardtiles.render(); // Renders the infinite checkerboard
-
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
-	if (!gamefile) return; // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
+	if (!gamefile) return boardtiles.render(); // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
+	
+	const boardsim = gamefile.boardsim;
+
+	if (boardsim.worldBorder !== undefined) {
+		// Mask the playable region so the board tiles don't render outside the world border
+		webgl.executeMaskedDraw(
+			// Mask containing playable region
+			() => border.drawPlayableRegionMask(boardsim),
+			// The board tiles will only be drawn inside the mask
+			() => boardtiles.render()
+		);
+	} else {
+		// Render normally, spanning the whole screen
+		boardtiles.render();
+	}
 
 	/**
 	 * What is the order of rendering?

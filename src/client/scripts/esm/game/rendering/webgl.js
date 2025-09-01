@@ -62,7 +62,7 @@ function setClearColor(newClearColor) { clearColor = newClearColor; }
  */
 function init() {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	gl = camera.canvas.getContext('webgl2', { alpha: false });
+	gl = camera.canvas.getContext('webgl2', { alpha: false, stencil: true });
 	if (!gl) { // WebGL2 not supported
 		alert(translations.webgl_unsupported);
 		throw new Error("WebGL2 not supported by browser.");
@@ -92,6 +92,8 @@ function init() {
 		gl.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
 		gl.cullFace(gl.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
 	}
+
+	gl.clearStencil(0); // Good practice, although 0 is the default
 }
 
 /**
@@ -100,7 +102,7 @@ function init() {
  */
 function clearScreen() {
 	gl.clearColor(...clearColor, 1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 }
 
 /**
@@ -147,6 +149,55 @@ function executeWithInverseBlending(func) {
 	func();
 	toggleNormalBlending();
 }
+
+
+/**
+ * Renders content masked by a given mesh. This function handles all stencil
+ * buffer state changes internally, ensuring a clean state before and after.
+ * @param {Function} drawMaskFunc - A function that renders the mesh to be used as the mask. (Your Function B)
+ * @param {Function} drawContentFunc - A function that renders the content to be clipped by the mask. (Your Function A)
+ */
+function executeMaskedDraw(drawMaskFunc, drawContentFunc) {
+	// Enable the stencil test before we do anything.
+	gl.enable(gl.STENCIL_TEST);
+
+	try {
+		// --- 1. Draw the Mask to the Stencil Buffer ---
+
+		// We want to write to the stencil buffer, but make the mask itself invisible.
+		gl.colorMask(false, false, false, false); // Disable writing to the color buffer
+		gl.depthMask(false);                      // Disable writing to the depth buffer
+
+		// Configure the stencil test to ALWAYS pass and REPLACE the stencil value with 1.
+		// This "paints" our mask into the stencil buffer.
+		gl.stencilFunc(gl.ALWAYS, 1, 0xFF);         // The test will always succeed.
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE); // If the test passes, replace the stencil value with 1.
+
+		drawMaskFunc(); // Execute the function that draws the mask.
+
+		// --- 2. Draw the Content, Using the Stencil Buffer as a Mask ---
+
+		// Re-enable writing to the color and depth buffers so we can see our content.
+		gl.colorMask(true, true, true, true);
+		gl.depthMask(true);
+
+		// Configure the stencil test to ONLY pass where the stencil value is 1.
+		// This restricts drawing to only the pixels inside our mask.
+		gl.stencilFunc(gl.EQUAL, 1, 0xFF);       // The test passes only if stencil value is 1.
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);   // Don't change the stencil buffer on pass or fail.
+
+		// Execute the user-provided function that draws the main scene content.
+		drawContentFunc();
+
+	} finally {
+		// --- 3. Cleanup: Return to a Normal Rendering State ---
+		// The `finally` block is GUARANTEED to run, even if `drawMaskFunc` or
+		// `drawContentFunc` throws an error. This prevents the WebGL state
+		// from being left "dirty" for the next frame.
+		gl.disable(gl.STENCIL_TEST);
+	}
+}
+
 
 /**
  * Queries common WebGL context values and logs them to the console.
@@ -266,6 +317,7 @@ export default {
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
+	executeMaskedDraw,
 	setClearColor,
 	queryWebGLContextInfo,
 	enableDepthTest,

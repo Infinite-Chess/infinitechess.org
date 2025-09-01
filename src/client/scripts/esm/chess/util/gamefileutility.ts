@@ -15,6 +15,7 @@ import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import winconutil from './winconutil.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
@@ -155,6 +156,26 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 	return [...new Set(turnOrder)];
 }
 
+/**
+ * Returns a bounding box containing all integer coordinates that
+ * are inside the playing area, not on or outside the world border.
+ */
+function getPlayableRegionBox(boardsim: Board): BoundingBoxBD {
+	if (boardsim.worldBorder === undefined) throw Error("Don't call getPlayableRegionBox() if you're not sure worldBorder is present!");
+
+	// To keep the board symmetric and fair. The world border should be precisely
+	// `worldBorder` many squares away from the furthest piece on each side.
+	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBDBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
+	const distanceToFurthestPlayableEdge = bd.FromBigInt(boardsim.worldBorder - 1n);
+
+	return {
+		left: bd.subtract(startingPositionBox.left, distanceToFurthestPlayableEdge),
+		right: bd.add(startingPositionBox.right, distanceToFurthestPlayableEdge),
+		bottom: bd.subtract(startingPositionBox.bottom, distanceToFurthestPlayableEdge),
+		top: bd.add(startingPositionBox.top, distanceToFurthestPlayableEdge)
+	};
+}
+
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -170,4 +191,5 @@ export default {
 	getPlayerCount,
 	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
+	getPlayableRegionBox,
 };

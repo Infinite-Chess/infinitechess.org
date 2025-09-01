@@ -293,6 +293,7 @@ function updateSkyColor() {
 	const skyB = avgB - dimAmount;
 
 	webgl.setClearColor([skyR, skyG, skyB]);
+	// webgl.setClearColor([0,0,0]); // Black for start map animation
 }
 
 function updateNavColor() {

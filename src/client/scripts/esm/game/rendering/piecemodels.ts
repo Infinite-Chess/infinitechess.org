@@ -10,6 +10,8 @@ import type { TypeGroup } from '../../chess/util/typeutil.js';
 import type { Board } from '../../chess/logic/gamefile.js';
 import type { Vec3 } from '../../util/math/vectors.js';
 
+// @ts-ignore
+import { gl } from './webgl.js';
 import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
@@ -166,7 +168,9 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
  * SLOWEST. Minimize calling.
  */
 function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
-	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
+	// const voidColor = preferences.getTintColorOfType(type); // Black, from the pieceTheme
+	const voidColor = gl.getParameter(gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field
+	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(voidColor);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
 	return {

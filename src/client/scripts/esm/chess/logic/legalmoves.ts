@@ -15,8 +15,8 @@ import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
-import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
+import gamefileutility from '../util/gamefileutility.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { players } from '../util/typeutil.js';
 import { rawTypes as r } from '../util/typeutil.js';
@@ -327,7 +327,7 @@ function slide_CalcLegalLimit(
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
 	if (boardsim.worldBorder !== undefined) enforceWorldBorderOnSlideLimit(boardsim, limit, coords, step, axis); // Mutating
-	else console.error("No world border set, skipping world border slide limit check.");
+	// else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
 	for (const idx of line) {
@@ -365,18 +365,8 @@ function slide_CalcLegalLimit(
 }
 
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
-function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, worldBorder: bigint, coords: Coords, step: Vec2, axis: 0 | 1): void {
-	// To keep the board symmetric and fair. The world border should be precisely
-	// `worldBorder` many squares away from the furthest piece on each side.
-	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBDBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
-	const distanceToFurthestPlayableEdge = bd.FromBigInt(worldBorder - 1n);
-
-	const playableRegion: BoundingBoxBD = {
-		left: bd.subtract(startingPositionBox.left, distanceToFurthestPlayableEdge),
-		right: bd.add(startingPositionBox.right, distanceToFurthestPlayableEdge),
-		bottom: bd.subtract(startingPositionBox.bottom, distanceToFurthestPlayableEdge),
-		top: bd.add(startingPositionBox.top, distanceToFurthestPlayableEdge)
-	};
+function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coords: Coords, step: Vec2, axis: 0 | 1): void {
+	const playableRegion = gamefileutility.getPlayableRegionBox(boardsim);
 
 	// What are the intersections this step makes with the playable region box?
 	const coordsBD = bd.FromCoords(coords);
@@ -392,6 +382,8 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, wor
 	const stepsToIntsect2 = getStepsToReachPoint(coordsBD, intsect2!, stepBD,        axis); // Always positive
 
 	/**
+	 * Calculates the minimum number of steps to reach the destination
+	 * coords (inclusive), or immediately before, but not after.
 	 * @param origin 
 	 * @param destination 
 	 * @param step - Can be negated. MUST BE IN THE direction towards the destination!
@@ -409,7 +401,7 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, wor
 	if (limit[0] === null || -stepsToIntsect1 > limit[0]) limit[0] = -stepsToIntsect1;
 	if (limit[1] === null ||  stepsToIntsect2 < limit[1]) limit[1] =  stepsToIntsect2;
 
-	console.log("New limit after blocked by world border:", limit);
+	// console.log("New limit after blocked by world border:", limit);
 }
 
 /**
