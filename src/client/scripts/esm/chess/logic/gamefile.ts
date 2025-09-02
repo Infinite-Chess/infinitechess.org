@@ -12,6 +12,7 @@ import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
 import type { BoundingBoxBD } from "../../util/math/bounds.js";
+import type { Additional } from "../../game/chess/gameslot.js";
 
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
@@ -26,7 +27,7 @@ import checkdetection from "./checkdetection.js";
 import gamerules from "../variants/gamerules.js";
 import wincondition from "./wincondition.js";
 import bounds from "../../util/math/bounds.js";
-import { Additional } from "../../game/chess/gameslot.js";
+import variant from "../variants/variant.js";
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -90,7 +91,7 @@ type Board = {
 	 * but dependant on game mode, such as engine), this is the width of extra
 	 * available play area next to the furthest piece on each side of the starting position.
 	 * This is so the position is symmetrical and fair.
-	 * For example, if the play position is 8x8, and the worldBorder is 10, then the playable area is 28x28.
+	 * For example, if the starting position is 8x8, and the worldBorder is 10, then the playable area is 28x28.
 	 */
 	worldBorder?: bigint
 } & EditorDependent
@@ -188,6 +189,13 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		startSnapshot
 	};
 
+	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
+	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
+	if (worldBorder !== undefined) {
+		if (worldBorderProperty === undefined) worldBorderProperty = worldBorder; // Use the provided world border if the variant doesn't have one.
+		else if (worldBorder < worldBorderProperty) worldBorderProperty = worldBorder; // Use the smaller of the two if both exist.
+	}
+
 	return {
 		pieces,
 		existingTypes,
@@ -199,7 +207,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
-		worldBorder,
+		worldBorder: worldBorderProperty,
 		...editorDependentVars
 	};
 }

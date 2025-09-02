@@ -262,6 +262,7 @@ async function startEngineGame(options: {
 			variantOptions: options.variantOptions,
 			// Engine games have a world border enabled so as to keep
 			// the position within safe floating point range.
+			// If the variant's world border is smaller, that will be used instead.
 			worldBorder: BigInt(Number.MAX_SAFE_INTEGER)
 		}
 	});

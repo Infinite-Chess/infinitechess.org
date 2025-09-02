@@ -77,6 +77,8 @@ interface Variant {
 		/** In compacted string form: '23,94>-1,0|23,76>-1,0' */
 		rays?: string
 	}
+	/** If present, its how many squares of padding exist between the furthest piece on each side to the world border. */
+	worldBorder?: bigint
 }
 
 interface VariantContext {
@@ -591,6 +593,15 @@ function getRayPresets(Variant: string | undefined): BaseRay[] {
 	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
 }
 
+/** Returns the worldBorder property for the given variant, if they have one. */
+function getVariantWorldBorder(Variant: string | undefined): bigint | undefined {
+	if (Variant === undefined) return undefined;
+	return variantDictionary[Variant]?.worldBorder;
+}
+
+
+// Exports ------------------------------------------------------------------
+
 
 export default {
 	isVariantValid,
@@ -603,4 +614,5 @@ export default {
 	getBareMinimumGameRules,
 	getSquarePresets,
 	getRayPresets,
+	getVariantWorldBorder,
 };
