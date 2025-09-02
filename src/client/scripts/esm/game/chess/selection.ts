@@ -192,7 +192,7 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) ||
-						editMode && canDropOnSquareInEditMode(gamefile.boardsim, hoverSquare) ||
+						editMode && legalmoves.testSquareValidity(gamefile.boardsim, hoverSquare, colorOfSelectedPiece, false, false) <= 1 ||
 						boardeditor.areInBoardEditor() && !coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords); // Allow ALL moves in board editor.
 }
 
@@ -335,21 +335,6 @@ function canMovePieceType(pieceType: number): boolean {
 	const isOurTurn = gameloader.areInLocalGame() || gameloader.isItOurTurn();
 	if (isOurTurn) return true; // Can always move pieces on our turn
 	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
-}
-
-/**
- * Tests our selected piece can POSSIBLY be dropped on the provided type.
- * As if edit mode was on, ignoring legal moves.
- */
-function canDropOnSquareInEditMode(boardsim: Board, coords: Coords) {
-	if (gamefileutility.isSquareOutsideBorder(boardsim, coords)) return false; // Can never drop outside the border
-	const typeAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, hoverSquare);
-	if (typeAtCoords === undefined) return true; // Can drop on empty squares.
-	const [rawtype, color] = typeutil.splitType(typeAtCoords);
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
-	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
-	return rawtype !== rawTypes.VOID && (color !== selectedPieceColor);
-	// return color !== selectedPieceColor; // Allow capturing voids for debugging
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */

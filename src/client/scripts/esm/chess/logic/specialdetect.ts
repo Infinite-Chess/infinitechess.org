@@ -13,6 +13,7 @@ import bimath from '../../util/bigdecimal/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
+import legalmoves from './legalmoves.js';
 import { players, rawTypes } from '../util/typeutil.js';
 // Import End
 
@@ -178,14 +179,17 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 	// 1. It can move forward if there is no piece there
 
 	// Is there a piece in front of it?
-	const coordsInFront: Coords = [coords[0], coords[1] + yOneorNegOne];
-	if (boardutil.getTypeFromCoords(boardsim.pieces, coordsInFront) === undefined || premove) { // No piece in front of it, OR we're premoving
-		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, coordsInFront, color); // No piece, add the move
+	const singlePushCoord: Coords = [coords[0], coords[1] + yOneorNegOne];
+	let moveValidity = legalmoves.testSquareValidity(boardsim, singlePushCoord, color, premove, false);
+
+	if (moveValidity === 0) { // Pawns forward-motion validity check must be 0, as they can't capture forward.
+		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
 
 		// Further... Is the double push legal?
-		const doublePushCoord: CoordsSpecial = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
-		const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, doublePushCoord);
-		if (doesPieceHaveSpecialRight(boardsim, coords) && (pieceAtCoords === undefined || premove)) { // Add the double push!
+		const doublePushCoord: CoordsSpecial = [singlePushCoord[0], singlePushCoord[1] + yOneorNegOne];
+		moveValidity = legalmoves.testSquareValidity(boardsim, doublePushCoord, color, premove, false);
+
+		if (doesPieceHaveSpecialRight(boardsim, coords) && moveValidity === 0) { // Add the double push!
 			// Only create the enpassantCreate flag if it's not a premove.
 			if (!premove) doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color); 
@@ -200,21 +204,8 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boole
     ];
 	for (let i = 0; i < 2; i++) {
 		const thisCoordsToCapture: Coords = coordsToCapture[i]!;
-
-		if (!premove) { // Only perform obstruction checks if we're not premoving
-			// Is there an enemy piece at this coords?
-			const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, thisCoordsToCapture);
-			if (pieceAtCoords === undefined) continue; // No piece, skip.
-
-			// There is a piece. Make sure it's a different color
-			const colorOfPiece = typeutil.getColorFromType(pieceAtCoords);
-			if (color === colorOfPiece) continue; // Same color, don't add the capture
-
-			// Make sure it isn't a void
-			if (typeutil.getRawType(pieceAtCoords) === rawTypes.VOID) continue;
-		}
-
-		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
+		const moveValidity = legalmoves.testSquareValidity(boardsim, thisCoordsToCapture, color, premove, true); // true for capture is required
+		if (moveValidity <= 1) appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -302,14 +293,11 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 				const movement = movements[math.posMod(b, movements.length)]!;
 				currentCoord = coordutil.addCoords(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
-				const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, currentCoord); // { type, index, coords }
-				if (pieceOnSquare && !premove) { // If there is a piece on the square and we're not premoving
-					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
-					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
-					break; // Break the spiral
-				}
-				// There is not a piece
-				appendCoordToIndividuals(currentCoord, path);
+
+				const moveValidity = legalmoves.testSquareValidity(boardsim, currentCoord, color, premove, false);
+				if (moveValidity <= 1) appendCoordToIndividuals(currentCoord, path); // Capture is legal
+				if (moveValidity >= 1) break; // Blocked, break the spiral
+
 				b += direction; // Update 'b' for the next iteration
 			}
 		}

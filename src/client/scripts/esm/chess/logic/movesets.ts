@@ -7,6 +7,7 @@ import typeutil from '../util/typeutil.js';
 import vectors from '../../util/math/vectors.js';
 import { rawTypes } from '../util/typeutil.js';
 import specialdetect from './specialdetect.js';
+import legalmoves from './legalmoves.js';
 // @ts-ignore
 import isprime from '../../util/isprime.js';
 
@@ -87,8 +88,8 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * This runs once for every piece on the same line of the selected piece.
  * 
  * 0 => Piece doesn't block
- * 1 => Blocked (friendly piece)
- * 2 => Blocked 1 square after (enemy piece)
+ * 1 => Blocked ON the square (enemy piece)
+ * 2 => Blocked 1 before the square (friendly piece or void)
  * 
  * The return value of 0 will be useful in the future for allowing pieces
  * to *phase* through other pieces.
@@ -96,7 +97,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
+type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean) => 0 | 1 | 2;
 /**
  * A function that returns an array of any legal special individual moves for the piece,
  * each of the coords will have a special property attached to it. castle/promote/enpassant
@@ -107,11 +108,8 @@ type SpecialFunction = (gamefile: FullGame, coords: Coords, color: Player, premo
 
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
-function defaultBlockingFunction(friendlyColor: Player, blockingPiece: Piece): 0 | 1 | 2 {
-	const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
-	const isVoid = typeutil.getRawType(blockingPiece.type) === rawTypes.VOID;
-	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
-	else return 2; // Allow the capture if enemy, but block afterward
+function defaultBlockingFunction(friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean): 0 | 1 | 2 {
+	return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 }
 
 /** The default ignore function of each piece's sliding moves, if not specified. */
@@ -275,13 +273,11 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				'1,0': [slideLimit, slideLimit],
 				'0,1': [slideLimit, slideLimit]
 			},
-			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => {
+			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean) => {
 				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
-				if (!isPrime) return 0; // Doesn't block
-				const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
-				if (colorOfBlockingPiece === friendlyColor) return 1; // Friendly piece blocked
-				else return 2; // Enemy piece blocked
+				if (!isPrime) return 0; // Doesn't block, not even if it's a void. It hops over it!
+				return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 			},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
 				const distance = vectors.chebyshevDistance(startCoords, endCoords);
