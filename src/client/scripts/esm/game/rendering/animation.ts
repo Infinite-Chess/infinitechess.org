@@ -292,7 +292,7 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.deleteArrow(c)));
 	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
 	// Add the arrow of the animated piece (also removes the arrow it off its destination square)
-	arrows.animateArrow(animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	arrows.animateArrow(animation.path[animation.path.length - 1]!, animationCurrentCoords, animation.type);
 	// Add the arrows of the captured pieces only after we've shifted the piece that captured it
 	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.addArrow(p.type, p.coords)));
 }

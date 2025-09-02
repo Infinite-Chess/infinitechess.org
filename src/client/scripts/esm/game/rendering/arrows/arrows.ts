@@ -779,6 +779,7 @@ type Shift = {
 	kind: 'animate',
 	start: Coords,
 	end: BDCoords,
+	type: number,
 } | {
 	kind: 'add',
 	type: number,
@@ -817,11 +818,17 @@ function moveArrow(start: Coords, end: Coords) {
 /**
  * Piece deleted on start coords. Uniquely animate arrow on floating point end coords.
  * => Recalculate start coords arrow lines.
+ * @param start
+ * @param end - Floating point coords of the current animation position
+ * @param type - The piece type, so we know what type of piece the arrow should be.
+ * 				We CANNOT just read the type of piece at the destination square, because
+ * 				the piece is not gauranteed to be there. In Atomic Chess, the piece can
+ * 				move, and then explode itself, leaving its destination square empty.
  */
-function animateArrow(start: Coords, end: BDCoords) {
+function animateArrow(start: Coords, end: BDCoords, type: number) {
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 	overwriteArrows(start); // Filter all previous arrows that this one would overwrite.
-	shifts.push({ kind: 'animate', start, end });
+	shifts.push({ kind: 'animate', start, end, type });
 }
 
 /**
@@ -871,21 +878,23 @@ function executeArrowShifts() {
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
+		// console.log("Processing arrow shift: ", shift);
 		if (shift.kind === 'delete') {
 			deletePiece(shift.start);
 		} else if (shift.kind === 'add') {
 			addPiece(shift.type, shift.end); // Add the piece to the gamefile, so that we can calculate the arrow lines correctly
 		} else if (shift.kind === 'move') {
 			const type = deletePiece(shift.start);
+			if (type === undefined) throw Error("Arrow shift: When moving arrow, no piece found at its start coords. Don't know what type of piece to add at the end coords!"); // If this ever happens, maybe give movePiece a type argument along just as animateArrow() has.
 			addPiece(type, shift.end);
 		} else if (shift.kind === 'animate') {
-			const type = deletePiece(shift.start); // Delete the piece, and get its type
+			deletePiece(shift.start); // Delete the piece if it is present (may not be if in Atomic Chess it blew itself up)
 
 			// This is an arrow animation for a piece IN MOTION, not a still animation.
 			// Add an animated arrow for it, since it is gonna be at a floating point coordinate
 			if (bounds.boxContainsSquareBD(boundingBoxInt!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
 
-			const piece: ArrowPiece = { type, coords: shift.end, index: -1, floating: true }; // Create a piece object for the arrow
+			const piece: ArrowPiece = { type: shift.type, coords: shift.end, index: -1, floating: true }; // Create a piece object for the arrow
 
 			// Add an arrow for every applicable direction
 			for (const lineKey of gamefile.boardsim.pieces.lines.keys()) {
@@ -914,10 +923,10 @@ function executeArrowShifts() {
 	});
 
 	/** Helper function to delete an arrow's start piece off the board. */
-	function deletePiece(start: Coords): number {
+	function deletePiece(start: Coords): number | undefined {
 		// Delete the piece from the gamefile, so that we can calculate the arrow lines correctly
 		const originalPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, start);
-		if (originalPiece === undefined) throw Error('Arrow shift: Piece to delete is not found! start: ' + start + ' Perhaps we are animating a move we are not viewing?');
+		if (originalPiece === undefined) return; // The piece may have been blown up by itself.
 		boardchanges.queueDeletePiece(changes, true, originalPiece);
 		return originalPiece.type;
 	}
