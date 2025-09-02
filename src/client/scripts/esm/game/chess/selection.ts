@@ -9,7 +9,7 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from '../../chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
-import type { Game, FullGame } from '../../chess/logic/gamefile.js';
+import type { Game, FullGame, Board } from '../../chess/logic/gamefile.js';
 
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -191,9 +191,8 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
-	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) ||
-						editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords) ||
+						editMode && canDropOnSquareInEditMode(gamefile.boardsim, hoverSquare) ||
 						boardeditor.areInBoardEditor() && !coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords); // Allow ALL moves in board editor.
 }
 
@@ -342,9 +341,11 @@ function canMovePieceType(pieceType: number): boolean {
  * Tests our selected piece can POSSIBLY be dropped on the provided type.
  * As if edit mode was on, ignoring legal moves.
  */
-function canDropOnPieceTypeInEditMode(type?: number) {
-	if (type === undefined) return true; // Can drop on empty squares.
-	const [rawtype, color] = typeutil.splitType(type);
+function canDropOnSquareInEditMode(boardsim: Board, coords: Coords) {
+	if (gamefileutility.isSquareOutsideBorder(boardsim, coords)) return false; // Can never drop outside the border
+	const typeAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, hoverSquare);
+	if (typeAtCoords === undefined) return true; // Can drop on empty squares.
+	const [rawtype, color] = typeutil.splitType(typeAtCoords);
 	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
 	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
 	return rawtype !== rawTypes.VOID && (color !== selectedPieceColor);

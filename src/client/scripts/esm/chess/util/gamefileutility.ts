@@ -176,6 +176,15 @@ function getPlayableRegionBox(boardsim: Board): BoundingBoxBD {
 	};
 }
 
+/** Tests whether the given square lies out of bounds of the position. */
+function isSquareOutsideBorder(boardsim: Board, coords: Coords): boolean {
+	if (boardsim.worldBorder === undefined) return false; // No world border => Always in bounds
+	
+	const playableRegion = getPlayableRegionBox(boardsim);
+	const coordsBD = bd.FromCoords(coords);
+	return !bounds.boxContainsSquareBD(playableRegion, coordsBD);
+}
+
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -192,4 +201,5 @@ export default {
 	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
 	getPlayableRegionBox,
+	isSquareOutsideBorder,
 };
