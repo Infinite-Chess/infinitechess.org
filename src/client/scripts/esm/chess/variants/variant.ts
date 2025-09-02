@@ -304,7 +304,8 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			[r.PAWN]: fourdimensionalgenerator.getPawnVicinity(5n, true),
 			[r.KNIGHT]: fourdimensionalgenerator.getKnightVicinity(5n),
 			[r.KING]: fourdimensionalgenerator.getKingVicinity(5n, false)
-		}
+		},
+		worldBorder: 0n,
 	},
 	'5D_Chess': {
 		generator: {
@@ -319,7 +320,8 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			[r.PAWN]: fourdimensionalgenerator.getPawnVicinity(9n, false),
 			[r.KNIGHT]: fourdimensionalgenerator.getKnightVicinity(9n),
 			[r.KING]: fourdimensionalgenerator.getKingVicinity(9n, true)
-		}
+		},
+		worldBorder: 0n,
 	}
 };
 

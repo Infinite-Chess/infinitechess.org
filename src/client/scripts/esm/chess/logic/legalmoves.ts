@@ -17,6 +17,7 @@ import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
 import gamefileutility from '../util/gamefileutility.js';
+import bounds from '../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import { rawTypes as r } from '../util/typeutil.js';
@@ -400,8 +401,13 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
 	const negatedStepBD = vectors.negateBDVector(stepBD);
 
 	// These are in order of ascending dot product.
-	const intersections = geometry.findLineBoxIntersections(coordsBD, step, playableRegion).map(i => i.coords);
-	if (intersections.length < 2) throw Error("Number of intersections slide direction makes with border is less than 2!");
+	// const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, bounds.castBDBoundingBoxToBigint(playableRegion), true).map(i => i.coords);
+	const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, bounds.castBDBoundingBoxToBigint(playableRegion)).map(i => i.coords);
+	if (intersections.length < 2) {
+		throw Error("Number of intersections slide direction makes with border is less than 2!");
+		// IT MIGHT BE POSSIBLE FOR THERE TO BE ONE INTERSECTION with the playable area if the
+		// the piece is on the very corner!!!!
+	}
 	const [intsect1, intsect2] = intersections;
 
 	const stepsToIntsect1 = getStepsToReachPoint(coordsBD, intsect1!, negatedStepBD, axis); // Always positive

@@ -108,14 +108,14 @@ function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 	};
 }
 
-// function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
-// 	return {
-// 		left: bd.toBigInt(box.left),
-// 		right: bd.toBigInt(box.right),
-// 		bottom: bd.toBigInt(box.bottom),
-// 		top: bd.toBigInt(box.top)
-// 	};
-// }
+function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
+	return {
+		left: bd.toBigInt(box.left),
+		right: bd.toBigInt(box.right),
+		bottom: bd.toBigInt(box.bottom),
+		top: bd.toBigInt(box.top)
+	};
+}
 
 /**
  * Expands the bounding box to include the provided coordinates, if it doesn't already.
@@ -203,8 +203,10 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 // Debugging --------------------------------------------------------
 
 
+/** [DEBUG] Prints a box of BigDecimal floating point edges, with their exact representations. SLOW. */
 function printBDBox(box: BoundingBoxBD): void {
-	console.log(`Box: left=${bd.toNumber(box.left)}, right=${bd.toNumber(box.right)}, bottom=${bd.toNumber(box.bottom)}, top=${bd.toNumber(box.top)}`);
+	// console.log(`Box: left=${bd.toNumber(box.left)}, right=${bd.toNumber(box.right)}, bottom=${bd.toNumber(box.bottom)}, top=${bd.toNumber(box.top)}`);
+	console.log(`Box: left=${bd.toExactString(box.left)}, right=${bd.toExactString(box.right)}, bottom=${bd.toExactString(box.bottom)}, top=${bd.toExactString(box.top)}`);
 }
 
 
@@ -217,7 +219,7 @@ export default {
 	getBDBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
-	// castBDBoundingBoxToBigint,
+	castBDBoundingBoxToBigint,
 	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,

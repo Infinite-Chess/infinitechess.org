@@ -22,7 +22,7 @@ import vectors, { Vec2, Vec2Key } from "../../../util/math/vectors.js";
 /**
  * Calculates all the lines formed from the highlight
  * lines of the current selected piece's legal moves.
- * */
+ */
 function getLines(): Line[] {
 	const lines: Line[] = [];
 
