@@ -142,6 +142,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 
 	return vertices;
 }
+
 /**
  * Generates vertex data for a plus sign using 5 non-overlapping rectangles
  */

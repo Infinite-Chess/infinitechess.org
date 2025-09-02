@@ -101,7 +101,7 @@ function renderEnPassant() {
 	const gamefile = gameslot.getGamefile()!;
 	if (!gamefile.boardsim.state.global.enpassant) return; // No enpassant gamefile property
 
-	const size = boardpos.getBoardScale();
+	const size = boardpos.getBoardScaleAsNumber();
 	squarerendering.genModel([gamefile.boardsim.state.global.enpassant.square], ENPASSANT_COLOR).render(undefined, undefined, { size });
 }
 

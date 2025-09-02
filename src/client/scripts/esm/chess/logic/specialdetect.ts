@@ -202,10 +202,9 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boole
         [coords[0] - 1n, coords[1] + yOneorNegOne],
         [coords[0] + 1n, coords[1] + yOneorNegOne]
     ];
-	for (let i = 0; i < 2; i++) {
-		const thisCoordsToCapture: Coords = coordsToCapture[i]!;
-		const moveValidity = legalmoves.testSquareValidity(boardsim, thisCoordsToCapture, color, premove, true); // true for capture is required
-		if (moveValidity <= 1) appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
+	for (const captureCoords of coordsToCapture) {
+		const moveValidity = legalmoves.testSquareValidity(boardsim, captureCoords, color, premove, true); // true for capture is required
+		if (moveValidity <= 1) appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -238,12 +237,12 @@ function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Co
 function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves: Coords[], coords: Coords, color: Player) {
 	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
-	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
+	const enpassantCapturedPawnType = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
+	if (typeutil.getColorFromType(enpassantCapturedPawnType) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (bimath.abs(xDifference) !== 1n) return; // Not immediately left or right of us
-	const yParity = color === players.WHITE ? 1n : -1n;
+	const yParity = color === players.WHITE ? 1n : color === players.BLACK ? -1n : (() => { throw new Error("Invalid color!"); })();
 	if (coords[1] + yParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!

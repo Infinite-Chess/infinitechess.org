@@ -255,7 +255,7 @@ function removeObstructedSlidingMoves(boardsim: Board, piece: Piece, moveset: Pi
  * 2 => Blocked, and BLOCKS further movement (friendly piece or void or outside border)
  * 
  * @param premove - Exempts the `capturing` requirement from being fulfilled, and allows capturing friendlies.
- * @param capturing - Whether the move is required to be a capture (pawns). Default: false. Setting this to false DOES NOT require the move to be non-capturing.
+ * @param capturing - Whether the move is required to be a capture (pawn diagonal move). Default: false. Setting this to false DOES NOT require the move to be non-capturing.
  */
 function testSquareValidity(boardsim: Board, coords: Coords, friendlyColor: Player, premove: boolean, capturing: boolean): 0 | 1 | 2 {
 	if (gamefileutility.isSquareOutsideBorder(boardsim, coords)) return 2; // NEVER allow moving outside the border
@@ -479,13 +479,6 @@ function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoord
 			specialdetect.transferSpecialFlags_FromCoordsToCoords(thisIndividual, endCoords);
 			return true;
 		}
-	}
-
-	// For premoving slides, without this block it would allow us to premove capturing voids!
-	const pieceOnDestination = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, endCoords);
-	if (pieceOnDestination) {
-		const rawType = typeutil.getRawType(pieceOnDestination.type);
-		if (rawType === r.VOID) return false; // Can't move to a void square
 	}
 
 	for (const [strline, limits] of Object.entries(legalMoves.sliding)) {
