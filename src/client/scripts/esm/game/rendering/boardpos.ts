@@ -106,7 +106,7 @@ function setBoardPos(newPos: BDCoords) {
 }
 
 function setBoardScale(newScale: BigDecimal) {
-	if (bd.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to ${bd.toString(newScale)}!`);
+	if (bd.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to a negative: ${bd.toString(newScale)}`);
 
 	// Cap the scale
 	if (bd.compare(newScale, maximumScale) > 0) {
