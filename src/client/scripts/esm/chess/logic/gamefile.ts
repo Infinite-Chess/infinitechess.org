@@ -85,7 +85,7 @@ type Board = {
 
 	specialVicinity: Record<CoordsKey, RawType[]>
 	vicinity: Record<CoordsKey, RawType[]>
-	
+
 	/**
 	 * IF a world border is present, this is a bounding box
 	 * containing all integer coordinates that are inside the
@@ -215,7 +215,6 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
-		worldBorder: worldBorderProperty,
 		playableRegion,
 		...editorDependentVars
 	};
