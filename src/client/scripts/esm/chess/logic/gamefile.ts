@@ -164,13 +164,20 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
+	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
+	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
+	if (worldBorder !== undefined) {
+		if (worldBorderProperty === undefined) worldBorderProperty = worldBorder; // Use the provided world border if the variant doesn't have one.
+		else if (worldBorder < worldBorderProperty) worldBorderProperty = worldBorder; // Use the smaller of the two if both exist.
+	}
+
 	const coordsOfAllPieces = boardutil.getCoordsOfAllPieces(pieces);
 	const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
-	const playableRegion = worldBorder !== undefined ? {
-		left: startingPositionBox.left - worldBorder,
-		right: startingPositionBox.right + worldBorder,
-		bottom: startingPositionBox.bottom - worldBorder,
-		top: startingPositionBox.top + worldBorder,
+	const playableRegion = worldBorderProperty !== undefined ? {
+		left: startingPositionBox.left - worldBorderProperty,
+		right: startingPositionBox.right + worldBorderProperty,
+		bottom: startingPositionBox.bottom - worldBorderProperty,
+		top: startingPositionBox.top + worldBorderProperty,
 	} : undefined;
 
 	const startSnapshot: Snapshot = {
@@ -196,13 +203,6 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		editor: false,
 		startSnapshot
 	};
-
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
-	if (worldBorder !== undefined) {
-		if (worldBorderProperty === undefined) worldBorderProperty = worldBorder; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorder < worldBorderProperty) worldBorderProperty = worldBorder; // Use the smaller of the two if both exist.
-	}
 
 	return {
 		pieces,
