@@ -150,13 +150,13 @@ function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords)
  * @param segP2 End point of the segment
  * @returns The intersection Coords if they intersect ON the segment, otherwise undefined.
  */
-function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segP1: BDCoords, segP2: BDCoords): BDCoords | undefined {
-	// 1. Get general form for the infinite line containing the segment
-	const segmentCoefficients = vectors.getLineGeneralFormFrom2CoordsBD(segP1, segP2);
+function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segmentCoefficients: LineCoefficients, segP1: BDCoords, segP2: BDCoords): BDCoords | undefined {
+	// 1. Convert the segment coefficients to BigDecimal
+	const segmentCoefficientsBD = vectors.convertCoeficcientsToBD(segmentCoefficients);
 
 	// 2. Calculate intersection of the two infinite lines
 	// Uses the provided function calcIntersectionPointOfLines
-	const intersectionPoint = calcIntersectionPointOfLinesBD(...lineCoefficients, ...segmentCoefficients);
+	const intersectionPoint = calcIntersectionPointOfLinesBD(...lineCoefficients, ...segmentCoefficientsBD);
 
 	// 3. Handle no intersection (parallel) or collinear lines.
 	// calcIntersectionPointOfLines returns undefined if determinant is 0.

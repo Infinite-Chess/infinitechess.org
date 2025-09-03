@@ -379,7 +379,7 @@ function findClosestEntityOfGroup(entities: BDCoords[], closeLines: LineSnapPoin
 		for (const eminatedLine of eminatingLines) {
 			for (const highlightLine of closeLines) {
 				// Do they intersect?
-				const intersection = geometry.intersectLineAndSegment(eminatedLine, highlightLine.line.start, highlightLine.line.end);
+				const intersection = geometry.intersectLineAndSegment(eminatedLine, highlightLine.line.coefficients, highlightLine.line.start, highlightLine.line.end);
 				if (intersection === undefined) continue;
 				// They DO intersect.
 				const dist = vectors.euclideanDistanceBD(intersection, mouseCoords);
