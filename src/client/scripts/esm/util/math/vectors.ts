@@ -431,6 +431,7 @@ export default {
 	absVector,
 	normalizeVector,
 	getPerpendicularVector,
+	getPerpendicularLine,
 	degreesToRadians,
 
 	// Distance Calculation

@@ -94,14 +94,10 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
  * on the fly, is because the start and end segment points MAY HAVE FLOATING POINT IMPRECISION,
  * which would bleed into coefficient imprecision, thus imprecise intersection points.
  * By accepting the coefficients as arguments, they retain maximum precision.
- * @param A1 Coefficient A of segment 1's line (Ax + By + C = 0)
- * @param B1 Coefficient B of segment 1's line
- * @param C1 Coefficient C of segment 1's line
+ * @param line1Coefficients Coefficients [A,B,C] of segment 1's infinite line
  * @param s1p1 Start point of segment 1
  * @param s1p2 End point of segment 1
- * @param A2 Coefficient A of segment 2's line (Ax + By + C = 0)
- * @param B2 Coefficient B of segment 2's line
- * @param C2 Coefficient C of segment 2's line
+ * @param line2Coefficients Coefficients [A,B,C] of segment 2's infinite line
  * @param s2p1 Start point of segment 2
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
@@ -143,9 +139,8 @@ function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords)
  * Calculates the intersection point of an infinite line (in general form) and a line segment.
  * Returns undefined if there is no intersection, the intersection point lies
  * outside the segment, or if the line and segment are collinear/parallel.
- * @param A Coefficient A of the infinite line (Ax + By + C = 0)
- * @param B Coefficient B of the infinite line
- * @param C Coefficient C of the infinite line
+ * @param lineCoefficients The coefficients [A,B,C] of the infinite line.
+ * @param segmentCoefficients The coefficients [A,B,C] of the line containing the segment.
  * @param segP1 Start point of the segment
  * @param segP2 End point of the segment
  * @returns The intersection Coords if they intersect ON the segment, otherwise undefined.
@@ -177,21 +172,19 @@ function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segmentCo
  * or if the ray's line and segment's line are collinear/parallel without a
  * valid single intersection point on both.
  * @param ray The ray, defined by a starting point and a direction vector.
- * @param segP1 Start point of the segment.
- * @param segP2 End point of the segment.
+ * @param segP1 Start point of the segment. PERFECT integer.
+ * @param segP2 End point of the segment. PERFECT integer.
  * @returns The intersection Coords if they intersect ON the segment and ON the ray, otherwise undefined.
  */
 function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoords | undefined {
-	// 1. Get general form for the infinite line containing the ray.
-	const [lineA_ray, lineB_ray, lineC_ray] = ray.line;
+	// 1. Get general form for the infinite line containing the segment.
+	// PERFECT integers => No floating point imprecision.
+	const segmentCoeffs = vectors.getLineGeneralFormFrom2Coords(segP1, segP2); 
 
-	// 2. Get general form for the infinite line containing the segment.
-	const [lineA_seg, lineB_seg, lineC_seg] = vectors.getLineGeneralFormFrom2Coords(segP1, segP2);
+	// 2. Calculate intersection of the two infinite lines.
+	const intersectionPoint = calcIntersectionPointOfLines(...ray.line, ...segmentCoeffs);
 
-	// 3. Calculate intersection of the two infinite lines.
-	const intersectionPoint = calcIntersectionPointOfLines(lineA_ray, lineB_ray, lineC_ray, lineA_seg, lineB_seg, lineC_seg);
-
-	// 4. Handle no unique intersection (parallel or collinear lines).
+	// 3. Handle no unique intersection (parallel or collinear lines).
 	// Be sure to capture the case if the ray starts at one of the segment's endpoints.
 	if (!intersectionPoint) {
 		// First check if the ray's start lies on the start/end poit of the segment.
@@ -214,10 +207,10 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 		else return bd.FromCoords(ray.start); // The intersection point is the ray's start.
 	}
 
-	// 5. Check if the calculated intersection point lies on the actual segment.
+	// 4. Check if the calculated intersection point lies on the actual segment.
 	if (!isPointOnSegment(intersectionPoint, bd.FromCoords(segP1), bd.FromCoords(segP2))) return undefined; // Intersection point is not within the segment bounds.
 
-	// 6. Check if the intersection point lies on the ray (not "behind" its start).
+	// 5. Check if the intersection point lies on the ray (not "behind" its start).
 	// Calculate vector from ray start to intersection.
 	const rayStartBD = bd.FromCoords(ray.start);
 	const vectorToIntersection = vectors.calculateVectorFromBDPoints(rayStartBD, intersectionPoint);
@@ -228,7 +221,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 
 	if (bd.compare(dotProd, ZERO) < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
 
-	// 7. If all checks pass, the intersection point is valid for both ray and segment.
+	// 6. If all checks pass, the intersection point is valid for both ray and segment.
 	return intersectionPoint;
 }
 
@@ -258,19 +251,15 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 	// The dot product will be non-negative (>= 0) if this is true.
     
 	// Vector from ray1's start to the intersection point
-	const ray1StartBD = bd.FromCoords(ray1.start);
-	const vectorToIntersection1 = vectors.calculateVectorFromBDPoints(ray1StartBD, intersectionPoint);
+	const vectorToIntersection1 = vectors.calculateVectorFromBDPoints(bd.FromCoords(ray1.start), intersectionPoint);
 	// Dot product of ray1's direction vector and vectorToIntersection1
-	const ray1VecBD = bd.FromCoords(ray1.vector);
-	const dotProd1 = vectors.dotProductBD(ray1VecBD, vectorToIntersection1);
+	const dotProd1 = vectors.dotProductBD(bd.FromCoords(ray1.vector), vectorToIntersection1);
 
 	if (bd.compare(dotProd1, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray1.
 
 	// 4. Check if the intersection point lies on the second ray (similarly).
-	const ray2StartBD = bd.FromCoords(ray2.start);
-	const vectorToIntersection2 = vectors.calculateVectorFromBDPoints(ray2StartBD, intersectionPoint);
-	const ray2VecBD = bd.FromCoords(ray2.vector);
-	const dotProd2 = vectors.dotProductBD(ray2VecBD, vectorToIntersection2);
+	const vectorToIntersection2 = vectors.calculateVectorFromBDPoints(bd.FromCoords(ray2.start), intersectionPoint);
+	const dotProd2 = vectors.dotProductBD(bd.FromCoords(ray2.vector), vectorToIntersection2);
 
 	if (bd.compare(dotProd2, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray2.
 
@@ -281,40 +270,28 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 
 /**
  * Returns the point on the line SEGMENT that is nearest to the given point.
- * @param lineStart - The starting point of the line segment.
- * @param lineEnd - The ending point of the line segment.
+ * 
+ * @param segP1 - The starting point of the line segment.
+ * @param segP2 - The ending point of the line segment.
  * @param point - The point to find the nearest point on the line segment to.
  * @returns An object containing the properties `coords`, which is the closest point on the segment,
  *          and `distance` to that point.
  */
-function closestPointOnLineSegment(lineStart: BDCoords, lineEnd: BDCoords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
-	const dx = bd.subtract(lineEnd[0], lineStart[0]);
-	const dy = bd.subtract(lineEnd[1], lineStart[1]);
+function closestPointOnLineSegment(segmentCoeffs: LineCoefficients, segP1: BDCoords, segP2: BDCoords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
 
-	// Calculate the squared length of the segment.
-	// If the segment has zero length, the start point is the closest point.
-	const lineLengthSquared: BigDecimal = bd.add(bd.multiply_fixed(dx, dx), bd.multiply_fixed(dy, dy)); // dx * dx + dy * dy
-	if (bd.areEqual(lineLengthSquared, ZERO)) { // If the segment has zero length, return the start point
-		const distance = vectors.euclideanDistanceBD(lineStart, point);
-		return { coords: lineStart, distance };
+	const perpendicularCoeffs = vectors.getPerpendicularLine(segmentCoeffs, point);
+
+	// Find the intersection of the perpendicular line with the line containing the segment.
+	let closestPoint: BDCoords | undefined = intersectLineAndSegment(perpendicularCoeffs, segmentCoeffs, segP1, segP2);
+
+	// If the intersection is undefined, it means it lies outside the segment.
+	// So we need to figure out which segment point its CLOSEST to.
+	if (closestPoint === undefined) {
+		const distToP1 = vectors.chebyshevDistanceBD(point, segP1);
+		const distToP2 = vectors.chebyshevDistanceBD(point, segP2);
+		if (bd.compare(distToP1, distToP2) < 0) closestPoint = segP1; // p1 is closer
+		else closestPoint = segP2; // p2 is closer
 	}
-
-	// Calculate the projection parameter t.
-	// t = dotProduct((point - lineStart), (lineEnd - lineStart)) / lineLengthSquared
-	const xDiff = bd.subtract(point[0], lineStart[0]);
-	const yDiff = bd.subtract(point[1], lineStart[1]);
-	const addend1 = bd.multiply_fixed(xDiff, dx);
-	const addend2 = bd.multiply_fixed(yDiff, dy);
-	const dotProduct = bd.add(addend1, addend2);
-	let t = bd.divide_fixed(dotProduct, lineLengthSquared);
-
-	// Clamp t to the range [0, 1] to stay within the segment.
-	t = bd.clamp(t, ZERO, ONE);
-
-	// Calculate the coordinates of the closest point on the segment.
-	const closestX = bd.add(lineStart[0], bd.multiply_fixed(t, dx)); // lineStart[0] + t * dx
-	const closestY = bd.add(lineStart[1], bd.multiply_fixed(t, dy)); // lineStart[1] + t * dy
-	const closestPoint: BDCoords = [closestX, closestY];
 
 	// Calculate the distance from the original point to the closest point on the segment.
 	const distance = vectors.euclideanDistanceBD(closestPoint, point);

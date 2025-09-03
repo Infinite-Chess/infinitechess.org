@@ -71,7 +71,10 @@ function getLines(): Line[] {
 	return lines;
 }
 
-/** Start and end of a line segment */
+/** 
+ * Start and end of a line segment. PERFECT integers!
+ * We don't need to precalculate the line coefficients because of that.
+ */
 type Segment = {
 	start: Coords
 	end: Coords
