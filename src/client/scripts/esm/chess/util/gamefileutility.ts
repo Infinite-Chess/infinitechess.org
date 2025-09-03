@@ -16,7 +16,7 @@ import metadata from './metadata.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import winconutil from './winconutil.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
-import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
@@ -97,11 +97,11 @@ function doGameOverChecks(gamefile: FullGame) {
 /**
  * Gets the bounding box of the game's starting position
  */
-function getStartingAreaBox(boardsim: Board): BoundingBoxBD {
+function getStartingAreaBox(boardsim: Board): BoundingBox {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 	if (coordsList.length === 0) coordsList.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
-	return bounds.getBDBoxFromCoordsList(coordsList);
+	return bounds.getBoxFromCoordsList(coordsList);
 }
 
 /**
@@ -165,15 +165,14 @@ function getPlayableRegionBox(boardsim: Board): BoundingBoxBD {
 
 	// To keep the board symmetric and fair. The world border should be precisely
 	// `worldBorder` many squares away from the furthest piece on each side.
-	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBDBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
-	const distanceToFurthestPlayableEdge = bd.FromBigInt(boardsim.worldBorder);
+	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
 
-	return {
-		left: bd.subtract(startingPositionBox.left, distanceToFurthestPlayableEdge),
-		right: bd.add(startingPositionBox.right, distanceToFurthestPlayableEdge),
-		bottom: bd.subtract(startingPositionBox.bottom, distanceToFurthestPlayableEdge),
-		top: bd.add(startingPositionBox.top, distanceToFurthestPlayableEdge)
-	};
+	return bounds.castBoundingBoxToBigDecimal({
+		left: startingPositionBox.left - boardsim.worldBorder,
+		right: startingPositionBox.right + boardsim.worldBorder,
+		bottom: startingPositionBox.bottom - boardsim.worldBorder,
+		top: startingPositionBox.top + boardsim.worldBorder
+	});
 }
 
 /** Tests whether the given square lies out of bounds of the position. */

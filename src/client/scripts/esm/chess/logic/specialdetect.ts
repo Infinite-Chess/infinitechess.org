@@ -335,7 +335,8 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 				const coordPathBD = bd.FromCoords(coord.path![1]!);
 				const newCoordPathBD = bd.FromCoords(newCoord.path[1]!);
 
-				const centerOfPlay = bounds.calcCenterOfBoundingBox(boardsim.startSnapshot.box);
+				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(boardsim.startSnapshot.box);
+				const centerOfPlay = bounds.calcCenterOfBoundingBox(startingBoxBD);
 				const vectorToCenter = vectors.calculateVectorFromBDPoints(coordsBD, centerOfPlay);
 				const existingCoordVector = vectors.calculateVectorFromBDPoints(coordsBD, coordPathBD);
 				const newCoordVector = vectors.calculateVectorFromBDPoints(coordsBD, newCoordPathBD);

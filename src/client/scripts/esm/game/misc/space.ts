@@ -51,14 +51,14 @@ function convertWorldSpaceToCoords_Rounded(worldCoords: DoubleCoords): Coords {
 }
 
 /** Returns the integer coordinate that contains the floating point coordinate provided. */
-function roundCoord(coord: BigDecimal): BigDecimal {
+function roundCoord(coord: BigDecimal): bigint {
 	const squareCenter = board.getSquareCenter();
-	return bd.floor(bd.add(coord, squareCenter));
+	return bd.toBigInt(bd.floor(bd.add(coord, squareCenter)));
 }
 
 /** Returns the integer coordinates that contain the floating point coordinate provided. */
 function roundCoords(coords: BDCoords): Coords {
-	return [bd.toBigInt(roundCoord(coords[0])), bd.toBigInt(roundCoord(coords[1]))];
+	return [roundCoord(coords[0]), roundCoord(coords[1])];
 }
 
 // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.getSquareCenter().

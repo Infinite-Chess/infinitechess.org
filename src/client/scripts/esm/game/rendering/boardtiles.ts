@@ -8,7 +8,7 @@ import type { BufferModel } from './buffermodel.js';
 import type { Color } from '../../util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import type { BoundingBoxBD } from '../../util/math/bounds.js';
+import type { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
 
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import jsutil from '../../util/jsutil.js';
@@ -36,6 +36,7 @@ import style from '../gui/style.js';
 import camera from './camera.js';
 // @ts-ignore
 import { gl } from './webgl.js';
+import bounds from '../../util/math/bounds.js';
 
 
 
@@ -185,22 +186,6 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
 	const bottom = bd.floor(bd.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
 	const top = bd.ceil(bd.add(bd.subtract(src.top, ONE), squareCenter)); // ceil(top - 1 + squareCenter)
     
-	return { left, right, bottom, top };
-}
-
-/**
- * Expands the edges of the box, which should contain integer squares for values,
- * to encapsulate the whole of the squares on their edges.
- * Turns it into a floating point edge.
- */
-function convertIntegerBoundingBoxToFloating(src: BoundingBoxBD): BoundingBoxBD {
-	const squareCenter = getSquareCenter();
-
-	const left = bd.subtract(src.left, squareCenter); // left - squareCenter)
-	const right = bd.add(bd.subtract(src.right, squareCenter), ONE); // right - squareCenter + 1
-	const bottom = bd.subtract(src.bottom, squareCenter); // bottom - squareCenter)
-	const top = bd.add(bd.subtract(src.top, squareCenter), ONE); // top - squareCenter + 1
-	
 	return { left, right, bottom, top };
 }
 
@@ -470,7 +455,6 @@ export default {
 	gtileWidth_Pixels,
 	recalcVariables,
 	roundAwayBoundingBox,
-	convertIntegerBoundingBoxToFloating,
 	gboundingBox,
 	gboundingBoxFloat,
 	updateTheme,

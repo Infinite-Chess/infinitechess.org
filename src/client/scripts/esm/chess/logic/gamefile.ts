@@ -11,7 +11,7 @@ import type { GameState, GlobalGameState } from "./state.js";
 import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
-import type { BoundingBoxBD } from "../../util/math/bounds.js";
+import type { BoundingBox } from "../../util/math/bounds.js";
 import type { Additional } from "../../game/chess/gameslot.js";
 
 import organizedpieces from "./organizedpieces.js";
@@ -37,7 +37,7 @@ interface Snapshot {
 	/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
 	fullMove: number,
 	/** The bounding box surrounding the starting position, without padding. INTEGER coords, not floating. */
-	box: BoundingBoxBD
+	box: BoundingBox
 }
 
 /**

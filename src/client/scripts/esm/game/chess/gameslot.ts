@@ -58,6 +58,7 @@ import gamesound from "../misc/gamesound.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
+import bounds from "../../util/math/bounds.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -274,7 +275,9 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
+	const startingAreaBox = gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim);
+	const startingAreaBoxBD = bounds.castBoundingBoxToBigDecimal(startingAreaBox);
+	const centerArea = area.calculateFromUnpaddedBox(startingAreaBoxBD);
 	boardpos.setBoardPos(centerArea.coords);
 	const amount = bd.FromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
 	const startScale = bd.multiply_fixed(centerArea.scale, amount);

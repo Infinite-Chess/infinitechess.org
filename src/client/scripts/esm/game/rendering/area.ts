@@ -272,11 +272,11 @@ function initTelFromArea(thisArea: Area, ignoreHistory: boolean): void {
 /**
  * Returns the area object that contains all pieces within
  * it from the specified gamefile, with added padding.
- * @param board - The gamefile
- * @returns The area object
  */
-function getAreaOfAllPieces(board: Board): Area {
-	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(board));
+function getAreaOfAllPieces(boardsim: Board): Area {
+	const startingAreaBox = gamefileutility.getStartingAreaBox(boardsim);
+	const startingAreaBoxBD = bounds.castBoundingBoxToBigDecimal(startingAreaBox);
+	return calculateFromUnpaddedBox(startingAreaBoxBD);
 }
 
 export default {

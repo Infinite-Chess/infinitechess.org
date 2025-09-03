@@ -12,7 +12,7 @@
 
 
 import type { Color } from "../../util/math/math.js";
-import type { BoundingBoxBD, DoubleBoundingBox } from "../../util/math/bounds.js";
+import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../util/math/bounds.js";
 
 import boardtiles from "./boardtiles.js";
 import boardpos from "./boardpos.js";
@@ -75,6 +75,10 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 /**
  * [Model Space] If you have say a bounding box from coordinate [1,1] to [9,9],
  * this will round that outwards from [0.5,0.5] to [9.5,9.5].
+ * 
+ * Expands the edges of the box, which should contain integer squares for values,
+ * to encapsulate the whole of the squares on their edges.
+ * Turns it into a floating point edge.
  */
 function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBoxBD): BoundingBoxBD {
 	const squareCenter = boardtiles.getSquareCenter();
@@ -141,7 +145,7 @@ function QuadWorld_ColorTexture(coords: Coords, type: number, color: Color): num
 /**
  * [World Space, LINE_LOOP] Generates the vertex data of a rectangle outline.
  */
-function RectWorld(boundingBox: BoundingBoxBD, color: Color): number[] {
+function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
 	return primitives.Rect(left, bottom, right, top, color);
@@ -213,6 +217,7 @@ export default {
 	// Square Bounds
 	getCoordBoxModel,
 	getCoordBoxWorld,
+	expandTileBoundingBoxToEncompassWholeSquare,
 	applyWorldTransformationsToBoundingBox,
 	// Mesh Data
 	QuadModel_Color,
