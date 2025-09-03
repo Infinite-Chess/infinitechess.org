@@ -30,7 +30,7 @@ import space from '../../misc/space.js';
 import vectors from '../../../util/math/vectors.js';
 import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../util/math/geometry.js';
-import bounds, { BoundingBoxBD } from '../../../util/math/bounds.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import meshes from '../meshes.js';
@@ -113,7 +113,7 @@ const ZERO: BigDecimal = bd.FromBigInt(0n);
  * THIS REPRESENTS THE INTEGER TILES INCLUDED IN THE RANGE.
  * For example, a `right` of 10 means it includes the X=10 tiles.
  */
-let boundingBoxOfRenderRange: BoundingBoxBD | undefined;
+let boundingBoxOfRenderRange: BoundingBox | undefined;
 
 /**
  * How much the vertex data of the highlight models has been offset, to make their numbers
@@ -183,19 +183,18 @@ function isViewRangeContainedInRenderRange() {
         getBoundingBoxOfPerspectiveView() :
         boardtiles.gboundingBoxFloat();
 
-	const floatingRenderRangeBox = boardtiles.convertIntegerBoundingBoxToFloating(boundingBoxOfRenderRange);
-
 	// In 2D mode, we also care about whether the
 	// camera box is significantly smaller than our render range.
 	if (!perspective.getEnabled()) {
 		// We can cast to number since we're confident it's going to be small (we are zoomed in)
 		const width: number = bd.toNumber(bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left));
-		const renderRangeWidth: number = bd.toNumber(bd.subtract(floatingRenderRangeBox.right, floatingRenderRangeBox.left));
+		const renderRangeWidth: number = Number(boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left) + 1;
 
 		// multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
 		if (width * multiplier * multiplier < renderRangeWidth) return false;
 	}
 
+	const floatingRenderRangeBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxOfRenderRange);
 	// Whether the camera view box exceeds the boundaries of the render range
 	return bounds.boxContainsBox(floatingRenderRangeBox, boundingBoxOfView);
 }
@@ -340,7 +339,7 @@ function pushSliding(
 		// The intersection points this slide direction intersects
 		// our legal move highlights render range bounding box, if it does.
 		// eslint-disable-next-line prefer-const
-		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(bd.FromCoords(coords), line, boundingBoxOfRenderRange!);
+		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersectionsInteger(coords, line, boundingBoxOfRenderRange!);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
@@ -559,7 +558,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
 		const step = ray.vector;
 
 		// eslint-disable-next-line prefer-const
-		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(bd.FromCoords(ray.start), ray.vector, boundingBoxOfRenderRange!);
+		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersectionsInteger(ray.start, ray.vector, boundingBoxOfRenderRange!);
 		
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.

@@ -9,7 +9,6 @@
 
 import type { Board } from "../../chess/logic/gamefile.js";
 
-import gamefileutility from "../../chess/util/gamefileutility.js";
 import meshes from "./meshes.js";
 import { createModel } from "./buffermodel.js";
 
@@ -21,8 +20,7 @@ import { createModel } from "./buffermodel.js";
  * playable area, just inside the world border.
  */
 function drawPlayableRegionMask(boardsim: Board): void {
-	const playableRegion = gamefileutility.getPlayableRegionBox(boardsim);
-	const vertexData = meshes.RectWorld_Filled(playableRegion, [1,0,0,1]);
+	const vertexData = meshes.RectWorld_Filled(boardsim.playableRegion!, [1,0,0,1]);
 
 	createModel(vertexData, 2, 'TRIANGLES', true).render();
 }

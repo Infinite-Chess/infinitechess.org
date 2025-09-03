@@ -82,14 +82,6 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 	return box;
 }
 
-/**
- * {@link getBoxFromCoordsList} but returns a BigDecimal bounding box instead of a bigint one.
- */
-function getBDBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
-	const integerBox = getBoxFromCoordsList(coordsList);
-	return castBoundingBoxToBigDecimal(integerBox);
-}
-
 function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
 	return {
 		left: bd.FromNumber(box.left),
@@ -216,7 +208,6 @@ function printBDBox(box: BoundingBoxBD): void {
 export default {
 	// Construction
 	getBoxFromCoordsList,
-	getBDBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
 	castBDBoundingBoxToBigint,

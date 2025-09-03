@@ -331,7 +331,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// 3. Origin (Center of Play) ==============================
 
 	const startingBox = gamefileutility.getStartingAreaBox(boardsim);
-	const origin: BDCoords = bounds.calcCenterOfBoundingBox(startingBox);
+	const startingBoxBD = bounds.castBoundingBoxToBigDecimal(startingBox);
+	const origin: BDCoords = bounds.calcCenterOfBoundingBox(startingBoxBD);
 	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
 	if (closestOriginSnap !== undefined) {
 		// Is the snap within snapping distance of the mouse?

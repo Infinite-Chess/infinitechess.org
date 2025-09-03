@@ -904,7 +904,7 @@ function executeArrowShifts() {
 
 				// Determine the line's dot product with the screen box.
 				// Flip the vector if need be, to point it in the right direction.
-				const thisPieceIntersections = geometry.findLineBoxIntersections(piece.coords, line, boundingBoxFloat!); // should THIS BE FLOAT???
+				const thisPieceIntersections = geometry.findLineBoxIntersections(piece.coords, line, boundingBoxFloat!);
 				if (thisPieceIntersections.length < 2) continue; // Slide direction doesn't intersect with screen box, no arrow needed
 
 				const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	

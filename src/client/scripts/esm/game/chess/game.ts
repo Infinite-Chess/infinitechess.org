@@ -173,7 +173,7 @@ function render() {
 	
 	const boardsim = gamefile.boardsim;
 
-	if (boardsim.worldBorder !== undefined) {
+	if (boardsim.playableRegion !== undefined) {
 		// Mask the playable region so the board tiles don't render outside the world border
 		webgl.executeMaskedDraw(
 			// Mask containing playable region

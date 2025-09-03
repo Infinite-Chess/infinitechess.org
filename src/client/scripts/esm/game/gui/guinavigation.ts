@@ -302,10 +302,9 @@ function callback_Expand() {
 }
 
 function recenter() {
-	const boundingBox = boardeditor.areInBoardEditor() ? bounds.getBDBoxFromCoordsList([[1n,1n], [8n,8n]]) :
-														 gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
-	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
-	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
+	const boxBD = bounds.castBoundingBoxToBigDecimal(boundingBox);
+	area.initTelFromUnpaddedBox(boxBD); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================

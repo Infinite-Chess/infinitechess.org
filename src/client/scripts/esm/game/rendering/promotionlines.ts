@@ -17,6 +17,7 @@ import { players } from '../../chess/util/typeutil.js';
 import { createModel } from './buffermodel.js';
 import primitives from './primitives.js';
 import camera from './camera.js';
+import meshes from './meshes.js';
 
 
 // ===================================== Constants =====================================
@@ -49,7 +50,7 @@ function render(): void {
 	} else {
 		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim); // Integer box
 		// Round the box away to encapsulate the entirity of all squares
-		const floatingBox = boardtiles.convertIntegerBoundingBoxToFloating(startPositionBox);
+		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(startPositionBox);
 		left = (bd.toNumber(bd.subtract(floatingBox.left, position[0])) - EXTRA_LENGTH) * scale;
 		right = (bd.toNumber(bd.subtract(floatingBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}

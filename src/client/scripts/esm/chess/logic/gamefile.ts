@@ -11,7 +11,7 @@ import type { GameState, GlobalGameState } from "./state.js";
 import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
-import type { BoundingBoxBD } from "../../util/math/bounds.js";
+import type { BoundingBox } from "../../util/math/bounds.js";
 import type { Additional } from "../../game/chess/gameslot.js";
 
 import organizedpieces from "./organizedpieces.js";
@@ -37,7 +37,7 @@ interface Snapshot {
 	/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
 	fullMove: number,
 	/** The bounding box surrounding the starting position, without padding. INTEGER coords, not floating. */
-	box: BoundingBoxBD
+	box: BoundingBox
 }
 
 /**
@@ -87,13 +87,12 @@ type Board = {
 	vicinity: Record<CoordsKey, RawType[]>
 
 	/**
-	 * If a world border exists in the current game (not dependant on variant,
-	 * but dependant on game mode, such as engine), this is the width of extra
-	 * available play area next to the furthest piece on each side of the starting position.
-	 * This is so the position is symmetrical and fair.
-	 * For example, if the starting position is 8x8, and the worldBorder is 10, then the playable area is 28x28.
+	 * IF a world border is present, this is a bounding box
+	 * containing all integer coordinates that are inside the
+	 * playing area, not on or outside the world border.
+	 * All pieces must be within this box.
 	 */
-	worldBorder?: bigint
+	playableRegion?: BoundingBox
 } & EditorDependent
 
 /** Some information should be left out when the editor is being used as it will slow processing down */
@@ -165,11 +164,20 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
+	const coordsOfAllPieces = boardutil.getCoordsOfAllPieces(pieces);
+	const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
+	const playableRegion = worldBorder !== undefined ? {
+		left: startingPositionBox.left - worldBorder,
+		right: startingPositionBox.right + worldBorder,
+		bottom: startingPositionBox.bottom - worldBorder,
+		top: startingPositionBox.top + worldBorder,
+	} : undefined;
+
 	const startSnapshot: Snapshot = {
 		position,
 		state_global,
 		fullMove,
-		box: bounds.getBDBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces)),
+		box: startingPositionBox
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
@@ -207,7 +215,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
-		worldBorder: worldBorderProperty,
+		playableRegion,
 		...editorDependentVars
 	};
 }

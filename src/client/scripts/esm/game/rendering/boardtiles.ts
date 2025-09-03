@@ -189,22 +189,6 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
 }
 
 /**
- * Expands the edges of the box, which should contain integer squares for values,
- * to encapsulate the whole of the squares on their edges.
- * Turns it into a floating point edge.
- */
-function convertIntegerBoundingBoxToFloating(src: BoundingBoxBD): BoundingBoxBD {
-	const squareCenter = getSquareCenter();
-
-	const left = bd.subtract(src.left, squareCenter); // left - squareCenter)
-	const right = bd.add(bd.subtract(src.right, squareCenter), ONE); // right - squareCenter + 1
-	const bottom = bd.subtract(src.bottom, squareCenter); // bottom - squareCenter)
-	const top = bd.add(bd.subtract(src.top, squareCenter), ONE); // top - squareCenter + 1
-	
-	return { left, right, bottom, top };
-}
-
-/**
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
  */
@@ -470,7 +454,6 @@ export default {
 	gtileWidth_Pixels,
 	recalcVariables,
 	roundAwayBoundingBox,
-	convertIntegerBoundingBoxToFloating,
 	gboundingBox,
 	gboundingBoxFloat,
 	updateTheme,
