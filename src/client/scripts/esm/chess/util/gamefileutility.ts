@@ -156,34 +156,6 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 	return [...new Set(turnOrder)];
 }
 
-/**
- * Returns a bounding box containing all integer coordinates that
- * are inside the playing area, not on or outside the world border.
- */
-function getPlayableRegionBox(boardsim: Board): BoundingBoxBD {
-	if (boardsim.worldBorder === undefined) throw Error("Don't call getPlayableRegionBox() if you're not sure worldBorder is present!");
-
-	// To keep the board symmetric and fair. The world border should be precisely
-	// `worldBorder` many squares away from the furthest piece on each side.
-	const startingPositionBox = boardsim.startSnapshot?.box ?? bounds.getBoxFromCoordsList([[0n,0n]]); // Fallback to origin (0,0) if startSnapshot not available (in board editor)
-
-	return bounds.castBoundingBoxToBigDecimal({
-		left: startingPositionBox.left - boardsim.worldBorder,
-		right: startingPositionBox.right + boardsim.worldBorder,
-		bottom: startingPositionBox.bottom - boardsim.worldBorder,
-		top: startingPositionBox.top + boardsim.worldBorder
-	});
-}
-
-/** Tests whether the given square lies out of bounds of the position. */
-function isSquareOutsideBorder(boardsim: Board, coords: Coords): boolean {
-	if (boardsim.worldBorder === undefined) return false; // No world border => Always in bounds
-	
-	const playableRegion = getPlayableRegionBox(boardsim);
-	const coordsBD = bd.FromCoords(coords);
-	return !bounds.boxContainsSquareBD(playableRegion, coordsBD);
-}
-
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -199,6 +171,4 @@ export default {
 	getPlayerCount,
 	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
-	getPlayableRegionBox,
-	isSquareOutsideBorder,
 };

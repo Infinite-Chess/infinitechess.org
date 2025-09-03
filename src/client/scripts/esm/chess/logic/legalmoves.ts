@@ -259,7 +259,8 @@ function removeObstructedSlidingMoves(boardsim: Board, piece: Piece, moveset: Pi
  * @param capturing - Whether the move is required to be a capture (pawn diagonal move). Default: false. Setting this to false DOES NOT require the move to be non-capturing.
  */
 function testSquareValidity(boardsim: Board, coords: Coords, friendlyColor: Player, premove: boolean, capturing: boolean): 0 | 1 | 2 {
-	if (gamefileutility.isSquareOutsideBorder(boardsim, coords)) return 2; // NEVER allow moving outside the border
+	// Test whether the given square lies out of bounds of the position.
+	if (boardsim.playableRegion !== undefined && !bounds.boxContainsSquare(boardsim.playableRegion, coords)) return 2;
 
 	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, coords);
 
@@ -350,7 +351,7 @@ function slide_CalcLegalLimit(
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
-	if (boardsim.worldBorder !== undefined) enforceWorldBorderOnSlideLimit(boardsim, limit, coords, step, axis); // Mutating
+	enforceWorldBorderOnSlideLimit(boardsim, limit, coords, step, axis); // Mutating
 	// else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
@@ -393,7 +394,7 @@ function slide_CalcLegalLimit(
 
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coords: Coords, step: Vec2, axis: 0 | 1): void {
-	const playableRegion = gamefileutility.getPlayableRegionBox(boardsim);
+	if (boardsim.playableRegion === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
 	const coordsBD = bd.FromCoords(coords);
@@ -402,7 +403,7 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
 
 	// These are in order of ascending dot product.
 	// const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, bounds.castBDBoundingBoxToBigint(playableRegion), true).map(i => i.coords);
-	const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, bounds.castBDBoundingBoxToBigint(playableRegion)).map(i => i.coords);
+	const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, boardsim.playableRegion).map(i => i.coords);
 	if (intersections.length < 2) {
 		throw Error("Number of intersections slide direction makes with border is less than 2!");
 		// IT MIGHT BE POSSIBLE FOR THERE TO BE ONE INTERSECTION with the playable area if the

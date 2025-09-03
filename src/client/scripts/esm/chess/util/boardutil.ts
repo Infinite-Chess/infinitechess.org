@@ -101,7 +101,7 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
 
 
 /**
- * Retrieves the coordinates of all pieces from the provided pieces.
+ * Retrieves the coordinates of all pieces.
  * @param o - contains the pieces data.
  * @returns A list of coordinates of all pieces.
  */

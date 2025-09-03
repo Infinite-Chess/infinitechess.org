@@ -54,11 +54,11 @@ import transition from "../rendering/transition.js";
 import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
+import bounds from "../../util/math/bounds.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
-import bounds from "../../util/math/bounds.js";
 
 // Type Definitions ----------------------------------------------------------
 

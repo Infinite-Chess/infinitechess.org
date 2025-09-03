@@ -8,7 +8,7 @@ import type { BufferModel } from './buffermodel.js';
 import type { Color } from '../../util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import type { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
+import type { BoundingBoxBD } from '../../util/math/bounds.js';
 
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import jsutil from '../../util/jsutil.js';
@@ -36,7 +36,6 @@ import style from '../gui/style.js';
 import camera from './camera.js';
 // @ts-ignore
 import { gl } from './webgl.js';
-import bounds from '../../util/math/bounds.js';
 
 
 

@@ -68,10 +68,11 @@ const iterationsToRecalcPadding: number = 10;
 function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBoxBD): Area {
 	if (coordsList.length === 0) throw Error("Cannot calculate area from an empty coords list.");
 
-	let box: BoundingBoxBD = bounds.getBDBoxFromCoordsList(coordsList); // Unpadded
-	if (existingBox) box = bounds.mergeBoundingBoxBDs(box, existingBox); // Unpadded
+	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
+	let boxBD = bounds.castBoundingBoxToBigDecimal(box);
+	if (existingBox) boxBD = bounds.mergeBoundingBoxBDs(boxBD, existingBox); // Unpadded
 
-	return calculateFromUnpaddedBox(box);
+	return calculateFromUnpaddedBox(boxBD);
 }
 
 /**
@@ -213,8 +214,9 @@ function addPaddingToBoundingBox(boundingBox: BoundingBoxBD, horzPad: BigDecimal
 function initTelFromCoordsList(coordsList: Coords[]): void {
 	if (coordsList.length === 0) throw Error("Cannot init teleport from an empty coords list.");
 
-	const box = bounds.getBDBoxFromCoordsList(coordsList); // Unpadded
-	initTelFromUnpaddedBox(box);
+	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
+	const boxBD = bounds.castBoundingBoxToBigDecimal(box);
+	initTelFromUnpaddedBox(boxBD);
 }
 
 function initTelFromUnpaddedBox(box: BoundingBoxBD): void {
@@ -269,20 +271,9 @@ function initTelFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	else transition.zoomTransition(trans2, undefined, ignoreHistory);
 }
 
-/**
- * Returns the area object that contains all pieces within
- * it from the specified gamefile, with added padding.
- */
-function getAreaOfAllPieces(boardsim: Board): Area {
-	const startingAreaBox = gamefileutility.getStartingAreaBox(boardsim);
-	const startingAreaBoxBD = bounds.castBoundingBoxToBigDecimal(startingAreaBox);
-	return calculateFromUnpaddedBox(startingAreaBoxBD);
-}
-
 export default {
 	calculateFromCoordsList,
 	calculateFromUnpaddedBox,
-	getAreaOfAllPieces,
 	initTelFromUnpaddedBox,
 	initTelFromCoordsList,
 	initTelFromArea

@@ -22,6 +22,7 @@ import perspective from "./perspective.js";
 import { Vec3 } from "../../util/math/vectors.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
+import bounds from "../../util/math/bounds.js";
 
 
 // Constants -------------------------------------------------------------------------
@@ -80,14 +81,15 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
  * to encapsulate the whole of the squares on their edges.
  * Turns it into a floating point edge.
  */
-function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBoxBD): BoundingBoxBD {
+function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBox): BoundingBoxBD {
 	const squareCenter = boardtiles.getSquareCenter();
+	const boxBD = bounds.castBoundingBoxToBigDecimal(boundingBox);
 	const inverseSquareCenter = bd.subtract(ONE, squareCenter);
 
-	const left = bd.subtract(boundingBox.left, squareCenter);
-	const right = bd.add(boundingBox.right, inverseSquareCenter);
-	const bottom = bd.subtract(boundingBox.bottom, squareCenter);
-	const top = bd.add(boundingBox.top, inverseSquareCenter);
+	const left = bd.subtract(boxBD.left, squareCenter);
+	const right = bd.add(boxBD.right, inverseSquareCenter);
+	const bottom = bd.subtract(boxBD.bottom, squareCenter);
+	const top = bd.add(boxBD.top, inverseSquareCenter);
 
 	return { left, bottom, right, top };
 }
@@ -154,7 +156,7 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 /**
  * [World Space, TRIANGLES] Generates the vertex data of a filled rectangle.
  */
-function RectWorld_Filled(boundingBox: BoundingBoxBD, color: Color): number[] {
+function RectWorld_Filled(boundingBox: BoundingBox, color: Color): number[] {
 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
 	return primitives.Quad_Color(left, bottom, right, top, color);

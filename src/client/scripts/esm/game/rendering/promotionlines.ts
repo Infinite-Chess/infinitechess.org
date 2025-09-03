@@ -49,9 +49,8 @@ function render(): void {
 		({ left, right } = camera.getScreenBoundingBox(false));
 	} else {
 		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim); // Integer box
-		const startBoxBD = bounds.castBoundingBoxToBigDecimal(startPositionBox);
 		// Round the box away to encapsulate the entirity of all squares
-		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBoxBD);
+		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(startPositionBox);
 		left = (bd.toNumber(bd.subtract(floatingBox.left, position[0])) - EXTRA_LENGTH) * scale;
 		right = (bd.toNumber(bd.subtract(floatingBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}
