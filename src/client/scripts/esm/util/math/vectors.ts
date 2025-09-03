@@ -302,6 +302,35 @@ function getPerpendicularVector(vec2: Vec2): Vec2 {
 }
 
 /**
+ * Calculates the line that is perpendicular to a given line and passes through a specific point.
+ * @param lineCoeffs - The coefficients [A,B,C] of the original line.
+ * @param point - The coordinates that the new perpendicular line must pass through.
+ * @returns New BigDecimal coefficients for the perpendicular line.
+ */
+function getPerpendicularLine(lineCoeffs: LineCoefficients, point: BDCoords): LineCoefficientsBD {
+	const lineCoeffsBD = convertCoeficcientsToBD(lineCoeffs);
+	const [A1, B1] = lineCoeffsBD;
+
+	// Step 1: Determine the A and B coefficients for the new line (L2).
+	// The normal vector for L2 is (-B1, A1).
+	const A2 = bd.negate(B1);
+	const B2 = A1;
+
+	// Step 2: Solve for the C coefficient of the new line (L2).
+	// The equation is A2*x + B2*y + C2 = 0.
+	// We know it must pass through point (xp, yp), so we can solve for C2:
+	// A2*xp + B2*yp + C2 = 0
+	// C2 = -(A2*xp + B2*yp)
+	// C2 = -((-B1)*xp + A1*yp)
+	// C2 = B1*xp - A1*yp
+	const term1 = bd.multiply_fixed(B1, point[0]);
+	const term2 = bd.multiply_fixed(A1, point[1]);
+	const C2 = bd.subtract(term1, term2);
+
+	return [A2, B2, C2];
+}
+
+/**
  * Converts an angle in degrees to radians
  */
 function degreesToRadians(angleDegrees: number): number {
