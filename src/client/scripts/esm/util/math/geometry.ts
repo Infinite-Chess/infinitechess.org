@@ -381,9 +381,9 @@ function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords
 }
 
 
-
 /**
  * Finds the intersection points of a line with a bounding box.
+ * FLOATING POINT PRECISION. If you need accuracy, use {@link findLineBoxIntersectionsPerfect} instead.
  * @param startCoords - The starting point of the line.
  * @param direction - The direction vector [dx, dy] of the line.
  * @param box - The bounding box the line intersects.
@@ -464,12 +464,6 @@ function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: B
 		};
 	});
 }
-
-
-
-// ======================================== Perfect Integer/Rational Geometry ========================================
-
-
 
 /**
  * Represents a rational number (fraction) using two BigInts.
@@ -675,11 +669,8 @@ function findLineBoxIntersectionsInteger(
 }
 
 
+// Exports ----------------------------------------------------------------------
 
-// ======================================================================================================
-
-
-// Exports -----------------------------------------------------------
 
 export default {
 	// Operations
