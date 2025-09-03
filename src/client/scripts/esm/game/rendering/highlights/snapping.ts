@@ -210,7 +210,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// First see if the pointer is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
 	const linesSnapPoints: LineSnapPoint[] = allLines.map(line => {
-		const snapPoint = geometry.closestPointOnLineSegment(line.start, line.end, pointerCoords);
+		const snapPoint = geometry.closestPointOnLineSegment(line.coefficients, line.start, line.end, pointerCoords);
 		return { line, snapPoint };
 	});
 
