@@ -63,7 +63,7 @@ function getLines(): Line[] {
 		// Skip if zero length
 		if (coordutil.areBDCoordsEqual(start, end)) continue;
 
-		const coefficients = vectors.getLineGeneralFormFromCoordsAndVecBD(start, step);
+		const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(pieceCoords, step);
 
 		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
 	};

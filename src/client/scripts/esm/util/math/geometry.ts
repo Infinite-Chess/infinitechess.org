@@ -11,7 +11,7 @@ import type { BoundingBox, BoundingBoxBD } from "./bounds.js";
 import bimath from "../bigdecimal/bimath.js";
 import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal.js";
-import vectors, { LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
+import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
 
 
 
@@ -43,6 +43,11 @@ const ONE = bd.FromBigInt(1n);
 /**
  * Finds the intersection of two lines in general form.
  * [x, y] or undefined if there is no intersection (or infinite intersections).
+ * 
+ * PERFECT INTEGER PRECISION. If the intersection lies on a perfect integer point,
+ * there will be no floating point innaccuracies.
+ * If however the intersection lies on a non-integer point, and the BigDecimal
+ * can't represent it perfectly in binary, there will be floating point innaccuracy.
  */
 function calcIntersectionPointOfLines(A1: bigint, B1: bigint, C1: bigint, A2: bigint, B2: bigint, C2: bigint): BDCoords | undefined {
 
@@ -100,9 +105,9 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
  * @param s2p1 Start point of segment 2
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
-function intersectLineSegments(line1Coefficients: LineCoefficientsBD, s1p1: BDCoords, s1p2: BDCoords, line2Coefficients: LineCoefficientsBD, s2p1: BDCoords, s2p2: BDCoords): BDCoords | undefined {
+function intersectLineSegments(line1Coefficients: LineCoefficients, s1p1: BDCoords, s1p2: BDCoords, line2Coefficients: LineCoefficients, s2p1: BDCoords, s2p2: BDCoords): BDCoords | undefined {
 	// 1. Calculate intersection of the infinite lines
-	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLinesBD(...line1Coefficients, ...line2Coefficients);
+	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLines(...line1Coefficients, ...line2Coefficients);
 
 	if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
 

@@ -16,7 +16,7 @@ import { createModel } from '../buffermodel.js';
 import type { BDCoords } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../util/math/math.js';
 import type {  BoundingBoxBD } from '../../../util/math/bounds.js';
-import type { LineCoefficientsBD } from '../../../util/math/vectors.js';
+import type { LineCoefficients } from '../../../util/math/vectors.js';
 
 
 
@@ -28,12 +28,12 @@ import type { LineCoefficientsBD } from '../../../util/math/vectors.js';
  * we can't render lines out to infinity.
  */
 interface Line {
-	/** The starting point coords. */
+	/** The starting point coords. May have floating point innaccuracy. */
 	start: BDCoords
-	/** The ending point coords. */
+	/** The ending point coords. May have floating point innaccuracy. */
 	end: BDCoords
-	/** The equation of the line in general form. [A,B,C] */
-	coefficients: LineCoefficientsBD
+	/** The equation of the line in general form. [A,B,C]. PERFECT integers, use this for calculating intersections. */
+	coefficients: LineCoefficients
 	/** The color of the line. */
 	color: Color
 	/**
