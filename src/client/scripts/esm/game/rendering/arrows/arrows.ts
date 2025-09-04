@@ -183,6 +183,7 @@ const renderZoomLimitVirtualPixels: BigDecimal = bd.FromBigInt(12n); // virtual 
 const perspectiveDist = 17;
 
 
+const ONE = bd.FromBigInt(1n);
 const HALF = bd.FromNumber(0.5);
 
 
@@ -907,7 +908,18 @@ function executeArrowShifts() {
 
 			// This is an arrow animation for a piece IN MOTION, not a still animation.
 			// Add an animated arrow for it, since it is gonna be at a floating point coordinate
-			if (bounds.boxContainsSquareBD(boundingBoxFloat!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
+
+			// Only add the arrow if the piece is JUST off-screen.
+			// Add 1 square on each side of the screen box first.
+			const expandedFloatingBox = {
+				left: bd.subtract(boundingBoxFloat!.left, ONE),
+				right: bd.add(boundingBoxFloat!.right, ONE),
+				bottom: bd.subtract(boundingBoxFloat!.bottom, ONE),
+				top: bd.add(boundingBoxFloat!.top, ONE),
+			};
+			// True if its square is atleast PARTIALLY visible on screen.
+			// We need no arrows for the animated piece, no matter the vector!
+			if (bounds.boxContainsSquareBD(expandedFloatingBox!, shift.end)) return;
 
 			const piece: ArrowPiece = { type: shift.type, coords: shift.end, index: -1, floating: true }; // Create a piece object for the arrow
 
