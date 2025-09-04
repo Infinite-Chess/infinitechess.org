@@ -850,6 +850,14 @@ function isZero(bd: BigDecimal): boolean {
 }
 
 /**
+ * Returns whether a bigdecimal has the default [FIXED] amount of precision.
+ * If not, it's likely been affected by floating point operations.
+ */
+function hasDefaultPrecision(bd: BigDecimal): boolean {
+	return bd.divex === DEFAULT_WORKING_PRECISION;
+}
+
+/**
  * Negates a BigDecimal.
  * 
  * Non-mutating; returns a new BigDecimal.
@@ -1433,6 +1441,7 @@ export default {
 	compare,
 	areEqual,
 	isZero,
+	hasDefaultPrecision,
 	negate,
 	min,
 	max,
