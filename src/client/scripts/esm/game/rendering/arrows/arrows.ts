@@ -451,7 +451,7 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, bou
 	 * The only difference is each piece may have a different dot product,
 	 * which just means it's on the opposite side.
 	 */
-	const intersections = geometry.findLineBoxIntersections(bd.FromCoords(firstPiece.coords), slideDir, boundingBoxFloat).map(c => c.coords);
+	const intersections = geometry.findLineBoxIntersectionsBD(bd.FromCoords(firstPiece.coords), slideDir, boundingBoxFloat).map(c => c.coords);
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
 	organizedline.forEach(idx => {
@@ -469,7 +469,7 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, bou
 		// Piece is guaranteed off-screen...
 		
 		// console.log(boundingBoxFloat, boundingBoxInt) 
-		const thisPieceIntersections = geometry.findLineBoxIntersections(arrowPiece.coords, slideDir, boundingBoxInt);
+		const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(arrowPiece.coords, slideDir, boundingBoxInt);
 		if (thisPieceIntersections.length < 2) return;
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
 
@@ -904,7 +904,7 @@ function executeArrowShifts() {
 
 				// Determine the line's dot product with the screen box.
 				// Flip the vector if need be, to point it in the right direction.
-				const thisPieceIntersections = geometry.findLineBoxIntersections(piece.coords, line, boundingBoxFloat!);
+				const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(piece.coords, line, boundingBoxFloat!);
 				if (thisPieceIntersections.length < 2) continue; // Slide direction doesn't intersect with screen box, no arrow needed
 
 				const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	

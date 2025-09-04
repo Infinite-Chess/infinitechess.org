@@ -402,8 +402,7 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
 	const negatedStepBD = vectors.negateBDVector(stepBD);
 
 	// These are in order of ascending dot product.
-	// const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, bounds.castBDBoundingBoxToBigint(playableRegion), true).map(i => i.coords);
-	const intersections = geometry.findLineBoxIntersectionsInteger(coords, step, boardsim.playableRegion).map(i => i.coords);
+	const intersections = geometry.findLineBoxIntersections(coords, step, boardsim.playableRegion).map(i => i.coords);
 	if (intersections.length < 2) {
 		throw Error("Number of intersections slide direction makes with border is less than 2!");
 		// IT MIGHT BE POSSIBLE FOR THERE TO BE ONE INTERSECTION with the playable area if the

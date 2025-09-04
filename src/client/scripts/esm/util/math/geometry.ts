@@ -18,7 +18,7 @@ import bounds from "./bounds.js";
 // Type Definitions -----------------------------------------------------------
 
 
-/** The form of the intersection points returned by {@link findLineBoxIntersections}. */
+/** The form of the intersection points returned by {@link findLineBoxIntersectionsBD}. */
 type IntersectionPoint = {
 	/** The actual intersection point */
 	coords: BDCoords;
@@ -99,6 +99,18 @@ function intersectLineAndVerticalLine(A1: bigint, B1: bigint, C1: bigint, x: big
 }
 
 /**
+ * {@link intersectLineAndVerticalLine}, but for BigDecimal coefficients and known value.
+ */
+function intersectLineAndVerticalLineBD(A1: BigDecimal, B1: BigDecimal, C1: BigDecimal, x: BigDecimal): BDCoords {
+	// The known coordinate is x, its coefficient is A1.
+	// We are solving for y, its coefficient is B1.
+	const intersectionY = solveForUnknownAxisBD(A1, B1, C1, x);
+	const intersectionX = x;
+
+	return [intersectionX, intersectionY];
+}
+
+/**
  * Calculates the intersection point of a NON-HORIZONTAL line with a horizontal one!
  * 
  */
@@ -107,6 +119,18 @@ function intersectLineAndHorizontalLine(A1: bigint, B1: bigint, C1: bigint, y: b
 	// We are solving for x, its coefficient is A1.
 	const intersectionX = solveForUnknownAxis(B1, A1, C1, y);
 	const intersectionY = bd.FromBigInt(y);
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * {@link intersectLineAndHorizontalLine}, but for BigDecimal coefficients and known value.
+ */
+function intersectLineAndHorizontalLineBD(A1: BigDecimal, B1: BigDecimal, C1: BigDecimal, y: BigDecimal): BDCoords {
+	// The known coordinate is y, its coefficient is B1.
+	// We are solving for x, its coefficient is A1.
+	const intersectionX = solveForUnknownAxisBD(B1, A1, C1, y);
+	const intersectionY = y;
 
 	return [intersectionX, intersectionY];
 }
@@ -129,6 +153,20 @@ function solveForUnknownAxis(knownAxisCoeff: bigint, unknownAxisCoeff: bigint, C
 
 	// Convert to BigDecimal and perform the single, final division.
 	return bd.divide_fixed(bd.FromBigInt(numerator), bd.FromBigInt(unknownAxisCoeff));
+}
+
+/**
+ * {@link solveForUnknownAxis}, but for BigDecimal coefficients and known value.
+ */
+function solveForUnknownAxisBD(knownAxisCoeff: BigDecimal, unknownAxisCoeff: BigDecimal, C: BigDecimal, knownValue: BigDecimal): BigDecimal {
+	// This should not happen if the "non-vertical" or "non-horizontal" constraints are met.
+	if (bd.areEqual(unknownAxisCoeff, ZERO)) throw new Error("Cannot solve for axis, as the divisor (unknownAxisCoeff) is zero.");
+
+	// Calculate the numerator
+	const numerator = bd.negate(bd.add(bd.multiply_fixed(knownAxisCoeff, knownValue), C));
+
+	// Perform the single, final division.
+	return bd.divide_fixed(numerator, unknownAxisCoeff);
 }
 
 /**
@@ -428,128 +466,90 @@ function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords
 
 /**
  * Finds the intersection points of a line with a bounding box.
- * FLOATING POINT PRECISION. If you need accuracy, use {@link findLineBoxIntersectionsPerfect} instead.
  * @param startCoords - The starting point of the line.
- * @param direction - The direction vector [dx, dy] of the line.
- * @param box - The bounding box the line intersects.
- * @returns An array of intersection points as BDCoords, sorted by distance along the vector.
- */
-function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: BoundingBoxBD): IntersectionPoint[] {
-
-	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
-	const [bd_x0, bd_y0] = startCoords;
-	const [bd_dx, bd_dy] = bd.FromCoords(direction);
-	
-	const { left, right, bottom, top } = box;
-    
-	const valid_t_values: BigDecimal[] = [];
-
-	// --- 2. Check for intersections with each of the four box edges ---
-
-	// Check vertical edges (left and right)
-	if (direction[0] !== 0n) {
-		// t = (boundary - x0) / dx
-		const t_left = bd.divide_fixed(bd.subtract(left, bd_x0), bd_dx);
-		const t_right = bd.divide_fixed(bd.subtract(right, bd_x0), bd_dx);
-
-		// Check if the intersection at t_left is on the edge
-		const y_at_left = bd.add(bd.multiply_fixed(t_left, bd_dy), bd_y0);
-		if (bd.compare(y_at_left, bottom) >= 0 && bd.compare(y_at_left, top) <= 0) {
-			valid_t_values.push(t_left);
-		}
-
-		// Check if the intersection at t_right is on the edge
-		const y_at_right = bd.add(bd.multiply_fixed(t_right, bd_dy), bd_y0);
-		if (bd.compare(y_at_right, bottom) >= 0 && bd.compare(y_at_right, top) <= 0) {
-			valid_t_values.push(t_right);
-		}
-	}
-
-	// Check horizontal edges (bottom and top)
-	if (direction[1] !== 0n) {
-		// t = (boundary - y0) / dy
-		const t_bottom = bd.divide_fixed(bd.subtract(bottom, bd_y0), bd_dy);
-		const t_top = bd.divide_fixed(bd.subtract(top, bd_y0), bd_dy);
-        
-		// Check if the intersection at t_bottom is on the edge
-		const x_at_bottom = bd.add(bd.multiply_fixed(t_bottom, bd_dx), bd_x0);
-		if (bd.compare(x_at_bottom, left) >= 0 && bd.compare(x_at_bottom, right) <= 0) {
-			valid_t_values.push(t_bottom);
-		}
-
-		// Check if the intersection at t_top is on the edge
-		const x_at_top = bd.add(bd.multiply_fixed(t_top, bd_dx), bd_x0);
-		if (bd.compare(x_at_top, left) >= 0 && bd.compare(x_at_top, right) <= 0) {
-			valid_t_values.push(t_top);
-		}
-	}
-
-	// --- 3. De-duplicate and Sort the valid t-values ---
-    
-	// De-duplicate points
-	const unique_t_values = valid_t_values.filter((v, i, a) => 
-		a.findIndex(t => bd.areEqual(v, t)) === i
-	);
-
-	// Sort
-	unique_t_values.sort((a, b) => bd.compare(a, b));
-
-	// --- 4. Map sorted t-values to the final output format ---
-	const ZERO_BD = bd.FromBigInt(0n);
-
-	return unique_t_values.map(t => {
-		// Calculate the final intersection coordinates
-		const x = bd.add(bd_x0, bd.multiply_fixed(t, bd_dx));
-		const y = bd.add(bd_y0, bd.multiply_fixed(t, bd_dy));
-
-		return {
-			coords: [x, y],
-			// The sign of the dot product is the same as the sign of t.
-			positiveDotProduct: bd.compare(t, ZERO_BD) >= 0,
-		};
-	});
-}
-
-/**
- * Finds the intersection points of an integer line with an integer bounding box.
- * PERFECT INTEGER PRECISION for intersections that lie on integer points.
- * @param startCoords - The starting point of the line.
- * @param direction - The direction vector [dx, dy] of the line.
+ * @param vector - The direction vector [dx, dy] of the line.
  * @param box - The bounding box to test if the line intersects.
- * @returns An array of intersection points as BDCoords, sorted by distance along the direction vector.
+ * @returns An array of intersection points as BDCoords, sorted by distance along the direction vector,
+ * 			along with whether whether their dot product is positive (in the direction of the vector).
  */
-function findLineBoxIntersectionsInteger(
+function findLineBoxIntersections(
 	startCoords: Coords,
-	direction: Vec2,
+	vector: Vec2,
 	box: BoundingBox,
 	log = false
-) {
-
+): IntersectionPoint[] {
 	if (log) {
 		console.log("\nFinding line box intersections for:");
 		console.log("Coords:", startCoords);
-		console.log("Vector:", direction);
+		console.log("Vector:", vector);
 		console.log("Box:", box);
 		console.log('\n');
 	}
 
-	// 1. Deconstruct inputs into BigInts for precise integer arithmetic
-
-	const [dx, dy] = direction;
+	// Cast the box to BigDecimals
 	const boxBD = bounds.castBoundingBoxToBigDecimal(box);
 
-	// 2. Determine the coefficients of the line in general form
+	// Determine the coefficients of the line in general form
+	const coeffs = vectors.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
 
-	const coeffs = vectors.getLineGeneralFormFromCoordsAndVec(startCoords, direction);
+	// Normalize the start coords as if the vector is normalized to the first graph quadrant.
+	const startCoordsNorm = coordutil.copyCoords(startCoords);
+	if (vector[0] < 0n) startCoordsNorm[0] = -startCoordsNorm[0];
+	if (vector[1] < 0n) startCoordsNorm[1] = -startCoordsNorm[1];
+	const startCoordsSum = bd.FromBigInt(startCoordsNorm[0] + startCoordsNorm[1]);
 
-	// 3. Check for intersections with each of the four box edges
+	return findLineBoxIntersectionsBDHelper(coeffs, vector, startCoordsSum, box, boxBD, intersectLineAndVerticalLine, intersectLineAndHorizontalLine, log);
+}
+
+// Test cases
+
+// const testBox: BoundingBox = { left: -10n, right: 10n, bottom: -5n, top: 5n };
+// const testCoords: Coords = [0n, 0n];
+// const textVector: Vec2 = [1n, 0n];
+
+// findLineBoxIntersections(testCoords, textVector, testBox, true);
+
+/**
+ * Finds the intersection points of a line with BigDecimal precision with a bounding box of BigDecimal precision.
+ * Slightly slower than {@link findLineBoxIntersections}.
+ * @param startCoords - The starting point of the line.
+ * @param vector - The direction vector [dx, dy] of the line.
+ * @param boxBD - The bounding box to test if the line intersects.
+ * @returns An array of intersection points as BDCoords, sorted by distance along the direction vector,
+ * 			along with whether whether their dot product is positive (in the direction of the vector).
+ */
+function findLineBoxIntersectionsBD(startCoords: BDCoords, vector: Vec2, boxBD: BoundingBoxBD): IntersectionPoint[] {
+	// Determine the coefficients of the line in general form
+	const coeffs = vectors.getLineGeneralFormFromCoordsAndVecBD(startCoords, vector);
+
+	// Normalize the start coords as if the vector is normalized to the first graph quadrant.
+	const startCoordsNorm = normalizeIntersection(startCoords, vector);
+	const startCoordsSum = bd.add(startCoordsNorm[0], startCoordsNorm[1]);
+
+	return findLineBoxIntersectionsBDHelper(coeffs, vector, startCoordsSum, boxBD, boxBD, intersectLineAndVerticalLineBD, intersectLineAndHorizontalLineBD);
+}
+
+/** [Helper] Shared logic for finding line-box intersections, whether the inputs are integers or BigDecimals. */
+function findLineBoxIntersectionsBDHelper<T extends bigint | BigDecimal>(
+	coeffs: [T,T,T],
+	vector: Vec2,
+	startCoordsSum: BigDecimal,
+	box: { left: T, right: T, bottom: T, top: T },
+	boxBD: BoundingBoxBD,
+	// eslint-disable-next-line no-unused-vars
+	vertIntectFunc: (A1: T, B1: T, C1: T, x: T) => BDCoords,
+	// eslint-disable-next-line no-unused-vars
+	horzIntsectFunc: (A1: T, B1: T, C1: T, y: T) => BDCoords,
+	log = false
+) {
+	// Check for intersections with each of the four box edges
 
 	const intersections: BDCoords[] = [];
 	
 	// Check vertical edges (where x is constant: x = left or x = right)
-	if (dx !== 0n) { // A non-zero dx means the line is not vertical and can intersect vertical edges.
-		const intersectionLeft = intersectLineAndVerticalLine(...coeffs, box.left);
-		const intersectionRight = intersectLineAndVerticalLine(...coeffs, box.right);
+	if (vector[0] !== 0n) { // A non-zero dx means the line is not vertical and can intersect vertical edges.
+		const intersectionLeft = vertIntectFunc(...coeffs, box.left);
+		const intersectionRight = vertIntectFunc(...coeffs, box.right);
 
 		// Now check if the intersection points actually lie ON the segments of the edges.
 		if (bd.compare(intersectionLeft[1], boxBD.bottom) >= 0 && bd.compare(intersectionLeft[1], boxBD.top) <= 0) intersections.push(intersectionLeft); // Valid intersection on left edge
@@ -557,9 +557,9 @@ function findLineBoxIntersectionsInteger(
 	}
 
 	// Check horizontal edges (where y is constant: y = bottom or y = top)
-	if (dy !== 0n) { // A non-zero dy means the line is not horizontal and can intersect horizontal edges.
-		const intersectionBottom = intersectLineAndHorizontalLine(...coeffs, box.bottom);
-		const intersectionTop = intersectLineAndHorizontalLine(...coeffs, box.top);
+	if (vector[1] !== 0n) { // A non-zero dy means the line is not horizontal and can intersect horizontal edges.
+		const intersectionBottom = horzIntsectFunc(...coeffs, box.bottom);
+		const intersectionTop = horzIntsectFunc(...coeffs, box.top);
 
 		// Now check if the intersection points actually lie ON the segments of the edges.
 		if (bd.compare(intersectionBottom[0], boxBD.left) >= 0 && bd.compare(intersectionBottom[0], boxBD.right) <= 0) intersections.push(intersectionBottom); // Valid intersection on bottom edge
@@ -573,20 +573,14 @@ function findLineBoxIntersectionsInteger(
 		a.findIndex(t => coordutil.areBDCoordsEqual(v, t)) === i
 	);
 
-	// Normalize the start coords as if the vector is normalized to the first graph quadrant.
-	const startCoordsNorm = coordutil.copyCoords(startCoords);
-	if (dx < 0n) startCoordsNorm[0] = -startCoordsNorm[0];
-	if (dy < 0n) startCoordsNorm[1] = -startCoordsNorm[1];
-	const startCoordsSum = startCoordsNorm[0] + startCoordsNorm[1];
-
 	const intersectionsWithPositiveDotProduct = unique_intersections.map(intersection => {
 		// Normalize the intersection as if the vector is normalized.
-		const norm = normalizeIntersection(intersection);
+		const norm = normalizeIntersection(intersection, vector);
 
 		const sum = bd.add(norm[0], norm[1]);
 
 		// If the sum is greater than the startCoords sum, the dot product is positive.
-		const positiveDotProduct = bd.compare(sum, bd.FromBigInt(startCoordsSum)) >= 0;
+		const positiveDotProduct = bd.compare(sum, startCoordsSum) >= 0;
 		
 		return {
 			coords: intersection,
@@ -597,8 +591,8 @@ function findLineBoxIntersectionsInteger(
 	// Sort by distance along the direction vector
 	intersectionsWithPositiveDotProduct.sort((a, b) => {
 		// Normalize the intersection as if the vector is normalized.
-		const normA = normalizeIntersection(a.coords);
-		const normB = normalizeIntersection(b.coords);
+		const normA = normalizeIntersection(a.coords, vector);
+		const normB = normalizeIntersection(b.coords, vector);
 
 		const ASum = bd.add(normA[0], normA[1]);
 		const BSum = bd.add(normB[0], normB[1]);
@@ -606,13 +600,6 @@ function findLineBoxIntersectionsInteger(
 		// Whichever is greater is further along the direction vector.
 		return bd.compare(ASum, BSum);
 	});
-
-	function normalizeIntersection(intersection: BDCoords): BDCoords {
-		const normalizedIntersection = coordutil.copyBDCoords(intersection);
-		if (dx < 0n) normalizedIntersection[0] = bd.negate(normalizedIntersection[0]);
-		if (dy < 0n) normalizedIntersection[1] = bd.negate(normalizedIntersection[1]);
-		return normalizedIntersection;
-	}
 
 	if (log) {
 		for (const i of intersectionsWithPositiveDotProduct) {
@@ -624,13 +611,16 @@ function findLineBoxIntersectionsInteger(
 	return intersectionsWithPositiveDotProduct;
 }
 
-// Test cases
-
-// const testBox: BoundingBox = { left: -10n, right: 10n, bottom: -5n, top: 5n };
-// const testCoords: Coords = [2n, -9n];
-// const textVector: Vec2 = [-3n, 1n];
-
-// findLineBoxIntersectionsInteger2(testCoords, textVector, testBox, true);
+/**
+ * Helper for findLineBoxIntersections to normalize an intersection point,
+ * as if the vector were normalized to the first graph quadrant.
+ */
+function normalizeIntersection(intersection: BDCoords, vector: Vec2): BDCoords {
+	const normalizedIntersection = coordutil.copyBDCoords(intersection);
+	if (vector[0] < 0n) normalizedIntersection[0] = bd.negate(normalizedIntersection[0]);
+	if (vector[1] < 0n) normalizedIntersection[1] = bd.negate(normalizedIntersection[1]);
+	return normalizedIntersection;
+}
 
 
 // Exports ----------------------------------------------------------------------
@@ -648,7 +638,7 @@ export default {
 	findCrossSectionalWidthPoints,
 	roundPointToNearestGridpoint,
 	findLineBoxIntersections,
-	findLineBoxIntersectionsInteger,
+	findLineBoxIntersectionsBD,
 };
 
 export type {

@@ -166,7 +166,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 		const rayStartBD = bd.FromCoords(ray.start);
 
 		// Find the points it intersects the screen
-		const intersectionPoints = geometry.findLineBoxIntersections(rayStartBD, ray.vector, boundingBox);
+		const intersectionPoints = geometry.findLineBoxIntersectionsBD(rayStartBD, ray.vector, boundingBox);
 		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
 		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
 

@@ -339,7 +339,7 @@ function pushSliding(
 		// The intersection points this slide direction intersects
 		// our legal move highlights render range bounding box, if it does.
 		// eslint-disable-next-line prefer-const
-		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersectionsInteger(coords, line, boundingBoxOfRenderRange!);
+		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange!);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
@@ -558,7 +558,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
 		const step = ray.vector;
 
 		// eslint-disable-next-line prefer-const
-		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersectionsInteger(ray.start, ray.vector, boundingBoxOfRenderRange!);
+		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(ray.start, ray.vector, boundingBoxOfRenderRange!);
 		
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.

@@ -45,7 +45,7 @@ function getLines(): Line[] {
 		const lineIsVertical = step[0] === 0n;
 		const cappingAxis = lineIsVertical ? 1 : 0;
 
-		const intersectionPoints = geometry.findLineBoxIntersections(bd.FromCoords(pieceCoords), step, boundingBox).map(intersection => intersection.coords);
+		const intersectionPoints = geometry.findLineBoxIntersectionsBD(bd.FromCoords(pieceCoords), step, boundingBox).map(intersection => intersection.coords);
 		if (intersectionPoints.length < 2) continue;
 
 		let start: BDCoords = intersectionPoints[0]!;
