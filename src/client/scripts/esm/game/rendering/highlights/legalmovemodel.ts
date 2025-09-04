@@ -236,7 +236,7 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 		// const ratio = capWidth / newWidth;
 		// newWidth *= ratio;
 		// newHeight *= ratio;
-		throw Error("Legal move highlights bounding box render range width exceeded cap! Don't recalculate it if we're zoomed out.");
+		throw Error("Legal move highlights bounding box render range width exceeded cap! Don't recalculate it if we're zoomed out. Width: " + newWidth + ", Cap: " + capWidth);
 	}
 
 	return [newWidth, newHeight];

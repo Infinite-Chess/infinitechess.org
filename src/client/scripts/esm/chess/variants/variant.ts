@@ -263,7 +263,6 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
 		gameruleModifications: { winConditions: royalCaptureWinConditions, ...gameruleModificationsOfOmegaShowcasings },
-		worldBorder: 0n,
 	},
 	Omega_Fourth: {
 		generator: {
@@ -272,7 +271,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			rules: { pawnDoublePush: false },
 		},
 		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
-		gameruleModifications: { winConditions: royalCaptureWinConditions, ...gameruleModificationsOfOmegaShowcasings }
+		gameruleModifications: { winConditions: royalCaptureWinConditions, ...gameruleModificationsOfOmegaShowcasings },
 	},
 	// Chess on an Infinite Plane - Huygens Options
 	CoaIP_HO: {

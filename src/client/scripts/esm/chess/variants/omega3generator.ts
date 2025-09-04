@@ -71,6 +71,14 @@ function genPositionOfOmegaCubed(): Map<CoordsKey, number> {
 	startingPos.set(coordutil.getKeyFromCoords([10n,-500n]), r.PAWN + e.W);
 	startingPos.set(coordutil.getKeyFromCoords([11n,-500n]), r.PAWN + e.W);
 	startingPos.set(coordutil.getKeyFromCoords([12n,-500n]), r.PAWN + e.W);
+	startingPos.set(coordutil.getKeyFromCoords([6n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([7n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([8n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([9n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([10n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([11n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([12n,-501n]), r.VOID + e.N);
+	startingPos.set(coordutil.getKeyFromCoords([13n,-501n]), r.VOID + e.N);
 
 	// Bishop box that prevents black stalemate ideas
 	startingPos.set(coordutil.getKeyFromCoords([497n,-497n]), r.VOID + e.N);
