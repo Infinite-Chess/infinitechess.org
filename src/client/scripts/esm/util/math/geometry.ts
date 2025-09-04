@@ -15,7 +15,7 @@ import bounds from "./bounds.js";
 
 
 
-// Type Definitions -----------------------------------------------------------
+// ==================================== Type Definitions ====================================
 
 
 /** The form of the intersection points returned by {@link findLineBoxIntersectionsBD}. */
@@ -30,14 +30,13 @@ type IntersectionPoint = {
 }
 
 
-// Constants -----------------------------------------------------------
+// ======================================= Constants =======================================
 
 
 const ZERO = bd.FromBigInt(0n);
-const ONE = bd.FromBigInt(1n);
 
 
-// Operations -----------------------------------------------------------
+// ============================== Fundamental Intersection Functions ==============================
 
 
 /**
@@ -169,6 +168,10 @@ function solveForUnknownAxisBD(knownAxisCoeff: BigDecimal, unknownAxisCoeff: Big
 	return bd.divide_fixed(numerator, unknownAxisCoeff);
 }
 
+
+// ================================= Composite Geometric Operations =================================
+
+
 /**
  * Calculates the intersection point of two line SEGMENTS (not rays or infinite lines).
  * Returns undefined if there is none, or there's infinite (colinear).
@@ -194,28 +197,6 @@ function intersectLineSegments(line1Coefficients: LineCoefficients, s1p1: BDCoor
 	if (isPointOnSegment(intersectionPoint, s1p1, s1p2) && isPointOnSegment(intersectionPoint, s2p1, s2p2)) return intersectionPoint;
 
 	return undefined; // Intersection point is not on one or both segments
-}
-
-/**
- * Checks if a point lies on a given line segment.
- * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
- * @param point The point to check.
- * @param segStart The starting point of the segment.
- * @param segEnd The ending point of the segment.
- * @returns True if the point is on the segment, false otherwise.
- */
-function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords): boolean {
-
-	const minSegX = bd.min(segStart[0], segEnd[0]);
-	const maxSegX = bd.max(segStart[0], segEnd[0]);
-	const minSegY = bd.min(segStart[1], segEnd[1]);
-	const maxSegY = bd.max(segStart[1], segEnd[1]);
-
-	// Check if point is within the bounding box of the segment
-	const withinX = bd.compare(point[0], minSegX) >= 0 && bd.compare(point[0], maxSegX) <= 0;
-	const withinY = bd.compare(point[1], minSegY) >= 0 && bd.compare(point[1], maxSegY) <= 0;
-
-	return withinX && withinY;
 }
 
 /**
@@ -350,6 +331,31 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 	return intersectionPoint;
 }
 
+/**
+ * Checks if a point lies on a given line segment.
+ * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
+ * @param point The point to check.
+ * @param segStart The starting point of the segment.
+ * @param segEnd The ending point of the segment.
+ * @returns True if the point is on the segment, false otherwise.
+ */
+function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords): boolean {
+
+	const minSegX = bd.min(segStart[0], segEnd[0]);
+	const maxSegX = bd.max(segStart[0], segEnd[0]);
+	const minSegY = bd.min(segStart[1], segEnd[1]);
+	const maxSegY = bd.max(segStart[1], segEnd[1]);
+
+	// Check if point is within the bounding box of the segment
+	const withinX = bd.compare(point[0], minSegX) >= 0 && bd.compare(point[0], maxSegX) <= 0;
+	const withinY = bd.compare(point[1], minSegY) >= 0 && bd.compare(point[1], maxSegY) <= 0;
+
+	return withinX && withinY;
+}
+
+
+// ============================== High-Level Algorithms ==============================
+
 
 /**
  * Returns the point on the line SEGMENT that is nearest to the given point.
@@ -438,30 +444,7 @@ function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBo
 	return [minCorner, maxCorner];
 }
 
-/**
- * Rounds the given point to the nearest grid point multiple of the provided gridSize.
- * 
- * For example, a point of [5200,1100] and gridSize of 10000 would yield [10000,0]
- */
-function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
-	// Incurs rounding, but honestly this doesn't need to be exact because it's for graphics.
-	const pointBigInt: Coords = bd.coordsToBigInt(point);
 
-	// To round bigints, we add half the gridSize before dividing by it.
-	function roundBigintNearestMultiple(value: bigint, multiple: bigint) {
-		const halfMultiple = multiple / 2n; // Assumes multiple is positive and divisible by 2.
-
-		// For positives, add half and truncate.
-		if (value >= 0n) return ((value + halfMultiple) / multiple) * multiple;
-		// For negatives, subtract half and truncate.
-		else return ((value - halfMultiple) / multiple) * multiple;
-	}
-
-	const nearestX = roundBigintNearestMultiple(pointBigInt[0], gridSize);
-	const nearestY = roundBigintNearestMultiple(pointBigInt[1], gridSize);
-
-	return [nearestX, nearestY];
-}
 
 
 /**
@@ -527,6 +510,17 @@ function findLineBoxIntersectionsBD(startCoords: BDCoords, vector: Vec2, boxBD: 
 	const startCoordsSum = bd.add(startCoordsNorm[0], startCoordsNorm[1]);
 
 	return findLineBoxIntersectionsBDHelper(coeffs, vector, startCoordsSum, boxBD, boxBD, intersectLineAndVerticalLineBD, intersectLineAndHorizontalLineBD);
+}
+
+/**
+ * Helper for findLineBoxIntersections to normalize an intersection point,
+ * as if the vector were normalized to the first graph quadrant.
+ */
+function normalizeIntersection(intersection: BDCoords, vector: Vec2): BDCoords {
+	const normalizedIntersection = coordutil.copyBDCoords(intersection);
+	if (vector[0] < 0n) normalizedIntersection[0] = bd.negate(normalizedIntersection[0]);
+	if (vector[1] < 0n) normalizedIntersection[1] = bd.negate(normalizedIntersection[1]);
+	return normalizedIntersection;
 }
 
 /** [Helper] Shared logic for finding line-box intersections, whether the inputs are integers or BigDecimals. */
@@ -611,34 +605,58 @@ function findLineBoxIntersectionsBDHelper<T extends bigint | BigDecimal>(
 	return intersectionsWithPositiveDotProduct;
 }
 
+
+// ============================== Miscellaneous Utilities ==============================
+
+
 /**
- * Helper for findLineBoxIntersections to normalize an intersection point,
- * as if the vector were normalized to the first graph quadrant.
+ * Rounds the given point to the nearest grid point multiple of the provided gridSize.
+ * 
+ * For example, a point of [5200,1100] and gridSize of 10000 would yield [10000,0]
  */
-function normalizeIntersection(intersection: BDCoords, vector: Vec2): BDCoords {
-	const normalizedIntersection = coordutil.copyBDCoords(intersection);
-	if (vector[0] < 0n) normalizedIntersection[0] = bd.negate(normalizedIntersection[0]);
-	if (vector[1] < 0n) normalizedIntersection[1] = bd.negate(normalizedIntersection[1]);
-	return normalizedIntersection;
+function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords { // point: [x,y]  gridSize is width of cells, typically 10,000
+	// Incurs rounding, but honestly this doesn't need to be exact because it's for graphics.
+	const pointBigInt: Coords = bd.coordsToBigInt(point);
+
+	// To round bigints, we add half the gridSize before dividing by it.
+	function roundBigintNearestMultiple(value: bigint, multiple: bigint) {
+		const halfMultiple = multiple / 2n; // Assumes multiple is positive and divisible by 2.
+
+		// For positives, add half and truncate.
+		if (value >= 0n) return ((value + halfMultiple) / multiple) * multiple;
+		// For negatives, subtract half and truncate.
+		else return ((value - halfMultiple) / multiple) * multiple;
+	}
+
+	const nearestX = roundBigintNearestMultiple(pointBigInt[0], gridSize);
+	const nearestY = roundBigintNearestMultiple(pointBigInt[1], gridSize);
+
+	return [nearestX, nearestY];
 }
 
 
-// Exports ----------------------------------------------------------------------
+// ================================= Exports =================================
 
 
 export default {
-	// Operations
+	// Fundamental Intersection Functions
 	calcIntersectionPointOfLines,
 	calcIntersectionPointOfLinesBD,
+	
+	// Composite Intersection Functions
 	intersectLineSegments,
 	intersectLineAndSegment,
 	intersectRayAndSegment,
 	intersectRays,
+
+	// High-Level Algorithms
 	closestPointOnLineSegment,
 	findCrossSectionalWidthPoints,
-	roundPointToNearestGridpoint,
 	findLineBoxIntersections,
 	findLineBoxIntersectionsBD,
+
+	// Miscellaneous Utilities
+	roundPointToNearestGridpoint,
 };
 
 export type {
