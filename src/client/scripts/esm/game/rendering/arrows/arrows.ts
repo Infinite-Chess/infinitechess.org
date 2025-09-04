@@ -183,6 +183,9 @@ const renderZoomLimitVirtualPixels: BigDecimal = bd.FromBigInt(12n); // virtual 
 const perspectiveDist = 17;
 
 
+const HALF = bd.FromNumber(0.5);
+
+
 /**
  * The mode the arrow indicators on the edges of the screen is currently in.
  * 0 = Off,
@@ -376,11 +379,16 @@ function updateBoundingBoxesOfVisibleScreen() {
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the
 	 * arrows indicators aren't touching the edge of the screen.
 	 */
-	const padding: BigDecimal = bd.FromNumber(width / 2 + sidePadding);
+	const padding: BigDecimal = getPadding();
 	boundingBoxFloat.left = bd.add(boundingBoxFloat.left, padding);
 	boundingBoxFloat.right = bd.subtract(boundingBoxFloat.right, padding);
 	boundingBoxFloat.bottom = bd.add(boundingBoxFloat.bottom, padding);
 	boundingBoxFloat.top = bd.subtract(boundingBoxFloat.top, padding);
+}
+
+/** Returns the distance one arrow's picture's center should be from the screen edge. */
+function getPadding(): BigDecimal {
+	return bd.FromNumber(width / 2 + sidePadding);
 }
 
 /**
@@ -512,7 +520,9 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, bound
 		const firstIntersection = positiveDotProduct ? thisPieceIntersections[0]! : thisPieceIntersections[1]!;
 
 		// What is the distance to the first intersection point?
-		const firstIntersectionDist = vectors.chebyshevDistanceBD(arrowPiece.coords, firstIntersection.coords);
+		let firstIntersectionDist = vectors.chebyshevDistanceBD(arrowPiece.coords, firstIntersection.coords);
+		// Subtract the padding from the intersection so we get the distance to the intersection of the SCREEN EDGE.
+		firstIntersectionDist = bd.subtract(firstIntersectionDist, getPadding());
 
 		// What is the distance to the farthest point this piece can slide along this direction?
 		let farthestSlidePoint: Coords | null;
@@ -534,7 +544,12 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, bound
 		// distance, then the piece is able to slide into the screen bounding box!
 
 		if (farthestSlidePointDist !== null) {
-			const farthestSlidePointDistBD = bd.FromBigInt(farthestSlidePointDist);
+			let farthestSlidePointDistBD = bd.FromBigInt(farthestSlidePointDist);
+			// Add the additional distance from the center of the square to its edge
+			// This is so that if any part of the furthest square highlight to
+			// move to is visible on screen, we will still render the arrow!
+			farthestSlidePointDistBD = bd.add(farthestSlidePointDistBD, HALF);
+
 			// If the farthest slide point distance is less than the first intersection distance,
 			// then this piece cannot slide onto the screen, so we skip it.
 			if (bd.compare(farthestSlidePointDistBD, firstIntersectionDist) < 0) return; // This piece cannot slide so far as to intersect the screen bounding box
