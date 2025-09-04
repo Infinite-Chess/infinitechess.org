@@ -8,10 +8,10 @@
 
 import type { BoundingBox, BoundingBoxBD } from "./bounds.js";
 
-import bimath from "../bigdecimal/bimath.js";
 import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal.js";
 import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
+import bounds from "./bounds.js";
 
 
 
@@ -84,6 +84,51 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
 	const y = determineAxis(bd.subtract(bd.multiply_fixed(A2, C1), bd.multiply_fixed(A1, C2)));
 
 	return [x, y];
+}
+
+/**
+ * Calculates the intersection point of a NON-VERTICAL line with a vertical one!
+ */
+function intersectLineAndVerticalLine(A1: bigint, B1: bigint, C1: bigint, x: bigint): BDCoords {
+	// The known coordinate is x, its coefficient is A1.
+	// We are solving for y, its coefficient is B1.
+	const intersectionY = solveForUnknownAxis(A1, B1, C1, x);
+	const intersectionX = bd.FromBigInt(x);
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * Calculates the intersection point of a NON-HORIZONTAL line with a horizontal one!
+ * 
+ */
+function intersectLineAndHorizontalLine(A1: bigint, B1: bigint, C1: bigint, y: bigint): BDCoords {
+	// The known coordinate is y, its coefficient is B1.
+	// We are solving for x, its coefficient is A1.
+	const intersectionX = solveForUnknownAxis(B1, A1, C1, y);
+	const intersectionY = bd.FromBigInt(y);
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * [Helper] Solves for one coordinate of a line (Ax + By + C = 0) when the other is known.
+ * Generalizes the formula: unknown = -(knownCoeff * knownVal + C) / unknownCoeff
+ * @param knownAxisCoeff - The coefficient (A or B) corresponding to the known coordinate.
+ * @param unknownAxisCoeff - The coefficient (A or B) for the coordinate we are solving for.
+ * @param C - The C coefficient of the line.
+ * @param knownValue - The value of the known coordinate (e.g., the 'x' of a vertical line).
+ * @returns The calculated value of the unknown coordinate as a BigDecimal.
+ */
+function solveForUnknownAxis(knownAxisCoeff: bigint, unknownAxisCoeff: bigint, C: bigint, knownValue: bigint): BigDecimal {
+	// This should not happen if the "non-vertical" or "non-horizontal" constraints are met.
+	if (unknownAxisCoeff === 0n) throw new Error("Cannot solve for axis, as the divisor (unknownAxisCoeff) is zero.");
+
+	// Calculate the numerator using perfect BigInt arithmetic.
+	const numerator = -(knownAxisCoeff * knownValue + C);
+
+	// Convert to BigDecimal and perform the single, final division.
+	return bd.divide_fixed(bd.FromBigInt(numerator), bd.FromBigInt(unknownAxisCoeff));
 }
 
 /**
@@ -466,53 +511,8 @@ function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: B
 }
 
 /**
- * Represents a rational number (fraction) using two BigInts.
- * This allows for perfect precision in calculations involving division.
- */
-type TIntersection = {
-	/** The parametric value 't' of the intersection, represented as a rational number. */
-	ratio: TRatio;
-	/**
-	 * The type of the bounding box edge that was intersected.
-	 * 0 => A horizontal edge (top or bottom), where the Y coordinate is fixed.
-	 * 1 => A vertical edge (left or right), where the X coordinate is fixed.
-	 */
-	type: 0 | 1;
-};
-
-/** An object PERFECTLY representing a rational number without floating point imprecision. */
-type TRatio = {
-	/** Numerator */
-	N: bigint;
-	/** Denominator */
-	D: bigint;
-}
-
-/**
- * Normalizes the ratio part of a TIntersection so that the denominator is always positive.
- * This is crucial for consistent sorting, as a negative denominator would otherwise flip the
- * direction of an inequality during comparison.
- * Non-mutating. Returns a new TIntersection object.
- */
-function normalizeIntersection(intersection: TIntersection): TIntersection {
-	if (intersection.ratio.D < 0n) return {
-		ratio: { N: -intersection.ratio.N, D: -intersection.ratio.D },
-		type: intersection.type,
-	};
-	return intersection;
-};
-
-/**
  * Finds the intersection points of an integer line with an integer bounding box.
- * 
- * All intermediate calculations are division-free, done with rational numbers
- * (numerators and denominators) to avoid all floating-point inaccuracies,
- * atleast if the final intersection points lie exactly on an integer
- * (if they don't, BigDecimals can't perfectly represent fractions, which is fine).
- *
- * SPECIALIZED. Optimized version that does not use generic rational line
- * intersection methods. It leverages the fact that the box's edges are perfectly vertical
- * and horizontal to reduce the number of arithmetic operations.
+ * PERFECT INTEGER PRECISION for intersections that lie on integer points.
  * @param startCoords - The starting point of the line.
  * @param direction - The direction vector [dx, dy] of the line.
  * @param box - The bounding box to test if the line intersects.
@@ -523,150 +523,114 @@ function findLineBoxIntersectionsInteger(
 	direction: Vec2,
 	box: BoundingBox,
 	log = false
-): IntersectionPoint[] {
+) {
 
-	if (log) console.log("Finding line box intersections for coords", startCoords, "with direction", direction, "and box:");
-	if (log) console.log(box);
+	if (log) {
+		console.log("\nFinding line box intersections for:");
+		console.log("Coords:", startCoords);
+		console.log("Vector:", direction);
+		console.log("Box:", box);
+		console.log('\n');
+	}
 
 	// 1. Deconstruct inputs into BigInts for precise integer arithmetic
 
-	const [x0, y0] = startCoords;
 	const [dx, dy] = direction;
-	const { left, right, bottom, top } = box;
+	const boxBD = bounds.castBoundingBoxToBigDecimal(box);
 
-	const valid_intersections: TIntersection[] = [];
+	// 2. Determine the coefficients of the line in general form
 
-	// 2. Check for intersections with each of the four box edges
+	const coeffs = vectors.getLineGeneralFormFromCoordsAndVec(startCoords, direction);
 
+	// 3. Check for intersections with each of the four box edges
+
+	const intersections: BDCoords[] = [];
+	
 	// Check vertical edges (where x is constant: x = left or x = right)
 	if (dx !== 0n) { // A non-zero dx means the line is not vertical and can intersect vertical edges.
-		// For a vertical edge at x=left, we solve x0 + t*dx = left.
-		// This gives t = (left - x0) / dx. We store this as a rational number (ratio).
-		const t_left_ratio = { N: left - x0, D: dx };
-		const t_right_ratio = { N: right - x0, D: dx };
+		const intersectionLeft = intersectLineAndVerticalLine(...coeffs, box.left);
+		const intersectionRight = intersectLineAndVerticalLine(...coeffs, box.right);
 
-		// Now, we must check if the intersection point actually lies ON the segment of the edge.
-		// The y-coordinate at the intersection is y = y0 + t*dy.
-		// The check is: bottom <= y0 + t*dy <= top.
-		// To avoid division, we substitute t = N/D and multiply the entire inequality by D:
-		// bottom*D <= y0*D + (N/D)*dy*D <= top*D
-		// This simplifies to: bottom*D <= y0*D + N*dy <= top*D
-		const y_num_left = y0 * t_left_ratio.D + t_left_ratio.N * dy;
-		let y_min_bound = bottom * t_left_ratio.D;
-		let y_max_bound = top * t_left_ratio.D;
-
-		// If the denominator D (dx) is negative, multiplying by it flips the inequality signs.
-		// We handle this by swapping the min and max bounds.
-		if (t_left_ratio.D < 0n) {
-			[y_min_bound, y_max_bound] = [y_max_bound, y_min_bound];
-		}
-		if (y_num_left >= y_min_bound && y_num_left <= y_max_bound) {
-			valid_intersections.push({ ratio: t_left_ratio, type: 1 });
-		}
-
-		// Repeat the same check for the right edge. The denominator and thus the bounds are the same.
-		const y_num_right = y0 * t_right_ratio.D + t_right_ratio.N * dy;
-		if (y_num_right >= y_min_bound && y_num_right <= y_max_bound) {
-			valid_intersections.push({ ratio: t_right_ratio, type: 1 });
-		}
+		// Now check if the intersection points actually lie ON the segments of the edges.
+		if (bd.compare(intersectionLeft[1], boxBD.bottom) >= 0 && bd.compare(intersectionLeft[1], boxBD.top) <= 0) intersections.push(intersectionLeft); // Valid intersection on left edge
+		if (bd.compare(intersectionRight[1], boxBD.bottom) >= 0 && bd.compare(intersectionRight[1], boxBD.top) <= 0) intersections.push(intersectionRight); // Valid intersection on right edge
 	}
 
 	// Check horizontal edges (where y is constant: y = bottom or y = top)
 	if (dy !== 0n) { // A non-zero dy means the line is not horizontal and can intersect horizontal edges.
-		// Similarly, for a horizontal edge at y=bottom, we solve y0 + t*dy = bottom.
-		// This gives t = (bottom - y0) / dy.
-		const t_bottom_ratio = { N: bottom - y0, D: dy };
-		const t_top_ratio = { N: top - y0, D: dy };
+		const intersectionBottom = intersectLineAndHorizontalLine(...coeffs, box.bottom);
+		const intersectionTop = intersectLineAndHorizontalLine(...coeffs, box.top);
 
-		// The check is now on the x-coordinate: left <= x0 + t*dx <= right.
-		// Cross-multiplying by D (dy) gives: left*D <= x0*D + N*dx <= right*D
-		const x_num_bottom = x0 * t_bottom_ratio.D + t_bottom_ratio.N * dx;
-		let x_min_bound = left * t_bottom_ratio.D;
-		let x_max_bound = right * t_bottom_ratio.D;
+		// Now check if the intersection points actually lie ON the segments of the edges.
+		if (bd.compare(intersectionBottom[0], boxBD.left) >= 0 && bd.compare(intersectionBottom[0], boxBD.right) <= 0) intersections.push(intersectionBottom); // Valid intersection on bottom edge
+		if (bd.compare(intersectionTop[0], boxBD.left) >= 0 && bd.compare(intersectionTop[0], boxBD.right) <= 0) intersections.push(intersectionTop); // Valid intersection on top edge
+	}
 
-		// Again, swap bounds if the denominator D (dy) is negative.
-		if (t_bottom_ratio.D < 0n) {
-			[x_min_bound, x_max_bound] = [x_max_bound, x_min_bound];
-		}
-		if (x_num_bottom >= x_min_bound && x_num_bottom <= x_max_bound) {
-			valid_intersections.push({ ratio: t_bottom_ratio, type: 0 });
-		}
+	// 4. De-duplicate and Sort the valid intersection points
 
-		// Repeat for the top edge.
-		const x_num_top = x0 * t_top_ratio.D + t_top_ratio.N * dx;
-		if (x_num_top >= x_min_bound && x_num_top <= x_max_bound) {
-			valid_intersections.push({ ratio: t_top_ratio, type: 0 });
+	// De-duplicate points
+	const unique_intersections = intersections.filter((v, i, a) => 
+		a.findIndex(t => coordutil.areBDCoordsEqual(v, t)) === i
+	);
+
+	// Normalize the start coords as if the vector is normalized to the first graph quadrant.
+	const startCoordsNorm = coordutil.copyCoords(startCoords);
+	if (dx < 0n) startCoordsNorm[0] = -startCoordsNorm[0];
+	if (dy < 0n) startCoordsNorm[1] = -startCoordsNorm[1];
+	const startCoordsSum = startCoordsNorm[0] + startCoordsNorm[1];
+
+	const intersectionsWithPositiveDotProduct = unique_intersections.map(intersection => {
+		// Normalize the intersection as if the vector is normalized.
+		const norm = normalizeIntersection(intersection);
+
+		const sum = bd.add(norm[0], norm[1]);
+
+		// If the sum is greater than the startCoords sum, the dot product is positive.
+		const positiveDotProduct = bd.compare(sum, bd.FromBigInt(startCoordsSum)) >= 0;
+		
+		return {
+			coords: intersection,
+			positiveDotProduct
+		};
+	});
+
+	// Sort by distance along the direction vector
+	intersectionsWithPositiveDotProduct.sort((a, b) => {
+		// Normalize the intersection as if the vector is normalized.
+		const normA = normalizeIntersection(a.coords);
+		const normB = normalizeIntersection(b.coords);
+
+		const ASum = bd.add(normA[0], normA[1]);
+		const BSum = bd.add(normB[0], normB[1]);
+
+		// Whichever is greater is further along the direction vector.
+		return bd.compare(ASum, BSum);
+	});
+
+	function normalizeIntersection(intersection: BDCoords): BDCoords {
+		const normalizedIntersection = coordutil.copyBDCoords(intersection);
+		if (dx < 0n) normalizedIntersection[0] = bd.negate(normalizedIntersection[0]);
+		if (dy < 0n) normalizedIntersection[1] = bd.negate(normalizedIntersection[1]);
+		return normalizedIntersection;
+	}
+
+	if (log) {
+		for (const i of intersectionsWithPositiveDotProduct) {
+			console.log("Coordinates of intersection:", coordutil.stringifyBDCoords(i.coords));
+			console.log("Positive dot product?", i.positiveDotProduct);
 		}
 	}
 
-	// 3. De-duplicate and Sort the valid t-ratios
-
-	// If the line passes through a corner, it will generate two intersection objects with
-	// identical rational 't' values. This filter removes such duplicates.
-	// The comparison `v.N * t.D === t.N * v.D` is a division-free way of checking if v.N/v.D === t.N/t.D.
-	const unique_intersections = valid_intersections.filter((v, i, a) => 
-		a.findIndex(t => v.ratio.N * t.ratio.D === t.ratio.N * v.ratio.D) === i
-	);
-
-	// Sort the intersections by their 't' value to order them correctly along the line.
-	// We compare t1 and t2 (a.ratio and b.ratio) without division.
-	// a < b  is equivalent to  a.N/a.D < b.N/b.D.
-	// Cross-multiplying gives a.N*b.D < b.N*a.D (assuming positive denominators).
-	// `normalizeIntersection` is called first to ensure denominators are positive.
-	unique_intersections.sort((a, b) => {
-		const norm_a = normalizeIntersection(a);
-		const norm_b = normalizeIntersection(b);
-		const diff = norm_a.ratio.N * norm_b.ratio.D - norm_b.ratio.N * norm_a.ratio.D;
-		return bimath.compare(diff, 0n);
-	});
-
-	// 4. Map sorted rational intersections to the final BigDecimal output format
-
-	const bd_x0 = bd.FromBigInt(x0);
-	const bd_y0 = bd.FromBigInt(y0);
-
-	const bd_dx = bd.FromBigInt(dx);
-	const bd_dy = bd.FromBigInt(dy);
-
-	return unique_intersections.map(intersection => {
-		const { ratio, type } = intersection;
-		let x: BigDecimal;
-		let y: BigDecimal;
-        
-		const bd_N = bd.FromBigInt(ratio.N);
-		const bd_D = bd.FromBigInt(ratio.D);
-
-		if (type === 1) { // Vertical intersection
-			// For a vertical intersection, we know the x-coordinate is EXACTLY on the boundary.
-			// We "snap" it to the integer value of the boundary to prevent any potential precision loss
-			// that might come from calculating `x0 + t*dx`.
-			x = ratio.N === left - x0 ? bd.FromBigInt(left) : bd.FromBigInt(right);
-			// The y-coordinate is then calculated using the precise rational value of t.
-			// y = y0 + (N/D) * dy -> y = (y0*D + N*dy) / D
-			const y_numerator = bd.add(bd.multiply_fixed(bd_y0, bd_D), bd.multiply_fixed(bd_N, bd_dy));
-			y = bd.divide_fixed(y_numerator, bd_D);
-		} else { // type === 0 => Horizontal intersection
-			// Similarly, snap the y-coordinate to the known boundary.
-			y = ratio.N === bottom - y0 ? bd.FromBigInt(bottom) : bd.FromBigInt(top);
-			// And calculate the x-coordinate.
-			const x_numerator = bd.add(bd.multiply_fixed(bd_x0, bd_D), bd.multiply_fixed(bd_N, bd_dx));
-			x = bd.divide_fixed(x_numerator, bd_D);
-		}
-
-		if (log) console.log("Coordinates of intersection:", coordutil.stringifyBDCoords([x, y]));
-
-		// The dot product of the direction vector and the vector to the intersection point
-		// determines if the intersection is "in front of" the starting point.
-		// The sign of the dot product is the same as the sign of 't'.
-		// The sign of t = N/D is the same as the sign of N*D, which avoids division.
-		const positiveDotProduct = ratio.N * ratio.D >= 0n;
-
-		return {
-			coords: [x, y],
-			positiveDotProduct,
-		};
-	});
+	return intersectionsWithPositiveDotProduct;
 }
+
+// Test cases
+
+// const testBox: BoundingBox = { left: -10n, right: 10n, bottom: -5n, top: 5n };
+// const testCoords: Coords = [2n, -9n];
+// const textVector: Vec2 = [-3n, 1n];
+
+// findLineBoxIntersectionsInteger2(testCoords, textVector, testBox, true);
 
 
 // Exports ----------------------------------------------------------------------
