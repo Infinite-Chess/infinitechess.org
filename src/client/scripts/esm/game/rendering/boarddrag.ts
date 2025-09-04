@@ -225,8 +225,8 @@ function dragBoard() {
 		const boardScale = boardpos.getBoardScale();
 		const newBoardPos: BDCoords = [
 			// negate and add pointer1BoardPosGrabbed instead of flipped, because we don't need high precision here.
-			bd.add(bd.negate(bd.divide_floating(mouseWorld[0], boardScale)), pointer1BoardPosGrabbed![0]),
-			bd.add(bd.negate(bd.divide_floating(mouseWorld[1], boardScale)), pointer1BoardPosGrabbed![1])
+			bd.add(bd.negate(bd.divide_fixed(mouseWorld[0], boardScale)), pointer1BoardPosGrabbed![0]),
+			bd.add(bd.negate(bd.divide_fixed(mouseWorld[1], boardScale)), pointer1BoardPosGrabbed![1])
 		];
 		boardpos.setBoardPos(newBoardPos);
 

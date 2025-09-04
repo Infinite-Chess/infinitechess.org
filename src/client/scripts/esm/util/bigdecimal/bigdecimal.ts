@@ -783,6 +783,7 @@ function clone(bd: BigDecimal): BigDecimal {
 
 /**
  * Modifies the BigDecimal to have the specified divex, always rounding half up.
+ * Mutating.
  * @param bd The BigDecimal to modify.
  * @param divex The target divex.
  */
@@ -815,9 +816,10 @@ function setExponent(bd: BigDecimal, divex: number): void {
 
 /**
  * Sets the BigDecimal to have the default working precision for all fixed point operations.
+ * Mutating, modifies the original BigDecimal.
  */
 function fixPrecision(bd: BigDecimal): void {
-	return setExponent(bd, DEFAULT_WORKING_PRECISION);
+	setExponent(bd, DEFAULT_WORKING_PRECISION);
 }
 
 /**

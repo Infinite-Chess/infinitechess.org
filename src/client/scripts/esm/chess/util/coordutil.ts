@@ -155,7 +155,8 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 /** [DEBUG] Stringifies a pair of BigDecimal coordinates into their exact representation. SLOW. */
 function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toNumber(coords[0])}, ${bd.toNumber(coords[1])})`;
-	return `(${bd.toExactString(coords[0])}, ${bd.toExactString(coords[1])})`;
+	// return `(${bd.toExactString(coords[0])}, ${bd.toExactString(coords[1])})`;
+	return `(${bd.toString(coords[0])}, ${bd.toString(coords[1])})`;
 }
 
 
