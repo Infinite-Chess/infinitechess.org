@@ -235,7 +235,7 @@ function initTelFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	const startCoords = boardpos.getBoardPos();
 	const endCoords = thisArea.coords;
 
-	const currentBoardBoundingBox = boardtiles.gboundingBox(); // Tile/board space, NOT world-space
+	const currentBoardBoundingBox = bounds.castBoundingBoxToBigDecimal(boardtiles.gboundingBox()); // Tile/board space, NOT world-space
 
 	// Will a teleport to this area be a zoom out or in?
 	const isAZoomOut = thisArea.scale < boardpos.getBoardScale();

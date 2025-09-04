@@ -35,15 +35,16 @@ import legalmoves from '../../../chess/logic/legalmoves.js';
 import geometry from '../../../util/math/geometry.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
+import perspective from '../perspective.js';
+import transition from '../transition.js';
+import bimath from '../../../util/bigdecimal/bimath.js';
 import vectors, { Vec2, Vec2Key } from '../../../util/math/vectors.js';
-import bounds, { BoundingBoxBD } from '../../../util/math/bounds.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
-import perspective from '../perspective.js';
-import transition from '../transition.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -201,7 +202,7 @@ let boundingBoxFloat: BoundingBoxBD | undefined;
  * rounded outward to contain the entirity of
  * any square even partially visible.
  */
-let boundingBoxInt: BoundingBoxBD | undefined;
+let boundingBoxInt: BoundingBox | undefined;
 
 
 /**
@@ -386,12 +387,11 @@ function updateBoundingBoxesOfVisibleScreen() {
  * Generates a draft of all the arrows for a game, as if All (plus hippogonals) mode was on.
  * This contains minimal information, as some may be removed later.
  */
-function generateArrowsDraft(boundingBoxInt: BoundingBoxBD, boundingBoxFloat: BoundingBoxBD): SlideArrowsDraft {
+function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBoxBD): SlideArrowsDraft {
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
 	gamefile.boardsim.pieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
-		const slideVD: BDCoords = bd.FromCoords(slide);
 		const slideKey: Vec2Key = vectors.getKeyFromVec2(slide);
 
 
@@ -399,19 +399,18 @@ function generateArrowsDraft(boundingBoxInt: BoundingBoxBD, boundingBoxFloat: Bo
 		// that will contain all organized lines of the given vector
 		// intersecting the box between them.
 
-		const containingPoints = geometry.findCrossSectionalWidthPoints(slideVD, boundingBoxInt);
-		const containingPointsLineC = containingPoints.map(point => vectors.getLineCFromCoordsAndVecBD(point, slideVD)) as [BigDecimal, BigDecimal];
+		const containingPoints = geometry.findCrossSectionalWidthPoints(slide, boundingBoxInt);
+		const containingPointsLineC = containingPoints.map(point => vectors.getLineCFromCoordsAndVec(point, slide)) as [bigint, bigint];
 		// Any line of this slope of which its C value is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
-		containingPointsLineC.sort((a, b) => bd.compare(a, b)); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
+		containingPointsLineC.sort((a, b) => bimath.compare(a, b)); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
 		const organizedLinesOfDir = gamefile.boardsim.pieces.lines.get(slideKey)!;
 		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
 			const C: bigint = organizedpieces.getCFromKey(lineKey);
-			const C_BD: BigDecimal = bd.FromBigInt(C);
-			if (bd.compare(C_BD, containingPointsLineC[0]) < 0 || bd.compare(C_BD, containingPointsLineC[1]) > 0) continue; // Next line, this one is off-screen, so no piece arrows are visible
+			if (bimath.compare(C, containingPointsLineC[0]) < 0 || bimath.compare(C, containingPointsLineC[1]) > 0) continue; // Next line, this one is off-screen, so no piece arrows are visible
 
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLineDraft(gamefile.boardsim, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine);
@@ -432,7 +431,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBoxBD, boundingBoxFloat: Bo
  * next to each other one the same line, since Huygens
  * can jump/skip over other pieces.
  */
-function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, boundingBoxFloat: BoundingBoxBD, slideDir: Vec2, slideKey: Vec2Key, organizedline: number[]): ArrowsLineDraft | undefined {
+function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBoxBD, slideDir: Vec2, slideKey: Vec2Key, organizedline: number[]): ArrowsLineDraft | undefined {
 
 	const negDotProd: ArrowDraft[] = [];
 	const posDotProd: ArrowDraft[] = [];
@@ -464,12 +463,13 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBoxBD, bou
 		};
 
 		// Is the piece off-screen?
-		if (bounds.boxContainsSquareBD(boundingBoxInt, arrowPiece.coords)) return; // On-screen, no arrow needed
+		const boundingBoxIntBD = bounds.castBoundingBoxToBigDecimal(boundingBoxInt);
+		if (bounds.boxContainsSquareBD(boundingBoxIntBD, arrowPiece.coords)) return; // On-screen, no arrow needed
 
 		// Piece is guaranteed off-screen...
 		
 		// console.log(boundingBoxFloat, boundingBoxInt) 
-		const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(arrowPiece.coords, slideDir, boundingBoxInt);
+		const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(arrowPiece.coords, slideDir, boundingBoxFloat);
 		if (thisPieceIntersections.length < 2) return;
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
 
@@ -892,7 +892,7 @@ function executeArrowShifts() {
 
 			// This is an arrow animation for a piece IN MOTION, not a still animation.
 			// Add an animated arrow for it, since it is gonna be at a floating point coordinate
-			if (bounds.boxContainsSquareBD(boundingBoxInt!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
+			if (bounds.boxContainsSquareBD(boundingBoxFloat!, shift.end)) return; // On-screen, no arrows needed for the piece, no matter their vector
 
 			const piece: ArrowPiece = { type: shift.type, coords: shift.end, index: -1, floating: true }; // Create a piece object for the arrow
 

@@ -12,6 +12,7 @@ import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal.js";
 import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
 import bounds from "./bounds.js";
+import bimath from "../bigdecimal/bimath.js";
 
 
 
@@ -398,18 +399,14 @@ function closestPointOnLineSegment(segmentCoeffs: LineCoefficients, segP1: BDCoo
  * If the vector is vertical, then as if we were looking at the box from below,
  * we would return its left/right-most points.
  */
-function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBoxBD): [BDCoords, BDCoords] {
+function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
 	const { left, right, bottom, top } = boundingBox;
-	const [dx, dy] = vector;
-
-	// Handle edge case: zero direction vector
-	if (bd.areEqual(dx, ZERO) && bd.areEqual(dy, ZERO)) throw new Error("Direction vector cannot be zero.");
 
 	// The normal vector is perpendicular to the viewing vector.
 	// We can use this to find the points that are furthest apart on this line.
-	const normal: BDCoords = [bd.negate(dy), dx];
+	const normal: Vec2 = vectors.getPerpendicularVector(vector);
 
-	const corners: BDCoords[] = [
+	const corners: Coords[] = [
         [left, top],     // Top-left
         [right, top],    // Top-right
         [left, bottom],  // Bottom-left
@@ -417,25 +414,22 @@ function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBo
     ];
 
 	// Initialize min/max with the projection of the first corner
-	let minCorner: BDCoords = corners[0]!;
-	let maxCorner: BDCoords = corners[0]!;
+	let minCorner: Coords = corners[0]!;
+	let maxCorner: Coords = corners[0]!;
 
-	// minCorner[0] * normalBD[0] + minCorner[1] * normalBD[1]
-	let minProjection: BigDecimal = bd.add(bd.multiply_fixed(minCorner[0], normal[0]), bd.multiply_fixed(minCorner[1], normal[1]));
-	let maxProjection: BigDecimal = minProjection;
+	let minProjection: bigint = vectors.dotProduct(minCorner, normal);
+	let maxProjection: bigint = minProjection;
 
 	// Iterate through the rest of the corners (from the second one)
-	for (let i = 1; i < corners.length; i++) {
-		const corner: BDCoords = corners[i]!;
-
+	for (const corner of corners) {
 		// Project the corner onto the NORMAL vector using the dot product
-		const projection = vectors.dotProductBD(corner, normal);
+		const projection = vectors.dotProduct(corner, normal);
 
-		if (bd.compare(projection, minProjection) < 0) {
+		if (bimath.compare(projection, minProjection) < 0) {
 			minProjection = projection;
 			minCorner = corner;
 		}
-		if (bd.compare(projection, maxProjection) > 0) {
+		if (bimath.compare(projection, maxProjection) > 0) {
 			maxProjection = projection;
 			maxCorner = corner;
 		}

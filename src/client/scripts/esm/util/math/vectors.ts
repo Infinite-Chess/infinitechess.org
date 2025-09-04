@@ -202,9 +202,10 @@ function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
 /**
  * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
  */
-function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: BDCoords): BigDecimal {
-	// Coors first since they are likely higher precision.
-	return bd.subtract(bd.multiply_fixed(coords[1], vector[0]), bd.multiply_fixed(coords[0], vector[1]));
+function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): BigDecimal {
+	const vectorBD = bd.FromCoords(vector);
+	// Coords first since they are likely higher precision.
+	return bd.subtract(bd.multiply_fixed(coords[1], vectorBD[0]), bd.multiply_fixed(coords[0], vectorBD[1]));
 }
 
 
