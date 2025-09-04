@@ -814,6 +814,13 @@ function setExponent(bd: BigDecimal, divex: number): void {
 }
 
 /**
+ * Sets the BigDecimal to have the default working precision for all fixed point operations.
+ */
+function fixPrecision(bd: BigDecimal): void {
+	return setExponent(bd, DEFAULT_WORKING_PRECISION);
+}
+
+/**
  * Compares two BigDecimals.
  * @param bd1 The first BigDecimal.
  * @param bd2 The second BigDecimal.
@@ -1438,6 +1445,7 @@ export default {
 	abs,
 	clone,
 	setExponent,
+	fixPrecision,
 	compare,
 	areEqual,
 	isZero,
