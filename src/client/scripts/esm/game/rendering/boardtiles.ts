@@ -179,11 +179,12 @@ function recalcBoundingBox() {
  */
 function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	const squareCenter = getSquareCenter();
+	const squareCenterMinusOne = bd.subtract(squareCenter, ONE);
 
 	const left = bd.toBigInt(bd.floor(bd.add(src.left, squareCenter))); // floor(left + squareCenter)
-	const right = bd.toBigInt(bd.ceil(bd.add(bd.subtract(src.right, ONE), squareCenter))); // ceil(right - 1 + squareCenter)
+	const right = bd.toBigInt(bd.ceil(bd.add(src.right, squareCenterMinusOne))); // ceil(right + squareCenter - 1)
 	const bottom = bd.toBigInt(bd.floor(bd.add(src.bottom, squareCenter))); // floor(bottom + squareCenter)
-	const top = bd.toBigInt(bd.ceil(bd.add(bd.subtract(src.top, ONE), squareCenter))); // ceil(top - 1 + squareCenter)
+	const top = bd.toBigInt(bd.ceil(bd.add(src.top, squareCenterMinusOne))); // ceil(top + squareCenter - 1)
     
 	return { left, right, bottom, top };
 }
