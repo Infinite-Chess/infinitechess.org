@@ -314,9 +314,8 @@ function updateZoomingTransition(easedT: number): void {
 	// Scale
 
 	// Smoothly transition E (the logarithm of the scale), then convert back to scale
-	const newE = originE + differenceE * easedT;
-	const E_CONSTANT = bd.FromNumber(Math.E);
-	const newScale = bd.pow(E_CONSTANT, newE);
+	const newE = bd.FromNumber(originE + differenceE * easedT);
+	const newScale = bd.exp(newE);
 	boardpos.setBoardScale(newScale);
 
 	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
