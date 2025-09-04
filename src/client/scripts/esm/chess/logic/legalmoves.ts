@@ -403,12 +403,10 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
 
 	// These are in order of ascending dot product.
 	const intersections = geometry.findLineBoxIntersections(coords, step, boardsim.playableRegion).map(i => i.coords);
-	if (intersections.length < 2) {
-		throw Error("Number of intersections slide direction makes with border is less than 2!");
-		// IT MIGHT BE POSSIBLE FOR THERE TO BE ONE INTERSECTION with the playable area if the
-		// the piece is on the very corner!!!!
-	}
-	const [intsect1, intsect2] = intersections;
+	if (intersections.length < 1) throw Error("Slide direction made zero intersections with border!"); // Would happen if the piece somehow gets outside the border
+	// eslint-disable-next-line prefer-const
+	let [intsect1, intsect2] = intersections;
+	if (!intsect2) intsect2 = intsect1; // If there's only one intersection (corner), use it for both
 
 	const stepsToIntsect1 = getStepsToReachPoint(coordsBD, intsect1!, negatedStepBD, axis); // Always positive
 	const stepsToIntsect2 = getStepsToReachPoint(coordsBD, intsect2!, stepBD,        axis); // Always positive
