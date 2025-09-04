@@ -177,19 +177,66 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
 /**
  * Creates a Big Decimal from a javascript number (double) by directly
  * interpreting its IEEE 754 binary representation extremely fast.
- * WARNING: If the input number is too small, and you don't specify a high enough precision,
- * then the resulting BigDecimal becomes 0! The precision is not automatic here.
+ * The result will have a fixed divex (scale) as specified.
+ * WARNING: If the input number is too small for the target precision,
+ * the resulting BigDecimal will become 0.
  * @param num - The number to convert.
  * @param [precision=DEFAULT_WORKING_PRECISION] The target divex for the result.
  * @returns A new BigDecimal with the value from the number.
  */
 function FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
-    
-	// 1. Handle non-finite and zero cases first.
 	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
+    
+	// Handle the zero case.
 	if (num === 0) return { bigint: ZERO, divex: precision };
 
+	// Get the raw, unadjusted BigDecimal representation.
+	// We know rawBD is not null here because we've handled the zero case.
+	const rawBD = _fromNumberBits(num)!;
+
+	// Adjust to the target precision.
+	setExponent(rawBD, precision);
+
+	return rawBD;
+}
+
+// /**
+//  * Creates a "floating-point" style Big Decimal from a javascript number (double).
+//  * This method preserves the significant digits of the input number by normalizing
+//  * the result to a specified mantissa bit length, automatically calculating the
+//  * required divex. This is ideal for representing very large or very small numbers
+//  * without them being truncated to zero.
+//  * @param num - The number to convert.
+//  * @param [mantissaBits=DEFAULT_MANTISSA_PRECISION_BITS] The target number of bits for the mantissa.
+//  * @returns A new, normalized BigDecimal with the value from the number.
+//  */
+// function FromNumber_floating(num: number, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+// 	if (mantissaBits <= 0 || mantissaBits > MAX_DIVEX) throw new Error(`Mantissa bits must be between 1 and ${MAX_DIVEX}. Received: ${mantissaBits}`);
+// 	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
+    
+// 	// Handle the zero case.
+// 	if (num === 0) return { bigint: ZERO, divex: mantissaBits };
+
+// 	// Get the raw, unadjusted BigDecimal representation.
+// 	// We know rawBD is not null here because we've handled the zero case.
+// 	const rawBD = _fromNumberBits(num)!;
+
+// 	// Normalize the raw BigDecimal to the target mantissa size.
+// 	return normalize(rawBD, mantissaBits);
+// }
+
+/**
+ * Internal helper to parse the raw IEEE 754 bits of a JavaScript number
+ * into the core components of a BigDecimal (bigint and divex) without
+ * any final precision adjustments.
+ * @param num The number to parse.
+ * @returns An object containing the raw, un-normalized BigDecimal
+ *          representation of the number. Returns null if the number is zero.
+ */
+function _fromNumberBits(num: number): BigDecimal | null {
+	// 1. Handle the zero case. The callers will handle this special value.
+	if (num === 0) return null;
 
 	// 2. Extract the raw 64 bits of the float into a BigInt.
 	// This is a standard and fast technique to get the binary components.
@@ -204,43 +251,22 @@ function FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION):
 	const exponent = Number((bits >> 52n) & 0x7FFn);
 	const mantissa = bits & 0xFFFFFFFFFFFFFn;
 
-	let initialBigInt: bigint;
-	let initialDivex: number;
-
 	if (exponent === 0) {
 		// Subnormal number. The implicit leading bit is 0.
 		// The effective exponent is -1022, and we scale by the mantissa bits (52).
-		initialBigInt = sign * mantissa;
-		initialDivex = 1022 + 52; // 1074
+		return {
+			bigint: sign * mantissa,
+			divex: 1022 + 52 // 1074
+		};
 	} else {
 		// Normal number. The implicit leading bit is 1.
 		// Add the implicit leading bit to the mantissa to get the full significand.
 		const significand = (ONE << 52n) | mantissa;
-		initialBigInt = sign * significand;
-		// The exponent is biased by 1023. We also account for the 52 fractional
-		// bits in the significand to get the final scaling factor.
-		initialDivex = 1023 - exponent + 52;
-	}
-    
-	// 4. Adjust the precision to match the user's request.
-	// This is identical to the logic in `setExponent`.
-	const difference = initialDivex - precision;
-
-	if (difference === 0) {
-		// Precision already matches.
-		return { bigint: initialBigInt, divex: initialDivex };
-	} else if (difference < 0) {
-		// We are increasing precision (shifting left).
 		return {
-			bigint: initialBigInt << BigInt(-difference),
-			divex: precision,
-		};
-	} else {
-		// We are decreasing precision (shifting right), so we must round.
-		const half = ONE << BigInt(difference - 1);
-		return {
-			bigint: (initialBigInt + half) >> BigInt(difference),
-			divex: precision
+			bigint: sign * significand,
+			// The exponent is biased by 1023. We also account for the 52 fractional
+		    // bits in the significand to get the final scaling factor.
+			divex: 1023 - exponent + 52
 		};
 	}
 }
@@ -665,7 +691,7 @@ function pow(base: BigDecimal, exponent: number, mantissaBits: number = DEFAULT_
 		throw new Error("Power of a negative base to a non-integer exponent results in a complex number, which is not supported.");
 	}
 	if (base.bigint === ZERO) {
-		if (exponent > 0) return { bigint: ZERO, divex: 0 }; // 0^positive = 0
+		if (exponent > 0) return { bigint: ZERO, divex: mantissaBits }; // 0^positive = 0
 		if (exponent < 0) throw new Error("0 raised to a negative power is undefined (division by zero).");
 		return FromBigInt(ONE, mantissaBits); // 0^0 is conventionally 1
 	}
@@ -1426,6 +1452,7 @@ export default {
 	
 	// NewBigDecimal_FromString,
 	FromNumber,
+	// FromNumber_floating,
 	FromBigInt,
 	FromCoords,
 	FromDoubleCoords,

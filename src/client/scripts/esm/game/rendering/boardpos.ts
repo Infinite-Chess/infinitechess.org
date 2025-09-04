@@ -74,7 +74,7 @@ function getBoardScale() {
  * Infinity or underflowing to 0.
  * 
  * Typically used for graphics calculations, as the arithmetic
- * is much simpler than using BigDecimals.
+ * is faster than using BigDecimals.
  */
 function getBoardScaleAsNumber(): number {
 	return bd.toNumber(boardScale);
