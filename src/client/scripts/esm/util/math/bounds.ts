@@ -100,14 +100,14 @@ function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 	};
 }
 
-function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
-	return {
-		left: bd.toBigInt(box.left),
-		right: bd.toBigInt(box.right),
-		bottom: bd.toBigInt(box.bottom),
-		top: bd.toBigInt(box.top)
-	};
-}
+// function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
+// 	return {
+// 		left: bd.toBigInt(box.left),
+// 		right: bd.toBigInt(box.right),
+// 		bottom: bd.toBigInt(box.bottom),
+// 		top: bd.toBigInt(box.top)
+// 	};
+// }
 
 /**
  * Expands the bounding box to include the provided coordinates, if it doesn't already.
@@ -210,7 +210,7 @@ export default {
 	getBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
-	castBDBoundingBoxToBigint,
+	// castBDBoundingBoxToBigint,
 	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
