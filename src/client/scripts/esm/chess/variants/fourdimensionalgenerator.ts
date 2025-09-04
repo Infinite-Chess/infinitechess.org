@@ -175,23 +175,26 @@ function gen4DMoveset(boards_x: bigint, boards_y: bigint, board_spacing: bigint,
 		[r.QUEEN]: {
 			individual: [],
 			sliding: {},
-			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
-			}
+			// Not needed if a worldBorder of 0n is added.
+			// ignore: (startCoords: Coords, endCoords: Coords) => {
+			// 	return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
+			// }
 		},
 		[r.BISHOP]: {
 			individual: [],
 			sliding: {},
-			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
-			}
+			// Not needed if a worldBorder of 0n is added.
+			// ignore: (startCoords: Coords, endCoords: Coords) => {
+			// 	return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
+			// }
 		},
 		[r.ROOK]: {
 			individual: [],
 			sliding: {},
-			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
-			}
+			// Not needed if a worldBorder of 0n is added.
+			// ignore: (startCoords: Coords, endCoords: Coords) => {
+			// 	return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
+			// }
 		},
 		[r.KING]: {
 			individual: [],
