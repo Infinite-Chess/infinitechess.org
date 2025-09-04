@@ -18,12 +18,10 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
-import bounds from '../../util/math/bounds.js';
 import premoves from '../chess/premoves.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import boardtiles from '../rendering/boardtiles.js';
 import transition from '../rendering/transition.js';
-import area from '../rendering/area.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 
 
@@ -294,17 +292,16 @@ function callback_Expand() {
 
 	// THIS ROUNDS RAY intersections to the nearest integer coordinate, so the resulting area may be imperfect!!!!!
 	// I don't think it matters to much.
-	const annoteSnapPoints = snapping.getAnnoteSnapPoints(false).map(sp => bd.coordsToBigInt(sp));
+	const annoteSnapPoints = snapping.getAnnoteSnapPoints(false).map(point => bd.coordsToBigInt(point));
 
 	allCoords.push(...annoteSnapPoints);
 	if (allCoords.length === 0) allCoords.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
-	area.initTelFromCoordsList(allCoords);
+	transition.zoomToCoordsList(allCoords);
 }
 
 function recenter() {
 	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
-	const boxBD = bounds.castBoundingBoxToBigDecimal(boundingBox);
-	area.initTelFromUnpaddedBox(boxBD); // If you know the bounding box, you don't need a coordinate list
+	transition.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================
