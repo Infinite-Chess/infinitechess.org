@@ -75,6 +75,9 @@ interface BigDecimal {
  */
 const DEFAULT_WORKING_PRECISION = 23;
 
+/** The target number of bits for the mantissa in floating-point operations. Higher is more precise but slower. */
+const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 7, or 16 digits of precision, depending whether we have 32 bit or 64 bit precision (javascript doubles are 64 bit).
+
 /**
  * The maximum divex a BigDecimal is allowed to have.
  * Beyond this, the divex is assumed to be running away towards Infinity, so an error is thrown.
@@ -113,6 +116,7 @@ const FIVE: bigint = 5n;
 const TEN: bigint = 10n;
 
 const E: BigDecimal = FromNumber(Math.E);
+const LN2 = FromNumber(Math.LN2); // Natural log of 2
 
 
 // Big Decimal Contructor =============================================================
@@ -990,48 +994,70 @@ function ln(bd: BigDecimal): number {
 
 /**
  * Calculates the exponential function e^bd (the inverse of the natural logarithm).
- * This is computed using a Taylor Series expansion for arbitrary precision.
+ * This is computed using argument reduction and a Taylor Series expansion for arbitrary precision.
  * @param bd The BigDecimal exponent.
  * @param mantissaBits The precision of the result in bits.
  * @returns A new BigDecimal representing e^bd.
  */
 function exp(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
-	// The Taylor series for e^x is Σ (x^n / n!) from n=0 to infinity.
-	// We can compute this iteratively: term_n = term_{n-1} * (x / n)
+	// --- 1. Argument Reduction ---
+	// We use the identity: e^x = e^(y + k*ln(2)) = (e^y) * 2^k
+	// First, find k = round(bd / ln(2))
+	const bd_div_ln2 = divide_floating(bd, LN2, mantissaBits);
+	const k = toBigInt(bd_div_ln2);
 
-	// Initialize sum and the first term (x^0 / 0! = 1)
+	// Now, find y = bd - k * ln(2). This `y` will be small.
+	const k_bd = FromBigInt(k, mantissaBits);
+	const k_ln2 = multiply_floating(k_bd, LN2, mantissaBits);
+	const y = subtract(bd, k_ln2);
+
+	// --- 2. Taylor Series for e^y ---
+	// The Taylor series for e^y is Σ (y^n / n!) from n=0 to infinity.
+	// Since `y` is small, this series converges very quickly.
+	// We can compute this iteratively: term_n = term_{n-1} * (y / n)
+
+	// Initialize sum and the first term (y^0 / 0! = 1)
 	let sum = FromBigInt(1n, mantissaBits);
 	let term = clone(sum);
 	let lastSum = FromBigInt(0n, mantissaBits);
 
-	const MAX_ITERATIONS = 1000; // Safety break to prevent infinite loops
+	const MAX_ITERATIONS = 100; // Safety break
 
 	for (let n = 1; n < MAX_ITERATIONS; n++) {
+		// console.log(`Iteration ${n}:`);
 		const n_bd = FromBigInt(BigInt(n), mantissaBits);
 
-		// Calculate the next term: term = term * (bd / n)
-		const bd_div_n = divide_floating(bd, n_bd, mantissaBits);
-		term = multiply_floating(term, bd_div_n, mantissaBits);
-		
-		// Add the new term to the sum
+		// Calculate the next term: term = term * (y / n)
+		const y_div_n = divide_floating(y, n_bd, mantissaBits);
+		term = multiply_floating(term, y_div_n, mantissaBits);
+        
+		// Add the new term to the sum.
 		sum = add(sum, term);
+		// console.log("New Sum:", toString(sum));
 
-		// Check for convergence. If the sum hasn't changed, we're done.
-		if (areEqual(sum, lastSum)) return sum;
-
+		// Check for convergence.
+		if (areEqual(sum, lastSum)) {
+			// console.log(`exp() converged after ${n} iterations.`);
+			break; // Exit loop once converged
+		}
 		lastSum = clone(sum);
 	}
 
-	console.warn(`bigdecimal.exp() may not have fully converged after ${MAX_ITERATIONS} iterations.`);
-	return sum;
+	// --- 3. Scale the Result ---
+	// We now have e^y. The final result is (e^y) * 2^k.
+	// A multiplication by 2^k is a simple divex adjustment.
+	// value = (bigint / 2^divex) * 2^k = bigint / 2^(divex - k)
+	const finalResult = {
+		bigint: sum.bigint,
+		divex: sum.divex - Number(k)
+	};
+
+	return finalResult;
 }
 
 
 // Floating-Point Model Helpers ====================================================
 
-
-/** The target number of bits for the mantissa in floating-point operations. Higher is more precise but slower. */
-const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 7, or 16 digits of precision, depending whether we have 32 bit or 64 bit precision (javascript doubles are 64 bit).
 
 /**
  * Normalizes a BigDecimal to enforce a true floating-point precision model.
