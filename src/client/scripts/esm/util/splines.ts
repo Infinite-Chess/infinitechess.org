@@ -83,6 +83,12 @@ function generateCubicSplineCoefficients(points: bigint[]): { a: BigDecimal, b: 
 function thomasAlgorithm(a: BigDecimal[], b: BigDecimal[], c: BigDecimal[], d: BigDecimal[]): BigDecimal[] {
 	const n = d.length;
 	if (n === 0) return [];
+
+	// Handle the 1x1 system case, which occurs when there are 3 control points.
+	// In this case, 'a' and 'c' are empty, and 'b' and 'd' have one element.
+	// The system is simply b[0]*x[0] = d[0], so x[0] = d[0]/b[0].
+	// Without this, a crash happens if you move the rose 2 hops in one move.
+	if (n === 1) return [bd.divide_fixed(d[0]!, b[0]!)];
     
 	const cp: BigDecimal[] = [...c];
 	const dp: BigDecimal[] = [...d];
