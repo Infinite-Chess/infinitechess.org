@@ -255,12 +255,11 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Coords {
 	// Since the targetVector can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
-	const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
-	const normalizedVectorX = bd.toNumber(bd.divide_floating(targetVector[0], targetLength));
-	const normalizedVectorY = bd.toNumber(bd.divide_floating(targetVector[1], targetLength));
+	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
+	const normalizedVector = vectors.normalizeVectorBD(targetVector);
 
 	// Now we can use small numbers
-	const targetAngle = Math.atan2(normalizedVectorY, normalizedVectorX);
+	const targetAngle = Math.atan2(normalizedVector[1], normalizedVector[0]); // Y value first
 
 	const searchVectors: Coords[] = searchHippogonals ? [
 		...vectors.VECTORS_ORTHOGONAL,

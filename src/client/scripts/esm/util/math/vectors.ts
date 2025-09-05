@@ -296,6 +296,21 @@ function normalizeVector(vec2: Vec2): Vec2 {
 }
 
 /**
+ * Normalizes a floating point arbitrarily large vector into a range
+ * near 0-1, small enough so it can be represented with javascript numbers.
+ * PRESERVES the ratio between the x and y components.
+ */
+function normalizeVectorBD(vec2: BDCoords): DoubleCoords {
+	// Normalize it NEAR the range 0-1 (don't matter if it's not exact).
+	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
+	const targetLength = bd.max(bd.abs(vec2[0]), bd.abs(vec2[1]));
+	return [
+		bd.toNumber(bd.divide_floating(vec2[0], targetLength)),
+		bd.toNumber(bd.divide_floating(vec2[1], targetLength))
+	];
+}
+
+/**
  * Calculates the normal (perpendicular) vector of a given 2D vector.
  */
 function getPerpendicularVector(vec2: Vec2): Vec2 {
@@ -431,6 +446,7 @@ export default {
 	negateBDVector,
 	absVector,
 	normalizeVector,
+	normalizeVectorBD,
 	getPerpendicularVector,
 	getPerpendicularLine,
 	degreesToRadians,

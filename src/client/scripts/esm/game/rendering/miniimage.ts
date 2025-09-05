@@ -102,15 +102,15 @@ function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => vo
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
 	for (const a of animation.animations) {
-		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentInfo);
 		callback(currentAnimationPosition, a.type);
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(p => {
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach(p => {
 			const pieceBDCoords = bd.FromCoords(p.coords);
 			callback(pieceBDCoords, p.type);
 		}));
 		// Construct the hidden pieces for below
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
 	// Static pieces
@@ -232,8 +232,8 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
 	for (const a of animation.animations) {
-		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentInfo);
 		// Add the main animated piece
 		pushPieceNoDuplicatesOrVoids({
 			coords: bd.coordsToBigInt(currentAnimationPosition),
@@ -241,9 +241,9 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 			index: -1
 		});
 		// Add the captured pieces being shown
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
 		// Construct the hidden pieces for below
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
 	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)

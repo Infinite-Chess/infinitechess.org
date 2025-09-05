@@ -33,8 +33,29 @@ import perspective from './perspective.js';
 interface AnimationSegment {
 	start: BDCoords;
 	end: BDCoords;
-	distance: BigDecimal;
+	/** The length of the individual segment. */
+	length: BigDecimal;
+
+	/** The precalculated difference going from start to the end. */
+	difference: BDCoords;
+	/** The precalculated ratio of the x difference to the distance (hypotenuse, total length). Doesn't need extreme precision. */
+	xRatio: number;
+	/** The precalculated ratio of the y difference to the distance (hypotenuse, total length). Doesn't need extreme precision. */
+	yRatio: number;
 }
+
+/** Information about the progress of a current animation. */
+type SegmentInfo = {
+	/**
+	 * The segment number along the entire animation path, 0-based.
+	 * 0 means it is at or beyond the first waypoint, 1 means it is at or beyond the second waypoint, etc.
+	 */
+	segmentNum: number,
+	/** The distance along the segment the animation currently is, in squares. */
+	distance: BigDecimal,
+	/** Whether the distance is from the start of the segment, or the end. */
+	forward: boolean
+};
 
 /** Represents an animation of a piece. */
 interface Animation {
@@ -147,7 +168,7 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	const path_smooth = splines.generateSplinePath(path, SPLINES.RESOLUTION);
 	const segments = createAnimationSegments(path_smooth);
 	// Calculates the total length of the path traveled by the piece in the animation.
-	const totalDistance: BigDecimal = segments.reduce((sum, seg) => bd.add(sum, seg.distance), ZERO);
+	const totalDistance: BigDecimal = segments.reduce((sum, seg) => bd.add(sum, seg.length), ZERO);
 
 	// The hideShowKeyframes need to be stretched to match the resolution of the spline.
 	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
@@ -226,10 +247,18 @@ function createAnimationSegments(waypoints: BDCoords[]): AnimationSegment[] {
 	for (let i = 0; i < waypoints.length - 1; i++) {
 		const start = waypoints[i]!;
 		const end = waypoints[i + 1]!;
+		const difference: BDCoords = coordutil.subtractBDCoords(end, start);
+		// Since the difference can be arbitrarily large, we need to normalize it
+		// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
+		const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
+		const normalizedVectorHypot: number = Math.hypot(...normalizedVector);
 		segments.push({
 			start,
 			end,
-			distance: vectors.euclideanDistanceBD(start, end)
+			length: vectors.euclideanDistanceBD(start, end),
+			difference: difference,
+			xRatio: normalizedVector[0] / normalizedVectorHypot,
+			yRatio: normalizedVector[1] / normalizedVectorHypot,
 		});
 	}
 	return segments;
@@ -287,14 +316,14 @@ function update() {
 
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
-	const segment = getCurrentSegment(animation);
+	const segmentInfo = getCurrentSegment(animation);
 	// Delete the arrows of the hidden pieces
-	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.deleteArrow(c)));
-	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
+	forEachActiveKeyframe(animation.hideKeyframes, segmentInfo.segmentNum, coords => coords.forEach(c => arrows.deleteArrow(c)));
+	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segmentInfo);
 	// Add the arrow of the animated piece (also removes the arrow it off its destination square)
 	arrows.animateArrow(animation.path[animation.path.length - 1]!, animationCurrentCoords, animation.type);
 	// Add the arrows of the captured pieces only after we've shifted the piece that captured it
-	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.addArrow(p.type, p.coords)));
+	forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach(p => arrows.addArrow(p.type, p.coords)));
 }
 
 
@@ -312,8 +341,8 @@ function renderTransparentSquares(): void {
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => {
 		const hidesData: number[] = [];
-		const segment = getCurrentSegment(animation);
-		forEachActiveKeyframe(animation.hideKeyframes, segment, v => {
+		const segmentNum = getCurrentSegment(animation).segmentNum;
+		forEachActiveKeyframe(animation.hideKeyframes, segmentNum, v => {
 			v.forEach(coord => hidesData.push(...meshes.QuadWorld_Color(coord, color)));
 		});
 		return hidesData; 
@@ -346,10 +375,10 @@ function renderAnimations() {
 	const instanceData: TypeGroup<number[]> = {};
 
 	animations.forEach(animation => {
-		const segment = getCurrentSegment(animation);
-		const currentPos = getCurrentAnimationPosition(animation.segments, segment);
+		const segmentInfo = getCurrentSegment(animation);
+		const currentPos = getCurrentAnimationPosition(animation.segments, segmentInfo);
 
-		forEachActiveKeyframe(animation.showKeyframes, segment, pieces => { // Render all captured pieces in place
+		forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, pieces => { // Render all captured pieces in place
 			pieces.forEach(p => {
 				const coordsBD = bd.FromCoords(p.coords);
 				processPiece(p.type, coordsBD);
@@ -383,17 +412,17 @@ function renderAnimations() {
 
 
 /**
- * Gets the current progress in float form.
- * The whole number is the segment that has been reached.
- * The decimal component is the progress in that segment.
- * For example, 1.6 means the animation is 60% through the second segment.
- * Roses's have a higher spline resolution, so they cram a lot more segments
- * in between each waypoint.
+ * Calculates which segment of the animation the animated piece is currently on,
+ * and its distance along that specific segment.
  * @param animation - The animation to calculate the current segment for.
- * @param maxDistB4TeleportNumber  - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
- * @returns The animation's segment progress
+ * @param maxDistB4TeleportNumber - The maximum distance the animation should be allowed to travel
+ * 									before teleporting mid-animation near the end of its destination.
+ * 									This should be specified if we're animating a miniimage, since when
+ * 									we're zoomed out, the animation moving faster is perceivable.
+ * 									Can be arbitrarily large.
+ * @returns The animation's segment information.
  */
-function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal = bd.FromNumber(MAX_DISTANCE_BEFORE_TELEPORT)): number {
+function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal = bd.FromNumber(MAX_DISTANCE_BEFORE_TELEPORT)): SegmentInfo {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
@@ -403,8 +432,10 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal =
 
 	/** The total distance along the animation path the animated piece should currently be at. */
 	let targetDistance: BigDecimal;
+	let forward = true;
+
 	if (bd.compare(animation.totalDistance, maxDistB4Teleport) <= 0) { // Total distance is short enough to animate the whole path
-		targetDistance = bd.multiply_fixed(animation.totalDistance, easedTBD);
+		targetDistance = bd.multiply_floating(animation.totalDistance, easedTBD);
 	} else { // The total distance is great enough to merit teleporting: Skip the middle of the path
 		if (easedT < 0.5) {
 			// First half
@@ -412,23 +443,43 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal =
 		} else { // easedT >= 0.5
 			// Second half: animate final portion of path
 			const inverseEasedT = bd.subtract(ONE, easedTBD);
-			const targetDistance_FromEnd = bd.multiply_fixed(maxDistB4Teleport, inverseEasedT);
-			targetDistance = bd.subtract(animation.totalDistance, targetDistance_FromEnd);
+			targetDistance = bd.multiply_fixed(maxDistB4Teleport, inverseEasedT);
+			forward = false;
 		}
 	}
 
 	// Return the segment the piece should be at, based on the target distance,
 	// and how far along the segment it currently is.
 	let accumulated: BigDecimal = bd.FromBigInt(0n);
-	for (const [i, segment] of animation.segments.entries()) {
-		const newAccumulated = bd.add(accumulated, segment.distance);
-		if (bd.compare(targetDistance, newAccumulated) <= 0) { // The piece is in this segment
-			const segmentProgress: number = bd.toNumber(bd.divide_floating(bd.subtract(targetDistance, accumulated), segment.distance));
-			return segmentProgress + i;
+	if (forward) {
+		for (let i = 0; i < animation.segments.length; i++) {
+			const segmentInfo = iterateSegment(i);
+			if (segmentInfo) return segmentInfo;
 		}
-		accumulated = newAccumulated;
+		return { segmentNum: animation.segments.length, distance: ZERO, forward }; // At the end of the path
+	} else {
+		for (let i = animation.segments.length - 1; i >= 0; i--) {
+			const segmentInfo = iterateSegment(i);
+			if (segmentInfo) return segmentInfo;
+		}
+		return { segmentNum: 0, distance: ZERO, forward }; // At the start of the path
 	}
-	return animation.segments.length;
+
+	function iterateSegment(i: number): SegmentInfo | undefined {
+		const segment = animation.segments[i]!;
+		const newAccumulated = bd.add(accumulated, segment.length);
+		if (bd.compare(targetDistance, newAccumulated) <= 0) { // The piece is in this segment
+			/**
+			 * Once we've found the segment we're on, this is how far we travel along that
+			 * segment until we reach our target distance of the animation from the very start.
+			 */
+			const distanceAlongSegment = bd.subtract(targetDistance, accumulated);
+			return { segmentNum: i, distance: distanceAlongSegment, forward };
+		}
+
+		accumulated = newAccumulated;
+		return undefined; // ts gets mad without this
+	}
 }
 
 /**
@@ -437,10 +488,21 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal =
  * @param segmentNum - The segment number, which is the progress of the animation from {@link getCurrentSegment}.
  * @returns the coordinate the animation's piece should be rendered this frame.
  */
-function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: number): BDCoords {
-	if (segmentNum >= segments.length) return segments[segments.length - 1]!.end;
-	const segment = segments[Math.floor(segmentNum)]!;
-	return coordutil.lerpCoords(segment.start, segment.end, segmentNum % 1);
+function getCurrentAnimationPosition(segments: AnimationSegment[], segmentInfo: SegmentInfo): BDCoords {
+	if (segmentInfo.segmentNum >= segments.length) return segments[segments.length - 1]!.end;
+	const segment = segments[segmentInfo.segmentNum]!;
+
+	const startPoint = segmentInfo.forward ? segment.start : segment.end;
+
+	const xTraversalAlongSegment = bd.multiply_floating(segmentInfo.distance, bd.FromNumber(segment.xRatio));
+	const yTraversalAlongSegment = bd.multiply_floating(segmentInfo.distance, bd.FromNumber(segment.yRatio));
+
+	const addOrSubtract: Function = segmentInfo.forward ? bd.add : bd.subtract;
+
+	return [
+		addOrSubtract(startPoint[0], xTraversalAlongSegment),
+		addOrSubtract(startPoint[1], yTraversalAlongSegment),
+	];
 }
 
 
