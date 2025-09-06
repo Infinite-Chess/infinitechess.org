@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/util/bigdecimal/bigintmath.ts
+// src/client/scripts/esm/util/bigdecimal/bimath.ts
 
 /**
  * This module contains complex math functions
@@ -19,6 +19,42 @@ const ONE: bigint = 1n;
 
 // Mathematical Operations ===========================================
 
+// EVERYTHING COMMENTED OUT I AM UNSURE IF WE WILL NEED.
+
+// /**
+//  * Returns the specified bigint power of 2 when called.
+//  * This has a dynamic internal list that, when a power of 2 is requested that is does not have,
+//  * it will calculate more powers of 2 up to the requested power!
+//  * @param power - The power of 2 to retrieve
+//  * @returns The bigint power of 2 requested
+//  */
+// const getBigintPowerOfTwo: (power: number) => bigint = (function() {
+
+// 	// Initiate the list
+// 	const powersOfTwo: bigint[] = [];
+// 	let currentPower: bigint = ONE;
+// 	const MAX_VALUE: bigint = BigInt(Number.MAX_VALUE);
+// 	while (currentPower < MAX_VALUE) {
+// 		powersOfTwo.push(currentPower);
+// 		currentPower <<= ONE;
+// 	}
+
+// 	// Adds more powers of 2 until we reach the provided power
+// 	function addMorePowers(powerCap: number): void {
+// 		console.log(`Adding more bigint powers of 2, up to 2^${powerCap}!`);
+// 		for (let i = powersOfTwo.length - 1; i <= powerCap - 1; i++) {
+// 			const thisPower = powersOfTwo[i]!;
+// 			powersOfTwo[i + 1] = thisPower << ONE;
+// 		}
+// 	}
+
+// 	// Return a function that, when called, returns the specified power of 2
+// 	return (power: number): bigint => {
+// 		// Do we have enough powers of two in store?
+// 		if (power > powersOfTwo.length - 1) addMorePowers(power);
+// 		return powersOfTwo[power]!;
+// 	};
+// })();
 
 /**
  * Calculates the absolute value of a bigint
@@ -29,9 +65,7 @@ function abs(bigint: bigint): bigint {
 	return bigint < ZERO ? -bigint : bigint;
 }
 
-// EVERYTHING COMMENTED OUT I AM UNSURE IF WE WILL NEED.
-
-/** Calculates the integer logarithm base 2 of a BigInt. */
+/** [INTEGER] Calculates the integer logarithm base 2 of a BigInt. */
 function log2(bigint: bigint): number {
 	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
 	if (bigint < ZERO) return NaN;
@@ -42,16 +76,34 @@ function log2(bigint: bigint): number {
 	return bitLength_bisection(bigint) - 1;
 }
 
-/**
-* Calculates the logarithm base 10 of the specified BigInt. Returns an integer.
-* @param bigint - The BigInt. 0+
-* @returns The logarithm to base 10
-*/
-function log10(bigint: bigint): number {
-	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
+/** [CONTINUOUS] Calculates the natural logarithm (base e) of a BigInt. */
+function ln(bigint: bigint): number {
 	if (bigint < ZERO) return NaN;
+	if (bigint === ZERO) return -Infinity;
 
-	return bigint.toString(10).length - 1;
+	const bitLen = bitLength_bisection(bigint);
+
+	// The maximum exponent for a standard IEEE 754 double is 1023.
+	// Therefore, any BigInt with a bit length of 1024 or more will overflow to Infinity.
+	// For anything smaller, direct conversion is the fastest and simplest path.
+	if (bitLen < 1024) return Math.log(Number(bigint));
+
+	// Manual method based on base-2 logarithms.
+	// N = m * 2^e  =>  ln(N) = ln(m) + e*ln(2)
+
+	// 1. The base-2 exponent 'e' is the bit length minus one.
+	const exponent = bitLen - 1;
+
+	// 2. To get the mantissa 'm', we extract the 53 most significant bits.
+	const precisionBits = 53; // JS number (double) has 53 bits of mantissa precision.
+	const shift = BigInt(bitLen - precisionBits);
+	const mantissaInt = Number(bigint >> shift);
+
+	// 3. Normalize the integer mantissa to the range [1.0, 2.0).
+	const mantissa = mantissaInt / (2 ** (precisionBits - 1));
+
+	// 4. Apply the logarithm formula.
+	return Math.log(mantissa) + exponent * Math.LN2;
 }
 
 // /**
@@ -155,6 +207,7 @@ function log10(bigint: bigint): number {
 /**
  * Returns a bigint's binary representation in an easy-to-read string format,
  * displaying all bits in the underlying 64‑bit chunks.
+ * Example output: "0b_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000 (1-chunk, 8 bytes, 64 bits)"
  */
 function toDebugBinaryString(bigint: bigint): string {
 	// 1. Handle the zero case cleanly.
@@ -254,29 +307,29 @@ function bitLength_bisection(x: bigint): number {
 	return i + 32 - Math.clz32(Number(a));
 }
 
-/**
- * Calculates the bit length of a bigint using a fast `toString(16)` and `Math.clz32` trick.
- * It is 4x faster than {@link bitLength_toString}.
- */
-function bitLength_hex(n: bigint): number {
-	if (n === ZERO) return 0;
-	if (n < ZERO) n = -n;
+// /**
+//  * Calculates the bit length of a bigint using a fast `toString(16)` and `Math.clz32` trick.
+//  * It is 4x faster than {@link bitLength_toString}.
+//  */
+// function bitLength_hex(n: bigint): number {
+// 	if (n === ZERO) return 0;
+// 	if (n < ZERO) n = -n;
 
-	const hexLength = n.toString(16).length;
-	const i = (hexLength - 1) * 4;
-	return i + (32 - Math.clz32(Number(n >> BigInt(i))));
-}
+// 	const hexLength = n.toString(16).length;
+// 	const i = (hexLength - 1) * 4;
+// 	return i + (32 - Math.clz32(Number(n >> BigInt(i))));
+// }
 
 
-/**
- * Calculates the bit length of a bigint using the simple `toString(2)` method.
- * This is the most readable but least performant method.
- */
-function bitLength_toString(n: bigint): number {
-	if (n === ZERO) return 0;
-	if (n < ZERO) n = -n;
-	return n.toString(2).length;
-}
+// /**
+//  * Calculates the bit length of a bigint using the simple `toString(2)` method.
+//  * This is the most readable but least performant method.
+//  */
+// function bitLength_toString(n: bigint): number {
+// 	if (n === ZERO) return 0;
+// 	if (n < ZERO) n = -n;
+// 	return n.toString(2).length;
+// }
 
 
 /**
@@ -289,7 +342,7 @@ function bitLength_toString(n: bigint): number {
  *
  * Total size = headerBytes + dataBytes
  * @param bi - The BigInt to measure.
- * @returns The estimated number of bytes occupied by `value` in memory.
+ * @returns The estimated number of bytes occupied by the bigint in memory.
  */
 function estimateBigIntSize(bi: bigint): number {
 	// Compute bit length (number of binary digits)
@@ -307,6 +360,102 @@ function estimateBigIntSize(bi: bigint): number {
 	return headerBytes + dataBytes;
 }
 
+/**
+ * Computes the positive modulus of two BigInts.
+ * @param a - The dividend.
+ * @param b - The divisor (must be a positive BigInt).
+ * @returns The positive remainder of the division as a BigInt.
+ */
+function posMod(a: bigint, b: bigint): bigint {
+	return (a % b + b) % b;
+}
+
+/** Finds the smaller of two BigInts. */
+function min(a: bigint, b: bigint): bigint {
+	return a < b ? a : b;
+}
+
+/** Finds the larger of two BigInts. */
+function max(a: bigint, b: bigint): bigint {
+	return a > b ? a : b;
+}
+
+/**
+ * Compares two BigInts.
+ * @param a The first BigInt.
+ * @param b The second BigInt.
+ * @returns -1 if a < b, 0 if a === b, and 1 if a > b.
+ */
+function compare(a: bigint, b: bigint): -1 | 0 | 1 {
+	return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** Clamps a BigInt value between an inclusive minimum and maximum. */
+function clamp(value: bigint, min: bigint, max: bigint): bigint {
+	return value < min ? min : value > max ? max : value;
+}
+
+
+// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
+
+
+/**
+ * Calculates the gcd of two bigints using the binary GCD (or Stein's) algorithm.
+ * This is faster than the Euclidean algorithm, especially for very large numbers.
+ */
+function GCD(a: bigint, b: bigint) {
+	// We must work with positive numbers
+	a = abs(a);
+	b = abs(b);
+
+	if (a === b) return a;
+	if (a === ZERO) return b;
+	if (b === ZERO) return a;
+
+	// Strip out any shared factors of two beforehand (to be re-added at the end)
+	let sharedTwoFactors = ZERO;
+	while (!((a & ONE) | (b & ONE))) {
+		sharedTwoFactors++;
+		a >>= ONE;
+		b >>= ONE;
+	}
+
+	while (a !== b && b > ONE) {
+		// Any remaining factors of two in either number are not important to the gcd and can be shifted away
+		while (!(a & ONE)) a >>= ONE;
+		while (!(b & ONE)) b >>= ONE;
+
+		// Standard Euclidean algorithm, maintaining a > b and avoiding division
+		if (b > a) [a, b] = [b, a];
+		else if (a === b) break;
+
+		a -= b;
+	}
+
+	// b is the gcd, after re-applying the shared factors of 2 removed earlier
+	return b << sharedTwoFactors;
+}
+
+/**
+ * Calculates the least common multiple (LCM) between all BigInts in an array.
+ * @param array An array of BigInts.
+ * @returns The LCM of the numbers in the array.
+ */
+function LCM(array: bigint[]): bigint {
+	if (array.length === 0) throw new Error('Array must contain at least one number to calculate the LCM.');
+
+	let answer: bigint = array[0]!;
+	for (let i = 1; i < array.length; i++) {
+		const currentNumber = array[i]!;
+
+		// A single-line if/else statement without curly braces.
+		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
+		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
+	}
+
+	return answer;
+}
+
 
 // Exports ============================================================
 
@@ -314,11 +463,17 @@ function estimateBigIntSize(bi: bigint): number {
 export default {
 	abs,
 	log2,
-	log10,
-	// logN,
+	ln,
 	// getLeastSignificantBits,
 	// getBitAtPositionFromRight,
 	toDebugBinaryString,
 	bitLength_bisection,
 	estimateBigIntSize,
+	posMod,
+	min,
+	max,
+	compare,
+	clamp,
+	GCD,
+	LCM,
 };

@@ -1,6 +1,9 @@
+
 /**
  * This script handles the processing and execution of premoves
  * after the opponent's move.
+ * 
+ * Premoves are handled client-side, not server side.
  */
 
 import type { FullGame } from '../../chess/logic/gamefile.js';

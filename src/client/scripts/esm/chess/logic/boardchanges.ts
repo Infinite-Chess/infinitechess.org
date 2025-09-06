@@ -50,6 +50,11 @@ type Change = {
 	path?: Coords[],
 } | {
 	action: 'capture',
+	/**
+	 * This is used by animations to tell when this piece was captured.
+	 * 0 based. 1 means the piece was captured at the 2nd path point.
+	 * `-1` implies the end of the path the piece moved along
+	 */
 	order: number
 })
 
@@ -240,8 +245,8 @@ function deletePiece({ boardsim }: FullGame, change: Change) {
 	jsutil.addElementToOrganizedArray(typedata.undefineds, idx);
 	
 	// Set the undefined piece's coordinates to [0,0] to keep things tidy.
-	pieces.XPositions[idx] = 0;
-	pieces.YPositions[idx] = 0;
+	pieces.XPositions[idx] = 0n;
+	pieces.YPositions[idx] = 0n;
 	// Don't need to delete its type because every spot in a type range is expected to have the same type.
 }
 

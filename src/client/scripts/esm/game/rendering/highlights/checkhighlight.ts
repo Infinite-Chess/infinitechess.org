@@ -6,17 +6,20 @@
 
 import space from '../../misc/space.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
-import { BufferModel, createModel } from '../buffermodel.js';
 import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
-// @ts-ignore
-import bufferdata from '../bufferdata.js';
+import bd from '../../../util/bigdecimal/bigdecimal.js';
+import primitives from '../primitives.js';
+import { BufferModel, createModel } from '../buffermodel.js';
 
 
 // Type Definitions ----------------------------------------------------------------
 
+
 import type { Board } from '../../../chess/logic/gamefile.js';
-import type { Coords } from '../../../chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../../chess/util/coordutil.js';
+import type { Color } from '../../../util/math/math.js';
+
 
 // Functions -----------------------------------------------------------------------
 
@@ -37,23 +40,23 @@ function render(boardsim: Board) {
  */
 function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 	const color = preferences.getCheckHighlightColor(); // [r,g,b,a]
-	const colorOfPerimeter: number[] = [color[0],color[1],color[2], 0]; // Same color, but zero opacity
+	const colorOfPerimeter: Color = [color[0], color[1], color[2],  0]; // Same color, but zero opacity
 
-	const outRad = 0.65 * boardpos.getBoardScale();
-	const inRad = 0.3 * boardpos.getBoardScale();
+	const outRad = 0.65 * boardpos.getBoardScaleAsNumber();
+	const inRad = 0.3 * boardpos.getBoardScaleAsNumber();
 	const resolution = 20;
     
 	const data: number[] = [];
 	for (let i = 0; i < royalsInCheck.length; i++) {
-		const thisRoyalInCheckCoords = royalsInCheck[i]!;
-		// This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.gsquareCenter()
+		const thisRoyalInCheckCoordsBD: BDCoords = bd.FromCoords(royalsInCheck[i]!);
+		// This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.getSquareCenter()
 		// Create a math function for returning the world-space point of the CENTER of the provided coordinate!
-		const worldSpaceCoord = space.convertCoordToWorldSpace(thisRoyalInCheckCoords);
+		const worldSpaceCoord = space.convertCoordToWorldSpace(thisRoyalInCheckCoordsBD);
 		const x = worldSpaceCoord[0];
 		const y = worldSpaceCoord[1];
 
-		const dataCircle: number[] = bufferdata.getDataCircle_TRIANGLES(x, y, inRad, resolution, color);
-		const dataRing: number[] = bufferdata.getDataRing(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
+		const dataCircle: number[] = primitives.Circle(x, y, inRad, resolution, color);
+		const dataRing: number[] = primitives.Ring(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
 		data.push(...dataCircle);
 		data.push(...dataRing);
 	}

@@ -12,17 +12,17 @@
 import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 
-import gameslot from '../../chess/gameslot.js';
-import onlinegame from './onlinegame.js';
-import moveutil from '../../../chess/util/moveutil.js';
-import guidrawoffer from '../../gui/guidrawoffer.js';
-import sound from '../sound.js';
 // @ts-ignore
 import statustext from '../../gui/statustext.js';
 // @ts-ignore
 import websocket from '../../websocket.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
+import gameslot from '../../chess/gameslot.js';
+import onlinegame from './onlinegame.js';
+import moveutil from '../../../chess/util/moveutil.js';
+import guidrawoffer from '../../gui/guidrawoffer.js';
+import gamesound from '../gamesound.js';
 
 
 // Variables ---------------------------------------------------
@@ -83,7 +83,7 @@ function areWeAcceptingDraw(): boolean {
 function onOpponentExtendedOffer() {
 	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
 	guidrawoffer.open();
-	sound.playSound_base();
+	gamesound.playBase();
 	guipause.updateDrawOfferButton();
 }
 

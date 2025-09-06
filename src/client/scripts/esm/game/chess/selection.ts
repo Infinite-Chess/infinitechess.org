@@ -9,7 +9,7 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from '../../chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
-import type { Game, FullGame } from '../../chess/logic/gamefile.js';
+import type { Game, FullGame, Board } from '../../chess/logic/gamefile.js';
 
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -28,9 +28,6 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
-import { rawTypes, players } from '../../chess/util/typeutil.js';
-import { listener_document, listener_overlay } from './game.js';
-import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import boarddrag from '../rendering/boarddrag.js';
@@ -41,18 +38,18 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import premoves from "../chess/premoves.js";
 import boardeditor from '../misc/boardeditor.js';
+import transition from '../rendering/transition.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import specialdetect from '../../chess/logic/specialdetect.js';
+import perspective from '../rendering/perspective.js';
 import { animateMove } from './graphicalchanges.js';
+import { rawTypes, players } from '../../chess/util/typeutil.js';
+import { listener_document, listener_overlay } from './game.js';
+import { Mouse } from '../input.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
-import specialdetect from '../../chess/logic/specialdetect.js';
-// @ts-ignore
-import perspective from '../rendering/perspective.js';
-// @ts-ignore
-import transition from '../rendering/transition.js';
-// @ts-ignore
 import statustext from '../gui/statustext.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -151,7 +148,7 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (boardpos.areZoomedOut() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
+	if (boardpos.areZoomedOut() || transition.areTransitioning() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
 		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased()) draganimation.dropPiece(); // Drop it without moving it.
@@ -194,9 +191,8 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
-	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) ||
-						editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords) ||
+						editMode && legalmoves.testSquareValidity(gamefile.boardsim, hoverSquare, colorOfSelectedPiece, false, false) <= 1 ||
 						boardeditor.areInBoardEditor() && !coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords); // Allow ALL moves in board editor.
 }
 
@@ -339,19 +335,6 @@ function canMovePieceType(pieceType: number): boolean {
 	const isOurTurn = gameloader.areInLocalGame() || gameloader.isItOurTurn();
 	if (isOurTurn) return true; // Can always move pieces on our turn
 	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
-}
-
-/**
- * Tests our selected piece can POSSIBLY be dropped on the provided type.
- * As if edit mode was on, ignoring legal moves.
- */
-function canDropOnPieceTypeInEditMode(type?: number) {
-	if (type === undefined) return true; // Can drop on empty squares.
-	const [rawtype, color] = typeutil.splitType(type);
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
-	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
-	return rawtype !== rawTypes.VOID && (color !== selectedPieceColor);
-	// return color !== selectedPieceColor; // Allow capturing voids for debugging
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */

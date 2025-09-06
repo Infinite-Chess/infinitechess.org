@@ -23,7 +23,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('resync'), 	 value: z.int() }),
+	z.strictObject({ action: z.literal('resync'), 	  value: z.int() }),
 	z.strictObject({ action: z.literal('AFK') }),
 	z.strictObject({ action: z.literal('AFK-Return') }),
 	z.strictObject({ action: z.literal('offerdraw') }),

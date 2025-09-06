@@ -10,7 +10,7 @@ import jsutil from "../../util/jsutil.js";
 // Type Definitions -----------------------------------------------------------------------------------------
 
 import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
-import type { Coords, CoordsKey } from "./coordutil.js";
+import type { Coords } from "./coordutil.js";
 import type { RawType, Player } from "./typeutil.js";
 
 interface Piece {
@@ -27,7 +27,7 @@ interface Piece {
 }
 
 /** A unique identifier for a single line of pieces. `C|X` */
-type LineKey = `${number}|${number}`
+type LineKey = `${bigint}|${bigint}`
 
 // Counting Pieces ----------------------------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
 
 
 /**
- * Retrieves the coordinates of all pieces from the provided pieces.
+ * Retrieves the coordinates of all pieces.
  * @param o - contains the pieces data.
  * @returns A list of coordinates of all pieces.
  */

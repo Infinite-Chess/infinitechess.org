@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/buffermodel.ts
+
 /**
  * This script contains all the functions used to generate renderable buffer models of the
  * game objects that the shader programs can use. It receives the object's vertex data to do so,
@@ -9,33 +11,42 @@
  */
 
 
-import type { Vec3 } from '../../util/math.js';
 import type { ShaderProgram } from './shaders.js';
+import type { Vec3 } from '../../util/math/vectors.js';
 
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import shaders from './shaders.js';
+import camera from './camera.js';
 // @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
-// @ts-ignore
-import camera from './camera.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
 
 
-/** Any kind of array, whether number[], or typed array, that may be passed to use as vertex data for a model. */
-type InputArray =
-	number[] // Converted to Float32Array, coming from float64s, with max safe integer: 9,007,199,254,740,991    Max value: 1.8e+308
-	| TypedArray
+/**
+ * Any kind of array that may be passed to the constructors
+ * to be used as vertex or instance data for a buffer model.
+ * 
+ * Each of these are subsequently converted into aFloat32Array,
+ * which have a max safe integer of 16,777,215 (16 million),
+ * and a max value of 3.4e38. so beware of precision loss!
+ * 
+ * number[] => Double precision (64-bit). Max safe integer of 9,007,199,254,740,991 (9 quadrillion). Max value of 1.8e+308.
+ */
+type InputArray = number[] | TypedArray;
 
-/** All signed type arrays compatible with WebGL, that can be used as vertex data. */
-type TypedArray =
-	Float32Array // Max safe integer: 16,777,215    Max value: 3.4e+38
-	| Int8Array // Max integer: 127
-	| Int16Array // Max integer: 32,767
-	| Int32Array; // Max integer: 2,147,483,647
+/**
+ * All signed type arrays compatible with WebGL, that can be used as vertex data.
+ * 
+ * Float32Array => Max safe integer: 16,777,215. Max value: 3.4e+38
+ * Int32Array => Max integer: 2,147,483,647
+ * Int16Array => Max integer: 32,767
+ * Int8Array => Max integer: 127
+ */
+type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
 /** All valid primitive shapes we can render with */
 type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES';
@@ -75,9 +86,9 @@ interface BaseBufferModel {
      */
 	render: (
 		// eslint-disable-next-line no-unused-vars
-		position?: [number, number, number],
+		position?: Vec3,
 		// eslint-disable-next-line no-unused-vars
-		scale?: [number, number, number],
+		scale?: Vec3,
 		// eslint-disable-next-line no-unused-vars
 		uniforms?: { [uniform: string]: any }
 	) => void
@@ -222,8 +233,8 @@ function createModel_GivenAttribInfo(
 			changedIndicesCount: number
 		) => updateBufferIndices(buffer, data, changedIndicesStart, changedIndicesCount),
 		render: (
-			position: [number, number, number] = [0, 0, 0],
-			scale: [number, number, number] = [1, 1, 1],
+			position: Vec3 = [0, 0, 0],
+			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
 		) => render(buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
 	};
@@ -269,8 +280,8 @@ function createModel_Instanced_GivenAttribInfo(
 			changedIndicesCount: number
 		) => updateBufferIndices(instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount),
 		render: (
-			position: [number, number, number] = [0, 0, 0],
-			scale: [number, number, number] = [1, 1, 1],
+			position: Vec3 = [0, 0, 0],
+			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
 		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};

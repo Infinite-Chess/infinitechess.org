@@ -10,7 +10,7 @@
  * 
  */
 
-import { createBufferFromData } from "./buffers";
+import { createBufferFromData } from "../../src/client/scripts/esm/game/rendering/buffers";
 
 
 /**

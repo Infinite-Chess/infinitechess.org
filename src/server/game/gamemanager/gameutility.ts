@@ -13,29 +13,28 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 
 // Custom imports
-// @ts-ignore
-import clockweb from '../clockweb.js';
-
+import timeutil from '../../../client/scripts/esm/util/timeutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import variant from '../../../client/scripts/esm/chess/variants/variant.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
+import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
+import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
+import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 // @ts-ignore
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 // @ts-ignore
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-import timeutil from '../../../client/scripts/esm/util/timeutil.js';
-import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import variant from '../../../client/scripts/esm/chess/variants/variant.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
-import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
-import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+// @ts-ignore
+import clockweb from '../clockweb.js';
 
-// Type Definitions...
+
 import type { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
-import { memberInfoEq, type Invite } from '../invitesmanager/inviteutility.js';
 import type { GameRules } from '../../../client/scripts/esm/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../client/scripts/esm/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../../types.js';
@@ -44,6 +43,10 @@ import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.j
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+
+// Type Definitions -----------------------------------------------------------------------------
+
 
 type ServerGameMoveMessage = { compact: string, clockStamp?: number };
 
@@ -215,6 +218,10 @@ interface Game {
 	 */
 	positionPasted: boolean;
 }
+
+
+// Functions --------------------------------------------------------------------------------------
+
 
 /**
  * Construct a new online game from the invite options,

@@ -1,4 +1,8 @@
 {
+	"65": {
+		"note": "Deleted slidelimit_not_number line 397. Changed invalid_wincon_white and invalid_wincon_black on line 389 to invalid_wincon.",
+		"changes": []
+	},
 	"64": {
 		"note": "Added undo_edit and redo_edit on lines 310-311.",
 		"changes": []
