@@ -371,28 +371,35 @@ function renderAnimations() {
 	const inverted = perspective.getIsViewingBlackPerspective();
 
 	const vertexData = instancedshapes.getDataTexture(inverted);
-	/** A running list of instancedata for each type of animated piece */
-	const instanceData: TypeGroup<number[]> = {};
+
+	// We need two separate data groups to control render order.
+	// 1. Captured pieces (which should be rendered underneath)
+	// 2. The main moving pieces (which should be rendered on top)
+	const capturedPiecesInstanceData: TypeGroup<number[]> = {};
+	const movingPiecesInstanceData: TypeGroup<number[]> = {};
 
 	animations.forEach(animation => {
 		const segmentInfo = getCurrentSegment(animation);
 		const currentPos = getCurrentAnimationPosition(animation.segments, segmentInfo);
 
+		// Populate the moving piece data
+		processPiece(animation.type, currentPos, movingPiecesInstanceData);
+
+		// Populate the captured piece data
 		forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, pieces => { // Render all captured pieces in place
 			pieces.forEach(p => {
 				const coordsBD = bd.FromCoords(p.coords);
-				processPiece(p.type, coordsBD);
+				processPiece(p.type, coordsBD, capturedPiecesInstanceData);
 			});
 		});
 
-		processPiece(animation.type, currentPos); // Process the main piece being animated
 	});
 
-	/** Helper for pushing a piece's instancedata to the running instancedata for all animated pieces. */
-	function processPiece(type: number, coords: BDCoords) {
+	/** Helper for pushing a piece's instancedata to a specified data group. */
+	function processPiece(type: number, coords: BDCoords, targetInstanceData: TypeGroup<number[]>) {
 		const relativePosition: DoubleCoords = bd.coordsToDoubles(coordutil.subtractBDCoords(coords, boardPos));
-		if (!(type in instanceData)) instanceData[type] = []; // Initialize
-		instanceData[type]!.push(...relativePosition);
+		if (!(type in targetInstanceData)) targetInstanceData[type] = []; // Initialize
+		targetInstanceData[type]!.push(...relativePosition);
 	}
 
 	// Render all
@@ -400,11 +407,19 @@ function renderAnimations() {
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
-	for (const [typeStr, instance_data] of Object.entries(instanceData)) {
-		const type = Number(typeStr);
-		const texture = texturecache.getTexture(type);
-		createModel_Instanced_GivenAttribInfo(vertexData, instance_data, piecemodels.ATTRIBUTE_INFO, 'TRIANGLES', texture).render(undefined, scale);
+	/** Renders an entire group of pieces, organized by type. */
+	function renderTypeGroup(instanceData: TypeGroup<number[]>) {
+		for (const [typeStr, instance_data] of Object.entries(instanceData)) {
+			const type = Number(typeStr);
+			const texture = texturecache.getTexture(type);
+			createModel_Instanced_GivenAttribInfo(vertexData, instance_data, piecemodels.ATTRIBUTE_INFO, 'TRIANGLES', texture).render(undefined, scale);
+		}
 	}
+
+	// 1. Render captured pieces FIRST on bottom.
+	renderTypeGroup(capturedPiecesInstanceData);
+	// 2. Render moving pieces SECOND, so they always appear on top.
+	renderTypeGroup(movingPiecesInstanceData);
 }
 
 
