@@ -42,10 +42,9 @@ import { CreateInputListener, InputListener, Mouse } from '../input.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
+import webgl from '../rendering/webgl.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
-import webgl from '../rendering/webgl.js';
 
 
 // Variables -------------------------------------------------------------------------------

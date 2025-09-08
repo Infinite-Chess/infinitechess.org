@@ -55,7 +55,6 @@ import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
 import meshes from "../rendering/meshes.js";
-// @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";

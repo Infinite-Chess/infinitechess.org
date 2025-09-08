@@ -7,9 +7,8 @@ import type { BDCoords, Coords, CoordsKey, DoubleCoords } from '../../chess/util
 
 
 // @ts-ignore
-import webgl from './webgl.js';
-// @ts-ignore
 import statustext from '../gui/statustext.js';
+import webgl from './webgl.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import gameslot from '../chess/gameslot.js';

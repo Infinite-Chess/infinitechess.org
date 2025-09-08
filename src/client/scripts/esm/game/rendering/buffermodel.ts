@@ -17,7 +17,6 @@ import type { Vec3 } from '../../util/math/vectors.js';
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import shaders from './shaders.js';
 import camera from './camera.js';
-// @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';

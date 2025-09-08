@@ -47,13 +47,18 @@ interface AnimationSegment {
 /** Information about the progress of a current animation. */
 type SegmentInfo = {
 	/**
-	 * The segment number along the entire animation path, 0-based.
+	 * The INTEGER segment number along the entire animation path, 0-based.
 	 * 0 means it is at or beyond the first waypoint, 1 means it is at or beyond the second waypoint, etc.
 	 */
 	segmentNum: number,
-	/** The distance along the segment the animation currently is, in squares. */
+	/**
+	 * The distance along the segment the animation currently is, in squares.
+	 * This is more ideal than a percentage between 0-1 since its hard to
+	 * predict how much precision you'll need to represent that percentage
+	 * in order to get a non-gittery animation for long distance animations.
+	 */
 	distance: BigDecimal,
-	/** Whether the distance is from the start of the segment, or the end. */
+	/** Whether the distance is from the start of the segment, or the end backwards. */
 	forward: boolean
 };
 
@@ -480,6 +485,7 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport: BigDecimal =
 		return { segmentNum: 0, distance: ZERO, forward }; // At the start of the path
 	}
 
+	/** Helper for iterating over each segment, accumulating the distance traveled until we reach the target distance. */
 	function iterateSegment(i: number): SegmentInfo | undefined {
 		const segment = animation.segments[i]!;
 		const newAccumulated = bd.add(accumulated, segment.length);
