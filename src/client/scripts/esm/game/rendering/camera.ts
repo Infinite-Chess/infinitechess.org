@@ -13,14 +13,17 @@
  */
 
 
-import perspective from './perspective.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
+// @ts-ignore
 import stats from '../gui/stats.js';
+// @ts-ignore
 import mat4 from './gl-matrix.js';
+import perspective from './perspective.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
-import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import { gl } from './webgl.js';
 import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';

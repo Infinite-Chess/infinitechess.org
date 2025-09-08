@@ -1,16 +1,17 @@
 
-// Import Start
 import type { Vec3 } from '../../util/math/vectors.js';
-import camera from './camera.js';
-// Import End
 
-/** The WebGL rendering context. This is our web-based render engine. */
-let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in initGL()
+import camera from './camera.js';
 
 /**
  * This script stores our global WebGL rendering context,
  * and other utility methods.
  */
+
+
+
+/** The WebGL rendering context. This is our web-based render engine. */
+let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in initGL()
 
 /**
  * The color the screen should be cleared to every frame.
@@ -51,9 +52,11 @@ const frontFaceVerticesAreClockwise = true;
  * Sets the color the screen will be cleared to every frame.
  * 
  * This is useful for changing the sky color.
- * @param {number[]} newClearColor - The new clear color: `[r,g,b]`
+ * @param newClearColor - The new clear color: `[r,g,b]`
  */
-function setClearColor(newClearColor) { clearColor = newClearColor; }
+function setClearColor(newClearColor: Vec3): void {
+	clearColor = newClearColor;
+}
 
 /**
  * Initiate the WebGL context. This is our web-based render engine.
@@ -62,7 +65,7 @@ function init() {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
 	if (!newContext) { // WebGL2 not supported
-		alert(translations.webgl_unsupported);
+		alert(translations['webgl_unsupported']);
 		throw new Error("WebGL2 not supported by browser.");
 		// gl = camera.canvas.getContext('webgl', { alpha: false });
 	}
