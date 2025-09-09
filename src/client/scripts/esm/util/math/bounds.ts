@@ -156,6 +156,18 @@ function boxContainsBox(outerBox: BoundingBoxBD, innerBox: BoundingBoxBD): boole
 }
 
 /**
+ * Determines if two bounding boxes have zero overlap.
+ */
+function areBoxesDisjoint(box1: DoubleBoundingBox, box3: DoubleBoundingBox): boolean {
+	if (box1.right <= box3.left) return true;
+	if (box1.left >= box3.right) return true;
+	if (box1.top <= box3.bottom) return true;
+	if (box1.bottom >= box3.top) return true;
+
+	return false;
+}
+
+/**
  * Returns true if the provided box contains the square coordinate.
  */
 function boxContainsSquare(box: BoundingBox, square: Coords): boolean {
@@ -217,6 +229,7 @@ export default {
 
 	// Operations
 	boxContainsBox,
+	areBoxesDisjoint,
 	boxContainsSquare,
 	boxContainsSquareBD,
 	calcCenterOfBoundingBox,

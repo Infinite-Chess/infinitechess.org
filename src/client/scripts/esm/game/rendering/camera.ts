@@ -58,7 +58,6 @@ const zFar: number = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  pers
 const canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;
 let canvasWidthVirtualPixels: number;
 let canvasHeightVirtualPixels: number;
-let canvasRect: DoubleBoundingBox; // accessed by mouse move listener in input script
 let aspect: number; // Aspect ratio of the canvas width to height.
 
 /**
@@ -99,10 +98,6 @@ function getCanvasWidthVirtualPixels(): number {
 
 function getCanvasHeightVirtualPixels(): number {
 	return canvasHeightVirtualPixels;
-}
-
-function getCanvasRect(): DoubleBoundingBox {
-	return jsutil.deepCopyObject(canvasRect);
 }
 
 function toggleDebug(): void {
@@ -160,7 +155,6 @@ function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 function init(): void {
 	initFOV();
 	initMatrixes();
-	canvasRect = canvas.getBoundingClientRect();
 	window.addEventListener("resize", onScreenResize);
 	document.addEventListener("fov-change", onFOVChange as EventListener); // Custom Event
 }
@@ -328,7 +322,6 @@ export default {
 	canvas,
 	getCanvasWidthVirtualPixels,
 	getCanvasHeightVirtualPixels,
-	getCanvasRect,
 	toggleDebug,
 	getDebug,
 	getScreenBoundingBox,

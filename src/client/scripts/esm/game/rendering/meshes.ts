@@ -160,14 +160,14 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 	return primitives.Rect(left, bottom, right, top, color);
 }
 
-/**
- * [World Space, TRIANGLES] Generates the vertex data of a filled rectangle.
- */
-function RectWorld_Filled(boundingBox: BoundingBox, color: Color): number[] {
-	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
-	return primitives.Quad_Color(left, bottom, right, top, color);
-}
+// /**
+//  * [World Space, TRIANGLES] Generates the vertex data of a filled rectangle.
+//  */
+// function RectWorld_Filled(boundingBox: BoundingBox, color: Color): number[] {
+// 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
+// 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
+// 	return primitives.Quad_Color(left, bottom, right, top, color);
+// }
 
 
 // Transforming Vertices ---------------------------------------------------------------
@@ -234,7 +234,7 @@ export default {
 	QuadWorld_Color,
 	QuadWorld_ColorTexture,
 	RectWorld,
-	RectWorld_Filled,
+	// RectWorld_Filled,
 	// Other Generic Rendering Methods
 	getModelPosition,
 };
