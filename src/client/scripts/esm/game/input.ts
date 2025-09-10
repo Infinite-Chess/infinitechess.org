@@ -126,7 +126,7 @@ type PointerHistory = { pos: DoubleCoords, time: number }[];
 const CLICK_THRESHOLDS = {
 	MOUSE: {
 		/** The maximum distance the mouse can move before a click is not registered. */
-		MOVE_VPIXELS: 8, // Default: 8
+		MOVE_VPIXELS: 6, // Default: 8
 		/** The maximum time the mouse can be held down before a click is not registered. */
 		TIME_MILLIS: 400, // Default: 400
 		/** The maximum time between first click down and second click up to register a double click drag. */
@@ -134,7 +134,7 @@ const CLICK_THRESHOLDS = {
 	},
 	TOUCH: {
 		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
-		MOVE_VPIXELS: 20, // Default: 24
+		MOVE_VPIXELS: 17, // Default: 20
 		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
 		TIME_MILLIS: 120,
 		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
