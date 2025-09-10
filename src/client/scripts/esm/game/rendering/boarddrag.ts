@@ -255,8 +255,8 @@ function dragBoard() {
 
 		const newBoardPos: BDCoords = [
 			// negate and add midCoords instead of flipped, because we don't need high precision here.
-			bd.add(bd.negate(bd.divide_floating(midPosWorld[0], newScale)), midCoords[0]),
-			bd.add(bd.negate(bd.divide_floating(midPosWorld[1], newScale)), midCoords[1])
+			bd.add(bd.negate(bd.divide_fixed(midPosWorld[0], newScale)), midCoords[0]),
+			bd.add(bd.negate(bd.divide_fixed(midPosWorld[1], newScale)), midCoords[1])
 		];
 
 		boardpos.setBoardPos(newBoardPos);

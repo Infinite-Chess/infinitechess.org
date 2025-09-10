@@ -102,8 +102,8 @@ function glimitToDampScale() {
 
 function setBoardPos(newPos: BDCoords) {
 	// Enforce fixed point model
-	if (!bd.hasDefaultPrecision(newPos[0])) throw Error(`Cannot set board position X to [${newPos[0].divex}] ${newPos[0]}. Does not have default precision.`);
-	if (!bd.hasDefaultPrecision(newPos[1])) throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${newPos[1]}. Does not have default precision.`);
+	if (!bd.hasDefaultPrecision(newPos[0])) throw Error(`Cannot set board position X to [${newPos[0].divex}] ${bd.toString(newPos[0])}. Does not have default precision.`);
+	if (!bd.hasDefaultPrecision(newPos[1])) throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${bd.toString(newPos[1])}. Does not have default precision.`);
 
 	// console.log(`New board position [${(boardPos[0].divex)},${boardPos[1].divex}]`, coordutil.stringifyBDCoords(boardPos));
 	boardPos = jsutil.deepCopyObject(newPos); // Copy
