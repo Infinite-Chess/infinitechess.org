@@ -43,7 +43,7 @@ import type { Color } from "../../../util/math/math.js";
 
 
 /** Width of entities (mini images, highlights) when zoomed out, in virtual pixels. */
-const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 36
+const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 40
 
 
 /** The color of the line that shows you what entity your mouse is snapped to. */

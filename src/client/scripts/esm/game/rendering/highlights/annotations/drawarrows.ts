@@ -14,7 +14,7 @@ import vectors from "../../../../util/math/vectors.js";
 import boardpos from "../../boardpos.js";
 import { createModel } from "../../buffermodel.js";
 import { Mouse } from "../../../input.js";
-import coordutil, { Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import { listener_overlay } from "../../../chess/game.js";
 import bd, { BigDecimal } from "../../../../util/bigdecimal/bigdecimal.js";
 
@@ -161,8 +161,23 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 		}
 	}
 
+	// Precalculate other arrow properties
+
+	const difference: BDCoords = bd.FromCoords(coordutil.subtractCoords(drag_end, drag_start!));
+	// Since the difference can be arbitrarily large, we need to normalize it
+	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
+	const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
+	const normalizedVectorHypot: number = Math.hypot(...normalizedVector);
+
 	// Add the arrow
-	arrows.push({ start: drag_start!, end: drag_end });
+	arrows.push({
+		start: drag_start!,
+		end: drag_end,
+
+		difference,
+		xRatio: normalizedVector[0] / normalizedVectorHypot,
+		yRatio: normalizedVector[1] / normalizedVectorHypot,
+	});
 	return { changed: true };
 }
 
@@ -205,13 +220,27 @@ function getDataArrow(
 	color: Color
 ): number[] {
 	// First we need to shift the arrow's base a little away from the center of the starting square.
-	const length_coords: BigDecimal = vectors.euclideanDistance(arrow.start, arrow.end);
-	// This makes sure that base offset looks the same no matter our zoom level
-	const invMult = boardpos.areZoomedOut() ? boardpos.getBoardScale() : ONE;
-	const invMultTimesLength: number = bd.toNumber(bd.multiply_fixed(length_coords, invMult));
-	const t = ARROW.BASE_OFFSET / invMultTimesLength; // Proportion of the arrow length to offset the base
-	if (t >= 1) return []; // No arrow drawn if base offset is greater than the entire arrow length (else it would be drawn with negative length).
-	const trueStartCoords = coordutil.lerpCoords(bd.FromCoords(arrow.start), bd.FromCoords(arrow.end), t);
+
+	// The distance in squares between the start and end coordinates.
+	const totalLengthSquares: BigDecimal = vectors.euclideanDistance(arrow.start, arrow.end);
+
+	const entityWidthWorld: number = snapping.getEntityWidthWorld();
+	// How many squares wide highlights are at this zoom distance.
+	const entityWidthSquares: BigDecimal = boardpos.areZoomedOut() ? space.convertWorldSpaceToGrid(entityWidthWorld) : ONE;
+
+	// How many squares the arrow base is offset from the start coordinate.
+	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(entityWidthSquares, bd.FromNumber(ARROW.BASE_OFFSET));
+
+	// If the arrow length <= base offset, don't draw it (it would have negative length).
+	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
+
+	const startCoordsBD = bd.FromCoords(arrow.start);
+	const arrowBaseOffsetVector: BDCoords = [
+		bd.multiply_floating(arrowBaseOffsetSquares, bd.FromNumber(arrow.xRatio)),
+		bd.multiply_floating(arrowBaseOffsetSquares, bd.FromNumber(arrow.yRatio))
+	];
+	// Where the actual BASE of the arrow starts rendering at
+	const trueStartCoords = coordutil.addBDCoords(startCoordsBD, arrowBaseOffsetVector);
 
 	// Calculate the base and tip world space coordinates
 	const startWorld = space.convertCoordToWorldSpace(trueStartCoords);
@@ -220,7 +249,7 @@ function getDataArrow(
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
-	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScaleAsNumber();
+	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
 	const bodyWidthArg = ARROW.BODY_WIDTH * size;
 	const tipWidthArg = ARROW.TIP_WIDTH * size;

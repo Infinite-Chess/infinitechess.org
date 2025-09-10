@@ -6,7 +6,7 @@
  * * Rays
  */
 
-import type { Coords } from "../../../../chess/util/coordutil.js";
+import type { BDCoords, Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "../../../../util/math/vectors.js";
 
 import drawsquares from "./drawsquares.js";
@@ -28,22 +28,29 @@ import bd from "../../../../util/bigdecimal/bigdecimal.js";
 /** An object storing all visible annotations for a specific ply. */
 interface Annotes {
 	/** First type of annotation: A square highlight. */
-	Squares: Coords[]
+	Squares: Coords[];
 	/** Second type of annoation: An arrow draw from one square to another. */
-	Arrows: Arrow[]
+	Arrows: Arrow[];
 	/**
 	 * Third type of annotation: A ray of infinite square highlights,
 	 * starting from a square and going to infinity.
 	 */
-	Rays: Ray[]
+	Rays: Ray[];
 }
 
 type Square = Coords;
 
 /** Second type of annoation: An arrow draw from one square to another. */
 interface Arrow {
-	start: Coords
-	end: Coords
+	start: Coords;
+	end: Coords;
+
+	/** The precalculated difference going from start to the end. */
+	difference: BDCoords;
+	/** The precalculated ratio of the x difference to the distance (hypotenuse, total length). Doesn't need extreme precision. */
+	xRatio: number;
+	/** The precalculated ratio of the y difference to the distance (hypotenuse, total length). Doesn't need extreme precision. */
+	yRatio: number;
 }
 
 

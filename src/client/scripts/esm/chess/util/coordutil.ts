@@ -74,6 +74,11 @@ function addCoords(coord1: Coords, coord2: Coords): Coords {
 	return [coord1[0] + coord2[0], coord1[1] + coord2[1]];
 }
 
+/** Adds two BigDecimal coordinates together. */
+function addBDCoords(coord1: BDCoords, coord2: BDCoords): BDCoords {
+	return [bd.add(coord1[0], coord2[0]), bd.add(coord1[1], coord2[1])];
+}
+
 /**
  * Subtracts two coordinate pairs together component-wise.
  * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
@@ -174,6 +179,7 @@ export default {
 	areCoordsEqual,
 	areBDCoordsEqual,
 	addCoords,
+	addBDCoords,
 	subtractCoords,
 	subtractBDCoords,
 	subtractDoubleCoords,
