@@ -164,8 +164,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
 				// randomly generate white piece coordinates in square around origin
-				const x: bigint = BigInt(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3n : 5n);
-				const y: bigint = BigInt(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3n : 5n);
+				const x: bigint = BigInt(Math.floor(Math.random() * (blackroyalnearer ? 7 : 11))) - (blackroyalnearer ? 3n : 5n);
+				const y: bigint = BigInt(Math.floor(Math.random() * (blackroyalnearer ? 7 : 11))) - (blackroyalnearer ? 3n : 5n);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
@@ -175,8 +175,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 				}
 			} else {
 				// randomly generate black piece coordinates at a distance
-				const x: bigint = BigInt(Math.random() * 3) + (blackroyalnearer ? 8n : 12n);
-				const y: bigint = BigInt(Math.random() * (blackroyalnearer ? 17 : 35)) - (blackroyalnearer ? 9n : 17n);
+				const x: bigint = BigInt(Math.floor(Math.random() * 3)) + (blackroyalnearer ? 8n : 12n);
+				const y: bigint = BigInt(Math.floor(Math.random() * (blackroyalnearer ? 17 : 35))) - (blackroyalnearer ? 9n : 17n);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
 				if (!position.has(key) && squareNotInSight(key, position)) {

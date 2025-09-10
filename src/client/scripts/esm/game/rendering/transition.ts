@@ -22,6 +22,8 @@ import math from '../../util/math/math.js';
 import area, { Area } from './area.js';
 import coordutil, { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
+import meshes from './meshes.js';
 
 
 // Type Definitions ----------------------------------------------------------------------
@@ -212,12 +214,41 @@ function panTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 
 /**
  * Starts a Zooming Transition to a list of coordinates.
- * 
- * Will not incur a following transition if all coords are not on screen.
+ * If an intermediate zoom-out is needed first, it will be done.
  */
-function zoomTransitionToCoordsList(coordsList: Coords[]) {
-	const theArea: Area = area.calculateFromCoordsList(coordsList);
-	zoomTransitionToArea(theArea);
+function zoomToCoordsList(coordsList: Coords[]): void {
+	const box = bounds.getBoxFromCoordsList(coordsList);
+	zoomToCoordsBox(box);
+}
+
+/**
+ * Starts a Zooming Transition to an integer bounding box.
+ * If an intermediate zoom-out is needed first, it will be done.
+ */
+function zoomToCoordsBox(box: BoundingBox): void {
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
+	const thisArea = area.calculateFromUnpaddedBox(boxFloating);
+	area.initTransitionFromArea(thisArea, false);
+}
+
+/**
+ * Starts a Zooming Transition to a list of coordinates.
+ * Will not incur an intermediate transition if all coords are not on screen originally.
+ */
+function singleZoomToCoordsList(coordsList: Coords[]) {
+	const transitionArea: Area = area.calculateFromCoordsList(coordsList);
+	zoomTransitionToArea(transitionArea);
+}
+
+/**
+ * Starts a Zooming Transition to floating point coords location.
+ * Will not incur an intermediate transition if it is not on screen originally.
+ */
+function singleZoomToBDCoords(coords: BDCoords) {
+	const snapBoundingBox: BoundingBoxBD = { left: coords[0], right: coords[0], bottom: coords[1], top: coords[1] };
+	const boxFloating: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquareBD(snapBoundingBox);
+	const transitionArea: Area = area.calculateFromUnpaddedBox(boxFloating);
+	zoomTransitionToArea(transitionArea);
 }
 
 /**
@@ -250,7 +281,7 @@ function undoTransition(): void {
 			scale: previousTrans.destinationScale,
 			boundingBox: boardtiles.getBoundingBoxOfBoard(previousTrans.destinationCoords, previousTrans.destinationScale)
 		};
-		area.initTelFromArea(thisArea, true);
+		area.initTransitionFromArea(thisArea, true);
 	} else { // Panning transition
 		panTransition(previousTrans.destinationCoords, true);
 	}
@@ -283,9 +314,8 @@ function updateZoomingTransition(easedT: number): void {
 	// Scale
 
 	// Smoothly transition E (the logarithm of the scale), then convert back to scale
-	const newE = originE + differenceE * easedT;
-	const E_CONSTANT = bd.FromNumber(Math.E);
-	const newScale = bd.pow(E_CONSTANT, newE);
+	const newE = bd.FromNumber(originE + differenceE * easedT);
+	const newScale = bd.exp(newE);
 	boardpos.setBoardScale(newScale);
 
 	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
@@ -393,14 +423,16 @@ export default {
 	// Initiating Transitions
 	areTransitioning,
 	zoomTransition,
-	zoomTransitionToCoordsList,
-	zoomTransitionToArea,
+	panTransition,
+	zoomToCoordsList,
+	zoomToCoordsBox,
+	singleZoomToCoordsList,
+	singleZoomToBDCoords,
 	undoTransition,
 	// Updating
 	update,
 	// Utility
 	eraseTelHist,
-	panTransition,
 	terminate,
 };
 

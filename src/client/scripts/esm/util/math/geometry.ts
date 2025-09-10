@@ -8,17 +8,18 @@
 
 import type { BoundingBox, BoundingBoxBD } from "./bounds.js";
 
-import bimath from "../bigdecimal/bimath.js";
 import coordutil, { BDCoords, Coords } from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../bigdecimal/bigdecimal.js";
-import vectors, { LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
+import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from "./vectors.js";
+import bounds from "./bounds.js";
+import bimath from "../bigdecimal/bimath.js";
 
 
 
-// Type Definitions -----------------------------------------------------------
+// ==================================== Type Definitions ====================================
 
 
-/** The form of the intersection points returned by {@link findLineBoxIntersections}. */
+/** The form of the intersection points returned by {@link findLineBoxIntersectionsBD}. */
 type IntersectionPoint = {
 	/** The actual intersection point */
 	coords: BDCoords;
@@ -30,19 +31,23 @@ type IntersectionPoint = {
 }
 
 
-// Constants -----------------------------------------------------------
+// ======================================= Constants =======================================
 
 
 const ZERO = bd.FromBigInt(0n);
-const ONE = bd.FromBigInt(1n);
 
 
-// Operations -----------------------------------------------------------
+// ============================== Fundamental Intersection Functions ==============================
 
 
 /**
  * Finds the intersection of two lines in general form.
  * [x, y] or undefined if there is no intersection (or infinite intersections).
+ * 
+ * PERFECT INTEGER PRECISION. If the intersection lies on a perfect integer point,
+ * there will be no floating point innaccuracies.
+ * If however the intersection lies on a non-integer point, and the BigDecimal
+ * can't represent it perfectly in binary, there will be floating point innaccuracy.
  */
 function calcIntersectionPointOfLines(A1: bigint, B1: bigint, C1: bigint, A2: bigint, B2: bigint, C2: bigint): BDCoords | undefined {
 
@@ -82,6 +87,93 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
 }
 
 /**
+ * Calculates the intersection point of a NON-VERTICAL line with a vertical one!
+ */
+function intersectLineAndVerticalLine(A1: bigint, B1: bigint, C1: bigint, x: bigint): BDCoords {
+	// The known coordinate is x, its coefficient is A1.
+	// We are solving for y, its coefficient is B1.
+	const intersectionY = solveForUnknownAxis(A1, B1, C1, x);
+	const intersectionX = bd.FromBigInt(x);
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * {@link intersectLineAndVerticalLine}, but for BigDecimal coefficients and known value.
+ */
+function intersectLineAndVerticalLineBD(A1: BigDecimal, B1: BigDecimal, C1: BigDecimal, x: BigDecimal): BDCoords {
+	// The known coordinate is x, its coefficient is A1.
+	// We are solving for y, its coefficient is B1.
+	const intersectionY = solveForUnknownAxisBD(A1, B1, C1, x);
+	const intersectionX = x;
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * Calculates the intersection point of a NON-HORIZONTAL line with a horizontal one!
+ * 
+ */
+function intersectLineAndHorizontalLine(A1: bigint, B1: bigint, C1: bigint, y: bigint): BDCoords {
+	// The known coordinate is y, its coefficient is B1.
+	// We are solving for x, its coefficient is A1.
+	const intersectionX = solveForUnknownAxis(B1, A1, C1, y);
+	const intersectionY = bd.FromBigInt(y);
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * {@link intersectLineAndHorizontalLine}, but for BigDecimal coefficients and known value.
+ */
+function intersectLineAndHorizontalLineBD(A1: BigDecimal, B1: BigDecimal, C1: BigDecimal, y: BigDecimal): BDCoords {
+	// The known coordinate is y, its coefficient is B1.
+	// We are solving for x, its coefficient is A1.
+	const intersectionX = solveForUnknownAxisBD(B1, A1, C1, y);
+	const intersectionY = y;
+
+	return [intersectionX, intersectionY];
+}
+
+/**
+ * [Helper] Solves for one coordinate of a line (Ax + By + C = 0) when the other is known.
+ * Generalizes the formula: unknown = -(knownCoeff * knownVal + C) / unknownCoeff
+ * @param knownAxisCoeff - The coefficient (A or B) corresponding to the known coordinate.
+ * @param unknownAxisCoeff - The coefficient (A or B) for the coordinate we are solving for.
+ * @param C - The C coefficient of the line.
+ * @param knownValue - The value of the known coordinate (e.g., the 'x' of a vertical line).
+ * @returns The calculated value of the unknown coordinate as a BigDecimal.
+ */
+function solveForUnknownAxis(knownAxisCoeff: bigint, unknownAxisCoeff: bigint, C: bigint, knownValue: bigint): BigDecimal {
+	// This should not happen if the "non-vertical" or "non-horizontal" constraints are met.
+	if (unknownAxisCoeff === 0n) throw new Error("Cannot solve for axis, as the divisor (unknownAxisCoeff) is zero.");
+
+	// Calculate the numerator using perfect BigInt arithmetic.
+	const numerator = -(knownAxisCoeff * knownValue + C);
+
+	// Convert to BigDecimal and perform the single, final division.
+	return bd.divide_fixed(bd.FromBigInt(numerator), bd.FromBigInt(unknownAxisCoeff));
+}
+
+/**
+ * {@link solveForUnknownAxis}, but for BigDecimal coefficients and known value.
+ */
+function solveForUnknownAxisBD(knownAxisCoeff: BigDecimal, unknownAxisCoeff: BigDecimal, C: BigDecimal, knownValue: BigDecimal): BigDecimal {
+	// This should not happen if the "non-vertical" or "non-horizontal" constraints are met.
+	if (bd.areEqual(unknownAxisCoeff, ZERO)) throw new Error("Cannot solve for axis, as the divisor (unknownAxisCoeff) is zero.");
+
+	// Calculate the numerator
+	const numerator = bd.negate(bd.add(bd.multiply_fixed(knownAxisCoeff, knownValue), C));
+
+	// Perform the single, final division.
+	return bd.divide_fixed(numerator, unknownAxisCoeff);
+}
+
+
+// ================================= Composite Geometric Operations =================================
+
+
+/**
  * Calculates the intersection point of two line SEGMENTS (not rays or infinite lines).
  * Returns undefined if there is none, or there's infinite (colinear).
  * 
@@ -89,20 +181,16 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
  * on the fly, is because the start and end segment points MAY HAVE FLOATING POINT IMPRECISION,
  * which would bleed into coefficient imprecision, thus imprecise intersection points.
  * By accepting the coefficients as arguments, they retain maximum precision.
- * @param A1 Coefficient A of segment 1's line (Ax + By + C = 0)
- * @param B1 Coefficient B of segment 1's line
- * @param C1 Coefficient C of segment 1's line
+ * @param line1Coefficients Coefficients [A,B,C] of segment 1's infinite line
  * @param s1p1 Start point of segment 1
  * @param s1p2 End point of segment 1
- * @param A2 Coefficient A of segment 2's line (Ax + By + C = 0)
- * @param B2 Coefficient B of segment 2's line
- * @param C2 Coefficient C of segment 2's line
+ * @param line2Coefficients Coefficients [A,B,C] of segment 2's infinite line
  * @param s2p1 Start point of segment 2
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
-function intersectLineSegments(line1Coefficients: LineCoefficientsBD, s1p1: BDCoords, s1p2: BDCoords, line2Coefficients: LineCoefficientsBD, s2p1: BDCoords, s2p2: BDCoords): BDCoords | undefined {
+function intersectLineSegments(line1Coefficients: LineCoefficients, s1p1: BDCoords, s1p2: BDCoords, line2Coefficients: LineCoefficients, s2p1: BDCoords, s2p2: BDCoords): BDCoords | undefined {
 	// 1. Calculate intersection of the infinite lines
-	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLinesBD(...line1Coefficients, ...line2Coefficients);
+	const intersectionPoint: BDCoords | undefined = calcIntersectionPointOfLines(...line1Coefficients, ...line2Coefficients);
 
 	if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
 
@@ -113,45 +201,22 @@ function intersectLineSegments(line1Coefficients: LineCoefficientsBD, s1p1: BDCo
 }
 
 /**
- * Checks if a point lies on a given line segment.
- * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
- * @param point The point to check.
- * @param segStart The starting point of the segment.
- * @param segEnd The ending point of the segment.
- * @returns True if the point is on the segment, false otherwise.
- */
-function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords): boolean {
-
-	const minSegX = bd.min(segStart[0], segEnd[0]);
-	const maxSegX = bd.max(segStart[0], segEnd[0]);
-	const minSegY = bd.min(segStart[1], segEnd[1]);
-	const maxSegY = bd.max(segStart[1], segEnd[1]);
-
-	// Check if point is within the bounding box of the segment
-	const withinX = bd.compare(point[0], minSegX) >= 0 && bd.compare(point[0], maxSegX) <= 0;
-	const withinY = bd.compare(point[1], minSegY) >= 0 && bd.compare(point[1], maxSegY) <= 0;
-
-	return withinX && withinY;
-}
-
-/**
  * Calculates the intersection point of an infinite line (in general form) and a line segment.
  * Returns undefined if there is no intersection, the intersection point lies
  * outside the segment, or if the line and segment are collinear/parallel.
- * @param A Coefficient A of the infinite line (Ax + By + C = 0)
- * @param B Coefficient B of the infinite line
- * @param C Coefficient C of the infinite line
+ * @param lineCoefficients The coefficients [A,B,C] of the infinite line.
+ * @param segmentCoefficients The coefficients [A,B,C] of the line containing the segment.
  * @param segP1 Start point of the segment
  * @param segP2 End point of the segment
  * @returns The intersection Coords if they intersect ON the segment, otherwise undefined.
  */
-function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segP1: BDCoords, segP2: BDCoords): BDCoords | undefined {
-	// 1. Get general form for the infinite line containing the segment
-	const segmentCoefficients = vectors.getLineGeneralFormFrom2CoordsBD(segP1, segP2);
+function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segmentCoefficients: LineCoefficients, segP1: BDCoords, segP2: BDCoords): BDCoords | undefined {
+	// 1. Convert the segment coefficients to BigDecimal
+	const segmentCoefficientsBD = vectors.convertCoeficcientsToBD(segmentCoefficients);
 
 	// 2. Calculate intersection of the two infinite lines
 	// Uses the provided function calcIntersectionPointOfLines
-	const intersectionPoint = calcIntersectionPointOfLinesBD(...lineCoefficients, ...segmentCoefficients);
+	const intersectionPoint = calcIntersectionPointOfLinesBD(...lineCoefficients, ...segmentCoefficientsBD);
 
 	// 3. Handle no intersection (parallel) or collinear lines.
 	// calcIntersectionPointOfLines returns undefined if determinant is 0.
@@ -172,21 +237,19 @@ function intersectLineAndSegment(lineCoefficients: LineCoefficientsBD, segP1: BD
  * or if the ray's line and segment's line are collinear/parallel without a
  * valid single intersection point on both.
  * @param ray The ray, defined by a starting point and a direction vector.
- * @param segP1 Start point of the segment.
- * @param segP2 End point of the segment.
+ * @param segP1 Start point of the segment. PERFECT integer.
+ * @param segP2 End point of the segment. PERFECT integer.
  * @returns The intersection Coords if they intersect ON the segment and ON the ray, otherwise undefined.
  */
 function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoords | undefined {
-	// 1. Get general form for the infinite line containing the ray.
-	const [lineA_ray, lineB_ray, lineC_ray] = ray.line;
+	// 1. Get general form for the infinite line containing the segment.
+	// PERFECT integers => No floating point imprecision.
+	const segmentCoeffs = vectors.getLineGeneralFormFrom2Coords(segP1, segP2); 
 
-	// 2. Get general form for the infinite line containing the segment.
-	const [lineA_seg, lineB_seg, lineC_seg] = vectors.getLineGeneralFormFrom2Coords(segP1, segP2);
+	// 2. Calculate intersection of the two infinite lines.
+	const intersectionPoint = calcIntersectionPointOfLines(...ray.line, ...segmentCoeffs);
 
-	// 3. Calculate intersection of the two infinite lines.
-	const intersectionPoint = calcIntersectionPointOfLines(lineA_ray, lineB_ray, lineC_ray, lineA_seg, lineB_seg, lineC_seg);
-
-	// 4. Handle no unique intersection (parallel or collinear lines).
+	// 3. Handle no unique intersection (parallel or collinear lines).
 	// Be sure to capture the case if the ray starts at one of the segment's endpoints.
 	if (!intersectionPoint) {
 		// First check if the ray's start lies on the start/end poit of the segment.
@@ -209,10 +272,10 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 		else return bd.FromCoords(ray.start); // The intersection point is the ray's start.
 	}
 
-	// 5. Check if the calculated intersection point lies on the actual segment.
+	// 4. Check if the calculated intersection point lies on the actual segment.
 	if (!isPointOnSegment(intersectionPoint, bd.FromCoords(segP1), bd.FromCoords(segP2))) return undefined; // Intersection point is not within the segment bounds.
 
-	// 6. Check if the intersection point lies on the ray (not "behind" its start).
+	// 5. Check if the intersection point lies on the ray (not "behind" its start).
 	// Calculate vector from ray start to intersection.
 	const rayStartBD = bd.FromCoords(ray.start);
 	const vectorToIntersection = vectors.calculateVectorFromBDPoints(rayStartBD, intersectionPoint);
@@ -223,7 +286,7 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 
 	if (bd.compare(dotProd, ZERO) < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
 
-	// 7. If all checks pass, the intersection point is valid for both ray and segment.
+	// 6. If all checks pass, the intersection point is valid for both ray and segment.
 	return intersectionPoint;
 }
 
@@ -253,19 +316,15 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 	// The dot product will be non-negative (>= 0) if this is true.
     
 	// Vector from ray1's start to the intersection point
-	const ray1StartBD = bd.FromCoords(ray1.start);
-	const vectorToIntersection1 = vectors.calculateVectorFromBDPoints(ray1StartBD, intersectionPoint);
+	const vectorToIntersection1 = vectors.calculateVectorFromBDPoints(bd.FromCoords(ray1.start), intersectionPoint);
 	// Dot product of ray1's direction vector and vectorToIntersection1
-	const ray1VecBD = bd.FromCoords(ray1.vector);
-	const dotProd1 = vectors.dotProductBD(ray1VecBD, vectorToIntersection1);
+	const dotProd1 = vectors.dotProductBD(bd.FromCoords(ray1.vector), vectorToIntersection1);
 
 	if (bd.compare(dotProd1, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray1.
 
 	// 4. Check if the intersection point lies on the second ray (similarly).
-	const ray2StartBD = bd.FromCoords(ray2.start);
-	const vectorToIntersection2 = vectors.calculateVectorFromBDPoints(ray2StartBD, intersectionPoint);
-	const ray2VecBD = bd.FromCoords(ray2.vector);
-	const dotProd2 = vectors.dotProductBD(ray2VecBD, vectorToIntersection2);
+	const vectorToIntersection2 = vectors.calculateVectorFromBDPoints(bd.FromCoords(ray2.start), intersectionPoint);
+	const dotProd2 = vectors.dotProductBD(bd.FromCoords(ray2.vector), vectorToIntersection2);
 
 	if (bd.compare(dotProd2, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray2.
 
@@ -273,43 +332,56 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 	return intersectionPoint;
 }
 
+/**
+ * Checks if a point lies on a given line segment.
+ * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
+ * @param point The point to check.
+ * @param segStart The starting point of the segment.
+ * @param segEnd The ending point of the segment.
+ * @returns True if the point is on the segment, false otherwise.
+ */
+function isPointOnSegment(point: BDCoords, segStart: BDCoords, segEnd: BDCoords): boolean {
+
+	const minSegX = bd.min(segStart[0], segEnd[0]);
+	const maxSegX = bd.max(segStart[0], segEnd[0]);
+	const minSegY = bd.min(segStart[1], segEnd[1]);
+	const maxSegY = bd.max(segStart[1], segEnd[1]);
+
+	// Check if point is within the bounding box of the segment
+	const withinX = bd.compare(point[0], minSegX) >= 0 && bd.compare(point[0], maxSegX) <= 0;
+	const withinY = bd.compare(point[1], minSegY) >= 0 && bd.compare(point[1], maxSegY) <= 0;
+
+	return withinX && withinY;
+}
+
+
+// ============================== High-Level Algorithms ==============================
+
 
 /**
  * Returns the point on the line SEGMENT that is nearest to the given point.
- * @param lineStart - The starting point of the line segment.
- * @param lineEnd - The ending point of the line segment.
+ * 
+ * @param segP1 - The starting point of the line segment.
+ * @param segP2 - The ending point of the line segment.
  * @param point - The point to find the nearest point on the line segment to.
  * @returns An object containing the properties `coords`, which is the closest point on the segment,
  *          and `distance` to that point.
  */
-function closestPointOnLineSegment(lineStart: BDCoords, lineEnd: BDCoords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
-	const dx = bd.subtract(lineEnd[0], lineStart[0]);
-	const dy = bd.subtract(lineEnd[1], lineStart[1]);
+function closestPointOnLineSegment(segmentCoeffs: LineCoefficients, segP1: BDCoords, segP2: BDCoords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
 
-	// Calculate the squared length of the segment.
-	// If the segment has zero length, the start point is the closest point.
-	const lineLengthSquared: BigDecimal = bd.add(bd.multiply_fixed(dx, dx), bd.multiply_fixed(dy, dy)); // dx * dx + dy * dy
-	if (bd.areEqual(lineLengthSquared, ZERO)) { // If the segment has zero length, return the start point
-		const distance = vectors.euclideanDistanceBD(lineStart, point);
-		return { coords: lineStart, distance };
+	const perpendicularCoeffs = vectors.getPerpendicularLine(segmentCoeffs, point);
+
+	// Find the intersection of the perpendicular line with the line containing the segment.
+	let closestPoint: BDCoords | undefined = intersectLineAndSegment(perpendicularCoeffs, segmentCoeffs, segP1, segP2);
+
+	// If the intersection is undefined, it means it lies outside the segment.
+	// So we need to figure out which segment point its CLOSEST to.
+	if (closestPoint === undefined) {
+		const distToP1 = vectors.chebyshevDistanceBD(point, segP1);
+		const distToP2 = vectors.chebyshevDistanceBD(point, segP2);
+		if (bd.compare(distToP1, distToP2) < 0) closestPoint = segP1; // p1 is closer
+		else closestPoint = segP2; // p2 is closer
 	}
-
-	// Calculate the projection parameter t.
-	// t = dotProduct((point - lineStart), (lineEnd - lineStart)) / lineLengthSquared
-	const xDiff = bd.subtract(point[0], lineStart[0]);
-	const yDiff = bd.subtract(point[1], lineStart[1]);
-	const addend1 = bd.multiply_fixed(xDiff, dx);
-	const addend2 = bd.multiply_fixed(yDiff, dy);
-	const dotProduct = bd.add(addend1, addend2);
-	let t = bd.divide_fixed(dotProduct, lineLengthSquared);
-
-	// Clamp t to the range [0, 1] to stay within the segment.
-	t = bd.clamp(t, ZERO, ONE);
-
-	// Calculate the coordinates of the closest point on the segment.
-	const closestX = bd.add(lineStart[0], bd.multiply_fixed(t, dx)); // lineStart[0] + t * dx
-	const closestY = bd.add(lineStart[1], bd.multiply_fixed(t, dy)); // lineStart[1] + t * dy
-	const closestPoint: BDCoords = [closestX, closestY];
 
 	// Calculate the distance from the original point to the closest point on the segment.
 	const distance = vectors.euclideanDistanceBD(closestPoint, point);
@@ -327,18 +399,14 @@ function closestPointOnLineSegment(lineStart: BDCoords, lineEnd: BDCoords, point
  * If the vector is vertical, then as if we were looking at the box from below,
  * we would return its left/right-most points.
  */
-function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBoxBD): [BDCoords, BDCoords] {
+function findCrossSectionalWidthPoints(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
 	const { left, right, bottom, top } = boundingBox;
-	const [dx, dy] = vector;
-
-	// Handle edge case: zero direction vector
-	if (bd.areEqual(dx, ZERO) && bd.areEqual(dy, ZERO)) throw new Error("Direction vector cannot be zero.");
 
 	// The normal vector is perpendicular to the viewing vector.
 	// We can use this to find the points that are furthest apart on this line.
-	const normal: BDCoords = [bd.negate(dy), dx];
+	const normal: Vec2 = vectors.getPerpendicularVector(vector);
 
-	const corners: BDCoords[] = [
+	const corners: Coords[] = [
         [left, top],     // Top-left
         [right, top],    // Top-right
         [left, bottom],  // Bottom-left
@@ -346,25 +414,22 @@ function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBo
     ];
 
 	// Initialize min/max with the projection of the first corner
-	let minCorner: BDCoords = corners[0]!;
-	let maxCorner: BDCoords = corners[0]!;
+	let minCorner: Coords = corners[0]!;
+	let maxCorner: Coords = corners[0]!;
 
-	// minCorner[0] * normalBD[0] + minCorner[1] * normalBD[1]
-	let minProjection: BigDecimal = bd.add(bd.multiply_fixed(minCorner[0], normal[0]), bd.multiply_fixed(minCorner[1], normal[1]));
-	let maxProjection: BigDecimal = minProjection;
+	let minProjection: bigint = vectors.dotProduct(minCorner, normal);
+	let maxProjection: bigint = minProjection;
 
 	// Iterate through the rest of the corners (from the second one)
-	for (let i = 1; i < corners.length; i++) {
-		const corner: BDCoords = corners[i]!;
-
+	for (const corner of corners) {
 		// Project the corner onto the NORMAL vector using the dot product
-		const projection = vectors.dotProductBD(corner, normal);
+		const projection = vectors.dotProduct(corner, normal);
 
-		if (bd.compare(projection, minProjection) < 0) {
+		if (bimath.compare(projection, minProjection) < 0) {
 			minProjection = projection;
 			minCorner = corner;
 		}
-		if (bd.compare(projection, maxProjection) > 0) {
+		if (bimath.compare(projection, maxProjection) > 0) {
 			maxProjection = projection;
 			maxCorner = corner;
 		}
@@ -372,6 +437,171 @@ function findCrossSectionalWidthPoints(vector: BDCoords, boundingBox: BoundingBo
 
 	return [minCorner, maxCorner];
 }
+
+
+
+
+/**
+ * Finds the intersection points of a line with a bounding box.
+ * @param startCoords - The starting point of the line.
+ * @param vector - The direction vector [dx, dy] of the line.
+ * @param box - The bounding box to test if the line intersects.
+ * @returns An array of intersection points as BDCoords, sorted by distance along the direction vector,
+ * 			along with whether whether their dot product is positive (in the direction of the vector).
+ */
+function findLineBoxIntersections(
+	startCoords: Coords,
+	vector: Vec2,
+	box: BoundingBox,
+	log = false
+): IntersectionPoint[] {
+	if (log) {
+		console.log("\nFinding line box intersections for:");
+		console.log("Coords:", startCoords);
+		console.log("Vector:", vector);
+		console.log("Box:", box);
+		console.log('\n');
+	}
+
+	// Cast the box to BigDecimals
+	const boxBD = bounds.castBoundingBoxToBigDecimal(box);
+
+	// Determine the coefficients of the line in general form
+	const coeffs = vectors.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
+
+	// Normalize the start coords as if the vector is normalized to the first graph quadrant.
+	const startCoordsNorm = coordutil.copyCoords(startCoords);
+	if (vector[0] < 0n) startCoordsNorm[0] = -startCoordsNorm[0];
+	if (vector[1] < 0n) startCoordsNorm[1] = -startCoordsNorm[1];
+	const startCoordsSum = bd.FromBigInt(startCoordsNorm[0] + startCoordsNorm[1]);
+
+	return findLineBoxIntersectionsBDHelper(coeffs, vector, startCoordsSum, box, boxBD, intersectLineAndVerticalLine, intersectLineAndHorizontalLine, log);
+}
+
+// Test cases
+
+// const testBox: BoundingBox = { left: -10n, right: 10n, bottom: -5n, top: 5n };
+// const testCoords: Coords = [0n, 0n];
+// const textVector: Vec2 = [1n, 0n];
+
+// findLineBoxIntersections(testCoords, textVector, testBox, true);
+
+/**
+ * Finds the intersection points of a line with BigDecimal precision with a bounding box of BigDecimal precision.
+ * Slightly slower than {@link findLineBoxIntersections}.
+ * @param startCoords - The starting point of the line.
+ * @param vector - The direction vector [dx, dy] of the line.
+ * @param boxBD - The bounding box to test if the line intersects.
+ * @returns An array of intersection points as BDCoords, sorted by distance along the direction vector,
+ * 			along with whether whether their dot product is positive (in the direction of the vector).
+ */
+function findLineBoxIntersectionsBD(startCoords: BDCoords, vector: Vec2, boxBD: BoundingBoxBD): IntersectionPoint[] {
+	// Determine the coefficients of the line in general form
+	const coeffs = vectors.getLineGeneralFormFromCoordsAndVecBD(startCoords, vector);
+
+	// Normalize the start coords as if the vector is normalized to the first graph quadrant.
+	const startCoordsNorm = normalizeIntersection(startCoords, vector);
+	const startCoordsSum = bd.add(startCoordsNorm[0], startCoordsNorm[1]);
+
+	return findLineBoxIntersectionsBDHelper(coeffs, vector, startCoordsSum, boxBD, boxBD, intersectLineAndVerticalLineBD, intersectLineAndHorizontalLineBD);
+}
+
+/**
+ * Helper for findLineBoxIntersections to normalize an intersection point,
+ * as if the vector were normalized to the first graph quadrant.
+ */
+function normalizeIntersection(intersection: BDCoords, vector: Vec2): BDCoords {
+	const normalizedIntersection = coordutil.copyBDCoords(intersection);
+	if (vector[0] < 0n) normalizedIntersection[0] = bd.negate(normalizedIntersection[0]);
+	if (vector[1] < 0n) normalizedIntersection[1] = bd.negate(normalizedIntersection[1]);
+	return normalizedIntersection;
+}
+
+/** [Helper] Shared logic for finding line-box intersections, whether the inputs are integers or BigDecimals. */
+function findLineBoxIntersectionsBDHelper<T extends bigint | BigDecimal>(
+	coeffs: [T,T,T],
+	vector: Vec2,
+	startCoordsSum: BigDecimal,
+	box: { left: T, right: T, bottom: T, top: T },
+	boxBD: BoundingBoxBD,
+	// eslint-disable-next-line no-unused-vars
+	vertIntectFunc: (A1: T, B1: T, C1: T, x: T) => BDCoords,
+	// eslint-disable-next-line no-unused-vars
+	horzIntsectFunc: (A1: T, B1: T, C1: T, y: T) => BDCoords,
+	log = false
+) {
+	// Check for intersections with each of the four box edges
+
+	const intersections: BDCoords[] = [];
+	
+	// Check vertical edges (where x is constant: x = left or x = right)
+	if (vector[0] !== 0n) { // A non-zero dx means the line is not vertical and can intersect vertical edges.
+		const intersectionLeft = vertIntectFunc(...coeffs, box.left);
+		const intersectionRight = vertIntectFunc(...coeffs, box.right);
+
+		// Now check if the intersection points actually lie ON the segments of the edges.
+		if (bd.compare(intersectionLeft[1], boxBD.bottom) >= 0 && bd.compare(intersectionLeft[1], boxBD.top) <= 0) intersections.push(intersectionLeft); // Valid intersection on left edge
+		if (bd.compare(intersectionRight[1], boxBD.bottom) >= 0 && bd.compare(intersectionRight[1], boxBD.top) <= 0) intersections.push(intersectionRight); // Valid intersection on right edge
+	}
+
+	// Check horizontal edges (where y is constant: y = bottom or y = top)
+	if (vector[1] !== 0n) { // A non-zero dy means the line is not horizontal and can intersect horizontal edges.
+		const intersectionBottom = horzIntsectFunc(...coeffs, box.bottom);
+		const intersectionTop = horzIntsectFunc(...coeffs, box.top);
+
+		// Now check if the intersection points actually lie ON the segments of the edges.
+		if (bd.compare(intersectionBottom[0], boxBD.left) >= 0 && bd.compare(intersectionBottom[0], boxBD.right) <= 0) intersections.push(intersectionBottom); // Valid intersection on bottom edge
+		if (bd.compare(intersectionTop[0], boxBD.left) >= 0 && bd.compare(intersectionTop[0], boxBD.right) <= 0) intersections.push(intersectionTop); // Valid intersection on top edge
+	}
+
+	// 4. De-duplicate and Sort the valid intersection points
+
+	// De-duplicate points
+	const unique_intersections = intersections.filter((v, i, a) => 
+		a.findIndex(t => coordutil.areBDCoordsEqual(v, t)) === i
+	);
+
+	const intersectionsWithPositiveDotProduct = unique_intersections.map(intersection => {
+		// Normalize the intersection as if the vector is normalized.
+		const norm = normalizeIntersection(intersection, vector);
+
+		const sum = bd.add(norm[0], norm[1]);
+
+		// If the sum is greater than the startCoords sum, the dot product is positive.
+		const positiveDotProduct = bd.compare(sum, startCoordsSum) >= 0;
+		
+		return {
+			coords: intersection,
+			positiveDotProduct
+		};
+	});
+
+	// Sort by distance along the direction vector
+	intersectionsWithPositiveDotProduct.sort((a, b) => {
+		// Normalize the intersection as if the vector is normalized.
+		const normA = normalizeIntersection(a.coords, vector);
+		const normB = normalizeIntersection(b.coords, vector);
+
+		const ASum = bd.add(normA[0], normA[1]);
+		const BSum = bd.add(normB[0], normB[1]);
+
+		// Whichever is greater is further along the direction vector.
+		return bd.compare(ASum, BSum);
+	});
+
+	if (log) {
+		for (const i of intersectionsWithPositiveDotProduct) {
+			console.log("Coordinates of intersection:", coordutil.stringifyBDCoords(i.coords));
+			console.log("Positive dot product?", i.positiveDotProduct);
+		}
+	}
+
+	return intersectionsWithPositiveDotProduct;
+}
+
+
+// ============================== Miscellaneous Utilities ==============================
+
 
 /**
  * Rounds the given point to the nearest grid point multiple of the provided gridSize.
@@ -399,319 +629,28 @@ function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords
 }
 
 
+// ================================= Exports =================================
 
-/**
- * Finds the intersection points of a line with a bounding box.
- * @param startCoords - The starting point of the line.
- * @param direction - The direction vector [dx, dy] of the line.
- * @param box - The bounding box the line intersects.
- * @returns An array of intersection points as BDCoords, sorted by distance along the vector.
- */
-function findLineBoxIntersections(startCoords: BDCoords, direction: Vec2, box: BoundingBoxBD): IntersectionPoint[] {
-
-	// --- 1. Convert all BigInt inputs to BigDecimal using default precision ---
-	const [bd_x0, bd_y0] = startCoords;
-	const [bd_dx, bd_dy] = bd.FromCoords(direction);
-	
-	const { left, right, bottom, top } = box;
-    
-	const valid_t_values: BigDecimal[] = [];
-
-	// --- 2. Check for intersections with each of the four box edges ---
-
-	// Check vertical edges (left and right)
-	if (direction[0] !== 0n) {
-		// t = (boundary - x0) / dx
-		const t_left = bd.divide_fixed(bd.subtract(left, bd_x0), bd_dx);
-		const t_right = bd.divide_fixed(bd.subtract(right, bd_x0), bd_dx);
-
-		// Check if the intersection at t_left is on the edge
-		const y_at_left = bd.add(bd.multiply_fixed(t_left, bd_dy), bd_y0);
-		if (bd.compare(y_at_left, bottom) >= 0 && bd.compare(y_at_left, top) <= 0) {
-			valid_t_values.push(t_left);
-		}
-
-		// Check if the intersection at t_right is on the edge
-		const y_at_right = bd.add(bd.multiply_fixed(t_right, bd_dy), bd_y0);
-		if (bd.compare(y_at_right, bottom) >= 0 && bd.compare(y_at_right, top) <= 0) {
-			valid_t_values.push(t_right);
-		}
-	}
-
-	// Check horizontal edges (bottom and top)
-	if (direction[1] !== 0n) {
-		// t = (boundary - y0) / dy
-		const t_bottom = bd.divide_fixed(bd.subtract(bottom, bd_y0), bd_dy);
-		const t_top = bd.divide_fixed(bd.subtract(top, bd_y0), bd_dy);
-        
-		// Check if the intersection at t_bottom is on the edge
-		const x_at_bottom = bd.add(bd.multiply_fixed(t_bottom, bd_dx), bd_x0);
-		if (bd.compare(x_at_bottom, left) >= 0 && bd.compare(x_at_bottom, right) <= 0) {
-			valid_t_values.push(t_bottom);
-		}
-
-		// Check if the intersection at t_top is on the edge
-		const x_at_top = bd.add(bd.multiply_fixed(t_top, bd_dx), bd_x0);
-		if (bd.compare(x_at_top, left) >= 0 && bd.compare(x_at_top, right) <= 0) {
-			valid_t_values.push(t_top);
-		}
-	}
-
-	// --- 3. De-duplicate and Sort the valid t-values ---
-    
-	// De-duplicate points
-	const unique_t_values = valid_t_values.filter((v, i, a) => 
-		a.findIndex(t => bd.areEqual(v, t)) === i
-	);
-
-	// Sort
-	unique_t_values.sort((a, b) => bd.compare(a, b));
-
-	// --- 4. Map sorted t-values to the final output format ---
-	const ZERO_BD = bd.FromBigInt(0n);
-
-	return unique_t_values.map(t => {
-		// Calculate the final intersection coordinates
-		const x = bd.add(bd_x0, bd.multiply_fixed(t, bd_dx));
-		const y = bd.add(bd_y0, bd.multiply_fixed(t, bd_dy));
-
-		return {
-			coords: [x, y],
-			// The sign of the dot product is the same as the sign of t.
-			positiveDotProduct: bd.compare(t, ZERO_BD) >= 0,
-		};
-	});
-}
-
-
-
-// ======================================== Perfect Integer/Rational Geometry ========================================
-
-
-
-/**
- * Represents a rational number (fraction) using two BigInts.
- * This allows for perfect precision in calculations involving division.
- */
-type TIntersection = {
-	/** The parametric value 't' of the intersection, represented as a rational number. */
-	ratio: TRatio;
-	/**
-	 * The type of the bounding box edge that was intersected.
-	 * 0 => A horizontal edge (top or bottom), where the Y coordinate is fixed.
-	 * 1 => A vertical edge (left or right), where the X coordinate is fixed.
-	 */
-	type: 0 | 1;
-};
-
-/** An object PERFECTLY representing a rational number without floating point imprecision. */
-type TRatio = {
-	/** Numerator */
-	N: bigint;
-	/** Denominator */
-	D: bigint;
-}
-
-/**
- * Normalizes the ratio part of a TIntersection so that the denominator is always positive.
- * This is crucial for consistent sorting, as a negative denominator would otherwise flip the
- * direction of an inequality during comparison.
- * Non-mutating. Returns a new TIntersection object.
- */
-function normalizeIntersection(intersection: TIntersection): TIntersection {
-	if (intersection.ratio.D < 0n) return {
-		ratio: { N: -intersection.ratio.N, D: -intersection.ratio.D },
-		type: intersection.type,
-	};
-	return intersection;
-};
-
-/**
- * Finds the intersection points of an integer line with an integer bounding box.
- * 
- * All intermediate calculations are division-free, done with rational numbers
- * (numerators and denominators) to avoid all floating-point inaccuracies,
- * atleast if the final intersection points lie exactly on an integer
- * (if they don't, BigDecimals can't perfectly represent fractions, which is fine).
- *
- * SPECIALIZED. Optimized version that does not use generic rational line
- * intersection methods. It leverages the fact that the box's edges are perfectly vertical
- * and horizontal to reduce the number of arithmetic operations.
- * @param startCoords - The starting point of the line.
- * @param direction - The direction vector [dx, dy] of the line.
- * @param box - The bounding box to test if the line intersects.
- * @returns An array of intersection points as BDCoords, sorted by distance along the direction vector.
- */
-function findLineBoxIntersectionsInteger(
-	startCoords: Coords,
-	direction: Vec2,
-	box: BoundingBox,
-	log = false
-): IntersectionPoint[] {
-
-	if (log) console.log("Finding line box intersections for coords", startCoords, "with direction", direction, "and box:");
-	if (log) console.log(box);
-
-	// 1. Deconstruct inputs into BigInts for precise integer arithmetic
-
-	const [x0, y0] = startCoords;
-	const [dx, dy] = direction;
-	const { left, right, bottom, top } = box;
-
-	const valid_intersections: TIntersection[] = [];
-
-	// 2. Check for intersections with each of the four box edges
-
-	// Check vertical edges (where x is constant: x = left or x = right)
-	if (dx !== 0n) { // A non-zero dx means the line is not vertical and can intersect vertical edges.
-		// For a vertical edge at x=left, we solve x0 + t*dx = left.
-		// This gives t = (left - x0) / dx. We store this as a rational number (ratio).
-		const t_left_ratio = { N: left - x0, D: dx };
-		const t_right_ratio = { N: right - x0, D: dx };
-
-		// Now, we must check if the intersection point actually lies ON the segment of the edge.
-		// The y-coordinate at the intersection is y = y0 + t*dy.
-		// The check is: bottom <= y0 + t*dy <= top.
-		// To avoid division, we substitute t = N/D and multiply the entire inequality by D:
-		// bottom*D <= y0*D + (N/D)*dy*D <= top*D
-		// This simplifies to: bottom*D <= y0*D + N*dy <= top*D
-		const y_num_left = y0 * t_left_ratio.D + t_left_ratio.N * dy;
-		let y_min_bound = bottom * t_left_ratio.D;
-		let y_max_bound = top * t_left_ratio.D;
-
-		// If the denominator D (dx) is negative, multiplying by it flips the inequality signs.
-		// We handle this by swapping the min and max bounds.
-		if (t_left_ratio.D < 0n) {
-			[y_min_bound, y_max_bound] = [y_max_bound, y_min_bound];
-		}
-		if (y_num_left >= y_min_bound && y_num_left <= y_max_bound) {
-			valid_intersections.push({ ratio: t_left_ratio, type: 1 });
-		}
-
-		// Repeat the same check for the right edge. The denominator and thus the bounds are the same.
-		const y_num_right = y0 * t_right_ratio.D + t_right_ratio.N * dy;
-		if (y_num_right >= y_min_bound && y_num_right <= y_max_bound) {
-			valid_intersections.push({ ratio: t_right_ratio, type: 1 });
-		}
-	}
-
-	// Check horizontal edges (where y is constant: y = bottom or y = top)
-	if (dy !== 0n) { // A non-zero dy means the line is not horizontal and can intersect horizontal edges.
-		// Similarly, for a horizontal edge at y=bottom, we solve y0 + t*dy = bottom.
-		// This gives t = (bottom - y0) / dy.
-		const t_bottom_ratio = { N: bottom - y0, D: dy };
-		const t_top_ratio = { N: top - y0, D: dy };
-
-		// The check is now on the x-coordinate: left <= x0 + t*dx <= right.
-		// Cross-multiplying by D (dy) gives: left*D <= x0*D + N*dx <= right*D
-		const x_num_bottom = x0 * t_bottom_ratio.D + t_bottom_ratio.N * dx;
-		let x_min_bound = left * t_bottom_ratio.D;
-		let x_max_bound = right * t_bottom_ratio.D;
-
-		// Again, swap bounds if the denominator D (dy) is negative.
-		if (t_bottom_ratio.D < 0n) {
-			[x_min_bound, x_max_bound] = [x_max_bound, x_min_bound];
-		}
-		if (x_num_bottom >= x_min_bound && x_num_bottom <= x_max_bound) {
-			valid_intersections.push({ ratio: t_bottom_ratio, type: 0 });
-		}
-
-		// Repeat for the top edge.
-		const x_num_top = x0 * t_top_ratio.D + t_top_ratio.N * dx;
-		if (x_num_top >= x_min_bound && x_num_top <= x_max_bound) {
-			valid_intersections.push({ ratio: t_top_ratio, type: 0 });
-		}
-	}
-
-	// 3. De-duplicate and Sort the valid t-ratios
-
-	// If the line passes through a corner, it will generate two intersection objects with
-	// identical rational 't' values. This filter removes such duplicates.
-	// The comparison `v.N * t.D === t.N * v.D` is a division-free way of checking if v.N/v.D === t.N/t.D.
-	const unique_intersections = valid_intersections.filter((v, i, a) => 
-		a.findIndex(t => v.ratio.N * t.ratio.D === t.ratio.N * v.ratio.D) === i
-	);
-
-	// Sort the intersections by their 't' value to order them correctly along the line.
-	// We compare t1 and t2 (a.ratio and b.ratio) without division.
-	// a < b  is equivalent to  a.N/a.D < b.N/b.D.
-	// Cross-multiplying gives a.N*b.D < b.N*a.D (assuming positive denominators).
-	// `normalizeIntersection` is called first to ensure denominators are positive.
-	unique_intersections.sort((a, b) => {
-		const norm_a = normalizeIntersection(a);
-		const norm_b = normalizeIntersection(b);
-		const diff = norm_a.ratio.N * norm_b.ratio.D - norm_b.ratio.N * norm_a.ratio.D;
-		return bimath.compare(diff, 0n);
-	});
-
-	// 4. Map sorted rational intersections to the final BigDecimal output format
-
-	const bd_x0 = bd.FromBigInt(x0);
-	const bd_y0 = bd.FromBigInt(y0);
-
-	const bd_dx = bd.FromBigInt(dx);
-	const bd_dy = bd.FromBigInt(dy);
-
-	return unique_intersections.map(intersection => {
-		const { ratio, type } = intersection;
-		let x: BigDecimal;
-		let y: BigDecimal;
-        
-		const bd_N = bd.FromBigInt(ratio.N);
-		const bd_D = bd.FromBigInt(ratio.D);
-
-		if (type === 1) { // Vertical intersection
-			// For a vertical intersection, we know the x-coordinate is EXACTLY on the boundary.
-			// We "snap" it to the integer value of the boundary to prevent any potential precision loss
-			// that might come from calculating `x0 + t*dx`.
-			x = ratio.N === left - x0 ? bd.FromBigInt(left) : bd.FromBigInt(right);
-			// The y-coordinate is then calculated using the precise rational value of t.
-			// y = y0 + (N/D) * dy -> y = (y0*D + N*dy) / D
-			const y_numerator = bd.add(bd.multiply_fixed(bd_y0, bd_D), bd.multiply_fixed(bd_N, bd_dy));
-			y = bd.divide_fixed(y_numerator, bd_D);
-		} else { // type === 0 => Horizontal intersection
-			// Similarly, snap the y-coordinate to the known boundary.
-			y = ratio.N === bottom - y0 ? bd.FromBigInt(bottom) : bd.FromBigInt(top);
-			// And calculate the x-coordinate.
-			const x_numerator = bd.add(bd.multiply_fixed(bd_x0, bd_D), bd.multiply_fixed(bd_N, bd_dx));
-			x = bd.divide_fixed(x_numerator, bd_D);
-		}
-
-		if (log) console.log("Coordinates of intersection:", coordutil.stringifyBDCoords([x, y]));
-
-		// The dot product of the direction vector and the vector to the intersection point
-		// determines if the intersection is "in front of" the starting point.
-		// The sign of the dot product is the same as the sign of 't'.
-		// The sign of t = N/D is the same as the sign of N*D, which avoids division.
-		const positiveDotProduct = ratio.N * ratio.D >= 0n;
-
-		return {
-			coords: [x, y],
-			positiveDotProduct,
-		};
-	});
-}
-
-
-
-// ======================================================================================================
-
-
-// Exports -----------------------------------------------------------
 
 export default {
-	// Operations
+	// Fundamental Intersection Functions
 	calcIntersectionPointOfLines,
 	calcIntersectionPointOfLinesBD,
+	
+	// Composite Intersection Functions
 	intersectLineSegments,
 	intersectLineAndSegment,
 	intersectRayAndSegment,
 	intersectRays,
+
+	// High-Level Algorithms
 	closestPointOnLineSegment,
 	findCrossSectionalWidthPoints,
-	roundPointToNearestGridpoint,
 	findLineBoxIntersections,
-	findLineBoxIntersectionsInteger,
+	findLineBoxIntersectionsBD,
+
+	// Miscellaneous Utilities
+	roundPointToNearestGridpoint,
 };
 
 export type {

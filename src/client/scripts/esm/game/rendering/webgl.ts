@@ -1,24 +1,23 @@
 
-// Import Start
-import camera from './camera.js';
-// Import End
+import type { Vec3 } from '../../util/math/vectors.js';
 
-/**
- * The WebGL rendering context. This is our web-based render engine.
- * @type {WebGL2RenderingContext}
- */
-let gl; // The WebGL context. Is initiated in initGL()
+import camera from './camera.js';
 
 /**
  * This script stores our global WebGL rendering context,
  * and other utility methods.
  */
 
+
+
+/** The WebGL rendering context. This is our web-based render engine. */
+let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in initGL()
+
 /**
  * The color the screen should be cleared to every frame.
  * This can be changed to give the sky a different color.
  */
-let clearColor = [0.5, 0.5, 0.5]; // Grey
+let clearColor: Vec3 = [0.5, 0.5, 0.5]; // Grey
 
 /**
  * Specifies the condition under which a fragment passes the depth test,
@@ -53,18 +52,20 @@ const frontFaceVerticesAreClockwise = true;
  * Sets the color the screen will be cleared to every frame.
  * 
  * This is useful for changing the sky color.
- * @param {number[]} newClearColor - The new clear color: `[r,g,b]`
+ * @param newClearColor - The new clear color: `[r,g,b]`
  */
-function setClearColor(newClearColor) { clearColor = newClearColor; }
+function setClearColor(newClearColor: Vec3): void {
+	clearColor = newClearColor;
+}
 
 /**
  * Initiate the WebGL context. This is our web-based render engine.
  */
 function init() {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	gl = camera.canvas.getContext('webgl2', { alpha: false, stencil: true });
-	if (!gl) { // WebGL2 not supported
-		alert(translations.webgl_unsupported);
+	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
+	if (!newContext) { // WebGL2 not supported
+		alert(translations['webgl_unsupported']);
 		throw new Error("WebGL2 not supported by browser.");
 		// gl = camera.canvas.getContext('webgl', { alpha: false });
 	}
@@ -76,6 +77,8 @@ function init() {
 	// 	alert(translations.webgl_unsupported);
 	// 	throw new Error("WebGL not supported.");
 	// }
+
+	gl = newContext;
 
 	gl.clearDepth(1.0); // Set the clear depth value
 	clearScreen();
@@ -120,19 +123,17 @@ function toggleNormalBlending() {
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function enableBlending_Inverse() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO); }
+function enableBlending_Inverse() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ZERO); }
 
 /**
  * Executes a function (typically a render function) while the depth function paramter
  * is `ALWAYS`. Objects will be rendered no matter if they are behind or on top of other objects.
  * This is useful for preventing tearing when objects are on the same z-level in perspective.
- * @param {Function} func 
- * @param {...*} args - Arguments to pass to the function.
  */
-function executeWithDepthFunc_ALWAYS(func, ...args) {
+function executeWithDepthFunc_ALWAYS(func: Function) {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	gl.depthFunc(gl.ALWAYS); // Temporary toggle the depth function to ALWAYS.
-	func(...args);
+	func();
 	gl.depthFunc(gl[defaultDepthFuncParam]); // Return to the original blending.
 }
 
@@ -142,9 +143,8 @@ function executeWithDepthFunc_ALWAYS(func, ...args) {
  * 
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
- * @param {Function} func 
  */
-function executeWithInverseBlending(func) {
+function executeWithInverseBlending(func: Function) {
 	enableBlending_Inverse();
 	func();
 	toggleNormalBlending();
@@ -154,15 +154,15 @@ function executeWithInverseBlending(func) {
 /**
  * Renders content masked by a given mesh. This function handles all stencil
  * buffer state changes internally, ensuring a clean state before and after.
- * @param {Function} drawMaskFunc - A function that renders the mesh to be used as the mask. (Your Function B)
- * @param {Function} drawContentFunc - A function that renders the content to be clipped by the mask. (Your Function A)
+ * @param drawMaskFunc - A function that renders the mesh to be used as the mask. (Your Function B)
+ * @param drawContentFunc - A function that renders the content to be clipped by the mask. (Your Function A)
  */
-function executeMaskedDraw(drawMaskFunc, drawContentFunc) {
+function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function) {
 	// Enable the stencil test before we do anything.
 	gl.enable(gl.STENCIL_TEST);
 
 	try {
-		// --- 1. Draw the Mask to the Stencil Buffer ---
+		// Draw the Mask to the Stencil Buffer
 
 		// We want to write to the stencil buffer, but make the mask itself invisible.
 		gl.colorMask(false, false, false, false); // Disable writing to the color buffer
@@ -175,7 +175,7 @@ function executeMaskedDraw(drawMaskFunc, drawContentFunc) {
 
 		drawMaskFunc(); // Execute the function that draws the mask.
 
-		// --- 2. Draw the Content, Using the Stencil Buffer as a Mask ---
+		// Draw the Content, Using the Stencil Buffer as a Mask
 
 		// Re-enable writing to the color and depth buffers so we can see our content.
 		gl.colorMask(true, true, true, true);
@@ -186,113 +186,110 @@ function executeMaskedDraw(drawMaskFunc, drawContentFunc) {
 		gl.stencilFunc(gl.EQUAL, 1, 0xFF);       // The test passes only if stencil value is 1.
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);   // Don't change the stencil buffer on pass or fail.
 
-		// Execute the user-provided function that draws the main scene content.
+		// Execute the function that draws the main scene content.
 		drawContentFunc();
 
 	} finally {
-		// --- 3. Cleanup: Return to a Normal Rendering State ---
-		// The `finally` block is GUARANTEED to run, even if `drawMaskFunc` or
-		// `drawContentFunc` throws an error. This prevents the WebGL state
-		// from being left "dirty" for the next frame.
+		// Cleanup. Return to a Normal Rendering State
 		gl.disable(gl.STENCIL_TEST);
 	}
 }
 
 
-/**
- * Queries common WebGL context values and logs them to the console.
- * Each user device may have different supported values.
- * @param {WebGLRenderingContext} gl - The WebGL context.
- */
-function queryWebGLContextInfo() {
-	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
-	const canvas = document.createElement('canvas');
-	const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');  // WebGL 2 if available, otherwise WebGL 1
+// /**
+//  * Queries common WebGL context values and logs them to the console.
+//  * Each user device may have different supported values.
+//  * @param {WebGLRenderingContext} gl - The WebGL context.
+//  */
+// function queryWebGLContextInfo() {
+// 	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
+// 	const canvas = document.createElement('canvas');
+// 	const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');  // WebGL 2 if available, otherwise WebGL 1
 
-	if (!gl) {
-		console.error('WebGL is not supported in this browser.');
-	} else {
-		console.log(gl instanceof WebGL2RenderingContext ? 'WebGL 2 is supported' : 'WebGL 1 is supported');
+// 	if (!gl) {
+// 		console.error('WebGL is not supported in this browser.');
+// 	} else {
+// 		console.log(gl instanceof WebGL2RenderingContext ? 'WebGL 2 is supported' : 'WebGL 1 is supported');
 
-		const params = [
-			{ name: 'MAX_TEXTURE_SIZE', desc: 'Maximum texture size', guaranteed: 64 },
-			{ name: 'MAX_CUBE_MAP_TEXTURE_SIZE', desc: 'Maximum cube map texture size', guaranteed: 16 },
-			{ name: 'MAX_RENDERBUFFER_SIZE', desc: 'Maximum renderbuffer size', guaranteed: 1 },
-			{ name: 'MAX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for fragment shader', guaranteed: 8 },
-			{ name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for vertex shader', guaranteed: 0 },
-			{ name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', desc: 'Maximum combined texture units', guaranteed: 8 },
-			{ name: 'MAX_VERTEX_ATTRIBS', desc: 'Maximum vertex attributes', guaranteed: 8 },
-			{ name: 'MAX_VERTEX_UNIFORM_VECTORS', desc: 'Maximum vertex uniform vectors', guaranteed: 128 },
-			{ name: 'MAX_FRAGMENT_UNIFORM_VECTORS', desc: 'Maximum fragment uniform vectors', guaranteed: 16 },
-			{ name: 'MAX_VARYING_VECTORS', desc: 'Maximum varying vectors', guaranteed: 8 },
-			{ name: 'MAX_VIEWPORT_DIMS', desc: 'Maximum viewport dimensions', guaranteed: [0, 0] },
-			{ name: 'ALIASED_POINT_SIZE_RANGE', desc: 'Aliased point size range', guaranteed: [1, 1] },
-			{ name: 'ALIASED_LINE_WIDTH_RANGE', desc: 'Aliased line width range', guaranteed: [1, 1] },
-			{ name: 'MAX_VERTEX_UNIFORM_COMPONENTS', desc: 'Maximum vertex uniform components', guaranteed: 1024 },
-			{ name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', desc: 'Maximum fragment uniform components', guaranteed: 1024 },
-			{ name: 'MAX_VERTEX_OUTPUT_COMPONENTS', desc: 'Maximum vertex output components', guaranteed: 64 },
-			{ name: 'MAX_FRAGMENT_INPUT_COMPONENTS', desc: 'Maximum fragment input components', guaranteed: 60 },
-			{ name: 'MAX_DRAW_BUFFERS', desc: 'Maximum draw buffers', guaranteed: 4 },
-			{ name: 'MAX_COLOR_ATTACHMENTS', desc: 'Maximum color attachments', guaranteed: 4 },
-			{ name: 'MAX_SAMPLES', desc: 'Maximum samples', guaranteed: 4 }
-		];
+// 		const params = [
+// 			{ name: 'MAX_TEXTURE_SIZE', desc: 'Maximum texture size', guaranteed: 64 },
+// 			{ name: 'MAX_CUBE_MAP_TEXTURE_SIZE', desc: 'Maximum cube map texture size', guaranteed: 16 },
+// 			{ name: 'MAX_RENDERBUFFER_SIZE', desc: 'Maximum renderbuffer size', guaranteed: 1 },
+// 			{ name: 'MAX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for fragment shader', guaranteed: 8 },
+// 			{ name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for vertex shader', guaranteed: 0 },
+// 			{ name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', desc: 'Maximum combined texture units', guaranteed: 8 },
+// 			{ name: 'MAX_VERTEX_ATTRIBS', desc: 'Maximum vertex attributes', guaranteed: 8 },
+// 			{ name: 'MAX_VERTEX_UNIFORM_VECTORS', desc: 'Maximum vertex uniform vectors', guaranteed: 128 },
+// 			{ name: 'MAX_FRAGMENT_UNIFORM_VECTORS', desc: 'Maximum fragment uniform vectors', guaranteed: 16 },
+// 			{ name: 'MAX_VARYING_VECTORS', desc: 'Maximum varying vectors', guaranteed: 8 },
+// 			{ name: 'MAX_VIEWPORT_DIMS', desc: 'Maximum viewport dimensions', guaranteed: [0, 0] },
+// 			{ name: 'ALIASED_POINT_SIZE_RANGE', desc: 'Aliased point size range', guaranteed: [1, 1] },
+// 			{ name: 'ALIASED_LINE_WIDTH_RANGE', desc: 'Aliased line width range', guaranteed: [1, 1] },
+// 			{ name: 'MAX_VERTEX_UNIFORM_COMPONENTS', desc: 'Maximum vertex uniform components', guaranteed: 1024 },
+// 			{ name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', desc: 'Maximum fragment uniform components', guaranteed: 1024 },
+// 			{ name: 'MAX_VERTEX_OUTPUT_COMPONENTS', desc: 'Maximum vertex output components', guaranteed: 64 },
+// 			{ name: 'MAX_FRAGMENT_INPUT_COMPONENTS', desc: 'Maximum fragment input components', guaranteed: 60 },
+// 			{ name: 'MAX_DRAW_BUFFERS', desc: 'Maximum draw buffers', guaranteed: 4 },
+// 			{ name: 'MAX_COLOR_ATTACHMENTS', desc: 'Maximum color attachments', guaranteed: 4 },
+// 			{ name: 'MAX_SAMPLES', desc: 'Maximum samples', guaranteed: 4 }
+// 		];
 
-		// Output WebGL Context Information
-		console.log('WebGL Context Information:');
-		params.forEach(param => {
-			try {
-				const value = gl.getParameter(gl[param.name]);
-				console.log(`${param.desc}:`, value, `(Guaranteed: ${param.guaranteed})`);
-			} catch (e) {
-				console.warn(`Error fetching ${param.name}:`, e.message);
-			}
-		});
-	}
+// 		// Output WebGL Context Information
+// 		console.log('WebGL Context Information:');
+// 		params.forEach(param => {
+// 			try {
+// 				const value = gl.getParameter(gl[param.name]);
+// 				console.log(`${param.desc}:`, value, `(Guaranteed: ${param.guaranteed})`);
+// 			} catch (e) {
+// 				console.warn(`Error fetching ${param.name}:`, e.message);
+// 			}
+// 		});
+// 	}
 
-	// Shortened version:
+// 	// Shortened version:
 
-	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
-	// const canvas = document.createElement('canvas');
-	// const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');  // WebGL 2 if available, otherwise WebGL 1
+// 	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
+// 	// const canvas = document.createElement('canvas');
+// 	// const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');  // WebGL 2 if available, otherwise WebGL 1
 
-	// if (!gl) {
-	// 	console.error('WebGL not supported.');
-	// } else {
-	// 	console.log(gl instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGL 1');
+// 	// if (!gl) {
+// 	// 	console.error('WebGL not supported.');
+// 	// } else {
+// 	// 	console.log(gl instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGL 1');
 
-	// 	const params = [
-	// 		{ name: 'MAX_TEXTURE_SIZE', guaranteed: 64 },
-	// 		{ name: 'MAX_CUBE_MAP_TEXTURE_SIZE', guaranteed: 16 },
-	// 		{ name: 'MAX_RENDERBUFFER_SIZE', guaranteed: 1 },
-	// 		{ name: 'MAX_TEXTURE_IMAGE_UNITS', guaranteed: 8 },
-	// 		{ name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', guaranteed: 0 },
-	// 		{ name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', guaranteed: 8 },
-	// 		{ name: 'MAX_VERTEX_ATTRIBS', guaranteed: 8 },
-	// 		{ name: 'MAX_VERTEX_UNIFORM_VECTORS', guaranteed: 128 },
-	// 		{ name: 'MAX_FRAGMENT_UNIFORM_VECTORS', guaranteed: 16 },
-	// 		{ name: 'MAX_VARYING_VECTORS', guaranteed: 8 },
-	// 		{ name: 'MAX_VIEWPORT_DIMS', guaranteed: [0, 0] },
-	// 		{ name: 'ALIASED_POINT_SIZE_RANGE', guaranteed: [1, 1] },
-	// 		{ name: 'ALIASED_LINE_WIDTH_RANGE', guaranteed: [1, 1] },
-	// 		{ name: 'MAX_VERTEX_UNIFORM_COMPONENTS', guaranteed: 1024 },
-	// 		{ name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', guaranteed: 1024 },
-	// 		{ name: 'MAX_VERTEX_OUTPUT_COMPONENTS', guaranteed: 64 },
-	// 		{ name: 'MAX_FRAGMENT_INPUT_COMPONENTS', guaranteed: 60 },
-	// 		{ name: 'MAX_DRAW_BUFFERS', guaranteed: 4 },
-	// 		{ name: 'MAX_COLOR_ATTACHMENTS', guaranteed: 4 },
-	// 		{ name: 'MAX_SAMPLES', guaranteed: 4 }
-	// 	];
+// 	// 	const params = [
+// 	// 		{ name: 'MAX_TEXTURE_SIZE', guaranteed: 64 },
+// 	// 		{ name: 'MAX_CUBE_MAP_TEXTURE_SIZE', guaranteed: 16 },
+// 	// 		{ name: 'MAX_RENDERBUFFER_SIZE', guaranteed: 1 },
+// 	// 		{ name: 'MAX_TEXTURE_IMAGE_UNITS', guaranteed: 8 },
+// 	// 		{ name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', guaranteed: 0 },
+// 	// 		{ name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', guaranteed: 8 },
+// 	// 		{ name: 'MAX_VERTEX_ATTRIBS', guaranteed: 8 },
+// 	// 		{ name: 'MAX_VERTEX_UNIFORM_VECTORS', guaranteed: 128 },
+// 	// 		{ name: 'MAX_FRAGMENT_UNIFORM_VECTORS', guaranteed: 16 },
+// 	// 		{ name: 'MAX_VARYING_VECTORS', guaranteed: 8 },
+// 	// 		{ name: 'MAX_VIEWPORT_DIMS', guaranteed: [0, 0] },
+// 	// 		{ name: 'ALIASED_POINT_SIZE_RANGE', guaranteed: [1, 1] },
+// 	// 		{ name: 'ALIASED_LINE_WIDTH_RANGE', guaranteed: [1, 1] },
+// 	// 		{ name: 'MAX_VERTEX_UNIFORM_COMPONENTS', guaranteed: 1024 },
+// 	// 		{ name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', guaranteed: 1024 },
+// 	// 		{ name: 'MAX_VERTEX_OUTPUT_COMPONENTS', guaranteed: 64 },
+// 	// 		{ name: 'MAX_FRAGMENT_INPUT_COMPONENTS', guaranteed: 60 },
+// 	// 		{ name: 'MAX_DRAW_BUFFERS', guaranteed: 4 },
+// 	// 		{ name: 'MAX_COLOR_ATTACHMENTS', guaranteed: 4 },
+// 	// 		{ name: 'MAX_SAMPLES', guaranteed: 4 }
+// 	// 	];
 
-	// 	params.forEach(param => {
-	// 		try {
-	// 			const value = gl.getParameter(gl[param.name]);
-	// 			console.log(`${param.name}: ${value}, G: ${param.guaranteed}`);
-	// 		} catch (e) {
-	// 			console.warn(`Error on ${param.name}`);
-	// 		}
-	// 	});
-	// }
-}
+// 	// 	params.forEach(param => {
+// 	// 		try {
+// 	// 			const value = gl.getParameter(gl[param.name]);
+// 	// 			console.log(`${param.name}: ${value}, G: ${param.guaranteed}`);
+// 	// 		} catch (e) {
+// 	// 			console.warn(`Error on ${param.name}`);
+// 	// 		}
+// 	// 	});
+// 	// }
+// }
 
 /**
  * Enables depth testing in WebGL.
@@ -319,7 +316,7 @@ export default {
 	executeWithInverseBlending,
 	executeMaskedDraw,
 	setClearColor,
-	queryWebGLContextInfo,
+	// queryWebGLContextInfo,
 	enableDepthTest,
 	disableDepthTest,
 };

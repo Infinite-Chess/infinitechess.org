@@ -166,7 +166,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 		const rayStartBD = bd.FromCoords(ray.start);
 
 		// Find the points it intersects the screen
-		const intersectionPoints = geometry.findLineBoxIntersections(rayStartBD, ray.vector, boundingBox);
+		const intersectionPoints = geometry.findLineBoxIntersectionsBD(rayStartBD, ray.vector, boundingBox);
 		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
 		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
 
@@ -175,7 +175,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 		lines.push({
 			start,
 			end: intersectionPoints[1]!.coords,
-			coefficients: vectors.convertCoeficcientsToBD(ray.line),
+			coefficients: ray.line,
 			color,
 		});
 	}
@@ -255,12 +255,11 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Coords {
 	// Since the targetVector can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
-	const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
-	const normalizedVectorX = bd.toNumber(bd.divide_floating(targetVector[0], targetLength));
-	const normalizedVectorY = bd.toNumber(bd.divide_floating(targetVector[1], targetLength));
+	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
+	const normalizedVector = vectors.normalizeVectorBD(targetVector);
 
 	// Now we can use small numbers
-	const targetAngle = Math.atan2(normalizedVectorY, normalizedVectorX);
+	const targetAngle = Math.atan2(normalizedVector[1], normalizedVector[0]); // Y value first
 
 	const searchVectors: Coords[] = searchHippogonals ? [
 		...vectors.VECTORS_ORTHOGONAL,

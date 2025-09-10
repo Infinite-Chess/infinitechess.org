@@ -17,7 +17,6 @@ import type { Vec3 } from '../../util/math/vectors.js';
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import shaders from './shaders.js';
 import camera from './camera.js';
-// @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
@@ -447,12 +446,12 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
 
 	for (const attrib of attribInfo) {
 		// Tell WebGL how to pull out the values from the vertex data and into the attribute in the shader code...
-		gl.vertexAttribPointer(shader.attribLocations[attrib.name], attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
-		gl.enableVertexAttribArray(shader.attribLocations[attrib.name]); // Enable the attribute for use
+		gl.vertexAttribPointer(shader.attribLocations[attrib.name]!, attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
+		gl.enableVertexAttribArray(shader.attribLocations[attrib.name]!); // Enable the attribute for use
 		// Be sure to set this every time, even if it's to 0!
 		// If another shader set the same attribute index to be
 		// used for instanced rendering, it would otherwise never be reset!
-		gl.vertexAttribDivisor(shader.attribLocations[attrib.name], vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
+		gl.vertexAttribDivisor(shader.attribLocations[attrib.name]!, vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
 
 		// Adjust our offset for the next attribute
 		currentOffsetBytes += attrib.numComponents * BYTES_PER_ELEMENT;
@@ -495,7 +494,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
 		
 		// Send the transformMatrix to the gpu (every shader has this uniform)
-		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix'], false, transformMatrix);
+		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix']!, false, transformMatrix);
 	}
 
 	if (texture) {
@@ -504,14 +503,14 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		// Tell the gpu we bound the texture to texture unit 0
-		gl.uniform1i(shader.uniformLocations['uSampler'], 0);
+		gl.uniform1i(shader.uniformLocations['uSampler']!, 0);
 	}
 
 	// Custom uniforms provided in the render call, for example 'tintColor'...
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
-		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name], value);
-		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name], value);
+		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name]!, value);
+		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name]!, value);
 		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
 	}
 }

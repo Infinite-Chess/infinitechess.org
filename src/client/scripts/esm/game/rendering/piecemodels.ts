@@ -10,7 +10,6 @@ import type { TypeGroup } from '../../chess/util/typeutil.js';
 import type { Board } from '../../chess/logic/gamefile.js';
 import type { Vec3 } from '../../util/math/vectors.js';
 
-// @ts-ignore
 import { gl } from './webgl.js';
 import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';

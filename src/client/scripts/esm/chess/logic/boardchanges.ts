@@ -50,6 +50,11 @@ type Change = {
 	path?: Coords[],
 } | {
 	action: 'capture',
+	/**
+	 * This is used by animations to tell when this piece was captured.
+	 * 0 based. 1 means the piece was captured at the 2nd path point.
+	 * `-1` implies the end of the path the piece moved along
+	 */
 	order: number
 })
 

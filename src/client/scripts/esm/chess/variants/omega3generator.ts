@@ -62,6 +62,8 @@ function genPositionOfOmegaCubed(): Map<CoordsKey, number> {
 	genBishopTunnel(startingPos, 15n, 6n, dist, dist);
 
 	surroundPositionInVoidBox(startingPos, { left: -500n, right: 500n, bottom: -500n, top: 500n });
+
+	// Bottom blip of pawns to prevent black rook from capturing them
 	startingPos.set(coordutil.getKeyFromCoords([499n,492n]), r.VOID + e.N);
 	startingPos.set(coordutil.getKeyFromCoords([7n,-500n]), r.PAWN + e.W);
 	startingPos.set(coordutil.getKeyFromCoords([8n,-500n]), r.PAWN + e.W);

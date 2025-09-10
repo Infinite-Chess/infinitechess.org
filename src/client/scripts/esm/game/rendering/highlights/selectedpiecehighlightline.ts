@@ -45,7 +45,7 @@ function getLines(): Line[] {
 		const lineIsVertical = step[0] === 0n;
 		const cappingAxis = lineIsVertical ? 1 : 0;
 
-		const intersectionPoints = geometry.findLineBoxIntersections(bd.FromCoords(pieceCoords), step, boundingBox).map(intersection => intersection.coords);
+		const intersectionPoints = geometry.findLineBoxIntersectionsBD(bd.FromCoords(pieceCoords), step, boundingBox).map(intersection => intersection.coords);
 		if (intersectionPoints.length < 2) continue;
 
 		let start: BDCoords = intersectionPoints[0]!;
@@ -63,7 +63,7 @@ function getLines(): Line[] {
 		// Skip if zero length
 		if (coordutil.areBDCoordsEqual(start, end)) continue;
 
-		const coefficients = vectors.getLineGeneralFormFromCoordsAndVecBD(start, step);
+		const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(pieceCoords, step);
 
 		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
 	};
@@ -71,7 +71,10 @@ function getLines(): Line[] {
 	return lines;
 }
 
-/** Start and end of a line segment */
+/** 
+ * Start and end of a line segment. PERFECT integers!
+ * We don't need to precalculate the line coefficients because of that.
+ */
 type Segment = {
 	start: Coords
 	end: Coords

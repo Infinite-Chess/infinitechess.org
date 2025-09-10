@@ -26,8 +26,7 @@ import preferences from "../../../components/header/preferences.js";
 import geometry from "../../../util/math/geometry.js";
 import jsutil from "../../../util/jsutil.js";
 import primitives from "../primitives.js";
-import area from "../area.js";
-import bounds, { BoundingBoxBD } from "../../../util/math/bounds.js";
+import bounds from "../../../util/math/bounds.js";
 import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../../chess/game.js";
@@ -152,7 +151,7 @@ function teleportToEntitiesIfClicked() {
 
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		mouse.claimMouseClick(Mouse.LEFT);
-		transition.zoomTransitionToCoordsList(allEntitiesHovered);
+		transition.singleZoomToCoordsList(allEntitiesHovered);
 	} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Allows second finger to grab the board
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
@@ -210,7 +209,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// First see if the pointer is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
 	const linesSnapPoints: LineSnapPoint[] = allLines.map(line => {
-		const snapPoint = geometry.closestPointOnLineSegment(line.start, line.end, pointerCoords);
+		const snapPoint = geometry.closestPointOnLineSegment(line.coefficients, line.start, line.end, pointerCoords);
 		return { line, snapPoint };
 	});
 
@@ -354,9 +353,7 @@ function teleportToSnapIfClicked() {
 		if (snap === undefined) return; // No snap to teleport to
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
 			mouse.claimMouseClick(Mouse.LEFT);
-			const snapBoundingBox: BoundingBoxBD = { left: snap.coords[0], right: snap.coords[0], bottom: snap.coords[1], top: snap.coords[1] };
-			const transitionArea = area.calculateFromUnpaddedBox(snapBoundingBox);
-			transition.zoomTransitionToArea(transitionArea);
+			transition.singleZoomToBDCoords(snap.coords);
 		} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Latter condition ensures if a board pinch starts then prioritize board dragging
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 		}
@@ -379,7 +376,7 @@ function findClosestEntityOfGroup(entities: BDCoords[], closeLines: LineSnapPoin
 		for (const eminatedLine of eminatingLines) {
 			for (const highlightLine of closeLines) {
 				// Do they intersect?
-				const intersection = geometry.intersectLineAndSegment(eminatedLine, highlightLine.line.start, highlightLine.line.end);
+				const intersection = geometry.intersectLineAndSegment(eminatedLine, highlightLine.line.coefficients, highlightLine.line.start, highlightLine.line.end);
 				if (intersection === undefined) continue;
 				// They DO intersect.
 				const dist = vectors.euclideanDistanceBD(intersection, mouseCoords);

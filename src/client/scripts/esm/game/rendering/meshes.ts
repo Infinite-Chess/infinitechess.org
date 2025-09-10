@@ -82,14 +82,21 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
  * Turns it into a floating point edge.
  */
 function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBox): BoundingBoxBD {
-	const squareCenter = boardtiles.getSquareCenter();
 	const boxBD = bounds.castBoundingBoxToBigDecimal(boundingBox);
+	return expandTileBoundingBoxToEncompassWholeSquareBD(boxBD);
+}
+
+/**
+ * {@link expandTileBoundingBoxToEncompassWholeSquare}, but use this if you already have a BigDecimal bounding box.
+ */
+function expandTileBoundingBoxToEncompassWholeSquareBD(boundingBox: BoundingBoxBD): BoundingBoxBD {
+	const squareCenter = boardtiles.getSquareCenter();
 	const inverseSquareCenter = bd.subtract(ONE, squareCenter);
 
-	const left = bd.subtract(boxBD.left, squareCenter);
-	const right = bd.add(boxBD.right, inverseSquareCenter);
-	const bottom = bd.subtract(boxBD.bottom, squareCenter);
-	const top = bd.add(boxBD.top, inverseSquareCenter);
+	const left = bd.subtract(boundingBox.left, squareCenter);
+	const right = bd.add(boundingBox.right, inverseSquareCenter);
+	const bottom = bd.subtract(boundingBox.bottom, squareCenter);
+	const top = bd.add(boundingBox.top, inverseSquareCenter);
 
 	return { left, bottom, right, top };
 }
@@ -153,14 +160,14 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 	return primitives.Rect(left, bottom, right, top, color);
 }
 
-/**
- * [World Space, TRIANGLES] Generates the vertex data of a filled rectangle.
- */
-function RectWorld_Filled(boundingBox: BoundingBox, color: Color): number[] {
-	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
-	return primitives.Quad_Color(left, bottom, right, top, color);
-}
+// /**
+//  * [World Space, TRIANGLES] Generates the vertex data of a filled rectangle.
+//  */
+// function RectWorld_Filled(boundingBox: BoundingBox, color: Color): number[] {
+// 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
+// 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
+// 	return primitives.Quad_Color(left, bottom, right, top, color);
+// }
 
 
 // Transforming Vertices ---------------------------------------------------------------
@@ -220,13 +227,14 @@ export default {
 	getCoordBoxModel,
 	getCoordBoxWorld,
 	expandTileBoundingBoxToEncompassWholeSquare,
+	expandTileBoundingBoxToEncompassWholeSquareBD,
 	applyWorldTransformationsToBoundingBox,
 	// Mesh Data
 	QuadModel_Color,
 	QuadWorld_Color,
 	QuadWorld_ColorTexture,
 	RectWorld,
-	RectWorld_Filled,
+	// RectWorld_Filled,
 	// Other Generic Rendering Methods
 	getModelPosition,
 };

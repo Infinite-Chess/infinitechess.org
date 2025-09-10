@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/util/math/vector.ts
+// src/client/scripts/esm/util/math/vectors.ts
 
 /**
  * This script contains methods for performing vector calculations,
@@ -202,9 +202,10 @@ function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
 /**
  * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
  */
-function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: BDCoords): BigDecimal {
-	// Coors first since they are likely higher precision.
-	return bd.subtract(bd.multiply_fixed(coords[1], vector[0]), bd.multiply_fixed(coords[0], vector[1]));
+function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): BigDecimal {
+	const vectorBD = bd.FromCoords(vector);
+	// Coords first since they are likely higher precision.
+	return bd.subtract(bd.multiply_fixed(coords[1], vectorBD[0]), bd.multiply_fixed(coords[0], vectorBD[1]));
 }
 
 
@@ -295,10 +296,54 @@ function normalizeVector(vec2: Vec2): Vec2 {
 }
 
 /**
+ * Normalizes a floating point arbitrarily large vector into a range
+ * near 0-1, small enough so it can be represented with javascript numbers.
+ * PRESERVES the ratio between the x and y components.
+ */
+function normalizeVectorBD(vec2: BDCoords): DoubleCoords {
+	// Normalize it NEAR the range 0-1 (don't matter if it's not exact).
+	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
+	const targetLength = bd.max(bd.abs(vec2[0]), bd.abs(vec2[1]));
+	return [
+		bd.toNumber(bd.divide_floating(vec2[0], targetLength)),
+		bd.toNumber(bd.divide_floating(vec2[1], targetLength))
+	];
+}
+
+/**
  * Calculates the normal (perpendicular) vector of a given 2D vector.
  */
 function getPerpendicularVector(vec2: Vec2): Vec2 {
 	return [-vec2[1], vec2[0]];
+}
+
+/**
+ * Calculates the line that is perpendicular to a given line and passes through a specific point.
+ * @param lineCoeffs - The coefficients [A,B,C] of the original line.
+ * @param point - The coordinates that the new perpendicular line must pass through.
+ * @returns New BigDecimal coefficients for the perpendicular line.
+ */
+function getPerpendicularLine(lineCoeffs: LineCoefficients, point: BDCoords): LineCoefficientsBD {
+	const lineCoeffsBD = convertCoeficcientsToBD(lineCoeffs);
+	const [A1, B1] = lineCoeffsBD;
+
+	// Step 1: Determine the A and B coefficients for the new line (L2).
+	// The normal vector for L2 is (-B1, A1).
+	const A2 = bd.negate(B1);
+	const B2 = A1;
+
+	// Step 2: Solve for the C coefficient of the new line (L2).
+	// The equation is A2*x + B2*y + C2 = 0.
+	// We know it must pass through point (xp, yp), so we can solve for C2:
+	// A2*xp + B2*yp + C2 = 0
+	// C2 = -(A2*xp + B2*yp)
+	// C2 = -((-B1)*xp + A1*yp)
+	// C2 = B1*xp - A1*yp
+	const term1 = bd.multiply_fixed(B1, point[0]);
+	const term2 = bd.multiply_fixed(A1, point[1]);
+	const C2 = bd.subtract(term1, term2);
+
+	return [A2, B2, C2];
 }
 
 /**
@@ -401,7 +446,9 @@ export default {
 	negateBDVector,
 	absVector,
 	normalizeVector,
+	normalizeVectorBD,
 	getPerpendicularVector,
+	getPerpendicularLine,
 	degreesToRadians,
 
 	// Distance Calculation

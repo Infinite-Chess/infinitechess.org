@@ -74,7 +74,7 @@ function getBoardScale() {
  * Infinity or underflowing to 0.
  * 
  * Typically used for graphics calculations, as the arithmetic
- * is much simpler than using BigDecimals.
+ * is faster than using BigDecimals.
  */
 function getBoardScaleAsNumber(): number {
 	return bd.toNumber(boardScale);
@@ -101,6 +101,11 @@ function glimitToDampScale() {
 
 
 function setBoardPos(newPos: BDCoords) {
+	// Enforce fixed point model
+	if (!bd.hasDefaultPrecision(newPos[0])) throw Error(`Cannot set board position X to [${newPos[0].divex}] ${newPos[0]}. Does not have default precision.`);
+	if (!bd.hasDefaultPrecision(newPos[1])) throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${newPos[1]}. Does not have default precision.`);
+
+	// console.log(`New board position [${(boardPos[0].divex)},${boardPos[1].divex}]`, coordutil.stringifyBDCoords(boardPos));
 	boardPos = jsutil.deepCopyObject(newPos); // Copy
 	frametracker.onVisualChange();
 }
@@ -196,9 +201,11 @@ function panBoard() {
 	const actualXChange = bd.multiply_fixed(baseXChange, deltaTimeBD);
 	const actualYChange = bd.multiply_fixed(baseYChange, deltaTimeBD);
 
-	boardPos[0] = bd.add(boardPos[0], actualXChange);
-	boardPos[1] = bd.add(boardPos[1], actualYChange);
-	frametracker.onVisualChange();
+	const newPos: BDCoords = [
+		bd.add(boardPos[0], actualXChange),
+		bd.add(boardPos[1], actualYChange)
+	];
+	setBoardPos(newPos);
 }
 
 /** Shifts the board scale by its scale velocity. */

@@ -122,7 +122,10 @@ function copyBDCoords(coords: BDCoords): BDCoords {
 }
 
 /**
- * Interpolates between two coordinates.
+ * [FLOATING] Interpolates between two coordinates.
+ * Fixed mantissa bit number.
+ * Doesn't work well for very large distances
+ * if you also need high decimal precision.
  * @param start - The starting coordinate.
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
@@ -130,8 +133,9 @@ function copyBDCoords(coords: BDCoords): BDCoords {
 function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
 	const bddiff: BDCoords = subtractBDCoords(end, start);
 	const bdt: BigDecimal = bd.FromNumber(t);
-	const travelX = bd.multiply_fixed(bddiff[0], bdt);
-	const travelY = bd.multiply_fixed(bddiff[1], bdt);
+	// console.log('bdt:', bd.toString(bdt), 't:', t);
+	const travelX = bd.multiply_floating(bddiff[0], bdt);
+	const travelY = bd.multiply_floating(bddiff[1], bdt);
 
 	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
 }
@@ -155,7 +159,8 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 /** [DEBUG] Stringifies a pair of BigDecimal coordinates into their exact representation. SLOW. */
 function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toNumber(coords[0])}, ${bd.toNumber(coords[1])})`;
-	return `(${bd.toExactString(coords[0])}, ${bd.toExactString(coords[1])})`;
+	// return `(${bd.toExactString(coords[0])}, ${bd.toExactString(coords[1])})`;
+	return `(${bd.toString(coords[0])}, ${bd.toString(coords[1])})`;
 }
 
 

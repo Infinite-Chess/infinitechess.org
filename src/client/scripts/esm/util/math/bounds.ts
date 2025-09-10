@@ -100,14 +100,14 @@ function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 	};
 }
 
-function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
-	return {
-		left: bd.toBigInt(box.left),
-		right: bd.toBigInt(box.right),
-		bottom: bd.toBigInt(box.bottom),
-		top: bd.toBigInt(box.top)
-	};
-}
+// function castBDBoundingBoxToBigint(box: BoundingBoxBD): BoundingBox {
+// 	return {
+// 		left: bd.toBigInt(box.left),
+// 		right: bd.toBigInt(box.right),
+// 		bottom: bd.toBigInt(box.bottom),
+// 		top: bd.toBigInt(box.top)
+// 	};
+// }
 
 /**
  * Expands the bounding box to include the provided coordinates, if it doesn't already.
@@ -153,6 +153,18 @@ function boxContainsBox(outerBox: BoundingBoxBD, innerBox: BoundingBoxBD): boole
 	if (bd.compare(innerBox.top, outerBox.top) > 0) return false;
 
 	return true;
+}
+
+/**
+ * Determines if two bounding boxes have zero overlap.
+ */
+function areBoxesDisjoint(box1: DoubleBoundingBox, box3: DoubleBoundingBox): boolean {
+	if (box1.right <= box3.left) return true;
+	if (box1.left >= box3.right) return true;
+	if (box1.top <= box3.bottom) return true;
+	if (box1.bottom >= box3.top) return true;
+
+	return false;
 }
 
 /**
@@ -210,13 +222,14 @@ export default {
 	getBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
-	castBDBoundingBoxToBigint,
+	// castBDBoundingBoxToBigint,
 	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
 
 	// Operations
 	boxContainsBox,
+	areBoxesDisjoint,
 	boxContainsSquare,
 	boxContainsSquareBD,
 	calcCenterOfBoundingBox,

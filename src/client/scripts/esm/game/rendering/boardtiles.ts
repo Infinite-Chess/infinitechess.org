@@ -8,7 +8,7 @@ import type { BufferModel } from './buffermodel.js';
 import type { Color } from '../../util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import type { BoundingBoxBD } from '../../util/math/bounds.js';
+import type { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
 
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import jsutil from '../../util/jsutil.js';
@@ -26,16 +26,13 @@ import bd from '../../util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import { createModel } from './buffermodel.js';
 import perspective from './perspective.js';
-// @ts-ignore
-import webgl from './webgl.js';
+import webgl, { gl } from './webgl.js';
 // @ts-ignore
 import texture from './texture.js';
 // @ts-ignore
 import style from '../gui/style.js';
 // @ts-ignore
 import camera from './camera.js';
-// @ts-ignore
-import { gl } from './webgl.js';
 
 
 
@@ -62,13 +59,13 @@ let boundingBoxFloat: BoundingBoxBD;
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  * CONTAINS INTEGER SQUARE VALUES. No floating points!
  */
-let boundingBox: BoundingBoxBD;
+let boundingBox: BoundingBox;
 /**
  * The bounding box of the board currently visible on the canvas when the CAMERA IS IN DEBUG MODE,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBox_debugMode: BoundingBoxBD;
+let boundingBox_debugMode: BoundingBox;
 
 const perspectiveMode_z = -0.01;
 
@@ -152,7 +149,7 @@ function gboundingBoxFloat(): BoundingBoxBD {
  * CONTAINS INTEGER SQUARE VALUES. No floating points!
  * @returns The board bounding box
  */
-function gboundingBox(debugMode = camera.getDebug()): BoundingBoxBD {
+function gboundingBox(debugMode = camera.getDebug()): BoundingBox {
 	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
 }
 
@@ -177,13 +174,14 @@ function recalcBoundingBox() {
  * @param src - The source board bounding box
  * @returns The rounded bounding box
  */
-function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
+function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	const squareCenter = getSquareCenter();
+	const squareCenterMinusOne = bd.subtract(squareCenter, ONE);
 
-	const left = bd.floor(bd.add(src.left, squareCenter)); // floor(left + squareCenter)
-	const right = bd.ceil(bd.add(bd.subtract(src.right, ONE), squareCenter)); // ceil(right - 1 + squareCenter)
-	const bottom = bd.floor(bd.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
-	const top = bd.ceil(bd.add(bd.subtract(src.top, ONE), squareCenter)); // ceil(top - 1 + squareCenter)
+	const left = bd.toBigInt(bd.floor(bd.add(src.left, squareCenter))); // floor(left + squareCenter)
+	const right = bd.toBigInt(bd.ceil(bd.add(src.right, squareCenterMinusOne))); // ceil(right + squareCenter - 1)
+	const bottom = bd.toBigInt(bd.floor(bd.add(src.bottom, squareCenter))); // floor(bottom + squareCenter)
+	const top = bd.toBigInt(bd.ceil(bd.add(src.top, squareCenterMinusOne))); // ceil(top + squareCenter - 1)
     
 	return { left, right, bottom, top };
 }

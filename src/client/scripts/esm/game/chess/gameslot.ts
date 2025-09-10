@@ -54,8 +54,7 @@ import transition from "../rendering/transition.js";
 import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
-import bounds from "../../util/math/bounds.js";
-// @ts-ignore
+import meshes from "../rendering/meshes.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
@@ -276,8 +275,8 @@ function unloadGame() {
  */
 function startStartingTransition() {
 	const startingAreaBox = gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim);
-	const startingAreaBoxBD = bounds.castBoundingBoxToBigDecimal(startingAreaBox);
-	const centerArea = area.calculateFromUnpaddedBox(startingAreaBoxBD);
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startingAreaBox);
+	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
 	const amount = bd.FromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
 	const startScale = bd.multiply_fixed(centerArea.scale, amount);

@@ -42,10 +42,9 @@ import { CreateInputListener, InputListener, Mouse } from '../input.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
+import webgl from '../rendering/webgl.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
-import webgl from '../rendering/webgl.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -179,11 +178,11 @@ function render() {
 			// Mask containing playable region
 			() => border.drawPlayableRegionMask(boardsim),
 			// The board tiles will only be drawn inside the mask
-			() => boardtiles.render()
+			renderTilesAndPromoteLines,
 		);
 	} else {
 		// Render normally, spanning the whole screen
-		boardtiles.render();
+		renderTilesAndPromoteLines();
 	}
 
 	/**
@@ -212,13 +211,18 @@ function render() {
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		animation.renderAnimations();
-		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		arrows.render();
 		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});
+}
+
+/** Renders items that need to be able to be masked by the world border. */
+function renderTilesAndPromoteLines() {
+	boardtiles.render();
+	promotionlines.render();
 }
 
 

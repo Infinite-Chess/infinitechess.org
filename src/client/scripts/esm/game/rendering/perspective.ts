@@ -12,7 +12,6 @@ import mat4 from './gl-matrix.js';
 import statustext from '../gui/statustext.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
-// @ts-ignore
 import webgl from './webgl.js';
 import camera, { Mat4 } from './camera.js';
 import { BufferModel, createModel } from './buffermodel.js';
