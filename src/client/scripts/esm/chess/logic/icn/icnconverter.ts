@@ -1320,15 +1320,17 @@ function parseShortFormMoves(shortformMoves: string): _Move_Out[] {
 
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param position - The starting position of the gamefile, in the form 'x,y': number
- * @param specialRights - Optional. The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @param position - A piece iterator giving us each piece's coordsKey and pieceType.
+ * 					 Using an iterable (which a Map<CoordsKey, number> also is considered a valid input) allows
+ * 					 optimization elsewhere in the code, allowing us to avoid creating massive intermediate maps.
+ * @param specialRights - The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
  * @returns The position of the game in compressed form, where each piece with a + has its special move ability (.e.g., "P5,6+|k15,-56|Q5000,1")
  */
-function getShortFormPosition(position: Map<CoordsKey, number>, specialRights: Set<CoordsKey>): string {
+function getShortFormPosition(position: Iterable<[CoordsKey, number]>, specialRights: Set<CoordsKey>): string {
 	const pieces: string[] = []; // ['P1,2+','P2,2+', ...]
 	for (const [coordsKey, type] of position) {
 		const pieceAbbr = getAbbrFromType(type);
-		const specialRightsString = specialRights.has(coordsKey as CoordsKey) ? '+' : '';
+		const specialRightsString = specialRights.has(coordsKey) ? '+' : '';
 		pieces.push(pieceAbbr + coordsKey + specialRightsString);
 	}
 	// Using join avoids overhead of repeatedly creating and copying large intermediate strings.
