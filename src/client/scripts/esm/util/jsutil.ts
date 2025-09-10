@@ -335,10 +335,15 @@ function estimateMemorySizeOf(obj: any): string {
 
 /**
  * A "replacer" for JSON.stringify()'ing with custom behavior,
- * allowing us to stringify special objects like Maps and TypedArrays.
+ * allowing us to stringify special objects like BigInts, Maps and TypedArrays.
  * Use {@link parseReviver} to parse back.
  */
 function stringifyReplacer(key: string, value: any): any {
+	// Stringify BigInts
+	if (typeof value === 'bigint') return {
+		$$type: "BigInt",
+		value: value.toString() // Convert BigInt to a string
+	};
 	// Stringify Maps
 	if (value instanceof Map) return {
 		$$type: "Map",
@@ -383,6 +388,7 @@ type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
  */
 function parseReviver(key: string, value: any): any {
 	if (typeof value === 'object' && value !== null) {
+		if (value.$$type === 'BigInt') return BigInt(value.value); // Convert string back to BigInt
 		if (value.$$type === 'Map') return new Map(value.value); // value.value should be an array of [key, value] pairs
 		if (value.$$type === 'Set') return new Set(value.value); // value.value should be an array of elements
 		if (value.$$type in FixedArrayInfo) {
