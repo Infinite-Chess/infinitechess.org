@@ -12,7 +12,8 @@ import type { Board } from "../../chess/logic/gamefile.js";
 import meshes from "./meshes.js";
 import camera from "./camera.js";
 import primitives from "./primitives.js";
-import bounds from "../../util/math/bounds.js";
+import perspective from "./perspective.js";
+import bounds, { DoubleBoundingBox } from "../../util/math/bounds.js";
 import { createModel } from "./buffermodel.js";
 
 
@@ -26,7 +27,13 @@ function drawPlayableRegionMask(boardsim: Board): void {
 	const boundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(boardsim.playableRegion!);
 	const worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD);
 
-	const screenBox = camera.getScreenBoundingBox(false);
+	let screenBox: DoubleBoundingBox;
+	if (perspective.getEnabled()) {
+		const dist = perspective.distToRenderBoard;
+		screenBox = { left: -dist, right: dist, bottom: -dist, top: dist };
+	} else {
+		screenBox = camera.getScreenBoundingBox(false);
+	}
 	// Cap the world box to the screen box.
 	// Fixes graphical glitches when the vertex data is beyond float32 range.
 	if (worldBox.left < screenBox.left) worldBox.left = screenBox.left;

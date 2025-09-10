@@ -45,7 +45,7 @@ let DEBUG: boolean = false;
 // This will NEVER change! The camera stays while the board position is what moves!
 // What CAN change is the rotation of the view matrix!
 const position: Vec3 = [0, 0, 12]; // [x, y, z]
-const position_devMode: Vec3 = [0, 0, 120]; // Default: 18
+const position_devMode: Vec3 = [0, 0, 18]; // Default: 18
 
 /** Field of view, in radians */
 let fieldOfView: number;
