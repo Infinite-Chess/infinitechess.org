@@ -358,12 +358,25 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?
 }
 
 /** Generates a position with the coordinates as the key, and the piece type as the value. */
-function generatePositionFromPieces(o: OrganizedPieces): Map<CoordsKey, number> {
+function generatePositionFromPieces({ coords, types }: OrganizedPieces): Map<CoordsKey, number> {
 	const position = new Map<CoordsKey, number>();
-	for (const [coordsKey, idx] of o.coords) {
-		position.set(coordsKey, o.types[idx]!);
+	for (const [coordsKey, idx] of coords) {
+		position.set(coordsKey, types[idx]!);
 	}
 	return position;
+}
+
+/**
+ * Generates an iterable of [coordsKey, pieceType] pairs from the given organized pieces.
+ * 
+ * More efficient than {@link generatePositionFromPieces}, as this doesn't create an intermediate map.
+ * @param {OrganizedPieces} o - The organized pieces object. Destructure the `coords` and `type` objects so the organized pieces can be garbage cleaned.
+ * @returns The piece iterator
+ */
+function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[CoordsKey, number]> {
+	for (const [coordsKey, idx] of coords) {
+		yield [coordsKey, types[idx]!];
+	}
 }
 
 
@@ -595,6 +608,7 @@ export default {
 	processInitialPosition,
 	regenerateLists,
 	generatePositionFromPieces,
+	getPieceIterable,
 	registerPieceInSpace,
 	removePieceFromSpace,
 	getTypeUndefinedsBehavior,
