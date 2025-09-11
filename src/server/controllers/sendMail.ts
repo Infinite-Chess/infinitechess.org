@@ -188,7 +188,7 @@ function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
  * @param messageSubject - email subject text
  * @param messageText - email body text
  */
-async function sendRatingAbuseEmail(messageSubject: string, messageText: string) {
+async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
 		if (!transporter) {
 			console.log("Email environment variables not specified. Not sending rating abuse email.");

@@ -235,7 +235,7 @@ interface Game {
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns The new game.
  */
-function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number) {
+function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number): Game {
 	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;
@@ -335,7 +335,7 @@ function assignWhiteBlackPlayersFromInvite<PT>(color: Player, ...playerlist: Arr
  * @param options.sendGameInfo
  * @param options.replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function subscribeClientToGame(game: Game, playerSocket: CustomWebSocket, playerColor: Player, { sendGameInfo = true, replyto }: {sendGameInfo?: boolean, replyto?: number} = {}) {
+function subscribeClientToGame(game: Game, playerSocket: CustomWebSocket, playerColor: Player, { sendGameInfo = true, replyto }: {sendGameInfo?: boolean, replyto?: number} = {}): void {
 
 	// 1. Attach their socket to the game for receiving updates
 	const playerData = game.players[playerColor];
@@ -364,7 +364,7 @@ function subscribeClientToGame(game: Game, playerSocket: CustomWebSocket, player
  * @param game
  * @param ws - Their websocket.
  */
-function unsubClientFromGame(game: Game, ws: CustomWebSocket) {
+function unsubClientFromGame(game: Game, ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.game === undefined) return; // Already unsubbed (they aborted)
 
 	// 1. Detach their socket from the game so we no longer send updates
@@ -383,7 +383,7 @@ function unsubClientFromGame(game: Game, ws: CustomWebSocket) {
  * @param playerColor - The color they are.
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function sendGameInfoToPlayer(game: Game, playerSocket: CustomWebSocket, playerColor: Player, replyto?: number) {
+function sendGameInfoToPlayer(game: Game, playerSocket: CustomWebSocket, playerColor: Player, replyto?: number): void {
 
 	const ratings = getRatingDataForGamePlayers(game);
 	const metadata = getMetadataOfGame(game, ratings);
@@ -432,7 +432,7 @@ function getRatingDataForGamePlayers(game: Game): PlayerGroup<Rating> {
  * @param ratingdata The rating data after their elos are changed after the game. Required IF you want WhiteRatingDiff & BlackRatingDiff in the metadata!
  * @returns An object containing metadata for the game including event name, players, time control, and UTC timestamps.
  */
-function getMetadataOfGame(game: Game, ratings: PlayerGroup<Rating>, ratingdata?: RatingData) {
+function getMetadataOfGame(game: Game, ratings: PlayerGroup<Rating>, ratingdata?: RatingData): MetaData {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 	const white = game.players[players.WHITE]!.identifier;
@@ -486,7 +486,7 @@ function getMetadataOfGame(game: Game, ratings: PlayerGroup<Rating>, ratingdata?
  * @param colorPlayingAs - Their color
  * @param [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
  */
-function resyncToGame(ws: CustomWebSocket, game: Game, colorPlayingAs: Player, replyToMessageID?: number) {
+function resyncToGame(ws: CustomWebSocket, game: Game, colorPlayingAs: Player, replyToMessageID?: number): void {
 	// If their socket isn't subscribed, connect them to the game!
 	if (!ws.metadata.subscriptions.game) subscribeClientToGame(game, ws, colorPlayingAs, { sendGameInfo: false });
 
@@ -499,7 +499,7 @@ function resyncToGame(ws: CustomWebSocket, game: Game, colorPlayingAs: Player, r
  * and the current moves list and timers.
  * @param game - The game
  */
-function sendGameUpdateToBothPlayers(game: Game) {
+function sendGameUpdateToBothPlayers(game: Game): void {
 	for (const player in game.players) {
 		sendGameUpdateToColor(game, Number(player) as Player);
 	}
@@ -513,7 +513,7 @@ function sendGameUpdateToBothPlayers(game: Game) {
  * @param options - Additional options
  * @param [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
  */
-function sendGameUpdateToColor(game: Game, color: Player, { replyTo }: { replyTo?: number } = {}) {
+function sendGameUpdateToColor(game: Game, color: Player, { replyTo }: { replyTo?: number } = {}): void {
 	const playerdata = game.players[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
@@ -543,7 +543,7 @@ function getGameUpdateMessageContents(game: Game, color: Player): GameUpdateMess
  * @param game - The game
  * @param ratingdata - The rating data
  */
-function sendRatingChangeToAllPlayers(game: Game, ratingdata: RatingData) {
+function sendRatingChangeToAllPlayers(game: Game, ratingdata: RatingData): void {
 	const messageContents = getRatingChangeMessageContents(ratingdata);
 	for (const playerdata of Object.values(game.players)) {
 		if (playerdata.socket === undefined) continue; // Not connected, can't send message
@@ -634,9 +634,12 @@ function doesPlayerBelongToGame_ReturnColor(game: Game, player: AuthMemberInfo):
  * @param action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
  * @param value - The value to send to the client.
  */
-function sendMessageToSocketOfColor(game: Game, color: Player, sub: string, action: string, value?: any) {
+function sendMessageToSocketOfColor(game: Game, color: Player, sub: string, action: string, value?: any): void {
 	const data = game.players[color];
-	if (data === undefined) return logEventsAndPrint(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt');
+	if (data === undefined) {
+		logEventsAndPrint(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt');
+		return;
+	}
 	const ws = data.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
@@ -651,7 +654,7 @@ function sendMessageToSocketOfColor(game: Game, color: Player, sub: string, acti
  * player sockets to remove self-referencing, and removes Node timers.
  * @param game - The game
  */
-function printGame(game: Game) {
+function printGame(game: Game): void {
 	const stringifiedGame = getSimplifiedGameString(game);
 	console.log(JSON.parse(stringifiedGame)); // Turning it back into an object gives it a special formatting in the console, instead of just printing a string.
 }
@@ -661,7 +664,7 @@ function printGame(game: Game) {
  * @param game - The game
  * @returns The simplified game string
  */
-function getSimplifiedGameString(game: Game) {
+function getSimplifiedGameString(game: Game): string {
 
 	// Only transfer interesting information.
 	const players: PlayerGroup<AuthMemberInfo> = {};
@@ -691,7 +694,7 @@ function getSimplifiedGameString(game: Game) {
  * @param game - The game
  * @returns true if the game is over (gameConclusion truthy)
  */
-function isGameOver(game: Game) {
+function isGameOver(game: Game): boolean {
 	return game.gameConclusion !== undefined;
 }
 
@@ -701,7 +704,7 @@ function isGameOver(game: Game) {
  * @param game - The game they're in
  * @param color - The color they are in this game
  */
-function isAutoResignDisconnectTimerActiveForColor(game: Game, color: Player) {
+function isAutoResignDisconnectTimerActiveForColor(game: Game, color: Player): boolean {
 	// If these are defined, then the timer is defined.
 	return game.players[color]!.disconnect.timeToAutoLoss !== undefined;
 }
@@ -752,7 +755,7 @@ function getGameClockValues(game: Game): ClockValues {
  *  so that it's as accurate as possible.
  * @param game - The game
  */
-function updateClockValues(game: Game) {
+function updateClockValues(game: Game): undefined {
 	const now = Date.now();
 	if (game.untimed || !isGameResignable(game) || isGameOver(game)) return;
 	if (game.timeAtTurnStart === undefined) throw new Error("cannot update clock values when timeAtTurnStart is not defined!");
@@ -760,7 +763,10 @@ function updateClockValues(game: Game) {
 	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
 	const newTime = game.timeRemainAtTurnStart! - timeElapsedSinceTurnStart;
 	const playerdata = game.players[game.whosTurn!];
-	if (playerdata === undefined) return logEventsAndPrint(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt');
+	if (playerdata === undefined) {
+		logEventsAndPrint(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt');
+		return;
+	}
 	playerdata.timer = newTime;
 	return;
 }
@@ -790,14 +796,14 @@ function sendMoveToColor(game: Game, color: Player, move: BaseMove): void {
 /**
  * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
  */
-function simplyMove(move: BaseMove) {
+function simplyMove(move: BaseMove): { compact: string; } {
 	return { compact: move.compact, };
 }
 
 /**
  * Cancel the timer to delete a game after it has ended if it is currently running.
  */
-function cancelDeleteGameTimer(game: Game) {
+function cancelDeleteGameTimer(game: Game): void {
 	clearTimeout(game.deleteTimeoutID);
 }
 
@@ -807,14 +813,14 @@ function cancelDeleteGameTimer(game: Game) {
  * @param game - The game
  * @returns *true* if the game is resignable.
  */
-function isGameResignable(game: Game) { return game.moves.length > 1; }
+function isGameResignable(game: Game): boolean { return game.moves.length > 1; }
 
 /**
  * Tests if the game has just become resignable with the latest move (exactly 2 moves have been played).
  * @param game - The game
  * @returns *true* if the game has just become resignable after the last move.
  */
-function isGameBorderlineResignable(game: Game) { return game.moves.length === 2; }
+function isGameBorderlineResignable(game: Game): boolean { return game.moves.length === 2; }
 
 /**
  * Returns the color of the player that played that moveIndex within the moves list.
@@ -835,7 +841,7 @@ function getColorThatPlayedMoveIndex(game: Game, i: number): Player {
  * @param gameRules
  * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
  */
-function getTerminationInEnglish(gameRules: GameRules, condition: string) {
+function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
 	if (condition === 'moverule') { // One exception
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
 		return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;

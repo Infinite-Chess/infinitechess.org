@@ -102,7 +102,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  * 
  * SLOWEST. Minimize calling.
  */
-function regenAll(boardsim: Board, mesh: Mesh | undefined) {
+function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 	if (!mesh) return;
 	console.log("Regenerating all piece type meshes.");
 
@@ -131,7 +131,7 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined) {
  * @param mesh
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-function regenType(boardsim: Board, mesh: Mesh, type: number) {
+function regenType(boardsim: Board, mesh: Mesh, type: number): void {
 	console.log(`Regenerating mesh of type ${type}.`);
 
 	if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
@@ -261,7 +261,7 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
  * uniform translations upon rendering, and reinits them on the gpu.
  * Faster than {@link regenAll}.
  */
-function shiftAll(boardsim: Board, mesh: Mesh) {
+function shiftAll(boardsim: Board, mesh: Mesh): void {
 	console.log("Shifting all piece meshes.");
 
 	const newOffset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
@@ -319,7 +319,7 @@ function shiftModel(meshData: MeshData, diffXOffset: bigint, diffYOffset: bigint
  * 
  * FAST, as this only needs to modify the vertex data of a single instance per piece type.
  */
-function rotateAll(mesh: Mesh, newInverted: boolean) {
+function rotateAll(mesh: Mesh, newInverted: boolean): void {
 	// console.log("Rotating position data of all type meshes!");
 
 	mesh.inverted = newInverted;
@@ -348,7 +348,7 @@ function rotateAll(mesh: Mesh, newInverted: boolean) {
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
-function overwritebufferdata(mesh: Mesh, piece: Piece) {
+function overwritebufferdata(mesh: Mesh, piece: Piece): void {
 	const meshData = mesh.types[piece.type]!;
 
 	const i = piece.index * STRIDE_PER_PIECE;
@@ -371,7 +371,7 @@ function overwritebufferdata(mesh: Mesh, piece: Piece) {
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
-function deletebufferdata(mesh: Mesh, piece: Piece) {
+function deletebufferdata(mesh: Mesh, piece: Piece): void {
 	const meshData = mesh.types[piece.type]!;
 
 	const i = piece.index * STRIDE_PER_PIECE;
@@ -394,7 +394,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece) {
  * Renders ever piece type mesh of the game, including voids,
  * translating and scaling them into position.
  */
-function renderAll(boardsim: Board, mesh: Mesh) {
+function renderAll(boardsim: Board, mesh: Mesh): void {
 
 	const boardPos = boardpos.getBoardPos();
 	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
@@ -427,7 +427,7 @@ function renderAll(boardsim: Board, mesh: Mesh) {
  * Tests if the board position is atleast REGEN_RANGE-distance away from the current offset.
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
-function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
+function isOffsetOutOfRangeOfRegenRange(offset: Coords): boolean { // offset: [x,y]
 	const boardPosRounded: Coords = bd.coordsToBigInt(boardpos.getBoardPos());
 	const chebyshevDist = vectors.chebyshevDistance(boardPosRounded, offset);
 	return chebyshevDist > REGEN_RANGE;

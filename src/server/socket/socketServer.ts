@@ -20,7 +20,7 @@ let WebSocketServer: WebSocket.Server;
 
 
 
-function start(httpsServer: HttpsServer) {
+function start(httpsServer: HttpsServer): void {
 	WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
 	// WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
 	WebSocketServer.on('connection', (socket: WebSocket, req: IncomingMessage) => {

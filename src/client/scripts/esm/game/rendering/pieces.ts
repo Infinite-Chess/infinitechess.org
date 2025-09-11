@@ -28,13 +28,13 @@ const ghostOpacity: number = 0.4;
  * Renders all of our pieces on the board,
  * including voids, and mini images, if visible.
  */
-function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined) {
+function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined): void {
 	if (mesh) piecemodels.renderAll(boardsim, mesh);
 	miniimage.render();
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
-function renderGhostPiece(type: number, coords: Coords) {
+function renderGhostPiece(type: number, coords: Coords): void {
 	const data = meshes.QuadWorld_ColorTexture(coords, type, [1, 1, 1, ghostOpacity]);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();

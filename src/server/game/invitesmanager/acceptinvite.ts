@@ -39,7 +39,7 @@ type AcceptInviteMessage = z.infer<typeof acceptinviteschem>
  * @param messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage, replyto?: number) { // { id, isPrivate }
+function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage, replyto?: number): void { // { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game", { replyto });
 
 	// Does the invite still exist?
@@ -92,7 +92,7 @@ function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage,
  * was invalid, if they entered a private invite code.
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function informThemGameAborted(ws: CustomWebSocket, isPrivate: boolean, inviteID: string, replyto?: number) {
+function informThemGameAborted(ws: CustomWebSocket, isPrivate: boolean, inviteID: string, replyto?: number): void {
 	const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
 	if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 	return sendNotify(ws, errString, { replyto });

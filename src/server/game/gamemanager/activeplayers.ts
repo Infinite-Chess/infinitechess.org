@@ -32,7 +32,7 @@ const browsersInActiveGames: Record<string, number> = {};
  * Players in this are not allowed to join a second game.
  * @param id - The id of the game they are in.
  */
-function addUserToActiveGames(user: AuthMemberInfo, id: number) {
+function addUserToActiveGames(user: AuthMemberInfo, id: number): void {
 	if (user.signedIn) membersInActiveGames[user.user_id] = id;
 	else browsersInActiveGames[user.browser_id] = id;
 }
@@ -44,7 +44,7 @@ function addUserToActiveGames(user: AuthMemberInfo, id: number) {
  * @param user - An object containing either the `member` or `browser` property.
  * @param gameID - The id of the game they are in.
  */
-function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number) {
+function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
 	// Only removes them from the game if they belong to a game of that ID.
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
@@ -62,7 +62,7 @@ function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number) {
  * active game, which means they're not allowed to join a new one.
  * @param ws - The websocket
  */
-function isSocketInAnActiveGame(ws: CustomWebSocket) {
+function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
 	const player = ws.metadata.memberInfo;
 	// Allow a member to still join a new game, even if they're browser may be connected to one already.
 	if (player.signedIn) { // Their username trumps their browser id.

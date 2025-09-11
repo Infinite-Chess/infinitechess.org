@@ -30,7 +30,7 @@ type InvitesMessage = z.infer<typeof InvitesSchema>;
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  * @returns 
  */
-function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: number) { // data: { route, action, value, id }
+function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: number): void { // data: { route, action, value, id }
 	// Route them according to their action
 	switch (contents.action) {
 		case "createinvite":

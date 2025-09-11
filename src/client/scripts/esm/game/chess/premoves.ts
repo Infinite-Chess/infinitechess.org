@@ -79,7 +79,7 @@ document.addEventListener('premoves-toggle', (e: CustomEvent) => {
 });
 
 /** Gets all pending premoves. */
-function hasAtleastOnePremove() {
+function hasAtleastOnePremove(): boolean {
 	return premoves.length > 0;
 }
 
@@ -100,7 +100,7 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveD
 }
 
 /** Applies a premove's changes to the board. */
-function applyPremove(gamefile: FullGame, mesh: Mesh | undefined, premove: Premove, forward: boolean) {
+function applyPremove(gamefile: FullGame, mesh: Mesh | undefined, premove: Premove, forward: boolean): void {
 	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward, true); // forward & global are true
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, premove, forward);
@@ -135,7 +135,7 @@ function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
 }
 
 /** Clears all pending premoves */
-function clearPremoves() {
+function clearPremoves(): void {
 	// console.error("Clearing premoves");
 	premoves = [];
 	// Since we now have zero premoves, they are technically applied.
@@ -144,7 +144,7 @@ function clearPremoves() {
 }
 
 /** Cancels all premoves */
-function cancelPremoves(gamefile: FullGame, mesh?: Mesh) {
+function cancelPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	// console.log("Clearing premoves");
 	const hadAtleastOnePremove = hasAtleastOnePremove();
 	
@@ -164,7 +164,7 @@ function cancelPremoves(gamefile: FullGame, mesh?: Mesh) {
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
-function rewindPremoves(gamefile: FullGame, mesh?: Mesh) {
+function rewindPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	if (!applied) throw Error("Don't rewindPremoves when other premoves are not applied!");
 
 	// Reverse the original array so all changes are made in the reverse order they were added
@@ -184,7 +184,7 @@ function rewindPremoves(gamefile: FullGame, mesh?: Mesh) {
  * All premove's must be regenerated, as for all we know
  * their destination square could have a new piece, or lack thereof.
  */
-function applyPremoves(gamefile: FullGame, mesh?: Mesh) {
+function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	if (applied) throw Error("Don't applyPremoves when other premoves are already applied!");
 
 	for (let i = 0; i < premoves.length; i++) {
@@ -315,7 +315,7 @@ function premoveIsLegal(gamefile: FullGame, premove: Premove | undefined, mode: 
  * Shouldn't care whether the game is over, as all premoves should have been cleared,
  * and not to mention we still need applied to be set to true.
  */
-function onYourMove(gamefile: FullGame, mesh?: Mesh) {
+function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
 	// Process the next premove, will reapply the premoves
 	processPremoves(gamefile, mesh);
 }
@@ -325,7 +325,7 @@ function onYourMove(gamefile: FullGame, mesh?: Mesh) {
  * Erases pending premoves, leaving the `applied` state at what it was before
  * so the rest of the code doesn't experience it changed randomly.
  */
-function onGameConclude() {
+function onGameConclude(): void {
 	// console.error("Game ended, clearing premoves");
 
 	const originalApplied = applied; // Save the original applied state
@@ -343,7 +343,7 @@ function onGameConclude() {
 /**
  * Call externally when the game is unloaded.
  */
-function onGameUnload() {
+function onGameUnload(): void {
 	clearPremoves();
 }
 
@@ -352,7 +352,7 @@ function onGameUnload() {
 
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
-function update(gamefile: FullGame, mesh?: Mesh) {
+function update(gamefile: FullGame, mesh?: Mesh): void {
 	if (preferences.getLingeringAnnotationsMode()) return; // Right mouse down doesn't clear premoves in Lingering Annotations mode
 
 	if (mouse.isMouseDown(Mouse.RIGHT)) {
@@ -370,7 +370,7 @@ function update(gamefile: FullGame, mesh?: Mesh) {
 
 
 /** Renders the premoves */
-function render() {
+function render(): void {
 	if (premoves.length === 0) return; // No premoves to render
 
 	let premoveSquares = premoves.flatMap(p => [p.startCoords, p.endCoords]);

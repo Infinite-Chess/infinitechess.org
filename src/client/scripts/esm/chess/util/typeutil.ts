@@ -147,7 +147,7 @@ function buildAllTypesForPlayers(players: Player[], rawTypes: RawType[]): number
 }
 
 // eslint-disable-next-line no-unused-vars
-function forEachPieceType(callback: (pieceType: number) => void, players: Player[], includePieces: RawType[]) {
+function forEachPieceType(callback: (pieceType: number) => void, players: Player[], includePieces: RawType[]): void {
 	for (let i = players.length - 1; i >= 0; i--) {
 		for (const r of includePieces) {
 			callback(buildType(r, players[i]!));
@@ -164,7 +164,7 @@ function invertType(type: number): number {
 function invertPlayer(player: Player): Player {
 	return player === players.WHITE ? players.BLACK :
 		   player === players.BLACK ? players.WHITE
-		   : (() => { throw Error(`Cannot invert player ${player}!`); })(); // No downsides to adding this, only more protection.
+		   : ((): never => { throw Error(`Cannot invert player ${player}!`); })(); // No downsides to adding this, only more protection.
 }
 
 function getRawTypeStr(type: RawType): string {
@@ -178,7 +178,7 @@ function getPlayerFromString(string: StrPlayer): Player {
 /**
  * Deletes for pieces that aren't included in this game.
  */
-function deleteUnusedFromRawTypeGroup<T>(existingRawTypes: RawType[], exclude: RawTypeGroup<T>) {
+function deleteUnusedFromRawTypeGroup<T>(existingRawTypes: RawType[], exclude: RawTypeGroup<T>): void {
 	for (const key in exclude) {
 		const rawType = Number(key) as RawType;
 		if (!existingRawTypes.includes(rawType)) delete exclude[rawType];

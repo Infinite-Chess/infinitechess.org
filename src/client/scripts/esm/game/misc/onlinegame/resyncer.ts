@@ -39,7 +39,7 @@ import { animateMove } from "../../chess/graphicalchanges.js";
  * Called when the server sends us the conclusion of the game when it ends,
  * OR we just need to resync! The game may not always be over.
  */
-function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, message: GameUpdateMessage) {
+function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, message: GameUpdateMessage): void {
 	const claimedGameConclusion = message.gameConclusion;
 
 	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync

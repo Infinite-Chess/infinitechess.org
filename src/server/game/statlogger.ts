@@ -15,7 +15,7 @@ import type { Game } from './gamemanager/gameutility.js';
 
 
 const statsPath = path.resolve('database/stats.json');
-(function ensureStatsFileExists() {
+(function ensureStatsFileExists(): void {
 	if (fs.existsSync(statsPath)) return; // Already exists
 
 	const content = JSON.stringify({
@@ -47,10 +47,10 @@ try {
 
 /**
  * 
- * @param {Game} game - The game to log
+ * @param game - The game to log
  * @returns 
  */
-async function logGame(game: Game) {
+async function logGame(game: Game): Promise<void> {
 	if (!game) return console.error("Cannot log a null game!");
 
 	// Only log the game if atleast 2 moves were played! (resignable)
@@ -90,7 +90,7 @@ async function logGame(game: Game) {
 	await saveStats(); // Saves stats in the database.
 }
 
-function incrementMonthsGamesPlayed(parent: Record<string, Record<string, number>>, month: string, variant: string) { // allTime / yyyy-mm=
+function incrementMonthsGamesPlayed(parent: Record<string, Record<string, number>>, month: string, variant: string): void { // allTime / yyyy-mm=
 	// Does this month's property exist yet?
 	if (parent[month] === undefined) parent[month] = {};
 
@@ -104,7 +104,7 @@ function incrementMonthsGamesPlayed(parent: Record<string, Record<string, number
 }
 
 // Sometimes this causes a file-already-locked error if multiple games are deleted at once.
-async function saveStats() {
+async function saveStats(): Promise<void> {
 	// Async function
 	try {
 		await writeFile(

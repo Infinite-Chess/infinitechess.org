@@ -61,7 +61,7 @@ function setClearColor(newClearColor: Vec3): void {
 /**
  * Initiate the WebGL context. This is our web-based render engine.
  */
-function init() {
+function init(): void {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
 	if (!newContext) { // WebGL2 not supported
@@ -103,7 +103,7 @@ function init() {
  * Clears color buffer and depth buffers.
  * Needs to be called every frame.
  */
-function clearScreen() {
+function clearScreen(): void {
 	gl.clearColor(...clearColor, 1.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 }
@@ -112,7 +112,7 @@ function clearScreen() {
  * Toggles normal blending mode. Transparent objects will correctly have
  * their color shaded onto the color behind them.
  */
-function toggleNormalBlending() {
+function toggleNormalBlending(): void {
 	// Non-premultiplied alpha blending mode. (Pre-multiplied would be gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
 }
@@ -123,14 +123,14 @@ function toggleNormalBlending() {
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function enableBlending_Inverse() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ZERO); }
+function enableBlending_Inverse(): void { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ZERO); }
 
 /**
  * Executes a function (typically a render function) while the depth function paramter
  * is `ALWAYS`. Objects will be rendered no matter if they are behind or on top of other objects.
  * This is useful for preventing tearing when objects are on the same z-level in perspective.
  */
-function executeWithDepthFunc_ALWAYS(func: Function) {
+function executeWithDepthFunc_ALWAYS(func: Function): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	gl.depthFunc(gl.ALWAYS); // Temporary toggle the depth function to ALWAYS.
 	func();
@@ -144,7 +144,7 @@ function executeWithDepthFunc_ALWAYS(func: Function) {
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function executeWithInverseBlending(func: Function) {
+function executeWithInverseBlending(func: Function): void {
 	enableBlending_Inverse();
 	func();
 	toggleNormalBlending();
@@ -157,7 +157,7 @@ function executeWithInverseBlending(func: Function) {
  * @param drawMaskFunc - A function that renders the mesh to be used as the mask. (Your Function B)
  * @param drawContentFunc - A function that renders the content to be clipped by the mask. (Your Function A)
  */
-function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function) {
+function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function): void {
 	// Enable the stencil test before we do anything.
 	gl.enable(gl.STENCIL_TEST);
 
@@ -295,7 +295,7 @@ function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function) {
  * Enables depth testing in WebGL.
  * This will ensure that objects closer to the camera are drawn in front of objects farther away.
  */
-function enableDepthTest() {
+function enableDepthTest(): void {
 	gl.enable(gl.DEPTH_TEST);
 }
 
@@ -304,7 +304,7 @@ function enableDepthTest() {
  * This will ensure that all objects are drawn regardless of their distance from the camera.
  * More efficient that setting the depth test condition to gl.ALWAYS
  */
-function disableDepthTest() {
+function disableDepthTest(): void {
 	gl.disable(gl.DEPTH_TEST);
 }
 

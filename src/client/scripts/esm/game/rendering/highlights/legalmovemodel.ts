@@ -128,7 +128,7 @@ let model_Offset: Coords = [0n,0n];
 
 
 /** Returns {@link model_Offset} */
-function getOffset() {
+function getOffset(): Coords {
 	return model_Offset;
 }
 
@@ -175,7 +175,7 @@ function updateRenderRange(): boolean {
  * our legal move highlights render range box,
  * OR if it's significantly smaller than it.
  */
-function isViewRangeContainedInRenderRange() {
+function isViewRangeContainedInRenderRange(): boolean {
 	if (!boundingBoxOfRenderRange) return false; // It isn't even initiated yet 
 
 	// The bounding box of what the camera currently sees on-screen.
@@ -290,7 +290,7 @@ function generateModelsForPiecesLegalMoveHighlights(
  * @param legalMoves - The piece legal moves to highlight
  * @param boardsim - A reference to the current loaded gamefile's board
  */
-function pushIndividual(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], legalMoves: LegalMoves, boardsim: Board) {
+function pushIndividual(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], legalMoves: LegalMoves, boardsim: Board): void {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const legalIndividuals: Coords[] = legalMoves.individual;
 
@@ -366,7 +366,7 @@ function pushSlide(
 	gamefile: FullGame,
 	friendlyColor: Player,
 	brute?: boolean
-) {
+): void {
 	// Right moveset...
 
 	if (intsect2.positiveDotProduct) {
@@ -423,7 +423,7 @@ function pushRay(
 	gamefile: FullGame,
 	friendlyColor: Player,
 	brute?: boolean
-) {
+): void {
 	if (limit === 0n) return; // Can't slide any spaces this ray's direction
 
 	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, false);
@@ -578,7 +578,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
  * [DEBUG] Renders an outline of the box containing all legal move highlights.
  * Will only be visible if camera debug mode is on, as this is normally outside of the screen edge.
  */
-function renderOutlineofRenderBox() {
+function renderOutlineofRenderBox(): void {
 	// const color: Color = [1,0,1, 1]; // Magenta
 	const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
 	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
@@ -589,7 +589,7 @@ function renderOutlineofRenderBox() {
 /**
  * [DEBUG] Renders an outline of the provided floating point bounding box.
  */
-function renderOutlineofFloatingBox(box: BoundingBoxBD) {
+function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
 	const color: Color = [0.65,0.15,0, 1];
 	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(box);
 	const data = primitives.Rect(left, bottom, right, top, color);

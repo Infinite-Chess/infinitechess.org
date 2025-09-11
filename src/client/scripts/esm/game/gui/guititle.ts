@@ -30,19 +30,19 @@ const element_menuExternalLinks = document.getElementById('menu-external-links')
 
 
 // Call when title screen is loaded
-function open() {
+function open(): void {
 	titleElement.classList.remove('hidden');
 	element_menuExternalLinks.classList.remove('hidden');
 	initListeners();
 };
 
-function close() {
+function close(): void {
 	titleElement.classList.add('hidden');
 	element_menuExternalLinks.classList.add('hidden');
 	closeListeners();
 }
 
-function initListeners() {
+function initListeners(): void {
 	element_play.addEventListener('click', callback_Play);
 	element_practice.addEventListener('click', callback_Practice);
 	element_guide.addEventListener('click', callback_Guide);
@@ -51,7 +51,7 @@ function initListeners() {
 	element_boardEditor.addEventListener('click', callback_BoardEditor);
 }
 
-function closeListeners() {
+function closeListeners(): void {
 	element_play.removeEventListener('click', callback_Play);
 	element_practice.removeEventListener('click', callback_Practice);
 	element_guide.removeEventListener('click', callback_Guide);
@@ -60,22 +60,22 @@ function closeListeners() {
 	element_boardEditor.removeEventListener('click', callback_BoardEditor);
 }
 
-function callback_Play(event: Event) {
+function callback_Play(event: Event): void {
 	close();
 	guiplay.open();
 }
 
-function callback_Practice(event: Event) {
+function callback_Practice(event: Event): void {
 	close();
 	guipractice.open();
 }
 
-function callback_Guide(event: Event) {
+function callback_Guide(event: Event): void {
 	close();
 	guiguide.open();
 }
 
-function callback_BoardEditor(event: Event) {
+function callback_BoardEditor(event: Event): void {
 	close();
 	guiboardeditor.open();
 }

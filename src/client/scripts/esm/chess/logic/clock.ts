@@ -114,7 +114,7 @@ function init(players: Iterable<Player>, time_control: MetaData["TimeControl"]):
  * @param basegame - The game to update the clocks of.
  * @param clockValues - The new clock values to set.
  */
-function edit(currentClocks: ClockData, clockValues: ClockValues) {
+function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 	const colorTicking = clockValues.colorTicking;
 	const now = Date.now();
 
@@ -157,7 +157,7 @@ function push(basegame: Game, clocks: ClockData): number | undefined {
 	return clocks.currentTime[prevcolor];
 }
 
-function endGame(basegame: Game) {
+function endGame(basegame: Game): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 	clocks.timeRemainAtTurnStart = undefined;
@@ -203,7 +203,7 @@ function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
 }
 
-function printClocks(basegame: Game) {
+function printClocks(basegame: Game): void {
 	if (basegame.untimed) return console.log("Game is untimed.");
 	const clocks = basegame.clocks!;
 	for (const color in clocks.currentTime) {

@@ -40,33 +40,33 @@ let model: BufferModelInstanced | undefined;
 
 // Functions -------------------------------------------------------------------------------------
 
-function enable() {
+function enable(): void {
 	enabled = true;
 	regenModel();
 	frametracker.onVisualChange();
 }
 
-function disable() {
+function disable(): void {
 	enabled = false;
 	regenModel();
 	frametracker.onVisualChange();
 }
 
-function toggle() {
+function toggle(): void {
 	enabled = !enabled;
 	statustext.showStatus(`Toggled special rights highlights: ${enabled}`, false, 0.5);
 	regenModel();
 	frametracker.onVisualChange();
 }
 
-function render() {
+function render(): void {
 	if (!enabled) return; // Not enabled
 
 	renderSpecialRights();
 	renderEnPassant();
 }
 
-function regenModel() {
+function regenModel(): void {
 	if (!enabled) return; // Not enabled
 
 	// console.log("Regenerating specialrights model");
@@ -85,7 +85,7 @@ function regenModel() {
 	model = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(squaresToHighlight), "TRIANGLES", true);
 }
 
-function renderSpecialRights() {
+function renderSpecialRights(): void {
 	if (!model) throw Error("Specialrights model not initialized");
 
 	const boardPos: BDCoords = boardpos.getBoardPos();
@@ -97,7 +97,7 @@ function renderSpecialRights() {
 	model.render(position, scale);
 }
 
-function renderEnPassant() {
+function renderEnPassant(): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (!gamefile.boardsim.state.global.enpassant) return; // No enpassant gamefile property
 
@@ -111,13 +111,13 @@ function renderEnPassant() {
  * This does not count rewinding/forwarding (which are local changes),
  * nor does it count simulated moves, or moves only made using movepiece.makeMove() and then reverted.
  */
-function onMove() {
+function onMove(): void {
 	// console.log("On move");
 	regenModel();
 }
 
 /** Erase the model so it doesn't carry over to next loaded game */
-function onGameClose() {
+function onGameClose(): void {
 	model = undefined;
 }
 

@@ -14,9 +14,9 @@
 import type { ShaderProgram } from './shaders.js';
 import type { Vec3 } from '../../util/math/vectors.js';
 
-import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import shaders from './shaders.js';
-import camera from './camera.js';
+import { createBufferFromData, updateBufferIndices } from './buffers.js';
+import camera, { Mat4 } from './camera.js';
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
@@ -230,12 +230,12 @@ function createModel_GivenAttribInfo(
 		updateBufferIndices: (
 			changedIndicesStart: number,
 			changedIndicesCount: number
-		) => updateBufferIndices(buffer, data, changedIndicesStart, changedIndicesCount),
+		): void => updateBufferIndices(buffer, data, changedIndicesStart, changedIndicesCount),
 		render: (
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
-		) => render(buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
+		): void => render(buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
 	};
 }
 
@@ -273,16 +273,16 @@ function createModel_Instanced_GivenAttribInfo(
 		updateBufferIndices_VertexBuffer: (
 			changedIndicesStart: number,
 			changedIndicesCount: number
-		) => updateBufferIndices(vertexBuffer, vertexData, changedIndicesStart, changedIndicesCount),
+		): void => updateBufferIndices(vertexBuffer, vertexData, changedIndicesStart, changedIndicesCount),
 		updateBufferIndices_InstanceBuffer: (
 			changedIndicesStart: number,
 			changedIndicesCount: number
-		) => updateBufferIndices(instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount),
+		): void => updateBufferIndices(instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount),
 		render: (
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
-		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
+		): void => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};
 }
 
@@ -290,7 +290,7 @@ function createModel_Instanced_GivenAttribInfo(
  * Accumulates the stride from the provided attribute info object.
  * Each attribute tells us how many components it uses.
  */
-function getStrideFromAttributeInfo(attribInfo: AttributeInfo) {
+function getStrideFromAttributeInfo(attribInfo: AttributeInfo): number {
 	return attribInfo.reduce((totalElements, currentAttrib) => { return totalElements + currentAttrib.numComponents; }, 0);
 }
 
@@ -335,7 +335,7 @@ function render(
 	vertexCount: number,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
-) {
+): void {
 	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
 	const attributesUsed = Object.values(attribInfo).map((attrib) => attrib.name);
 	const uniformsUsed = Object.keys(uniforms);
@@ -393,7 +393,7 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	instanceCount: number,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
-) {
+): void {
 	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
 	const attributesUsed_VertexData = Object.values(attribInfoInstanced.vertexDataAttribInfo).map((attrib) => attrib.name);
 	const attributesUsed_InstanceData = Object.values(attribInfoInstanced.instanceDataAttribInfo).map((attrib) => attrib.name);
@@ -432,7 +432,7 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
  * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
  * @param instanced - Whether the provided attributes to enable are instance-specific attributes (only updated once per instance instead of once per vertex)
  */
-function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number, instanced: boolean) {
+function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number, instanced: boolean): void {
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
 	// IF WE BIND A VERTEX ARRAY OBJECT here, then unbind it after our initAttribute() calls,
@@ -520,7 +520,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
  * The gpu works with matrices REALLY FAST, so this is the most optimal way
  * to translate our models into position.
  */
-function genWorldMatrix(position: Vec3, scale: Vec3) {
+function genWorldMatrix(position: Vec3, scale: Vec3): Mat4 {
 	const worldMatrix = mat4.create();
 	mat4.scale(worldMatrix, worldMatrix, scale);
 	mat4.translate(worldMatrix, worldMatrix, position);

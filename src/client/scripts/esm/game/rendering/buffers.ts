@@ -41,7 +41,7 @@ const DRAW_HINT = "STATIC_DRAW";
  * @param changedIndicesStart - The index in the vertex data marking the first value changed.
  * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
-function updateBufferIndices(buffer: WebGLBuffer, data: TypedArray, changedIndicesStart: number, changedIndicesCount: number) {
+function updateBufferIndices(buffer: WebGLBuffer, data: TypedArray, changedIndicesStart: number, changedIndicesCount: number): void {
 	const endIndice = changedIndicesStart + changedIndicesCount - 1;
 	if (endIndice > data.length - 1) {
 		return console.error(`Cannot update buffer indices when they overflow the data. Data length: ${data.length}, changedIndicesStart: ${changedIndicesStart}, changedIndicesCount: ${changedIndicesCount}, endIndice: ${endIndice}`);

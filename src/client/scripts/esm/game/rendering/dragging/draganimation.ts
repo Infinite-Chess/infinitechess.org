@@ -116,7 +116,7 @@ function getDragParity(): boolean {
  * @param type - The type of piece being dragged
  * @param pieceCoords - the square the piece was on
  */
-function pickUpPiece(piece: Piece, resetParity: boolean) {
+function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	if (!preferences.getDragEnabled()) return; // Dragging is disabled
 	areDragging = true;
 	if (resetParity) parity = true;
@@ -133,7 +133,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 /**
  * Call AFTER selection.update()
  */
-function updateDragLocation() {
+function updateDragLocation(): void {
 	if (!areDragging) return;
 	
 	/**
@@ -154,7 +154,7 @@ function updateDragLocation() {
 }
 
 /** Call AFTER {@link updateDragLocation} and BEFORE {@link renderPiece} */
-function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coords) {
+function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coords): void {
 	worldLocation = worldLoc;
 	hoveredCoords = hoverSquare;
 }
@@ -175,7 +175,7 @@ function hasPointerReleased(): boolean {
  * where the respective listener is listener_document,
  * because we cannot drag the board.
  */
-function unclaimPointer() {
+function unclaimPointer(): void {
 	// console.log("Unclaiming pointer", pointerId);
 	listener_overlay.unclaimPointerDown(pointerId!);
 }
@@ -189,7 +189,7 @@ function unclaimPointer() {
 /**
  * Stop dragging the piece.
  */
-function dropPiece() {
+function dropPiece(): void {
 	// console.error("Dropped piece");
 	if (!areDragging) return;
 	areDragging = false;
@@ -206,7 +206,7 @@ function dropPiece() {
 }
 
 /** Puts the dragged piece back. Doesn't make a move. */
-function cancelDragging() {
+function cancelDragging(): void {
 	dropPiece();
 	parity = true;
 }
@@ -216,7 +216,7 @@ function cancelDragging() {
 
 
 // Hides the original piece by rendering a transparent square model above it in the depth field.
-function renderTransparentSquare() {
+function renderTransparentSquare(): void {
 	if (!startCoords) return;
 
 	const color: Color = [0,0,0,0];
@@ -225,7 +225,7 @@ function renderTransparentSquare() {
 }
 
 // Renders the box outline, the dragged piece and its shadow
-function renderPiece() {
+function renderPiece(): void {
 	if (!areDragging || perspective.isLookingUp() || !worldLocation) return;
 
 	genOutlineModel().render();
@@ -345,7 +345,7 @@ function getBoxFrameData(coords: Coords): number[] {
 	const innerBottom = outerBottom + edgeWidth;
 
 	// Helper function to add a rectangle (two triangles)
-	function addRectangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+	function addRectangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void {
 		vertices.push(
 			x1, y1, r, g, b, a, // Triangle 1, Vertex 1
 			x2, y2, r, g, b, a, // Triangle 1, Vertex 2

@@ -105,7 +105,7 @@ function shiftArrows(): void {
 	else arrows.deleteArrow(selectedPiece.coords);
 }
 
-function onDragTermination() {
+function onDragTermination(): void {
 	capturedPieceThisFrame = undefined;
 }
 

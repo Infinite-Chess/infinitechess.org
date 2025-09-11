@@ -394,7 +394,7 @@ function registerPieceInSpace(idx: number, o: {
 	YPositions: bigint[],
 	coords: Map<CoordsKey, number>,
 	lines: Map<Vec2Key, Map<LineKey, number[]>>,
-}) {
+}): void {
 	if (idx === undefined) throw Error("Undefined idx is trying");
 	const x = o.XPositions[idx];
 	const y = o.YPositions[idx];
@@ -423,7 +423,7 @@ function removePieceFromSpace(idx: number, o: {
 	YPositions: bigint[],
 	coords: Map<CoordsKey, number>,
 	lines: Map<Vec2Key, Map<LineKey, number[]>>,
-}) {
+}): void {
 	const x = o.XPositions![idx];
 	const y = o.YPositions![idx];
 	const coords = [x,y] as Coords;
@@ -440,7 +440,7 @@ function removePieceFromSpace(idx: number, o: {
 	}
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
-	function removePieceFromLine(lineset: Map<LineKey, number[]>, lineKey: LineKey) {
+	function removePieceFromLine(lineset: Map<LineKey, number[]>, lineKey: LineKey): void {
 		const line = lineset.get(lineKey)!;
 
 		for (let i = 0; i < line.length; i++) {

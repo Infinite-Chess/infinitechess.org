@@ -203,7 +203,7 @@ function getAnimationsMode(): boolean {
 	return preferences.animations ?? default_animations;
 }
 
-function setAnimationsMode(animations_enabled: boolean) {
+function setAnimationsMode(animations_enabled: boolean): void {
 	preferences.animations = animations_enabled;
 	onChangeMade();
 	savePreferences();
@@ -234,11 +234,11 @@ function setPerspectiveFOV(perspective_fov: number): void {
 	document.dispatchEvent(new CustomEvent('fov-change'));
 }
 
-function getLingeringAnnotationsMode() {
+function getLingeringAnnotationsMode(): boolean {
 	return preferences.lingering_annotations ?? default_lingering_annotations;
 }
 
-function setLingeringAnnotationsMode(value: boolean) {
+function setLingeringAnnotationsMode(value: boolean): void {
 	if (typeof value !== 'boolean') throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
 	preferences.lingering_annotations = value;
 	onChangeMade();

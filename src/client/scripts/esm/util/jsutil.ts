@@ -141,16 +141,16 @@ function deleteElementFromOrganizedArray(sortedArray: number[], value: number): 
 }
 
 // Removes specified object from given array. Throws error if it fails. The object cannot be an object or array, only a single value.
-function removeObjectFromArray(array: any[], object: any) { // object can't be an array
+function removeObjectFromArray(array: any[], object: any): void { // object can't be an array
 	const index = array.indexOf(object);
 	if (index !== -1) array.splice(index, 1);
 	else throw Error(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`);
 }
 
-// Returns true if provided object is a float32array
-function isFloat32Array(param: any) {
-	return param instanceof Float32Array;
-}
+// // Returns true if provided object is a float32array
+// function isFloat32Array(param: any): boolean {
+// 	return param instanceof Float32Array;
+// }
 
 /**
  * Copies the properties from one object to another,
@@ -159,7 +159,7 @@ function isFloat32Array(param: any) {
  * @param objSrc - The source object
  * @param objDest - The destination object
  */
-function copyPropertiesToObject(objSrc: Record<string, any>, objDest: Record<string, any>) {
+function copyPropertiesToObject(objSrc: Record<string, any>, objDest: Record<string, any>): void {
 	for (const [key, value] of Object.entries(objSrc)) {
 		objDest[key] = value;
 	}
@@ -441,7 +441,7 @@ export default {
 	addElementToOrganizedArray,
 	findIndexOfPointInOrganizedArray,
 	deleteElementFromOrganizedArray,
-	isFloat32Array,
+	// isFloat32Array,
 	copyPropertiesToObject,
 	isEmpty,
 	isJson,

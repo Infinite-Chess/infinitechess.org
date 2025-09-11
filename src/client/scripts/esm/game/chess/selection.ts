@@ -88,36 +88,36 @@ let editMode = false; // editMode, allows moving pieces anywhere else on the boa
 
 
 /** Returns the current selected piece, if there is one. */
-function getPieceSelected() { return pieceSelected; }
+function getPieceSelected(): Piece | undefined { return pieceSelected; }
 
 /** Returns *true* if a piece is currently selected. */
-function isAPieceSelected() { return pieceSelected !== undefined; }
+function isAPieceSelected(): boolean { return pieceSelected !== undefined; }
 
 /** Returns true if we have selected an opponents piece to view their moves */
-function isOpponentPieceSelected() { return isOpponentPiece; }
+function isOpponentPieceSelected(): boolean { return isOpponentPiece; }
 
 /** Returns true if we are in premove mode (i.e. selected our own piece in an online game, when it's not our turn) */
-function arePremoving() { return isPremove; }
+function arePremoving(): boolean { return isPremove; }
 
 /** Returns the pre-calculated legal moves of the selected piece. */
-function getLegalMovesOfSelectedPiece() { return legalMoves; }
+function getLegalMovesOfSelectedPiece(): LegalMoves | undefined { return legalMoves; }
 
 /** Returns *true* if a pawn is currently promoting (promotion UI open). */
-function getSquarePawnIsCurrentlyPromotingOn() { return pawnIsPromotingOn; }
+function getSquarePawnIsCurrentlyPromotingOn(): CoordsSpecial | undefined { return pawnIsPromotingOn; }
 
 /**
  * Flags the currently selected pawn to be promoted next frame.
  * Call when a choice is made on the promotion UI.
  */
-function promoteToType(type: number) { promoteTo = type; }
+function promoteToType(type: number): void { promoteTo = type; }
 
-function getEditMode() {
+function getEditMode(): boolean {
 	return editMode;
 }
 
 // Toggles EDIT MODE! editMode
 // Called when '1' is pressed!
-function toggleEditMode() {
+function toggleEditMode(): void {
 	// Make sure it's legal
 	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener_document.isKeyHeld('Digit0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
@@ -128,16 +128,16 @@ function toggleEditMode() {
 	statustext.showStatus(`Toggled Edit Mode: ${editMode}`);
 }
 
-function disableEditMode() { editMode = false; }
+function disableEditMode(): void { editMode = false; }
 
-function enableEditMode() { editMode = true; }
+function enableEditMode(): void { editMode = true; }
 
 
 // Updating ---------------------------------------------------------------------------------------------
 
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
-function update() {
+function update(): void {
 	guipromotion.update();
 	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Right-click deselects everything
 
@@ -204,7 +204,7 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
-function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined) {
+function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
@@ -341,7 +341,7 @@ function canMovePieceType(pieceType: number): boolean {
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
-function isOpponentType(basegame: Game, type: number) {
+function isOpponentType(basegame: Game, type: number): boolean {
 	const pieceColor = typeutil.getColorFromType(type);
 	if (boardeditor.areInBoardEditor()) return false;
 	else if (gameloader.areInLocalGame()) return pieceColor !== basegame.whosTurn;
@@ -358,7 +358,7 @@ function isOpponentType(basegame: Game, type: number) {
  * @param piece 
  * @param drag - If true, the piece starts being dragged. This also means it won't be deselected if you clicked the selected piece again.
  */
-function selectPiece(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece, drag: boolean) {
+function selectPiece(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece, drag: boolean): void {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
 
 	annotations.onPieceSelection();
@@ -381,7 +381,7 @@ function selectPiece(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece, d
  * and changing the color if needed.
  * Typically called after our opponent makes a move while we have a piece selected.
  */
-function reselectPiece() {
+function reselectPiece(): void {
 	if (!pieceSelected) return; // No piece to reselect.
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
@@ -401,7 +401,7 @@ function reselectPiece() {
 }
 
 /** Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
-function unselectPiece() {
+function unselectPiece(): void {
 	// console.error("Unselecting piece");
 	if (pieceSelected === undefined) return; // No piece to unselect.
 	pieceSelected = undefined;
@@ -418,7 +418,7 @@ function unselectPiece() {
 }
 
 /** Initializes the selected piece, and calculates its legal moves. */
-function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece) {
+function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece: Piece): void {
 	// Initiate
 	pieceSelected = piece;
 
@@ -449,7 +449,7 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: CoordsSpecial) {
+function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: CoordsSpecial): void {
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger && !boardeditor.areInBoardEditor()) return onPromoteTrigger(coords);
 
@@ -494,7 +494,7 @@ function onPromoteTrigger(coords: CoordsSpecial): void {
 }
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
-function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined) {
+function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	const coords: CoordsSpecial = pawnIsPromotingOn!;
 	// Add the promoteTo flag
 	coords.promotion = promoteTo!;
@@ -507,7 +507,7 @@ function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined) {
 
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
-function renderGhostPiece() {
+function renderGhostPiece(): void {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (typeutil.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.

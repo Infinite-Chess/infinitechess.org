@@ -69,7 +69,7 @@ let initialized = false;
 /**
  * Set the text below the leaderboard table, explaining which variants belong to it
  */
-function setSupportedVariantsDisplay() {;
+function setSupportedVariantsDisplay(): void {;
 	const valid_variants = Object.keys(VariantLeaderboards);
 	const variantslist: string[] = [];
 	valid_variants.forEach((variant: string | null) => {
@@ -82,7 +82,7 @@ function setSupportedVariantsDisplay() {;
 /**
  * Create an empty leaderboard table upon page initialization
  */
-function createEmptyLeaderboardTable() {
+function createEmptyLeaderboardTable(): void {
 	// Create table
 	const table = document.createElement("table");
 	// Create header of table
@@ -107,7 +107,7 @@ function createEmptyLeaderboardTable() {
  * If initialized === false, then this function also populates the "global ranking" element at the top
  * @param n_players - number of players to add to table
  */
-async function populateTable(n_players: number) {
+async function populateTable(n_players: number): Promise<void> {
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
@@ -185,7 +185,7 @@ async function populateTable(n_players: number) {
 /**
  * Populate the leaderboard table with the next highest rated players
  */
-async function showMorePlayers() {
+async function showMorePlayers(): Promise<void> {
 	// disable the button so it can’t be clicked again while we’re fetching
 	element_ShowMoreButton.disabled = true;
 	try {

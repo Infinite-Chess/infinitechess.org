@@ -43,7 +43,7 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  * @param game - The game
  * @param options.alertOpponent - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned. [false]
  */
-function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}) {
+function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}): void {
 	if (game.autoAFKResignTime !== undefined && alertOpponent) { // Alert their opponent
 		const opponentColor = typeutil.invertPlayer(game.whosTurn!);
 		gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn');
@@ -64,7 +64,7 @@ function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}) {
  * @param onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
  */
 // eslint-disable-next-line no-unused-vars
-function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boolean, onAutoResignFunc: (game: Game, winner: Player) => void) {
+function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boolean, onAutoResignFunc: (game: Game, winner: Player) => void): void {
 	console.log(`Starting disconnect timer to auto resign player ${color}.`);
 
 	const now = Date.now();
@@ -103,7 +103,7 @@ function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boo
  * Typically called when a game ends.
  * @param game - The game
  */
-function cancelDisconnectTimers(game: Game) {
+function cancelDisconnectTimers(game: Game): void {
 	for (const color of Object.keys(game.players)) {
 		cancelDisconnectTimer(game, Number(color) as Player, { dontNotifyOpponent: true });
 	}
@@ -115,7 +115,7 @@ function cancelDisconnectTimers(game: Game) {
  * @param game - The game
  * @param color - The color to cancel the timer for
  */
-function cancelDisconnectTimer(game: Game, color: Player, { dontNotifyOpponent = false } = {}) {
+function cancelDisconnectTimer(game: Game, color: Player, { dontNotifyOpponent = false } = {}): void {
 	// console.log(`Canceling disconnect timer for player ${color}!`)
 
 	/** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */

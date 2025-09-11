@@ -64,7 +64,7 @@ function getBoardPos(): BDCoords {
 	return coordutil.copyBDCoords(boardPos);
 }
 
-function getBoardScale() {
+function getBoardScale(): BigDecimal {
 	return bd.clone(boardScale);
 }
 
@@ -84,7 +84,7 @@ function getPanVel(): DoubleCoords {
 	return [...panVel]; // Copies
 }
 
-function getRelativePanVelCap() {
+function getRelativePanVelCap(): number {
 	return perspective.getEnabled() ? panVelCap3D : panVelCap2D;
 }
 
@@ -92,7 +92,7 @@ function getScaleVel(): number {
 	return scaleVel;
 }
 
-function glimitToDampScale() {
+function glimitToDampScale(): number {
 	return limitToDampScale;
 }
 
@@ -100,7 +100,7 @@ function glimitToDampScale() {
 // Setters ----------------------------------------------------------------------------------------
 
 
-function setBoardPos(newPos: BDCoords) {
+function setBoardPos(newPos: BDCoords): void {
 	// Enforce fixed point model
 	if (!bd.hasDefaultPrecision(newPos[0])) throw Error(`Cannot set board position X to [${newPos[0].divex}] ${bd.toString(newPos[0])}. Does not have default precision.`);
 	if (!bd.hasDefaultPrecision(newPos[1])) throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${bd.toString(newPos[1])}. Does not have default precision.`);
@@ -110,7 +110,7 @@ function setBoardPos(newPos: BDCoords) {
 	frametracker.onVisualChange();
 }
 
-function setBoardScale(newScale: BigDecimal) {
+function setBoardScale(newScale: BigDecimal): void {
 	if (bd.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to a negative: ${bd.toString(newScale)}`);
 	// console.error("New scale:", bd.toString(newScale));
 
@@ -124,7 +124,7 @@ function setBoardScale(newScale: BigDecimal) {
 	frametracker.onVisualChange();
 }
 
-function setPanVel(newPanVel: DoubleCoords) {
+function setPanVel(newPanVel: DoubleCoords): void {
 	if (isNaN(newPanVel[0]) || isNaN(newPanVel[1])) return console.error(`Cannot set panVel to ${newPanVel}!`);
 
 	// Can't enforce a cap, as otherwise we wouldn't
@@ -133,7 +133,7 @@ function setPanVel(newPanVel: DoubleCoords) {
 	panVel = [...newPanVel];
 }
 
-function setScaleVel(newScaleVel: number) {
+function setScaleVel(newScaleVel: number): void {
 	if (isNaN(newScaleVel)) return console.error(`Cannot set scaleVel to ${newScaleVel}!`);
 	if (Math.abs(newScaleVel) >= 100) console.warn(`Very large scaleVel: (${newScaleVel})`);
 
@@ -145,12 +145,12 @@ function setScaleVel(newScaleVel: number) {
 
 
 /** Erases all board pan & scale velocity. */
-function eraseMomentum() {
+function eraseMomentum(): void {
 	panVel = [0,0];
 	scaleVel = 0;
 }
 
-function boardHasMomentum() {
+function boardHasMomentum(): boolean {
 	return panVel[0] !== 0 || panVel[1] !== 0;
 }
 
@@ -160,7 +160,7 @@ function boardHasMomentum() {
  * * Legal moves highlights and Ray annotations rendering as highlight lines.
  * * Pieces rendering as mini-images.
  */
-function areZoomedOut() {
+function areZoomedOut(): boolean {
 	return bd.compare(boardScale, camera.getScaleWhenZoomedOut()) < 0;
 }
 
@@ -169,7 +169,7 @@ function areZoomedOut() {
  * of reprenting single tiles with a single of your monitor's pixels.
  * On retina displays you have to zoom out even more to reach this.
  */
-function isScaleSmallForInvisibleTiles() {
+function isScaleSmallForInvisibleTiles(): boolean {
 	return bd.compare(boardScale, camera.getScaleWhenTilesInvisible()) < 0;
 }
 
@@ -178,7 +178,7 @@ function isScaleSmallForInvisibleTiles() {
 
 
 // Called from game.updateBoard()
-function update() {
+function update(): void {
 	if (guipause.areWePaused()) return; // Exit if paused
 	if (transition.areTransitioning()) return; // Exit if we are teleporting
 	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
@@ -188,7 +188,7 @@ function update() {
 }
 
 /** Shifts the board position by its velocity. */
-function panBoard() {
+function panBoard(): void {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
 
 	const panVelBD: BDCoords = bd.FromDoubleCoords(panVel);
@@ -210,7 +210,7 @@ function panBoard() {
 }
 
 /** Shifts the board scale by its scale velocity. */
-function recalcScale() {
+function recalcScale(): void {
 	if (scaleVel === 0) return; // Exit if we're not zooming
 
 	const scaleVelBD: BigDecimal = bd.FromNumber(scaleVel);

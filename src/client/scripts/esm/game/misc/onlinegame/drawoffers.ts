@@ -80,7 +80,7 @@ function areWeAcceptingDraw(): boolean {
 }
 
 /** Is called when we receive a draw offer from our opponent */
-function onOpponentExtendedOffer() {
+function onOpponentExtendedOffer(): void {
 	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
 	guidrawoffer.open();
 	gamesound.playBase();
@@ -88,7 +88,7 @@ function onOpponentExtendedOffer() {
 }
 
 /** Is called when our opponent declines our draw offer */
-function onOpponentDeclinedOffer() {
+function onOpponentDeclinedOffer(): void {
 	statustext.showStatus(`Opponent declined draw offer.`);
 }
 
@@ -96,7 +96,7 @@ function onOpponentDeclinedOffer() {
  * Extends a draw offer in our current game.
  * All legality checks have already passed!
  */
-function extendOffer() {
+function extendOffer(): void {
 	websocket.sendmessage('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
@@ -108,7 +108,7 @@ function extendOffer() {
  * This fires when we click the checkmark in
  * the draw offer UI on the bottom navigation bar.
  */
-function callback_AcceptDraw() {
+function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
 	websocket.sendmessage('game', 'acceptdraw');
 	guidrawoffer.close();
@@ -123,7 +123,7 @@ function callback_AcceptDraw() {
  * @param [options.informServer=true] - If true, the server will be informed that the draw offer has been declined.
  * We'll want to set this to false if we call this after making a move, because the server auto-declines it.
  */
-function callback_declineDraw() {
+function callback_declineDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	closeDraw();
 	// Notify the server
@@ -135,7 +135,7 @@ function callback_declineDraw() {
  * Closes the current draw offer, if there is one, from our opponent.
  * This does NOT notify the server.
  */
-function closeDraw() {
+function closeDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	guidrawoffer.close();
 	isAcceptingDraw = false;
@@ -145,7 +145,7 @@ function closeDraw() {
  * Set the current draw offer values according to the information provided.
  * This is called after a page refresh when we're in a game.
  */
-function set(drawOffer: DrawOfferInfo) {
+function set(drawOffer: DrawOfferInfo): void {
 	plyOfLastOfferedDraw = drawOffer.lastOfferPly;
 	if (!drawOffer.unconfirmed) return; // No open draw offer
 	// Open draw offer!!
@@ -153,7 +153,7 @@ function set(drawOffer: DrawOfferInfo) {
 }
 
 /** Called whenever a move is played in an online game */
-function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
+function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 	// Declines any open draw offer from our opponent. We don't need to inform
 	// the server because the server knows to auto decline when we submit our move.
 	if (!isOpponents) closeDraw();
@@ -163,7 +163,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
  * Called when an online game concludes or is closed. Closes any open draw
  * offer and resets all draw for values for future games.
  */
-function onGameClose() {
+function onGameClose(): void {
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
 	guidrawoffer.close();

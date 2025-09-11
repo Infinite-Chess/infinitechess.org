@@ -75,7 +75,7 @@ let lightTiles: Color; // [r,g,b,a]
 let darkTiles: Color;
 
 
-(function() {
+(function(): void {
 	document.addEventListener('theme-change', (event) => { // Custom Event listener.
 		console.log(`Theme change event detected: ${preferences.getTheme()}`);
 		updateTheme();
@@ -96,7 +96,7 @@ let darkTiles: Color;
 })();
 
 
-async function initTextures() {
+async function initTextures(): Promise<void> {
 	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
 	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
 
@@ -111,15 +111,15 @@ async function initTextures() {
 
 
 /** Returns what Z level the board tiles should be rendered at this frame. */
-function getRelativeZ() {
+function getRelativeZ(): number {
 	return perspective.getEnabled() ? perspectiveMode_z : 0;
 }
 
-function getSquareCenter() {
+function getSquareCenter(): BigDecimal {
 	return bd.FromNumber(squareCenter);
 }
 
-function getSquareCenterAsNumber() {
+function getSquareCenterAsNumber(): number {
 	return squareCenter;
 }
 
@@ -154,11 +154,11 @@ function gboundingBox(debugMode = camera.getDebug()): BoundingBox {
 }
 
 // Recalculate board velicity, scale, and other common variables.
-function recalcVariables() {
+function recalcVariables(): void {
 	recalcBoundingBox();
 }
 
-function recalcBoundingBox() {
+function recalcBoundingBox(): void {
 
 	boundingBoxFloat = getBoundingBoxOfBoard(boardpos.getBoardPos(), boardpos.getBoardScale(), false);
 	boundingBox = roundAwayBoundingBox(boundingBoxFloat);
@@ -235,7 +235,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	return createModel(data, 2, "TRIANGLES", true, boardTexture);
 }
 
-function renderMainBoard() {
+function renderMainBoard(): void {
 	if (boardpos.isScaleSmallForInvisibleTiles()) return;
 
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
@@ -248,7 +248,7 @@ function renderMainBoard() {
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
-function updateTheme() {
+function updateTheme(): void {
 	const gamefile = gameslot.getGamefile();
 	if (gamefile && gamefileutility.isGameOver(gamefile.basegame)) darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
@@ -257,7 +257,7 @@ function updateTheme() {
 }
 
 // Updates sky color based on current board color
-function updateSkyColor() {
+function updateSkyColor(): void {
 	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
 	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
 	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
@@ -271,7 +271,7 @@ function updateSkyColor() {
 	// webgl.setClearColor([0,0,0]); // Black for start map animation
 }
 
-function updateNavColor() {
+function updateNavColor(): void {
 	// Determine the new "white" color
 
 	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
@@ -303,14 +303,14 @@ function updateNavColor() {
     `);
 }
 
-function resetColor(newLightTiles = preferences.getColorOfLightTiles(), newDarkTiles = preferences.getColorOfDarkTiles()) {
+function resetColor(newLightTiles = preferences.getColorOfLightTiles(), newDarkTiles = preferences.getColorOfDarkTiles()): void {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
 	initTextures();
 	frametracker.onVisualChange();
 }
 
-function darkenColor() {
+function darkenColor(): void {
 	const defaultLightTiles = preferences.getColorOfLightTiles();
 	const defaultDarkTiles = preferences.getColorOfDarkTiles();
 
@@ -326,7 +326,7 @@ function darkenColor() {
 }
 
 // Renders board tiles
-function render() {
+function render(): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
@@ -335,7 +335,7 @@ function render() {
 	});
 }
 
-function renderFractalBoards() {
+function renderFractalBoards(): void {
 	const z = getRelativeZ();
 
 	const e = -bd.log10(boardpos.getBoardScale());
@@ -370,7 +370,7 @@ function renderFractalBoards() {
 }
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
-function renderSolidCover() {
+function renderSolidCover(): void {
 	// const dist = perspective.distToRenderBoard;
 	const dist = camera.getZFar() / Math.SQRT2;
 	const z = getRelativeZ();

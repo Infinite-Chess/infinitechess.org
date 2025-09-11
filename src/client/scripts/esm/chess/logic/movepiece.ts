@@ -211,7 +211,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
  * @param piece - The piece that's being moved
  * @param move - The move that's being made
  */
-function calcMovesChanges(boardsim: Board, piece: Piece, moveDraft: _Move_Compact, edit: Edit) {
+function calcMovesChanges(boardsim: Board, piece: Piece, moveDraft: _Move_Compact, edit: Edit): void {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(edit.changes, true, capturedPiece);
@@ -228,7 +228,7 @@ function calcMovesChanges(boardsim: Board, piece: Piece, moveDraft: _Move_Compac
  * This will upgrade the repetition algorithm to not delay declaring a draw
  * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit) {
+function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit): void {
 	edit.changes.forEach(change => {
 		if (change.action === 'move') {
 			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
@@ -249,7 +249,7 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: Move) {
+function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: Move): void {
 	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
@@ -264,7 +264,7 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(gamefile: FullGame, move: Move) {
+function makeMove(gamefile: FullGame, move: Move): void {
 	gamefile.boardsim.moves.push(move);
 	gamefile.basegame.moves.push({
 		startCoords: move.startCoords,
@@ -293,7 +293,7 @@ function makeMove(gamefile: FullGame, move: Move) {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: FullGame, move: Move, forward = true, { global = false } = {}) {
+function applyMove(gamefile: FullGame, move: Move, forward = true, { global = false } = {}): void {
 	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
@@ -311,7 +311,7 @@ function applyMove(gamefile: FullGame, move: Move, forward = true, { global = fa
  * @param global - If true, we will also apply this move's global state changes to the gamefile. Should be true if the edit is from a board editor move.
  * @param forward - Whether the move's board changes should be applied forward or backward.
  */
-function applyEdit(gamefile: FullGame, edit: Edit, forward: boolean, global: boolean) {
+function applyEdit(gamefile: FullGame, edit: Edit, forward: boolean, global: boolean): void {
 	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: global }); // Apply the State of the move
 	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
@@ -319,7 +319,7 @@ function applyEdit(gamefile: FullGame, edit: Edit, forward: boolean, global: boo
 /**
  * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
-function updateTurn(gamefile: FullGame) {
+function updateTurn(gamefile: FullGame): void {
 	gamefile.basegame.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile.basegame, gamefile.boardsim.state.local.moveIndex);
 }
 
@@ -327,7 +327,7 @@ function updateTurn(gamefile: FullGame) {
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(gamefile: FullGame, move: Move ) {
+function createCheckState(gamefile: FullGame, move: Move ): void {
 	const {boardsim, basegame} = gamefile;
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(basegame, boardsim.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
@@ -351,7 +351,7 @@ function createCheckState(gamefile: FullGame, move: Move ) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMoveMessage[]) {
+function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMoveMessage[]): void {
 	if (gamefile.boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
@@ -417,7 +417,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 /**
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
-function rewindMove(gamefile: FullGame) {
+function rewindMove(gamefile: FullGame): void {
 	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(gamefile.boardsim.moves, gamefile.boardsim.state.local.moveIndex);
 
@@ -443,7 +443,7 @@ function rewindMove(gamefile: FullGame) {
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
 // eslint-disable-next-line no-unused-vars
-function goToMove(boardsim: Board, index: number, callback: (move: Move ) => void) {
+function goToMove(boardsim: Board, index: number, callback: (move: Move ) => void): void {
 	if (index === boardsim.state.local.moveIndex) return;
 
 	const forwards = index >= boardsim.state.local.moveIndex;

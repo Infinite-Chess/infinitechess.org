@@ -111,7 +111,7 @@ function getAudioContext(): AudioContext {
  * @param audioCtx 
  * @param decodedBuffer - The decoded buffer of the loaded sound spritesheet.
  */
-function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer) {
+function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer): void {
 	audioContext = audioCtx;
 	audioDecodedBuffer = decodedBuffer;
 }
@@ -141,11 +141,11 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 	const soundObject: SoundObject = {
 		source: createBufferSource(volume, playbackRate),
 		sourceReverb: undefined,
-		stop: () => {
+		stop: (): void => {
 			soundObject.source.stop();
 			if (soundObject.sourceReverb) soundObject.sourceReverb.stop();
 		},
-		fadeOut: (durationMillis) => {
+		fadeOut: (durationMillis): void => {
 			fadeOut(soundObject.source, durationMillis);
 			if (soundObject.sourceReverb) fadeOut(soundObject.sourceReverb, durationMillis);
 		}
@@ -176,7 +176,7 @@ function getSoundStamp(soundName: SoundName): SoundTimeSnippet {
 }
 
 /** Calculates the duration of a sound time snippet in seconds. */
-function getStampDuration(stamp: SoundTimeSnippet) { // [ startTimeSecs, endTimeSecs ]
+function getStampDuration(stamp: SoundTimeSnippet): number { // [ startTimeSecs, endTimeSecs ]
 	return stamp[1] - stamp[0];
 }
 
@@ -234,13 +234,13 @@ function generateGainNode(audioContext: AudioContext, volume: number): GainNode 
 }
 
 /** Generates a reverb effect node. */
-function generateConvolverNode(audioContext: AudioContext, durationSecs: number) {
+function generateConvolverNode(audioContext: AudioContext, durationSecs: number): ConvolverNode {
 	const impulse = impulseResponse(durationSecs);
 	return new ConvolverNode(audioContext, {buffer:impulse});
 }
 
 /** The mathematical function used by the convolver (reverb) node used to calculate the reverb effect! */
-function impulseResponse(duration: number) { // Duration in seconds, decay
+function impulseResponse(duration: number): AudioBuffer { // Duration in seconds, decay
 	const decay = 2;
 	const sampleRate = audioContext.sampleRate;
 	const length = sampleRate * duration;
@@ -254,7 +254,7 @@ function impulseResponse(duration: number) { // Duration in seconds, decay
  * After an audio source buffer is created, it must be connected to the destination for us to hear sound!
  * Optionally, we can include nodes for modying the sound! Gain (volume), reverb...
  */
-function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, context: AudioContext, nodeList: (GainNode|ConvolverNode)[]) { // nodeList is optional
+function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, context: AudioContext, nodeList: (GainNode | ConvolverNode)[]): void { // nodeList is optional
 	let currentConnection: AudioBufferSourceNode | GainNode | ConvolverNode = source; // Start at the beginning
 	
 	for (const thisNode of nodeList) {
@@ -278,7 +278,7 @@ function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, cont
  * @param targetVolume - The final volume level.
  * @param fadeDuration - The duration of the fade-in effect in seconds.
  */
-function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, fadeDuration: number) {
+function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, fadeDuration: number): void {
 	const currentTime = audioContext.currentTime;
 	source.gainNode.gain.setValueAtTime(0, currentTime);
 	source.gainNode.gain.linearRampToValueAtTime(targetVolume, currentTime + fadeDuration / 1000);
@@ -291,7 +291,7 @@ function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, fadeDurat
  * @param source - The audio source node to fade out, WITH ITS `gainNode` property attached.
  * @param durationMillis - The duration of the fade-out effect in milliseconds.
  */
-function fadeOut(source: AudioBufferWithGainNode, durationMillis: number) {
+function fadeOut(source: AudioBufferWithGainNode, durationMillis: number): void {
 	const durationSecs = durationMillis / 1000;
 	const currentTime = audioContext.currentTime;
 	const endTime = currentTime + durationSecs;

@@ -55,7 +55,7 @@ let tokenInfo: {
 // Functions ----------------------------------------------------------------------------
 
 
-(function init() {
+(function init(): void {
 	initListeners();
   
 	// Sets our memberInfo properties if we are logged in
@@ -67,7 +67,7 @@ let tokenInfo: {
 	renewSession();
 })();
 
-function initListeners() {
+function initListeners(): void {
 	document.addEventListener('logout', resetMemberInfo);
 	document.addEventListener('logout', onLogout);
 	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
@@ -76,7 +76,7 @@ function initListeners() {
 /**
  * Renews the session if it is older than the specified time to renew.
  */
-function renewSession() {
+function renewSession(): void {
 	if (!memberInfo.signedIn) return;
 
 	// Convert the ISO 8601 issued time to a timestamp
@@ -208,7 +208,7 @@ async function waitUntilInitialRequestBack(): Promise<void> {
 	// console.log("Waiting until initial request for an access token is completed... (Delete later)");
 
 	// Create a promise that resolves when the request is completed
-	return new Promise<void>(resolve => {
+	return new Promise<void>((resolve): void => {
 		resolvers.push(resolve); // Add this resolver to the list
 	});
 }

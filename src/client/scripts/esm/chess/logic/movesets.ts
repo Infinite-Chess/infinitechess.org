@@ -113,7 +113,7 @@ function defaultBlockingFunction(friendlyColor: Player, blockingPiece: Piece, co
 }
 
 /** The default ignore function of each piece's sliding moves, if not specified. */
-function defaultIgnoreFunction() {
+function defaultIgnoreFunction(): boolean {
 	return true; // Square allowed
 }
 
@@ -273,7 +273,7 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				'1,0': [slideLimit, slideLimit],
 				'0,1': [slideLimit, slideLimit]
 			},
-			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean) => {
+			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean): 0 | 1 | 2 => {
 				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
 				if (!isPrime) return 0; // Doesn't block, not even if it's a void. It hops over it!

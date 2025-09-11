@@ -43,7 +43,7 @@ const programs: ShaderProgram[] = [];
  * Initiates the shader programs we will be using.
  * Call this after initiating the webgl context.
  * */
-function initPrograms() {
+function initPrograms(): void {
 	programs.push(
 		createColorProgram(),
 		createColorProgram_Instanced(),

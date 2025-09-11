@@ -59,7 +59,7 @@ const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
  * @param player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
-function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number) { // Player 1 is the invite owner.
+function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number): void { // Player 1 is the invite owner.
 	const gameID = issueUniqueGameId();
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
@@ -86,7 +86,7 @@ function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, 
  * 
  * The game will receive this same id in the database when it is logged.
  */
-function issueUniqueGameId() {
+function issueUniqueGameId(): number {
 	let id: number;
 	do {
 		id = genUniqueGameID(); // This is already unique against all game_ids in the table.
@@ -99,7 +99,7 @@ function issueUniqueGameId() {
  * Adds a game to the active games list and increments the active game count.
  * @param game - The game
  */
-function addGameToActiveGames(game: Game) {
+function addGameToActiveGames(game: Game): void {
 	activeGames[game.id] = game;
 	incrementActiveGameCount();
 }
@@ -126,7 +126,7 @@ function isMemberInSomeActiveGame(username: string): boolean {
  * @param options - Additional options.
  * @param [unsubNotByChoice] When true, we will give them a 5-second cushion to re-sub before we start an auto-resignation timer. Set to false if we call this due to them closing the tab.
  */
-function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = true } = {}) {
+function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = true } = {}): void {
 	const gameID = ws.metadata.subscriptions.game?.id;
 	if (gameID === undefined) return console.error("Cannot unsub client from game when it's not subscribed to one.");
 
@@ -161,7 +161,7 @@ function getGameByID(id: number): Game | undefined { return activeGames[id]; }
  * @param player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
  * @returns The game they are in, if they belong in one, otherwise undefined..
  */
-function getGameByPlayer(player: AuthMemberInfo) {
+function getGameByPlayer(player: AuthMemberInfo): Game | undefined {
 	const gameID = getIDOfGamePlayerIsIn(player);
 	if (gameID === undefined) return; // Not in a game;
 	return getGameByID(gameID);
@@ -222,7 +222,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Gam
  * @param game - The game
  * @returns The new time (in ms) of the player that just moved after increment is added.
  */
-function pushGameClock(game: Game) {
+function pushGameClock(game: Game): number | undefined {
 	const colorWhoJustMoved = game.whosTurn!; // white/black
 	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
 
@@ -262,7 +262,7 @@ function pushGameClock(game: Game) {
  * Sets whosTurn to undefined
  * @param game - The game
  */
-function stopGameClock(game: Game) {
+function stopGameClock(game: Game): void {
 	if (game.untimed) return;
 	if (game.whosTurn === undefined) return; // Clocks already stopped (can reach this point after a cheat report and the game conclusion changes.)
 
@@ -289,7 +289,7 @@ function stopGameClock(game: Game) {
  * @param game - The game
  * @param conclusion - The new game conclusion
  */
-function setGameConclusion(game: Game, conclusion: string | undefined) {
+function setGameConclusion(game: Game, conclusion: string | undefined): void {
 	const dontDecrementActiveGames = game.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	game.gameConclusion = conclusion;
 	if (conclusion !== undefined) onGameConclusion(game, { dontDecrementActiveGames });
@@ -303,7 +303,7 @@ function setGameConclusion(game: Game, conclusion: string | undefined) {
  * @param [options] - Optional parameters.
  * @param [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
  */
-function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {}) {
+function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {}): void {
 	if (!dontDecrementActiveGames) decrementActiveGameCount();
 
 	const players: Record<string, any> = {};
@@ -338,7 +338,7 @@ function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {})
  * one of them was disconnected when this happened.
  * @param game - The game
  */
-function onPlayerLostOnTime(game: Game) {
+function onPlayerLostOnTime(game: Game): void {
 	console.log("Someone has lost on time!");
 
 	// Who lost on time?
@@ -361,7 +361,7 @@ function onPlayerLostOnTime(game: Game) {
  * @param game - The game
  * @param colorWon - The color that won by opponent disconnection
  */
-function onPlayerLostByDisconnect(game: Game, colorWon: Player) {
+function onPlayerLostByDisconnect(game: Game, colorWon: Player): void {
 	if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!");
 
 	if (gameutility.isGameResignable(game)) {
@@ -383,7 +383,7 @@ function onPlayerLostByDisconnect(game: Game, colorWon: Player) {
  * @param game - The game
  * @param colorWon - The color that won by opponent abandonment (AFK)
  */
-function onPlayerLostByAbandonment(game: Game, colorWon: Player) {
+function onPlayerLostByAbandonment(game: Game, colorWon: Player): void {
 	if (gameutility.isGameResignable(game)) {
 		console.log("Someone has lost by abandonment!");
 		setGameConclusion(game, `${colorWon} disconnect`);
@@ -402,7 +402,7 @@ function onPlayerLostByAbandonment(game: Game, colorWon: Player) {
  * to give players time to cheat report.
  * @param game
  */
-async function deleteGame(game: Game) {
+async function deleteGame(game: Game): Promise<void> {
 	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[game.id]; // Delete the game from the activeGames list
@@ -448,7 +448,7 @@ async function deleteGame(game: Game) {
  * Aborts all active games, sends the conclusions to the players.
  * Immediately logs all games and updates statistics.
  */
-async function logAllGames() {
+async function logAllGames(): Promise<void> {
 	for (const gameID in activeGames) {
 		const game = activeGames[gameID]!;
 		if (!gameutility.isGameOver(game)) {
@@ -467,7 +467,7 @@ async function logAllGames() {
  * Send a message to all sockets in a game saying the server will restart soon.
  * Every reconnection from now on should re-send the time the server will restart.
  */
-function broadCastGameRestarting() {
+function broadCastGameRestarting(): void {
 	const timeToRestart = getTimeServerRestarting() as number;
 	for (const game of Object.values(activeGames)) {
 		for (const color in game.players) {

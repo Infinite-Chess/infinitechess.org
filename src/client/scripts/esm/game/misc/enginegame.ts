@@ -57,7 +57,7 @@ function isItOurTurn(): boolean {
 	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
 }
 
-function getCurrentEngine() {
+function getCurrentEngine(): string | undefined {
 	return currentEngine;
 }
 
@@ -88,26 +88,26 @@ function initEngineGame(options: {
 	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
 
 	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
-	return new Promise<void>((resolve, reject) => {
+	return new Promise<void>((resolve, reject): void => {
 		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
 		// We have to manually send this message at the top of our engines.
-		engineWorker!.onmessage = (e: MessageEvent) => {
+		engineWorker!.onmessage = (e: MessageEvent): void => {
 			if (e.data === 'readyok') resolve(); // Engine is ready!
 		};
-		engineWorker!.onerror = (e: ErrorEvent) => {
+		engineWorker!.onerror = (e: ErrorEvent): void => {
 			reject(new Error("Worker failed to load: " + e.message));
 		};
 	}).then((result: any) => {
 		// After the promise resolves, we know the worker is ready
 		// Overwrite the onmessage listener to listen for move submissions
-		engineWorker!.onmessage = (e: MessageEvent) => makeEngineMove(e.data);
+		engineWorker!.onmessage = (e: MessageEvent): void => makeEngineMove(e.data);
 		// Remove the error handler (no longer needed after worker is ready)
 		engineWorker!.onerror = null;
 	});
 }
 
 // Call when we leave an engine game
-function closeEngineGame() {
+function closeEngineGame(): void {
 	inEngineGame = false;
 	ourColor = undefined;
 	engineColor = undefined;
@@ -134,7 +134,7 @@ function areWeColor(color: Player): boolean {
  * This method is called externally when the player submits his move in an engine game
  * It submits the gamefile to the webworker
  */
-async function onMovePlayed() {
+function onMovePlayed(): void {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
@@ -153,7 +153,7 @@ async function onMovePlayed() {
  * This method takes care of all the logic involved in making an engine move
  * It gets called after the engine finishes its calculation
  */
-function makeEngineMove(moveDraft: MoveDraft) {
+function makeEngineMove(moveDraft: MoveDraft): void {
 	if (!inEngineGame) return;
 	if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
@@ -186,7 +186,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 }
 
-function onGameConclude() {
+function onGameConclude(): void {
 	if (!inEngineGame) return;
 	checkmatepractice.onEngineGameConclude();
 }

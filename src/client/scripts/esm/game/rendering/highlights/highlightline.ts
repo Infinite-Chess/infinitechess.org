@@ -10,7 +10,7 @@ import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
-import { createModel } from '../buffermodel.js';
+import { BufferModel, createModel } from '../buffermodel.js';
 
 
 import type { BDCoords } from '../../../chess/util/coordutil.js';
@@ -74,12 +74,12 @@ function getRenderRange(): BoundingBoxBD {
 
 
 
-function genLinesModel(lines: Line[]) {
+function genLinesModel(lines: Line[]): BufferModel {
 	const data: number[] = lines.flatMap(line => getLineData(line));
 	return createModel(data, 2, 'LINES', true);
 }
 
-function getLineData(line: Line) {
+function getLineData(line: Line): number[] {
 	const startWorld = space.convertCoordToWorldSpace(line.start);
 	const endWorld = space.convertCoordToWorldSpace(line.end);
 	const [ r, g, b, a ] = line.color;

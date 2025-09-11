@@ -140,7 +140,7 @@ interface EnPassant {
 
 
 /** Creates a check local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createCheckState(move: Edit, current: inCheck, future: inCheck, gamestate: GameState) {
+function createCheckState(move: Edit, current: inCheck, future: inCheck, gamestate: GameState): void {
 	const newStateChange: StateChange = { type: 'check', current, future };
 	move.state.local.push(newStateChange); // Check is a local state
 	// Check states are immediately applied to the gamefile
@@ -148,7 +148,7 @@ function createCheckState(move: Edit, current: inCheck, future: inCheck, gamesta
 }
 
 /** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createAttackersState(move: Edit, current: Attacker[], future: Attacker[], gamestate: GameState) {
+function createAttackersState(move: Edit, current: Attacker[], future: Attacker[], gamestate: GameState): void {
 	const newStateChange: StateChange = { type: 'attackers', current, future };
 	move.state.local.push(newStateChange); // Attackers is a local state
 	// Attackers states are immediately applied to the gamefile
@@ -160,7 +160,7 @@ function createAttackersState(move: Edit, current: Attacker[], future: Attacker[
 
 
 /** Creates an enpassant global StateChange, queueing it by adding it to the Move. */
-function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassant) {
+function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassant): void {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'enpassant', current, future };
 	// Check to make sure there isn't already an enpassant state change,
@@ -171,14 +171,14 @@ function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassan
 }
 
 /** Creates a specialrights global StateChange, queueing it by adding it to the Move. */
-function createSpecialRightsState(move: Edit, coordsKey: CoordsKey, current: boolean, future: boolean) {
+function createSpecialRightsState(move: Edit, coordsKey: CoordsKey, current: boolean, future: boolean): void {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'specialrights', current, future, coordsKey };
 	move.state.global.push(newStateChange); // Special Rights is a global state
 }
 
 /** Creates a moverule global StateChange, queueing it by adding it to the Move. */
-function createMoveRuleState(move: Edit, current: number, future: number) {
+function createMoveRuleState(move: Edit, current: number, future: number): void {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'moverulestate', current, future };
 	move.state.global.push(newStateChange); // Special Rights is a global state
@@ -204,25 +204,25 @@ function applyMove(
 	 * be local, so `globalChange` should be false.
 	 */
 	{ globalChange = false } = {}
-) {
+): void {
 	applyLocalStateChanges(gamestate.local, moveState.local, forward);
 	if (globalChange) applyGlobalStateChanges(gamestate.global, moveState.global, forward);
 }
 
-function applyLocalStateChanges(gamestate: LocalGameState, changes: Array<StateChange>, forward: boolean) {
+function applyLocalStateChanges(gamestate: LocalGameState, changes: Array<StateChange>, forward: boolean): void {
 	for (const state of changes) {
 		applyLocalState(gamestate, state, forward);
 	}
 }
 
-function applyGlobalStateChanges(gamestate: GlobalGameState, changes: Array<StateChange>, forward: boolean) { /** The reason we don't include the whole gamefile is so that {@link gamecompressor.GameToPosition} can also use applyMove(). */
+function applyGlobalStateChanges(gamestate: GlobalGameState, changes: Array<StateChange>, forward: boolean): void { /** The reason we don't include the whole gamefile is so that {@link gamecompressor.GameToPosition} can also use applyMove(). */
 	for (const state of changes) {
 		applyGlobalState(gamestate, state, forward);
 	}
 }
 
 /** Applies a move's local state change to the gamefile, forward or backward. */
-function applyLocalState(gamestate: LocalGameState, state: StateChange, forward: boolean) {
+function applyLocalState(gamestate: LocalGameState, state: StateChange, forward: boolean): void {
 	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
 		case 'check':
@@ -238,7 +238,7 @@ function applyLocalState(gamestate: LocalGameState, state: StateChange, forward:
 }
 
 /** Applies a move's global state change to the gamefile, forward or backward. */
-function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forward: boolean) {
+function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forward: boolean): void {
 	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
 		case 'specialrights':

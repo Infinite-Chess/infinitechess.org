@@ -79,7 +79,7 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 }
 
 /** Closes the database connection. */
-function close() {
+function close(): void {
 	db.close();
 	console.log('Closed database.');
 }

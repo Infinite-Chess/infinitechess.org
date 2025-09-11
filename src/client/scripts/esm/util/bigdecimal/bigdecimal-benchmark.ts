@@ -31,7 +31,7 @@ function benchmark(name: string, fn: () => void): number {
 }
 
 // --- Main Benchmark Function ---
-async function runAllBenchmarks() {
+async function runAllBenchmarks(): Promise<void> {
 	console.log(`--- Running Benchmarks ---`);
 	console.log(`Target Decimal Precision: ${config.DECIMAL_PRECISION} digits`);
 	console.log(`Loop count for each operation: ${config.loopCount.toLocaleString()}\n`);

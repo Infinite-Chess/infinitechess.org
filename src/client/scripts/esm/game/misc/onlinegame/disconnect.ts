@@ -34,7 +34,7 @@ let displayOpponentDisconnectTimeoutID: ReturnType<typeof setTimeout> | undefine
 function startOpponentDisconnectCountdown({ millisUntilAutoDisconnectResign, wasByChoice }: {
 	millisUntilAutoDisconnectResign: number,
 	wasByChoice: boolean
-}) {
+}): void {
 	// This overwrites the "Opponent is AFK" timer
 	afk.stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting
@@ -46,12 +46,12 @@ function startOpponentDisconnectCountdown({ millisUntilAutoDisconnectResign, was
 	displayOpponentDisconnect(secsRemaining, wasByChoice);
 }
 
-function stopOpponentDisconnectCountdown() {
+function stopOpponentDisconnectCountdown(): void {
 	clearTimeout(displayOpponentDisconnectTimeoutID);
 	displayOpponentDisconnectTimeoutID = undefined;
 }
 
-function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean) {
+function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean): void {
 	const opponent_disconnectedOrLostConnection = wasByChoice ? translations['onlinegame'].opponent_disconnected : translations['onlinegame'].opponent_lost_connection;
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,

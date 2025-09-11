@@ -84,13 +84,13 @@ const countdown: {
 };
 
 
-function hideClocks() {
+function hideClocks(): void {
 	for (const clockElements of Object.values(element_timers)) {
 		clockElements.timer.classList.add('hidden');
 	}
 }
 
-function showClocks() {
+function showClocks(): void {
 	for (const clockElements of Object.values(element_timers)) {
 		clockElements.timer.classList.remove('hidden');
 	}
@@ -99,7 +99,7 @@ function showClocks() {
 /**
  * Stops clock sounds and removes all borders
  */
-function stopClocks(basegame?: Game) {
+function stopClocks(basegame?: Game): void {
 	cancelSoundEffectTimers();
 
 	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
@@ -108,7 +108,7 @@ function stopClocks(basegame?: Game) {
 	}
 }
 
-function cancelSoundEffectTimers() {
+function cancelSoundEffectTimers(): void {
 	// Minute Tick
 	clearTimeout(lowtimeNotif.timeoutID);
 	lowtimeNotif.timeoutID = undefined;
@@ -131,12 +131,12 @@ function cancelSoundEffectTimers() {
 /**
  * Resets all data so a new game can be loaded
  */
-function resetClocks() {
+function resetClocks(): void {
 	stopClocks();
 	lowtimeNotif.playersNotified = new Set();
 }
 
-function update(basegame: Game) {
+function update(basegame: Game): void {
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
 
@@ -145,7 +145,7 @@ function update(basegame: Game) {
 	updateTextContent(basegame.clocks);
 }
 
-function edit(basegame: Game) {
+function edit(basegame: Game): void {
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 
@@ -159,7 +159,7 @@ function edit(basegame: Game) {
 	rescheduleSoundEffects(basegame.clocks);
 }
 
-function rescheduleSoundEffects(clocks: ClockData) {
+function rescheduleSoundEffects(clocks: ClockData): void {
 	cancelSoundEffectTimers(); // Clear the previous timeouts
 
 	if (clocks.colorTicking === undefined) return; // Don't reschedule sound effects if no clocks are ticking
@@ -169,14 +169,14 @@ function rescheduleSoundEffects(clocks: ClockData) {
 	scheduleCountdown(clocks); // Schedule 10s drum countdown
 }
 
-function removeBorder(element: HTMLElement) {
+function removeBorder(element: HTMLElement): void {
 	element.style.outline = '';
 }
 
 /**
  * Changes the border color gradually
  */
-function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeRemain: number) {
+function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeRemain: number): void {
 	const percRemain = currentTimeRemain / (clocks.startTime.minutes * 60 * 1000);
 
 	// Green => Yellow => Orange => Red
@@ -209,7 +209,7 @@ function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeR
 /** 
  * Updates the clocks' text content in the document.
  */
-function updateTextContent(clocks: ClockData) {
+function updateTextContent(clocks: ClockData): void {
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
 		const player = Number(playerStr) as Player;
 		const text = clockutil.getTextContentFromTimeRemain(clocks.currentTime[player]!);
@@ -221,7 +221,7 @@ function updateTextContent(clocks: ClockData) {
 /** 
  * Reschedules the timer to play the ticking sound effect at 1 minute remaining.
  */
-function scheduleMinuteTick(clocks: ClockData) {
+function scheduleMinuteTick(clocks: ClockData): void {
 	if (clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
 	if (lowtimeNotif.playersNotified.has(clocks.colorTicking!)) return;
 	const timeRemainAtTurnStart = clocks.timeRemainAtTurnStart!;
@@ -229,12 +229,12 @@ function scheduleMinuteTick(clocks: ClockData) {
 	if (timeRemain < 0) return;
 	lowtimeNotif.timeoutID = setTimeout(() => playMinuteTick(clocks.colorTicking!), timeRemain);}
 
-function playMinuteTick(color: Player) {
+function playMinuteTick(color: Player): void {
 	gamesound.playTick({ volume: 0.07 });
 	lowtimeNotif.playersNotified.add(color);
 }
 
-function set(basegame: Game) {
+function set(basegame: Game): void {
 	if (basegame.untimed) return hideClocks();
 	else showClocks();
 	updateTextContent(basegame.clocks);
@@ -242,13 +242,13 @@ function set(basegame: Game) {
 
 // The 10s drum countdown...
 /** Reschedules the timer to play the 10-second countdown effect. */
-function scheduleCountdown(clocks: ClockData) {
+function scheduleCountdown(clocks: ClockData): void {
 	scheduleDrum(clocks);
 	scheduleTicking(clocks);
 	scheduleTick(clocks);
 }
 
-function push(clocks: ClockData) {
+function push(clocks: ClockData): void {
 	rescheduleSoundEffects(clocks);
 
 	// Remove colored border
@@ -259,7 +259,7 @@ function push(clocks: ClockData) {
 	}
 }
 
-function scheduleDrum(clocks: ClockData) {
+function scheduleDrum(clocks: ClockData): void {
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
 	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
@@ -275,7 +275,7 @@ function scheduleDrum(clocks: ClockData) {
 	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(clocks, secsRemaining), timeNextDrum);
 }
 
-function scheduleTicking(clocks: ClockData) {
+function scheduleTicking(clocks: ClockData): void {
 	if (clocks.timeAtTurnStart! < 10000) return;
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
@@ -289,7 +289,7 @@ function scheduleTicking(clocks: ClockData) {
 }
 
 // Tick sound effect right BEFORE 10 seconds is hit
-function scheduleTick(clocks: ClockData) {
+function scheduleTick(clocks: ClockData): void {
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
 	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
@@ -301,7 +301,7 @@ function scheduleTick(clocks: ClockData) {
 	}
 }
 
-function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number) {
+function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number): void {
 	if (secsRemaining === undefined) return console.error("Cannot play drum without secsRemaining");
 	gamesound.playDrum();
 
@@ -318,11 +318,11 @@ function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number) {
 	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(clocks, newSecsRemaining), timeUntilNextDrum);
 }
 
-function playTickingEffect(offset: number) {
+function playTickingEffect(offset: number): void {
 	countdown.ticking.sound = gamesound.playTicking({ fadeInDuration: countdown.ticking.fadeInDuration, offset });
 }
 
-function playTickEffect(offset: number) {
+function playTickEffect(offset: number): void {
 	countdown.tick.sound = gamesound.playTick({ volume: 0.07, fadeInDuration: countdown.tick.fadeInDuration, offset });
 }
 

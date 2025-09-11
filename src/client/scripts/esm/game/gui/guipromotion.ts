@@ -38,9 +38,9 @@ let selectionOpen = false; // True when promotion GUI visible. Do not listen to 
 PromotionGUI.base.addEventListener('contextmenu', (event) => event.preventDefault());
 
 
-function isUIOpen() { return selectionOpen; }
+function isUIOpen(): boolean { return selectionOpen; }
 
-function open(color: Player) {
+function open(color: Player): void {
 	selectionOpen = true;
 	PromotionGUI.base.classList.remove('hidden');
 	if (!(color in PromotionGUI.players)) throw new Error(`Promotion UI does not support color "${color}"`);
@@ -48,7 +48,7 @@ function open(color: Player) {
 }
 
 /** Closes the promotion UI */
-function close() {
+function close(): void {
 	// console.error("Closing promotion UI");
 	selectionOpen = false;
 	for (const element of Object.values(PromotionGUI.players)) {
@@ -62,7 +62,7 @@ function close() {
  * @param promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined) {
+async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined): Promise<void> {
 	if (promotionsAllowed === undefined) return;
 
 	if (Object.values(PromotionGUI.players).some(element => element.childElementCount > 0)) {
@@ -87,7 +87,7 @@ async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined) {
 /**
  * Resets the promotion UI by clearing all promotion options.
  */
-function resetUI() {
+function resetUI(): void {
 	for (const playerPromo of Object.values(PromotionGUI.players)) {
 		while (playerPromo.firstChild) {
 			const svg = playerPromo.firstChild;
@@ -97,7 +97,7 @@ function resetUI() {
 	}
 }
 
-function callback_promote(event: Event) {
+function callback_promote(event: Event): void {
 	const type = Number((event.currentTarget as HTMLElement).id);
 	// TODO: Dispatch a custom 'promote-selected' event!
 	// That way this script doesn't depend on selection.js
@@ -106,7 +106,7 @@ function callback_promote(event: Event) {
 }
 
 /** Closes the UI if the mouse clicks outside it. */
-function update() {
+function update(): void {
 	if (!selectionOpen) return;
 	if (!listener_overlay.isMouseDown(Mouse.LEFT) && !listener_overlay.isMouseDown(Mouse.RIGHT) && !listener_overlay.isMouseDown(Mouse.MIDDLE)) return;
 	// Atleast one mouse button was clicked-down OUTSIDE of the promotion UI

@@ -34,7 +34,7 @@ import websocket from "../../websocket.js";
  * Called when selection.js moves a piece. This will send it to the server
  * if we're in an online game.
  */
-function sendMove() {
+function sendMove(): void {
 	if (!onlinegame.areInOnlineGame() || !onlinegame.areInSync() || !websocket.areSubbedToSub('game')) return; // Skip
 	// console.log("Sending our move..");
 
@@ -58,7 +58,7 @@ function sendMove() {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
+function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message: OpponentsMoveMessage): void {
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
 	const expectedMoveNumber = gamefile.boardsim.moves.length + 1;

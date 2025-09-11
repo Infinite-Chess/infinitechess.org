@@ -37,7 +37,7 @@ const fastTransitionCooldownMillis: number = 750;
 
 
 /** Enables fast transition mode for tooltips. */
-function enableFastTransition() {
+function enableFastTransition(): void {
 	if (fastTransitionMode) return; // Already on!
 
 	// console.log("Enabled fast transition");
@@ -46,14 +46,14 @@ function enableFastTransition() {
 }
 
 /** Cancels the timer to exit fast transition mode. */
-function cancelFastTransitionExpiryTimer() {
+function cancelFastTransitionExpiryTimer(): void {
 	// if (fastTransitionTimeoutID == null) return;
 	clearTimeout(fastTransitionTimeoutID);
 	fastTransitionTimeoutID = undefined;
 }
 
 /** Disables fast transition mode for tooltips.  */
-function disableFastTransition() {
+function disableFastTransition(): void {
 	if (!fastTransitionMode) return;
 
 	// console.log("Disabled fast transition");
@@ -84,16 +84,16 @@ if (docutil.isMouseSupported()) tooltips.forEach(tooltip => {
 	let removedClass: boolean = false;
 	let addBackClassTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
-	function onTooltipVisible() {
+	function onTooltipVisible(): void {
 		tooltipVisible = true;
 	}
 
-	function cancelHoveringTimer() {
+	function cancelHoveringTimer(): void {
 		clearTimeout(hoveringTimer);
 		hoveringTimer = undefined;
 	}
 
-	function removeClass() {
+	function removeClass(): void {
 		if (removedClass) return;
 
 		// console.log("Removed tooltip class");
@@ -104,17 +104,17 @@ if (docutil.isMouseSupported()) tooltips.forEach(tooltip => {
 		cancelHoveringTimer();
 	}
 
-	function cancelTimerToAddClass() {
+	function cancelTimerToAddClass(): void {
 		clearTimeout(addBackClassTimeoutID);
 		addBackClassTimeoutID = undefined;
 	}
 
-	function resetTimerToAddClass() {
+	function resetTimerToAddClass(): void {
 		cancelTimerToAddClass();
 		addBackClassTimeoutID = setTimeout(addBackClass, timeToReAddTooltipClassAfterDeletionMillis);
 	}
 
-	function addBackClass() {
+	function addBackClass(): void {
 		if (!removedClass || isHolding) return;
 
 		// console.log("Added tooltip class");

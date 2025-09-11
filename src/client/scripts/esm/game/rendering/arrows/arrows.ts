@@ -248,7 +248,7 @@ function getMode(): typeof mode {
 /**
  * Resets the arrows lists in prep for the next frame.
  */
-function reset() {
+function reset(): void {
 	slideArrows = {};
 	animatedArrows.length = 0;
 	hoveredArrows.length = 0;
@@ -260,7 +260,7 @@ function reset() {
 /**
  * Sets the rendering mode of the arrow indicators on the edges of the screen.
  */
-function setMode(value: typeof mode) {
+function setMode(value: typeof mode): void {
 	mode = value;
 	if (mode === 0) {
 		reset();
@@ -269,7 +269,7 @@ function setMode(value: typeof mode) {
 }
 
 /** Rotates the current mode of the arrow indicators. */
-function toggleArrows() {
+function toggleArrows(): void {
 	frametracker.onVisualChange();
 	// Have to do it weirdly like this, instead of using '++', because typescript complains that nextMode is of type number.
 	let nextMode: typeof mode = mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
@@ -308,7 +308,7 @@ function areHoveringAtleastOneArrow(): boolean {
  * This is so that other script have the opportunity to modify the list of
  * visible arrows before rendering.
  */
-function update() {
+function update(): void {
 	reset(); // Initiate the arrows empty
 	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
 		arrowlegalmovehighlights.reset(); // Also reset this
@@ -347,7 +347,7 @@ function update() {
 }
 
 /** Whether the arrows should be calculated and rendered this frame */
-function areArrowsActiveThisFrame() {
+function areArrowsActiveThisFrame(): boolean {
 	// false if the arrows are off, or if the board is too zoomed out
 	return mode !== 0 && bd.compare(boardtiles.gtileWidth_Pixels(false), renderZoomLimitVirtualPixels) >= 0;
 }
@@ -359,7 +359,7 @@ function areArrowsActiveThisFrame() {
  * These boxes are used to test whether a piece is visible on-screen or not.
  * As if it's not, it should get an arrow.
  */
-function updateBoundingBoxesOfVisibleScreen() {
+function updateBoundingBoxesOfVisibleScreen(): void {
 	boundingBoxFloat = perspective.getEnabled() ? boardtiles.generatePerspectiveBoundingBox(perspectiveDist) : boardtiles.gboundingBoxFloat();
 
 	// Apply the padding of the navigation and gameinfo bars to the screen bounding box.
@@ -591,7 +591,7 @@ function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, bound
  * mode == 2: Everything in mode 1, PLUS all orthogonals and diagonals, whether or not the piece can slide into our sreen
  * mode == 3: Everything in mode 1 & 2, PLUS all hippogonals, whether or not the piece can slide into our screen
  */
-function removeUnnecessaryArrows(slideArrowsDraft: SlideArrowsDraft) {
+function removeUnnecessaryArrows(slideArrowsDraft: SlideArrowsDraft): void {
 	if (mode === 3) return; // Don't remove anything
 
 	const slideExceptions = getSlideExceptions();
@@ -636,7 +636,7 @@ function getSlideExceptions(): Vec2Key[] {
 	return slideExceptions;
 }
 
-function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft) {
+function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft): void {
 	// The only pieces in a line that WOULDN'T be able to slide onto the screen
 	// is the piece closest to us. ALL other pieces we wouldn't have added otherwise.
 	if (line.negDotProd.length > 0) {
@@ -655,7 +655,7 @@ function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft) 
  * 
  * It also constructs the list of arrows being hovered over this frame.
  */
-function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
+function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): void {
 	if (Object.keys(slideArrows).length > 0) throw Error('SHOULD have erased all slide arrows before recalcing');
 
 	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
@@ -744,13 +744,13 @@ function processPiece(piece: ArrowPiece, vector: Vec2, intersection: BDCoords, i
 /**
  * This teleports you to the piece it is pointing to IF the mouse has clicked it this frame.
  */
-function teleportToPieceIfClicked(piece: ArrowPiece, pieceWorld: DoubleCoords, vector: Vec2, worldHalfWidth: number) {
+function teleportToPieceIfClicked(piece: ArrowPiece, pieceWorld: DoubleCoords, vector: Vec2, worldHalfWidth: number): void {
 	// Left mouse button
 	if (mouse.isMouseDown(Mouse.LEFT) || mouse.isMouseClicked(Mouse.LEFT)) processMouseClick(Mouse.LEFT, mouse);
 	// Finger simulating right mouse down (annotations mode ON)
 	else if ((listener_overlay.isMouseDown(Mouse.RIGHT) || listener_overlay.isMouseClicked(Mouse.RIGHT)) && listener_overlay.isMouseTouch(Mouse.RIGHT)) processMouseClick(Mouse.RIGHT, listener_overlay);
 
-	function processMouseClick(button: MouseButton, listener: typeof mouse | InputListener) {
+	function processMouseClick(button: MouseButton, listener: typeof mouse | InputListener): void {
 		const clickWorld = mouse.getMouseWorld(button)!;
 		const chebyshevDist = vectors.chebyshevDistanceDoubles(pieceWorld, clickWorld);
 		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
@@ -815,7 +815,7 @@ let shifts: Shift[] = [];
  * Piece deleted from start coords
  * => Arrow line recalculated
  */
-function deleteArrow(start: Coords) {
+function deleteArrow(start: Coords): void {
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 	overwriteArrows(start); // Filter all previous arrows that this one would overwrite.
 	shifts.push({ kind: 'delete', start });
@@ -825,7 +825,7 @@ function deleteArrow(start: Coords) {
  * Piece deleted on start coords and added on end coords
  * => Arrow lines recalculated
  */
-function moveArrow(start: Coords, end: Coords) {
+function moveArrow(start: Coords, end: Coords): void {
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 	overwriteArrows(start); // Filter all previous arrows that this one would overwrite.
 	shifts.push({ kind: 'move', start, end }); 
@@ -841,7 +841,7 @@ function moveArrow(start: Coords, end: Coords) {
  * 				the piece is not gauranteed to be there. In Atomic Chess, the piece can
  * 				move, and then explode itself, leaving its destination square empty.
  */
-function animateArrow(start: Coords, end: BDCoords, type: number) {
+function animateArrow(start: Coords, end: BDCoords, type: number): void {
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 	overwriteArrows(start); // Filter all previous arrows that this one would overwrite.
 	shifts.push({ kind: 'animate', start, end, type });
@@ -851,7 +851,7 @@ function animateArrow(start: Coords, end: BDCoords, type: number) {
  * Piece added on end coords.
  * => Arrow lines recalculated
  */
-function addArrow(type: number, end: Coords) {
+function addArrow(type: number, end: Coords): void {
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 	shifts.push({ kind: 'add', type, end }); 
 }
@@ -860,7 +860,7 @@ function addArrow(type: number, end: Coords) {
  * Erases existing arrow shifts that should be overwritten by the new arrow.
  * Should only be called when shifting a new arrow.
  */
-function overwriteArrows(start: Coords) {
+function overwriteArrows(start: Coords): void {
 	/**
 	 * For each previous shift, if either their start or end
 	 * is on this start (deletion coords), then delete it!
@@ -883,7 +883,7 @@ function overwriteArrows(start: Coords) {
 
 
 /** Execute any arrow modifications made by animation.js or arrowsdrop.js */
-function executeArrowShifts() {
+function executeArrowShifts(): void {
 	// console.log("Executing arrow shifts");
 	// console.log(jsutil.deepCopyObject(shifts));
 
@@ -993,7 +993,7 @@ function executeArrowShifts() {
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLinesThroughCoords(boardsim: Board, coords: Coords) {
+function recalculateLinesThroughCoords(boardsim: Board, coords: Coords): void {
 	// console.log("Recalculating lines through coords: ", coords);
 	// Recalculate every single line it is on.
 
@@ -1066,11 +1066,11 @@ function recalculateLinesThroughCoords(boardsim: Board, coords: Coords) {
  * Also calls for the cached legal moves of the hovered
  * arrows to be updated.
  */
-function render() {
+function render(): void {
 	regenerateModelAndRender();
 }
 
-function regenerateModelAndRender() {
+function regenerateModelAndRender(): void {
 	if (Object.keys(slideArrows).length === 0 && animatedArrows.length === 0) return; // No visible arrows, don't generate the model
 
 	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
@@ -1146,7 +1146,7 @@ function regenerateModelAndRender() {
  * Takes an arrow, generates the vertex data of both the PICTURE and ARROW,
  * and appends them to their respective vertex data arrays.
  */
-function concatData(instanceData_Pictures: number[], instanceData_Arrows: number[], arrow: Arrow, vector: Vec2, index: number) {
+function concatData(instanceData_Pictures: number[], instanceData_Arrows: number[], arrow: Arrow, vector: Vec2, index: number): void {
 
 	/**
 	 * Our pictures' instance data needs to contain:

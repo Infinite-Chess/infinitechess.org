@@ -56,7 +56,7 @@ const mov = {
 // Utility ---------------------------------------------------------------------------------------------------------
 
 
-function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint) {
+function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint): void {
 	const MIN_X = 0n;
 	const MIN_Y = 0n;
 	dim = {
@@ -70,11 +70,11 @@ function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing:
 	};
 }
 
-function get4DBoardDimensions() {
+function get4DBoardDimensions(): { BOARD_SPACING: bigint; BOARDS_X: bigint; BOARDS_Y: bigint; MIN_X: bigint; MAX_X: bigint; MIN_Y: bigint; MAX_Y: bigint; } {
 	return dim!;
 }
 
-function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean) {
+function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean): void {
 	mov.STRONG_KINGS_AND_QUEENS = strong_kings_and_queens;
 	mov.STRONG_PAWNS = strong_pawns;
 }
@@ -83,7 +83,7 @@ function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean
  * Returns the type of queen, king, and pawn movements in the last loaded 4 dimension variant.
  * Triagonal? Quadragonal? Brawn?
  */
-function getMovementType() {
+function getMovementType(): { STRONG_KINGS_AND_QUEENS: boolean; STRONG_PAWNS: boolean; } {
 	return mov;
 }
 
@@ -166,7 +166,7 @@ function gen4DPosition(boards_x: bigint, boards_y: bigint, board_spacing: bigint
  * @param strong_pawns - true: pawns can capture along any diagonal. false: pawns can only capture along strictly spacelike or timelike diagonals
  * @returns 
  */
-function gen4DMoveset(boards_x: bigint, boards_y: bigint, board_spacing: bigint, strong_kings_and_queens: boolean, strong_pawns: boolean) {
+function gen4DMoveset(boards_x: bigint, boards_y: bigint, board_spacing: bigint, strong_kings_and_queens: boolean, strong_pawns: boolean): Movesets {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	setMovementType(strong_kings_and_queens, strong_pawns);

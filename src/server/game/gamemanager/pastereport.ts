@@ -20,7 +20,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * @param ws - The socket
  * @param game - The game they belong in, if they belong in one.
  */
-function onPaste(ws: CustomWebSocket, game: Game) { // { reason, opponentsMoveNumber }
+function onPaste(ws: CustomWebSocket, game: Game): void { // { reason, opponentsMoveNumber }
 	console.log("Client pasted a game.");
 
 	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);

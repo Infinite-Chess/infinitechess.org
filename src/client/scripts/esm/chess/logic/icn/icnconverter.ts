@@ -300,7 +300,7 @@ function getPieceAbbrevRegexSource(capturing: boolean): string {
  * For example, 'P1,2+' => Pawn at 1,2 with special right.
  * It optionally captures the piece abbreviation, coords key, and special right into named groups.
  */
-function getPieceEntryRegexSource(capturing: boolean) {
+function getPieceEntryRegexSource(capturing: boolean): string {
 	const pieceAbbr = capturing ? '<pieceAbbr>' : ':';
 	const coordsKey = capturing ? '<coordsKey>' : ':';
 	const specialRight = capturing ? '<specialRight>' : ':';
@@ -309,7 +309,7 @@ function getPieceEntryRegexSource(capturing: boolean) {
 }
 
 /** Returns a regex source for matching the promotion segment in a move, optionally capturing  */
-function getPromotionRegexSource(capturing: boolean) {
+function getPromotionRegexSource(capturing: boolean): string {
 	const promotionAbbr = capturing ? '<promotionAbbr>' : ':';
 	return `(?:=(?${promotionAbbr}${getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
 }
@@ -988,7 +988,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		}
 
 		/** Adds the matched piece entry to the position and specialRights. */
-		function processPieceEntry(match: RegExpExecArray) { // named groups are: pieceAbbr, coordsKey, specialRight
+		function processPieceEntry(match: RegExpExecArray): void { // named groups are: pieceAbbr, coordsKey, specialRight
 			const pieceAbbr = match.groups!['pieceAbbr']!;
 			const coordsKey = match.groups!['coordsKey']! as CoordsKey;
 			const hasSpecialRight = match.groups!['specialRight'] === "+";
@@ -1006,7 +1006,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	// Now we can test if the moves section came *after* the positon section.
 	if (!moves) testNextSectionForMoves();
 
-	function testNextSectionForMoves() {
+	function testNextSectionForMoves(): void {
 		// Test if the beginning of the string matches the moves regex
 		movesRegex.lastIndex = lastIndex;
 
@@ -1084,7 +1084,7 @@ function getCompactMoveFromDraft(moveDraft: _Move_Compact): string {
 	return getCompactMoveFromParts(startCoordsKey, endCoordsKey, promotionAbbr);
 }
 
-function getCompactMoveFromParts(startCoordsKey: string, endCoordsKey: string, promotionAbbr?: string) {
+function getCompactMoveFromParts(startCoordsKey: string, endCoordsKey: string, promotionAbbr?: string): string {
 	const promotedPieceStr = promotionAbbr ? "=" + promotionAbbr : "";
 	return startCoordsKey + ">" + endCoordsKey + promotedPieceStr; // 'a,b>c,d=X'
 }

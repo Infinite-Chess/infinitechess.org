@@ -61,7 +61,7 @@ type CreateInviteMessage = z.infer<typeof createinviteschem>
  * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
  * @param replyto - The incoming websocket message ID, to include in the reply
  */
-async function createInvite(ws: CustomWebSocket, messageContents: CreateInviteMessage, replyto?: number) { // invite: { id, owner, variant, clock, color, rated, publicity } 
+async function createInvite(ws: CustomWebSocket, messageContents: CreateInviteMessage, replyto?: number): Promise<void> { // invite: { id, owner, variant, clock, color, rated, publicity } 
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
 
 	// Make sure they don't already have an existing invite
@@ -160,7 +160,7 @@ function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageConte
  * @param replyto - The incoming websocket message ID, to include in the reply
  * @returns true if invite creation is allowed
  */
-async function isAllowedToCreateInvite(ws: CustomWebSocket, replyto?: number) {
+async function isAllowedToCreateInvite(ws: CustomWebSocket, replyto?: number): Promise<boolean> {
 	if (!await isServerRestarting()) return true; // Server not restarting, all new invites are allowed!
 
 	// Server is restarting... Do we have admin perms to create an invite anyway?

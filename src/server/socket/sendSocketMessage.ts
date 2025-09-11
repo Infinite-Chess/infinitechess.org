@@ -63,7 +63,7 @@ const timeOfInactivityToRenewConnection = 10000;
  * @param [options] - Additional options for sending the message.
  * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendSocketMessage(ws: CustomWebSocket, sub: string | undefined, action: string | undefined, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+function sendSocketMessage(ws: CustomWebSocket, sub: string | undefined, action: string | undefined, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}): void { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(sendSocketMessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
@@ -112,7 +112,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string | undefined, action:
  * @param [options.replyto] - The ID of the incoming WebSocket message to which this message is replying.
  * @param [options.customNumber] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
-function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, customNumber }: { replyto?: number, customNumber?: number } = {}) {
+function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, customNumber }: { replyto?: number, customNumber?: number } = {}): void {
 	const i18next = ws.metadata.cookies.i18next;
 	let text = getTranslation(translationCode, i18next);
 	// Special case: number of minutes to be displayed upon server restart
@@ -129,14 +129,14 @@ function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, cus
  * @param ws - The socket
  * @param translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
-function sendNotifyError(ws: CustomWebSocket, translationCode: string) {
+function sendNotifyError(ws: CustomWebSocket, translationCode: string): void {
 	sendSocketMessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
 }
 
 /**
  * Tell them to hard-refresh the page, there's a new update.
  */
-function informSocketToHardRefresh(ws: CustomWebSocket) {
+function informSocketToHardRefresh(ws: CustomWebSocket): void {
 	console.log(`Informing socket to hard refresh! ${socketUtility.stringifySocketMetadata(ws)}`);
 	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
@@ -149,7 +149,7 @@ function informSocketToHardRefresh(ws: CustomWebSocket) {
  * Reschedule the timer to send an empty message to the client
  * to verify they are still connected and responding.
  */
-function rescheduleRenewConnection(ws: CustomWebSocket) {
+function rescheduleRenewConnection(ws: CustomWebSocket): void {
 	cancelRenewConnectionTimer(ws);
 	// Only reset the timer if they have atleast one subscription!
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
@@ -157,7 +157,7 @@ function rescheduleRenewConnection(ws: CustomWebSocket) {
 	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
 }
 
-function cancelRenewConnectionTimer(ws: CustomWebSocket) {
+function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
 	clearTimeout(ws.metadata.renewConnectionTimeoutID);
 	ws.metadata.renewConnectionTimeoutID = undefined;
 }
@@ -166,7 +166,7 @@ function cancelRenewConnectionTimer(ws: CustomWebSocket) {
  * Send an empty message to the client, expecting an echo
  * within five seconds to make sure they are still connected.
  */
-function renewConnection(ws: CustomWebSocket) {
+function renewConnection(ws: CustomWebSocket): void {
 	sendSocketMessage(ws, 'general', 'renewconnection');
 }
 

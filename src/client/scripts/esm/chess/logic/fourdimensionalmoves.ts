@@ -143,7 +143,7 @@ function addPossibleEnPassant({ basegame, boardsim }: FullGame, individualMoves:
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player) {
+function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
 		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
 		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
@@ -152,7 +152,7 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
 	individualMoves.push(landCoords);
 }
 
-function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords) {
+function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 	const key = coordutil.getKeyFromCoords(coords);
 	return boardsim.state.global.specialRights.has(key);
 }

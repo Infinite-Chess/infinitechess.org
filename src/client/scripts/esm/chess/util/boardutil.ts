@@ -86,7 +86,7 @@ function getPieceCountOfType(o: OrganizedPieces, type: number): number {
 }
 
 /** Excludes undefined placeholders */
-function getPieceCountOfTypeRange(range: TypeRange) {
+function getPieceCountOfTypeRange(range: TypeRange): number {
 	return (range.end - range.start) - range.undefineds.length;
 }
 
@@ -157,7 +157,7 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
  * on each piece idx.
  */
 // eslint-disable-next-line no-unused-vars
-function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (idx: number) => void) {
+function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (idx: number) => void): void {
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
@@ -174,7 +174,7 @@ function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (i
  * calculating if each idx is an undefined placeholder.
  */
 // eslint-disable-next-line no-unused-vars
-function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: number, callback: (idx: number, isUndefined: boolean) => void) {
+function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: number, callback: (idx: number, isUndefined: boolean) => void): void {
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
@@ -185,7 +185,7 @@ function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: nu
 	}
 }
 
-function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange) {
+function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange): void {
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
 		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.

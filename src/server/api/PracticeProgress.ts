@@ -75,7 +75,7 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function) 
  * @param res - The Express response object.
  * @param checkmates_beaten - The checkmates_beaten object to be saved in the cookie.
  */
-function createPracticeProgressCookie(res: Response, checkmates_beaten: string) {
+function createPracticeProgressCookie(res: Response, checkmates_beaten: string): void {
 	// Set or update the checkmates_beaten cookie
 	res.cookie('checkmates_beaten', checkmates_beaten, {
 		httpOnly: false,
@@ -89,7 +89,7 @@ function createPracticeProgressCookie(res: Response, checkmates_beaten: string) 
  * Even though the cookie only lasts 10 seconds, this is still helpful
  * @param {Object} res - The Express response object.
  */
-function deletePracticeProgressCookie(res: Response) {
+function deletePracticeProgressCookie(res: Response): void {
 	res.clearCookie('checkmates_beaten', {
 		httpOnly: false,
 		secure: true,

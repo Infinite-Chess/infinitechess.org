@@ -126,7 +126,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	const triHalfWidth = CORNER_TRIS.TRI_WIDTH / 2;
 
 	// Helper to add a single corner triangle
-	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number) => {
+	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number): void => {
 		vertices.push(
 			cornerX, cornerY, r, g, b, a,
 			cornerX + dx, cornerY, r, g, b, a,
@@ -158,7 +158,7 @@ function getDataPlusSign(color: Color): number[] {
 	const vertices: number[] = [];
 	
 	// Helper to add quad vertices (2 triangles)
-	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) => {
+	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void => {
 		// Triangle 1
 		vertices.push(x1, y1, r, g, b, a);
 		vertices.push(x2, y2, r, g, b, a);

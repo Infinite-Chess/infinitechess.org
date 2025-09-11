@@ -24,7 +24,7 @@ const PREFERRED_IMG_SIZE = 512;
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A promise that resolves with the generated spritesheet as an HTMLImageElement.
  */
-async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]) {
+async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]): Promise<{ spritesheet: HTMLImageElement; spritesheetData: { pieceWidth: number; texLocs: { [key: number]: DoubleCoords; }; }; }> {
 	// Ensure there are images provided
 	if (images.length === 0) throw new Error('No images provided when generating spritesheet.');
   
@@ -94,7 +94,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param gridSize - How many images fit one-way.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): { pieceWidth: number; texLocs: { [key: number]: DoubleCoords; }; } {  
 	const pieceWidth = 1 / gridSize;
 	const texLocs: { [key: number]: DoubleCoords } = {};
 

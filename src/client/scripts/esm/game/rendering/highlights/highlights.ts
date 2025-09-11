@@ -31,7 +31,7 @@ import type { Color } from "../../../util/math/math.js";
  * Hovered arrows legal move highlights
  * Outline of highlights render box
  */
-function render(boardsim: Board) {
+function render(boardsim: Board): void {
 	if (!boardpos.areZoomedOut()) { // Zoomed in
 		highlightLastMove(boardsim);
 		checkhighlight.render(boardsim);
@@ -44,7 +44,7 @@ function render(boardsim: Board) {
 }
 
 /** Highlights the start and end squares of the most recently played move. */
-function highlightLastMove(boardsim: Board) {
+function highlightLastMove(boardsim: Board): void {
 	const lastMove = moveutil.getCurrentMove(boardsim);
 	if (!lastMove) return; // Don't render if last move is undefined.
 

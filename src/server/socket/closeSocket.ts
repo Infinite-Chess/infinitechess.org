@@ -18,7 +18,7 @@ import type { CustomWebSocket } from "./socketUtility.js";
 // Functions ---------------------------------------------------------------------------
 
 
-function onclose(ws: CustomWebSocket, code: number, reason: Buffer) {
+function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	const reasonString = reason.toString();
 
 	// Delete connection from object.
@@ -44,7 +44,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer) {
 	if (reasonString === 'No echo heard') console.log(`Socket closed from no echo heard. ${socketUtility.stringifySocketMetadata(ws)}`);
 }
 
-function cancelRenewConnectionTimer(ws: CustomWebSocket) {
+function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
 	clearTimeout(ws.metadata.renewConnectionTimeoutID);
 	ws.metadata.renewConnectionTimeoutID = undefined;
 }

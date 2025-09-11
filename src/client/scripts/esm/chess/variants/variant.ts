@@ -285,7 +285,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	// },
 	'4x4x4x4_Chess': {
 		generator: {
-			algorithm: () => { return fourdimensionalgenerator.gen4DPosition(4n, 4n, 5n, {
+			algorithm: (): Map<CoordsKey, number> => { return fourdimensionalgenerator.gen4DPosition(4n, 4n, 5n, {
 				"0,0": "P1,2|P2,2|P3,2|P4,2|R1,1|N2,1|N3,1|R4,1",
 				"1,0": "P1,2|P2,2|P3,2|P4,2|P1,1|P2,1|P3,1|P4,1",
 				"2,0": "P1,2|P2,2|P3,2|P4,2|B1,1|K2,1|Q3,1|B4,1",
@@ -297,7 +297,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			  }); },
 			rules: { pawnDoublePush: true }
 		},
-		movesetGenerator: () => fourdimensionalgenerator.gen4DMoveset(4n, 4n, 5n, false, true),
+		movesetGenerator: (): Movesets => fourdimensionalgenerator.gen4DMoveset(4n, 4n, 5n, false, true),
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { [p.WHITE]: [19n], [p.BLACK]: [1n] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove },
 		specialVicinity: { 
@@ -309,10 +309,10 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	},
 	'5D_Chess': {
 		generator: {
-			algorithm: () => { return fourdimensionalgenerator.gen4DPosition(8n, 8n, 9n, positionStringOfClassical); },
+			algorithm: (): Map<CoordsKey, number> => { return fourdimensionalgenerator.gen4DPosition(8n, 8n, 9n, positionStringOfClassical); },
 			rules: { pawnDoublePush: true, castleWith: r.ROOK }
 		},
-		movesetGenerator: () => fourdimensionalgenerator.gen4DMoveset(8n, 8n, 9n, true, false),
+		movesetGenerator: (): Movesets => fourdimensionalgenerator.gen4DMoveset(8n, 8n, 9n, true, false),
 		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
 		gameruleModifications: { winConditions: royalCaptureWinConditions, promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { [p.WHITE]: [8n, 17n, 26n, 35n, 44n, 53n, 62n, 71n], [p.BLACK]: [1n, 10n, 19n, 28n, 37n, 46n, 55n, 64n] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove },
@@ -344,7 +344,7 @@ function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Pla
  * @param variantName - The name of the variant
  * @returns *true* if the variant is a valid variant
  */
-function isVariantValid(variantName?: string) {
+function isVariantValid(variantName?: string): boolean {
 	if (variantName === undefined) return false;
 	return variantDictionary[variantName] !== undefined;
 }
@@ -356,7 +356,7 @@ function isVariantValid(variantName?: string) {
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
-function getStartingPositionOfVariant(metadata: VariantContext) {
+function getStartingPositionOfVariant(metadata: VariantContext): { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey>; } {
 	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
 	const variantEntry: Variant = variantDictionary[metadata.Variant!]!;
 
@@ -548,8 +548,9 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
 		const intPiece = Number(piece) as RawType;
-		pieceMovesets[intPiece] = movesetModifications[intPiece] ? () => jsutil.deepCopyObject(movesetModifications[intPiece]!)
-														   : () => jsutil.deepCopyObject(moves);
+		pieceMovesets[intPiece] = movesetModifications[intPiece] ?
+			(): PieceMoveset => jsutil.deepCopyObject(movesetModifications[intPiece]!) :
+			(): PieceMoveset => jsutil.deepCopyObject(moves);
 	}
 
 	return pieceMovesets;
@@ -570,7 +571,7 @@ function getSpecialMovesOfVariant(metadata: VariantContext): RawTypeGroup<Specia
 }
 
 
-function getSpecialVicinityOfVariant(metadata: VariantContext) {
+function getSpecialVicinityOfVariant(metadata: VariantContext): SpecialVicinity {
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
 	if (metadata.Variant === undefined) return defaultSpecialVicinityByPiece;

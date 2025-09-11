@@ -27,18 +27,18 @@ let moveSound_timeoutID: ReturnType<typeof setTimeout> | undefined;
 
 
 
-function onGameStart({ isOurMove }: { isOurMove: boolean }) {
+function onGameStart({ isOurMove }: { isOurMove: boolean }): void {
 	// This will already flash the tab name
 	onMovePlayed({ isOpponents: isOurMove });
 }
 
 /** Called when the online game is closed */
-function onGameClose() {
+function onGameClose(): void {
 	cancelFlashTabTimer();
 	cancelMoveSound();
 }
 
-function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
+function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 	if (isOpponents) {
 		// Flash the tab name
 		flashTabNameYOUR_MOVE(true);
@@ -54,7 +54,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
  * and sets a timer for the next toggle.
  * @param parity - If true, the tab name becomes "YOUR MOVE", otherwise it reverts to the original title
  */
-function flashTabNameYOUR_MOVE(parity: boolean) {
+function flashTabNameYOUR_MOVE(parity: boolean): void {
 	if (!loadbalancer.isPageHidden()) {
 		// The page is no longer hidden, restore the tab's original title,
 		// and stop flashing "YOUR MOVE"
@@ -67,13 +67,13 @@ function flashTabNameYOUR_MOVE(parity: boolean) {
 	timeoutID = setTimeout(flashTabNameYOUR_MOVE, periodicityMillis, !parity);
 }
 
-function cancelFlashTabTimer() {
+function cancelFlashTabTimer(): void {
 	document.title = originalDocumentTitle;
 	clearTimeout(timeoutID);
 	timeoutID = undefined;
 }
 
-function scheduleMoveSound_timeoutID() {
+function scheduleMoveSound_timeoutID(): void {
 	if (!loadbalancer.isPageHidden()) return; // Don't schedule it if the page is already visible
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!.basegame)) return;
 	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
@@ -81,7 +81,7 @@ function scheduleMoveSound_timeoutID() {
 	moveSound_timeoutID = setTimeout(() => gamesound.playMove(ZERO, false, false), timeNextSoundFromNow);
 }
 
-function cancelMoveSound() {
+function cancelMoveSound(): void {
 	clearTimeout(moveSound_timeoutID);
 	moveSound_timeoutID = undefined;
 }

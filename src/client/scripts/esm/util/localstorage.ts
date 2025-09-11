@@ -32,7 +32,7 @@ eraseExpiredItems();
  * @param value - What to save
  * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
  */
-function saveItem(key: string, value: any, expiryMillis: number = defaultExpiryTimeMillis) {
+function saveItem(key: string, value: any, expiryMillis: number = defaultExpiryTimeMillis): void {
 	if (printSavesAndDeletes) console.log(`Saving key to local storage: ${key}`);
 	const timeExpires = Date.now() + expiryMillis;
 	const save: Entry = { value, expires: timeExpires };
@@ -71,12 +71,12 @@ function loadItem(key: string): any {
  * Deletes an item from browser local storage
  * @param key The name/key of the item in storage
  */
-function deleteItem(key: string) {
+function deleteItem(key: string): void {
 	if (printSavesAndDeletes) console.log(`Deleting local storage item with key '${key}!'`);
 	localStorage.removeItem(key);
 }
 
-function hasItemExpired(save: Entry | any) {
+function hasItemExpired(save: Entry | any): boolean {
 	if (save.expires === undefined) {
 		console.log(`Local storage item was in an old format. Deleting it! Value: ${JSON.stringify(save)}}`);
 		return true;
@@ -84,7 +84,7 @@ function hasItemExpired(save: Entry | any) {
 	return Date.now() >= save.expires;
 }
 
-function eraseExpiredItems() {
+function eraseExpiredItems(): void {
 	const keys = Object.keys(localStorage);
 
 	// if (keys.length > 0) console.log(`Items in local storage: ${JSON.stringify(keys)}`);
@@ -94,7 +94,7 @@ function eraseExpiredItems() {
 	}
 }
 
-function eraseAll() {
+function eraseAll(): void {
 	console.log("Erasing ALL items in local storage...");
 	const keys = Object.keys(localStorage);
 	for (const key of keys) {

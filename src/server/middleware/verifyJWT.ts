@@ -25,7 +25,7 @@ import type { Request, Response, NextFunction } from "express";
  * Further middleware can read these properties to not send
  * private information to unauthorized users.\
  */
-function verifyJWT(req: Request, res: Response, next: NextFunction) {
+function verifyJWT(req: Request, res: Response, next: NextFunction): void {
 	const cookies: ParsedCookies = req.cookies;
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
 

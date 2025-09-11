@@ -69,7 +69,7 @@ let pointerWorld: DoubleCoords | undefined;
  * REQUIRES THE HOVERED HIGHLIGHTS to be updated prior to calling this!
  * @param arrows - All arrow annotations currently on the board.
  */
-function update(arrows: Arrow[]) {
+function update(arrows: Arrow[]): void {
 	const respectiveListener = mouse.getRelevantListener();
 
 	if (!drag_start) {
@@ -117,7 +117,7 @@ function update(arrows: Arrow[]) {
 	}
 }
 
-function stopDrawing() {
+function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
 	pointerWorld = undefined;
@@ -186,7 +186,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 
 
 
-function render(arrows: Arrow[]) {
+function render(arrows: Arrow[]): void {
 	// Add the arrow currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnArrow(arrows) : { changed: false };
 
@@ -265,11 +265,11 @@ function getDataArrow(
 	const length = vectors.euclideanDistanceDoubles(startWorld, endWorld);
 
 	// Helpers
-	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) => {
+	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void => {
 		vertices.push(x1, y1, r, g, b, a, x2, y2, r, g, b, a, x3, y3, r, g, b, a);
 		vertices.push(x3, y3, r, g, b, a, x4, y4, r, g, b, a, x1, y1, r, g, b, a);
 	};
-	const addTriangle = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => {
+	const addTriangle = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void => {
 		vertices.push(x1, y1, r, g, b, a, x2, y2, r, g, b, a, x3, y3, r, g, b, a);
 	};
 

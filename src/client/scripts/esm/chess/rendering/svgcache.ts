@@ -44,7 +44,7 @@ async function getSVGElements(ids: number[], width?: number, height?: number): P
  * Initiates fetch requests for all specified SVG file locations concurrently, preventing duplicate requests.
  * @param locations - A set of unique SVG location names (e.g., "classical", "fairy/rose") to fetch.
  */
-async function fetchMissingTypes(locations: Set<string>) {
+async function fetchMissingTypes(locations: Set<string>): Promise<void> {
 	await Promise.all([...locations].map(async location => fetchLocation(location)));
 }
 /**
@@ -57,7 +57,7 @@ async function fetchLocation(location: string): Promise<void> {
 	const url = `svg/pieces/${location}.svg`;
 
 	if (!processingCache[url]) {
-		processingCache[url] = (async() => {
+		processingCache[url] = (async(): Promise<void> => {
 			try {
 				const response = await fetch(url);
 				if (!response.ok) throw new Error(`HTTP error when fetching piece svgs from location "${location}"! status: ${response.status}`);
@@ -232,7 +232,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
  * Appends all cached SVG elements directly to the document body for debugging purposes.
  * This allows visual inspection of the SVGs currently held in the cache.
  */
-function showCache() {
+function showCache(): void {
 	for (const svg of Object.values(cachedPieceSVGs)) {
 		document.body.appendChild(svg);
 	}

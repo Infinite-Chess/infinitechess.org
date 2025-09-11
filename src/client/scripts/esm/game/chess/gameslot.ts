@@ -136,7 +136,7 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-function isLoadedGameViewingWhitePerspective() {
+function isLoadedGameViewingWhitePerspective(): boolean {
 	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game.");
 	return youAreColor === players.WHITE;
 };
@@ -176,7 +176,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadOptions: LoadOptions) {
+function loadLogical(loadOptions: LoadOptions): void {
 
 	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
 
@@ -198,7 +198,7 @@ function loadLogical(loadOptions: LoadOptions) {
 }
 
 /** Loads all of the graphical components of a game */
-async function loadGraphical(loadOptions: LoadOptions) {
+async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
 	guiclock.set(loadedGamefile!.basegame);
@@ -234,7 +234,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 }
 
 /** The canvas will no longer render the current game */
-function unloadGame() {
+function unloadGame(): void {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	// console.error("Unloading gamefile...");
 	
@@ -273,7 +273,7 @@ function unloadGame() {
  * Sets the camera to the recentered position, plus a little zoomed in.
  * THEN transitions to normal zoom.
  */
-function startStartingTransition() {
+function startStartingTransition(): void {
 	const startingAreaBox = gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim);
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startingAreaBox);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
@@ -286,18 +286,18 @@ function startStartingTransition() {
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
-function initCopyPastGameListeners() {
+function initCopyPastGameListeners(): void {
 	document.addEventListener('copy', callbackCopy);
 	document.addEventListener('paste', pastegame.callbackPaste);
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
-function removeCopyPasteGameListeners() {
+function removeCopyPasteGameListeners(): void {
 	document.removeEventListener('copy', callbackCopy);
 	document.removeEventListener('paste', pastegame.callbackPaste);
 }
 
-function callbackCopy(event: Event) {
+function callbackCopy(event: Event): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	copygame.copyGame(false);
 }
@@ -306,7 +306,7 @@ function callbackCopy(event: Event) {
  * Ends the game. Call this when the game is over by the used win condition.
  * Stops the clocks, darkens the board, displays who won, plays a sound effect.
  */
-function concludeGame() {
+function concludeGame(): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
 	const basegame = loadedGamefile.basegame;
 	if (basegame.gameConclusion === undefined) throw Error("Cannot conclude game when the game hasn't ended.");
@@ -339,7 +339,7 @@ function concludeGame() {
 }
 
 /** Undoes the conclusion of the game. */
-function unConcludeGame() {
+function unConcludeGame(): void {
 	delete loadedGamefile!.basegame.gameConclusion;
 	// Delete the Result and Condition metadata
 	gamefileutility.eraseTerminationMetadata(loadedGamefile!.basegame);
