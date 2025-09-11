@@ -13,11 +13,11 @@
 
 import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
-import math from "../../util/math.js";
 import movesets from "./movesets.js";
+import vectors, { Vec2, Vec2Key } from "../../util/math/vectors.js";
+import bimath from "../../util/bigdecimal/bimath.js";
 
 import type { LineKey } from "../util/boardutil.js";
-import type { Vec2, Vec2Key } from "../../util/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";
@@ -39,9 +39,9 @@ import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../u
  */
 interface OrganizedPieces {
 	/** The X position of all pieces. Undefined pieces are set to 0. */
-	XPositions: Float64Array
+	XPositions: bigint[]
 	/** The Y position of all pieces. Undefined pieces are set to 0. */
-	YPositions: Float64Array
+	YPositions: bigint[]
 	/**
 	 * The type of all pieces. Undefined pieces retain the type of the type range they are in.
 	 * 
@@ -161,15 +161,15 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 	// console.log(`Total slots needed: ${totalSlotsNeeded}`);
 
 	// This way we save on RAM since we don't have to construct normal arrays first and transfer the data after.
-	const XPositions = new Float64Array(totalSlotsNeeded);
-	const YPositions = new Float64Array(totalSlotsNeeded);
+	const XPositions = new Array<bigint>(totalSlotsNeeded);
+	const YPositions = new Array<bigint>(totalSlotsNeeded);
 	const types = new Uint8Array(totalSlotsNeeded);
 	
 	// Initialize the organized lines
 
 	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
 	for (const line of slides) {
-		const strline = math.getKeyFromVec2(line);
+		const strline = vectors.getKeyFromVec2(line);
 		lines.set(strline, new Map());
 	}
 
@@ -281,8 +281,8 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?
 	const newSize = oldSize + totalAdditionalSlots;
 
 	// 2. Allocate new, larger arrays
-	const newXPositions = new Float64Array(newSize);
-	const newYPositions = new Float64Array(newSize);
+	const newXPositions = new Array<bigint>(newSize);
+	const newYPositions = new Array<bigint>(newSize);
 	const newTypes = new Uint8Array(newSize);
 
 	// Keep track of original types before overwriting o.types
@@ -298,8 +298,11 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?
 		// console.log(`Copying type ${typeutil.debugType(type)}: ${range.start} -> ${newStart}, ${range.end} -> ${newEnd}`);
 
 		// Copy existing data block
-		newXPositions.set(o.XPositions.subarray(range.start, range.end), newStart);
-		newYPositions.set(o.YPositions.subarray(range.start, range.end), newStart);
+		const copyLength = range.end - range.start;
+		for (let i = 0; i < copyLength; i++) {
+			newXPositions[newStart + i] = o.XPositions[range.start + i]!;
+			newYPositions[newStart + i] = o.YPositions[range.start + i]!;
+		}
 		newTypes.set(o.types.subarray(range.start, range.end), newStart);
 
 		// Update the TypeRange
@@ -355,12 +358,25 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?
 }
 
 /** Generates a position with the coordinates as the key, and the piece type as the value. */
-function generatePositionFromPieces(o: OrganizedPieces): Map<CoordsKey, number> {
+function generatePositionFromPieces({ coords, types }: OrganizedPieces): Map<CoordsKey, number> {
 	const position = new Map<CoordsKey, number>();
-	for (const [coordsKey, idx] of o.coords) {
-		position.set(coordsKey, o.types[idx]!);
+	for (const [coordsKey, idx] of coords) {
+		position.set(coordsKey, types[idx]!);
 	}
 	return position;
+}
+
+/**
+ * Generates an iterable of [coordsKey, pieceType] pairs from the given organized pieces.
+ * 
+ * More efficient than {@link generatePositionFromPieces}, as this doesn't create an intermediate map.
+ * @param {OrganizedPieces} o - The organized pieces object. Destructure the `coords` and `type` objects so the organized pieces can be garbage cleaned.
+ * @returns The piece iterator
+ */
+function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[CoordsKey, number]> {
+	for (const [coordsKey, idx] of coords) {
+		yield [coordsKey, types[idx]!];
+	}
 }
 
 
@@ -374,8 +390,8 @@ function registerPieceInSpace(idx: number, o: {
 	 * Partial<OrganizedPieces> guarantees these options MUST be present.
 	 * And doesn't require us pass in a fully-constructed organized pieces object.
 	 */
-	XPositions: Float64Array,
-	YPositions: Float64Array,
+	XPositions: bigint[],
+	YPositions: bigint[],
 	coords: Map<CoordsKey, number>,
 	lines: Map<Vec2Key, Map<LineKey, number[]>>,
 }) {
@@ -403,8 +419,8 @@ function removePieceFromSpace(idx: number, o: {
 	 * Partial<OrganizedPieces> guarantees these options MUST be present.
 	 * And doesn't require us pass in a fully-constructed organized pieces object.
 	 */
-	XPositions: Float64Array,
-	YPositions: Float64Array,
+	XPositions: bigint[],
+	YPositions: bigint[],
 	coords: Map<CoordsKey, number>,
 	lines: Map<Vec2Key, Map<LineKey, number[]>>,
 }) {
@@ -525,8 +541,8 @@ function getTypeUndefinedsBehavior(type: number, editor: boolean, promotionsAllo
 function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 	for (let i = 0; i < slidingPossible.length; i++) {
 		const thisSlideDir: Vec2 = slidingPossible[i]!;
-		if (Math.abs(thisSlideDir[0]) > 1) return true;
-		if (Math.abs(thisSlideDir[1]) > 1) return true;
+		if (bimath.abs(thisSlideDir[0]) > 1) return true;
+		if (bimath.abs(thisSlideDir[1]) > 1) return true;
 	}
 	return false;
 }
@@ -545,19 +561,19 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
  * 
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
- * @param {Vec2} step - Line step `[dx,dy]`
- * @param {Coords} coords `[x,y]` - A point the line intersects
- * @returns {String} the key `C|X`
+ * @param step - Line step `[dx,dy]`
+ * @param coords `[x,y]` - A point the line intersects
+ * @returns the key `C|X`
  */
 function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
-	const C = math.getLineCFromCoordsAndVec(coords, step);
+	const C = vectors.getLineCFromCoordsAndVec(coords, step);
 	const X = getXFromLine(step, coords);
 	return `${C}|${X}`;
 }
 
 /** Splits the `C` value out of the line key */
-function getCFromKey(lineKey: LineKey): number {
-	return Number(lineKey.split('|')[0]);
+function getCFromKey(lineKey: LineKey): bigint {
+	return BigInt(lineKey.split('|')[0]!);
 }
 
 /**
@@ -573,15 +589,15 @@ function getCFromKey(lineKey: LineKey): number {
  * @param {Coords} coords - Coordinates that are on the line
  * @returns {number} The X in the line's key: `C|X`
  */
-function getXFromLine(step: Coords, coords: Coords): number {
+function getXFromLine(step: Coords, coords: Coords): bigint {
 	// See these desmos graphs for inspiration for finding what line the coords are on:
 	// https://www.desmos.com/calculator/d0uf1sqipn
 	// https://www.desmos.com/calculator/t9wkt3kbfo
 
-	const lineIsVertical = step[0] === 0;
+	const lineIsVertical = step[0] === 0n;
 	const deltaAxis = lineIsVertical ? step[1] : step[0];
 	const coordAxis = lineIsVertical ? coords[1] : coords[0];
-	return math.posMod(coordAxis, deltaAxis);
+	return bimath.posMod(coordAxis, deltaAxis);
 }
 
 
@@ -592,6 +608,7 @@ export default {
 	processInitialPosition,
 	regenerateLists,
 	generatePositionFromPieces,
+	getPieceIterable,
 	registerPieceInSpace,
 	removePieceFromSpace,
 	getTypeUndefinedsBehavior,

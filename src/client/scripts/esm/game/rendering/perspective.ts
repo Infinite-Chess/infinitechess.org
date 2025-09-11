@@ -1,11 +1,20 @@
 
-// Import Start
+// src/client/scripts/esm/game/rendering/perspective.ts
+
+/**
+ * This script handles our perspective mode!
+ * Also rendering our crosshair
+ */
+
+// @ts-ignore
+import mat4 from './gl-matrix.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
+// @ts-ignore
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
-import camera from './camera.js';
-import statustext from '../gui/statustext.js';
-import { createModel } from './buffermodel.js';
-import mat4 from './gl-matrix.js';
+import camera, { Mat4 } from './camera.js';
+import { BufferModel, createModel } from './buffermodel.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
@@ -14,20 +23,11 @@ import gameslot from '../chess/gameslot.js';
 import docutil from '../../util/docutil.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
-// Import End
 
-/**
- * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- */
+import type { Color } from '../../util/math/math.js';
 
-"use strict";
 
-/**
- * This script handles our perspective mode!
- * Also rendering our crosshair
- */
-
+/** Whether perspective mode is enabled. */
 let enabled = false;
 
 let rotX = 0; // Positive x looks down. Min 0
@@ -44,10 +44,9 @@ const distToRenderBoard = 1500; // Default 1500. When changing this, also change
 // Crosshair
 const crosshairThickness = 2.5; // Default: 2.5
 const crosshairWidth = 18; // Default: 16.7
-const crosshairColor = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
-/** The buffer model of the mouse crosshair when in perspective mode.
- * @type {BufferModel} */
-let crosshairModel;
+const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
+/** The buffer model of the mouse crosshair when in perspective mode. */
+let crosshairModel: BufferModel;
 
 
 // Getters
@@ -56,18 +55,18 @@ function getRotX() { return rotX; }
 function getRotZ() { return rotZ; }
 function getIsViewingBlackPerspective() { return isViewingBlackPerspective; }
 
-function toggle() {
-	if (!docutil.isMouseSupported()) return statustext.showStatus(translations.rendering.perspective_mode_on_desktop);
+function toggle(): void {
+	if (!docutil.isMouseSupported()) return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
 }
 
-function enable() {
+function enable(): void {
 	if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
 	enabled = true;
 
-	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.on}`;
+	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].on}`;
 
 	guipause.callback_Resume();
 
@@ -75,10 +74,10 @@ function enable() {
 
 	initCrosshairModel();
 
-	statustext.showStatus(translations.rendering.movement_tutorial);
+	statustext.showStatus(translations['rendering'].movement_tutorial);
 }
 
-function disable() {
+function disable(): void {
 	if (!enabled) return;
 	frametracker.onVisualChange();
 
@@ -86,7 +85,7 @@ function disable() {
 	// document.exitPointerLock()
 	guipause.callback_Resume();
 
-	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
+	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].off}`;
     
 	const viewWhitePerspective = gameslot.areInGame() ? gameslot.isLoadedGameViewingWhitePerspective() : true;
 	resetRotations(viewWhitePerspective);
@@ -103,7 +102,7 @@ function resetRotations(viewWhitePerspective = true) {
 }
 
 // Called when the mouse re-clicks the screen after ALREADY in perspective.
-function relockMouse() {
+function relockMouse(): void {
 	if (!enabled) return;
 	if (isMouseLocked()) return;
 	if (guipause.areWePaused()) return;
@@ -112,13 +111,13 @@ function relockMouse() {
 	lockMouse();
 }
 
-function lockMouse() {
+function lockMouse(): void {
 	camera.canvas.requestPointerLock();
 	// Disables OS-level mouse acceleration. This does NOT solve safari being more sensitive.
 	// camera.canvas.requestPointerLock({ unadjustedMovement: true });
 }
 
-function update() {
+function update(): void {
 	if (!enabled) return;
 	// If they pushed escape, the mouse will no longer be locked
 	// If the mouse is unlocked, don't rotate view.
@@ -146,7 +145,7 @@ function update() {
 }
 
 // Applies perspective rotation to default camera viewMatrix
-function applyRotations(viewMatrix) {
+function applyRotations(viewMatrix: Mat4): void {
 	if (haveZeroRotation()) return; // No perspective rotation
 
 	const cameraPos = camera.getPosition(); // devMode-sensitive
@@ -168,33 +167,30 @@ function applyRotations(viewMatrix) {
 	mat4.translate(viewMatrix, viewMatrix, negativeCameraPos);
 }
 
-// Returns true if we have no perspective rotation
-function haveZeroRotation() {
+/** Returns true if we have no perspective rotation */
+function haveZeroRotation(): boolean {
 	return rotX === 0 && rotZ === 0;
 }
 
-/**
- * Returns *true* if we're looking above the horizon.
- * @returns {boolean}
- */
-function isLookingUp() { return enabled && rotX <= -90; }
+/** Returns *true* if we're looking above the horizon. */
+function isLookingUp(): boolean {
+	return enabled && rotX <= -90;
+}
 
 // Makes sure we don't go upside-down
-function capRotations() {
+function capRotations(): void {
 	if (rotX > 0) rotX = 0;
 	else if (rotX < -180) rotX = -180;
 	if (rotZ < 0) rotZ += 360;
 	else if (rotZ > 360) rotZ -= 360;
 }
 
-function isMouseLocked() {
-	return document.pointerLockElement === camera.canvas
-        || document.mozPointerLockElement === camera.canvas
-        || document.webkitPointerLockElement === camera.canvas;
+function isMouseLocked(): boolean {
+	return document.pointerLockElement === camera.canvas;
 }
 
 // Buffer model of crosshair. Called whenever perspective is enabled, screen is resized, or devMode is toggled.
-function initCrosshairModel() {
+function initCrosshairModel(): void {
 	if (!enabled) return;
 
 	const screenHeight = camera.getScreenHeightWorld();
@@ -253,7 +249,7 @@ function initCrosshairModel() {
 	crosshairModel = createModel(data, 2, "TRIANGLES", true); 
 }
 
-function renderCrosshair() {
+function renderCrosshair(): void {
 	if (!enabled) return;
 	if (config.VIDEO_MODE) return; // Don't render while recording
 
@@ -268,14 +264,18 @@ function renderCrosshair() {
 }
 
 // Used when the promotion UI opens
-function unlockMouse() {
+function unlockMouse(): void {
 	if (!enabled) return;
 	document.exitPointerLock();
 }
 
-function updateIsViewingBlackPerspective() {
+function updateIsViewingBlackPerspective(): void {
 	isViewingBlackPerspective = rotZ > 90 && rotZ < 270;
 }
+
+
+// Exports -----------------------------------------------------------------------
+
 
 export default {
 	getEnabled,

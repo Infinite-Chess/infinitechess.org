@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/buffermodel.ts
+
 /**
  * This script contains all the functions used to generate renderable buffer models of the
  * game objects that the shader programs can use. It receives the object's vertex data to do so,
@@ -9,33 +11,41 @@
  */
 
 
-import type { Vec3 } from '../../util/math.js';
 import type { ShaderProgram } from './shaders.js';
+import type { Vec3 } from '../../util/math/vectors.js';
 
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import shaders from './shaders.js';
-// @ts-ignore
+import camera from './camera.js';
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
-// @ts-ignore
-import camera from './camera.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
 
 
-/** Any kind of array, whether number[], or typed array, that may be passed to use as vertex data for a model. */
-type InputArray =
-	number[] // Converted to Float32Array, coming from float64s, with max safe integer: 9,007,199,254,740,991    Max value: 1.8e+308
-	| TypedArray
+/**
+ * Any kind of array that may be passed to the constructors
+ * to be used as vertex or instance data for a buffer model.
+ * 
+ * Each of these are subsequently converted into aFloat32Array,
+ * which have a max safe integer of 16,777,215 (16 million),
+ * and a max value of 3.4e38. so beware of precision loss!
+ * 
+ * number[] => Double precision (64-bit). Max safe integer of 9,007,199,254,740,991 (9 quadrillion). Max value of 1.8e+308.
+ */
+type InputArray = number[] | TypedArray;
 
-/** All signed type arrays compatible with WebGL, that can be used as vertex data. */
-type TypedArray =
-	Float32Array // Max safe integer: 16,777,215    Max value: 3.4e+38
-	| Int8Array // Max integer: 127
-	| Int16Array // Max integer: 32,767
-	| Int32Array; // Max integer: 2,147,483,647
+/**
+ * All signed type arrays compatible with WebGL, that can be used as vertex data.
+ * 
+ * Float32Array => Max safe integer: 16,777,215. Max value: 3.4e+38
+ * Int32Array => Max integer: 2,147,483,647
+ * Int16Array => Max integer: 32,767
+ * Int8Array => Max integer: 127
+ */
+type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
 /** All valid primitive shapes we can render with */
 type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES';
@@ -75,11 +85,11 @@ interface BaseBufferModel {
      */
 	render: (
 		// eslint-disable-next-line no-unused-vars
-		position?: [number, number, number],
+		position?: Vec3,
 		// eslint-disable-next-line no-unused-vars
-		scale?: [number, number, number],
+		scale?: Vec3,
 		// eslint-disable-next-line no-unused-vars
-		uniforms?: { [uniform: string]: any }
+		uniforms?: { [uniform: string]: number }
 	) => void
 }
 
@@ -222,8 +232,8 @@ function createModel_GivenAttribInfo(
 			changedIndicesCount: number
 		) => updateBufferIndices(buffer, data, changedIndicesStart, changedIndicesCount),
 		render: (
-			position: [number, number, number] = [0, 0, 0],
-			scale: [number, number, number] = [1, 1, 1],
+			position: Vec3 = [0, 0, 0],
+			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
 		) => render(buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
 	};
@@ -269,8 +279,8 @@ function createModel_Instanced_GivenAttribInfo(
 			changedIndicesCount: number
 		) => updateBufferIndices(instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount),
 		render: (
-			position: [number, number, number] = [0, 0, 0],
-			scale: [number, number, number] = [1, 1, 1],
+			position: Vec3 = [0, 0, 0],
+			scale: Vec3 = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
 		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};
@@ -436,12 +446,12 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
 
 	for (const attrib of attribInfo) {
 		// Tell WebGL how to pull out the values from the vertex data and into the attribute in the shader code...
-		gl.vertexAttribPointer(shader.attribLocations[attrib.name], attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
-		gl.enableVertexAttribArray(shader.attribLocations[attrib.name]); // Enable the attribute for use
+		gl.vertexAttribPointer(shader.attribLocations[attrib.name]!, attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
+		gl.enableVertexAttribArray(shader.attribLocations[attrib.name]!); // Enable the attribute for use
 		// Be sure to set this every time, even if it's to 0!
 		// If another shader set the same attribute index to be
 		// used for instanced rendering, it would otherwise never be reset!
-		gl.vertexAttribDivisor(shader.attribLocations[attrib.name], vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
+		gl.vertexAttribDivisor(shader.attribLocations[attrib.name]!, vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
 
 		// Adjust our offset for the next attribute
 		currentOffsetBytes += attrib.numComponents * BYTES_PER_ELEMENT;
@@ -484,7 +494,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
 		
 		// Send the transformMatrix to the gpu (every shader has this uniform)
-		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix'], false, transformMatrix);
+		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix']!, false, transformMatrix);
 	}
 
 	if (texture) {
@@ -493,14 +503,14 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		// Tell the gpu we bound the texture to texture unit 0
-		gl.uniform1i(shader.uniformLocations['uSampler'], 0);
+		gl.uniform1i(shader.uniformLocations['uSampler']!, 0);
 	}
 
 	// Custom uniforms provided in the render call, for example 'tintColor'...
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
-		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name], value);
-		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name], value);
+		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name]!, value);
+		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name]!, value);
 		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
 	}
 }

@@ -15,6 +15,7 @@ import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
 import icncommentutils, { CommandObject } from "./icncommentutils.js";
+import bimath from "../../../util/bigdecimal/bimath.js";
 
 
 // @ts-ignore
@@ -569,8 +570,8 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	// En passant
 	if (longformat.state_global.enpassant) {
 		// Only add it SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
-		const yDistance = Math.abs(longformat.state_global.enpassant.square[1] - longformat.state_global.enpassant.pawn[1]);
-		if (yDistance === 1) positionSegments.push(coordutil.getKeyFromCoords(longformat.state_global.enpassant.square)); // '1,3'
+		const yDistance = bimath.abs(longformat.state_global.enpassant.square[1] - longformat.state_global.enpassant.pawn[1]);
+		if (yDistance === 1n) positionSegments.push(coordutil.getKeyFromCoords(longformat.state_global.enpassant.square)); // '1,3'
 		else console.warn("Enpassant distance is more than 1 square, not specifying it in the ICN. Enpassant:", longformat.state_global.enpassant);
 	}
 
@@ -716,7 +717,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let moveRule: number | undefined;
 	let moveRuleState: number | undefined;
 	let fullMove: number; // Required
-	let promotionRanks: PlayerGroup<number[]> | undefined;
+	let promotionRanks: PlayerGroup<bigint[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
 	let presetSquares: Coords[] | undefined;
@@ -806,7 +807,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 		const coords = coordutil.getCoordsFromKey(enpassantString);
 		const lastTurn = turnOrder[turnOrder.length - 1];
-		const yParity = lastTurn === p.WHITE ? 1 : lastTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid last turn (${lastTurn}) when parsing enpassant in ICN!`); })();
+		const yParity = lastTurn === p.WHITE ? 1n : lastTurn === p.BLACK ? -1n : (() => { throw new Error(`Invalid last turn (${lastTurn}) when parsing enpassant in ICN!`); })();
 		enpassant = { square: coords, pawn: [coords[0], coords[1] + yParity] };
 
 		lastIndex = enpassantRegex.lastIndex; // Update the ICN index being observed
@@ -862,7 +863,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			promotionRanks[player] = []; // Initialize empty
 			if (playerPromotions === '') continue; // Player has no promotions. Maybe promotions were "(8|)"
 			const [ranks, allowed] = playerPromotions.split(';'); // The allowed section is optional
-			promotionRanks[player] = ranks!.split(',').map(Number);
+			promotionRanks[player] = ranks!.split(',').map(BigInt);
 			promotionsAllowed[player] = allowed ? allowed.split(',').map(raw => Number(piece_codes_raw_inverted[raw.toLowerCase()]) as RawType) : jsutil.deepCopyObject(default_promotions);
 		}
 
@@ -1189,11 +1190,6 @@ function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMo
 	const startCoords = coordutil.getCoordsFromKey(startCoordsKey);
 	const endCoords = coordutil.getCoordsFromKey(endCoordsKey);
 
-	// Make sure neither coords are Infinity
-	if (!isFinite(startCoords[0]) || !isFinite(startCoords[1]) || !isFinite(endCoords[0]) || !isFinite(endCoords[1])) {
-		throw Error(`Move coordinate must not be Infinite. ${JSON.stringify(capturedGroups)}`);
-	}
-
 	const parsedMove: _Move_Out = {
 		startCoords,
 		endCoords,
@@ -1324,15 +1320,17 @@ function parseShortFormMoves(shortformMoves: string): _Move_Out[] {
 
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param position - The starting position of the gamefile, in the form 'x,y': number
- * @param specialRights - Optional. The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @param position - A piece iterator giving us each piece's coordsKey and pieceType.
+ * 					 Using an iterable (which a Map<CoordsKey, number> also is considered a valid input) allows
+ * 					 optimization elsewhere in the code, allowing us to avoid creating massive intermediate maps.
+ * @param specialRights - The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
  * @returns The position of the game in compressed form, where each piece with a + has its special move ability (.e.g., "P5,6+|k15,-56|Q5000,1")
  */
-function getShortFormPosition(position: Map<CoordsKey, number>, specialRights: Set<CoordsKey>): string {
+function getShortFormPosition(position: Iterable<[CoordsKey, number]>, specialRights: Set<CoordsKey>): string {
 	const pieces: string[] = []; // ['P1,2+','P2,2+', ...]
 	for (const [coordsKey, type] of position) {
 		const pieceAbbr = getAbbrFromType(type);
-		const specialRightsString = specialRights.has(coordsKey as CoordsKey) ? '+' : '';
+		const specialRightsString = specialRights.has(coordsKey) ? '+' : '';
 		pieces.push(pieceAbbr + coordsKey + specialRightsString);
 	}
 	// Using join avoids overhead of repeatedly creating and copying large intermediate strings.
@@ -1382,7 +1380,7 @@ function generateSpecialRights(position: Map<CoordsKey, number>, pawnDoublePush:
 			const kingCoords = coordutil.getCoordsFromKey(kingCoord as CoordsKey); // [x,y]
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
 			if (castleWithsFound[coord as CoordsKey] !== kingsFound[kingCoord as CoordsKey]) continue; // Their players don't match
-			const xDist = Math.abs(coords[0] - kingCoords[0]);
+			const xDist = bimath.abs(coords[0] - kingCoords[0]);
 			if (xDist < 3) continue; // Not at least 3 squares away
 			specialRights.add(coord as CoordsKey); // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
@@ -1436,11 +1434,6 @@ function parsePresetSquares(presetSquares: string): Coords[] {
 	const coordsKeys = presetSquares.split('|') as CoordsKey[];
 	const squares: Coords[] = coordsKeys.map(coordutil.getCoordsFromKey);
 
-	squares.forEach(s => {
-		// Make sure it's not Infinity
-		if (!isFinite(s[0]) || !isFinite(s[1])) throw Error(`Square must not be Infinite. ${JSON.stringify(s)}`);
-	});
-
 	// console.log("Parsed squares:", squares);
 
 	return squares;
@@ -1458,11 +1451,6 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 		const start = coordutil.getCoordsFromKey(startCoordsKey as CoordsKey);
 		const vector = coordutil.getCoordsFromKey(vec2Key as CoordsKey);
 
-		// Make sure neither are Infinity
-		if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
-			throw Error(`Ray start/vector must not be Infinite. ${sr}`);
-		}
-
 		return { start, vector };
 	});
 
@@ -1479,7 +1467,6 @@ export default {
 	LongToShort_Format,
 	ShortToLong_Format,
 
-	getAbbrFromType,
 	getTypeFromAbbr,
 	getCompactMoveFromDraft,
 

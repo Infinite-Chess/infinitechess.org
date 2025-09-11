@@ -1,6 +1,6 @@
 
 import moveutil from "../../chess/util/moveutil.js";
-import sound from "../misc/sound.js";
+import gamesound from "../misc/gamesound.js";
 import clockutil from "../../chess/util/clockutil.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import { players } from "../../chess/util/typeutil.js";
@@ -9,7 +9,6 @@ import clock from "../../chess/logic/clock.js";
 import type { SoundObject } from "../misc/sound.js";
 import type { Player, PlayerGroup } from "../../chess/util/typeutil.js";
 import type { Game } from "../../chess/logic/gamefile.js";
-
 import type { ClockData } from "../../chess/logic/clock.js";
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
@@ -231,7 +230,7 @@ function scheduleMinuteTick(clocks: ClockData) {
 	lowtimeNotif.timeoutID = setTimeout(() => playMinuteTick(clocks.colorTicking!), timeRemain);}
 
 function playMinuteTick(color: Player) {
-	sound.playSound_tick({ volume: 0.07 });
+	gamesound.playTick({ volume: 0.07 });
 	lowtimeNotif.playersNotified.add(color);
 }
 
@@ -304,7 +303,7 @@ function scheduleTick(clocks: ClockData) {
 
 function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number) {
 	if (secsRemaining === undefined) return console.error("Cannot play drum without secsRemaining");
-	sound.playSound_drum();
+	gamesound.playDrum();
 
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
@@ -320,11 +319,11 @@ function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number) {
 }
 
 function playTickingEffect(offset: number) {
-	countdown.ticking.sound = sound.playSound_ticking({ fadeInDuration: countdown.ticking.fadeInDuration, offset });
+	countdown.ticking.sound = gamesound.playTicking({ fadeInDuration: countdown.ticking.fadeInDuration, offset });
 }
 
 function playTickEffect(offset: number) {
-	countdown.tick.sound = sound.playSound_tick({ volume: 0.07, fadeInDuration: countdown.tick.fadeInDuration, offset });
+	countdown.tick.sound = gamesound.playTick({ volume: 0.07, fadeInDuration: countdown.tick.fadeInDuration, offset });
 }
 
 export default {

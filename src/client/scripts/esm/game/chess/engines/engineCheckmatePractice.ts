@@ -9,7 +9,6 @@
 
 // @ts-ignore
 import isprime from '../../../util/isprime.js';
-// @ts-ignore
 import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
 import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/util/typeutil.js';
 import organizedpieces from '../../../chess/logic/organizedpieces.js';
@@ -20,13 +19,11 @@ import jsutil from '../../../util/jsutil.js';
  */
 import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
 import type { MoveDraft } from "../../../chess/logic/movepiece";
-import type { Coords, CoordsKey } from "../../../chess/util/coordutil";
-import type { Vec2 } from "../../../util/math";
+import type { Coords, CoordsKey, DoubleCoords } from "../../../chess/util/coordutil";
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
 // type Coords = import("../../chess/util/coordutil").Coords;
-// type Vec2 = import("../../util/math").Vec2;
 
 
 
@@ -78,19 +75,19 @@ let checkmateSelectedID: string;
 // The informtion that is currently considered best by this engine
 let globallyBestScore: number;
 let globalSurvivalPlies: number;
-let globallyBestVariation: { [key: number]: [number, Coords] };
+let globallyBestVariation: { [key: number]: [number, DoubleCoords] };
 // e.g. { 0: [NaN, [1,0]], 1: [3,[2,4]], 2: [NaN, [-1,1]], 3: [2, [5,6]], ... } = { 0: black move, 1: white piece index & move, 2: black move, ... }
 
 // the real coordinates of the black royal piece in the gamefile
-let gamefile_royal_coords: Coords;
+let gamefile_royal_coords: DoubleCoords;
 
 // Black royal piece properties. The black royal piece is always at square [0,0]
-const king_moves: Coords[] = [ 
+const king_moves: DoubleCoords[] = [ 
 	[-1,  1], [0,  1], [1,  1],
 	[-1,  0],          [1,  0],
 	[-1, -1], [0, -1], [1, -1],
 ];
-const centaur_moves: Coords[] = [ 
+const centaur_moves: DoubleCoords[] = [ 
 			  [-1,  2],          [1,  2],
 	[-2,  1], [-1,  1], [0,  1], [1,  1], [2,  1],
 			  [-1,  0],          [1,  0],
@@ -98,12 +95,12 @@ const centaur_moves: Coords[] = [
 			  [-1, -2],          [1, -2]
 ];
 
-let royal_moves: Coords[]; // king_moves or centaur_moves
+let royal_moves: DoubleCoords[]; // king_moves or centaur_moves
 let royal_type: 'k' | 'rc'; // "k" or "rc"
 
 // White pieces. Their coordinates are relative to the black royal
 let start_piecelist: number[]; // list of white pieces in starting position, like [3,4,4,4,2, ... ]. Meaning of numbers given by pieceNameDictionary
-let start_coordlist: Coords[]; // list of tuples, like [[2,3], [5,6], [6,7], ...], pieces are corresponding to ordering in start_piecelist
+let start_coordlist: DoubleCoords[]; // list of tuples, like [[2,3], [5,6], [6,7], ...], pieces are corresponding to ordering in start_piecelist
 
 // only used for parsing in the position
 const pieceNameDictionary: { [pieceType: number]: number } = {
@@ -133,7 +130,7 @@ function invertPieceNameDictionary(json: { [key: string]: number }) {
 const invertedPieceNameDictionaty = invertPieceNameDictionary(pieceNameDictionary);
 
 // legal move storage for pieces in piecelist
-const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean, is_huygen?: boolean } } = {
+const pieceTypeDictionary: { [key: number]: { rides?: DoubleCoords[], jumps?: DoubleCoords[], is_royal?: boolean, is_pawn?: boolean, is_huygen?: boolean } } = {
 	0: {}, // 0 corresponds to a captured piece
 	1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
 	2: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]]}, // rook
@@ -169,10 +166,10 @@ const shortRangeJumpDictionary: { [key: number]: number } = {
 // weights for the evaluation function
 let pieceExistenceEvalDictionary: { [key: number]: number };
 // eslint-disable-next-line no-unused-vars
-let distancesEvalDictionary: { [key: number]: [number, (square: Coords) => number][] };
+let distancesEvalDictionary: { [key: number]: [number, (square: DoubleCoords) => number][] };
 let legalMoveEvalDictionary: { [key: number]: { [key: number]: number } };
 // eslint-disable-next-line no-unused-vars
-let centerOfMassEvalDictionary: { [key: string]: [number, number, number, (square: Coords) => number][] };
+let centerOfMassEvalDictionary: { [key: string]: [number, number, number, (square: DoubleCoords) => number][] };
 
 // number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
 let wiggleroomDictionary: { [key: number]: number };
@@ -198,7 +195,7 @@ let maxDistanceForProtector: number;
 let protectedRiderFleeDictionary: { [key: string]: [number, number, number] };
 
 // bestMoveList stores the best black response for very specific positions in some variants
-let bestMoveList: {bestMove: Coords, piecelist: number[], coordlist: Coords[]}[] = [];
+let bestMoveList: {bestMove: DoubleCoords, piecelist: number[], coordlist: DoubleCoords[]}[] = [];
 
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
@@ -541,47 +538,47 @@ function initEvalWeightsAndSearchProperties() {
 }
 
 // computes the 2-norm of a square
-function diagonalNorm(square: Coords): number {
+function diagonalNorm(square: DoubleCoords): number {
 	return Math.sqrt(square[0] ** 2 + square[1] ** 2);
 }
 
 // computes the squared 2-norm of a square
-function diagonalNormSquared(square: Coords): number {
+function diagonalNormSquared(square: DoubleCoords): number {
 	return square[0] ** 2 + square[1] ** 2;
 }
 
 // computes the manhattan norm of a square
-function manhattanNorm(square: Coords): number {
+function manhattanNorm(square: DoubleCoords): number {
 	return Math.abs(square[0]) + Math.abs(square[1]);
 }
 
 // computes the manhattan distance of two squares
-function manhattanDistance(square1: Coords, square2: Coords): number {
+function manhattanDistance(square1: DoubleCoords, square2: DoubleCoords): number {
 	return Math.abs(square1[0] - square2[0]) + Math.abs(square1[1] - square2[1]);
 }
 
 // special norm = manhattan + diagonal
-function specialNorm(square: Coords): number {
+function specialNorm(square: DoubleCoords): number {
 	return diagonalNorm(square) + manhattanNorm(square);
 }
 
 // pawn norm: gives slight malus for black king being near and above the pawn. Also gives malus for black king being above white pawn everywhere
-function pawnNorm(square: Coords): number {
+function pawnNorm(square: DoubleCoords): number {
 	const prefactor = square[1] < 0 && manhattanNorm(square) < 5 ? 1 : 6;
 	return prefactor * (0.5 * diagonalNorm(square) + 1.5 * manhattanNorm(square) + 0.5 * square[1]);
 }
 
 // special norm, which gives a massive malus to the piece being near the black king for black
-function vincinityNorm(square: Coords): number {
+function vincinityNorm(square: DoubleCoords): number {
 	const diagnormsquared = diagonalNormSquared(square);
 	const penalty = diagnormsquared < 3 ? -16 : ( diagnormsquared < 9 ? -8 : (diagnormsquared < 19 ? -4 : 0));
 	return manhattanNorm(square) + penalty;
 }
 
 // center of mass of all white pieces near the black king
-function get_center_of_mass(piece_type: number, cutoff: number, piecelist: number[], coordlist: Coords[]) {
+function get_center_of_mass(piece_type: number, cutoff: number, piecelist: number[], coordlist: DoubleCoords[]) {
 	let numpieces: number = 0;
-	let center: Coords = [0,0];
+	let center: DoubleCoords = [0,0];
 	for (let i = 0; i < piecelist.length; i++) {
 		if (piecelist[i] === piece_type && manhattanNorm(coordlist[i]!) <= cutoff) {
 			center = add_move(center, coordlist[i]!);
@@ -598,7 +595,7 @@ function get_center_of_mass(piece_type: number, cutoff: number, piecelist: numbe
  * @param direction - vector like [1,2]
  * @returns like [boolean, scalar multiple factor]
  */
-function is_natural_multiple(v: Vec2, direction: Vec2): [boolean, number] {
+function is_natural_multiple(v: DoubleCoords, direction: DoubleCoords): [boolean, number] {
 	let scalar: number;
 	if (direction[0] !== 0) scalar = v[0] / direction[0];
 	else scalar = v[1] / direction[1];
@@ -610,7 +607,7 @@ function is_natural_multiple(v: Vec2, direction: Vec2): [boolean, number] {
 // exclude_white_piece_squares specifies whether to exclude occupied squares from being threatened
 // ignore_blockers specifies whether to completely ignore blocking pieces in piecelist&coordlist
 // threatening_own_square specifies whether a piece can threaten its own square
-function rider_threatens(direction: Vec2, piece_square: Coords, target_square: Coords, is_huygen: boolean, piecelist: number[], coordlist: Coords[],
+function rider_threatens(direction: DoubleCoords, piece_square: DoubleCoords, target_square: DoubleCoords, is_huygen: boolean, piecelist: number[], coordlist: DoubleCoords[],
 	{ exclude_white_piece_squares = false, ignore_blockers = false, threatening_own_square = false} = {}): boolean {
 	if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
 	const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
@@ -631,37 +628,37 @@ function rider_threatens(direction: Vec2, piece_square: Coords, target_square: C
 }
 
 // adds two squares
-function add_move(square: Coords, v: Vec2): Coords {
+function add_move(square: DoubleCoords, v: DoubleCoords): DoubleCoords {
 	return [square[0] + v[0], square[1] + v[1]];
 }
 
 // stretches vector by scalar
-function rescaleVector(scalar: number, v: Vec2): Vec2 {
+function rescaleVector(scalar: number, v: DoubleCoords): DoubleCoords {
 	return [scalar * v[0], scalar * v[1]];
 }
 
 // computes the cross product of two vectors
-function crossProduct(v1: Vec2, v2: Vec2): number {
+function crossProduct(v1: DoubleCoords, v2: DoubleCoords): number {
 	return v1[0] * v2[1] - v1[1] * v2[0];
 }
 
 // checks if two squares are equal
-function squares_are_equal(square_1: Coords, square_2: Coords): boolean {
+function squares_are_equal(square_1: DoubleCoords, square_2: DoubleCoords): boolean {
 	return (square_1[0] === square_2[0]) && (square_1[1] === square_2[1]);
 }
 
 // checks if a list of squares contains a given square
-function tuplelist_contains_tuple(tuplelist: Coords[], tuple: Coords): boolean {
+function tuplelist_contains_tuple(tuplelist: DoubleCoords[], tuple: DoubleCoords): boolean {
 	return tuplelist.some((entry) => squares_are_equal(entry, tuple));
 }
 
 // checks if a square is occupied by a white piece
-function square_is_occupied(square: Coords, piecelist: number[], coordlist: Coords[]): boolean {
+function square_is_occupied(square: DoubleCoords, piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	return coordlist.some((entry, index) => piecelist[index] !== 0 && squares_are_equal(entry, square));
 }
 
 // checks if a white piece at index piece_index in the piecelist&coordlist threatens a given square
-function piece_threatens_square(piece_index: number, target_square: Coords, piecelist: number[], coordlist: Coords[]): boolean {
+function piece_threatens_square(piece_index: number, target_square: DoubleCoords, piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	const piece_type = piecelist[piece_index]!;
 
 	// piece no longer exists
@@ -696,7 +693,7 @@ function piece_threatens_square(piece_index: number, target_square: Coords, piec
 }
 
 // checks if any white piece threatens a given square
-function square_is_threatened(target_square: Coords, piecelist: number[], coordlist: Coords[]): boolean {
+function square_is_threatened(target_square: DoubleCoords, piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	for (let index = 0; index < coordlist.length; index++) {
 		if (piece_threatens_square(index, target_square, piecelist, coordlist)) return true;
 	}
@@ -706,7 +703,7 @@ function square_is_threatened(target_square: Coords, piecelist: number[], coordl
 /**
  * Computes an array of all the squares that the black royal can legally move to in the given position
  */
-function get_black_legal_moves(inTrapFleeMode: boolean, piecelist: number[], coordlist: Coords[]): Coords[] {
+function get_black_legal_moves(inTrapFleeMode: boolean, piecelist: number[], coordlist: DoubleCoords[]): DoubleCoords[] {
 	// If black is in flee mode, he cannot capture white pieces
 	return royal_moves.filter((square) => !square_is_threatened(square, piecelist, coordlist) && !(inTrapFleeMode && square_is_occupied(square, piecelist, coordlist)) );
 }
@@ -714,12 +711,12 @@ function get_black_legal_moves(inTrapFleeMode: boolean, piecelist: number[], coo
 /**
  * Computes the number of squares that the black royal can legally move to in the given position
  */
-function get_black_legal_move_amount(inTrapFleeMode: boolean, piecelist: number[], coordlist: Coords[]): number {
+function get_black_legal_move_amount(inTrapFleeMode: boolean, piecelist: number[], coordlist: DoubleCoords[]): number {
 	return get_black_legal_moves(inTrapFleeMode, piecelist, coordlist).length;
 }
 
 // checks if the black royal is in check
-function is_check(piecelist: number[], coordlist: Coords[]): boolean {
+function is_check(piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	return square_is_threatened([0, 0], piecelist, coordlist);
 }
 
@@ -740,7 +737,7 @@ function is_stalemate(inTrapFleeMode, piecelist, coordlist) {
 */
 
 // determine if black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
-function isBlackInTrap(piecelist: number[], coordlist: Coords[]) {
+function isBlackInTrap(piecelist: number[], coordlist: DoubleCoords[]) {
 	let nearbyNonroyalWhites = 0;
 	for (let i = 0; i < piecelist.length; i++) {
 		if (piecelist[i]! !== 0 && manhattanNorm(coordlist[i]!) <= maxDistanceForTrap) {
@@ -754,7 +751,7 @@ function isBlackInTrap(piecelist: number[], coordlist: Coords[]) {
 }
 
 // determine if black is near specified protected rider
-function isBlackNearProtectedRider(piecelist: number[], coordlist: Coords[]) {
+function isBlackNearProtectedRider(piecelist: number[], coordlist: DoubleCoords[]) {
 	for (let i = 0; i < piecelist.length; i++) {
 		if (piecelist[i] === riderTypeToFleeFrom) {
 			if (manhattanNorm(coordlist[i]!) <= maxDistanceForRider) {
@@ -772,8 +769,8 @@ function isBlackNearProtectedRider(piecelist: number[], coordlist: Coords[]) {
 }
 
 // calculate a list of interesting squares to move to for a white piece with a certain piece index
-function get_white_piece_candidate_squares(piece_index: number, piecelist: number[], coordlist: Coords[]): Coords[] {
-	const candidate_squares: Coords[] = [];
+function get_white_piece_candidate_squares(piece_index: number, piecelist: number[], coordlist: DoubleCoords[]): DoubleCoords[] {
+	const candidate_squares: DoubleCoords[] = [];
 
 	const piece_type = piecelist[piece_index]!;
 
@@ -790,7 +787,7 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 	if (piece_properties.jumps) {
 		const num_jumps = piece_properties.jumps.length;
 		const shortrangeLimit = shortRangeJumpDictionary[piece_type]!;
-		let best_target_square: Coords;
+		let best_target_square: DoubleCoords;
 		let bestmove_distance = Infinity;
 		let bestmove_diagSquaredNorm = Infinity;
 		for (let move_index = 0; move_index < num_jumps; move_index++) {
@@ -873,8 +870,8 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 
 // adds suitable squares along v1 to the candidates list, using v2 as the attack vector towards the king
 function add_suitable_squares_to_candidate_list(
-	candidate_squares: Coords[], piece_index: number, piece_square: Coords, v1: Vec2, v2: Vec2,
-	c1_min: number, c1_max: number, c2_min: number, c2_max: number, piecelist: number[], coordlist: Coords[]
+	candidate_squares: DoubleCoords[], piece_index: number, piece_square: DoubleCoords, v1: DoubleCoords, v2: DoubleCoords,
+	c1_min: number, c1_max: number, c2_min: number, c2_max: number, piecelist: number[], coordlist: DoubleCoords[]
 ) {
 	// iterate through all candidate squares in v1 direction
 	candidates_loop:
@@ -942,8 +939,8 @@ function add_suitable_squares_to_candidate_list(
 
 // calculate a list of interesting moves for the white pieces in the position given by piecelist&coordlist
 // if inProtectedRiderFleeMode, then moves by pieces with type riderTypeToFleeFrom are not considered
-function get_white_candidate_moves(inProtectedRiderFleeMode: boolean, piecelist: number[], coordlist: Coords[]): Coords[][] {
-	const candidate_moves: Coords[][] = [];
+function get_white_candidate_moves(inProtectedRiderFleeMode: boolean, piecelist: number[], coordlist: DoubleCoords[]): DoubleCoords[][] {
+	const candidate_moves: DoubleCoords[][] = [];
 	for (let piece_index = 0; piece_index < piecelist.length; piece_index++) {
 		if (inProtectedRiderFleeMode && riderTypeToFleeFrom === piecelist[piece_index]) candidate_moves.push([]);
 		else candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist));
@@ -954,9 +951,9 @@ function get_white_candidate_moves(inProtectedRiderFleeMode: boolean, piecelist:
 /**
  * Updates the position by moving the piece given by piece_index to target_square
  */
-function make_white_move(piece_index: number, target_square: Coords, piecelist: number[], coordlist: Coords[]): [number[], Coords[]] {
+function make_white_move(piece_index: number, target_square: DoubleCoords, piecelist: number[], coordlist: DoubleCoords[]): [number[], DoubleCoords[]] {
 	const new_piecelist = piecelist.map(a => {return a;});
-	const new_coordlist = coordlist.map(a => {return [...a];}) as Coords[];
+	const new_coordlist = coordlist.map(a => {return [...a];}) as DoubleCoords[];
 	new_coordlist[piece_index] = target_square;
 
 	return [new_piecelist, new_coordlist];
@@ -965,9 +962,9 @@ function make_white_move(piece_index: number, target_square: Coords, piecelist: 
 /**
  * Given a direction that the black royal moves to, this shifts all white pieces relative to [0,0] and returns an updated piecelist&coordlist
  */
-function make_black_move(move: Coords, piecelist: number[], coordlist: Coords[]): [number[], Coords[]] {
+function make_black_move(move: DoubleCoords, piecelist: number[], coordlist: DoubleCoords[]): [number[], DoubleCoords[]] {
 	const new_piecelist: number[] = [];
-	const new_coordlist: Coords[] = [];
+	const new_coordlist: DoubleCoords[] = [];
 	for (let i = 0; i < piecelist.length; i++) {
 		if (move[0]! === coordlist[i]![0]! && move[1]! === coordlist[i]![1]!) {
 			// white piece is captured
@@ -993,7 +990,7 @@ function make_black_move(move: Coords, piecelist: number[], coordlist: Coords[])
  * @param {Boolean} inProtectedRiderFleeMode - whether black is in protected rider flee mode -> leads to higher scores, if true
  * @returns {Number}
  */
-function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean): number {
+function get_position_evaluation(piecelist: number[], coordlist: DoubleCoords[], black_to_move: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean): number {
 	let score = 0;
 
 	// add penalty based on number of legal moves of black royal
@@ -1036,7 +1033,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
  * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search beyond the first white node
  * @param {Boolean} inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
- * @param {Coords[]} black_killer_list - list of black killer moves that is being maintained when white to move
+ * @param {DoubleCoords[]} black_killer_list - list of black killer moves that is being maintained when white to move
  * @param {Number[]} white_killer_list - list white killer pieces that is being maintained when black to move
  * @param {Number} alpha 
  * @param {Number} beta 
@@ -1044,7 +1041,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, black_killer_list: Coords[], white_killer_list: Number[], alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, black_killer_move?: Coords, white_killer_piece_index?: Number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: DoubleCoords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, black_killer_list: DoubleCoords[], white_killer_list: Number[], alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, DoubleCoords] }, survivalPlies: number, black_killer_move?: DoubleCoords, white_killer_piece_index?: Number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
@@ -1057,13 +1054,13 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode && start_depth - depth > 1, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
 	}
 
-	let bestVariation: { [key: number]: [number, Coords] } = {};
+	let bestVariation: { [key: number]: [number, DoubleCoords] } = {};
 	
 	// Black to move
 	if (black_to_move) {
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
-		let black_killer_move: Coords | undefined = undefined;
+		let black_killer_move: DoubleCoords | undefined = undefined;
 		let black_moves = get_black_legal_moves(inTrapFleeMode && start_depth - depth > 1, piecelist, coordlist);
 
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
@@ -1090,8 +1087,8 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 
 		// Use killer move heuristic, i.e. put moves in black_killer_list in front
 		if (black_killer_list.length > 0) {
-			const reordered_moves_killers: Coords[] = [];
-			const reordered_moves_nonkillers: Coords[] = [];
+			const reordered_moves_killers: DoubleCoords[] = [];
+			const reordered_moves_nonkillers: DoubleCoords[] = [];
 			for (const move of black_moves) {
 				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_moves_killers.push(move); // Add killer moves to the first list
 				else reordered_moves_nonkillers.push(move); // Add non-killer moves to second list
@@ -1154,7 +1151,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let minScore = Infinity;
 		let minPlies = Infinity;
 		let white_killer_piece_index: Number | undefined = undefined;
-		let candidate_moves: Coords[][];
+		let candidate_moves: DoubleCoords[][];
 
 		if (inTrapFleeMode && start_depth - depth > 1) candidate_moves = [[coordlist[0]], ...Array(piecelist.length - 1).fill([])];
 		else candidate_moves = get_white_candidate_moves(inProtectedRiderFleeMode, piecelist, coordlist);
@@ -1235,7 +1232,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 /**
  * Performs a search with alpha-beta pruning through the game tree with iteratively greater depths
  */
-function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
+function runIterativeDeepening(piecelist: number[], coordlist: DoubleCoords[], maxdepth: number): void {
 	// immediately initialize and set globallyBestVariation randomly, in case nothing better ever gets found
 	const black_moves = get_black_legal_moves(false, piecelist, coordlist);
 	globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]! ];
@@ -1344,9 +1341,19 @@ function mulberry32(a: number) {
 /**
  * Converts a target square for the black king to move to into a Move Object, taking into account gamefile_royal_coords
  */
-function move_to_gamefile_move(target_square: Coords): MoveDraft {
-	const endCoords: Coords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
-	return { startCoords: gamefile_royal_coords, endCoords: endCoords };
+function move_to_gamefile_move(target_square: DoubleCoords): MoveDraft {
+	const endCoords: DoubleCoords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
+	// Convert the floating point numbers to BigInt coordinates before passing the move to the game
+	return {
+		startCoords: [
+			BigInt(gamefile_royal_coords[0]),
+			BigInt(gamefile_royal_coords[1])
+		],
+		endCoords: [
+			BigInt(endCoords[0]!),
+			BigInt(endCoords[1]!)
+		]
+	};
 }
 
 function doesTypeExist(boardsim: Board, type: number): boolean {
@@ -1357,7 +1364,7 @@ function doesTypeExist(boardsim: Board, type: number): boolean {
 	return range.end - range.start - range.undefineds.length > 0;
 }
 
-function getFirstOfType(boardsim: Board, type: number): Coords | undefined {
+function getFirstOfType(boardsim: Board, type: number): DoubleCoords | undefined {
 	const range = boardsim.pieces.typeRanges.get(type);
 
 	if (range === undefined) return;
@@ -1369,9 +1376,19 @@ function getFirstOfType(boardsim: Board, type: number): Coords | undefined {
 			undefinedidx++;
 			continue;
 		}
-		return [boardsim.pieces.XPositions[idx]!, boardsim.pieces.YPositions[idx]!];
+		const bigintCoords: Coords = [boardsim.pieces.XPositions[idx]!, boardsim.pieces.YPositions[idx]!];
+		// Convert the bigint coordinates to floating point coordinates that the engine works with.
+		return convertBigIntCoordsToFloating(bigintCoords);
 	}
 	return;
+}
+
+/**
+ * Converts bigint coords to floating point coords that the engine works with.
+ * We can do this since the game gaurantees all moves are within safe limits.
+ */
+function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
+	return [Number(coords[0]!), Number(coords[1]!)];
 }
 
 /**
@@ -1404,7 +1421,9 @@ async function runEngine() {
 					continue;
 				}
 				if (Math.floor(type / numTypes) !== players.WHITE) continue;
-				const coords: Coords = [board.pieces.XPositions[idx]!, board.pieces.YPositions[idx]!];
+				const bigintCoords: Coords = [board.pieces.XPositions[idx]!, board.pieces.YPositions[idx]!];
+				// Convert the bigint coordinates to floating point coordinates that the engine works with.
+				const coords = convertBigIntCoordsToFloating(bigintCoords);
 				start_piecelist.push(pieceNameDictionary[type]!);
 				// shift all white pieces, so that the black royal is at [0,0]
 				start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);

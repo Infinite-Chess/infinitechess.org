@@ -9,7 +9,7 @@ import docutil from "../../util/docutil.js";
 import typeutil from "../../chess/util/typeutil.js";
 
 
-import type { Color } from "../../util/math.js";
+import type { Color } from "../../util/math/math.js";
 
 
 
@@ -165,7 +165,7 @@ function setTheme(theme: string): void {
 	savePreferences();
 }
 
-function getLegalMovesShape(): string {
+function getLegalMovesShape(): 'dots' | 'squares' {
 	return preferences.legal_moves || default_legal_moves;
 }
 

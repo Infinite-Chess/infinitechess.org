@@ -1,4 +1,9 @@
 
+
+// @ts-ignore
+import guipause from './guipause.js';
+// @ts-ignore
+import stats from './stats.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
@@ -7,27 +12,17 @@ import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
-import math from '../../util/math.js';
 import premoves from '../chess/premoves.js';
-// @ts-ignore
+import bd from '../../util/bigdecimal/bigdecimal.js';
 import boardtiles from '../rendering/boardtiles.js';
-// @ts-ignore
-import guipause from './guipause.js';
-// @ts-ignore
-import area from '../rendering/area.js';
-// @ts-ignore
 import transition from '../rendering/transition.js';
-// @ts-ignore
-import statustext from './statustext.js';
-// @ts-ignore
-import stats from './stats.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 
 
 /**
@@ -58,8 +53,6 @@ const element_moveForward = document.getElementById('move-right')!;
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 const element_pause = document.getElementById('pause')!;
-
-const MAX_TELEPORT_DIST = Infinity;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
@@ -159,15 +152,15 @@ function updateElement_Coords() {
 
 	const boardPos = boardpos.getBoardPos();
 	const mouseTile = mouse.getTileMouseOver_Integer();
-	const squareCenter = boardtiles.gsquareCenter();
+	const squareCenter = boardtiles.getSquareCenter();
 
 	// Tile camera is over
 	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)
 	// element_CoordsY.textContent = Math.floor(boardPos[1] + squareCenter)
 
 	// Tile mouse over
-	element_CoordsX.value = String(mouseTile ? mouseTile[0] : Math.floor(boardPos[0] + squareCenter));
-	element_CoordsY.value = String(mouseTile ? mouseTile[1] : Math.floor(boardPos[1] + squareCenter));
+	element_CoordsX.value = String(mouseTile ? mouseTile[0] : bd.floor(bd.add(boardPos[0], squareCenter)));
+	element_CoordsY.value = String(mouseTile ? mouseTile[1] : bd.floor(bd.add(boardPos[1], squareCenter)));
 }
 
 /**
@@ -281,34 +274,34 @@ function callback_CoordsChange() {
 	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
 	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
 
-	const newX = Number(element_CoordsX.value);
-	const newY = Number(element_CoordsY.value);
-	// Make sure the teleport distance doesn't exceed the cap
-	if (newX < -MAX_TELEPORT_DIST || newX > MAX_TELEPORT_DIST || newY < -MAX_TELEPORT_DIST || newY > MAX_TELEPORT_DIST) {
-		statustext.showStatus(`Cannot teleport more than ${MAX_TELEPORT_DIST} squares in any direction.`, true);
-		return;
-	}
+	const newX = BigInt(element_CoordsX.value);
+	const newY = BigInt(element_CoordsY.value);
 
-	boardpos.setBoardPos([newX, newY]);
+	const newPos = bd.FromCoords([newX, newY]);
+	boardpos.setBoardPos(newPos);
 }
 
 function callback_Back() {
-	transition.telToPrevTel();
+	transition.undoTransition();
 }
 
 function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+
 	// Add the square annotation highlights, too.
-	allCoords.push(...snapping.getAnnoteSnapPoints(false));
-	if (allCoords.length === 0) allCoords.push([1,1], [8,8]); // use the [1,1]-[8,8] area as a fallback
-	area.initTelFromCoordsList(allCoords);
+
+	// THIS ROUNDS RAY intersections to the nearest integer coordinate, so the resulting area may be imperfect!!!!!
+	// I don't think it matters to much.
+	const annoteSnapPoints = snapping.getAnnoteSnapPoints(false).map(point => bd.coordsToBigInt(point));
+
+	allCoords.push(...annoteSnapPoints);
+	if (allCoords.length === 0) allCoords.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
+	transition.zoomToCoordsList(allCoords);
 }
 
 function recenter() {
-	const boundingBox = boardeditor.areInBoardEditor() ? math.getBoxFromCoordsList([[1,1], [8,8]]) :
-														 gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
-	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
-	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
+	transition.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================

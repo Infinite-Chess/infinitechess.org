@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/instancedshapes.ts
+
 /**
  * This script calculates the vertex data of a single instance
  * of several different kinds of shapes.
@@ -11,18 +13,12 @@
  */
 
 
+import type { DoubleCoords } from "../../chess/util/coordutil.js";
+import type { Color } from "../../util/math/math.js";
 
-import type { Coords } from "../../chess/util/coordutil.js";
-import type { Color } from "../../util/math.js";
-
-
-// @ts-ignore
-import bufferdata from "./bufferdata.js";
-// @ts-ignore
 import board from "./boardtiles.js";
-// @ts-ignore
-import shapes from "./shapes.js";
-
+import primitives from "./primitives.js";
+import meshes from "./meshes.js";
 
 
 // Variables ------------------------------------------------------------------------------
@@ -65,7 +61,7 @@ const CORNER_TRIS = {
  */
 const PLUS_SIGN = {
 	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
-	POSITION: [0.3, 0.3] as Coords, // Default: [0.3, 0.3]
+	POSITION: [0.3, 0.3] as DoubleCoords, // Default: [0.3, 0.3]
 	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
 	ARM_LENGTH: 0.4, // Default: 0.4
 	/** Width of the plus sign arms */
@@ -84,10 +80,10 @@ const PLUS_SIGN = {
  * @returns The vertex data for the legal move square.
  */
 function getDataLegalMoveSquare(color: Color): number[] {
-	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
-	return shapes.getDataQuad_Color_FromCoord(coords, color);
+	return meshes.QuadModel_Color(coords, color);
 }
 
 /**
@@ -96,18 +92,16 @@ function getDataLegalMoveSquare(color: Color): number[] {
  * @returns The vertex data for the "legal move dot" (circle).
  */
 function getDataLegalMoveDot(color: Color): number[] {
-	// eslint-disable-next-line prefer-const
-	let [r, g, b, a] = color;
-	a += DOTS.OPACITY_OFFSET; // Add the offset
-	a = Math.min(a, 1); // Cap it
+	color[3] += DOTS.OPACITY_OFFSET; // Add the offset
+	color[3] = Math.min(color[3], 1); // Cap it
 
-	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
-	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
-	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
+	const x = coords[0] + (1 - board.getSquareCenterAsNumber()) - 0.5;
+	const y = coords[1] + (1 - board.getSquareCenterAsNumber()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
-	return shapes.getDataCircle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, r, g, b, a);
+	return primitives.Circle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, color);
 }
 
 /**
@@ -123,7 +117,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	a = Math.min(a + CORNER_TRIS.OPACITY_OFFSET, 1);
 
 	// Calculate visual center position (original [0,0] instance adjusted for board centering)
-	const boardCenterAdjust = (1 - board.gsquareCenter()) - 0.5;
+	const boardCenterAdjust = (1 - board.getSquareCenterAsNumber()) - 0.5;
 	const centerX = boardCenterAdjust;
 	const centerY = boardCenterAdjust;
 
@@ -148,6 +142,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 
 	return vertices;
 }
+
 /**
  * Generates vertex data for a plus sign using 5 non-overlapping rectangles
  */
@@ -218,12 +213,12 @@ function getDataPlusSign(color: Color): number[] {
  * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
  */
 function getDataTexture(inverted: boolean): number[] {
-	let { left, right, bottom, top } = shapes.getBoundingBoxOfCoord([0,0]);
+	let { left, right, bottom, top } = meshes.getCoordBoxModel([0,0]);
 	if (inverted) {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top
 	}
-	return bufferdata.getDataQuad_Texture(left, bottom, right, top, 0, 0, 1, 1);
+	return primitives.Quad_Texture(left, bottom, right, top, 0, 0, 1, 1);
 }
 
 /**
@@ -231,7 +226,6 @@ function getDataTexture(inverted: boolean): number[] {
  * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
  */
 function getDataColoredTexture(color: Color, inverted: boolean): number[] {
-	// let { left, right, bottom, top } = shapes.getBoundingBoxOfCoord([0,0]);
 	let left = -0.5;
 	let right = 0.5;
 	let bottom = -0.5;
@@ -240,7 +234,7 @@ function getDataColoredTexture(color: Color, inverted: boolean): number[] {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top
 	}
-	return bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
+	return primitives.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
 }
 
 export default {

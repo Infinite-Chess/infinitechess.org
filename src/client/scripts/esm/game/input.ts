@@ -9,9 +9,9 @@
  */
 
 
-import type { Coords } from "../chess/util/coordutil.js";
+import type { DoubleCoords } from "../chess/util/coordutil.js";
+
 import docutil from "../util/docutil.js";
-import type { Vec2 } from "../util/math.js";
 
 const Mouse = {
 	LEFT: 0,
@@ -64,7 +64,7 @@ interface InputListener {
 	getMouseId(button: MouseButton): string | undefined;
 	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
 	// eslint-disable-next-line no-unused-vars
-	getMousePosition(button: MouseButton): Coords | undefined;
+	getMousePosition(button: MouseButton): DoubleCoords | undefined;
 	/** Whether the given mouse button simulated a full CLICK this frame. */
 	// eslint-disable-next-line no-unused-vars
 	isMouseClicked(button: MouseButton): boolean;
@@ -82,19 +82,19 @@ interface InputListener {
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-    getPointerPos(pointerId?: string): Coords | undefined;
+    getPointerPos(pointerId?: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-	getPointerDelta(pointerId: string): Vec2 | undefined;
+	getPointerDelta(pointerId: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-	getPointerVel(pointerId: string): Vec2 | undefined;
+	getPointerVel(pointerId: string): DoubleCoords | undefined;
 	/** Returns the ids of all existing pointers. */
 	getAllPointerIds(): string[];
 	/** Returns all existing pointers. */
@@ -120,13 +120,13 @@ interface InputListener {
     element: HTMLElement | typeof document;
 }
 
-type PointerHistory = { pos: Coords, time: number }[];
+type PointerHistory = { pos: DoubleCoords, time: number }[];
 
 /** Options for simulated clicks */
 const CLICK_THRESHOLDS = {
 	MOUSE: {
 		/** The maximum distance the mouse can move before a click is not registered. */
-		MOVE_VPIXELS: 8, // Default: 8
+		MOVE_VPIXELS: 6, // Default: 8
 		/** The maximum time the mouse can be held down before a click is not registered. */
 		TIME_MILLIS: 400, // Default: 400
 		/** The maximum time between first click down and second click up to register a double click drag. */
@@ -134,7 +134,7 @@ const CLICK_THRESHOLDS = {
 	},
 	TOUCH: {
 		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
-		MOVE_VPIXELS: 20, // Default: 24
+		MOVE_VPIXELS: 17, // Default: 20
 		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
 		TIME_MILLIS: 120,
 		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
@@ -158,12 +158,12 @@ type Pointer = {
 	 * since touches won't exist if their no longer held down.
 	 */
 	isHeld: boolean;
-	position: Coords;
+	position: DoubleCoords;
 	/** How many pixels the pointer has moved since last frame. */
-	delta: Vec2;
+	delta: DoubleCoords;
 	/** Used for calculating velocity */
 	positionHistory: PointerHistory;
-	velocity: Vec2;
+	velocity: DoubleCoords;
 };
 
 /**
@@ -194,7 +194,7 @@ interface ClickInfo {
 	 * Also Used for calculating simulated clicks, when touch events
 	 * don't provide delta from lift to down.
 	 */
-	posDown?: Coords;
+	posDown?: DoubleCoords;
 	/**
 	 * How much the mouse has ABSOLUTELY moved since the last click down.
 	 * ONLY USED FOR CALCULATING SIMULATED CLICKS AND DOUBLE CLICK DRAGS,
@@ -205,12 +205,12 @@ interface ClickInfo {
 	 * 
 	 * This can only be positive, not negative.
 	 */
-	deltaSinceDown: Coords;
+	deltaSinceDown: DoubleCoords;
 	/**
 	 * The last known position of the last active pointer for this mouse button.
 	 * UPDATES ON DOWN AND UP, NOT ON MOVE.
 	 */
-	position?: Coords;
+	position?: DoubleCoords;
 	/** Whether this frame incurred the start of a double click drag */
 	doubleClickDrag: boolean;
 }
@@ -329,6 +329,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	function updateClickInfoDown(targetButton: MouseButton, e: MouseEvent | Touch) {
 		// console.log("Mouse down: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
+		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 		const pointerId = e instanceof MouseEvent ? 'mouse' : e.identifier.toString(); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.pointerId = pointerId;
 		targetButtonInfo.isDown = true;
@@ -354,7 +355,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// Mouse has been down atleast once before.
 			// Now we now posDown will be defined, so we can calculate the distance to that last click down.
 			// Works for 2D mode, desktop & mobile
-			const posDown = clickInfo[targetButton].posDown;
+			const posDown = targetButtonInfo.posDown;
 			const distMoved = posDown ? Math.max(
 				Math.abs(posDown[0] - relativeMousePos[0]),
 				Math.abs(posDown[1] - relativeMousePos[1])
@@ -381,6 +382,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	function updateClickInfoUp(targetButton: MouseButton, e: MouseEvent | Touch) {
 		// console.log("Mouse up: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
+		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 		const pointerId = e instanceof MouseEvent ? 'mouse' : e.identifier.toString(); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.pointerId = pointerId;
 		targetButtonInfo.isDown = false;
@@ -396,25 +398,25 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		if (pointers[pointerId]) pointers[pointerId].isHeld = false; // Mark the pointer as no longer held down
 
 		// Update click --------------
-		const mouseHistory = clickInfo[targetButton].timeDownMillisHistory;
+		const mouseHistory = targetButtonInfo.timeDownMillisHistory;
 		const timePassed = Date.now() - (mouseHistory[mouseHistory.length - 1] ?? 0); // Since the latest click
 		const TIME_MILLIS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.TIME_MILLIS : CLICK_THRESHOLDS.TOUCH.TIME_MILLIS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 		if (timePassed < TIME_MILLIS) {
 			// Works for 2D mode, desktop & mobile
-			const posDown = clickInfo[targetButton].posDown;
+			const posDown = targetButtonInfo.posDown;
 			const distMoved = posDown ? Math.max(
 				Math.abs(posDown[0] - relativeMousePos[0]),
 				Math.abs(posDown[1] - relativeMousePos[1])
 			) : 0; // No click down to compare to. This can happen if you click down offscreen.
 			// Works for 3D mode, desktop (mouse is locked in place then)
 			const delta = Math.max(
-				clickInfo[targetButton].deltaSinceDown[0],
-				clickInfo[targetButton].deltaSinceDown[1]
+				targetButtonInfo.deltaSinceDown[0],
+				targetButtonInfo.deltaSinceDown[1]
 			);
 			// console.log("Mouse delta: ", delta);
 			const MOVE_VPIXELS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS : CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) {
-				clickInfo[targetButton].clicked = true;
+				targetButtonInfo.clicked = true;
 				// console.log("Mouse clicked: ", MouseNames[targetButton]);
 			}
 		} // --------------
@@ -427,7 +429,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	 * 
 	 * If the pointer moves too much, don't simulate a click.
 	 */
-	function updateDeltaSinceDownForPointer(pointerId: string, delta: Vec2) {
+	function updateDeltaSinceDownForPointer(pointerId: string, delta: DoubleCoords) {
 		// Update the delta (deltaSinceDown) for simulated mouse clicks
 		Object.values(Mouse).forEach((targetButton) => {
 			const targetButtonInfo = clickInfo[targetButton];
@@ -703,7 +705,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
  * Converts the mouse coordinates to be relative to the
  * element bounding box instead of absolute to the whole page.
  */
-function getRelativeMousePosition(coords: Coords, element: HTMLElement | typeof document): Coords {
+function getRelativeMousePosition(coords: DoubleCoords, element: HTMLElement | typeof document): DoubleCoords {
 	if (element instanceof Document) return coords; // No need to adjust if we're listening on the document.
 	const rect = element.getBoundingClientRect();
 	return [

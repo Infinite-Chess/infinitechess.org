@@ -5,7 +5,6 @@
 
 
 import { TypedArray } from "./buffermodel.js";
-// @ts-ignore
 import { gl } from "./webgl.js";
 
 

@@ -7,21 +7,23 @@
 
 
 import space from "../../../misc/space.js";
-import math, { Color } from "../../../../util/math.js";
 import preferences from "../../../../components/header/preferences.js";
-import { createModel } from "../../buffermodel.js";
-import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
 import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
-import { Mouse } from "../../../input.js";
+import vectors from "../../../../util/math/vectors.js";
 import boardpos from "../../boardpos.js";
+import { createModel } from "../../buffermodel.js";
+import { Mouse } from "../../../input.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
 import { listener_overlay } from "../../../chess/game.js";
+import bd, { BigDecimal } from "../../../../util/bigdecimal/bigdecimal.js";
 
 
 import type { Arrow } from "./annotations.js";
+import type { Color } from "../../../../util/math/math.js";
 
 
-// Variables -----------------------------------------------------------------
+// Constants -----------------------------------------------------------------
 
 
 /** Properties for the drawn arrows.*/
@@ -45,6 +47,8 @@ const ARROW = {
 	BASE_OFFSET: 0.35,
 };
 
+const ONE = bd.FromBigInt(1n); // Used to convert board space to world space when zoomed out
+
 
 
 
@@ -53,7 +57,7 @@ let drag_start: Coords | undefined;
 /** The ID of the pointer that is drawing the arrow. */
 let pointerId: string | undefined;
 /** The last known position of the pointer drawing an arrow. */
-let pointerWorld: Coords | undefined;
+let pointerWorld: DoubleCoords | undefined;
 
 
 // Updating -----------------------------------------------------------------
@@ -157,8 +161,23 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 		}
 	}
 
+	// Precalculate other arrow properties
+
+	const difference: BDCoords = bd.FromCoords(coordutil.subtractCoords(drag_end, drag_start!));
+	// Since the difference can be arbitrarily large, we need to normalize it
+	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
+	const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
+	const normalizedVectorHypot: number = Math.hypot(...normalizedVector);
+
 	// Add the arrow
-	arrows.push({ start: drag_start!, end: drag_end });
+	arrows.push({
+		start: drag_start!,
+		end: drag_end,
+
+		difference,
+		xRatio: normalizedVector[0] / normalizedVectorHypot,
+		yRatio: normalizedVector[1] / normalizedVectorHypot,
+	});
 	return { changed: true };
 }
 
@@ -201,21 +220,36 @@ function getDataArrow(
 	color: Color
 ): number[] {
 	// First we need to shift the arrow's base a little away from the center of the starting square.
-	const length_coords = math.euclideanDistance(arrow.start, arrow.end);
-	// This makes sure that base offset looks the same no matter our zoom level
-	const invMult = boardpos.areZoomedOut() ? boardpos.getBoardScale() : 1;
-	const t = ARROW.BASE_OFFSET / (invMult * length_coords); // Proportion of the arrow length to offset the base
-	if (t >= 1) return []; // No arrow drawn if base offset is greater than the entire arrow length (else it would be drawn with negative length).
-	const trueStartCoords = coordutil.lerpCoords(arrow.start, arrow.end, t);
+
+	// The distance in squares between the start and end coordinates.
+	const totalLengthSquares: BigDecimal = vectors.euclideanDistance(arrow.start, arrow.end);
+
+	const entityWidthWorld: number = snapping.getEntityWidthWorld();
+	// How many squares wide highlights are at this zoom distance.
+	const entityWidthSquares: BigDecimal = boardpos.areZoomedOut() ? space.convertWorldSpaceToGrid(entityWidthWorld) : ONE;
+
+	// How many squares the arrow base is offset from the start coordinate.
+	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(entityWidthSquares, bd.FromNumber(ARROW.BASE_OFFSET));
+
+	// If the arrow length <= base offset, don't draw it (it would have negative length).
+	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
+
+	const startCoordsBD = bd.FromCoords(arrow.start);
+	const arrowBaseOffsetVector: BDCoords = [
+		bd.multiply_floating(arrowBaseOffsetSquares, bd.FromNumber(arrow.xRatio)),
+		bd.multiply_floating(arrowBaseOffsetSquares, bd.FromNumber(arrow.yRatio))
+	];
+	// Where the actual BASE of the arrow starts rendering at
+	const trueStartCoords = coordutil.addBDCoords(startCoordsBD, arrowBaseOffsetVector);
 
 	// Calculate the base and tip world space coordinates
 	const startWorld = space.convertCoordToWorldSpace(trueStartCoords);
-	const endWorld = space.convertCoordToWorldSpace(arrow.end);
+	const endWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.end));
 
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
-	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
+	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
 	const bodyWidthArg = ARROW.BODY_WIDTH * size;
 	const tipWidthArg = ARROW.TIP_WIDTH * size;
@@ -228,7 +262,7 @@ function getDataArrow(
 
 	const dx = ex - sx;
 	const dy = ey - sy;
-	const length = math.euclideanDistance(startWorld, endWorld);
+	const length = vectors.euclideanDistanceDoubles(startWorld, endWorld);
 
 	// Helpers
 	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) => {

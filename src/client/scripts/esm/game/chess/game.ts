@@ -7,6 +7,9 @@
 
 
 
+import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { Mesh } from '../rendering/piecemodels.js';
+
 import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
 import highlights from '../rendering/highlights/highlights.js';
@@ -34,20 +37,14 @@ import boardeditor from '../misc/boardeditor.js';
 import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';
+import promotionlines from '../rendering/promotionlines.js';
 import { CreateInputListener, InputListener, Mouse } from '../input.js';
-// @ts-ignore
-import invites from '../misc/invites.js';
-// @ts-ignore
+import transition from '../rendering/transition.js';
+import perspective from '../rendering/perspective.js';
+import border from '../rendering/border.js';
 import webgl from '../rendering/webgl.js';
 // @ts-ignore
-import perspective from '../rendering/perspective.js';
-// @ts-ignore
-import transition from '../rendering/transition.js';
-// @ts-ignore
-import promotionlines from '../rendering/promotionlines.js';
-
-import type { FullGame } from '../../chess/logic/gamefile.js';
-import type { Mesh } from '../rendering/piecemodels.js';
+import invites from '../misc/invites.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -169,11 +166,24 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 function render() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
-	boardtiles.render(); // Renders the infinite checkerboard
-
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
-	if (!gamefile) return; // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
+	if (!gamefile) return boardtiles.render(); // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
+	
+	const boardsim = gamefile.boardsim;
+
+	if (boardsim.playableRegion !== undefined) {
+		// Mask the playable region so the board tiles don't render outside the world border
+		webgl.executeMaskedDraw(
+			// Mask containing playable region
+			() => border.drawPlayableRegionMask(boardsim),
+			// The board tiles will only be drawn inside the mask
+			renderTilesAndPromoteLines,
+		);
+	} else {
+		// Render normally, spanning the whole screen
+		renderTilesAndPromoteLines();
+	}
 
 	/**
 	 * What is the order of rendering?
@@ -201,13 +211,18 @@ function render() {
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		animation.renderAnimations();
-		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		arrows.render();
 		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});
+}
+
+/** Renders items that need to be able to be masked by the world border. */
+function renderTilesAndPromoteLines() {
+	boardtiles.render();
+	promotionlines.render();
 }
 
 

@@ -4,10 +4,10 @@
  */
 
 import typeutil from '../util/typeutil.js';
-import math from '../../util/math.js';
+import vectors from '../../util/math/vectors.js';
 import { rawTypes } from '../util/typeutil.js';
-// @ts-ignore
 import specialdetect from './specialdetect.js';
+import legalmoves from './legalmoves.js';
 // @ts-ignore
 import isprime from '../../util/isprime.js';
 
@@ -16,9 +16,9 @@ import isprime from '../../util/isprime.js';
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
-import type { Vec2, Vec2Key } from '../../util/math.js';
 import type { Piece } from '../util/boardutil.js';
 import type { FullGame } from './gamefile.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
 
 /**
@@ -39,14 +39,14 @@ interface PieceMoveset {
 	/**
 	 * Sliding moves the piece can make.
 	 * 
-	 * `"1,0": [-Infinity, Infinity]` => Lets the piece slide horizontally infinitely in both directions.
+	 * `"1,0": [null,null]` => Lets the piece slide horizontally infinitely in both directions.
 	 * 
 	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
 	 * 
 	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
 	 */
 	sliding?: {
-		[slideDirection: Vec2Key]: Coords
+		[slideDirection: Vec2Key]: [bigint | null, bigint | null]
 	},
 	/**
 	 * The initial function that determines how far a piece is legally able to slide
@@ -88,8 +88,8 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * This runs once for every piece on the same line of the selected piece.
  * 
  * 0 => Piece doesn't block
- * 1 => Blocked (friendly piece)
- * 2 => Blocked 1 square after (enemy piece)
+ * 1 => Blocked ON the square (enemy piece)
+ * 2 => Blocked 1 before the square (friendly piece or void)
  * 
  * The return value of 0 will be useful in the future for allowing pieces
  * to *phase* through other pieces.
@@ -97,7 +97,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
+type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean) => 0 | 1 | 2;
 /**
  * A function that returns an array of any legal special individual moves for the piece,
  * each of the coords will have a special property attached to it. castle/promote/enpassant
@@ -108,11 +108,8 @@ type SpecialFunction = (gamefile: FullGame, coords: Coords, color: Player, premo
 
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
-function defaultBlockingFunction(friendlyColor: Player, blockingPiece: Piece): 0 | 1 | 2 {
-	const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
-	const isVoid = typeutil.getRawType(blockingPiece.type) === rawTypes.VOID;
-	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
-	else return 2; // Allow the capture if enemy, but block afterward
+function defaultBlockingFunction(friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean): 0 | 1 | 2 {
+	return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 }
 
 /** The default ignore function of each piece's sliding moves, if not specified. */
@@ -128,8 +125,8 @@ function defaultIgnoreFunction() {
  * @param [slideLimit] Optional. The slideLimit gamerule value.
  * @returns Object containing the movesets of all pieces except pawns.
  */
-function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
-	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
+function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
+	if (typeof slideLimit !== 'number' && slideLimit !== null) throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
 		// Finitely moving
@@ -138,154 +135,152 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		[rawTypes.KNIGHT]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ]
 		},
 		[rawTypes.HAWK]: {
 			individual: [
-                [-3,0],[-2,0],[2,0],[3,0],
-                [0,-3],[0,-2],[0,2],[0,3],
-                [-2,-2],[-2,2],[2,-2],[2,2],
-                [-3,-3],[-3,3],[3,-3],[3,3]
+                [-3n,0n],[-2n,0n],[2n,0n],[3n,0n],
+                [0n,-3n],[0n,-2n],[0n,2n],[0n,3n],
+                [-2n,-2n],[-2n,2n],[2n,-2n],[2n,2n],
+                [-3n,-3n],[-3n,3n],[3n,-3n],[3n,3n]
             ]
 		},
 		[rawTypes.KING]: {
 			individual: [
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1]
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n]
             ],
 			special: specialdetect.kings
 		},
 		[rawTypes.GUARD]: {
 			individual: [
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1]
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n]
             ]
 		},
 		// Infinitely moving
 		[rawTypes.ROOK]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.BISHOP]: {
 			sliding: {
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.QUEEN]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit],
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.ROYALQUEEN]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit],
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.CHANCELLOR]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.ARCHBISHOP]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			sliding: {
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.AMAZON]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit],
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.CAMEL]: {
 			individual: [
-                [-3,1],[-1,3],[1,3],[3,1],
-                [-3,-1],[-1,-3],[1,-3],[3,-1]
+                [-3n,1n],[-1n,3n],[1n,3n],[3n,1n],
+                [-3n,-1n],[-1n,-3n],[1n,-3n],[3n,-1n]
             ]
 		},
 		[rawTypes.GIRAFFE]: {
 			individual: [
-                [-4,1],[-1,4],[1,4],[4,1],
-                [-4,-1],[-1,-4],[1,-4],[4,-1]
+                [-4n,1n],[-1n,4n],[1n,4n],[4n,1n],
+                [-4n,-1n],[-1n,-4n],[1n,-4n],[4n,-1n]
             ]
 		},
 		[rawTypes.ZEBRA]: {
 			individual: [
-                [-3,2],[-2,3],[2,3],[3,2],
-                [-3,-2],[-2,-3],[2,-3],[3,-2]
+                [-3n,2n],[-2n,3n],[2n,3n],[3n,2n],
+                [-3n,-2n],[-2n,-3n],[2n,-3n],[3n,-2n]
             ]
 		},
 		[rawTypes.KNIGHTRIDER]: {
 			sliding: {
-				'1,2' : [-slideLimit, slideLimit],
-				'1,-2' : [-slideLimit,slideLimit],
-				'2,1' : [-slideLimit,slideLimit],
-				'2,-1' : [-slideLimit,slideLimit],
+				'1,2': [slideLimit, slideLimit],
+				'1,-2': [slideLimit,slideLimit],
+				'2,1': [slideLimit,slideLimit],
+				'2,-1': [slideLimit,slideLimit],
 			}
 		},
 		[rawTypes.CENTAUR]: {
 			individual: [
                 // Guard moveset
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1],
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n],
                 // + Knight moveset!
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ]
 		},
 		[rawTypes.ROYALCENTAUR]: {
 			individual: [
                 // Guard moveset
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1],
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n],
                 // + Knight moveset!
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			special: specialdetect.kings
 		},
 		[rawTypes.HUYGEN]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit]
 			},
-			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => {
-				const distance = math.chebyshevDistance(coords, blockingPiece.coords);
+			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean) => {
+				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
-				if (!isPrime) return 0; // Doesn't block
-				const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
-				if (colorOfBlockingPiece === friendlyColor) return 1; // Friendly piece blocked
-				else return 2; // Enemy piece blocked
+				if (!isPrime) return 0; // Doesn't block, not even if it's a void. It hops over it!
+				return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 			},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				const distance = math.chebyshevDistance(startCoords, endCoords);
+				const distance = vectors.chebyshevDistance(startCoords, endCoords);
 				const isPrime = isprime.primalityTest(distance, null);
 				return isPrime;
 			}
@@ -308,7 +303,7 @@ function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec
 		if (!moveset.sliding) continue;
 		Object.keys(moveset.sliding).forEach(slide => slides.add(slide as Vec2Key));
 	}
-	return Array.from(slides, math.getVec2FromKey);
+	return Array.from(slides, vectors.getVec2FromKey);
 }
 
 

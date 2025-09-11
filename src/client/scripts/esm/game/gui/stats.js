@@ -81,14 +81,6 @@ function updateFPS(fps) {
 }
 
 
-function decimalToPercent(decimal) {
-	// Multiply by 100 to convert to percentage, then round
-	const percent = Math.round(decimal * 100);
-    
-	// Convert the rounded percentage to a string with a percentage sign
-	return percent.toString() + "%";
-}
-
 
 export default {
 	showMoves,

@@ -3,34 +3,33 @@
  */
 
 
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords, CoordsKey, DoubleCoords } from '../../chess/util/coordutil.js';
 
 
+// @ts-ignore
+import statustext from '../gui/statustext.js';
+import webgl from './webgl.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import gameslot from '../chess/gameslot.js';
-import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
-import { players, TypeGroup } from '../../chess/util/typeutil.js';
-import boardutil, { Piece } from '../../chess/util/boardutil.js';
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
 import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import math, { Color } from '../../util/math.js';
+import vectors from '../../util/math/vectors.js';
 import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import jsutil from '../../util/jsutil.js';
-// @ts-ignore
-import webgl from './webgl.js';
-// @ts-ignore
-import perspective from './perspective.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-// @ts-ignore
 import boardtiles from './boardtiles.js';
+import bd from '../../util/bigdecimal/bigdecimal.js';
+import perspective from './perspective.js';
+import { Color } from '../../util/math/math.js';
+import boardutil, { Piece } from '../../chess/util/boardutil.js';
+import { players, TypeGroup } from '../../chess/util/typeutil.js';
+import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 
 
 // Variables --------------------------------------------------------------
@@ -43,7 +42,7 @@ const pieceCountToDisableMiniImages = 50_000;
 
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
-const MAX_ANIM_DIST_VPIXELS = 2300;
+const MAX_ANIM_DIST_VPIXELS = bd.FromBigInt(2300n);
 
 /** The attribute info for all mini image vertex & attribute data. */
 const attribInfo: AttributeInfoInstanced = {
@@ -93,21 +92,24 @@ function toggle(): void {
 
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
 // eslint-disable-next-line no-unused-vars
-function forEachRenderablePiece(callback: (coords: Coords, type: number) => void) {
+function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void) {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 
 	// Animated pieces
-	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+	const maxDistB4Teleport = bd.divide_floating(MAX_ANIM_DIST_VPIXELS, boardtiles.gtileWidth_Pixels());
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
 	for (const a of animation.animations) {
-		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentInfo);
 		callback(currentAnimationPosition, a.type);
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(p => callback(p.coords, p.type)));
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach(p => {
+			const pieceBDCoords = bd.FromCoords(p.coords);
+			callback(pieceBDCoords, p.type);
+		}));
 		// Construct the hidden pieces for below
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
 	// Static pieces
@@ -122,7 +124,8 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
-			callback(coords, type);
+			const coordsBD = bd.FromCoords(coords);
+			callback(coordsBD, type);
 		});
 	});
 }
@@ -151,18 +154,21 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 		forEachRenderablePiece(processPiece); // Process each renderable piece
 	} else { // Disabled (too many pieces) => Only process pieces on highlights or being animated
 		const piecesToRender = getAllPiecesBelowAnnotePoints();
-		piecesToRender.forEach(p => processPiece(p.coords, p.type)); // Calculate their instance data
+		piecesToRender.forEach(p => {
+			const coordsBD = bd.FromCoords(p.coords);
+			processPiece(coordsBD, p.type);
+		}); // Calculate their instance data
 	}
 
 	/** Calculates and appends the instance data of the piece */
-	function processPiece(coords: Coords, type: number) {
+	function processPiece(coords: BDCoords, type: number) {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		instanceData[type]!.push(...coordsWorld);
 
 		// Are we hovering over? If so, add the same data to instanceData_hovered
 		if (areWatchingMousePosition) {
 			for (const pointerWorld of pointerWorlds) {
-				if (math.chebyshevDistance(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
+				if (vectors.chebyshevDistanceDoubles(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
 			}
 		}
 	}
@@ -171,7 +177,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 }
 
 /** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
-function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coords[], dists?: number[] } {
+function getImagesBelowWorld(world: DoubleCoords, trackDists: boolean): { images: Coords[], dists?: number[] } {
 	const imagesHovered: Coords[] = [];
 	const dists: number[] = [];
 
@@ -182,15 +188,19 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 		forEachRenderablePiece(processPiece);
 	} else { // Disabled (too many pieces) => Only process pieces on highlights or being animated
 		const piecesToConsider = getAllPiecesBelowAnnotePoints();
-		piecesToConsider.forEach(p => processPiece(p.coords)); // Calculate if their underneath the world coords
+		piecesToConsider.forEach(p => {
+			const coordsBD = bd.FromCoords(p.coords);
+			processPiece(coordsBD);
+		}); // Calculate if their underneath the world coords
 	}
 
-	function processPiece(coords: Coords) {
+	function processPiece(coords: BDCoords) {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
-		if (math.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
-			imagesHovered.push(coords);
+		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
+			const integerCoords = bd.coordsToBigInt(coords);
+			imagesHovered.push(integerCoords);
 			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
+			if (trackDists) dists.push(vectors.euclideanDistanceDoubles(coordsWorld, world));
 		}
 	}
 
@@ -217,22 +227,26 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const pieces = boardsim.pieces;
 
 	// 1. Process all animations and add pieces relevant to the current move
-	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+	const maxDistB4Teleport = bd.divide_floating(MAX_ANIM_DIST_VPIXELS, boardtiles.gtileWidth_Pixels());
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
 	for (const a of animation.animations) {
-		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentInfo);
 		// Add the main animated piece
-		pushPieceNoDuplicatesOrVoids({coords: currentAnimationPosition, type: a.type, index: -1});
+		pushPieceNoDuplicatesOrVoids({
+			coords: bd.coordsToBigInt(currentAnimationPosition),
+			type: a.type,
+			index: -1
+		});
 		// Add the captured pieces being shown
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
 		// Construct the hidden pieces for below
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
 	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
-	const annotePoints = snapping.getAnnoteSnapPoints(true);
+	const annotePoints: Coords[] = snapping.getAnnoteSnapPoints(true).map(bd.coordsToBigInt);
 	annotePoints.forEach(ap => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight

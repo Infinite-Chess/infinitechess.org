@@ -7,11 +7,10 @@
 
 
 import type { BufferModel } from "../buffermodel.js";
-import type { Color } from "../../../util/math.js";
-import type { Coords } from "../../../chess/util/coordutil.js";
-import type { BoundingBox } from "../../../util/math.js";
+import type { Color } from "../../../util/math/math.js";
+import type { Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
 import type { Piece } from "../../../chess/util/boardutil.js";
-import type { RawType } from "../../../chess/util/typeutil.js";
+
 
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
@@ -24,20 +23,16 @@ import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import animation from "../animation.js";
-import { listener_document, listener_overlay } from "../../chess/game.js";
-import { InputListener, Mouse } from "../../input.js";
 import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
-// @ts-ignore
-import shapes from "../shapes.js";
-// @ts-ignore
-import bufferdata from "../bufferdata.js";
-// @ts-ignore
+import bd from "../../../util/bigdecimal/bigdecimal.js";
+import boardtiles from "../boardtiles.js";
+import primitives from "../primitives.js";
+import { listener_overlay } from "../../chess/game.js";
+import { Mouse } from "../../input.js";
+import meshes from "../meshes.js";
 import perspective from "../perspective.js";
-// @ts-ignore
 import camera from "../camera.js";
-// @ts-ignore
-import board from "../boardtiles.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -97,7 +92,7 @@ let pointerId: string | undefined;
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
 /** The world location the piece has been dragged to. */
-let worldLocation: Coords | undefined;
+let worldLocation: DoubleCoords | undefined;
 /** The square that the piece would be moved to if dropped now. It will be outlined. */
 let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
@@ -147,7 +142,7 @@ function updateDragLocation() {
 	 */
 	const squarePawnPromotingOn = selection.getSquarePawnIsCurrentlyPromotingOn();
 	if (squarePawnPromotingOn !== undefined) {
-		const worldCoords = space.convertCoordToWorldSpace(squarePawnPromotingOn);
+		const worldCoords = space.convertCoordToWorldSpace(bd.FromCoords(squarePawnPromotingOn));
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;
 		return;
@@ -159,7 +154,7 @@ function updateDragLocation() {
 }
 
 /** Call AFTER {@link updateDragLocation} and BEFORE {@link renderPiece} */
-function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
+function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coords) {
 	worldLocation = worldLoc;
 	hoveredCoords = hoverSquare;
 }
@@ -192,9 +187,7 @@ function unclaimPointer() {
 // }
 
 /**
- * Stop dragging the piece and optionally play a sound.
- * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
- * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ * Stop dragging the piece.
  */
 function dropPiece() {
 	// console.error("Dropped piece");
@@ -226,18 +219,16 @@ function cancelDragging() {
 function renderTransparentSquare() {
 	if (!startCoords) return;
 
-	const color = [0,0,0,0];
-	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
+	const color: Color = [0,0,0,0];
+	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
 	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
 function renderPiece() {
-	if (!areDragging ||  perspective.isLookingUp() || !worldLocation) return;
+	if (!areDragging || perspective.isLookingUp() || !worldLocation) return;
 
-	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
-	outlineModel.render();
-
+	genOutlineModel().render();
 	genPieceModel()?.render();
 }
 
@@ -246,15 +237,14 @@ function renderPiece() {
  * @returns The buffer model
  */
 function genPieceModel(): BufferModel | undefined {
-	if (perspective.isLookingUp()) return;
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = listener_overlay.isMouseTouch(Mouse.LEFT);
-	const boardScale = boardpos.getBoardScale();
+	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
+	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(pieceType!, rotation);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
@@ -276,8 +266,8 @@ function genPieceModel(): BufferModel | undefined {
 	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	
 	const data: number[] = [];
-	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
-	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
+	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
+	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
 	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
@@ -290,25 +280,22 @@ function genPieceModel(): BufferModel | undefined {
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isMouseTouch(Mouse.LEFT);
-	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
-	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardpos.getBoardScale();
+	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
+	const boardScale = boardpos.getBoardScaleAsNumber();
+	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();
 	
 	// Outline the enire rank & file when:
 	// 1. We're not hovering over the start square.
 	// 2. It is a touch screen, OR we are zoomed out enough.
-	if (!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) && (pointerIsTouch || board.gtileWidth_Pixels() < minSizeToDrawOutline)) {
+	if (!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) && (pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)) {
 		// Outline the entire rank and file
-		let boundingBox: BoundingBox;
-		if (perspective.getEnabled()) {
-			const dist = perspective.distToRenderBoard;
-			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
-		} else boundingBox = camera.getScreenBoundingBox(false);
+		const screenBox = camera.getRespectiveScreenBox();
 
-		data.push(...bufferdata.getDataQuad_Color({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // left
-		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom + width }, color)); // bottom
-		data.push(...bufferdata.getDataQuad_Color({ left: right - width, right, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // right
-		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom: top - width, top }, color)); // top
+		data.push(...primitives.Quad_Color(left, screenBox.bottom, left + width, screenBox.top, color)); // left
+		data.push(...primitives.Quad_Color(screenBox.left, bottom, screenBox.right, bottom + width, color)); // bottom
+		data.push(...primitives.Quad_Color(right - width, screenBox.bottom, right, screenBox.top, color)); // right
+		data.push(...primitives.Quad_Color(screenBox.left, top - width, screenBox.right, top, color)); // top
 	} else {
 		// Outline the hovered square
 		data.push(...getBoxFrameData(hoveredCoords!));
@@ -324,15 +311,22 @@ function genOutlineModel(): BufferModel {
  */
 function getBoxFrameData(coords: Coords): number[] {
 	const boardPos = boardpos.getBoardPos();
-	const boardScale = boardpos.getBoardScale();
-	const squareCenter = board.gsquareCenter();
+	// We should be able to work with scale converted to a number
+	// because we don't drag pieces when zoomed out far.
+	const boardScale: number = boardpos.getBoardScaleAsNumber();
+	const squareCenter = boardtiles.getSquareCenterAsNumber();
 	const edgeWidth = 0.07 * boardScale;
 	const color = themes.getPropertyOfTheme(preferences.getTheme(), 'boxOutlineColor');
 
-	const centerXOfBox = coords[0] + 0.5 - squareCenter;
-	const centerYOfBox = coords[1] + 0.5 - squareCenter;
-	const centerX = (centerXOfBox - boardPos[0]) * boardScale;
-	const centerY = (centerYOfBox - boardPos[1]) * boardScale;
+	// Subtracting these two arbitrary numbers should result in a small number,
+	// since you know how would we be dragging the piece anyway if it wasn't close.
+	// (coords - boardPos) * scale
+	const relativeX = bd.toNumber(bd.subtract(bd.FromBigInt(coords[0]), boardPos[0])) * boardScale;
+	const relativeY = bd.toNumber(bd.subtract(bd.FromBigInt(coords[1]), boardPos[1])) * boardScale;
+
+	// Account for square center offset
+	const centerX = relativeX + (0.5 - squareCenter) * boardScale;
+	const centerY = relativeY + (0.5 - squareCenter) * boardScale;
 
 	const vertices: number[] = [];
 	const [r, g, b, a] = color;
@@ -395,30 +389,6 @@ function getBoxFrameData(coords: Coords): number[] {
 	);
 
 	return vertices;
-}
-
-/**
- * Generates a model of two lines intersecting at the piece.
- * Used when the piece is unable to be dropped such as when
- * zoomed far out or teleporting.
- * @returns The buffer model
- */
-function genIntersectingLines(): BufferModel {
-	let boundingBox: BoundingBox;
-	if (perspective.getEnabled()) {
-		const dist = perspective.distToRenderBoard;
-		boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
-	} else boundingBox = camera.getScreenBoundingBox(false);
-	
-	const { left, right, bottom, top } = boundingBox;
-	const [ r, g, b, a ] = preferences.getBoxOutlineColor();
-	const data = [
-		left, worldLocation![1], r, g, b, a,
-		right, worldLocation![1],r, g, b, a,
-		worldLocation![0], bottom, r, g, b, a,
-		worldLocation![0], top, r, g, b, a,
-	];
-	return createModel(data, 2, "LINES", true);
 }
 
 

@@ -1,4 +1,4 @@
-// @ts-ignore
+
 import { gl } from './webgl.js';
 
 

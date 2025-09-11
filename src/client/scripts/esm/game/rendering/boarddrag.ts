@@ -4,19 +4,18 @@
  * and throwing it after letting go.
  */
 
-// @ts-ignore
-import perspective from "./perspective.js";
-// @ts-ignore
-import transition from "./transition.js";
-import math from "../../util/math.js";
+
+import type { BDCoords, DoubleCoords } from "../../chess/util/coordutil.js";
+
 import mouse from "../../util/mouse.js";
-import { listener_overlay } from "../chess/game.js";
 import boardpos from "./boardpos.js";
 import guipromotion from "../gui/guipromotion.js";
-
-
-
-import type { Coords } from "../../chess/util/coordutil.js";
+import vectors from "../../util/math/vectors.js";
+import coordutil from "../../chess/util/coordutil.js";
+import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
+import { listener_overlay } from "../chess/game.js";
+import perspective from "./perspective.js";
+import transition from "./transition.js";
 
 
 
@@ -29,8 +28,8 @@ import type { Coords } from "../../chess/util/coordutil.js";
  */
 interface PositionHistoryEntry {
 	time: number;
-	boardPos: Coords;
-	boardScale: number;
+	boardPos: BDCoords;
+	boardScale: BigDecimal;
 }
 
 
@@ -41,7 +40,7 @@ interface PositionHistoryEntry {
 let boardIsGrabbed: boolean = false;
 
 /** Equal to the board scale the moment a 2nd finger touched down. (pinching the board) */
-let scale_WhenBoardPinched: number | undefined;
+let scale_WhenBoardPinched: BigDecimal | undefined;
 /** Equal to the distance between 2 fingers the moment they touched down. (pinching the board) */
 let fingerPixelDist_WhenBoardPinched: number | undefined;
 
@@ -53,9 +52,9 @@ let pointer2Id: string | undefined;
 
 
 /** What coordinates 1 finger has grabbed the board, if it has. */
-let pointer1BoardPosGrabbed: Coords | undefined;
+let pointer1BoardPosGrabbed: BDCoords | undefined;
 /** What coordinates a 2nd finger has grabbed the board, if it has. */
-let pointer2BoardPosGrabbed: Coords | undefined;
+let pointer2BoardPosGrabbed: BDCoords | undefined;
 
 
 
@@ -74,7 +73,7 @@ function isBoardDragging(): boolean {
 
 /** Checks if the board needs to be grabbed by any new pointers pressed down this frame. */
 function checkIfBoardGrabbed() {
-	if (perspective.getEnabled() || transition.areWeTeleporting() || guipromotion.isUIOpen()) return;
+	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen()) return;
 
 	// For every new pointer touched down / created this frame...
 	for (const pointerId of [...listener_overlay.getPointersDown()]) {
@@ -96,7 +95,7 @@ function checkIfBoardGrabbed() {
 			// Pixel distance
 			const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
 			const p2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
-			fingerPixelDist_WhenBoardPinched = math.euclideanDistance(p1Pos, p2Pos);
+			fingerPixelDist_WhenBoardPinched = vectors.euclideanDistanceDoubles(p1Pos, p2Pos);
 			if (fingerPixelDist_WhenBoardPinched === 0) throw Error('Finger pixel dist when pinching is 0');
 		
 			// Scale
@@ -175,13 +174,13 @@ function throwBoard(time: number) {
 	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0]!;
 	const lastBoardState = positionHistory[positionHistory.length - 1]!;
-	const deltaX = lastBoardState.boardPos[0] - firstBoardState.boardPos[0];
-	const deltaY = lastBoardState.boardPos[1] - firstBoardState.boardPos[1];
-	const deltaT = (lastBoardState.time - firstBoardState.time) / 1000;
+	const deltaX = bd.subtract(lastBoardState.boardPos[0], firstBoardState.boardPos[0]);
+	const deltaY = bd.subtract(lastBoardState.boardPos[1], firstBoardState.boardPos[1]);
+	const deltaT = bd.FromNumber((lastBoardState.time - firstBoardState.time) / 1000);
 	const boardScale = lastBoardState.boardScale;
-	const newPanVel: Coords = [
-		deltaX / deltaT * boardScale,
-		deltaY / deltaT * boardScale
+	const newPanVel: DoubleCoords = [
+		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaX, deltaT), boardScale)),
+		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaY, deltaT), boardScale))
 	];
 	// console.log('Throwing board with velocity', newPanVel);
 	boardpos.setPanVel(newPanVel);
@@ -196,7 +195,7 @@ function throwScale(time: number) {
 	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0]!;
 	const lastBoardState = positionHistory[positionHistory.length - 1]!;
-	const ratio = lastBoardState.boardScale / firstBoardState.boardScale;
+	const ratio = bd.toNumber(bd.divide_floating(lastBoardState.boardScale, firstBoardState.boardScale));
 	const deltaTime = (lastBoardState.time - firstBoardState.time) / 1000;
 	boardpos.setScaleVel((ratio - 1) / deltaTime);
 }
@@ -210,7 +209,7 @@ function dragBoard() {
 
 	if (pointer2Id === undefined) { // 1 Finger drag
 
-		const mouseWorld = mouse.getPointerWorld(pointer1Id!)!;
+		const mouseWorld = bd.FromDoubleCoords(mouse.getPointerWorld(pointer1Id!)!);
 		// console.log('Mouse world', mousePos);
 
 		/**
@@ -224,9 +223,10 @@ function dragBoard() {
 		 */
 
 		const boardScale = boardpos.getBoardScale();
-		const newBoardPos: Coords = [
-			pointer1BoardPosGrabbed![0] - (mouseWorld[0] / boardScale),
-			pointer1BoardPosGrabbed![1] - (mouseWorld[1] / boardScale),
+		const newBoardPos: BDCoords = [
+			// negate and add pointer1BoardPosGrabbed instead of flipped, because we don't need high precision here.
+			bd.add(bd.negate(bd.divide_fixed(mouseWorld[0], boardScale)), pointer1BoardPosGrabbed![0]),
+			bd.add(bd.negate(bd.divide_fixed(mouseWorld[1], boardScale)), pointer1BoardPosGrabbed![1])
 		];
 		boardpos.setBoardPos(newBoardPos);
 
@@ -238,17 +238,10 @@ function dragBoard() {
 		const pointer2World = mouse.convertMousePositionToWorldSpace(pointer2Pos, listener_overlay.element);
 
 		// Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
-		const thisPixelDist = math.euclideanDistance(pointer1Pos, pointer2Pos);
-		let ratio = thisPixelDist / fingerPixelDist_WhenBoardPinched!;
+		const thisPixelDist = vectors.euclideanDistanceDoubles(pointer1Pos, pointer2Pos);
+		const ratio = bd.FromNumber(thisPixelDist / fingerPixelDist_WhenBoardPinched!);
 	
-		// If the scale is greatly zoomed out, start slowing it down
-		const limitToDampScale = boardpos.glimitToDampScale();
-		if (scale_WhenBoardPinched! < limitToDampScale && ratio < 1) {
-			const dampener = scale_WhenBoardPinched! / limitToDampScale;
-			ratio = (ratio - 1) * dampener + 1;
-		}
-	
-		const newScale = scale_WhenBoardPinched! * ratio;
+		const newScale = bd.multiply_floating(scale_WhenBoardPinched!, ratio);
 		boardpos.setBoardScale(newScale);
 
 		/**
@@ -256,19 +249,14 @@ function dragBoard() {
 		 * as one finger dragging from the midpoint between them.
 		 */
 
-		const midCoords: Coords = [
-			(pointer1BoardPosGrabbed![0] + pointer2BoardPosGrabbed![0]) / 2,
-			(pointer1BoardPosGrabbed![1] + pointer2BoardPosGrabbed![1]) / 2
-		];
+		const midCoords: BDCoords = coordutil.lerpCoords(pointer1BoardPosGrabbed!, pointer2BoardPosGrabbed!, 0.5);
 
-		const midPosWorld: Coords = [
-			(pointer1World[0] + pointer2World[0]) / 2,
-			(pointer1World[1] + pointer2World[1]) / 2
-		];
+		const midPosWorld: BDCoords = bd.FromDoubleCoords(coordutil.lerpCoordsDouble(pointer1World, pointer2World, 0.5));
 
-		const newBoardPos: Coords = [
-			midCoords[0] - midPosWorld[0] / newScale,
-			midCoords[1] - midPosWorld[1] / newScale
+		const newBoardPos: BDCoords = [
+			// negate and add midCoords instead of flipped, because we don't need high precision here.
+			bd.add(bd.negate(bd.divide_fixed(midPosWorld[0], newScale)), midCoords[0]),
+			bd.add(bd.negate(bd.divide_fixed(midPosWorld[1], newScale)), midCoords[1])
 		];
 
 		boardpos.setBoardPos(newBoardPos);

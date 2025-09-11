@@ -6,7 +6,7 @@
 import { rawTypes, players } from "../../chess/util/typeutil.js";
 
 import type { RawType, Player } from "../../chess/util/typeutil.js";
-import type { Color } from "../../util/math.js";
+import type { Color } from "../../util/math/math.js";
 
 type PieceColorGroup = {
 	// eslint-disable-next-line no-unused-vars

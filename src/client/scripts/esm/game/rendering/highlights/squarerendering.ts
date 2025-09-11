@@ -13,10 +13,11 @@
 
 import space from "../../misc/space.js";
 import instancedshapes from "../instancedshapes.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
 import { BufferModelInstanced, createModel_Instanced } from "../buffermodel.js";
 
 import type { Coords } from "../../../chess/util/coordutil.js";
-import type { Color } from "../../../util/math.js";
+import type { Color } from "../../../util/math/math.js";
 
 
 /**
@@ -32,8 +33,8 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 	const instanceData: number[] = [];
 
 	highlights.forEach(coords => {
-		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-		const worldLoc = space.convertCoordToWorldSpace(coords);
+		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(bigdecimal.FromCoords(coords));
+		const worldLoc = space.convertCoordToWorldSpace(bd.FromCoords(coords));
 		instanceData.push(...worldLoc);
 	});
 

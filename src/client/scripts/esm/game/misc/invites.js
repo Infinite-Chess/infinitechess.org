@@ -2,7 +2,6 @@
 // Import Start
 import websocket from '../websocket.js';
 import localstorage from '../../util/localstorage.js';
-import sound from './sound.js';
 import clockutil from '../../chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
@@ -11,6 +10,7 @@ import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 import docutil from '../../util/docutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import gamesound from './gamesound.js';
 import { players } from '../../chess/util/typeutil.js';
 // Import End
 
@@ -178,7 +178,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 			foundOurs = true;
 			ourInviteID = invite.id;
 			if (!alreadySeenOurInvite) {
-				sound.playSound_marimba();
+				gamesound.playMarimba();
 				alreadyPlayedSound = true;
 			}
 		}
@@ -273,8 +273,8 @@ const playBaseIfNewInvite = (() => {
 })();
 
 function playSoundNewOpponentInvite() {
-	if (docutil.isMouseSupported()) sound.playSound_base();
-	else sound.playSound_viola_c3();
+	if (docutil.isMouseSupported()) gamesound.playBase();
+	else gamesound.playViola_c3();
     
 }
 

@@ -32,6 +32,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 "use strict";
 
+import bimath from "./bigdecimal/bimath.js";
+
 // Some useful BigInt constants
 const ZERO = 0n;
 const ONE = 1n;
@@ -224,42 +226,6 @@ function montgomeryPow(n, exp, ctx) {
 //     this.probablePrime = probablePrime
 //   }
 // }
-
-/**
- * Calculates the gcd of two positive bigints.
- *
- * @param {bigint} a The first number (must be positive)
- * @param {bigint} b The second number (must be positive)
- * @returns {bigint} gcd(a, b)
- */
-function ugcd(a, b) {
-	if (a === b) return a;
-	if (a === ZERO) return b;
-	if (b === ZERO) return a;
-
-	// Strip out any shared factors of two beforehand (to be re-added at the end)
-	let sharedTwoFactors = ZERO;
-	while (!((a & ONE) | (b & ONE))) {
-		sharedTwoFactors++;
-		a >>= ONE;
-		b >>= ONE;
-	}
-
-	while (a !== b && b > ONE) {
-		// Any remaining factors of two in either number are not important to the gcd and can be shifted away
-		while (!(a & ONE)) a >>= ONE;
-		while (!(b & ONE)) b >>= ONE;
-
-		// Standard Euclidean algorithm, maintaining a > b and avoiding division
-		if (b > a) [a, b] = [b, a];
-		else if (a === b) break;
-
-		a -= b;
-	}
-
-	// b is the gcd, after re-applying the shared factors of 2 removed earlier
-	return b << sharedTwoFactors;
-}
 
 /**
  * Ensures that all bases in the given array are valid for use in Miller-Rabin tests on the number `n = nSub + 1`.
@@ -481,7 +447,7 @@ function primalityTestBigint(
 
 			// Check whether the chosen base has any factors in common with n (if so, we can end early)
 			if (findDivisor) {
-				const gcd = ugcd(n, base);
+				const gcd = bimath.GCD(n, base);
 				if (gcd !== ONE) return false; // Found a factor of n, so no need for further primality tests
 			}
 
@@ -524,7 +490,7 @@ function primalityTestBigint(
 
 			// Check whether the chosen base has any factors in common with n (if so, we can end early)
 			if (findDivisor) {
-				const gcd = ugcd(n, base);
+				const gcd = bimath.GCD(n, base);
 				if (gcd !== ONE) return false; // Found a factor of n, so no need for further primality tests
 			}
 

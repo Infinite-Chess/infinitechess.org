@@ -17,7 +17,9 @@ import preferences from "../../../components/header/preferences.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import squarerendering from "./squarerendering.js";
 
+
 import type { Board } from "../../../chess/logic/gamefile.js";
+import type { Color } from "../../../util/math/math.js";
 
 
 /**
@@ -46,8 +48,8 @@ function highlightLastMove(boardsim: Board) {
 	const lastMove = moveutil.getCurrentMove(boardsim);
 	if (!lastMove) return; // Don't render if last move is undefined.
 
-	const color = preferences.getLastMoveHighlightColor();
-	const size = boardpos.getBoardScale();
+	const color: Color = preferences.getLastMoveHighlightColor();
+	const size: number = boardpos.getBoardScaleAsNumber();
 
 	squarerendering.genModel([lastMove.startCoords, lastMove.endCoords], color).render(undefined, undefined, { size });
 }

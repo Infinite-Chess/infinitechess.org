@@ -23,6 +23,7 @@ import movesequence from '../chess/movesequence.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import guinavigation from '../gui/guinavigation.js';
+import organizedpieces from '../../chess/logic/organizedpieces.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -304,20 +305,16 @@ function redo() {
 }
 
 /**
- * copypastegame uses the move list instead of the position
+ * copygame uses the move list instead of the position
  * which doesn't work for the board editor.
  * This function uses the position of pieces on the board.
  */
 function save() {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-	const pieces = gamefile.boardsim.pieces;
-	let output = "";
-	pieces.coords.forEach((idx: number, coordsKey: string) => {
-		const type = pieces.types[idx];
-		if (type !== undefined) output += icnconverter.getAbbrFromType(type) + coordsKey + '|';
-	});
-	docutil.copyToClipboard(output.slice(0,-1));
+	const gamefile = gameslot.getGamefile()!;
+	const pieceIterator = organizedpieces.getPieceIterable(gamefile.boardsim.pieces);
+	const positionString = icnconverter.getShortFormPosition(pieceIterator, gamefile.boardsim.state.global.specialRights);
+
+	docutil.copyToClipboard(positionString);
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 

@@ -17,6 +17,8 @@ import space from "../../misc/space.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import bd from "../../../util/bigdecimal/bigdecimal.js";
+import coordutil from "../../../chess/util/coordutil.js";
 
 
 
@@ -42,19 +44,31 @@ function updateCapturedPiece(): void {
 
 	let hoveredArrows = arrows.getHoveredArrows();
 
-	// Filter out the selected piece
+	// Filter out the selected piece, and floating point arrows (animated ones)
 
-	hoveredArrows = hoveredArrows.filter(arrow => arrow.piece.coords !== selectedPiece.coords);
+	hoveredArrows = hoveredArrows.filter(arrow => {
+		if (arrow.piece.floating) return false; // Filter animated arrows
+		const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
+		return !coordutil.areCoordsEqual(integerCoords, selectedPiece.coords);
+	});
 
 	// For each of the hovered arrows, test if capturing is legal
 
 	const legalCaptureHoveredArrows = hoveredArrows.filter(arrow => {
-		return legalmoves.checkIfMoveLegal(gameslot.getGamefile()!, selectedPieceLegalMoves, selectedPiece.coords, arrow.piece.coords, selectedPieceColor);
+		return legalmoves.checkIfMoveLegal(gameslot.getGamefile()!, selectedPieceLegalMoves, selectedPiece.coords, bd.coordsToBigInt(arrow.piece.coords), selectedPieceColor);
 	});
+
+	if (legalCaptureHoveredArrows.length === 0) return; // No arrow being hovered over is legal to capture by the dragged piece
+
+	const legalCapturePiece = legalCaptureHoveredArrows[0]!.piece;
 
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));
 
-	if (legalCaptureHoveredArrows.length === 1) capturedPieceThisFrame = legalCaptureHoveredArrows[0]!.piece;
+	capturedPieceThisFrame = {
+		type: legalCapturePiece.type,
+		coords: bd.coordsToBigInt(legalCapturePiece.coords),
+		index: legalCapturePiece.index,
+	};
 }
 
 function getCaptureCoords(): Coords | undefined {
@@ -77,16 +91,18 @@ function shiftArrows(): void {
 
 	if (capturedPieceThisFrame !== undefined) {
 		// Reflect the dragged piece's new location in draganimation.ts
-		const worldCoords = space.convertCoordToWorldSpace(capturedPieceThisFrame.coords) as Coords;
+		const worldCoords = space.convertCoordToWorldSpace(bd.FromCoords(capturedPieceThisFrame.coords));
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrows.shiftArrow(capturedPieceThisFrame.type, true, capturedPieceThisFrame.coords, undefined);
+		arrows.deleteArrow(capturedPieceThisFrame.coords);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
-	arrows.shiftArrow(selectedPiece.type, true, selectedPiece.coords, newLocationOfSelectedPiece);
+	if (newLocationOfSelectedPiece) arrows.moveArrow(selectedPiece.coords, newLocationOfSelectedPiece);
+	// Or just delete if there's no new integer destination
+	else arrows.deleteArrow(selectedPiece.coords);
 }
 
 function onDragTermination() {

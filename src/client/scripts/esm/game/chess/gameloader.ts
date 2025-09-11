@@ -21,9 +21,7 @@ import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 
 
-// @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
 import transition from "../rendering/transition.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
@@ -145,6 +143,9 @@ async function startLocalGame(options: {
 		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
 		 */
 		// additional: { editor: true }
+		// Enable to test world border in local games
+		// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
+		// additional: { worldBorder: BigInt(15) }
 	})
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
@@ -257,7 +258,14 @@ async function startEngineGame(options: {
 		metadata,
 		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
-		additional: { variantOptions: options.variantOptions }
+		additional: {
+			variantOptions: options.variantOptions,
+			// Engine games have a world border enabled so as to keep
+			// the position within safe floating point range.
+			// If the variant's world border is smaller, that will be used instead.
+			// worldBorder: BigInt(Number.MAX_SAFE_INTEGER) // FREEZES practice checkmate engine if you move to the border
+			worldBorder: BigInt(1e15) // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
+		}
 	});
 
 	/** A promise that resolves when the engine script has been fetched. */

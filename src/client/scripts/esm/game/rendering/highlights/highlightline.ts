@@ -5,17 +5,18 @@
  */
 
 
-// @ts-ignore
 import perspective from '../perspective.js';
-// @ts-ignore
 import boardtiles from '../boardtiles.js';
-import { createModel } from '../buffermodel.js';
 import space from '../../misc/space.js';
-
-
-import type { BoundingBox, Color } from '../../../util/math.js';
-import type { Coords } from '../../../chess/util/coordutil.js';
 import boardpos from '../boardpos.js';
+import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
+import { createModel } from '../buffermodel.js';
+
+
+import type { BDCoords } from '../../../chess/util/coordutil.js';
+import type { Color } from '../../../util/math/math.js';
+import type {  BoundingBoxBD } from '../../../util/math/bounds.js';
+import type { LineCoefficients } from '../../../util/math/vectors.js';
 
 
 
@@ -27,12 +28,12 @@ import boardpos from '../boardpos.js';
  * we can't render lines out to infinity.
  */
 interface Line {
-	/** The starting point coords. */
-	start: Coords
-	/** The ending point coords. */
-	end: Coords
-	/** The equation of the line in general form. [A,B,C] */
-	coefficients: [number, number, number]
+	/** The starting point coords. May have floating point innaccuracy. */
+	start: BDCoords
+	/** The ending point coords. May have floating point innaccuracy. */
+	end: BDCoords
+	/** The equation of the line in general form. [A,B,C]. PERFECT integers, use this for calculating intersections. */
+	coefficients: LineCoefficients
 	/** The color of the line. */
 	color: Color
 	/**
@@ -48,18 +49,24 @@ interface Line {
  * Returns the respective bounding box inside which we should render highlight lines out to,
  * according to whether we're in perspective mode or not.
  */
-function getRenderRange(): BoundingBox {
+function getRenderRange(): BoundingBoxBD {
+
 	if (!perspective.getEnabled()) { // 2D mode
 		return boardtiles.gboundingBoxFloat();
 	} else { // Perspective mode
-		const distToRenderBoard_Tiles = perspective.distToRenderBoard / boardpos.getBoardScale();
+
+		const distToRenderBoardBD: BigDecimal = bd.FromNumber(perspective.distToRenderBoard);
+		const scale: BigDecimal = boardpos.getBoardScale();
+		const position = boardpos.getBoardPos();
+
+		const distToRenderBoard_Tiles: BigDecimal = bd.divide_floating(distToRenderBoardBD, scale);
+
 		// Shift the box based on our current board position
-		const boardPos = boardpos.getBoardPos();
 		return {
-			left: boardPos[0] - distToRenderBoard_Tiles,
-			right: boardPos[0] + distToRenderBoard_Tiles,
-			bottom: boardPos[1] - distToRenderBoard_Tiles,
-			top: boardPos[1] + distToRenderBoard_Tiles,
+			left: bd.subtract(position[0], distToRenderBoard_Tiles),
+			right: bd.add(position[0], distToRenderBoard_Tiles),
+			bottom: bd.subtract(position[1], distToRenderBoard_Tiles),
+			top: bd.add(position[1], distToRenderBoard_Tiles),
 		};
 	}
 }

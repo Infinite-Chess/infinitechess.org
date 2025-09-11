@@ -17,7 +17,7 @@ import gamefileutility from "../../../chess/util/gamefileutility.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import pingManager from "../../../util/pingManager.js";
 import { listener_document, listener_overlay } from "../../chess/game.js";
-import sound from "../sound.js";
+import gamesound from "../gamesound.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
 // @ts-ignore
@@ -131,7 +131,7 @@ function tellServerWeAFK() {
 	timeWeLoseFromAFK = Date.now() + timerToLossFromAFK;
 
 	// Play lowtime alert sound
-	sound.playSound_lowtime();
+	gamesound.playLowtime();
 
 	// Display on screen "You are AFK. Auto-resigning in 20..."
 	displayWeAFK(20);
@@ -159,8 +159,8 @@ function displayWeAFK(secsRemaining: number) {
 }
 
 function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number) {
-	if (note === 'c3') sound.playSound_viola_c3();
-	else if (note === 'c4') sound.playSound_violin_c4();
+	if (note === 'c3') gamesound.playViola_c3();
+	else if (note === 'c4') gamesound.playViolin_c4();
     
 	const nextSecsRemaining = secsRemaining > 5 ? secsRemaining - 1 : secsRemaining - 0.5;
 	if (nextSecsRemaining === 0) return; // Stop

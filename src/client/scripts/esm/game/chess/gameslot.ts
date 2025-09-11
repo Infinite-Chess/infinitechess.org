@@ -39,29 +39,25 @@ import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
-import sound from "../misc/sound.js";
 import guiclock from "../gui/guiclock.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
 import premoves from "./premoves.js";
 import { animateMove } from "./graphicalchanges.js";
-// @ts-ignore
+import winconutil from "../../chess/util/winconutil.js";
+import copygame from "./copygame.js";
+import pastegame from "./pastegame.js";
+import bd from "../../util/bigdecimal/bigdecimal.js";
+import board from "../rendering/boardtiles.js";
+import transition from "../rendering/transition.js";
+import perspective from "../rendering/perspective.js";
+import area from "../rendering/area.js";
+import gamesound from "../misc/gamesound.js";
+import meshes from "../rendering/meshes.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
-import copypastegame from "./copypastegame.js";
-// @ts-ignore
-import transition from "../rendering/transition.js";
-// @ts-ignore
-import board from "../rendering/boardtiles.js";
-// @ts-ignore
-import area from "../rendering/area.js";
-// @ts-ignore
 import guipause from "../gui/guipause.js";
-// @ts-ignore
-import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import winconutil from "../../chess/util/winconutil.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -92,6 +88,11 @@ interface Additional {
 	clockValues?: ClockValues,
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor?: boolean,
+	/**
+	 * If present, the resulting gamefile will have a world border at this distance on all sides from the origin (0,0).
+	 * It is NOT equidistant from all sides of the current position.
+	 */
+	worldBorder?: bigint,
 }
 
 // Variables ---------------------------------------------------------------
@@ -163,7 +164,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
-	sound.playSound_gamestart();
+	gamesound.playGamestart();
 
 	/**
 	 * Next start loading the GRAPHICAL stuff...
@@ -216,7 +217,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	// Initialize the mesh empty
 	mesh = {
-		offset: [0, 0],
+		offset: [0n, 0n],
 		inverted: false,
 		types: {}
 	};
@@ -273,9 +274,13 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
+	const startingAreaBox = gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim);
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startingAreaBox);
+	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
-	boardpos.setBoardScale(centerArea.scale * 1.75);
+	const amount = bd.FromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
+	const startScale = bd.multiply_fixed(centerArea.scale, amount);
+	boardpos.setBoardScale(startScale);
 	guinavigation.recenter();
 	transition.eraseTelHist();
 }
@@ -283,18 +288,18 @@ function startStartingTransition() {
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
 function initCopyPastGameListeners() {
 	document.addEventListener('copy', callbackCopy);
-	document.addEventListener('paste', copypastegame.callbackPaste);
+	document.addEventListener('paste', pastegame.callbackPaste);
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
 function removeCopyPasteGameListeners() {
 	document.removeEventListener('copy', callbackCopy);
-	document.removeEventListener('paste', copypastegame.callbackPaste);
+	document.removeEventListener('paste', pastegame.callbackPaste);
 }
 
 function callbackCopy(event: Event) {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
-	copypastegame.copyGame(false);
+	copygame.copyGame(false);
 }
 
 /**
@@ -318,12 +323,12 @@ function concludeGame() {
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {
-		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
+		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);
+		else gamesound.playDraw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
-		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
+		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor()) gamesound.playWin(delayToPlayConcludeSoundSecs);
+		else if (victor === players.NEUTRAL || !victor) gamesound.playDraw(delayToPlayConcludeSoundSecs);
+		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
 	}
 	
 	// Set the Result and Condition metadata
@@ -355,5 +360,7 @@ export default {
 };
 
 export type {
+	LoadOptions,
+	PresetAnnotes,
 	Additional,
 };

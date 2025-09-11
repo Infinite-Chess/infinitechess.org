@@ -9,14 +9,12 @@
 import boardutil from '../util/boardutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
-import math from '../../util/math.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
-
-import { players } from '../util/typeutil.js';
 import legalmoves from './legalmoves.js';
+import vectors, { Vec2 } from '../../util/math/vectors.js';
+import { players } from '../util/typeutil.js';
 
-import type { Vec2 } from '../../util/math.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
@@ -214,7 +212,7 @@ function doesSlideAttackSquare(boardsim: Board, square: Coords, friendlyColor: P
 function doesLineAttackSquare(boardsim: Board, line: number[] | undefined, direction: Vec2, coords: Coords, color: Player, attackers?: Attacker[]): boolean {
 	if (!line) return false; // This line doesn't exist, then obviously no pieces can attack our square
 
-	const directionKey = math.getKeyFromVec2(direction); // 'dx,dy'
+	const directionKey = vectors.getKeyFromVec2(direction); // 'dx,dy'
 	let atleast1Attacker = false;
 
 	// Iterate through every piece on the line, and test if they can attack our square
@@ -230,7 +228,7 @@ function doesLineAttackSquare(boardsim: Board, line: number[] | undefined, direc
 		const moveset = thisPieceMoveset.sliding[directionKey];
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
 		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
-		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, boardsim.pieces, line, direction, moveset, thisPiece.coords, thisPieceColor);
+		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, line, direction, moveset, thisPiece.coords, thisPieceColor, false);
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
 		const ignoreFunc = legalmoves.getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
