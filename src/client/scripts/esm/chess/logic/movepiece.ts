@@ -66,7 +66,7 @@ type promoteTrigger = boolean;
 type promotion = number;
 /** A special move tag for castling. */
 type castle = {
-	/** 1 => King castled right   2 => King castled left */
+	/** 1 => King castled right   -1 => King castled left */
 	dir: 1n | -1n,
 	/** The coordinate of the piece the king castled with, usually a rook. */
 	coord: Coords
