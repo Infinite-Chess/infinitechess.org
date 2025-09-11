@@ -16,7 +16,7 @@ import type { Server as HttpsServer } from 'https';
 
 
 
-let WebSocketServer: WebSocket.Server;
+let WebSocketServer: Server;
 
 
 
