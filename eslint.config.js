@@ -1,6 +1,6 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
-// import pluginTypescript from "@typescript-eslint/eslint-plugin";
+import pluginTypescript from "@typescript-eslint/eslint-plugin";
 import parserTypescript from "@typescript-eslint/parser";
 
 export default [
@@ -61,10 +61,13 @@ export default [
 	},
 	{ // TYPESCRIPT SETTINGS THAT OVERWRITE THE ABOVE
 		files: ["**/*.ts"],
+		// Required for us to use the @typescript-eslint/explicit-function-return-type rule below
+		plugins: { "@typescript-eslint": pluginTypescript },
 		rules: {
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off', 
-			'no-undef': 'off' // Prevent ESLint from flagging TypeScript types as undefined
+			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined
+			"@typescript-eslint/explicit-function-return-type": "error",
 		},
 	},
 ];
