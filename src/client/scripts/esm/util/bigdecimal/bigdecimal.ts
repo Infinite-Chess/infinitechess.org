@@ -738,6 +738,8 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
 	// We continue until the guess stabilizes.
 	let last_x_k = clone(x_k); // A copy to check for convergence
 
+	// console.log("Beginning square root iteration for value:", toString(bd));
+
 	const MAX_ITERATIONS = 100; // Limit iterations to prevent infinite loops in case of non-convergence.
 	// console.log(`Starting sqrt iterations with mantissaBits = ${mantissaBits}`);
 	for (let i = 0; i < MAX_ITERATIONS; i++) {
@@ -745,20 +747,21 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
 		// Calculate `n / x_k` using high-precision floating division
 		const n_div_xk = divide_floating(bd, x_k, mantissaBits * 2);
 		// Calculate `x_k + (n / x_k)`
-		const sum = add(x_k, n_div_xk);
+		const sum = add(n_div_xk, x_k); // n_div_xk is FIRST since it has more precision, so the sum will match that precision!
 		// Divide by 2: `(sum) / 2`. A right shift is equivalent to division by 2.
 		x_k = { bigint: sum.bigint >> ONE, divex: sum.divex };
+
+		// console.log(`Iteration ${i}: Value = ${toExactString(x_k)}`);
 
 		// Check for convergence: if the guess is no longer changing, we've found our answer.
 		// console.log(`Iteration ${i}: x_k = ${toExactString(x_k)}`);
 		if (areEqual(x_k, last_x_k)) {
-			// console.log(`Reached convergence in sqrt after ${i} iterations.`);
-			return x_k;
+			// console.log(`Reached convergence in sqrt after ${i} iterations: ${toString(x_k)}`);
+			return normalize(x_k, mantissaBits); // x_k has precision of n_div_xk before this
 		}
 
 		// Prepare for the next iteration.
 		last_x_k = clone(x_k);
-		i++;
 	}
 
 	// If the loop completes without converging, something is wrong.
