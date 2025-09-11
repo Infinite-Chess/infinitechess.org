@@ -156,7 +156,7 @@ function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g
 
 	const data: number[] = [x, y,   r1, g1, b1, a1]; // Mid point
 
-	for (let i = 0; i < resolution; i++) { // Add all outer points
+	for (let i = 0; i <= resolution; i++) { // Add all outer points
 		const theta = (i / resolution) * 2 * Math.PI;
 		const thisX = x + radius * Math.cos(theta);
 		const thisY = y + radius * Math.sin(theta);
