@@ -3,7 +3,6 @@
  * This script contains the default movesets for all pieces except specials (pawns, castling)
  */
 
-import typeutil from '../util/typeutil.js';
 import vectors from '../../util/math/vectors.js';
 import { rawTypes } from '../util/typeutil.js';
 import specialdetect from './specialdetect.js';
@@ -45,9 +44,7 @@ interface PieceMoveset {
 	 * 
 	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
 	 */
-	sliding?: {
-		[slideDirection: Vec2Key]: [bigint | null, bigint | null]
-	},
+	sliding?: SlidingMoves,
 	/**
 	 * The initial function that determines how far a piece is legally able to slide
 	 * according to what pieces block it.
@@ -67,6 +64,21 @@ interface PieceMoveset {
 	 */
 	special?: SpecialFunction
 }
+
+
+/**
+ * Sliding moves the piece can make.
+ * 
+ * `"1,0": [-5,null]` => Lets the piece slide 5 squares in the negative vector direction, or infinitely in the positive.
+ * 
+ * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
+ * 
+ * THE 0-INDEX KEY SHOULD ALWAYS BE NEGATIVE!!!
+ */
+type SlidingMoves = {
+	[slideDirection: Vec2Key]: [bigint | null, bigint | null]
+}
+
 
 /**
  * This runs once for every square you can slide to that's visible on the screen.
@@ -118,6 +130,30 @@ function defaultIgnoreFunction(): boolean {
 }
 
 /**
+ * Generates all orthogonal/diagonal moves on the perimeter of a square with a given radius (king, hawk).
+ */
+function generateCompassMoves(distance: bigint): Coords[] {
+	return [
+		[-distance, distance], [0n, distance], [distance, distance],
+		[-distance, 0n], /*[0n,0n],*/ [distance, 0n],
+		[-distance, -distance], [0n, -distance], [distance, -distance]
+	];
+}
+
+/**
+ * Generates the 8 moves for an (m,n) leaper piece (knight, camel, zebra, giraffe).
+ * It creates all permutations of (±m, ±n) and (±n, ±m).
+ */
+function generateLeaperMoves(m: bigint, n: bigint): Coords[] {
+	return [
+		// Positive second coordinate ("up" on a board)
+		[-n, m], [-m, n], [m, n], [n, m],
+		// Negative second coordinate ("down" on a board)
+		[-n, -m], [-m, -n], [m, -n], [n, -m],
+	];
+}
+
+/**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
  * 
  * These movesets are called as functions so that they return brand
@@ -125,8 +161,24 @@ function defaultIgnoreFunction(): boolean {
  * @param [slideLimit] Optional. The slideLimit gamerule value.
  * @returns Object containing the movesets of all pieces except pawns.
  */
-function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
-	if (typeof slideLimit !== 'number' && slideLimit !== null) throw new Error("slideLimit gamerule is in an unsupported value.");
+function getPieceDefaultMovesets(slideLimit: bigint | null = 5n): Movesets {
+	if (typeof slideLimit !== 'bigint' && slideLimit !== null) throw new Error("slideLimit gamerule is in an unsupported value.");
+
+	// Slide limits of all pieces. Negative the first index.
+	const slideLimits: [bigint | null, bigint | null] = [slideLimit === null ? null : -slideLimit, slideLimit];
+
+	// Define common movesets to reduce duplication
+	const kingMoves: Coords[] = generateCompassMoves(1n);
+	const knightMoves = generateLeaperMoves(1n, 2n);
+	const rookMoves: SlidingMoves = {
+		'1,0': slideLimits,
+		'0,1': slideLimits
+	};
+	const bishopMoves: SlidingMoves = {
+		'1,1': slideLimits,
+		'1,-1': slideLimits
+	};
+
 
 	return {
 		// Finitely moving
@@ -134,152 +186,94 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 			special: specialdetect.pawns
 		},
 		[rawTypes.KNIGHT]: {
-			individual: [
-                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
-                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
-            ]
+			individual: knightMoves
 		},
 		[rawTypes.HAWK]: {
 			individual: [
-                [-3n,0n],[-2n,0n],[2n,0n],[3n,0n],
-                [0n,-3n],[0n,-2n],[0n,2n],[0n,3n],
-                [-2n,-2n],[-2n,2n],[2n,-2n],[2n,2n],
-                [-3n,-3n],[-3n,3n],[3n,-3n],[3n,3n]
+                ...generateCompassMoves(2n),
+				...generateCompassMoves(3n),
             ]
 		},
 		[rawTypes.KING]: {
-			individual: [
-                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
-                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n]
-            ],
+			individual: kingMoves,
 			special: specialdetect.kings
 		},
 		[rawTypes.GUARD]: {
-			individual: [
-                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
-                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n]
-            ]
+			individual: kingMoves
 		},
 		// Infinitely moving
 		[rawTypes.ROOK]: {
-			sliding: {
-				'1,0': [slideLimit, slideLimit],
-				'0,1': [slideLimit, slideLimit]
-			}
+			sliding: rookMoves
 		},
 		[rawTypes.BISHOP]: {
-			sliding: {
-				'1,1': [slideLimit, slideLimit],
-				'1,-1': [slideLimit, slideLimit]
-			}
+			sliding: bishopMoves
 		},
 		[rawTypes.QUEEN]: {
 			sliding: {
-				'1,0': [slideLimit, slideLimit],
-				'0,1': [slideLimit, slideLimit],
-				'1,1': [slideLimit, slideLimit],
-				'1,-1': [slideLimit, slideLimit]
+				...rookMoves,
+				...bishopMoves
 			}
 		},
 		[rawTypes.ROYALQUEEN]: {
 			sliding: {
-				'1,0': [slideLimit, slideLimit],
-				'0,1': [slideLimit, slideLimit],
-				'1,1': [slideLimit, slideLimit],
-				'1,-1': [slideLimit, slideLimit]
+				...rookMoves,
+				...bishopMoves
 			}
 		},
 		[rawTypes.CHANCELLOR]: {
-			individual: [
-                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
-                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
-            ],
-			sliding: {
-				'1,0': [slideLimit, slideLimit],
-				'0,1': [slideLimit, slideLimit]
-			}
+			individual: knightMoves,
+			sliding: rookMoves
 		},
 		[rawTypes.ARCHBISHOP]: {
-			individual: [
-                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
-                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
-            ],
-			sliding: {
-				'1,1': [slideLimit, slideLimit],
-				'1,-1': [slideLimit, slideLimit]
-			}
+			individual: knightMoves,
+			sliding: bishopMoves
 		},
 		[rawTypes.AMAZON]: {
-			individual: [
-                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
-                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
-            ],
+			individual: knightMoves,
 			sliding: {
-				'1,0': [slideLimit, slideLimit],
-				'0,1': [slideLimit, slideLimit],
-				'1,1': [slideLimit, slideLimit],
-				'1,-1': [slideLimit, slideLimit]
+				...rookMoves,
+				...bishopMoves
 			}
 		},
 		[rawTypes.CAMEL]: {
-			individual: [
-                [-3n,1n],[-1n,3n],[1n,3n],[3n,1n],
-                [-3n,-1n],[-1n,-3n],[1n,-3n],[3n,-1n]
-            ]
+			individual: generateLeaperMoves(1n, 3n)
 		},
 		[rawTypes.GIRAFFE]: {
-			individual: [
-                [-4n,1n],[-1n,4n],[1n,4n],[4n,1n],
-                [-4n,-1n],[-1n,-4n],[1n,-4n],[4n,-1n]
-            ]
+			individual: generateLeaperMoves(1n, 4n)
 		},
 		[rawTypes.ZEBRA]: {
-			individual: [
-                [-3n,2n],[-2n,3n],[2n,3n],[3n,2n],
-                [-3n,-2n],[-2n,-3n],[2n,-3n],[3n,-2n]
-            ]
+			individual: generateLeaperMoves(2n, 3n)
 		},
 		[rawTypes.KNIGHTRIDER]: {
 			sliding: {
-				'1,2': [slideLimit, slideLimit],
-				'1,-2': [slideLimit,slideLimit],
-				'2,1': [slideLimit,slideLimit],
-				'2,-1': [slideLimit,slideLimit],
+				'1,2': slideLimits,
+				'1,-2': slideLimits,
+				'2,1': slideLimits,
+				'2,-1': slideLimits,
 			}
 		},
 		[rawTypes.CENTAUR]: {
 			individual: [
-                // Guard moveset
-                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
-                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n],
-                // + Knight moveset!
-                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
-                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
+                ...kingMoves,
+                ...knightMoves
             ]
 		},
 		[rawTypes.ROYALCENTAUR]: {
 			individual: [
-                // Guard moveset
-                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
-                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n],
-                // + Knight moveset!
-                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
-                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
+				...kingMoves,
+                ...knightMoves
             ],
 			special: specialdetect.kings
 		},
 		[rawTypes.HUYGEN]: {
-			sliding: {
-				'1,0': [slideLimit, slideLimit],
-				'0,1': [slideLimit, slideLimit]
-			},
+			sliding: rookMoves,
 			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean): 0 | 1 | 2 => {
 				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
 				if (!isPrime) return 0; // Doesn't block, not even if it's a void. It hops over it!
 				return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 			},
-			ignore: (startCoords: Coords, endCoords: Coords) => {
+			ignore: (startCoords: Coords, endCoords: Coords): boolean => {
 				const distance = vectors.chebyshevDistance(startCoords, endCoords);
 				const isPrime = isprime.primalityTest(distance, null);
 				return isPrime;
@@ -315,4 +309,11 @@ export default {
 	getPossibleSlides,
 };
 
-export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction, SpecialFunction };
+export type {
+	Movesets,
+	PieceMoveset,
+	Coords,
+	BlockingFunction,
+	IgnoreFunction,
+	SpecialFunction
+};

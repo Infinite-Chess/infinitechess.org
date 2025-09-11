@@ -24,8 +24,6 @@ import type { CoordsSpecial } from './movepiece.js';
 import type { enpassantCreate } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
 
-"use strict";
-
 /**
  * This detects if special moves are legal.
  * Does NOT execute the moves!

@@ -35,7 +35,6 @@ import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
-import camera from '../camera.js';
 import primitives from '../primitives.js';
 import bimath from '../../../util/bigdecimal/bimath.js';
 

@@ -541,8 +541,8 @@ function getTypeUndefinedsBehavior(type: number, editor: boolean, promotionsAllo
 function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 	for (let i = 0; i < slidingPossible.length; i++) {
 		const thisSlideDir: Vec2 = slidingPossible[i]!;
-		if (bimath.abs(thisSlideDir[0]) > 1) return true;
-		if (bimath.abs(thisSlideDir[1]) > 1) return true;
+		if (bimath.abs(thisSlideDir[0]) > 1n) return true;
+		if (bimath.abs(thisSlideDir[1]) > 1n) return true;
 	}
 	return false;
 }

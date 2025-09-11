@@ -16,7 +16,6 @@ import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
-import gamefileutility from '../util/gamefileutility.js';
 import bounds from '../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
