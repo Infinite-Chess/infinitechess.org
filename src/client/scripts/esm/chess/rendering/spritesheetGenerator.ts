@@ -9,6 +9,12 @@ import type { DoubleCoords } from "../util/coordutil.js";
 
 
 
+type SpritesheetData =  {
+	/** A fraction 0-1 representing what percentage of the total spritesheet's width one piece takes up. */
+	pieceWidth: number;
+	texLocs: { [key: number]: DoubleCoords; };
+}
+
 /**
  * The preferred image width each pieces image in a spreadsheet should be.
  * This may be a little higher, in order to make the spritesheet's total width a POWER OF 2.
@@ -24,7 +30,7 @@ const PREFERRED_IMG_SIZE = 512;
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A promise that resolves with the generated spritesheet as an HTMLImageElement.
  */
-async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]): Promise<{ spritesheet: HTMLImageElement; spritesheetData: { pieceWidth: number; texLocs: { [key: number]: DoubleCoords; }; }; }> {
+async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]): Promise<{ spritesheet: HTMLImageElement; spritesheetData: SpritesheetData; }> {
 	// Ensure there are images provided
 	if (images.length === 0) throw new Error('No images provided when generating spritesheet.');
   
@@ -94,7 +100,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param gridSize - How many images fit one-way.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): { pieceWidth: number; texLocs: { [key: number]: DoubleCoords; }; } {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): SpritesheetData {  
 	const pieceWidth = 1 / gridSize;
 	const texLocs: { [key: number]: DoubleCoords } = {};
 
