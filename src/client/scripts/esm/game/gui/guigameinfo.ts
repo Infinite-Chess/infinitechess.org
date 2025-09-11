@@ -52,7 +52,7 @@ let usernamecontainer_black: UsernameContainer | undefined;
  * @param metadata - The metadata of the gamefile, with its respective White and Black player names
  * @param {boolean} showGameControlButtons
  */
-function open(metadata: MetaData, showGameControlButtons?: boolean) {
+function open(metadata: MetaData, showGameControlButtons?: boolean): void {
 	// console.log("Opening game info bar");
 
 	if (showGameControlButtons) showButtons = showGameControlButtons;
@@ -74,7 +74,7 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	isOpen = true;
 }
 
-function embedUsernameContainers(gameMetadata: MetaData) {
+function embedUsernameContainers(gameMetadata: MetaData): void {
 	// console.log("Embedding username containers");
 
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(gameMetadata);
@@ -111,7 +111,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
  * Hides the game info bar.
  * Does NOT clear/erase the username containers.
  */
-function close() {
+function close(): void {
 	// console.log("Closing game info bar");
 
 	// Restore the whosturn marker to original content
@@ -128,7 +128,7 @@ function close() {
 }
 
 /** Erases the username containers, removing them from the document. */
-function clearUsernameContainers() {
+function clearUsernameContainers(): void {
 	// console.log("Clearing username containers");
 
 	// Stop any running number animations
@@ -143,25 +143,25 @@ function clearUsernameContainers() {
 	
 }
 
-function initListeners_Gamecontrol() {
+function initListeners_Gamecontrol(): void {
 	element_undoButton.addEventListener('click', undoMove);
 	element_restartButton.addEventListener('click', restartGame);
 	// For some reason we need this in order to stop the undo button from getting focused when clicked??
 	element_undoButton.addEventListener('mousedown', preventFocus);
 }
 
-function closeListeners_Gamecontrol() {
+function closeListeners_Gamecontrol(): void {
 	element_undoButton.removeEventListener('click', undoMove);
 	element_restartButton.removeEventListener('click', restartGame);
 	element_undoButton.removeEventListener('mousedown', preventFocus);
 }
 
-function undoMove() {
+function undoMove(): void {
 	const event = new Event("guigameinfo-undoMove");
 	document.dispatchEvent(event);
 }
 
-function restartGame() {
+function restartGame(): void {
 	const event = new Event("guigameinfo-restart");
 	document.dispatchEvent(event);
 }
@@ -169,7 +169,7 @@ function restartGame() {
 /**
  * Disables / Enables the "Undo Move" button
  */
-function update_GameControlButtons(undoingIsLegal: boolean) {
+function update_GameControlButtons(undoingIsLegal: boolean): void {
 	if (undoingIsLegal) {
 		element_undoButton.classList.remove('opacity-0_5');
 		element_undoButton.style.cursor = "pointer";
@@ -182,23 +182,23 @@ function update_GameControlButtons(undoingIsLegal: boolean) {
 	}
 }
 
-function preventFocus(event: Event) {
+function preventFocus(event: Event): void {
 	event.preventDefault();
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
-function revealPlayerNames() {
+function revealPlayerNames(): void {
 	element_playerWhiteContainer.classList.remove('hidden');
 	element_playerBlackContainer.classList.remove('hidden');
 }
 
 /** Hides the player names. Typically to make room for the draw offer UI */
-function hidePlayerNames() {
+function hidePlayerNames(): void {
 	element_playerWhiteContainer.classList.add('hidden');
 	element_playerBlackContainer.classList.add('hidden');
 }
 
-function toggle() {
+function toggle(): void {
 	if (isOpen) close();
 	else open(gameslot.getGamefile()!.basegame.metadata, showButtons);
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
@@ -242,7 +242,7 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
  * Updates the text at the bottom of the screen displaying who's turn it is now.
  * Call this after flipping the gamefile's `whosTurn` property.
  */
-function updateWhosTurn() {
+function updateWhosTurn(): void {
 	const { basegame } = gameslot.getGamefile()!;
 
 	// In the scenario we forward the game to front after the game has adjudicated,
@@ -263,7 +263,7 @@ function updateWhosTurn() {
 }
 
 /** Updates the whosTurn text to say who won! */
-function gameEnd(conclusion?: string) {
+function gameEnd(conclusion?: string): void {
 	// '1 checkmate' / '2 resignation' / '0 stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
@@ -347,7 +347,7 @@ function getHeightOfGameInfoBar(): number {
  * Narrow screen => Left-aligns black's username container and adds a fade effect on the right overflow
  * Fades either if they exceed the width of their parent.
  */
-function updateAlignmentUsernames() {
+function updateAlignmentUsernames(): void {
 	if (!usernamecontainer_white || !usernamecontainer_black) return; // Not in a game
 
 	// Player white
@@ -373,7 +373,7 @@ function updateAlignmentUsernames() {
  * This gets called when the client receives a "gameratingchange" message from a websocket
  * Displays the rating changes from the game in the existing username containers, while keeping all display options the same
  */
-function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>) {
+function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>): void {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
 	const { basegame } = gameslot.getGamefile()!;
 	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.WHITE]!.change);

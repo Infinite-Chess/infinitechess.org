@@ -60,7 +60,7 @@ let listener_document: InputListener;
 // Functions -------------------------------------------------------------------------------
 
 
-function init() {
+function init(): void {
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
@@ -73,7 +73,7 @@ function init() {
 }
 
 // Update the game every single frame
-function update() {
+function update(): void {
 	controls.testOutGameToggles();
 	invites.update();
 	// Any input should trigger the next frame to render.
@@ -152,7 +152,7 @@ function update() {
  * Tests if by clicking an empty region of the board,
  * we need to clear premoves and collapse annotations.
  */
-function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined) {
+function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (boardeditor.isBoardEditorUsingDrawingTool()) return; // Don't collapse if the board editor is using a drawing tool
 
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
@@ -163,7 +163,7 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 	}
 }
 
-function render() {
+function render(): void {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
@@ -220,7 +220,7 @@ function render() {
 }
 
 /** Renders items that need to be able to be masked by the world border. */
-function renderTilesAndPromoteLines() {
+function renderTilesAndPromoteLines(): void {
 	boardtiles.render();
 	promotionlines.render();
 }

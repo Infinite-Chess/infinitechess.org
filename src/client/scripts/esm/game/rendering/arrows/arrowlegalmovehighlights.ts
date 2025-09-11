@@ -66,7 +66,7 @@ const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
  * Pieces that are consecutively hovered over each frame have their
  * legal moves cached.
  */
-function update() {
+function update(): void {
 	const gamefile = gameslot.getGamefile()!;
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
@@ -100,7 +100,7 @@ function update() {
  * Calculates their legal moves and model for rendering them.
  * @param piece - The piece this arrow is pointing to
  */
-function onPieceIndicatorHover(arrowPiece: ArrowPiece) {
+function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 	// SHOULD WE JUST RETURN HERE INSTEAD OF ERROR???
 	if (!bd.areCoordsIntegers(arrowPiece.coords)) throw Error("We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!");
 
@@ -137,7 +137,7 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece) {
 }
 
 /** Renders the pre-cached legal move highlights of all arrow indicators being hovered over */
-function renderEachHoveredPieceLegalMoves() {
+function renderEachHoveredPieceLegalMoves(): void {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
 	const boardPos = boardpos.getBoardPos();
@@ -163,7 +163,7 @@ function renderEachHoveredPieceLegalMoves() {
  * Call when our highlights offset, or render range bounding box, changes,
  * so we account for the new offset.
  */
-function regenModelsOfHoveredPieces() {
+function regenModelsOfHoveredPieces(): void {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No arrows being hovered over
 
 	console.log("Updating models of hovered piece's legal moves..");
@@ -179,7 +179,7 @@ function regenModelsOfHoveredPieces() {
 }
 
 /** Erases the cached legal moves of the hovered arrow indicators */
-function reset() {
+function reset(): void {
 	hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
 }
 

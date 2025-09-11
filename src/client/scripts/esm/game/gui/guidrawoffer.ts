@@ -30,7 +30,7 @@ let drawOfferUICramped: boolean = false;
 
 
 /** Reveals the draw offer UI on the bottom navigation bar */
-function open() {
+function open(): void {
 	element_draw_offer_ui.classList.remove('hidden');
 	element_whosturn.classList.add('hidden');
 	initDrawOfferListeners();
@@ -39,7 +39,7 @@ function open() {
 }
 
 /** Hides the draw offer UI on the bottom navigation bar */
-function close() {
+function close(): void {
 	element_draw_offer_ui.classList.add('hidden');
 	element_whosturn.classList.remove('hidden');
 	closeDrawOfferListeners();
@@ -52,12 +52,12 @@ function close() {
 	drawOfferUICramped = false; // Reset for next draw offer UI opening
 }
 
-function initDrawOfferListeners() {
+function initDrawOfferListeners(): void {
 	element_acceptDraw.addEventListener('click', drawoffers.callback_AcceptDraw);
 	element_declineDraw.addEventListener('click', drawoffers.callback_declineDraw);
 }
 
-function closeDrawOfferListeners() {
+function closeDrawOfferListeners(): void {
 	element_acceptDraw.removeEventListener('click', drawoffers.callback_AcceptDraw);
 	element_declineDraw.removeEventListener('click', drawoffers.callback_declineDraw);
 }
@@ -67,7 +67,7 @@ function closeDrawOfferListeners() {
  * enough space to fit with them.
  * This is called when the UI is opened, AND on screen resize event!
  */
-function updateVisibilityOfNamesAndClocksWithDrawOffer() {
+function updateVisibilityOfNamesAndClocksWithDrawOffer(): void {
 	if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
 	    
 	if (isDrawOfferUICramped()) { // Hide the player names and clocks

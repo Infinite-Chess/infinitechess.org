@@ -68,7 +68,7 @@ function areInAGame(): boolean {
 }
 
 /** Returns the type of game we are in. */
-function getTypeOfGameWeIn() {
+function getTypeOfGameWeIn(): typeof typeOfGameWeAreIn {
 	return typeOfGameWeAreIn;
 }
 
@@ -105,7 +105,7 @@ function areWeLoadingGame(): boolean {
 /**
  * Updates whatever game is currently loaded, for what needs to be updated.
  */
-function update() {
+function update(): void {
 	if (typeOfGameWeAreIn === 'online') onlinegame.update();
 }
 
@@ -118,7 +118,7 @@ async function startLocalGame(options: {
 	/** Must be one of the valid variants in variant.ts */
 	Variant: string,
 	TimeControl: MetaData['TimeControl'],
-}) {
+}): Promise<void> {
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
 
@@ -169,7 +169,7 @@ async function startOnlineGame(options: {
 	participantState?: ParticipantState,
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
-}) {
+}): Promise<void> {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
 
@@ -231,7 +231,7 @@ async function startEngineGame(options: {
 	engineConfig: EngineConfig,
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true
-}) {
+}): Promise<void> {
 	if (options.Variant && options.variantOptions) throw Error("Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.");
 	if (!options.Variant && !options.variantOptions) throw Error("Must provide either Variant or variantOptions when starting an engine game.");
 
@@ -284,7 +284,7 @@ async function startEngineGame(options: {
 }
 
 /** Initializes the board editor. */
-async function startBoardEditor() {
+async function startBoardEditor(): Promise<void> {
 
 	typeOfGameWeAreIn = 'editor';
 	gameLoading = true;
@@ -332,7 +332,7 @@ async function pasteGame(options: {
 		variantOptions: VariantOptions,
 	},
 	presetAnnotes?: PresetAnnotes
-}) {
+}): Promise<void> {
 	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
 	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
 
@@ -369,7 +369,7 @@ async function pasteGame(options: {
  * A function that is executed when a game is FULLY loaded (graphical, spritesheet, engine, etc.)
  * This hides the spinny pawn loading animation that covers the board.
  */
-function onFinishedLoading() {
+function onFinishedLoading(): void {
 	// console.log('COMPLETELY finished loading game!');
 	gameLoading = false;
 
@@ -385,7 +385,7 @@ function onFinishedLoading() {
  * Replaces the loading animation with the words
  * "ERROR. One or more resources failed to load. Please refresh."
  */
-function onCatchLoadingError(err: Error) {
+function onCatchLoadingError(err: Error): void {
 	console.error(err);
 	loadingscreen.onError();
 }
@@ -395,12 +395,12 @@ function onCatchLoadingError(err: Error) {
  * @param metadata - The metadata of the gamefile 
  * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
  */
-function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
+function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false): void {
 	guigameinfo.open(metadata, showGameControlButtons);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 
-function unloadGame() {
+function unloadGame(): void {
 	// console.log("Game loader unloading game...");
 	
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();

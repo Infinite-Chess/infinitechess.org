@@ -67,17 +67,17 @@ let annotes_linger: Annotes = getEmptyAnnotes();
 
 
 /** Returns the list of all Square highlights currently visible. */
-function getSquares() {
+function getSquares(): Coords[] {
 	return getRelevantAnnotes().Squares;
 }
 
 /** Returns the list of all Arrow highlights currently visible. */
-function getArrows() {
+function getArrows(): Arrow[] {
 	return getRelevantAnnotes().Arrows;
 }
 
 /** Returns the list of all Ray highlights currently visible. */
-function getRays() {
+function getRays(): Ray[] {
 	return getRelevantAnnotes().Rays;
 }
 
@@ -121,7 +121,7 @@ function getEmptyAnnotes(): Annotes {
 }
 
 /** Erases all the annotes of the provided annotations. */
-function clearAnnotes(annotes: Annotes) {
+function clearAnnotes(annotes: Annotes): void {
 	annotes.Squares.length = 0;
 	annotes.Arrows.length = 0;
 	annotes.Rays.length = 0;
@@ -132,7 +132,7 @@ function clearAnnotes(annotes: Annotes) {
 
 
 /** Main Adds/deletes annotations */
-function update() {
+function update(): void {
 	// Do not allow new annotations to be drawn (via right mouse click) if the board editor is using a drawing tool
 	if (boardeditor.isBoardEditorUsingDrawingTool()) return;
 
@@ -149,7 +149,7 @@ function update() {
  * A. Atleast 1 ray => Erase all rays and add more Squares at all their intersections.
  * B. Else => Erase all annotes.
  */
-function Collapse() {
+function Collapse(): void {
 	const annotes = getRelevantAnnotes();
 
 	if (annotes.Rays.length > 0) {
@@ -169,14 +169,14 @@ function Collapse() {
  * Erases all the annotations of the current ply,
  * if lingering annotations is OFF.
  */
-function onPieceSelection() {
+function onPieceSelection(): void {
 	if (preferences.getLingeringAnnotationsMode()) return; // Don't clear annotations on piece selection in this mode
 	// Clear the annotations of the current ply
 	const annotes = getRelevantAnnotes();
 	clearAnnotes(annotes);
 }
 
-function onGameUnload() {
+function onGameUnload(): void {
 	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
 	drawarrows.stopDrawing();
@@ -190,13 +190,13 @@ function onGameUnload() {
 
 
 /** Renders the annotations that should be rendered below the pieces */
-function render_belowPieces() {
+function render_belowPieces(): void {
 	const annotes = getRelevantAnnotes();
 	drawsquares.render(annotes.Squares);
 	drawrays.render(annotes.Rays);
 }
 
-function render_abovePieces() {
+function render_abovePieces(): void {
 	const annotes = getRelevantAnnotes();
 	drawarrows.render(annotes.Arrows);
 }

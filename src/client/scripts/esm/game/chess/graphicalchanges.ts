@@ -38,20 +38,20 @@ const meshChanges: ChangeApplication<genericChangeFunc<Mesh>> = {
 // Mesh Changes -----------------------------------------------------------------------------------------
 
 
-function addMeshPiece(mesh: Mesh, change: Change) {
+function addMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
 
-function deleteMeshPiece(mesh: Mesh, change: Change) {
+function deleteMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.deletebufferdata(mesh, change.piece);
 }
 
-function moveMeshPiece(mesh: Mesh, change: Change) {
+function moveMeshPiece(mesh: Mesh, change: Change): void {
 	if (change.action !== 'move') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
 	piecemodels.overwritebufferdata(mesh, { type: change.piece.type, coords: change.endCoords, index: change.piece.index });
 }
 
-function returnMeshPiece(mesh: Mesh, change: Change) {
+function returnMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
 
@@ -66,11 +66,11 @@ function returnMeshPiece(mesh: Mesh, change: Change) {
  * @param premove - Whether this animation is for a premove.
  * @param force_instant - Whether to FORCE instant animation, EVEN secondary pieces won't be animated. Enable when you are playing a premove in the game.
  */
-function animateMove(moveChanges: Change[], forward = true, animateMain = true, premove = false, force_instant = false) {
+function animateMove(moveChanges: Change[], forward = true, animateMain = true, premove = false, force_instant = false): void {
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
 
 	// Helper function for pushing an item to an array in a map, creating the array if it does not exist.
-	function pushToArrayMap<K, V>(map: Map<K, V[]>, key: K, apple: V) {
+	function pushToArrayMap<K, V>(map: Map<K, V[]>, key: K, apple: V): void {
 		let t = map.get(key);
 		if (!t) {
 			t = [];
@@ -105,7 +105,7 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true, 
 				waypoints = waypoints.slice().reverse();
 				// Helper that inverts orders at the start of the path to the end, and vice versa.
 				// x remains the same, but y is set to the inverted x.
-				function invert<V>(x: Map<number,V>, y: Map<number,V>) {
+				function invert<V>(x: Map<number,V>, y: Map<number,V>): void {
 					y.clear();
 					x.forEach((v, k) => {
 						y.set(last - k,v);

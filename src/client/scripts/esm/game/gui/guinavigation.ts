@@ -82,19 +82,19 @@ let annotationsEnabled: boolean = false;
 
 // Functions
 
-function isOpen() {
+function isOpen(): boolean {
 	return navigationOpen;
 }
 
 /** Called when we push 'N' on the keyboard */
-function toggle() {
+function toggle(): void {
 	if (navigationOpen) close();
 	else open({ allowEditCoords: !onlinegame.areInOnlineGame() });
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
 	frametracker.onVisualChange();
 }
 
-function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {
+function open({ allowEditCoords = true }: { allowEditCoords?: boolean }): void {
 	element_Navigation.classList.remove('hidden');
 	if (!guiboardeditor.isOpen()) { // Normal game => Show navigate move buttons
 		element_moveRewind.classList.remove("hidden");
@@ -115,7 +115,7 @@ function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {
 	stats.updateStatsCSS();
 }
 
-function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
+function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }): void {
 	if (allowEditCoords) {
 		element_CoordsX.disabled = false;
 		element_CoordsY.disabled = false;
@@ -129,7 +129,7 @@ function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
 	}
 }
 
-function close() {
+function close(): void {
 	element_Navigation.classList.add('hidden');
 	closeListeners_Navigation();
 	navigationOpen = false;
@@ -147,7 +147,7 @@ function close() {
 
 
 // Update the division on the screen displaying your current coordinates
-function updateElement_Coords() {
+function updateElement_Coords(): void {
 	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
 
 	const boardPos = boardpos.getBoardPos();
@@ -170,7 +170,7 @@ function isCoordinateActive(): boolean {
 	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
 
-function initListeners_Navigation() {
+function initListeners_Navigation(): void {
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
@@ -219,7 +219,7 @@ function initListeners_Navigation() {
 	}
 }
 
-function closeListeners_Navigation() {
+function closeListeners_Navigation(): void {
 	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
@@ -269,7 +269,7 @@ function closeListeners_Navigation() {
 }
 
 /** Is called when we hit enter after changing one of the coordinate fields */
-function callback_CoordsChange() {
+function callback_CoordsChange(): void {
 
 	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
 	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
@@ -281,11 +281,11 @@ function callback_CoordsChange() {
 	boardpos.setBoardPos(newPos);
 }
 
-function callback_Back() {
+function callback_Back(): void {
 	transition.undoTransition();
 }
 
-function callback_Expand() {
+function callback_Expand(): void {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 
 	// Add the square annotation highlights, too.
@@ -299,20 +299,20 @@ function callback_Expand() {
 	transition.zoomToCoordsList(allCoords);
 }
 
-function recenter() {
+function recenter(): void {
 	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
 	transition.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================
 
-function callback_Annotations() {
+function callback_Annotations(): void {
 	annotationsEnabled = !annotationsEnabled;
 	listener_overlay.setTreatLeftasRight(annotationsEnabled);
 	element_Annotations.classList.toggle('enabled');
 }
 
-function callback__Collapse() {
+function callback__Collapse(): void {
 	annotations.Collapse();
 }
 
@@ -334,7 +334,7 @@ document.addEventListener('ray-count-change', (e: CustomEvent) => {
  * Returns true if the coords input box is currently not allowed to be edited.
  * This was set at the time they were opened.
  */
-function areCoordsAllowedToBeEdited() {
+function areCoordsAllowedToBeEdited(): boolean {
 	return !element_CoordsX.disabled;
 }
 
@@ -343,12 +343,12 @@ function getHeightOfNavBar(): number {
 	return element_Navigation.getBoundingClientRect().height;
 }
 
-function callback_Pause() {
+function callback_Pause(): void {
 	guipause.open();
 }
 
 /** Tests if the arrow keys have been pressed outisde of the board editor, signaling to rewind/forward the game. */
-function update() {
+function update(): void {
 	if (!guiboardeditor.isOpen()) {
 		testIfRewindMove();
 		testIfForwardMove();
@@ -363,20 +363,20 @@ function update() {
 // Move Buttons =====================================================
 
 
-function callback_MoveRewind() {
+function callback_MoveRewind(): void {
 	if (rewindIsLocked) return;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrEdit = Date.now();
 	rewindMove();
 }
 
-function callback_MoveForward() {
+function callback_MoveForward(): void {
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrEdit = Date.now();
 	forwardMove();
 }
 
-function isItOkayToRewindOrForward() {
+function isItOkayToRewindOrForward(): boolean {
 	const timeSincelastRewindOrEdit = Date.now() - lastRewindOrEdit;
 	return timeSincelastRewindOrEdit >= minimumRewindOrEditIntervalMillis; // True if enough time has passed!
 }
@@ -385,7 +385,7 @@ function isItOkayToRewindOrForward() {
  * Makes the rewind/forward move buttons transparent if we're at
  * the very beginning or end of the game.
  */
-function update_MoveButtons() {
+function update_MoveButtons(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const decrementingLegal = moveutil.isDecrementingLegal(gamefile.boardsim);
 	const incrementingLegal = moveutil.isIncrementingLegal(gamefile.boardsim);
@@ -399,7 +399,7 @@ function update_MoveButtons() {
 
 // Mouse
 
-function callback_MoveRewindMouseDown() {
+function callback_MoveRewindMouseDown(): void {
 	leftArrowTimeoutID = setTimeout(() => {
 		leftArrowIntervalID = setInterval(() => {
 			callback_MoveRewind();
@@ -407,17 +407,17 @@ function callback_MoveRewindMouseDown() {
 	}, timeToHoldMillis);
 }
 
-function callback_MoveRewindMouseLeave() {
+function callback_MoveRewindMouseLeave(): void {
 	clearTimeout(leftArrowTimeoutID);
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_MoveRewindMouseUp() {
+function callback_MoveRewindMouseUp(): void {
 	clearTimeout(leftArrowTimeoutID);
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_MoveForwardMouseDown() {
+function callback_MoveForwardMouseDown(): void {
 	rightArrowTimeoutID = setTimeout(() => {
 		rightArrowIntervalID = setInterval(() => {
 			callback_MoveForward();
@@ -425,19 +425,19 @@ function callback_MoveForwardMouseDown() {
 	}, timeToHoldMillis);
 }
 
-function callback_MoveForwardMouseLeave() {
+function callback_MoveForwardMouseLeave(): void {
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
 }
 
-function callback_MoveForwardMouseUp() {
+function callback_MoveForwardMouseUp(): void {
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
 }
 
 // Fingers
 
-function callback_MoveRewindTouchStart() {
+function callback_MoveRewindTouchStart(): void {
 	touchIsInsideLeft = true;
 	leftArrowTimeoutID = setTimeout(() => {
 		if (!touchIsInsideLeft) return;
@@ -447,7 +447,7 @@ function callback_MoveRewindTouchStart() {
 	}, timeToHoldMillis);
 }
 
-function callback_MoveRewindTouchMove(event: TouchEvent) {
+function callback_MoveRewindTouchMove(event: TouchEvent): void {
 	if (!touchIsInsideLeft) return;
 	const touch = event.touches[0]!;
 	const rect = element_moveRewind.getBoundingClientRect();
@@ -461,13 +461,13 @@ function callback_MoveRewindTouchMove(event: TouchEvent) {
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_MoveRewindTouchEnd() {
+function callback_MoveRewindTouchEnd(): void {
 	touchIsInsideLeft = false;
 	clearTimeout(leftArrowTimeoutID);
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_MoveForwardTouchStart() {
+function callback_MoveForwardTouchStart(): void {
 	touchIsInsideRight = true;
 	rightArrowTimeoutID = setTimeout(() => {
 		if (!touchIsInsideRight) return;
@@ -477,7 +477,7 @@ function callback_MoveForwardTouchStart() {
 	}, timeToHoldMillis);
 }
 
-function callback_MoveForwardTouchMove(event: TouchEvent) {
+function callback_MoveForwardTouchMove(event: TouchEvent): void {
 	event = event || window.event;
 	if (!touchIsInsideRight) return;
 	const touch = event.touches[0]!;
@@ -492,7 +492,7 @@ function callback_MoveForwardTouchMove(event: TouchEvent) {
 	clearInterval(rightArrowIntervalID);
 }
 
-function callback_MoveForwardTouchEnd() {
+function callback_MoveForwardTouchEnd(): void {
 	touchIsInsideRight = false;
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
@@ -502,7 +502,7 @@ function callback_MoveForwardTouchEnd() {
  * Locks the rewind button for a brief moment. Typically called after forwarding the moves to the front.
  * This is so if our opponent moves while we're rewinding, there's a brief pause.
  */
-function lockRewind() {
+function lockRewind(): void {
 	rewindIsLocked = true;
 	lockLayers++;
 	setTimeout(() => {
@@ -514,20 +514,20 @@ function lockRewind() {
 let lockLayers = 0;
 
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
-function testIfRewindMove() {
+function testIfRewindMove(): void {
 	if (!listener_document.isKeyDown('ArrowLeft')) return;
 	if (rewindIsLocked) return;
 	rewindMove();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to forward the game. */
-function testIfForwardMove() {
+function testIfForwardMove(): void {
 	if (!listener_document.isKeyDown('ArrowRight')) return;
 	forwardMove();
 }
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
-function rewindMove() {
+function rewindMove(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
@@ -546,7 +546,7 @@ function rewindMove() {
 }
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
-function forwardMove() {
+function forwardMove(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
@@ -559,7 +559,7 @@ function forwardMove() {
 
 // Edit Buttons =====================================================
 
-function isItOkayToUndoEditOrRedoEdit() {
+function isItOkayToUndoEditOrRedoEdit(): boolean {
 	const timeSincelastRewindOrEdit = Date.now() - lastRewindOrEdit;
 	return timeSincelastRewindOrEdit >= minimumRewindOrEditIntervalMillis; // True if enough time has passed!
 }
@@ -568,7 +568,7 @@ function isItOkayToUndoEditOrRedoEdit() {
  * Makes the undo/redo move buttons transparent if we're at
  * the very beginning or end of the edits.
  */
-function update_EditButtons() {
+function update_EditButtons(): void {
 	if (boardeditor.canUndo()) element_undoEdit.classList.remove('opacity-0_5');
 	else element_undoEdit.classList.add('opacity-0_5');
 
@@ -578,7 +578,7 @@ function update_EditButtons() {
 
 // Mouse
 
-function callback_UndoEditMouseDown() {
+function callback_UndoEditMouseDown(): void {
 	leftArrowTimeoutID = setTimeout(() => {
 		leftArrowIntervalID = setInterval(() => {
 			callback_UndoEdit();
@@ -586,17 +586,17 @@ function callback_UndoEditMouseDown() {
 	}, timeToHoldMillis);
 }
 
-function callback_UndoEditMouseLeave() {
+function callback_UndoEditMouseLeave(): void {
 	clearTimeout(leftArrowTimeoutID);
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_UndoEditMouseUp() {
+function callback_UndoEditMouseUp(): void {
 	clearTimeout(leftArrowTimeoutID);
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_RedoEditMouseDown() {
+function callback_RedoEditMouseDown(): void {
 	rightArrowTimeoutID = setTimeout(() => {
 		rightArrowIntervalID = setInterval(() => {
 			callback_RedoEdit();
@@ -604,19 +604,19 @@ function callback_RedoEditMouseDown() {
 	}, timeToHoldMillis);
 }
 
-function callback_RedoEditMouseLeave() {
+function callback_RedoEditMouseLeave(): void {
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
 }
 
-function callback_RedoEditMouseUp() {
+function callback_RedoEditMouseUp(): void {
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
 }
 
 // Fingers
 
-function callback_UndoEditTouchStart() {
+function callback_UndoEditTouchStart(): void {
 	touchIsInsideLeft = true;
 	leftArrowTimeoutID = setTimeout(() => {
 		if (!touchIsInsideLeft) return;
@@ -626,7 +626,7 @@ function callback_UndoEditTouchStart() {
 	}, timeToHoldMillis);
 }
 
-function callback_UndoEditTouchMove(event: TouchEvent) {
+function callback_UndoEditTouchMove(event: TouchEvent): void {
 	if (!touchIsInsideLeft) return;
 	const touch = event.touches[0]!;
 	const rect = element_moveRewind.getBoundingClientRect();
@@ -640,13 +640,13 @@ function callback_UndoEditTouchMove(event: TouchEvent) {
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_UndoEditTouchEnd() {
+function callback_UndoEditTouchEnd(): void {
 	touchIsInsideLeft = false;
 	clearTimeout(leftArrowTimeoutID);
 	clearInterval(leftArrowIntervalID);
 }
 
-function callback_RedoEditTouchStart() {
+function callback_RedoEditTouchStart(): void {
 	touchIsInsideRight = true;
 	rightArrowTimeoutID = setTimeout(() => {
 		if (!touchIsInsideRight) return;
@@ -656,7 +656,7 @@ function callback_RedoEditTouchStart() {
 	}, timeToHoldMillis);
 }
 
-function callback_RedoEditTouchMove(event: TouchEvent) {
+function callback_RedoEditTouchMove(event: TouchEvent): void {
 	event = event || window.event;
 	if (!touchIsInsideRight) return;
 	const touch = event.touches[0]!;
@@ -671,33 +671,33 @@ function callback_RedoEditTouchMove(event: TouchEvent) {
 	clearInterval(rightArrowIntervalID);
 }
 
-function callback_RedoEditTouchEnd() {
+function callback_RedoEditTouchEnd(): void {
 	touchIsInsideRight = false;
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
 }
 
 /** Tests if the left arrow key has been pressed, signaling to undo an edit. */
-function testIfUndoEdit() {
+function testIfUndoEdit(): void {
 	if (!listener_document.isKeyDown('ArrowLeft')) return;
 	callback_UndoEdit();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to redo and edit. */
-function testIfRedoEdit() {
+function testIfRedoEdit(): void {
 	if (!listener_document.isKeyDown('ArrowRight')) return;
 	callback_RedoEdit();
 }
 
 /** Undoes one edit */
-function callback_UndoEdit() {
+function callback_UndoEdit(): void {
 	if (!isItOkayToUndoEditOrRedoEdit()) return;
 	lastRewindOrEdit = Date.now();
 	boardeditor.undo();
 }
 
 /** Redoes one edit. */
-function callback_RedoEdit() {
+function callback_RedoEdit(): void {
 	if (!isItOkayToUndoEditOrRedoEdit()) return;
 	lastRewindOrEdit = Date.now();
 	boardeditor.redo();

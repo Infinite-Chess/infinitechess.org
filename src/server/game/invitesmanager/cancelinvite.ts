@@ -28,7 +28,7 @@ type CancelInviteMessage = z.infer<typeof cancelinviteschem>
  * @param messageContents - The incoming socket message that is the ID of the invite to be cancelled!
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage, replyto?: number) { // Value should be the ID of the invite to cancel!
+function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage, replyto?: number): void { // Value should be the ID of the invite to cancel!
 	const id = messageContents; // id of invite to delete
 
 	const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index } | undefined

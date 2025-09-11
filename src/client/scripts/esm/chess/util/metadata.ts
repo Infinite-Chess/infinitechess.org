@@ -63,7 +63,7 @@ type MetadataKey = keyof MetaData;
  * Helper function that uses generics to link the metadata key to its value type.
  * Inside the function typescript doesn't error when we are transferring the property.
  */
-function copyMetadataField<K extends MetadataKey>(target: MetaData, source: MetaData, key: K) {
+function copyMetadataField<K extends MetadataKey>(target: MetaData, source: MetaData, key: K): void {
 	// TS knows that target[key] and source[key] have the same type: MetaData[K]
 	target[key] = source[key];
 }
@@ -84,7 +84,7 @@ function getResultFromVictor(victor?: Player): string {
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
-function getGameConclusionFromResultAndTermination(result: string, termination: string) {
+function getGameConclusionFromResultAndTermination(result: string, termination: string): string {
 	if (!result || !termination) throw Error("Must provide both result and termination.");
 
 	if (termination === 'aborted') return 'aborted';
@@ -92,7 +92,7 @@ function getGameConclusionFromResultAndTermination(result: string, termination: 
 		result === '1-0' ? players.WHITE :
 		result === '0-1' ? players.BLACK :
 		result === '1/2-1/2' ? players.NEUTRAL :
-		(() => { throw Error(`Unsupported result (${result})!`); })();
+		((): never => { throw Error(`Unsupported result (${result})!`); })();
 	return `${victor} ${termination}`;
 }
 

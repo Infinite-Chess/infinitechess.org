@@ -209,7 +209,7 @@ function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMove
  * 
  * Call BEFORE appending special moves.
  */
-function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, premove: boolean) {
+function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, premove: boolean): void {
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Remove obstructed jumping/individual moves
@@ -236,7 +236,7 @@ function removeInvalidIndividualMoves(boardsim: Board, individualMoves: Coords[]
 /**
  * @param premove - If true, then only voids and world borders block movement.
  */
-function removeObstructedSlidingMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, slidingMoves: Record<Vec2Key, SlideLimits>, color: Player, premove: boolean) {
+function removeObstructedSlidingMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, slidingMoves: Record<Vec2Key, SlideLimits>, color: Player, premove: boolean): void {
 	const blockingFunc = getBlockingFuncFromPieceMoveset(moveset);
 	for (const [linekey, limits] of Object.entries(slidingMoves)) {
 		const lines = boardsim.pieces.lines.get(linekey as Vec2Key);
@@ -601,7 +601,7 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 
 	return true; // By this point, nothing illegal!
 
-	function rewindGameAndReturnReason(reasonIllegal: string) {
+	function rewindGameAndReturnReason(reasonIllegal: string): string {
 		// Rewind the game back to the index we were originally on
 		movepiece.goToMove(boardsim, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
 		return reasonIllegal;
@@ -637,7 +637,7 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 		if (doesSlideHaveWidth(limits)) return true;
 	}
 
-	function doesSlideHaveWidth(slide: SlideLimits) {
+	function doesSlideHaveWidth(slide: SlideLimits): boolean {
 		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in atleast one direction
 		return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
 

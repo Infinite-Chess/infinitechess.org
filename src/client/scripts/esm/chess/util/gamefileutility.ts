@@ -53,7 +53,7 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
 /**
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  */
-function setTerminationMetadata(basegame: Game) {
+function setTerminationMetadata(basegame: Game): void {
 	if (!basegame.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
 	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
@@ -66,7 +66,7 @@ function setTerminationMetadata(basegame: Game) {
 /**
  * Deletes the `Termination` and `Result` metadata from the gamefile.
  */
-function eraseTerminationMetadata(basegame: Game) {
+function eraseTerminationMetadata(basegame: Game): void {
 	delete basegame.metadata.Termination;
 	delete basegame.metadata.Result;
 }
@@ -89,7 +89,7 @@ function isOpponentUsingWinCondition(basegame: Game, friendlyColor: Player, winC
 /**
  * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  */
-function doGameOverChecks(gamefile: FullGame) {
+function doGameOverChecks(gamefile: FullGame): void {
 	gamefile.basegame.gameConclusion = wincondition.getGameConclusion(gamefile);
 	if (isGameOver(gamefile.basegame) && winconutil.isGameConclusionDecisive(gamefile.basegame.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
@@ -146,7 +146,7 @@ function areColinearSlidesPresentInGame(pieceMovesets: RawTypeGroup<() => PieceM
 }
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(basegame: Game) {
+function getPlayerCount(basegame: Game): number {
 	return new Set(basegame.gameRules.turnOrder).size;
 }
 

@@ -67,17 +67,17 @@ document.addEventListener('connection-lost', () => {
 
 
 
-function isOurAFKAutoResignTimerRunning() {
+function isOurAFKAutoResignTimerRunning(): boolean {
 	// If the time we will lose from being afk is defined, the timer is running
 	return timeWeLoseFromAFK !== undefined;
 }
 
-function onGameStart() {
+function onGameStart(): void {
 	// Start the timer that will inform the server we are afk, the server thenafter starting an auto-resign timer.
 	rescheduleAlertServerWeAFK();
 }
 
-function onGameClose() {
+function onGameClose(): void {
 	// Reset everything
 	cancelAFKTimer();
 	timeoutID = undefined,
@@ -88,13 +88,13 @@ function onGameClose() {
 	timeOpponentLoseFromAFK = undefined;
 }
 
-function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
+function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 	// Restart the timer that will inform the server we are afk, the server thenafter starting an auto-resign timer.
 	rescheduleAlertServerWeAFK();
 	if (isOpponents) stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were)
 }
 
-function updateAFK() {
+function updateAFK(): void {
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return; // Game is over
 	if (!listener_overlay.atleastOneInput() && !listener_document.atleastOneInput()) return; // No input this frame, don't reset the timer to tell the server we are afk.
 	// There has been mouse movement, restart the afk auto-resign timer.
@@ -106,7 +106,7 @@ function updateAFK() {
  * Restarts the timer that will inform the server we are afk,
  * the server thenafter starting an auto-resign timer.
  */
-function rescheduleAlertServerWeAFK() {
+function rescheduleAlertServerWeAFK(): void {
 	clearTimeout(timeoutID);
 	const { basegame } = gameslot.getGamefile()!;
 	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(basegame) || onlinegame.getIsPrivate() && basegame.untimed) return;
@@ -119,14 +119,14 @@ function rescheduleAlertServerWeAFK() {
 	timeoutID = setTimeout(tellServerWeAFK, timeUntilAlertServerWeAFKSecs * 1000);
 }
 
-function cancelAFKTimer() {
+function cancelAFKTimer(): void {
 	clearTimeout(timeoutID);
 	clearTimeout(displayAFKTimeoutID);
 	clearTimeout(playStaccatoTimeoutID);
 	clearTimeout(displayOpponentAFKTimeoutID);
 }
 
-function tellServerWeAFK() {
+function tellServerWeAFK(): void {
 	websocket.sendmessage('game','AFK');
 	timeWeLoseFromAFK = Date.now() + timerToLossFromAFK;
 
@@ -139,7 +139,7 @@ function tellServerWeAFK() {
 	playStaccatoTimeoutID = setTimeout(playStaccatoNote, 10000, 'c3', 10);
 }
 
-function tellServerWeBackFromAFK() {
+function tellServerWeBackFromAFK(): void {
 	websocket.sendmessage('game','AFK-Return');
 	timeWeLoseFromAFK = undefined;
 	clearTimeout(displayAFKTimeoutID);
@@ -148,7 +148,7 @@ function tellServerWeBackFromAFK() {
 	playStaccatoTimeoutID = undefined;
 }
 
-function displayWeAFK(secsRemaining: number) {
+function displayWeAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
 	statustext.showStatusForDuration(`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
@@ -158,7 +158,7 @@ function displayWeAFK(secsRemaining: number) {
 	displayAFKTimeoutID = setTimeout(displayWeAFK, timeToPlayNextDisplayWeAFK, nextSecsRemaining);
 }
 
-function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number) {
+function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number): void {
 	if (note === 'c3') gamesound.playViola_c3();
 	else if (note === 'c4') gamesound.playViolin_c4();
     
@@ -173,7 +173,7 @@ function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number) {
 
 
 
-function startOpponentAFKCountdown(millisUntilAutoAFKResign: number) {
+function startOpponentAFKCountdown(millisUntilAutoAFKResign: number): void {
 	// Cancel the previous one if this is overwriting
 	stopOpponentAFKCountdown();
 
@@ -187,12 +187,12 @@ function startOpponentAFKCountdown(millisUntilAutoAFKResign: number) {
 	displayOpponentAFK(secsRemaining);
 }
 
-function stopOpponentAFKCountdown() {
+function stopOpponentAFKCountdown(): void {
 	clearTimeout(displayOpponentAFKTimeoutID);
 	displayOpponentAFKTimeoutID = undefined;
 }
 
-function displayOpponentAFK(secsRemaining: number) {
+function displayOpponentAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
 	statustext.showStatusForDuration(`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;

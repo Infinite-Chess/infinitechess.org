@@ -508,7 +508,7 @@ bug_generic = "Isso é um bug, por favor, informe!"
 
 [terms] # Traduções estão desativadas por enquanto, a única lingua permitida é en-US
 title = "Termos de Serviço"
-warning = ["ESTE DOCUMENTO NÃO É JURIDICAMENTE VINCULATIVO. Somos responsáveis apenas pela versão em inglês deste documento. Esta tradução é fornecida apenas para fins informativos gerais. Você pode acessar a versão oficial em inglês ", "aqui", "."]]
+warning = ["ESTE DOCUMENTO NÃO É JURIDICAMENTE VINCULATIVO. Somos responsáveis apenas pela versão em inglês deste documento. Esta tradução é fornecida apenas para fins informativos gerais. Você pode acessar a versão oficial em inglês ", "aqui", "."]
 consent = "Ao usar este site, você concorda em cumprir os seguintes termos. Se não concordar, você deve parar imediatamente de usar o site."
 guardian_consent = "Se você for menor de 18 anos, deverá receber o consentimento de um dos pais ou responsável legal para usar este site e criar uma conta."
 parents_header = "Pais"
@@ -517,7 +517,7 @@ parents_paragraphs = [
 "Atualmente, os membros não podem definir sua própria foto de perfil. Há um plano para permitir esse recurso. Nesse momento, faremos o possível para evitar fotos de perfil inadequadas",
 ]
 fair_play_header = "Jogo limpo"
-fair_play_paragraph1 = ["Não é possível criar mais de uma conta."].
+fair_play_paragraph1 = ["Não é possível criar mais de uma conta."]
 fair_play_paragraph2 = "Para manter o jogo divertido e justo para todos, você NÃO deve:"
 fair_play_rules = [
 "Modificar ou manipular o código de qualquer forma, incluindo, mas não se limitando a: Usar comandos de console, substituições locais, scripts personalizados, modificar solicitações http, etc. Isso pode ser feito para interromper intencionalmente o jogo ou para lhe dar uma vantagem.",

@@ -128,7 +128,7 @@ type SuspicionLevelRecord = {
 /**
  * Monitor suspicion levels for all players who played a particular game in a particular leaderboard
  */
-async function measureRatingAbuseAfterGame(game: Game) {
+async function measureRatingAbuseAfterGame(game: Game): Promise<void> {
 	// Do not monitor suspicion levels, if game was unrated 
 	if (!game.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
@@ -164,7 +164,7 @@ async function measureRatingAbuseAfterGame(game: Game) {
  * Weights a specific user's probability of rating abuse on a specified leaderboard.
  * If it flags a user, it sends Naviary an email with data on them.
  */
-async function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number) {
+async function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number): Promise<void> {
 
 	// If player is not in rating_abuse table, add him to it
 	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) {
@@ -335,7 +335,7 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
  * Check if the game dates are too close in proximity to each other
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
+function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]): void {
 	const sorted_timestamp_list = gameInfoList.map(game_info => timeutil.sqliteToTimestamp(game_info.date)).sort();
 	const timestamp_differences: number[] = [];
 	for (let i = 1; i < sorted_timestamp_list.length; i++) {
@@ -355,7 +355,7 @@ function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspic
  * Check if the move counts of the games in gameInfoList are too low.
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
+function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]): void {
 	let weight = 0;
 	let comment = "";
 	for (const gameInfo of gameInfoList) {
@@ -379,7 +379,7 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
  * Check if the durations on the server of the games in gameInfoList are too low.
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
+function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]): void {
 	let weight = 0;
 	let comment = "";
 	for (const gameInfo of gameInfoList) {
@@ -403,7 +403,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
  * Check if the clock at the end of the games in gameInfoList are too low.
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
+function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]): void {
 	let weight = 0;
 	let comment = "";
 	for (const gameInfo of gameInfoList) {
@@ -433,7 +433,7 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
  * Check if the user is playing against the same opponents many times.
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key: number] : number }, suspicion_level_record_list: SuspicionLevelRecord[]) {
+function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key: number] : number }, suspicion_level_record_list: SuspicionLevelRecord[]): void {
 	if (user_id_list.length === 0) return;
 
 	let weight = 0;
@@ -457,7 +457,7 @@ function checkIPAddresses(
 	user_ip_address_list: string[],
 	opponent_ip_address_lists: { [ key: number ] : string[] },
 	suspicion_level_record_list: SuspicionLevelRecord[]
-) {
+): void {
 	// Player logged out mid game
 	if (user_ip_address_list.length === 0) {
 		suspicion_level_record_list.push({
@@ -495,7 +495,7 @@ function checkOpponentAccountAge(
 	user_id_frequency: { [key: number] : number },
 	opponentInfoList: RatingAbuseRelevantMemberRecord[],
 	suspicion_level_record_list: SuspicionLevelRecord[]
-) {
+): void {
 	if (user_id_list.length === 0) return;
 
 	const current_time_millis = Date.now();

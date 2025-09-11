@@ -403,7 +403,7 @@ function clamp(value: bigint, min: bigint, max: bigint): bigint {
  * Calculates the gcd of two bigints using the binary GCD (or Stein's) algorithm.
  * This is faster than the Euclidean algorithm, especially for very large numbers.
  */
-function GCD(a: bigint, b: bigint) {
+function GCD(a: bigint, b: bigint): bigint {
 	// We must work with positive numbers
 	a = abs(a);
 	b = abs(b);

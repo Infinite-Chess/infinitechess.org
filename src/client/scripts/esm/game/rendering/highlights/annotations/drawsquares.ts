@@ -93,7 +93,7 @@ function getSquaresBelowWorld(highlights: Square[], world: DoubleCoords, trackDi
  * REQUIRES THE HOVERED HIGHLIGHTS to be updated prior to calling this!
  * @param highlights - All square highlights currently on the board.
  */
-function update(highlights: Square[]) {
+function update(highlights: Square[]): void {
 	// If the pointer simulated a right click, add a highlight!
 	if (mouse.isMouseClicked(Mouse.RIGHT)) {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
@@ -130,18 +130,18 @@ function update(highlights: Square[]) {
  * Sets the preset squares, if they were specified in the ICN.
  * These override the variant's preset squares.
  */
-function setPresetOverrides(pss: Coords[]) {
+function setPresetOverrides(pss: Coords[]): void {
 	if (preset_squares) throw Error("Preset squares already initialized. Did you forget to clearPresetOverrides()?");
 	preset_squares = pss;
 }
 
 /** Returns the preset square overrides from the ICN. */
-function getPresetOverrides() {
+function getPresetOverrides(): Coords[] | undefined {
 	return preset_squares;
 }
 
 /** Clears the preset ray overrides from the ICN. */
-function clearPresetOverrides() {
+function clearPresetOverrides(): void {
 	preset_squares = undefined;
 }
 
@@ -149,7 +149,7 @@ function clearPresetOverrides() {
 // Rendering -----------------------------------------------------------------
 
 
-function render(highlights: Square[]) {
+function render(highlights: Square[]): void {
 	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 
 	// If we're zoomed out, then the size of the highlights is constant.

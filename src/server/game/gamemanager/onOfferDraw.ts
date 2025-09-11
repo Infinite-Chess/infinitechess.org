@@ -63,7 +63,7 @@ function acceptDraw(ws: CustomWebSocket, game: Game): void {
  * @param ws - The socket
  * @param game - The game they are in.
  */
-function declineDraw(ws: CustomWebSocket, game: Game) {
+function declineDraw(ws: CustomWebSocket, game: Game): void {
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
 

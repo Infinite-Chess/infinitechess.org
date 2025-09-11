@@ -31,7 +31,7 @@ import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../../chess/game.js";
 import { Mouse } from "../../input.js";
-import { createModel } from "../buffermodel.js";
+import { BufferModel, createModel } from "../buffermodel.js";
 
 
 import type { BDCoords, Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
@@ -85,11 +85,11 @@ type Snap = {
 
 
 /** {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units. This can change depending on the screen dimensions. */
-function getEntityWidthWorld() {
+function getEntityWidthWorld(): number {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
-function getAllEntitiesWorldHovers(world: DoubleCoords) {
+function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
 	const highlightsHovered = drawsquares.getSquaresBelowWorld(annotations.getSquares(), world, false).squares;
 	return [...imagesHovered, ...highlightsHovered];
@@ -136,7 +136,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
  * Calculates what entities are below the click location.
  * Teleports to them, claiming the click.
  */
-function teleportToEntitiesIfClicked() {
+function teleportToEntitiesIfClicked(): void {
 	if (!isSnappingEnabledThisFrame()) return;
 
 	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only teleport if clicked
@@ -345,8 +345,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	return { coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
 }
 
-function teleportToSnapIfClicked() {
-	if (!isSnappingEnabledThisFrame()) return undefined;
+function teleportToSnapIfClicked(): void {
+	if (!isSnappingEnabledThisFrame()) return;
 	
 	if (mouse.isMouseClicked(Mouse.LEFT) || mouse.isMouseDown(Mouse.LEFT)) {
 		const world = mouse.getMouseWorld(Mouse.LEFT)!;
@@ -437,8 +437,8 @@ function getAnnoteSnapPoints(trimDecimals: boolean): BDCoords[] {
  * Snapping is in charge of rendering either a glow dot on the snap point,
  * or a mini image of a piece on the legal move line.
  */
-function render() {
-	if (!isSnappingEnabledThisFrame()) return undefined;
+function render(): void {
+	if (!isSnappingEnabledThisFrame()) return;
 
 	const allPointerIds = mouse.getRelevantListener().getAllPointerIds();
 	const allSnaps: Snap[] = [];
@@ -489,7 +489,7 @@ function render() {
 }
 
 /** TODO: Dont use the spritesheet */
-function generateGhostImageModel(type: number, coords: DoubleCoords) {
+function generateGhostImageModel(type: number, coords: DoubleCoords): BufferModel {
 
 	const dataGhost: number[] = [];
 

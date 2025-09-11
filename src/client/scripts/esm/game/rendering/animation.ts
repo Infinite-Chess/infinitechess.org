@@ -225,7 +225,7 @@ function clearAnimations(playSounds = false): void {
 	animations.length = 0; // Empties existing animations
 }
 
-function toggleDebug() {
+function toggleDebug(): void {
 	DEBUG = !DEBUG;
 	statustext.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
 }
@@ -288,7 +288,7 @@ function scheduleSoundPlayback(animation: Animation): void {
 }
 
 /** Schedules the removal of an animation after it's over. */
-function scheduleAnimationRemoval(animation: Animation) {
+function scheduleAnimationRemoval(animation: Animation): void {
 	animation.scheduledRemovalId = setTimeout(() => {
 		const index = animations.indexOf(animation);
 		if (index === -1) return; // Already removed
@@ -302,7 +302,7 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param animation - The animation to play the sound for.
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
-function playAnimationSound(animation: Animation) {
+function playAnimationSound(animation: Animation): void {
 	gamesound.playMove(animation.totalDistance, animation.showKeyframes.size !== 0, animation.premove);
 	animation.soundPlayed = true;
 }
@@ -312,7 +312,7 @@ function playAnimationSound(animation: Animation) {
 
 
 /** Flags the frame to be rendered if there are any animations, and adds an arrow indicator animation for each */
-function update() {
+function update(): void {
 	if (animations.length === 0) return;
 
 	frametracker.onVisualChange();
@@ -320,7 +320,7 @@ function update() {
 }
 
 /** Animates the arrow indicator */
-function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
+function shiftArrowIndicatorOfAnimatedPiece(animation: Animation): void {
 	const segmentInfo = getCurrentSegment(animation);
 	// Delete the arrows of the hidden pieces
 	forEachActiveKeyframe(animation.hideKeyframes, segmentInfo.segmentNum, coords => coords.forEach(c => arrows.deleteArrow(c)));
@@ -358,7 +358,7 @@ function renderTransparentSquares(): void {
 }
 
 /** [ZOOMED IN] Renders the animations of the pieces. */
-function renderAnimations() {
+function renderAnimations(): void {
 	if (animations.length === 0) return;
 
 	if (DEBUG) animations.forEach(animation => splines.renderSplineDebug(animation.path_smooth, SPLINES.WIDTH, SPLINES.COLOR));
@@ -401,7 +401,7 @@ function renderAnimations() {
 	});
 
 	/** Helper for pushing a piece's instancedata to a specified data group. */
-	function processPiece(type: number, coords: BDCoords, targetInstanceData: TypeGroup<number[]>) {
+	function processPiece(type: number, coords: BDCoords, targetInstanceData: TypeGroup<number[]>): void {
 		const relativePosition: DoubleCoords = bd.coordsToDoubles(coordutil.subtractBDCoords(coords, boardPos));
 		if (!(type in targetInstanceData)) targetInstanceData[type] = []; // Initialize
 		targetInstanceData[type]!.push(...relativePosition);
@@ -413,7 +413,7 @@ function renderAnimations() {
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	/** Renders an entire group of pieces, organized by type. */
-	function renderTypeGroup(instanceData: TypeGroup<number[]>) {
+	function renderTypeGroup(instanceData: TypeGroup<number[]>): void {
 		for (const [typeStr, instance_data] of Object.entries(instanceData)) {
 			const type = Number(typeStr);
 			const texture = texturecache.getTexture(type);

@@ -105,7 +105,7 @@ function getLineComponents(): { rays: Ray[], segments: Segment[] } {
 		processComponent(coordutil.copyCoords(pieceCoords), step, limits[1]); // Positive slide direction
 	};
 
-	function processComponent(start: Coords, step: Vec2, limit: bigint | null) {
+	function processComponent(start: Coords, step: Vec2, limit: bigint | null): void {
 		if (limit === null) { // Can slide infinitly => RAY
 			const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, step);
 			rays.push({ start, vector: step, line: coefficients });
@@ -120,7 +120,7 @@ function getLineComponents(): { rays: Ray[], segments: Segment[] } {
 
 
 
-function render() {
+function render(): void {
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 
 	const lines = getLines();

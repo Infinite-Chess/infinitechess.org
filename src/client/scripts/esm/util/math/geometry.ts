@@ -56,7 +56,7 @@ function calcIntersectionPointOfLines(A1: bigint, B1: bigint, C1: bigint, A2: bi
 
 	const determinantBD = bd.FromBigInt(determinant);
 
-	function determineAxis(dividend: bigint) {
+	function determineAxis(dividend: bigint): BigDecimal {
 		const dividendBD = bd.FromBigInt(dividend);
 		return bd.divide_fixed(dividendBD, determinantBD);
 	}
@@ -75,7 +75,7 @@ function calcIntersectionPointOfLinesBD(A1: BigDecimal, B1: BigDecimal, C1: BigD
 	const determinant = bd.subtract(bd.multiply_fixed(A1, B2), bd.multiply_fixed(A2, B1));
 	if (bd.areEqual(determinant, ZERO)) return undefined; // Lines are parallel or identical
 
-	function determineAxis(dividend: BigDecimal) {
+	function determineAxis(dividend: BigDecimal): BigDecimal {
 		return bd.divide_fixed(dividend, determinant);
 	}
 
@@ -529,7 +529,7 @@ function findLineBoxIntersectionsBDHelper<T extends bigint | BigDecimal>(
 	// eslint-disable-next-line no-unused-vars
 	horzIntsectFunc: (A1: T, B1: T, C1: T, y: T) => BDCoords,
 	log = false
-) {
+): { coords: BDCoords; positiveDotProduct: boolean; }[] {
 	// Check for intersections with each of the four box edges
 
 	const intersections: BDCoords[] = [];
@@ -613,7 +613,7 @@ function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords
 	const pointBigInt: Coords = bd.coordsToBigInt(point);
 
 	// To round bigints, we add half the gridSize before dividing by it.
-	function roundBigintNearestMultiple(value: bigint, multiple: bigint) {
+	function roundBigintNearestMultiple(value: bigint, multiple: bigint): bigint {
 		const halfMultiple = multiple / 2n; // Assumes multiple is positive and divisible by 2.
 
 		// For positives, add half and truncate.

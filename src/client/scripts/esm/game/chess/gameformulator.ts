@@ -98,7 +98,7 @@ function ICNToGamefile(ICN: string): FullGame {
 	return gamefile.initFullGame(longformOut.metadata, {variantOptions, moves});
 }
 
-function convertVariantFromSpokenLanguageToCode(Variant?: string) {
+function convertVariantFromSpokenLanguageToCode(Variant?: string): string | undefined {
 	// Iterate through all translations until we find one that matches this name
 	for (const translationCode in translations) {
 		if (translations[translationCode] === Variant) {

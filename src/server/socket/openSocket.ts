@@ -40,7 +40,7 @@ import type { Request } from "express";
 // Functions ---------------------------------------------------------------------------
 
 
-function onConnectionRequest(socket: WebSocket, req: Request) { 
+function onConnectionRequest(socket: WebSocket, req: Request): void { 
 
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
@@ -142,13 +142,13 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 /**
  * Adds the 'message', 'close', and 'error' event listeners to the socket
  */
-function addListenersToSocket(req: Request, ws: CustomWebSocket) {
+function addListenersToSocket(req: Request, ws: CustomWebSocket): void {
 	ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message); });
 	ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason); });
 	ws.on('error', (error) => { executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error); });
 }
 
-function onerror(ws: CustomWebSocket, error: Error) {
+function onerror(ws: CustomWebSocket, error: Error): void {
 	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
 	logEventsAndPrint(errText, 'errLog.txt');
 }

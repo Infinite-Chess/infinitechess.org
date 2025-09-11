@@ -57,7 +57,7 @@ const defaultSpecialMoves: RawTypeGroup<SpecialMoveFunction> = {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
+function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
@@ -82,7 +82,7 @@ function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
 	return true;
 }
 
-function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
+function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
@@ -113,7 +113,7 @@ function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
 }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
-function roses(boardsim: Board, piece: Piece, move: MoveDraftEdit) {
+function roses(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	// Delete the piece captured

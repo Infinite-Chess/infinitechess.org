@@ -50,10 +50,10 @@ let crosshairModel: BufferModel;
 
 
 // Getters
-function getEnabled() { return enabled; }
-function getRotX() { return rotX; }
-function getRotZ() { return rotZ; }
-function getIsViewingBlackPerspective() { return isViewingBlackPerspective; }
+function getEnabled(): boolean { return enabled; }
+function getRotX(): number { return rotX; }
+function getRotZ(): number { return rotZ; }
+function getIsViewingBlackPerspective(): boolean { return isViewingBlackPerspective; }
 
 function toggle(): void {
 	if (!docutil.isMouseSupported()) return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
@@ -92,7 +92,7 @@ function disable(): void {
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
-function resetRotations(viewWhitePerspective = true) {
+function resetRotations(viewWhitePerspective = true): void {
 	rotX = 0;
 	rotZ = viewWhitePerspective ? 0 : 180;
 

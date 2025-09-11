@@ -18,26 +18,30 @@ import icnconverter from "../logic/icn/icnconverter.js";
 import bimath from "../../util/bigdecimal/bimath.js";
 
 
+/** An object that contains all relevant quantities for the size of a single 4D chess board. */
+type Dimensions = {
+	/** The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1 */
+	BOARD_SPACING: bigint;
+	/** Number of 2D boards in x direction */
+	BOARDS_X: bigint;
+	/** Number of 2D boards in y direction */
+	BOARDS_Y: bigint;
+	/** Board edges on the real chessboard */
+	MIN_X: bigint;
+	/** Board edges on the real chessboard */
+	MAX_X: bigint;
+	/** Board edges on the real chessboard */
+	MIN_Y: bigint;
+	/** Board edges on the real chessboard */
+	MAX_Y: bigint;
+}
+
+
 // Variables ------------------------------------------------------------------------------------------------
 
 
 /** Contains all relevant quantities for the size of the 4D chess board. */
-let dim: {
-	/** The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1 */
-	BOARD_SPACING: bigint,
-	/** Number of 2D boards in x direction */
-	BOARDS_X: bigint,
-	/** Number of 2D boards in y direction */
-	BOARDS_Y: bigint,
-	/** Board edges on the real chessboard */
-	MIN_X: bigint,
-	/** Board edges on the real chessboard */
-	MAX_X: bigint,
-	/** Board edges on the real chessboard */
-	MIN_Y: bigint,
-	/** Board edges on the real chessboard */
-	MAX_Y: bigint,
-} | undefined;
+let dim: Dimensions | undefined;
 
 /**
  * mov: Contains all relevant parameters for movement logic on the 4D board
@@ -56,7 +60,7 @@ const mov = {
 // Utility ---------------------------------------------------------------------------------------------------------
 
 
-function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint) {
+function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint): void {
 	const MIN_X = 0n;
 	const MIN_Y = 0n;
 	dim = {
@@ -70,11 +74,11 @@ function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing:
 	};
 }
 
-function get4DBoardDimensions() {
+function get4DBoardDimensions(): Dimensions {
 	return dim!;
 }
 
-function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean) {
+function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean): void {
 	mov.STRONG_KINGS_AND_QUEENS = strong_kings_and_queens;
 	mov.STRONG_PAWNS = strong_pawns;
 }
@@ -83,7 +87,7 @@ function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean
  * Returns the type of queen, king, and pawn movements in the last loaded 4 dimension variant.
  * Triagonal? Quadragonal? Brawn?
  */
-function getMovementType() {
+function getMovementType(): { STRONG_KINGS_AND_QUEENS: boolean; STRONG_PAWNS: boolean; } {
 	return mov;
 }
 
@@ -166,7 +170,7 @@ function gen4DPosition(boards_x: bigint, boards_y: bigint, board_spacing: bigint
  * @param strong_pawns - true: pawns can capture along any diagonal. false: pawns can only capture along strictly spacelike or timelike diagonals
  * @returns 
  */
-function gen4DMoveset(boards_x: bigint, boards_y: bigint, board_spacing: bigint, strong_kings_and_queens: boolean, strong_pawns: boolean) {
+function gen4DMoveset(boards_x: bigint, boards_y: bigint, board_spacing: bigint, strong_kings_and_queens: boolean, strong_pawns: boolean): Movesets {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	setMovementType(strong_kings_and_queens, strong_pawns);

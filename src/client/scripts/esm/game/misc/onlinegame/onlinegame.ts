@@ -146,11 +146,11 @@ function hasServerConcludedGame(): boolean {
 	return serverHasConcludedGame!;
 }
 
-function setInSyncTrue() {
+function setInSyncTrue(): void {
 	inSync = true;
 }
 
-function setInSyncFalse() {
+function setInSyncFalse(): void {
 	if (!inOnlineGame) return;
 	inSync = false;
 }
@@ -167,7 +167,7 @@ function initOnlineGame(options: {
 	participantState?: ParticipantState,
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
-}) {
+}): void {
 	inOnlineGame = true;
 	inSync = true;
 
@@ -191,7 +191,7 @@ function initOnlineGame(options: {
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(participantState?: ParticipantState, serverRestartingAt?: number) {
+function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(participantState?: ParticipantState, serverRestartingAt?: number): void {
 	if (participantState) {
 		drawoffers.set(participantState.drawOffer);
 
@@ -210,7 +210,7 @@ function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(participan
 }
 
 // Call when we leave an online game
-function closeOnlineGame() {
+function closeOnlineGame(): void {
 	inOnlineGame = false;
 	id = undefined;
 	isPrivate = undefined;
@@ -227,7 +227,7 @@ function closeOnlineGame() {
 	closeEventListeners();
 }
 
-function initEventListeners() {
+function initEventListeners(): void {
 	// Add the event listeners for when we lose connection or the socket closes,
 	// to set our inSync variable to false
 	document.addEventListener('connection-lost', setInSyncFalse); // Custom event
@@ -244,7 +244,7 @@ function initEventListeners() {
 	});
 }
 
-function closeEventListeners() {
+function closeEventListeners(): void {
 	document.removeEventListener('connection-lost', setInSyncFalse);
 	document.removeEventListener('socket-closed', setInSyncFalse);
 	document.querySelectorAll('a').forEach((link) => {
@@ -259,7 +259,7 @@ function closeEventListeners() {
  * which just ejects them out of the game
  * @param event 
  */
-function confirmNavigationAwayFromGame(event: MouseEvent) {
+function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return;
@@ -280,20 +280,20 @@ function confirmNavigationAwayFromGame(event: MouseEvent) {
 	 */
 }
 
-function update() {
+function update(): void {
 	afk.updateAFK();
 }
 
 /**
  * Requests a game update from the server, since we are out of sync.
  */
-function resyncToGame() {
+function resyncToGame(): void {
 	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
 	websocket.sendmessage('game', 'resync', id!);
 }
 
-function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
+function onMovePlayed({ isOpponents }: { isOpponents: boolean}): void {
 	// Inform all the scripts that rely on online game
 	// logic that a move occurred, so they can update accordingly
 	afk.onMovePlayed({ isOpponents });
@@ -301,7 +301,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
 	drawoffers.onMovePlayed({ isOpponents });
 }
 
-function reportOpponentsMove(reason: string) {
+function reportOpponentsMove(reason: string): void {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
 	const opponentsMoveNumber = gameslot.getGamefile()!.basegame.moves.length + 1;
 
@@ -314,7 +314,7 @@ function reportOpponentsMove(reason: string) {
 }
 
 /**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
-function onAbortOrResignButtonPress() {
+function onAbortOrResignButtonPress(): void {
 	if (!inOnlineGame) return;
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
 	if (playerHasPressedAbortOrResignButton) return; // Don't need to abort/resign, we have already done this during this game
@@ -331,7 +331,7 @@ function onAbortOrResignButtonPress() {
  * This can happen if the game is already over or if the player has already pressed the "Abort / Resign" button.
  * This requests the server to stop serving us game updates, and allow us to join a new game.
  */
-function onMainMenuButtonPress() {
+function onMainMenuButtonPress(): void {
 	// MUST BE BEFORE UNSUBBING, since the code will skip
 	// sending this message if we are not subbed.
 	// This allows us to join a new game.
@@ -344,7 +344,7 @@ function onMainMenuButtonPress() {
 
 
 /** Called when an online game is concluded (termination shown on-screen) */
-function onGameConclude() {
+function onGameConclude(): void {
 	if (!inOnlineGame) return; // The game concluded wasn't an online game.
 
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
@@ -356,7 +356,7 @@ function onGameConclude() {
 	requestRemovalFromPlayersInActiveGames();
 }
 
-function deleteCustomVariantOptions() {
+function deleteCustomVariantOptions(): void {
 	// Delete any custom pasted position in a private game.
 	if (isPrivate) localstorage.deleteItem(String(id!));
 }
@@ -369,7 +369,7 @@ function deleteCustomVariantOptions() {
  * with the resulting game conclusion (no cheating detected),
  * and the server may change the players elos!
  */
-function requestRemovalFromPlayersInActiveGames() {
+function requestRemovalFromPlayersInActiveGames(): void {
 	if (!areInOnlineGame()) return;
 	if (!websocket.areSubbedToSub('game')) {
 		// THE SERVER has deleted the game. Already removed from players in active games list!
@@ -407,7 +407,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
  * Returns the key that's put in local storage to store the variant options
  * of the current online game, if we have pasted a position in a private match.
  */
-function getKeyForOnlineGameVariantOptions(gameID: number) {
+function getKeyForOnlineGameVariantOptions(gameID: number): string {
 	return `online-game-variant-options${gameID}`;
 }
 

@@ -166,7 +166,7 @@ function hasPieceMoved(boardsim: Board, coords: Coords): boolean {
 /**
  * Flags the gamefile's very last move as a "mate".
  */
-function flagLastMoveAsMate(boardsim: Board) {
+function flagLastMoveAsMate(boardsim: Board): void {
 	const lastMove = getLastMove(boardsim.moves);
 	if (lastMove === undefined) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
 	lastMove.flags.mate = true;

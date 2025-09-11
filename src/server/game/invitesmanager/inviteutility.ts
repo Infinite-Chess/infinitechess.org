@@ -44,14 +44,14 @@ interface SafeInvite {
 /**
  * Returns true if the invite is private
  */
-function isInvitePrivate(invite: Invite) {
+function isInvitePrivate(invite: Invite): boolean {
 	return invite.publicity === 'private';
 }
 
 /**
  * Returns true if the invite is public
  */
-function isInvitePublic(invite: Invite) {
+function isInvitePublic(invite: Invite): boolean {
 	return invite.publicity === 'public';
 }
 

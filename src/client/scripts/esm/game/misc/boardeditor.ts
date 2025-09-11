@@ -73,7 +73,7 @@ let addingSpecialRights: boolean | undefined;
 
 // Functions ------------------------------------------------------------------------
 
-function initBoardEditor() {
+function initBoardEditor(): void {
 	inBoardEditor = true;
 	edits = [];
 	indexOfThisEdit = 0;
@@ -87,7 +87,7 @@ function initBoardEditor() {
 	guiboardeditor.markPiece(currentPieceType);
 }
 
-function closeBoardEditor() {
+function closeBoardEditor(): void {
 	inBoardEditor = false;
 	drawing = false;
 	addingSpecialRights = undefined;
@@ -97,29 +97,29 @@ function closeBoardEditor() {
 	previousSquare = undefined;
 }
 
-function areInBoardEditor() {
+function areInBoardEditor(): boolean {
 	return inBoardEditor;
 }
 
 /** Set the piece type to be added to the board */
-function setPiece(pieceType: number) {
+function setPiece(pieceType: number): void {
 	currentPieceType = pieceType;
 }
 
-function getPiece() {
+function getPiece(): number {
 	return currentPieceType;
 }
 
-function setColor(color: Player) {
+function setColor(color: Player): void {
 	currentColor = color;
 }
 
-function getColor() {
+function getColor(): Player {
 	return currentColor;
 }
 
 /** Change the tool being used. */
-function setTool(tool: string) {
+function setTool(tool: string): void {
 	if (!validTools.includes(tool as Tool)) return;
 	currentTool = tool as Tool;
 	endEdit();
@@ -135,32 +135,32 @@ function setTool(tool: string) {
 	else guiboardeditor.markPiece(currentPieceType);
 }
 
-function getTool() {
+function getTool(): typeof currentTool {
 	return currentTool;
 }
 
-function isBoardEditorUsingDrawingTool() {
+function isBoardEditorUsingDrawingTool(): boolean {
 	return inBoardEditor && drawingTools.includes(currentTool);
 }
 
-function canUndo() {
+function canUndo(): boolean {
 	// comparing undefined always returns false
 	return indexOfThisEdit! > 0;
 }
 
-function canRedo() {
+function canRedo(): boolean {
 	// comparing undefined always returns false
 	return indexOfThisEdit! < edits?.length!;
 }
 
-function beginEdit() {
+function beginEdit(): void {
 	drawing = true;
 	thisEdit = { changes:[], state: {local: [], global: []} };
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
 
-function endEdit() {
+function endEdit(): void {
 	drawing = false;
 	addingSpecialRights = undefined;
 	previousSquare = undefined;
@@ -169,7 +169,7 @@ function endEdit() {
 }
 
 /** Runs both logical and graphical changes. */
-function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = true) {
+function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = true): void {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 
@@ -182,7 +182,7 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	specialrighthighlights.onMove();
 }
 
-function addEditToHistory(edit: Edit) {
+function addEditToHistory(edit: Edit): void {
 	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	edits!.length = indexOfThisEdit!;
 	edits!.push(edit);
@@ -236,7 +236,7 @@ function update(): void {
 	thisEdit!.state.global.push(...edit.state.global);
 }
 
-function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined) {
+function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
@@ -248,14 +248,14 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 }
 
-function queueAddPiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
+function queueAddPiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number): void {
 	if (pieceHovered?.type === type) return; // do not do anything if new piece would be equal to old piece
 	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
 
-function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined) {
+function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
 	if (!pieceHovered) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	// Remove the piece
@@ -269,7 +269,7 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | 
 	}
 }
 
-function clearAll() {
+function clearAll(): void {
 	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.");
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
@@ -284,7 +284,7 @@ function clearAll() {
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 }
 
-function undo() {
+function undo(): void {
 	if (!inBoardEditor) throw Error("Cannot undo edit when we're not using the board editor.");
 	if (indexOfThisEdit! <= 0) return;
 	const gamefile = gameslot.getGamefile()!;
@@ -294,7 +294,7 @@ function undo() {
 	guinavigation.update_EditButtons();
 }
 
-function redo() {
+function redo(): void {
 	if (!inBoardEditor) throw Error("Cannot redo edit when we're not using the board editor.");
 	if (indexOfThisEdit! >= edits!.length) return;
 	const gamefile = gameslot.getGamefile()!;
@@ -309,7 +309,7 @@ function redo() {
  * which doesn't work for the board editor.
  * This function uses the position of pieces on the board.
  */
-function save() {
+function save(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const pieceIterator = organizedpieces.getPieceIterable(gamefile.boardsim.pieces);
 	const positionString = icnconverter.getShortFormPosition(pieceIterator, gamefile.boardsim.state.global.specialRights);
@@ -318,7 +318,7 @@ function save() {
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 
-function load() {
+function load(): void {
 	// Need to implement position loading and also fix pasting logic
 	statustext.showStatus("Loading not yet implemented", true);
 }

@@ -381,7 +381,7 @@ function appendPathBlockingMoves(gamefile: FullGame, path: path, legalMoves: Leg
  * @param color - The color of the player the piece belongs to.
  * @returns Whether the move would result in the player owning the piece being in check.
  */
-function isMoveCheckInvalid(gamefile: FullGame, piece: Piece, destCoords: CoordsSpecial, color: Player) { // pieceSelected: { type, index, coords }
+function isMoveCheckInvalid(gamefile: FullGame, piece: Piece, destCoords: CoordsSpecial, color: Player): boolean { // pieceSelected: { type, index, coords }
 	const moveDraft: MoveDraft = { startCoords: jsutil.deepCopyObject(piece.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
 	return getSimulatedCheck(gamefile, moveDraft, color).check;

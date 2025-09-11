@@ -68,7 +68,7 @@ type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
  * Sends an echo (unless this message itself **is** an echo), rate limits,
  * logs the message, then routes the message where it needs to go.
  */
-function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer) {
+function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer): void {
 	const messageStr = rawMessage.toString('utf8');
 
 	let parsedUnvalidatedMessage: any;

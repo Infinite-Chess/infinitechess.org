@@ -27,7 +27,7 @@ import type { Color } from '../../../util/math/math.js';
 /**
  * Renders the red glow around all pieces in check on the currently-viewed move.
  */
-function render(boardsim: Board) {
+function render(boardsim: Board): void {
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
 	if (royalsInCheck.length === 0) return; // Nothing in check
     

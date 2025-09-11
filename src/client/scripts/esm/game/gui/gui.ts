@@ -25,7 +25,7 @@ import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
  * Call when we first load the page, or leave any game. This prepares the board
  * for either the title screen or lobby (any screen that's not in a game)
  */
-function prepareForOpen() {
+function prepareForOpen(): void {
 	// Randomize pan velocity direction for the title screen and lobby menus
 	randomizePanVelDir();
 	const amount = bigdecimal.FromNumber(1.8); // Default: 1.8
@@ -34,7 +34,7 @@ function prepareForOpen() {
 }
 
 // Sets panVel to a random direction, and sets speed to titleBoardVel. Called when the title screen is initiated.
-function randomizePanVelDir() {
+function randomizePanVelDir(): void {
 	const randTheta = Math.random() * 2 * Math.PI;
 	const XYComponents = vectors.getXYComponents_FromAngle(randTheta);
 	boardpos.setPanVel([
@@ -44,7 +44,7 @@ function randomizePanVelDir() {
 }
 
 /** Displays the status message on screen "Feature is planned". */
-function displayStatus_FeaturePlanned() {
+function displayStatus_FeaturePlanned(): void {
 	statustext.showStatus(translations['planned_feature']);
 }
 

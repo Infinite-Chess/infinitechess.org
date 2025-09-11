@@ -55,11 +55,11 @@ let boardEditorOpen = false;
 
 // Functions ---------------------------------------------------------------
 
-function isOpen() {
+function isOpen(): boolean {
 	return boardEditorOpen;
 }
 
-async function open() {
+async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove("hidden");
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
@@ -67,7 +67,7 @@ async function open() {
 	initListeners();
 }
 
-function close() {
+function close(): void {
 	if (!boardEditorOpen) return;
 	element_menu.classList.add("hidden");
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
@@ -75,7 +75,7 @@ function close() {
 	boardEditorOpen = false;
 }
 
-async function initUI() {
+async function initUI(): Promise<void> {
 	if (initialized) return;
 	const uniquePlayers = _getPlayersInOrder();
 
@@ -116,7 +116,7 @@ async function initUI() {
 	initialized = true;
 }
 
-function initListeners() {
+function initListeners(): void {
 	Array.from(element_tools.children).forEach((element) => {
 		element.addEventListener("click", callback_ChangeTool);
 	});
@@ -125,7 +125,7 @@ function initListeners() {
 	});
 }
 
-function closeListeners() {
+function closeListeners(): void {
 	Array.from(element_tools.children).forEach((element) => {
 		element.removeEventListener("click", callback_ChangeTool);
 	});
@@ -135,7 +135,7 @@ function closeListeners() {
 }
 
 
-function markTool(tool: string) {
+function markTool(tool: string): void {
 	Array.from(element_tools.children).forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
 		if (element_tool === tool) element.classList.add("active");
@@ -143,7 +143,7 @@ function markTool(tool: string) {
 	});
 }
 
-function markPiece(type: number | null) {
+function markPiece(type: number | null): void {
 	const placerToolActive = boardeditor.getTool() === "placer";
 
 	_getActivePieceElements().forEach((element) => {
@@ -153,7 +153,7 @@ function markPiece(type: number | null) {
 	});
 }
 
-function updatePieceColors(newColor: Player) {
+function updatePieceColors(newColor: Player): void {
 	if (!initialized) return;
 
 	// Hide all player containers and remove their listeners
@@ -185,7 +185,7 @@ function updatePieceColors(newColor: Player) {
 	markPiece(boardeditor.getPiece());
 }
 
-function nextColor() {
+function nextColor(): void {
 	const playersArray = _getPlayersInOrder();
 	const currentIndex = playersArray.indexOf(boardeditor.getColor());
 	const nextColor = playersArray[(currentIndex + 1) % playersArray.length]!;
@@ -207,7 +207,7 @@ function _getPlayersInOrder(): Player[] {
 
 // Callbacks ---------------------------------------------------------------
 
-function callback_ChangeTool(e: Event) {
+function callback_ChangeTool(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
@@ -229,7 +229,7 @@ function callback_ChangeTool(e: Event) {
 	}
 }
 
-function callback_ChangePieceType(e: Event) {
+function callback_ChangePieceType(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const currentPieceType = Number.parseInt(target.id);
 	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);

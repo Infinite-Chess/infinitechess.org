@@ -304,7 +304,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	});
 
 	/** Calculates the mouse velocity based on recent mouse positions. */
-	function recalcPointerVel(pointer: Pointer, now: number) {
+	function recalcPointerVel(pointer: Pointer, now: number): void {
 		// Remove old entries, stop once we encounter recent enough data
 		const timeToRemoveEntriesBefore = now - MOUSE_POS_HISTORY_WINDOW_MILLIS;
 		while (pointer.positionHistory.length > 0 && pointer.positionHistory[0]!.time < timeToRemoveEntriesBefore) pointer.positionHistory.shift();
@@ -326,7 +326,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	// Simulated Click Events (either mouse or finger) ------------------------------------------------------------
 
 
-	function updateClickInfoDown(targetButton: MouseButton, e: MouseEvent | Touch) {
+	function updateClickInfoDown(targetButton: MouseButton, e: MouseEvent | Touch): void {
 		// console.log("Mouse down: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
@@ -379,7 +379,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		targetButtonInfo.deltaSinceDown = [0, 0]; // Reset the delta since down
 	}
 
-	function updateClickInfoUp(targetButton: MouseButton, e: MouseEvent | Touch) {
+	function updateClickInfoUp(targetButton: MouseButton, e: MouseEvent | Touch): void {
 		// console.log("Mouse up: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
@@ -429,7 +429,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	 * 
 	 * If the pointer moves too much, don't simulate a click.
 	 */
-	function updateDeltaSinceDownForPointer(pointerId: string, delta: DoubleCoords) {
+	function updateDeltaSinceDownForPointer(pointerId: string, delta: DoubleCoords): void {
 		// Update the delta (deltaSinceDown) for simulated mouse clicks
 		Object.values(Mouse).forEach((targetButton) => {
 			const targetButtonInfo = clickInfo[targetButton];
@@ -444,7 +444,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 
 		// Mouse Events ---------------------------------------------------------------------------
 
-		addListener(element, 'mousedown', ((e: MouseEvent) => {
+		addListener(element, 'mousedown', ((e: MouseEvent): void => {
 			if (element instanceof HTMLElement) {
 				if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 				// Prevents dragging the board also selecting/highlighting text in Coordinates container
@@ -461,7 +461,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		}) as EventListener);
 
 		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
-		addListener(document, 'mouseup', ((e: MouseEvent) => {
+		addListener(document, 'mouseup', ((e: MouseEvent): void => {
 			atleastOneInputThisFrame = true;
 			const eventButton = e.button as MouseButton;
 			// If alt is held, right click instead
@@ -470,7 +470,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		}) as EventListener);
 
 		// Mouse position tracking
-		addListener(element, 'mousemove', ((e: MouseEvent) => {
+		addListener(element, 'mousemove', ((e: MouseEvent): void => {
 			atleastOneInputThisFrame = true;
 			const targetPointer = pointers['mouse'];
 			if (!targetPointer) return; // Sometimes the 'mousemove' event is fired from touch events, even though the mouse pointer does not exist.
@@ -493,7 +493,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		}) as EventListener);
 
 		// Scroll wheel tracking
-		addListener(element, 'wheel', ((e: WheelEvent) => {
+		addListener(element, 'wheel', ((e: WheelEvent): void => {
 			if (element instanceof HTMLElement && e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 			atleastOneInputThisFrame = true;
 			wheelDelta = e.deltaY;
@@ -501,7 +501,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		}) as EventListener);
 
 		// Prevent the context menu on right click
-		addListener(element, 'contextmenu', ((e: MouseEvent) => {
+		addListener(element, 'contextmenu', ((e: MouseEvent): void => {
 			if (element instanceof Document || e.target !== element) return; // Allow context menu outside the element, or inside as long as the target isn't the element.
 			atleastOneInputThisFrame = true;
 			// console.log("Context menu");
@@ -512,7 +512,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// Finger Events ---------------------------------------------------------------------------
 
 
-		addListener(element, 'touchstart', ((e: TouchEvent) => {
+		addListener(element, 'touchstart', ((e: TouchEvent): void => {
 			if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 			atleastOneInputThisFrame = true;
 
@@ -543,7 +543,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			}
 		}) as EventListener);
 
-		addListener(element, 'touchmove', ((e: TouchEvent) => {
+		addListener(element, 'touchmove', ((e: TouchEvent): void => {
 			atleastOneInputThisFrame = true;
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				const touch: Touch = e.changedTouches[i]!;
@@ -572,7 +572,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		addListener(document, 'touchend', touchEndCallback as EventListener);
 		addListener(document, 'touchcancel', touchEndCallback as EventListener);
 
-		function touchEndCallback(e: TouchEvent) {
+		function touchEndCallback(e: TouchEvent): void {
 			atleastOneInputThisFrame = true;
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				const touch: Touch = e.changedTouches[i]!;
@@ -594,7 +594,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 
 	if (keyboard) {
 
-		addListener(element, 'keydown', ((e: KeyboardEvent) => {
+		addListener(element, 'keydown', ((e: KeyboardEvent): void => {
 			// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 			// console.log("Key down: ", e.code);
@@ -606,7 +606,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		}) as EventListener);
 
 		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
-		addListener(element, 'keyup', ((e: KeyboardEvent) => {
+		addListener(element, 'keyup', ((e: KeyboardEvent): void => {
 			// console.log("Key up: ", e.code);
 			atleastOneInputThisFrame = true;
 			const downIndex = keyDowns.indexOf(e.code);
@@ -633,9 +633,9 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 
 	return {
 		element,
-		atleastOneInput: () => atleastOneInputThisFrame,
-		isMouseDown: (button: MouseButton) => clickInfo[button].isDown ?? false,
-		claimMouseDown: (button: MouseButton) => {
+		atleastOneInput: (): boolean => atleastOneInputThisFrame,
+		isMouseDown: (button: MouseButton): boolean => clickInfo[button].isDown ?? false,
+		claimMouseDown: (button: MouseButton): void => {
 			clickInfo[button].isDown = false;
 			// Also remove the pointer from the list of pointers down this frame.
 			const pointerId = clickInfo[button].pointerId;
@@ -643,30 +643,30 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// console.error("Claiming pointer down1: ", pointerId);
 			if (index !== -1) pointersDown.splice(index, 1);
 		},
-		claimPointerDown: (pointerId: string) => {
+		claimPointerDown: (pointerId: string): void => {
 			const index = pointersDown.indexOf(pointerId);
 			if (index === -1) throw Error("Can't claim pointer down. Already claimed, or is not down.");
 			// console.error("Claiming pointer down2: ", pointerId);
 			pointersDown.splice(index, 1);
 		},
-		unclaimPointerDown: (pointerId: string) => {
+		unclaimPointerDown: (pointerId: string): void => {
 			const index = pointersDown.indexOf(pointerId);
 			if (index !== -1) throw Error("Can't unclaim pointer, it was never claimed.");
 			pointersDown.push(pointerId);
 		},
-		claimMouseClick: (button: MouseButton) => {
+		claimMouseClick: (button: MouseButton): void => {
 			clickInfo[button].clicked = false;
 			// console.error("Claiming mouse click: ", MouseNames[button]);
 		},
-		cancelMouseClick: (button: MouseButton) => clickInfo[button].timeDownMillisHistory.length = 0,
-		isMouseHeld: (button: MouseButton) => clickInfo[button].isHeld ?? false,
-		isMouseTouch: (button: MouseButton) => {
+		cancelMouseClick: (button: MouseButton): number => clickInfo[button].timeDownMillisHistory.length = 0,
+		isMouseHeld: (button: MouseButton): boolean => clickInfo[button].isHeld ?? false,
+		isMouseTouch: (button: MouseButton): boolean => {
 			const pointerId = clickInfo[button].pointerId;
 			if (pointerId === undefined) return false;
 			return pointers[pointerId]?.isTouch ?? true; // If it's delete then it must have been a touch.
 		},
-		getMouseId: (button: MouseButton) => clickInfo[button].pointerId,
-		getMousePosition: (button: MouseButton) => {
+		getMouseId: (button: MouseButton): string | undefined => clickInfo[button].pointerId,
+		getMousePosition: (button: MouseButton): DoubleCoords | undefined => {
 			const pointerId = clickInfo[button].pointerId;
 			if (pointerId === undefined) return undefined;
 			/**
@@ -675,22 +675,22 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			 */
 			return pointers[pointerId]?.position ?? clickInfo[button].position ?? undefined;
 		},
-		isMouseClicked: (button: MouseButton) => clickInfo[button].clicked,
-		isMouseDoubleClickDragged: (button: MouseButton) => clickInfo[button].doubleClickDrag,
-		setTreatLeftasRight: (value: boolean) => treatLeftAsRight = value,
-		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? undefined,
-		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? undefined,
-		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? undefined,
-		getAllPointerIds: () => Object.keys(pointers),
-		getAllPointers: () => Object.values(pointers),
-		getPointerCount: () => Object.keys(pointers).length,
-		getPointer: (pointerId: string) => pointers[pointerId],
-		getPointersDown: () => pointersDown,
-		getPointersDownCount: () => pointersDown.length,
-		getWheelDelta: () => wheelDelta,
-		isKeyDown: (keyCode: string) => keyDowns.includes(keyCode),
-		isKeyHeld: (keyCode: string) => keyHelds.includes(keyCode),
-		removeEventListeners: () => {
+		isMouseClicked: (button: MouseButton): boolean => clickInfo[button].clicked,
+		isMouseDoubleClickDragged: (button: MouseButton): boolean => clickInfo[button].doubleClickDrag,
+		setTreatLeftasRight: (value: boolean): boolean => treatLeftAsRight = value,
+		getPointerPos: (pointerId: string): DoubleCoords | undefined => pointers[pointerId]?.position ?? undefined,
+		getPointerDelta: (pointerId: string): DoubleCoords | undefined => pointers[pointerId]?.delta ?? undefined,
+		getPointerVel: (pointerId: string): DoubleCoords | undefined => pointers[pointerId]?.velocity ?? undefined,
+		getAllPointerIds: (): string[] => Object.keys(pointers),
+		getAllPointers: (): Pointer[] => Object.values(pointers),
+		getPointerCount: (): number => Object.keys(pointers).length,
+		getPointer: (pointerId: string): Pointer | undefined => pointers[pointerId],
+		getPointersDown: (): string[] => pointersDown,
+		getPointersDownCount: (): number => pointersDown.length,
+		getWheelDelta: (): number => wheelDelta,
+		isKeyDown: (keyCode: string): boolean => keyDowns.includes(keyCode),
+		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
+		removeEventListeners: (): void => {
 			Object.keys(eventHandlers).forEach((eventType) => {
 				const { target, handler } = eventHandlers[eventType]!;
 				target.removeEventListener(eventType, handler);

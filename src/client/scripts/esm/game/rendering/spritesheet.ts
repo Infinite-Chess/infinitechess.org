@@ -76,7 +76,7 @@ function getSpritesheetDataTexLocation(type: number): DoubleCoords {
 }
 
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
-async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Board) {
+async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Board): Promise<void> {
 
 	// Filter our voids from all types in the game.
 	// @ts-ignore
@@ -102,7 +102,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Boar
  * Call when the gameslot unloads the gamefile.
  * The spritesheet and data is no longer needed.
  */
-function deleteSpritesheet() {
+function deleteSpritesheet(): void {
 	spritesheet = undefined;
 	spritesheetData = undefined;
 }

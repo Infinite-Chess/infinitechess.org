@@ -75,7 +75,7 @@ const wheelMultiplier = 0.015; // Default: 0.015
 
 
 // Called from game.updateBoard()
-function updateNavControls() {
+function updateNavControls(): void {
 	if (guipause.areWePaused()) return; // Exit if paused
 
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
@@ -89,7 +89,7 @@ function updateNavControls() {
 
 
 /** Detects WASD controls, updating board velocity accordingly. */
-function detectPanning() {
+function detectPanning(): void {
 	if (boarddrag.isBoardDragging()) return; // Only pan if we aren't dragging the board
 
 	let panVel = boardpos.getPanVel();
@@ -160,7 +160,7 @@ function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 
 
 /** Detects Space/Shift/Wheel controls, updating board SCALE velocity accordingly. */
-function detectZooming() {
+function detectZooming(): void {
 	let scaleVel = boardpos.getScaleVel();
 
 	let scaling = false;
@@ -219,14 +219,14 @@ function deccelerateScaleVel(scaleVel: number): number {
 
 
 /** Debug toggles that are not only for in a game, but outside. */
-function testOutGameToggles() {
+function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
 	if (listener_document.isKeyDown('Digit4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (listener_document.isKeyDown('KeyM')) stats.toggleFPS();
 }
 
 /** Debug toggles that are only for in a game. */
-function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
+function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Escape')) guipause.toggle();
 	
 	if (listener_document.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE

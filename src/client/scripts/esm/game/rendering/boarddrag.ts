@@ -72,7 +72,7 @@ function isBoardDragging(): boolean {
 }
 
 /** Checks if the board needs to be grabbed by any new pointers pressed down this frame. */
-function checkIfBoardGrabbed() {
+function checkIfBoardGrabbed(): void {
 	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen()) return;
 
 	// For every new pointer touched down / created this frame...
@@ -110,7 +110,7 @@ function checkIfBoardGrabbed() {
  * Checks if any of the pointers that are currenlty dragging the board
  * have been released, or no longer exist. If so, throw the board and cancel the drag.
  */
-function checkIfBoardDropped() {
+function checkIfBoardDropped(): void {
 	if (!boardIsGrabbed) return; // Not grabbed
 
 	const now = Date.now();
@@ -156,7 +156,7 @@ function checkIfBoardDropped() {
 }
 
 /** Forcefully terminates a board drag WITHOUT throwing the board. */
-function cancelBoardDrag() {
+function cancelBoardDrag(): void {
 	boardIsGrabbed = false;
 	pointer1Id = undefined;
 	pointer2Id = undefined;
@@ -169,7 +169,7 @@ function cancelBoardDrag() {
 }
 
 /** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
-function throwBoard(time: number) {
+function throwBoard(time: number): void {
 	removeOldPositions(time);
 	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0]!;
@@ -190,7 +190,7 @@ function throwBoard(time: number) {
  * Called after letting go of the board with a second finger. Applies scale
  * velocity to the board according to how fast the fingers were pinching
  */
-function throwScale(time: number) {
+function throwScale(time: number): void {
 	removeOldPositions(time);
 	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0]!;
@@ -202,7 +202,7 @@ function throwScale(time: number) {
 
 
 /** Called if the board is being dragged, calculates the new board position. */
-function dragBoard() {
+function dragBoard(): void {
 	if (!boardIsGrabbed) return;
 
 	// Calculate new board position...
@@ -271,7 +271,7 @@ function dragBoard() {
  * 
  * History is only kept track of while dragging.
  */
-function addCurrentPositionToHistory() {
+function addCurrentPositionToHistory(): void {
 	const now = Date.now();
 	removeOldPositions(now);
 	positionHistory.push({
@@ -285,7 +285,7 @@ function addCurrentPositionToHistory() {
  * Removes all positions from the history that are older than the
  * positionHistoryWindowMillis.
  */
-function removeOldPositions(now: number) {
+function removeOldPositions(now: number): void {
 	const earliestTime = now - positionHistoryWindowMillis;
 	while (positionHistory.length > 0 && positionHistory[0]!.time < earliestTime) positionHistory.shift();
 }

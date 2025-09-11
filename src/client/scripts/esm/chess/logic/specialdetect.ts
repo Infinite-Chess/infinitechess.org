@@ -234,7 +234,7 @@ function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Co
  * @param color - The color of the pawn selected
  */
 // If it can capture en passant, the move is appended to  legalmoves
-function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves: Coords[], coords: Coords, color: Player) {
+function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves: Coords[], coords: Coords, color: Player): void {
 	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawnType = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
@@ -260,7 +260,7 @@ function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves:
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player) {
+function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
 		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
 		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
@@ -312,7 +312,7 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 	 * 3. Randomly pick one
 	 * @param {Coords} newCoord - The coordinate to append [x, y].
 	 */
-	function appendCoordToIndividuals(newCoord: CoordsSpecial, path: Coords[]) {
+	function appendCoordToIndividuals(newCoord: CoordsSpecial, path: Coords[]): void {
 		newCoord.path = jsutil.deepCopyObject(path);
 		for (let i = 0; i < individualMoves.length; i++) {
 			const coord = individualMoves[i]!;
@@ -395,7 +395,7 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
  * @param coords - The coordinates
  * @param {MoveDraft} move - The move
  */
-function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: MoveDraft) {
+function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: MoveDraft): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (coords[special] !== undefined) {
@@ -410,7 +410,7 @@ function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: Move
  * @param coords - The coordinates
  * @param {MoveDraft} move - The move
  */
-function transferSpecialFlags_FromMoveToCoords(move: MoveDraft, coords: Coords) {
+function transferSpecialFlags_FromMoveToCoords(move: MoveDraft, coords: Coords): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (move[special]) coords[special] = jsutil.deepCopyObject(move[special]);
@@ -422,7 +422,7 @@ function transferSpecialFlags_FromMoveToCoords(move: MoveDraft, coords: Coords) 
  * @param srcCoords - The source coordinates
  * @param destCoords - The destination coordinates
  */
-function transferSpecialFlags_FromCoordsToCoords(srcCoords: CoordsSpecial, destCoords: CoordsSpecial) {
+function transferSpecialFlags_FromCoordsToCoords(srcCoords: CoordsSpecial, destCoords: CoordsSpecial): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (srcCoords[special] !== undefined) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);

@@ -92,7 +92,7 @@ function toggle(): void {
 
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
 // eslint-disable-next-line no-unused-vars
-function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void) {
+function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void): void {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 
@@ -161,7 +161,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 	}
 
 	/** Calculates and appends the instance data of the piece */
-	function processPiece(coords: BDCoords, type: number) {
+	function processPiece(coords: BDCoords, type: number): void {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		instanceData[type]!.push(...coordsWorld);
 
@@ -194,7 +194,7 @@ function getImagesBelowWorld(world: DoubleCoords, trackDists: boolean): { images
 		}); // Calculate if their underneath the world coords
 	}
 
-	function processPiece(coords: BDCoords) {
+	function processPiece(coords: BDCoords): void {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
 			const integerCoords = bd.coordsToBigInt(coords);
@@ -216,7 +216,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	/** Running list of all pieces to render. */
 	const piecesToRender: Piece[] = [];
 
-	function pushPieceNoDuplicatesOrVoids(piece: Piece) {
+	function pushPieceNoDuplicatesOrVoids(piece: Piece): void {
 		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(piece.type))) return; // Skip voids
 		if (!piecesToRender.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) {
 			piecesToRender.push(piece);

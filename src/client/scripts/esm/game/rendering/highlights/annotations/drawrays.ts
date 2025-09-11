@@ -58,7 +58,7 @@ let pointerWorld: DoubleCoords | undefined;
 
 
 /** Whether a ray is currently being drawn. */
-function areDrawing() {
+function areDrawing(): boolean {
 	return drag_start !== undefined;
 }
 
@@ -85,7 +85,7 @@ function getPresetRays(): Ray[] {
  * REQUIRES THE HOVERED HIGHLIGHTS to be updated prior to calling this!
  * @param rays - All ray annotations currently on the board.
  */
-function update(rays: Ray[]) {
+function update(rays: Ray[]): void {
 	const respectiveListener = mouse.getRelevantListener();
 
 	if (!drag_start) { // Not currently drawing a ray
@@ -151,7 +151,7 @@ function getPointerId(): string {
 	return pointerId;
 }
 
-function stopDrawing() {
+function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
 	pointerWorld = undefined;
@@ -368,14 +368,14 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 		}
 	}
 
-	function addSquare_NoDuplicates(coords: BDCoords) {
+	function addSquare_NoDuplicates(coords: BDCoords): void {
 		if (intersections.every(coords2 => !coordutil.areBDCoordsEqual(coords, coords2))) intersections.push(coords);
 	}
 
 	return intersections;
 }
 
-function dispatchRayCountEvent(rays: Ray[]) {
+function dispatchRayCountEvent(rays: Ray[]): void {
 	document.dispatchEvent(new CustomEvent('ray-count-change', { detail: rays.length }));
 }
 
@@ -383,18 +383,18 @@ function dispatchRayCountEvent(rays: Ray[]) {
  * Sets the preset rays, if they were specified in the ICN.
  * These override the variant's preset rays.
  */
-function setPresetOverrides(prs: BaseRay[]) {
+function setPresetOverrides(prs: BaseRay[]): void {
 	if (preset_rays) throw Error("Preset rays already initialized. Did you forget to clearPresetOverrides()?");
 	preset_rays = prs;
 }
 
 /** Returns the preset ray overrides from the ICN. */
-function getPresetOverrides() {
+function getPresetOverrides(): BaseRay[] | undefined {
 	return preset_rays;
 }
 
 /** Clears the preset ray overrides from the ICN. */
-function clearPresetOverrides() {
+function clearPresetOverrides(): void {
 	preset_rays = undefined;
 }
 
@@ -403,7 +403,7 @@ function clearPresetOverrides() {
 
 
 /** Renders all existing rays, including preset rays. */
-function render(rays: Ray[]) {
+function render(rays: Ray[]): void {
 	// Add the ray currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
@@ -422,7 +422,7 @@ function render(rays: Ray[]) {
 }
 
 /** Generates and renders a model for the given rays and color. */
-function genAndRenderRays(rays: Ray[], color: Color) {
+function genAndRenderRays(rays: Ray[], color: Color): void {
 	if (rays.length === 0) return; // Nothing to render
 
 	if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines

@@ -26,7 +26,7 @@ function isLocalEnvironment(): boolean {
  * Copies the provided text to the operating system's clipboard.
  * @param text - The text to copy
  */
-function copyToClipboard(text: string) {
+function copyToClipboard(text: string): void {
 	navigator.clipboard.writeText(text)
 		.then(() => { console.log('Copied to clipboard'); })
 		.catch((error) => { console.error('Failed to copy to clipboard', error); });
@@ -65,7 +65,7 @@ function getLastSegmentOfURL(): string {
  * @param href - The href to extract the pathname from. Can be a relative or absolute URL.
  * @returns The pathname of the href (e.g., '/news').
  */
-function getPathnameFromHref(href: string) {
+function getPathnameFromHref(href: string): string {
 	const url = new URL(href, window.location.origin);
 	return url.pathname;
 }
@@ -92,7 +92,7 @@ function getCookieValue(cookieName: string): string | undefined {
  * @param value - The value of the cookie
  * @param days - How many days until the cookie should expire.
  */
-function updateCookie(cookieName: string, value: string, days: number) {
+function updateCookie(cookieName: string, value: string, days: number): void {
 	let expires = "";
 	if (days) {
 		const date = new Date();
@@ -106,7 +106,7 @@ function updateCookie(cookieName: string, value: string, days: number) {
  * Deletes a document cookie.
  * @param cookieName - The name of the cookie you would like to delete.
  */
-function deleteCookie(cookieName: string) {
+function deleteCookie(cookieName: string): void {
 	document.cookie = cookieName + '=; Max-Age=-99999999;';
 }
 

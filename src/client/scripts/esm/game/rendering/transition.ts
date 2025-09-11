@@ -155,7 +155,7 @@ let differenceE: number;
 
 
 /** Sets common variables between starting either a Zooming or Panning Transition. */
-function onTransitionStart() {
+function onTransitionStart(): void {
 	isTeleporting = true;
 	startTime = Date.now();
 	originCoords = boardpos.getBoardPos();
@@ -235,7 +235,7 @@ function zoomToCoordsBox(box: BoundingBox): void {
  * Starts a Zooming Transition to a list of coordinates.
  * Will not incur an intermediate transition if all coords are not on screen originally.
  */
-function singleZoomToCoordsList(coordsList: Coords[]) {
+function singleZoomToCoordsList(coordsList: Coords[]): void {
 	const transitionArea: Area = area.calculateFromCoordsList(coordsList);
 	zoomTransitionToArea(transitionArea);
 }
@@ -244,7 +244,7 @@ function singleZoomToCoordsList(coordsList: Coords[]) {
  * Starts a Zooming Transition to floating point coords location.
  * Will not incur an intermediate transition if it is not on screen originally.
  */
-function singleZoomToBDCoords(coords: BDCoords) {
+function singleZoomToBDCoords(coords: BDCoords): void {
 	const snapBoundingBox: BoundingBoxBD = { left: coords[0], right: coords[0], bottom: coords[1], top: coords[1] };
 	const boxFloating: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquareBD(snapBoundingBox);
 	const transitionArea: Area = area.calculateFromUnpaddedBox(boxFloating);
@@ -256,7 +256,7 @@ function singleZoomToBDCoords(coords: BDCoords) {
  * 
  * Will not incur a following transition if the area is not on screen.
  */
-function zoomTransitionToArea(theArea: Area) {
+function zoomTransitionToArea(theArea: Area): void {
 	const trans: ZoomTransition = {
 		destinationCoords: theArea.coords,
 		destinationScale: theArea.scale,

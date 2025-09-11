@@ -114,7 +114,7 @@ const changeFuncs: ChangeApplication<genericChangeFunc<FullGame>> = {
  * @param main Whether this change is affecting the main piece moved, not a secondary piece.
  * @param order This is used by animations to tell when this piece was captured. `-1` implies the end of the path the piece moved along
  */
-function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, order: number = -1) {
+function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, order: number = -1): Change[] {
 	const change: Change = { action: 'capture', main, piece, order};
 	changes.push(change);
 	return changes;
@@ -126,7 +126,7 @@ function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, order
  * @param piece the piece to add
  * the pieces index is optional and will get assigned one if none is present
  */
-function queueAddPiece(changes: Array<Change>, piece: Piece) {
+function queueAddPiece(changes: Array<Change>, piece: Piece): Change[] {
 	changes.push({ action: 'add', main: false, piece }); // It's impossible for an 'add' change to affect the main piece moved, because before this move this piece didn't exist.
 	return changes;
 };
@@ -137,7 +137,7 @@ function queueAddPiece(changes: Array<Change>, piece: Piece) {
  * @param piece - The piece this change affects
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  */
-function queueDeletePiece(changes: Array<Change>, main: boolean, piece: Piece) {
+function queueDeletePiece(changes: Array<Change>, main: boolean, piece: Piece): Change[] {
 	changes.push({ action: 'delete', main, piece });
 	return changes;
 }
@@ -149,7 +149,7 @@ function queueDeletePiece(changes: Array<Change>, main: boolean, piece: Piece) {
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  * @param endCoords 
  */
-function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, path?: Coords[]) {
+function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, path?: Coords[]): Change[] {
 	const change: Change = { action: 'move', main, piece, endCoords };
 	if (path !== undefined) change.path = path;
 	changes.push(change);
@@ -165,7 +165,7 @@ function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, end
  * either modifying the piece lists, or modifying the mesh,
  * depending on what changeFuncs are passed in.
  */
-function runChanges<T>(actiondata: T, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc<T>>, forward: boolean = true) {
+function runChanges<T>(actiondata: T, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc<T>>, forward: boolean = true): void {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
 	applyChanges(actiondata, changes, funcs, forward);
 }
@@ -177,7 +177,7 @@ function runChanges<T>(actiondata: T, changes: Change[], changeFuncs: ChangeAppl
  * @param funcs the object contain change funcs
  * @param forward whether to apply changes in forward order (true) or reverse order (false)
  */
-function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionList<genericChangeFunc<T>>, forward: boolean) {
+function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionList<genericChangeFunc<T>>, forward: boolean): void {
 	if (forward) {
 		// Iterate forwards through the changes array
 		for (const change of changes) {
@@ -202,7 +202,7 @@ function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionLis
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  */
-function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIndex optional
+function addPiece({boardsim, basegame}: FullGame, change: Change): void { // desiredIndex optional
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
@@ -232,7 +232,7 @@ function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIn
  * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
  * from the organized lists.
  */
-function deletePiece({ boardsim }: FullGame, change: Change) {
+function deletePiece({ boardsim }: FullGame, change: Change): void {
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
@@ -259,7 +259,7 @@ function deletePiece({ boardsim }: FullGame, change: Change) {
  * @param gamefile - The gamefile
  * @param change - the move data
  */
-function movePiece({ boardsim }: FullGame, change: Change) {
+function movePiece({ boardsim }: FullGame, change: Change): void {
 	if (change.action !== 'move') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const pieces = boardsim.pieces;
@@ -274,7 +274,7 @@ function movePiece({ boardsim }: FullGame, change: Change) {
 /**
  * Reverses `movePiece`
  */
-function returnPiece({ boardsim }: FullGame, change: Change) {
+function returnPiece({ boardsim }: FullGame, change: Change): void {
 	if (change.action !== 'move') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
 	const pieces = boardsim.pieces;
@@ -299,7 +299,7 @@ function returnPiece({ boardsim }: FullGame, change: Change) {
  * 
  * This is intended for updating a simplified board state, one that is used in gamecompressor.GameToPosition
  */
-function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]) {
+function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]): void {
 	for (const change of changes) {
 		const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 		switch (change.action) {

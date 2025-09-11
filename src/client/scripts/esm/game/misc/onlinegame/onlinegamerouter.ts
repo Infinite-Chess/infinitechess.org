@@ -156,7 +156,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
  * This type of message contains the MOST information about the game.
  * Less then "gameupdate"s, or resyncing.
  */
-function handleJoinGame(message: JoinGameMessage) {
+function handleJoinGame(message: JoinGameMessage): void {
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
 	websocket.deleteSub('invites');
 	websocket.addSub('game');
@@ -178,7 +178,7 @@ function handleLoggedGameInfo(message: {
 	private: 0 | 1,
 	termination: string,
 	icn: string,
-}) {
+}): void {
 	let parsedGame: LongFormatOut;
 	try {
 		parsedGame = icnconverter.ShortToLong_Format(message.icn);
@@ -231,7 +231,7 @@ function handleLoggedGameInfo(message: {
 /** 
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
+function handleUpdatedClock(basegame: Game, clockValues: ClockValues): void {
 	if (basegame.untimed) throw Error('Received clock values for untimed game??');
 	
 	// Adjust the timer whos turn it is depending on ping.
@@ -248,7 +248,7 @@ function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
  * Called when the server informs us they have unsubbed us from receiving updates from the game.
  * At this point we should leave the game.
  */
-function handleUnsubbing() {
+function handleUnsubbing(): void {
 	websocket.deleteSub('game');
 }
 
@@ -257,7 +257,7 @@ function handleUnsubbing() {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(basegame: Game) {
+function handleLogin(basegame: Game): void {
 	statustext.showStatus(translations['onlinegame'].not_logged_in, true, 100);
 	websocket.deleteSub('game');
 	clock.endGame(basegame);
@@ -276,7 +276,7 @@ function handleLogin(basegame: Game) {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(basegame: Game) {
+function handleNoGame(basegame: Game): void {
 	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
 	websocket.deleteSub('game');
 	basegame.gameConclusion = 'aborted';
@@ -291,7 +291,7 @@ function handleNoGame(basegame: Game) {
  * but you won't be allowed to create an invite if you're still in a game.
  * However you can start a local game.
  */
-function handleLeaveGame() {
+function handleLeaveGame(): void {
 	statustext.showStatus(translations['onlinegame'].another_window_connected);
 	websocket.deleteSub('game');
 	gameloader.unloadGame();

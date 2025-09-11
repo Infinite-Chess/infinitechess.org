@@ -43,9 +43,9 @@ function createCheckerboardIMG(lightColor: string, darkColor: string, imageSize:
 	img.src = canvas.toDataURL();
 
 	// Return a promise that resolves when the image is loaded
-	return new Promise<HTMLImageElement>((resolve, reject) => {
-		img.onload = () => resolve(img);
-		img.onerror = () => {
+	return new Promise<HTMLImageElement>((resolve, reject): void => {
+		img.onload = (): void => resolve(img);
+		img.onerror = (): void => {
 			const errorMessage = 'Error loading the checkerboard texture';
 			console.error(errorMessage, img);
 			reject(new Error(errorMessage));

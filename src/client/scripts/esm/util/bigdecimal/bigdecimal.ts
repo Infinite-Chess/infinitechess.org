@@ -1192,7 +1192,7 @@ function coordsToDoubles(coords: BDCoords): DoubleCoords {
  * @param bd - The BigDecimal to convert.
  * @returns The value as a standard javascript number.
  */
-function toNumber(bd: BigDecimal) {
+function toNumber(bd: BigDecimal): number {
 	if (bd.divex >= 0) {
 		if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
 		const mantissaAsNumber = Number(bd.bigint);
@@ -1559,18 +1559,18 @@ export type {
 // Comprehensive Interaction Verification Suite
 /////////////////////////////////////////////////////////////////////////////////////
 
-function runComprehensiveVerification() {
+function runComprehensiveVerification(): void {
 	console.log('--- Running Comprehensive Interaction Verification Suite ---');
 	console.log('Verifying all function outputs by inspecting their internal state.\n');
 
 	// Helper to print a header and then the full info of a BigDecimal result
-	function testAndPrint(name: string, result: BigDecimal) {
+	function testAndPrint(name: string, result: BigDecimal): void {
 		console.log(`\n▶ TEST: ${name}`);
 		printInfo(result);
 	}
     
 	// Helper for primitives
-	function testPrimitive(name: string, result: any) {
+	function testPrimitive(name: string, result: any): void {
 		console.log(`\n▶ TEST: ${name}`);
 		console.log(`  Result: ${result}`);
 		console.log('----------------------------');

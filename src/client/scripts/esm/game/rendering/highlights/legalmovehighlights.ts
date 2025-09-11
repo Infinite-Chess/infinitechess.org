@@ -69,13 +69,13 @@ document.addEventListener('theme-change', regenerateAll);
 
 
 /** Call this from selection.js when a piece is selected */
-function onPieceSelected(piece: Piece, legalMoves: LegalMoves) {
+function onPieceSelected(piece: Piece, legalMoves: LegalMoves): void {
 	pieceSelected = piece;
 	selectedPieceLegalMoves = legalMoves;
 	regenSelectedPieceLegalMovesHighlightsModel();
 }
 
-function onPieceUnselected() {
+function onPieceUnselected(): void {
 	pieceSelected = undefined;
 	selectedPieceLegalMoves = undefined;
 
@@ -93,7 +93,7 @@ function onPieceUnselected() {
  * Renders the legal move highlights of the selected piece, all hovered arrows,
  * and outlines the box containing all of them.
  */
-function render() {
+function render(): void {
 	// Sometimes when we are just panning around, our screen bounding box
 	// exits the box containing our generating legal move highlights mesh.
 	// When that happens, update the box and regenerate the highlights!
@@ -112,14 +112,14 @@ function render() {
  * 
  * Basically everything that relies on {@link model_Offset}
  */
-function regenerateAll() {
+function regenerateAll(): void {
 	regenSelectedPieceLegalMovesHighlightsModel();
 	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
 	specialrighthighlights.regenModel();
 }
 
 // Regenerates the model for all highlighted legal moves.
-function regenSelectedPieceLegalMovesHighlightsModel() {
+function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	if (!pieceSelected) return;
 	// console.log("Regenerating legal moves model..");
 
@@ -147,7 +147,7 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
  * 
  * The mesh should have been pre-calculated.
  */
-function renderSelectedPieceLegalMoves() {
+function renderSelectedPieceLegalMoves(): void {
 	if (!pieceSelected) return; // No model to render
 
 	const boardPos: BDCoords = boardpos.getBoardPos();

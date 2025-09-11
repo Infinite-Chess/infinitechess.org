@@ -26,7 +26,7 @@ let timeoutID: ReturnType<typeof setTimeout> | undefined = undefined;
  * This periodically reminds the user, in a game, of that fact.
  * @param timeToRestart - The timestamp the server informed us it will be restarting.
  */
-function initServerRestart(timeToRestart: number) {
+function initServerRestart(timeToRestart: number): void {
 	if (time === timeToRestart) return; // We already know the server is restarting.
 	resetServerRestarting(); // Overwrite the previous one, if it exists.
 	time = timeToRestart;
@@ -37,7 +37,7 @@ function initServerRestart(timeToRestart: number) {
 }
 
 /** Displays the next "Server restaring..." message, and schedules the next one. */
-function displayServerRestarting(minutesLeft: number) {
+function displayServerRestarting(minutesLeft: number): void {
 	if (minutesLeft === 0) {
 		statustext.showStatus(translations['onlinegame'].server_restarting, false, 2);
 		time = undefined;
@@ -58,14 +58,14 @@ function displayServerRestarting(minutesLeft: number) {
 }
 
 /** Cancels the timer to display the next "Server restaring..." message, and resets the values. */
-function resetServerRestarting() {
+function resetServerRestarting(): void {
 	time = undefined;
 	clearTimeout(timeoutID);
 	timeoutID = undefined;
 }
 
 /** Called when the online game is closed */
-function onGameClose() {
+function onGameClose(): void {
 	resetServerRestarting();
 }
 

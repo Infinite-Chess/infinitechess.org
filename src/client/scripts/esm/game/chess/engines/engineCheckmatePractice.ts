@@ -36,7 +36,7 @@ import type { Coords, CoordsKey, DoubleCoords } from "../../../chess/util/coordu
 postMessage('readyok');
 
 // Here, the engine webworker received messages from the outside
-self.onmessage = function(e: MessageEvent) {
+self.onmessage = function(e: MessageEvent): void {
 	const message = e.data;
 	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
 	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
@@ -119,7 +119,7 @@ const pieceNameDictionary: { [pieceType: number]: number } = {
 	[r.HUYGEN + e.W]: 12
 };
 
-function invertPieceNameDictionary(json: { [key: string]: number }) {
+function invertPieceNameDictionary(json: { [key: string]: number }): { [key: number]: number; } {
 	const inv: { [key: number]: number } = {};
 	for (const key in json) {
 		inv[json[key]!] = Number(key);
@@ -200,7 +200,7 @@ let bestMoveList: {bestMove: DoubleCoords, piecelist: number[], coordlist: Doubl
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
  */
-function initEvalWeightsAndSearchProperties() {
+function initEvalWeightsAndSearchProperties(): void {
 
 	// default
 	ignorepawnmoves = false;
@@ -576,7 +576,7 @@ function vincinityNorm(square: DoubleCoords): number {
 }
 
 // center of mass of all white pieces near the black king
-function get_center_of_mass(piece_type: number, cutoff: number, piecelist: number[], coordlist: DoubleCoords[]) {
+function get_center_of_mass(piece_type: number, cutoff: number, piecelist: number[], coordlist: DoubleCoords[]): DoubleCoords | false {
 	let numpieces: number = 0;
 	let center: DoubleCoords = [0,0];
 	for (let i = 0; i < piecelist.length; i++) {
@@ -737,7 +737,7 @@ function is_stalemate(inTrapFleeMode, piecelist, coordlist) {
 */
 
 // determine if black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
-function isBlackInTrap(piecelist: number[], coordlist: DoubleCoords[]) {
+function isBlackInTrap(piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	let nearbyNonroyalWhites = 0;
 	for (let i = 0; i < piecelist.length; i++) {
 		if (piecelist[i]! !== 0 && manhattanNorm(coordlist[i]!) <= maxDistanceForTrap) {
@@ -751,7 +751,7 @@ function isBlackInTrap(piecelist: number[], coordlist: DoubleCoords[]) {
 }
 
 // determine if black is near specified protected rider
-function isBlackNearProtectedRider(piecelist: number[], coordlist: DoubleCoords[]) {
+function isBlackNearProtectedRider(piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	for (let i = 0; i < piecelist.length; i++) {
 		if (piecelist[i] === riderTypeToFleeFrom) {
 			if (manhattanNorm(coordlist[i]!) <= maxDistanceForRider) {
@@ -872,7 +872,7 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 function add_suitable_squares_to_candidate_list(
 	candidate_squares: DoubleCoords[], piece_index: number, piece_square: DoubleCoords, v1: DoubleCoords, v2: DoubleCoords,
 	c1_min: number, c1_max: number, c2_min: number, c2_max: number, piecelist: number[], coordlist: DoubleCoords[]
-) {
+): void {
 	// iterate through all candidate squares in v1 direction
 	candidates_loop:
 	for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
@@ -1307,7 +1307,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: DoubleCoords[], m
  * Given some string, returns an array of four random seeds
  * Source: https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
  */
-function cyrb128(str: string) {
+function cyrb128(str: string): number[] {
 	let h1 = 1779033703, h2 = 3144134277,
 		h3 = 1013904242, h4 = 2773480762;
 	for (let i = 0, k; i < str.length; i++) {
@@ -1329,8 +1329,8 @@ function cyrb128(str: string) {
  * Given some number, returns a seeded function that draws uniformly random numbers between 0 and 1
  * Source: https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
  */
-function mulberry32(a: number) {
-	return function() {
+function mulberry32(a: number): () => number {
+	return function(): number {
 	  let t = a += 0x6D2B79F5;
 	  t = Math.imul(t ^ t >>> 15, t | 1);
 	  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
@@ -1394,7 +1394,7 @@ function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
 /**
  * This function is called from outside and initializes the engine calculation given the provided gamefile
  */
-async function runEngine() {
+async function runEngine(): Promise<void> {
 	try {
 		const board = input_gamefile.boardsim;
 		// get real coordinates and parse type of black royal piece

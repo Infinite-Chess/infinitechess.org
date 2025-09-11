@@ -11,7 +11,7 @@ const element_loadingText = document.getElementById('loading-text')!;
 const durationOfFadeOutMillis = 400;
 
 /** Stops the loading screen animation. */
-function closeAnimation() {
+function closeAnimation(): void {
 	setTimeout(() => {
 		element_loadingAnimation.classList.add('hidden');
 	}, durationOfFadeOutMillis);

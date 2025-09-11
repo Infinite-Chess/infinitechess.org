@@ -78,7 +78,7 @@ let undoingIsLegal : boolean = false;
 document.addEventListener('logout', updateCompletedCheckmates);
 
 
-function setUndoingIsLegal(value: boolean) {
+function setUndoingIsLegal(value: boolean): void {
 	undoingIsLegal = value;
 	guigameinfo.update_GameControlButtons(value);
 }
@@ -123,12 +123,12 @@ function onGameUnload(): void {
 	setUndoingIsLegal(false);
 }
 
-function initListeners() {
+function initListeners(): void {
 	document.addEventListener("guigameinfo-undoMove", undoMove);
 	document.addEventListener("guigameinfo-restart", restartGame);
 }
 
-function closeListeners() {
+function closeListeners(): void {
 	document.removeEventListener("guigameinfo-undoMove", undoMove);
 	document.removeEventListener("guigameinfo-restart", restartGame);
 }
@@ -231,7 +231,7 @@ function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 /**
  * Updates completedCheckmates list and redraws the GUI by calling guipractice.updateCheckmatesBeaten()
  */
-function updateCompletedCheckmates() {
+function updateCompletedCheckmates(): void {
 	// Update completedCheckmates according to checkmates_beaten cookie, if it exists, and if we are logged in
 	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
 	if (validatorama.areWeLoggedIn() && cookieCheckmates !== undefined) {
@@ -248,7 +248,7 @@ function updateCompletedCheckmates() {
  * Updates the completedCheckmates variable with the beaten checkmatePracticeID,
  * and sends a message to the server if the player is logged in
  */
-async function markCheckmateBeaten(checkmatePracticeID: string) {
+async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
 	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
 
@@ -331,7 +331,7 @@ function onEngineGameConclude(): void {
 /**
  * This function gets called by enginegame.ts whenever a human player submitted a move
  */
-function registerHumanMove() {
+function registerHumanMove(): void {
 	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
 
 	const { basegame } = gameslot.getGamefile()!;
@@ -347,7 +347,7 @@ function registerHumanMove() {
 /**
  * This function gets called by enginegame.ts whenever an engine player submitted a move
  */
-function registerEngineMove() {
+function registerEngineMove(): void {
 	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
 
 	const { basegame } = gameslot.getGamefile()!;
@@ -357,7 +357,7 @@ function registerEngineMove() {
 	}
 }
 
-function undoMove() {
+function undoMove(): void {
 	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
@@ -377,7 +377,7 @@ function undoMove() {
 	}
 }
 
-function restartGame() {
+function restartGame(): void {
 	if (!inCheckmatePractice) return console.error("Restarting games is currently not supported for non-practice mode games");
 	
 	gameloader.unloadGame(); // Unload current game

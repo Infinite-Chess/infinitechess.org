@@ -326,14 +326,14 @@ function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboar
 
 
 /** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link RD_UPDATE_FREQUENCY} milliseconds */
-function startPeriodicLeaderboardRatingDeviationUpdate() {
+function startPeriodicLeaderboardRatingDeviationUpdate(): void {
 	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
 
 /**
  * Retrieves all entries of the leaderboards table and updates their RD
  */
-function updateAllRatingDeviationsofLeaderboardTable() {
+function updateAllRatingDeviationsofLeaderboardTable(): void {
 	const query = `SELECT * FROM leaderboards`;
 
 	try {

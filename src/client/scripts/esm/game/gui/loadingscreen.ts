@@ -24,14 +24,14 @@ const element_loadingError = document.querySelector('.game-loading-screen .loadi
 const element_loadingErrorText = document.querySelector('.game-loading-screen .loading-error-text');
 
 
-(function init() {
+(function init(): void {
 
 	initColorOfLoadingBackground();
 	document.addEventListener('theme-change', initColorOfLoadingBackground);
 
 })();
 
-function initColorOfLoadingBackground() {
+function initColorOfLoadingBackground(): void {
 	const theme = preferences.getTheme();
 	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles'); lightTiles[3] = 1;
 	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles'); darkTiles[3] = 1;
@@ -47,7 +47,7 @@ function initColorOfLoadingBackground() {
 	loadingScreen!.style.background = `repeating-conic-gradient(${darkTilesCSS} 0% 25%, ${lightTilesCSS} 0% 50%) 50% / ${widthOfTiles}vmin ${widthOfTiles}vmin`;
 }
 
-async function open() {
+async function open(): Promise<void> {
 	loadingScreen.classList.remove('transparent');
 	// This gives the document a chance to repaint, as otherwise our javascript
 	// will continue to run until the next animation frame, which could be a long time.
@@ -55,7 +55,7 @@ async function open() {
 	await thread.sleep(10);
 }
 
-async function close() {
+async function close(): Promise<void> {
 	loadingScreen.classList.add('transparent');
 
 	// Hide the error text and show the spinny pawn
@@ -66,7 +66,7 @@ async function close() {
 	await thread.sleep(0);
 }
 
-async function onError() {
+async function onError(): Promise<void> {
 	// const type = event.type; // Event type: "error"/"abort"
 	// const target = event.target; // Element that triggered the event
 	// const elementType = target?.tagName.toLowerCase();

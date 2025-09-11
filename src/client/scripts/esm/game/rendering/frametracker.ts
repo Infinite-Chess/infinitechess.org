@@ -12,12 +12,12 @@ let hasBeenVisualChange: boolean = true;
 
 
 /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
-function onVisualChange() {
+function onVisualChange(): void {
 	hasBeenVisualChange = true;
 }
 
 /** true if there has been a visual change on-screen since last frame. */
-function doWeRenderNextFrame() {
+function doWeRenderNextFrame(): boolean {
 	return hasBeenVisualChange;
 }
 
@@ -25,7 +25,7 @@ function doWeRenderNextFrame() {
  * Resets {@link hasBeenVisualChange} to false, to prepare for next frame.
  * Call right after we finish a render frame.
  */
-function onFrameRender() {
+function onFrameRender(): void {
 	hasBeenVisualChange = false;
 }
 

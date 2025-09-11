@@ -82,7 +82,7 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
  * were affected, because other pieces may still need graphical changes
  * from the move's changes! For example, pawn deleted that promoted.
  */
-function runMeshChanges(boardsim: FullGame["boardsim"], mesh: Mesh, edit: Edit, forward: boolean) {
+function runMeshChanges(boardsim: FullGame["boardsim"], mesh: Mesh, edit: Edit, forward: boolean): void {
 	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
 	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
@@ -91,7 +91,7 @@ function runMeshChanges(boardsim: FullGame["boardsim"], mesh: Mesh, edit: Edit, 
 /**
  * Makes a global backward move in the game.
  */
-function rewindMove(gamefile: FullGame, mesh: Mesh | undefined) {
+function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
@@ -115,7 +115,7 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined) {
  * 
  * But it does change the check state.
  */
-function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move , forward = true) {
+function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move , forward = true): void {
 	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
@@ -127,7 +127,7 @@ function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move , forwa
  * Makes the game view a set move index
  * @param index the move index to goto
  */
-function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number) {
+function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): void {
 	movepiece.goToMove(gamefile.boardsim, index, (move: Move) => viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex));
 	updateGui(false);
 }
@@ -135,7 +135,7 @@ function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number) {
 /**
  * Makes the game view the last move
  */
-function viewFront(gamefile: FullGame, mesh: Mesh | undefined) {
+function viewFront(gamefile: FullGame, mesh: Mesh | undefined): void {
 	/** Call {@link viewIndex} with the index of the last move in the game */
 	viewIndex(gamefile, mesh, gamefile.boardsim.moves.length - 1);
 }
@@ -171,7 +171,7 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
  * updates the move number below the move buttons.
  * @param showMoveCounter Whether to show the move counter below the move buttons in the navigation bar.
  */
-function updateGui(showMoveCounter: boolean) {
+function updateGui(showMoveCounter: boolean): void {
 	if (showMoveCounter) stats.showMoves();
 	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();

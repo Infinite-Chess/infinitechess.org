@@ -2,7 +2,7 @@
 // src/client/scripts/esm/game/misc/gamesound.ts
 
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
-import sound from "./sound.js";
+import sound, { SoundObject } from "./sound.js";
 
 /**
  * This script is in charge of playing game sound effects.
@@ -71,7 +71,7 @@ let timeLastMoveOrCaptureSound = 0;
  * @param capture - Whether this move made a capture.
  * @param premove - Whether this move is a premove.
  */
-function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean) {
+function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean): void {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -114,27 +114,27 @@ function calculateReverbOptions(distanceMoved: BigDecimal): { reverbVolume: numb
 	return { reverbVolume, reverbDuration: REVERB_CONFIG.duration };
 }
 
-function playGamestart() {
+function playGamestart(): SoundObject | undefined {
 	return sound.playSound('gamestart', { volume: 0.4 });
 }
 
-function playWin(delay?: number) {
+function playWin(delay?: number): SoundObject | undefined {
 	return sound.playSound('win', { volume: 0.7, delay });
 }
 
-function playDraw(delay?: number) {
+function playDraw(delay?: number): SoundObject | undefined {
 	return sound.playSound('draw', { volume: 0.7, delay });
 }
 
-function playLoss(delay?: number) {
+function playLoss(delay?: number): SoundObject | undefined {
 	return sound.playSound('loss', { volume: 0.7, delay });
 }
 
-function playLowtime() {
+function playLowtime(): SoundObject | undefined {
 	return sound.playSound('lowtime');
 }
 
-function playDrum() {
+function playDrum(): SoundObject | undefined {
 	const soundName = Math.random() > 0.5 ? 'drum1' : 'drum2'; // Randomly choose which drum. They sound ever slightly different.
 	return sound.playSound(soundName, { volume: 0.7 });
 }
@@ -148,7 +148,7 @@ function playTick({
 	volume?: number
 	fadeInDuration?: number,
 	offset?: number
-} = {}) {
+} = {}): SoundObject | undefined {
 	return sound.playSound('tick', { volume, offset, fadeInDuration }); // Default volume: 0.07
 }
 
@@ -161,24 +161,24 @@ function playTicking(
 		fadeInDuration?: number,
 		offset?: number
 	} = {}
-) {
+): SoundObject | undefined {
 	return sound.playSound('ticking', { volume: 0.18, offset, fadeInDuration });
 }
 
-function playViola_c3({ volume }: { volume?: number } = {}) {
+function playViola_c3({ volume }: { volume?: number } = {}): SoundObject | undefined {
 	return sound.playSound('viola_staccato_c3', { volume });
 }
 
-function playViolin_c4() {
+function playViolin_c4(): SoundObject | undefined {
 	return sound.playSound('violin_staccato_c4', { volume: 0.9 });
 }
 
-function playMarimba() {
+function playMarimba(): SoundObject | undefined {
 	const audioName = Math.random() > 0.15 ? 'marimba_c2_soft' : 'marimba_c2';
 	return sound.playSound(audioName, { volume: 0.4 });
 }
 
-function playBase() {
+function playBase(): SoundObject | undefined {
 	return sound.playSound('base_staccato_c2', { volume: 0.8 });
 }
 

@@ -27,7 +27,7 @@ const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've
 // Functions ---------------------------------------------------------------------------
 
 
-function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number) {
+function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number): void {
 	echoTimers[messageID] = timeout;
 }
 

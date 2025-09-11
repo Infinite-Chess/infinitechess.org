@@ -57,7 +57,7 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 // Adding / Removing from the lists ---------------------------------------------------------------------------
 
 
-function addConnectionToConnectionLists(ws: CustomWebSocket) {
+function addConnectionToConnectionLists(ws: CustomWebSocket): void {
 	websocketConnections[ws.metadata.id] = ws;
 	addConnectionToList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Add IP connection
 	if (ws.metadata.cookies.jwt) addConnectionToList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Add session connection
@@ -73,12 +73,12 @@ function addConnectionToConnectionLists(ws: CustomWebSocket) {
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to add to the collection.
  */
-function addConnectionToList(collection: { [key: string]: string[] }, key: number | string, id: string) {
+function addConnectionToList(collection: { [key: string]: string[] }, key: number | string, id: string): void {
 	if (!collection[key]) collection[key] = []; // Initialize the array if it doesn't exist
 	collection[key].push(id); // Add the socket ID to the list
 }
 
-function startTimerToExpireSocket(ws: CustomWebSocket) {
+function startTimerToExpireSocket(ws: CustomWebSocket): void {
 	ws.metadata.clearafter = setTimeout(() => ws.close(1000, 'Connection expired'), maxWebSocketAgeMillis); // We pass in an arrow function so it doesn't lose scope of ws.
 }
 
@@ -88,7 +88,7 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
  * @param code - The WebSocket closure code.
  * @param reason - The reason for the WebSocket closure.
  */
-function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string) {
+function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string): void {
 	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Remove IP connection
 	if (ws.metadata.cookies.jwt) removeConnectionFromList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Remove session connection
@@ -104,7 +104,7 @@ function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, 
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to remove from the collection.
  */
-function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number, id: string) {
+function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number, id: string): void {
 	if (key === undefined || !collection[key]) return; // No key or collection doesn't exist
 	const index = collection[key].indexOf(id);
 	if (index !== -1) {
@@ -118,7 +118,7 @@ function removeConnectionFromList(collection: { [key: string]: string[] }, key: 
 // Terminating all sockets of criteria ---------------------------------------------------------------------------
 
 
-function terminateAllIPSockets(IP: string) {
+function terminateAllIPSockets(IP: string): void {
 	const connectionList = connectedIPs[IP];
 	if (connectionList === undefined) return; // IP is defined, but they don't have any sockets to terminate!
 	for (const id of connectionList) {
@@ -137,7 +137,7 @@ function terminateAllIPSockets(IP: string) {
  * @param closureCode - The code of the socket closure, sent to the client.
  * @param closureReason - The closure reason, sent to the client.
  */
-function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReason: string) {
+function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReason: string): void {
 	connectedSessions[jwt]?.slice().forEach(socketID => { // slice() makes a copy of it
 		const ws = websocketConnections[socketID];
 		if (!ws) return;
@@ -151,7 +151,7 @@ function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReaso
  * @param closureCode - The code for closing the socket, sent to the client.
  * @param closureReason - The reason for closure, sent to the client.
  */
-function closeAllSocketsOfMember(user_id: string, closureCode: number, closureReason: string) {
+function closeAllSocketsOfMember(user_id: string, closureCode: number, closureReason: string): void {
 	const socketIDs = connectedMembers[user_id];
 	if (!socketIDs) return; // This member doesn't have any connected sockets
 
@@ -166,7 +166,7 @@ function closeAllSocketsOfMember(user_id: string, closureCode: number, closureRe
  * Sets the metadata.verified entry of all sockets of a given user to true.
  * @param user_id - The unique ID of the user.
  */
-function AddVerificationToAllSocketsOfMember(user_id: number) {
+function AddVerificationToAllSocketsOfMember(user_id: number): void {
 	const socketIDs = connectedMembers[user_id];
 	if (!socketIDs) return; // This member doesn't have any connected sockets
 
@@ -206,7 +206,7 @@ function doesSessionHaveMaxSocketCount(jwt: string): boolean {
 
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean) {
+function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean): void {
 	if (!ws.metadata.subscriptions) return; // No subscriptions
 
 	const subscriptions = ws.metadata.subscriptions;
@@ -220,7 +220,7 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 // Miscellaneous ---------------------------------------------------------------------------
 
 
-function generateUniqueIDForSocket() {
+function generateUniqueIDForSocket(): string {
 	return uuid.genUniqueID(4, websocketConnections);
 }
 

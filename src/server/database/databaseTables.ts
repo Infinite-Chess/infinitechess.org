@@ -285,7 +285,7 @@ function generateTables(): void {
  * Deletes a table from the database by its name.
  * @param tableName - The name of the table to delete.
  */
-function deleteTable(tableName: string) {
+function deleteTable(tableName: string): void {
 	try {
 		// Prepare the SQL query to drop the table
 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;

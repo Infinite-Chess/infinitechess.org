@@ -30,7 +30,7 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
  * Generates the allowinvites.json file inside the "database", on
  * initial startup, if it isn't alread
  */
-(function ensureAllowInvitesFileExists() {
+(function ensureAllowInvitesFileExists(): void {
 	if (fs.existsSync(allowinvitesPath)) return; // Already exists
 
 	const content = JSON.stringify({
@@ -79,13 +79,13 @@ const intervalToReadAllowinviteMillis = 5000; // 5 seconds
  * been a little bit since it was last read.
  * @returns true if invite creation is allowed
  */
-async function isServerRestarting() {
+async function isServerRestarting(): Promise<boolean> {
 	await updateAllowInvites();
 	return !allowinvites.allowinvites;
 }
 
 /** Makes sure {@link allowinvites} is up-to-date with any changes the computer user has made. */
-const updateAllowInvites = (function() {
+const updateAllowInvites = (function(): () => Promise<void> {
 
 	/**
      * The time, in millis since the Unix Epoch, we last read allowinvites.json to see if
@@ -96,7 +96,7 @@ const updateAllowInvites = (function() {
      */
 	let timeLastReadAllowInvites = Date.now();
 
-	return async() => {
+	return async(): Promise<void> => {
 		// How long has it been since the last read?
 		const timePassedMillis = Date.now() - timeLastReadAllowInvites;
 		const isTimeToReadAgain = timePassedMillis >= intervalToReadAllowinviteMillis;
@@ -131,7 +131,7 @@ const updateAllowInvites = (function() {
  * periodically informing the user when it gets closer.
  * @param {Object} newAllowInvitesValue - The newly read allowinvites.json file.
  */
-async function initServerRestart(newAllowInvitesValue: AllowInvites) { // { allowInvites, restartIn: minutes }
+async function initServerRestart(newAllowInvitesValue: AllowInvites): Promise<void> { // { allowInvites, restartIn: minutes }
 	if (!newAllowInvitesValue.restartIn) return; // We have not changed the value to indicate we're restarting. Return.
 
 	const now = Date.now(); // Current time in milliseconds

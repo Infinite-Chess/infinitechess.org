@@ -34,7 +34,7 @@ import type { Game } from './gameutility.js';
  * @param gameID - The game id they requested to sync to. They SHOULD have provided this as a number, but they may tamper it.
  * @param replyToMessageID - If specified, the id of the incoming socket message this resync will be the reply to
  */
-function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: number) {
+function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: number): void {
 	if (typeof gameID !== 'number') {
 		// Tampered message
 		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}) of type ${typeof gameID}. The socket: ${socketUtility.stringifySocketMetadata(ws)}`;

@@ -112,7 +112,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 	return commandAndArgs;
 }
 
-function deleteCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
+function deleteCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 3) {
 		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -133,7 +133,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: Identifie
 	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
 }
 
-function usernameCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
+function usernameCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs[1] === "get") {
 		if (commandAndArgs.length < 3) {
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
@@ -166,7 +166,7 @@ function usernameCommand(command: string, commandAndArgs: string[], req: Identif
 	}
 }
 
-function logoutUser(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
+function logoutUser(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -192,7 +192,7 @@ function logoutUser(command: string, commandAndArgs: string[], req: IdentifiedRe
 	}
 }
 
-function verify(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
+function verify(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -206,7 +206,7 @@ function verify(command: string, commandAndArgs: string[], req: IdentifiedReques
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
-function getUserInfo(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response) {
+function getUserInfo(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -223,13 +223,13 @@ function getUserInfo(command: string, commandAndArgs: string[], req: IdentifiedR
 	}
 }
 
-function updateContributorsCommand(command: string, req: IdentifiedRequest, res: Response) {
+function updateContributorsCommand(command: string, req: IdentifiedRequest, res: Response): void {
 	logCommand(command, req);
 	refreshGitHubContributorsList();
 	sendAndLogResponse(res, 200, "Contributors should now be updated!");
 }
 
-function helpCommand(commandAndArgs: string[], res: Response) {
+function helpCommand(commandAndArgs: string[], res: Response): void {
 	if (commandAndArgs.length === 1) {
 		res.status(200).send("Commands: " + validCommands.join(", ") + "\nUse help <command> to get more information about a command.");
 		return;
@@ -274,13 +274,13 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 	}
 }
 
-function logCommand(command: string, req: IdentifiedRequest) {
+function logCommand(command: string, req: IdentifiedRequest): void {
 	if (req.memberInfo.signedIn) {
 		logEventsAndPrint(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt");
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
 
-function sendAndLogResponse(res: Response, code: number, message: any) {
+function sendAndLogResponse(res: Response, code: number, message: any): void {
 	res.status(code).send(message);
 	// Also log the sent response
 	logEventsAndPrint("Result:   " + message + "\n", "adminCommands.txt");

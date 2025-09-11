@@ -84,11 +84,11 @@ document.addEventListener('theme-change', () => {
  * Returns the last selected checkmate practce. Useful
  * for knowing which one we just beat.
  */
-function getCheckmateSelectedID() {
+function getCheckmateSelectedID(): string {
 	return checkmateSelectedID;
 }
 
-function open() {
+function open(): void {
 	isOpen = true;
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
@@ -99,7 +99,7 @@ function open() {
 	initListeners();
 }
 
-function close() {
+function close(): void {
 	isOpen = false;
 	clearScrollMomentumInterval();
 	element_practiceSelection.classList.add("hidden");
@@ -110,7 +110,7 @@ function close() {
 /**
  * On first practice page load, generate list of checkmate HTML elements to be shown on page
  */
-function createPracticeHTML() {
+function createPracticeHTML(): void {
 	for (const [difficulty, checkmates] of Object.entries(validcheckmates.validCheckmates)) {
 		checkmates.forEach((checkmateID: string) => {
 			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
@@ -166,7 +166,7 @@ function createPracticeHTML() {
 	generatedHTML = true;
 }
 
-async function addPieceIcons() {
+async function addPieceIcons(): Promise<void> {
 	// let sprites = await svgcache.getSVGElements();
 	const spritenames = new Set<number>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
@@ -200,7 +200,7 @@ async function addPieceIcons() {
  * Removes the piece icons from the checkmate lists.
  * Called when the theme changes.
  */
-function removePieceIcons() {
+function removePieceIcons(): void {
 	for (const checkmate of element_checkmates.children) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
@@ -217,7 +217,7 @@ function removePieceIcons() {
 	generatedIcons = false; // Reset the icon generation flag
 }
 
-function initListeners() {
+function initListeners(): void {
 	element_practiceBack.addEventListener('click', callback_practiceBack);
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
@@ -231,7 +231,7 @@ function initListeners() {
 	}
 }
 
-function closeListeners() {
+function closeListeners(): void {
 	element_practiceBack.removeEventListener('click', callback_practiceBack);
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
@@ -249,7 +249,7 @@ function closeListeners() {
 // Scrolling list with the left mouse button ------------------------------------------------
 
 
-function callback_mouseDown(event: MouseEvent) {
+function callback_mouseDown(event: MouseEvent): void {
 	SCROLL.mouseIsDown = true;
 	SCROLL.mouseMovedAfterClick = false;
 	SCROLL.startY = event.pageY - element_checkmateList.offsetTop;
@@ -259,7 +259,7 @@ function callback_mouseDown(event: MouseEvent) {
 	clearScrollMomentumInterval();
 }
 
-function callback_mouseUp(event: MouseEvent) {
+function callback_mouseUp(event: MouseEvent): void {
 	SCROLL.mouseIsDown = false;
 	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
 	if (SCROLL.mouseMovedAfterClick) {
@@ -270,7 +270,7 @@ function callback_mouseUp(event: MouseEvent) {
 	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
 }
 
-function callback_mouseMove(event: MouseEvent) {
+function callback_mouseMove(event: MouseEvent): void {
 	SCROLL.mouseMovedAfterClick = true;
 	if (!SCROLL.mouseIsDown) return;
 	event.preventDefault();
@@ -282,7 +282,7 @@ function callback_mouseMove(event: MouseEvent) {
 	SCROLL.lastY = event.pageY;
 }
 
-function applyMomentum() {
+function applyMomentum(): void {
 	SCROLL.momentumInterval = setInterval(() => {
 		if (Math.abs(SCROLL.velocity) < 0.5) {
 			clearScrollMomentumInterval();
@@ -293,7 +293,7 @@ function applyMomentum() {
 	}, 16); // Approx. 60fps
 }
 
-function clearScrollMomentumInterval() {
+function clearScrollMomentumInterval(): void {
 	clearInterval(SCROLL.momentumInterval);
 	SCROLL.momentumInterval = undefined;
 }
@@ -302,7 +302,7 @@ function clearScrollMomentumInterval() {
 // End of scrolling ---------------------------------------------------------------------
 
 
-function changeCheckmateSelected(checkmateid: string) {
+function changeCheckmateSelected(checkmateid: string): void {
 	for (const element of element_checkmates.children) {
 		if (checkmateid === element.id) {
 			element.classList.add('selected');
@@ -319,7 +319,7 @@ function changeCheckmateSelected(checkmateid: string) {
  * Checkmates that have the 'beaten' class are green with a checkmark on the left.
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
-function updateCheckmatesBeaten(completedCheckmates : string[]) {
+function updateCheckmatesBeaten(completedCheckmates : string[]): void {
 	let numCompleted = 0;
 	for (const element of element_checkmates.children) {
 		// What is the id string of this checkmate?
@@ -348,7 +348,7 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
  * @param numCompleted - Number of checkmates completed
  * @param numTotal - Total number of checkmates
  */
-function updateBadges(numCompleted: number, numTotal: number) {
+function updateBadges(numCompleted: number, numTotal: number): void {
 	const areLoggedIn = validatorama.areWeLoggedIn();
     
 	// Configuration for each badge type
@@ -395,24 +395,24 @@ function updateBadges(numCompleted: number, numTotal: number) {
 	});
 }
 
-function callback_practiceBack(event: Event) {
+function callback_practiceBack(event: Event): void {
 	close();
 	guititle.open();
 }
 
-function callback_practicePlay() {
+function callback_practicePlay(): void {
 	close();
 	checkmatepractice.startCheckmatePractice(checkmateSelectedID);
 }
 
 /** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
-function callback_keyPress(event: KeyboardEvent) {
+function callback_keyPress(event: KeyboardEvent): void {
 	if (event.key === 'Enter') callback_practicePlay();
 	else if (event.key === 'ArrowDown') moveDownSelection(event);
 	else if (event.key === 'ArrowUp') moveUpSelection(event);
 }
 
-function moveDownSelection(event: Event) {
+function moveDownSelection(event: Event): void {
 	event.preventDefault();
 	if (indexSelected >= element_checkmates.children.length - 1) return;
 	clearScrollMomentumInterval();
@@ -421,7 +421,7 @@ function moveDownSelection(event: Event) {
 	changeCheckmateSelected(newSelectionElement.id);
 }
 
-function moveUpSelection(event: Event) {
+function moveUpSelection(event: Event): void {
 	event.preventDefault();
 	if (indexSelected <= 0) return;
 	clearScrollMomentumInterval();

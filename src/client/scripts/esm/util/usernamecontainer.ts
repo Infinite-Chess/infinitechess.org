@@ -180,7 +180,7 @@ function extractPropertiesFromUsernameContainerElement(containerDiv: HTMLDivElem
  * @param child_element 
  * @param parent_element 
  */
-function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, parent_element: HTMLElement) {
+function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, parent_element: HTMLElement): void {
 	// First clear all other content of parent_element
 	while (parent_element.firstChild) {
 		parent_element.removeChild(parent_element.firstChild);
@@ -202,7 +202,7 @@ function wasEventClickInsideUsernameContainer(event: MouseEvent): boolean {
 }
 
 /** Adds the elo change div to an existing username container. */
-function createEloChangeItem(usernamecontainer: UsernameContainer, newRating: Rating, ratingChange: number) {
+function createEloChangeItem(usernamecontainer: UsernameContainer, newRating: Rating, ratingChange: number): void {
 	if (!usernamecontainer.properties.rating) throw Error("Cannot create elo change item for usernamecontainer without rating!");
 
 	// Previous rating value
@@ -230,7 +230,7 @@ function createEloChangeItem(usernamecontainer: UsernameContainer, newRating: Ra
  * Updates the text contents of each of the username container element's rating elements,
  * according to the values in the usernamecontainer properties..
  */
-function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameContainer) {
+function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameContainer): void {
 	const element = usernamecontainer.element;
 
 	// Update the rating
@@ -266,9 +266,10 @@ function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameCon
  * @param confident - Whether the new rating is confident or not.
  * @returns A function that takes a numeric value and returns the formatted text content for the elo rating.
  */
-function createEloFormatter(confident: boolean) {
+// eslint-disable-next-line no-unused-vars
+function createEloFormatter(confident: boolean): (value: number) => string {
 	// Create a text content generator
-	return (value: number) => {
+	return (value: number): string => {
 		const rating: Rating = { value, confident };
 		const displayRating = metadata.getWhiteBlackElo(rating);
 		return `(${displayRating})`;
@@ -289,7 +290,7 @@ function animateRatingChange(
 	newValue: number,
 	change: number,
 	confident: boolean,
-) {
+): void {
 	const DURATION = 1000;  // ms for both animations
 
 	// find our two elements
@@ -351,7 +352,7 @@ function animateNumber(
 	 * Internal step function for requestAnimationFrame
 	 * @param now — high-resolution timestamp passed by rAF
 	 */
-	function step(now: DOMHighResTimeStamp) {
+	function step(now: DOMHighResTimeStamp): void {
 		if (cancelled) return;
 		const elapsed = now - startTime;
 		const progress = Math.min(elapsed / durationMillis, 1);
@@ -366,7 +367,7 @@ function animateNumber(
 
 	return {
 		/** Cancel the animation at its next opportunity */
-		cancel() {
+		cancel(): void {
 			cancelled = true;
 			if (frameId !== null) cancelAnimationFrame(frameId);
 		}

@@ -22,12 +22,12 @@ const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 
 
-function startPeriodicDatabaseCleanupTasks() {
+function startPeriodicDatabaseCleanupTasks(): void {
 	performCleanupTasks(); // Run immediately to clean up now.
 	setInterval(performCleanupTasks, CLEANUP_INTERVAL_MS);
 }
 
-function performCleanupTasks() {
+function performCleanupTasks(): void {
 	checkDatabaseIntegrity();
 	deleteExpiredPasswordResetTokens();
 	cleanUpExpiredRefreshTokens();
@@ -39,7 +39,7 @@ function performCleanupTasks() {
 
 
 /** Checks the integrity of the SQLite database and logs it to the error log if the check fails. */
-function checkDatabaseIntegrity() {
+function checkDatabaseIntegrity(): void {
 	try {
 		const result = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
 
@@ -55,7 +55,7 @@ function checkDatabaseIntegrity() {
 
 
 /** Periodically deletes expired password reset tokens from the database. */
-function deleteExpiredPasswordResetTokens() {
+function deleteExpiredPasswordResetTokens(): void {
 	console.log('Running cleanup of expired password reset tokens.');
 	try {
 		const now = Date.now();
@@ -76,7 +76,7 @@ function deleteExpiredPasswordResetTokens() {
 
 
 /** Deletes all expired refresh tokens from the database in a single, efficient query. */
-function cleanUpExpiredRefreshTokens() {
+function cleanUpExpiredRefreshTokens(): void {
 	console.log('Running cleanup of expired refresh tokens.');
 	try {
 		const now = Date.now();
@@ -102,7 +102,7 @@ function cleanUpExpiredRefreshTokens() {
  * FUTURE: If the user has zero game records in the database, we could skip adding
  * their user_id to the deleted_members table, allowing us to reuse that id.
  */
-function removeOldUnverifiedMembers() {
+function removeOldUnverifiedMembers(): void {
 	console.log("Checking for old unverified accounts to remove.");
 	try {
 		// Calculate the cutoff time.
