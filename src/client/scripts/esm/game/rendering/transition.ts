@@ -69,7 +69,7 @@ const ZOOM_TRANSITION_DURATION_MILLIS = {
 	MULTIPLIER: 70, // Default: 70
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	PERSPECTIVE_MULTIPLIER: 1.3,
-};
+} as const;
 
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
@@ -81,7 +81,7 @@ const PAN_TRANSITION_CONFIG = {
 	 * in world space units (not affected by board scale).
 	 */
 	MAX_PAN_DISTANCE: 90,
-};
+} as const;
 
 
 const ONE = bd.FromBigInt(1n);
@@ -365,9 +365,15 @@ function updatePanningTransition(t: number, easedT: number): void {
 		const neg = firstHalf ? ONE : NEGONE;
 		const actualEasedT = bd.FromNumber(firstHalf ? easedT : 1 - easedT);
 
-		// Need to pick one that is non-zero to avoid division by zero
-		const nonZeroDiff = bd.isZero(difference[0]) ? bd.abs(difference[1]) : bd.abs(difference[0]);
-		const ratio = bd.divide_floating(maxDistSquares, nonZeroDiff);
+		// Create a new, shorter vector that points in the exact same direction,
+		// but with a length that is visually manageable on screen.
+
+		// To preserve the vector's direction, we must scale it based on its largest component.
+		const absDiffX = bd.abs(difference[0]);
+		const absDiffY = bd.abs(difference[1]);
+		const maxComponent = bd.max(absDiffX, absDiffY);
+
+		const ratio = bd.divide_floating(maxDistSquares, maxComponent);
 
 		difference[0] = bd.multiply_floating(difference[0], ratio);
 		difference[1] = bd.multiply_floating(difference[1], ratio);
