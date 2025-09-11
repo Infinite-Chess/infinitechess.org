@@ -50,13 +50,17 @@
 		"@types/proper-lockfile": "^4.1.4",
 		"@types/uuid": "^10.0.0",
 		"@types/ws": "^8.5.13",
+		"@types/yargs": "^17.0.33",
 		"@typescript-eslint/eslint-plugin": "^8.37.0",
 		"@typescript-eslint/parser": "^8.37.0",
 		"eslint": "^9.16.0",
 		"globals": "^15.9.0",
 		"madge": "^8.0.0",
+		"ts-morph": "^27.0.0",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.7.2",
-		"typescript-eslint": "^8.37.0"
+		"typescript-eslint": "^8.37.0",
+		"yargs": "^17.7.2"
 	},
 	"scripts": {
 		"build": "node build.js",
