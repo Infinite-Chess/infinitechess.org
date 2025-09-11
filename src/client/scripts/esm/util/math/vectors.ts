@@ -389,6 +389,10 @@ function manhattanDistance(point1: Coords, point2: Coords): bigint {
 	return bimath.abs(point2[0] - point1[0]) + bimath.abs(point2[1] - point1[1]);
 }
 
+// function manhattanDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
+// 	return bd.add(bd.abs(bd.subtract(point2[0], point1[0])), bd.abs(bd.subtract(point2[1], point1[1])));
+// }
+
 /**
  * Returns the chebyshev distance between 2 points.
  * This is the maximum between the points' x distance and y distance.
@@ -456,6 +460,7 @@ export default {
 	euclideanDistanceBD,
 	euclideanDistanceDoubles,
 	manhattanDistance,
+	// manhattanDistanceBD,
 	chebyshevDistance,
 	chebyshevDistanceBD,
 	chebyshevDistanceDoubles,

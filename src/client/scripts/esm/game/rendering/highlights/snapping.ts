@@ -43,11 +43,11 @@ import type { Color } from "../../../util/math/math.js";
 
 
 /** Width of entities (mini images, highlights) when zoomed out, in virtual pixels. */
-const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 40
+const ENTITY_WIDTH_VPIXELS = 40; // Default: 40
 
 
 /** The color of the line that shows you what entity your mouse is snapped to. */
-const SNAP_LINE_COLOR: Color = [0, 0, 1, 0.3];
+const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
 
 
 /** Properties of the glow dot when rendering the snapped coord. */
@@ -319,7 +319,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 	// Only snap to these if there isn't too many pieces (slow)
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) < THRESHOLD_TO_SNAP_PIECES) {
-		const pieces = boardutil.getCoordsOfAllPieces(boardsim.pieces).map(c => bd.FromCoords(c)); // Convert to BDCoords
+		const pieces: BDCoords[] = boardutil.getCoordsOfAllPieces(boardsim.pieces).map(c => bd.FromCoords(c)); // Convert to BDCoords
 		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, pointerCoords, searchVectors);
 		if (closestPieceSnap !== undefined) {
 			// Is the snap within snapping distance of the mouse?
@@ -329,14 +329,15 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 	// 3. Origin (Center of Play) ==============================
 
-	const startingBox = gamefileutility.getStartingAreaBox(boardsim);
-	const startingBoxBD = bounds.castBoundingBoxToBigDecimal(startingBox);
-	const origin: BDCoords = bounds.calcCenterOfBoundingBox(startingBoxBD);
-	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
-	if (closestOriginSnap !== undefined) {
-		// Is the snap within snapping distance of the mouse?
-		if (bd.compare(closestOriginSnap.dist, snapDistSquares) < 0) return closestOriginSnap.snap;
-	}
+	// DISABLED for now. I don't really like it
+	// const startingBox = gamefileutility.getStartingAreaBox(boardsim);
+	// const startingBoxBD = bounds.castBoundingBoxToBigDecimal(startingBox);
+	// const origin: BDCoords = bounds.calcCenterOfBoundingBox(startingBoxBD);
+	// const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
+	// if (closestOriginSnap !== undefined) {
+	// 	// Is the snap within snapping distance of the mouse?
+	// 	if (bd.compare(closestOriginSnap.dist, snapDistSquares) < 0) return closestOriginSnap.snap;
+	// }
 
 	// No snap found! ===========================================
 
@@ -379,12 +380,16 @@ function findClosestEntityOfGroup(entities: BDCoords[], closeLines: LineSnapPoin
 				const intersection = geometry.intersectLineAndSegment(eminatedLine, highlightLine.line.coefficients, highlightLine.line.start, highlightLine.line.end);
 				if (intersection === undefined) continue;
 				// They DO intersect.
-				const dist = vectors.euclideanDistanceBD(intersection, mouseCoords);
+				// 25% fps boost: The (faster to calculate) chebyshev distance can never be larger than the euclidean distance.
+				// So, we know we only have to calculate the euclidean distance if the chebyshev distance is closer than the previous closest snap.
+				const chebyDist = vectors.chebyshevDistanceBD(intersection, mouseCoords);
+				if (closestEntitySnap !== undefined && bd.compare(chebyDist, closestEntitySnap.dist) >= 0) continue; // Chebyshev distance isn't even within the threshold, the euclidean distance won't be either.
+				const euclidDist = vectors.euclideanDistanceBD(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
-				if (closestEntitySnap === undefined || bd.compare(dist, closestEntitySnap.dist) < 0) {
+				if (closestEntitySnap === undefined || bd.compare(euclidDist, closestEntitySnap.dist) < 0) {
 					const snap = { coords: intersection, color: highlightLine.line.color, type: highlightLine.line.piece, source: jsutil.deepCopyObject(entityCoords) };
-					closestEntitySnap = { snap, dist };
+					closestEntitySnap = { snap, dist: euclidDist };
 				}
 			}
 		}
