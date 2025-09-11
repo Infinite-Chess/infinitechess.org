@@ -100,7 +100,7 @@ const teleportHistory: Transition[] = [];
 // The state of the current transition
 
 /** Whether we're currently transitioning. */
-let isTeleporting: boolean = false;
+let isTransitioning: boolean = false;
 /**
  * If defined, then after the current transition is
  * finished, we should immediately start this transition.
@@ -156,7 +156,7 @@ let differenceE: number;
 
 /** Sets common variables between starting either a Zooming or Panning Transition. */
 function onTransitionStart(): void {
-	isTeleporting = true;
+	isTransitioning = true;
 	startTime = Date.now();
 	originCoords = boardpos.getBoardPos();
 	originScale = boardpos.getBoardScale();
@@ -293,7 +293,7 @@ function undoTransition(): void {
 
 /** If we are currently transitioning, this updates the board position and scale. */
 function update(): void {
-	if (!isTeleporting) return; // Not transitioning
+	if (!isTransitioning) return; // Not transitioning
 
 	const elapsedTime = Date.now() - startTime;
 	if (elapsedTime >= durationMillis) {
@@ -397,7 +397,7 @@ function finishTransition(): void { // Called at the end of a teleport
 	boardpos.setBoardScale(destinationScale);
 
 	if (nextTransition) zoomTransition(nextTransition, undefined, true);
-	else isTeleporting = false;
+	else isTransitioning = false;
 }
 
 
@@ -406,7 +406,7 @@ function finishTransition(): void { // Called at the end of a teleport
 
 /** Whether we are currently transitioning.  */
 function areTransitioning(): boolean {
-	return isTeleporting;
+	return isTransitioning;
 }
 
 /** Erases teleport history. */
@@ -417,7 +417,7 @@ function eraseTelHist(): void {
 /** Cancels the current transition. */
 function terminate(): void {
 	// Clear current transition state
-	isTeleporting = false;
+	isTransitioning = false;
 	nextTransition = undefined;
 }
 
