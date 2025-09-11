@@ -89,7 +89,7 @@ interface BaseBufferModel {
 		// eslint-disable-next-line no-unused-vars
 		scale?: Vec3,
 		// eslint-disable-next-line no-unused-vars
-		uniforms?: { [uniform: string]: any }
+		uniforms?: { [uniform: string]: number }
 	) => void
 }
 

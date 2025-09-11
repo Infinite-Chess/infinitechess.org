@@ -8,6 +8,7 @@
 
 import type { FullGame } from '../../chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
+import type { Color } from '../../util/math/math.js';
 
 
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -379,8 +380,8 @@ function render() {
 		return self.findIndex(c => coordutil.areCoordsEqual(c, coords)) === index;
 	});
 
-	const size = boardpos.getBoardScale();
-	const color = preferences.getAnnoteSquareColor();
+	const size: number = boardpos.getBoardScaleAsNumber();
+	const color: Color = preferences.getAnnoteSquareColor();
 
 	// Render preset squares
 	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { size });
