@@ -206,14 +206,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const zoomTimesScale = bd.toNumber(bd.multiply_floating(boardScale, zoom));
 	const zoomTimesScaleTwo = zoomTimesScale * 2;
 
-	const inPerspective = perspective.getEnabled();
-	const distToRenderBoard = perspective.distToRenderBoard;
-	const screenBoundingBox = camera.getScreenBoundingBox(false);
-
-	const startX = inPerspective ? -distToRenderBoard : screenBoundingBox.left;
-	const endX =   inPerspective ?  distToRenderBoard : screenBoundingBox.right;
-	const startY = inPerspective ? -distToRenderBoard : screenBoundingBox.bottom;
-	const endY =   inPerspective ?  distToRenderBoard : screenBoundingBox.top;
+	const { left, right, bottom, top } = camera.getRespectiveScreenBox();
 
 	const boardPos = boardpos.getBoardPos();
 
@@ -235,10 +228,10 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 		return [texstart, texend];
 	}
 
-	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], startX, endX);
-	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], startY, endY);
+	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], left, right);
+	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], bottom, top);
 	
-	const data = primitives.Quad_ColorTexture(startX, startY, endX, endY, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
+	const data = primitives.Quad_ColorTexture(left, bottom, right, top, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
 	return createModel(data, 2, "TRIANGLES", true, boardTexture);
 }
 

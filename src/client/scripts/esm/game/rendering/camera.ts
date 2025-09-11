@@ -123,6 +123,23 @@ function getScreenBoundingBox(debugMode: boolean = DEBUG): DoubleBoundingBox {
 }
 
 /**
+ * Returns the respective world-space bounding box containing the whole screen,
+ * depending on whether we're in perspective mode or not.
+ * 
+ * In perspective, the range of visibility is much greater.
+ * 
+ * Ignorant of debug mode.
+ */
+function getRespectiveScreenBox(): DoubleBoundingBox {
+	if (perspective.getEnabled()) {
+		const dist = perspective.distToRenderBoard;
+		return { left: -dist, right: dist, bottom: -dist, top: dist };
+	} else {
+		return getScreenBoundingBox(false);
+	}
+}
+
+/**
  * Returns the length from the bottom of the screen to the top, in tiles when at a zoom of 1.
  * This is the same as the height of {@link getScreenBoundingBox}.
  * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
@@ -325,6 +342,7 @@ export default {
 	toggleDebug,
 	getDebug,
 	getScreenBoundingBox,
+	getRespectiveScreenBox,
 	getScreenHeightWorld,
 	getViewMatrix,
 	setViewMatrix,

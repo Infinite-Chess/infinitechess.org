@@ -229,11 +229,9 @@ function renderTransparentSquare() {
 
 // Renders the box outline, the dragged piece and its shadow
 function renderPiece() {
-	if (!areDragging ||  perspective.isLookingUp() || !worldLocation) return;
+	if (!areDragging || perspective.isLookingUp() || !worldLocation) return;
 
-	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
-	outlineModel.render();
-
+	genOutlineModel().render();
 	genPieceModel()?.render();
 }
 
@@ -242,7 +240,6 @@ function renderPiece() {
  * @returns The buffer model
  */
 function genPieceModel(): BufferModel | undefined {
-	if (perspective.isLookingUp()) return;
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
@@ -296,16 +293,12 @@ function genOutlineModel(): BufferModel {
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) && (pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)) {
 		// Outline the entire rank and file
-		let boundingBox: DoubleBoundingBox;
-		if (perspective.getEnabled()) {
-			const dist = perspective.distToRenderBoard;
-			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
-		} else boundingBox = camera.getScreenBoundingBox(false);
+		const screenBox = camera.getRespectiveScreenBox();
 
-		data.push(...primitives.Quad_Color(left, boundingBox.bottom, left + width, boundingBox.top, color)); // left
-		data.push(...primitives.Quad_Color(boundingBox.left, bottom, boundingBox.right, bottom + width, color)); // bottom
-		data.push(...primitives.Quad_Color(right - width, boundingBox.bottom, right, boundingBox.top, color)); // right
-		data.push(...primitives.Quad_Color(boundingBox.left, top - width, boundingBox.right, top, color)); // top
+		data.push(...primitives.Quad_Color(left, screenBox.bottom, left + width, screenBox.top, color)); // left
+		data.push(...primitives.Quad_Color(screenBox.left, bottom, screenBox.right, bottom + width, color)); // bottom
+		data.push(...primitives.Quad_Color(right - width, screenBox.bottom, right, screenBox.top, color)); // right
+		data.push(...primitives.Quad_Color(screenBox.left, top - width, screenBox.right, top, color)); // top
 	} else {
 		// Outline the hovered square
 		data.push(...getBoxFrameData(hoveredCoords!));
@@ -399,29 +392,6 @@ function getBoxFrameData(coords: Coords): number[] {
 	);
 
 	return vertices;
-}
-
-/**
- * Generates a model of two lines intersecting at the piece.
- * Used when the piece is unable to be dropped such as when
- * zoomed far out or teleporting.
- */
-function genIntersectingLines(): BufferModel {
-	let boundingBox: DoubleBoundingBox;
-	if (perspective.getEnabled()) {
-		const dist = perspective.distToRenderBoard;
-		boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
-	} else boundingBox = camera.getScreenBoundingBox(false);
-	
-	const { left, right, bottom, top } = boundingBox;
-	const [ r, g, b, a ] = preferences.getBoxOutlineColor();
-	const data = [
-		left, worldLocation![1], r, g, b, a,
-		right, worldLocation![1],r, g, b, a,
-		worldLocation![0], bottom, r, g, b, a,
-		worldLocation![0], top, r, g, b, a,
-	];
-	return createModel(data, 2, "LINES", true);
 }
 
 

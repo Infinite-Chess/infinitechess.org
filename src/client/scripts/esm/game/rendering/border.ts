@@ -27,13 +27,7 @@ function drawPlayableRegionMask(boardsim: Board): void {
 	const boundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(boardsim.playableRegion!);
 	const worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD);
 
-	let screenBox: DoubleBoundingBox;
-	if (perspective.getEnabled()) {
-		const dist = perspective.distToRenderBoard;
-		screenBox = { left: -dist, right: dist, bottom: -dist, top: dist };
-	} else {
-		screenBox = camera.getScreenBoundingBox(false);
-	}
+	const screenBox = camera.getRespectiveScreenBox();
 	// Cap the world box to the screen box.
 	// Fixes graphical glitches when the vertex data is beyond float32 range.
 	if (worldBox.left < screenBox.left) worldBox.left = screenBox.left;
