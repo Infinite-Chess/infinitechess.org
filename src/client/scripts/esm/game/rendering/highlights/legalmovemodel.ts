@@ -229,19 +229,7 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	const newWidth = width * multiplier;
 	const newHeight = height * multiplier;
 
-	// Make sure width has a cap so we aren't generating a model stupidly large
-	// Cap width = width of screen in pixels, * multiplier
-	const capWidth = camera.canvas.width * multiplier;
-	if (newWidth > capWidth) {
-		// const ratio = capWidth / newWidth;
-		// newWidth *= ratio;
-		// newHeight *= ratio;
-
-		console.error("Zoomed out: ", boardpos.areZoomedOut());
-
-		// DEBUGGING STUFF BELOW...
-		throw Error("Legal move highlights bounding box render range width exceeded cap! Don't recalculate it if we're zoomed out. Width: " + newWidth + ", Cap: " + capWidth);
-	}
+	if (boardpos.areZoomedOut()) throw Error("Don't recalculate legal move highlights box zoomed out!"); // Don't want to generate a stupidly large model
 
 	return [newWidth, newHeight];
 }
