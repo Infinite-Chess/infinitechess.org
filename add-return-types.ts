@@ -12,7 +12,7 @@ const argv = yargs(hideBin(process.argv)).options({
 	tsconfig: { type: 'string', default: 'tsconfig.json', describe: 'Path to tsconfig.json' },
 	glob: { type: 'string', default: 'src/**/*.ts?(x)', describe: 'Glob pattern for source files' },
 	dryRun: { type: 'boolean', default: false, describe: 'Run without saving changes' },
-	allowVoid: { type: 'boolean', default: false, describe: 'Allow adding ": void" as a return type' },
+	allowVoid: { type: 'boolean', default: true, describe: 'Allow adding ": void" as a return type' },
 }).argv;
 
 async function main() {
@@ -30,56 +30,78 @@ async function main() {
 	const sourceFiles = project.getSourceFiles(argv.glob);
 	console.log(`Found ${sourceFiles.length} files to process...`);
 
+	// [THE FINAL FIX] This loop structure is robust against modification errors.
+	// It finds and fixes ONE function at a time, then rescans the file.
 	for (const sourceFile of sourceFiles) {
-		let madeChanges = false;
 		console.log(`Processing: ${sourceFile.getFilePath()}`);
+		let madeChangesInFile = false;
 
-		// [FIX] Find ALL function-like declarations, including class methods and getters
-		const functions: FunctionLikeDeclaration[] = sourceFile.getDescendants().filter(
-			(node): node is FunctionLikeDeclaration =>
-				Node.isFunctionDeclaration(node) ||
-            Node.isArrowFunction(node) ||
-            Node.isFunctionExpression(node) ||
-            Node.isMethodDeclaration(node) ||
-            Node.isGetAccessorDeclaration(node)
-		);
-
-		for (const func of functions) {
-			// Check if it already has a return type
-			if (func.getReturnTypeNode()) {
-				continue;
-			}
-			// Constructors don't have a return type annotation
-			if (Node.isConstructorDeclaration(func)) {
-				continue;
-			}
-
-			const inferredReturnType = func.getReturnType().getText(func);
-
-			// [FIX] More robust safety check for 'any' or 'unknown' within the type
-			if (/\bany\b|\bunknown\b/.test(inferredReturnType)) {
-				console.warn(
-					`  -> Skipping function at line ${func.getStartLineNumber()}: Inferred return type "${inferredReturnType}" contains 'any' or 'unknown'. Please fix manually.`
-				);
-				continue;
-			}
-
-			// [IMPROVEMENT] Optional check to avoid adding ': void' if not desired
-			if (!argv.allowVoid && inferredReturnType === 'void') {
-				console.log(
-					`  -> Skipping function at line ${func.getStartLineNumber()}: Inferred return type is 'void' (use --allowVoid to add).`
-				);
-				continue;
-			}
-
-			console.log(
-				`  -> Adding return type '${inferredReturnType}' to function at line ${func.getStartLineNumber()}`
+		// Keep looping over the file as long as we are making changes
+		while (true) {
+			let changedInThisPass = false;
+			
+			// Get a FRESH list of all function-like declarations
+			const functions = sourceFile.getDescendants().filter(
+				(node): node is FunctionLikeDeclaration =>
+					Node.isFunctionDeclaration(node) ||
+					Node.isArrowFunction(node) ||
+					Node.isFunctionExpression(node) ||
+					Node.isMethodDeclaration(node) ||
+					Node.isGetAccessorDeclaration(node)
 			);
-			func.setReturnType(inferredReturnType);
-			madeChanges = true;
+
+			for (const func of functions) {
+				// Skip if it already has a return type or is a constructor
+				if (func.getReturnTypeNode() || Node.isConstructorDeclaration(func)) {
+					continue;
+				}
+
+				// --- ALL THE LOGIC FROM BEFORE GOES HERE ---
+				const inferredReturnType = func.getReturnType().getText(func);
+
+				if (/\bany\b|\bunknown\b/.test(inferredReturnType)) {
+					console.warn(
+						`  -> Skipping function at line ${func.getStartLineNumber()}: Inferred return type "${inferredReturnType}" contains 'any' or 'unknown'. Please fix manually.`
+					);
+					continue;
+				}
+
+				if (!argv.allowVoid && inferredReturnType === 'void') {
+					console.log(
+						`  -> Skipping function at line ${func.getStartLineNumber()}: Inferred return type is 'void' (use --allowVoid to add).`
+					);
+					continue;
+				}
+
+				const funcText = func.getText();
+				if (Node.isArrowFunction(func) && func.getParameters().length === 1 && !funcText.trim().startsWith('(')) {
+					console.log(`  -> Rebuilding arrow function at line ${func.getStartLineNumber()} with return type '${inferredReturnType}'`);
+					const paramText = func.getParameters()[0].getText();
+					const bodyText = func.getBody().getText();
+					const newFuncText = `(${paramText}): ${inferredReturnType} => ${bodyText}`;
+					func.replaceWithText(newFuncText);
+				} else {
+					console.log(
+						`  -> Adding return type '${inferredReturnType}' to function at line ${func.getStartLineNumber()}`
+					);
+					func.setReturnType(inferredReturnType);
+				}
+				// --- END OF LOGIC BLOCK ---
+
+				// If we made it here, we changed something.
+				changedInThisPass = true;
+				madeChangesInFile = true;
+				break; // Exit the for-loop to start a new pass
+			}
+
+			// If we went through a whole pass without making changes, we're done with this file.
+			if (!changedInThisPass) {
+				break; // Exit the while-loop
+			}
 		}
 
-		if (madeChanges && !argv.dryRun) {
+		// Save the file only if changes were made
+		if (madeChangesInFile && !argv.dryRun) {
 			await sourceFile.save();
 			console.log(`  -> Saved changes to ${sourceFile.getFilePath()}`);
 		}
@@ -89,6 +111,8 @@ async function main() {
 }
 
 main().catch(error => {
-	console.error('An unexpected error occurred:', error);
+	console.error('An unexpected error occurred:');
+	// This prints only the useful message, not the huge file dump.
+	console.error(error.message);
 	process.exit(1);
 });
