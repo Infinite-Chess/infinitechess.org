@@ -68,10 +68,10 @@ export default [
 			'dot-notation': 'off', 
 			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined
 			// "@typescript-eslint/explicit-function-return-type": "error",
-			"@typescript-eslint/explicit-function-return-type": [
+			"@typescript-eslint/explicit-function-return-type": [ // Enforces all functions to declare their return type
 				"error",
 				{
-					"allowExpressions": true // Allows arrow functions to not have return types specified, as they are usually inferred
+					"allowExpressions": true // Adds arrow functions as exceptions, as their return types are usually inferred
 				}
 			]
 		},
