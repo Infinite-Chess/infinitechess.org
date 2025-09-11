@@ -10,7 +10,6 @@ import type { BufferModel } from "../buffermodel.js";
 import type { Color } from "../../../util/math/math.js";
 import type { Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
 import type { Piece } from "../../../chess/util/boardutil.js";
-import type { DoubleBoundingBox } from "../../../util/math/bounds.js";
 
 
 import spritesheet from "../spritesheet.js";
@@ -188,9 +187,7 @@ function unclaimPointer() {
 // }
 
 /**
- * Stop dragging the piece and optionally play a sound.
- * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
- * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ * Stop dragging the piece.
  */
 function dropPiece() {
 	// console.error("Dropped piece");

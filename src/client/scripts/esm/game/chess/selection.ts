@@ -148,7 +148,7 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (boardpos.areZoomedOut() || transition.areTransitioning() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
+	if (boardpos.areZoomedOut() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
 		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased()) draganimation.dropPiece(); // Drop it without moving it.
@@ -156,9 +156,12 @@ function update() {
 	}
 
 	hoverSquare = mouse.getTileMouseOver_Integer()!; // Update the tile the mouse is hovering over, if any.
-	// console.log("Hover square:", hoverSquare);
+	console.log("Hover square:", hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
+
+	// Only exit during a transition after updating hover square
+	if (transition.areTransitioning()) return;
 
 	// What should selection.ts do?
 
@@ -468,7 +471,6 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	const animateMain = !wasBeingDragged;
-	// const animateMain = !draganimation.areDraggingPiece(); // For premoving
 	animateMove(changes, true, animateMain, isPremove);
 
 	if (!isPremove) {
