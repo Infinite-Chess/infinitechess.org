@@ -156,7 +156,7 @@ function update() {
 	}
 
 	hoverSquare = mouse.getTileMouseOver_Integer()!; // Update the tile the mouse is hovering over, if any.
-	console.log("Hover square:", hoverSquare);
+	// console.log("Hover square:", hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 
