@@ -13,6 +13,7 @@ const argv = yargs(hideBin(process.argv)).options({
 	glob: { type: 'string', default: 'src/**/*.ts?(x)', describe: 'Glob pattern for source files' },
 	dryRun: { type: 'boolean', default: false, describe: 'Run without saving changes' },
 	allowVoid: { type: 'boolean', default: true, describe: 'Allow adding ": void" as a return type' },
+	allowExpressions: { type: 'boolean', default: true, describe: 'Ignore functions used as arguments in other functions (e.g. callbacks)' },
 }).argv;
 
 async function main() {
@@ -56,7 +57,16 @@ async function main() {
 					continue;
 				}
 
-				// --- ALL THE LOGIC FROM BEFORE GOES HERE ---
+				// Mimic the 'allowExpressions' ESLint rule option
+				if (argv.allowExpressions && (Node.isArrowFunction(func) || Node.isFunctionExpression(func))) {
+					const parent = func.getParent();
+					// If the parent is a function call, it means this function is being used as a callback.
+					if (Node.isCallExpression(parent)) {
+						console.log(`  -> Skipping callback function at line ${func.getStartLineNumber()}`);
+						continue;
+					}
+				}
+
 				const inferredReturnType = func.getReturnType().getText(func);
 
 				if (/\bany\b|\bunknown\b/.test(inferredReturnType)) {
