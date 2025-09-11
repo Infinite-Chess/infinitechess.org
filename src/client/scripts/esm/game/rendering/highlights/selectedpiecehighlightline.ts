@@ -1,6 +1,6 @@
 
 /**
- * This script calculates and renders the highlight lines
+ * [ZOOMED OUT] This script calculates and renders the highlight lines
  * of the currently selected piece's legal moves.
  */
 
@@ -41,7 +41,6 @@ function getLines(): Line[] {
 	for (const [strline, limits] of Object.entries(legalmoves.sliding)) {
 		const slideKey = strline as CoordsKey;
 		const step = coordutil.getCoordsFromKey(slideKey);
-		const negStep: Vec2 = vectors.negateVector(step);
 		const lineIsVertical = step[0] === 0n;
 		const cappingAxis = lineIsVertical ? 1 : 0;
 
@@ -50,7 +49,7 @@ function getLines(): Line[] {
 
 		let start: BDCoords = intersectionPoints[0]!;
 		if (limits[0] !== null) { // The left slide limit has a chance of not reaching intsect1
-			const leftLimit: BDCoords = bd.FromCoords([pieceCoords[0] + negStep[0] * limits[0], pieceCoords[1] + negStep[1] * limits[0]]);
+			const leftLimit: BDCoords = bd.FromCoords([pieceCoords[0] + step[0] * limits[0], pieceCoords[1] + step[1] * limits[0]]); // The first index of limits is already negative, so we don't have to negate the step.
 			if (bd.compare(leftLimit[cappingAxis], start[cappingAxis]) > 0) start = leftLimit;
 		}
 
