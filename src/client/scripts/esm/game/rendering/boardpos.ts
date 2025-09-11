@@ -112,6 +112,7 @@ function setBoardPos(newPos: BDCoords) {
 
 function setBoardScale(newScale: BigDecimal) {
 	if (bd.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to a negative: ${bd.toString(newScale)}`);
+	// console.error("New scale:", bd.toString(newScale));
 
 	// Cap the scale
 	if (bd.compare(newScale, maximumScale) > 0) {
@@ -218,7 +219,7 @@ function recalcScale() {
 	const product = bd.multiply_fixed(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
 	const factor2 = bd.add(product, ONE); // scaleVel * deltaTime + 1
 
-	const newScale = bd.multiply_fixed(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
+	const newScale = bd.multiply_floating(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
 	setBoardScale(newScale);
 }
 
