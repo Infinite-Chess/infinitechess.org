@@ -67,7 +67,13 @@ export default [
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off', 
 			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined
-			"@typescript-eslint/explicit-function-return-type": "error",
+			// "@typescript-eslint/explicit-function-return-type": "error",
+			"@typescript-eslint/explicit-function-return-type": [
+				"error",
+				{
+					"allowExpressions": true // Allows arrow functions to not have return types specified, as they are usually inferred
+				}
+			]
 		},
 	},
 ];
