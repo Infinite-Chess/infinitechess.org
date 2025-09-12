@@ -447,8 +447,7 @@ function LCM(array: bigint[]): bigint {
 	let answer: bigint = array[0]!;
 	for (let i = 1; i < array.length; i++) {
 		const currentNumber = array[i]!;
-
-		// A single-line if/else statement without curly braces.
+
 		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
 		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
 	}
