@@ -44,7 +44,7 @@ import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.
  */
 interface BigDecimal {
 	/**
-	 * The bigint storing the bits of the BigDecimal. Multiply this
+	 * The bigint storing the bits of the BigDecimal, or the mantissa. Multiply this
 	 * by 2^(-divex) to get the true number being stored by the Big Decimal!
 	 */
     bigint: bigint,
