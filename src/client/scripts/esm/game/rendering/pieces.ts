@@ -29,7 +29,7 @@ const ghostOpacity: number = 0.4;
  * including voids, and mini images, if visible.
  */
 function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined): void {
-	if (mesh) piecemodels.renderAll(boardsim, mesh);
+	piecemodels.renderAll(boardsim, mesh);
 	miniimage.render();
 }
 

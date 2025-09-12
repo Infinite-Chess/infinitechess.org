@@ -17,6 +17,20 @@ import type { Color } from '../../util/math/math.js';
 
 
 
+/** [TRIANGLES] Generates vertex data for a 2D quad with NO COLOR DATA. */
+function Quad(left: number, bottom: number, right: number, top: number): number[] {
+	return [
+    //     Position
+        left,  bottom,
+        left,  top,
+        right, bottom,
+        right, bottom,
+        left,  top,
+        right, top,
+    ];
+}
+
+
 /** [TRIANGLES] Generates vertex data for a solid-colored 2D quad. */
 function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
@@ -284,6 +298,7 @@ function BoxTunnel(left: number, bottom: number, startZ: number, right: number, 
 
 export default {
 	// Quads
+	Quad,
 	Quad_Color,
 	Quad_Color3D,
 	Quad_Texture,
