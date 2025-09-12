@@ -17,12 +17,13 @@ import type { Color } from "../../util/math/math.js";
 
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled'];
+const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled', 'starfield_enabled'];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
 	drag_enabled: boolean;
 	premove_enabled: boolean;
+	starfield_enabled: boolean;
 	[key: string]: any;
 }
 
@@ -51,6 +52,7 @@ const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
 const default_lingering_annotations: boolean = false;
+const default_starfield_enabled: boolean = true;
 
 
 /**
@@ -77,6 +79,7 @@ function loadPreferences(): void {
 		premove_enabled: default_premove_enabled,
 		animations: default_animations,
 		lingering_annotations: default_lingering_annotations,
+		starfield_enabled: default_starfield_enabled,
 	};
 
 	preferences = browserStoragePrefs;
@@ -162,6 +165,15 @@ function setTheme(theme: string): void {
 	preferences.theme = theme;
 	console.log('Set theme');
 	onChangeMade();
+	savePreferences();
+}
+
+function getStarfieldMode(): boolean {
+	return preferences.starfield_enabled ?? default_starfield_enabled;
+}
+
+function setStarfieldMode(starfield_enabled: boolean): void {
+	preferences.starfield_enabled = starfield_enabled;
 	savePreferences();
 }
 
@@ -449,6 +461,8 @@ function getTintColorOfType(type: number): Color {
 export default {
 	getTheme,
 	setTheme,
+	getStarfieldMode,
+	setStarfieldMode,
 	getLegalMovesShape,
 	setLegalMovesShape,
 	getDragEnabled,

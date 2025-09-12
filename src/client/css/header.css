@@ -292,7 +292,7 @@ nav.compact-3 #svg-logout {
     border-bottom: 1px solid grey;
 }
 
-.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover, .selection-option:hover {
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover, .boolean-option:hover {
     background-color: var(--header-link-hover-color);
 }
 
@@ -382,7 +382,7 @@ span.arrow-head-left {
 
 /* Language nested dropdown */
 
-.language-dropdown-item, .legalmove-option, .selection-option {
+.language-dropdown-item, .legalmove-option, .boolean-option {
     display:flex;
     align-items: center;
     cursor: pointer;
@@ -451,16 +451,16 @@ span.arrow-head-left {
     height: 35px;
 }
 
-.selection-options p.text {
+.boolean-option p.text {
     padding: 10px 6px 10px 3px;
 }
 
-.selection-option {
+.boolean-option {
     min-height: 43px;
     padding: 0 8px 0 8px;
 }
 
-.selection-option .switch {
+.boolean-option .switch {
     width: 36px;
     height: 20px;
     margin: 0 2px 0 4px;
