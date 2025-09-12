@@ -172,9 +172,12 @@ function getStarfieldMode(): boolean {
 	return preferences.starfield_enabled ?? default_starfield_enabled;
 }
 
-function setStarfieldMode(starfield_enabled: boolean): void {
-	preferences.starfield_enabled = starfield_enabled;
+function setStarfieldMode(value: boolean): void {
+	preferences.starfield_enabled = value;
 	savePreferences();
+	
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('starfield-toggle', { detail: value }));
 }
 
 function getLegalMovesShape(): 'dots' | 'squares' {

@@ -21,6 +21,7 @@ import gameslot from '../chess/gameslot.js';
 import boardutil from '../../chess/util/boardutil.js';
 import boardtiles from './boardtiles.js';
 import bounds from '../../util/math/bounds.js';
+import gameloader from '../chess/gameloader.js';
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import { rawTypes as r } from '../../chess/util/typeutil.js';
 
@@ -127,6 +128,14 @@ let desiredNumStars: number = 0;
 // Initialization -----------------------------------------------------------------------
 
 
+/** Event listener for when we toggle Starfield in the settings dropdown. */
+document.addEventListener('starfield-toggle', (e: CustomEvent) => {
+	if (!gameloader.areInAGame()) return; // Not in a game => Starfield should not be initiated or terminated.
+	const enabled: boolean = e.detail;
+	if (enabled) init();
+	else terminate();
+});
+
 /**
  * Initializes the starfield system, creating all the star objects.
  * This must be called once before `update`.
@@ -147,6 +156,8 @@ function init(): void {
 
 /** Closes the starfield system, resetting its state. */
 function terminate(): void {
+	if (!isInitialized) throw Error("Starfield is already terminated.");
+
 	// Clear any existing stars
 	stars.length = 0;
 	isInitialized = false;
