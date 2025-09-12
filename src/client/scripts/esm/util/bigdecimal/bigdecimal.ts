@@ -1068,9 +1068,9 @@ function exp(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_B
 
 	const MAX_ITERATIONS = 100; // Safety break
 
-	for (let n = 1; n < MAX_ITERATIONS; n++) {
+	for (let i = 0; i < MAX_ITERATIONS; i++) {
 		// console.log(`Iteration ${n}:`);
-		const n_bd = FromBigInt(BigInt(n), mantissaBits);
+		const n_bd = FromBigInt(BigInt(i), mantissaBits);
 
 		// Calculate the next term: term = term * (y / n)
 		const y_div_n = divide_floating(y, n_bd, mantissaBits);
@@ -1082,22 +1082,25 @@ function exp(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_B
 
 		// Check for convergence.
 		if (areEqual(sum, lastSum)) {
-			// console.log(`exp() converged after ${n} iterations.`);
-			break; // Exit loop once converged
+			// console.log(`exp() converged after ${i} iterations.`);
+
+			// --- 3. Scale the Result ---
+			// We now have e^y. The final result is (e^y) * 2^k.
+			// A multiplication by 2^k is a simple divex adjustment.
+			// value = (bigint / 2^divex) * 2^k = bigint / 2^(divex - k)
+			const finalResult = {
+				bigint: sum.bigint,
+				divex: sum.divex - Number(k)
+			};
+			return finalResult;
 		}
+
+		// Prepare for the next iteration.
 		lastSum = clone(sum);
 	}
 
-	// --- 3. Scale the Result ---
-	// We now have e^y. The final result is (e^y) * 2^k.
-	// A multiplication by 2^k is a simple divex adjustment.
-	// value = (bigint / 2^divex) * 2^k = bigint / 2^(divex - k)
-	const finalResult = {
-		bigint: sum.bigint,
-		divex: sum.divex - Number(k)
-	};
-
-	return finalResult;
+	// If the loop completes without converging, something is wrong.
+	throw new Error(`exp failed to converge after ${MAX_ITERATIONS} iterations.`);
 }
 
 
