@@ -23,8 +23,8 @@ import type { BDCoords, DoubleCoords } from "../../chess/util/coordutil.js";
 
 // BigDecimal Constants ---------------------------------------------------
 
-const ZERO = bd.FromNumber(0.0);
-const ONE = bd.FromNumber(1.0);
+const ZERO = bd.FromBigInt(0n);
+const ONE = bd.FromBigInt(1n);
 
 // Variables -------------------------------------------------------------
 
@@ -42,7 +42,7 @@ let panVel: DoubleCoords = [0,0];
  * Higher => zoomed IN
  * Lower => zoomed OUT
  */
-let boardScale: BigDecimal = bd.FromNumber(1.0); // Default: 1.0
+let boardScale: BigDecimal = bd.FromBigInt(1n); // Default: 1
 /** The current board scale (zoom) velocity. */
 let scaleVel: number = 0;
 
@@ -53,7 +53,7 @@ const panVelCap2D = 22.0; // Default: 22
 const panVelCap3D = 16.0; // Default: 16
 
 /** The furthest we can be zoomed IN. */
-const maximumScale = bd.FromNumber(5.0); // Default: 5.0
+const maximumScale = bd.FromBigInt(5n); // Default: 5.0
 const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
 
 
