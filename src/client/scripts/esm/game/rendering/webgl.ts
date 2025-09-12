@@ -152,47 +152,82 @@ function executeWithInverseBlending(func: Function): void {
 
 
 /**
- * Renders content masked by a given mesh.
+ * Renders content using a flexible stencil mask.
  * Handles all stencil buffer state changes internally, ensuring a clean state before and after.
- * @param drawMaskFunc - A function that renders the mesh to be used as the mask.
- * @param drawContentFunc - A function that renders the content to be clipped by the mask.
- * @param invert - If true, inverts the mask, rendering content only outside the mask instead of only inside.
+ * @param {Function} drawInclusionMaskFunc - A function that renders the INCLUSION ZONE MASK. The main scene will appear inside this zone.
+ * @param {Function} drawExclusionMaskFunc - A function that renders the EXCLUSION ZONE MASK. The main scene will NOT appear inside this zone.
+ * @param {Function} drawContentFunc - A function that renders the main scene content. Will be masked.
+ * @param priority - If both inclusion and exclusion masks are provided, this determines which mask takes priority in overlapping areas, otherwise it has no effect.
  */
-function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function, invert: boolean): void {
-	// Enable the stencil test before we do anything.
+function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExclusionMaskFunc: Function | undefined, drawContentFunc: Function, priority: 'exclusion' | 'inclusion'): void {
+	if (!drawExclusionMaskFunc && !drawInclusionMaskFunc) throw Error("No mask functions provided.");
+
+	// Enable the stencil test.
 	gl.enable(gl.STENCIL_TEST);
 
 	try {
-		// Draw the Mask to the Stencil Buffer
-
 		// We want to write to the stencil buffer, but make the mask itself invisible.
 		gl.colorMask(false, false, false, false); // Disable writing to the color buffer
 		gl.depthMask(false);                      // Disable writing to the depth buffer
 
-		// Configure the stencil test to ALWAYS pass and REPLACE the stencil value with 1.
-		// This "paints" our mask into the stencil buffer.
-		gl.stencilFunc(gl.ALWAYS, 1, 0xFF);         // The test will always succeed.
-		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE); // If the test passes, replace the stencil value with 1.
+		// Draw the Masks
 
-		drawMaskFunc(); // Execute the function that draws the mask.
+		if (priority === 'exclusion') {
+			drawInclusion();
+			drawExclusion();
+		} else {
+			drawExclusion();
+			drawInclusion();
+		}
 
-		// Draw the Content, Using the Stencil Buffer as a Mask
+		function drawInclusion(): void {
+			if (!drawInclusionMaskFunc) return;
+			// Inclusion mask writes with '2'.
+			gl.stencilFunc(gl.ALWAYS, 2, 0xFF);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+			drawInclusionMaskFunc();
+		}
+		function drawExclusion(): void {
+			if (!drawExclusionMaskFunc) return;
+			// Exclusion mask writes with '1'.
+			gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+			drawExclusionMaskFunc();
+		}
 
-		// Re-enable writing to the color and depth buffers so we can see our content.
+		// Draw the Main Content
+
+		// Re-enable drawing to the screen.
 		gl.colorMask(true, true, true, true);
 		gl.depthMask(true);
+		// We only want to test against the buffer, not change it.
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 
-		// Configure the stencil test to ONLY pass where the stencil value is 1 or not 1.
-		// This restricts drawing to only the pixels inside our mask, or outside.
-		const stencilCondition = invert ? gl.NOTEQUAL : gl.EQUAL;
-		gl.stencilFunc(stencilCondition, 1, 0xFF); // The test passes only if the stencil value is 1 (inside the mask) or not 1 (outside the mask).
-		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); // Don't change the stencil buffer on pass or fail.
+		if (drawExclusionMaskFunc && drawInclusionMaskFunc) {
+			// Case: COMPOSITE MASK (both exclusion and inclusion masks provided)
+			// The buffer now has 0s, 1s, and 2s.
+			if (priority === 'inclusion') {
+				// We want to draw where it's 0 or 2 (not 1).
+				gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
+			} else {
+				// We want to draw where it's 2 (exclusion mask would have overwritten some 2's with 1's).
+				gl.stencilFunc(gl.EQUAL, 2, 0xFF);
+			}
+		} else if (drawExclusionMaskFunc) {
+			// Case: EXCLUSION ONLY.
+			// The buffer has 0s and 1s. We want to draw ONLY where the value is 0 (not 1).
+			gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
+		} else if (drawInclusionMaskFunc) {
+			// Case: INCLUSION ONLY.
+			// The buffer has 0s and 2s. We want to draw ONLY where the value is 2 (not 0).
+			gl.stencilFunc(gl.EQUAL, 2, 0xFF);
+		} else throw Error("Unexpected!");
+		
 
-		// Execute the function that draws the main scene content.
 		drawContentFunc();
 
 	} finally {
-		// Cleanup. Return to a Normal Rendering State
+		// Return to a normal state.
 		gl.disable(gl.STENCIL_TEST);
 	}
 }
