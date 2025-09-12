@@ -12,6 +12,8 @@ import type { Board } from "../../chess/logic/gamefile.js";
 import meshes from "./meshes.js";
 import camera from "./camera.js";
 import primitives from "./primitives.js";
+import perspective from "./perspective.js";
+import boardtiles from "./boardtiles.js";
 import bounds, { DoubleBoundingBox } from "../../util/math/bounds.js";
 import { createModel } from "./buffermodel.js";
 
@@ -23,6 +25,10 @@ import { createModel } from "./buffermodel.js";
  * playable area, just inside the world border.
  */
 function drawPlayableRegionMask(boardsim: Board): void {
+	// No border, and in perspective mode => This is the best mask we can get!
+	// This is crucial for making as if the board goes infinitely into the horizon.
+	// Otherwise without this the solid cover isn't visible.
+	if (!boardsim.playableRegion && perspective.getEnabled()) return boardtiles.renderSolidCover();
 
 	const screenBox = camera.getRespectiveScreenBox();
 

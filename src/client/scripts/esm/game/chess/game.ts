@@ -9,7 +9,10 @@
 
 import type { FullGame } from '../../chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
+import type { Color } from '../../util/math/math.js';
 
+// @ts-ignore
+import invites from '../misc/invites.js';
 import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
 import highlights from '../rendering/highlights/highlights.js';
@@ -38,13 +41,16 @@ import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';
 import promotionlines from '../rendering/promotionlines.js';
-import { CreateInputListener, InputListener, Mouse } from '../input.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
 import webgl from '../rendering/webgl.js';
-// @ts-ignore
-import invites from '../misc/invites.js';
+import starfield from '../rendering/starfield.js';
+import camera from '../rendering/camera.js';
+import primitives from '../rendering/primitives.js';
+import piecemodels from '../rendering/piecemodels.js';
+import { createModel } from '../rendering/buffermodel.js';
+import { CreateInputListener, InputListener, Mouse } from '../input.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -82,9 +88,11 @@ function update(): void {
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
-	if (!gamefile) return boardpos.update(); // On title screen. Updates the board's position and scale according to its velocity; // 
+	if (!gamefile) return boardpos.update(); // On title screen. Updates the board's position and scale according to its velocity
 
 	// There is a gamefile, update everything board-related...
+
+	starfield.update(); // Update the star field animation, if needed.
 
 	controls.testInGameToggles(gamefile, mesh);
 
@@ -172,19 +180,23 @@ function render(): void {
 	
 	const boardsim = gamefile.boardsim;
 
-	if (boardsim.playableRegion !== undefined) {
-		// Mask the playable region so the board tiles don't render outside the world border
-		webgl.executeMaskedDraw(
-			// Mask containing playable region
-			() => border.drawPlayableRegionMask(boardsim),
-			// The board tiles will only be drawn inside the mask
-			renderTilesAndPromoteLines,
-			false, // Only render inside the mask
-		);
-	} else {
-		// Render normally, spanning the whole screen
-		renderTilesAndPromoteLines();
-	}
+	// Star Field Animation: Appears in border & voids
+	webgl.executeMaskedDraw(
+		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
+		() => border.drawPlayableRegionMask(boardsim), // EXCLUSION MASK is our playable region
+		() => starfield.render(), // MAIN SCENE
+		'inclusion'
+	);
+	// Board Tiles & Voids: Mask the playable region so the tiles
+	// don't render outside the world border or where voids should be
+	webgl.executeMaskedDraw(
+		() => border.drawPlayableRegionMask(boardsim), // INCLUSION MASK containing playable region
+		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
+		() => renderTilesAndPromoteLines(), // MAIN SCENE
+		'exclusion'
+	);
+
+	if (camera.getDebug() && !perspective.getEnabled()) renderOutlineofScreenBox();
 
 	/**
 	 * What is the order of rendering?
@@ -225,6 +237,21 @@ function renderTilesAndPromoteLines(): void {
 	boardtiles.render();
 	promotionlines.render();
 }
+
+/**
+ * [DEBUG] Renders an outline of the viewing screen bounding box.
+ * Will only be visible if camera debug mode is on.
+ */
+function renderOutlineofScreenBox(): void {
+	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
+	
+	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
+	const color: Color = [0,0,0, 0.5]; // Transparent Black
+	const data = primitives.Rect(left, bottom, right, top, color);
+
+	createModel(data, 2, "LINE_LOOP", true).render();
+}
+
 
 
 

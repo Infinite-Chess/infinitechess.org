@@ -459,6 +459,7 @@ export default {
 	resetColor,
 	darkenColor,
 	render,
+	renderSolidCover,
 	getBoundingBoxOfBoard,
 	generatePerspectiveBoundingBox,
 };
