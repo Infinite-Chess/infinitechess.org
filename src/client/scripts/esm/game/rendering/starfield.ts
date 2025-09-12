@@ -116,7 +116,10 @@ export const CONFIG = {
 
 /** All star objects. The entire star field. */
 const stars: Star[] = [];
-/** Whether the star field has been initialized or not. */
+/**
+ * Whether the star field has been initialized or not.
+ * It will never be initialized if they are disabled.
+ */
 let isInitialized: boolean = false;
 /**
  * This frame's desired number of stars.
@@ -238,7 +241,7 @@ function update(): void {
 
 	// Call for a render this frame if the starfield is visible
 	if (isStarfieldVisible()) frametracker.onVisualChange();
-	else console.log("Starfield not visible. Not rendering.")
+	else console.log("Starfield not visible. Not rendering.");
 
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();
@@ -283,6 +286,8 @@ function isStarfieldVisible(): boolean {
 	// see the sky, which the starfield is visible in.
 	if (perspective.getEnabled()) return true;
 
+	// 2D Mode...
+
 	// If voids are present in the game, there's also a good chance
 	// we can see the starfield underneath them.
 	// It would take too much effort to determine if the void mesh
@@ -293,7 +298,8 @@ function isStarfieldVisible(): boolean {
 	// At this point, if there isn't a world border, we know starfield is NOT visible.
 	if (boardsim.playableRegion === undefined) return false;
 
-	// There IS a world border.
+	// There IS a world border...
+
 	// Last check is whether our screen is entirely contained within the playableRegion box.
 	// If so, the starfield is NOT visible.
 	const screenBox = boardtiles.gboundingBox(false);
