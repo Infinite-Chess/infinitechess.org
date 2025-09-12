@@ -262,13 +262,21 @@ function updateSkyColor(): void {
 	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
 	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
 
-	const dimAmount = 0.27; // Default: 0.27
-	const skyR = avgR - dimAmount;
-	const skyG = avgG - dimAmount;
-	const skyB = avgB - dimAmount;
+	// BEFORE STAR FIELD ANIMATION
+	// const dimAmount = 0.27; // Default: 0.27
+	// const skyR = avgR - dimAmount;
+	// const skyG = avgG - dimAmount;
+	// const skyB = avgB - dimAmount;
+
+	// AFTER STAR FIELD ANIMATION
+	const baseDim = 0.27;
+	const multiplierDim = 0.6;
+	const skyR = (avgR - baseDim) * multiplierDim; 
+	const skyG = (avgG - baseDim) * multiplierDim;
+	const skyB = (avgB - baseDim) * multiplierDim;
 
 	webgl.setClearColor([skyR, skyG, skyB]);
-	// webgl.setClearColor([0,0,0]); // Black for start map animation
+	// webgl.setClearColor([0,0,0]); // Solid Black
 }
 
 function updateNavColor(): void {
