@@ -164,6 +164,10 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 
 	// Enable the stencil test.
 	gl.enable(gl.STENCIL_TEST);
+	// We don't want the mask to be affected by depth.
+	// WITHOUT THIS, sometimes the mask doesn't do its masking, because it
+	// initially failed the depth test if something else is rendered in front of it!
+	gl.disable(gl.DEPTH_TEST);
 
 	try {
 		// We want to write to the stencil buffer, but make the mask itself invisible.
@@ -229,6 +233,7 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 	} finally {
 		// Return to a normal state.
 		gl.disable(gl.STENCIL_TEST);
+		gl.enable(gl.DEPTH_TEST);
 	}
 }
 
