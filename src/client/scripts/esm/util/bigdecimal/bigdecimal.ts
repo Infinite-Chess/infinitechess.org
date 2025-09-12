@@ -179,7 +179,7 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
  * interpreting its IEEE 754 binary representation extremely fast.
  * The result will have a fixed divex (scale) as specified.
  * WARNING: If the input number is too small for the target precision,
- * the resulting BigDecimal will become 0.
+ * the resulting BigDecimal will underflow to 0.
  * @param num - The number to convert.
  * @param [precision=DEFAULT_WORKING_PRECISION] The target divex for the result.
  * @returns A new BigDecimal with the value from the number.
@@ -206,7 +206,7 @@ function FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION):
 //  * This method preserves the significant digits of the input number by normalizing
 //  * the result to a specified mantissa bit length, automatically calculating the
 //  * required divex. This is ideal for representing very large or very small numbers
-//  * without them being truncated to zero.
+//  * without them being underflowed to zero.
 //  * @param num - The number to convert.
 //  * @param [mantissaBits=DEFAULT_MANTISSA_PRECISION_BITS] The target number of bits for the mantissa.
 //  * @returns A new, normalized BigDecimal with the value from the number.
@@ -792,12 +792,9 @@ function hypot(bd1: BigDecimal, bd2: BigDecimal, mantissaBits: number = DEFAULT_
  * @param bd - The BigDecimal.
  * @returns A new BigDecimal representing the absolute value.
  */
-function abs(bd: BigDecimal): BigDecimal {
-	// The sign is determined solely by the bigint.
-	// The divex (scale) remains the same.
-	// We return a new object and do not modify the original.
+function abs(bd: BigDecimal): BigDecimal {
 	return {
-		bigint: bd.bigint < ZERO ? -bd.bigint : bd.bigint,
+		bigint: bimath.abs(bd.bigint),
 		divex: bd.divex
 	};
 }
@@ -914,7 +911,7 @@ function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	return compare(bd1, bd2) === -1 ? bd2 : bd1;
 }
 
-/** Returns a new BigDecimal that is clamped between the specified minimum and maximum values. */
+/** Returns a BigDecimal that is clamped between the specified minimum and maximum values. */
 function clamp(bd: BigDecimal, min: BigDecimal, max: BigDecimal): BigDecimal {
 	return compare(bd, min) < 0 ? min : compare(bd, max) > 0 ? max : bd;
 }
