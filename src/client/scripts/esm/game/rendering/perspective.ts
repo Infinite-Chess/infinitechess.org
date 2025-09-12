@@ -253,13 +253,26 @@ function renderCrosshair(): void {
 	if (!enabled) return;
 	if (config.VIDEO_MODE) return; // Don't render while recording
 
+	renderWithoutPerspectiveRotations(() => {
+		webgl.executeWithInverseBlending(() => {
+			crosshairModel.render();
+		});
+	});
+}
+
+/**
+ * Renders (performs) whatever function is passed to it,
+ * as if our camera was looking straight at the board from
+ * white's perspective. ZERO perspective rotations!
+ */
+function renderWithoutPerspectiveRotations(func: Function): void {
+	if (!enabled) return func();
+
 	const perspectiveViewMatrixCopy = camera.getViewMatrix();
 	camera.initViewMatrix(true); // Init view while ignoring perspective rotations
 
-	webgl.executeWithInverseBlending(() => {
-		crosshairModel.render();
-	});
-    
+	func();
+
 	camera.setViewMatrix(perspectiveViewMatrixCopy); // Re-put back the perspective rotation
 }
 
@@ -291,6 +304,7 @@ export default {
 	applyRotations,
 	isMouseLocked,
 	renderCrosshair,
+	renderWithoutPerspectiveRotations,
 	unlockMouse,
 	isLookingUp,
 	initCrosshairModel
