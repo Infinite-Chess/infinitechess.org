@@ -152,12 +152,13 @@ function executeWithInverseBlending(func: Function): void {
 
 
 /**
- * Renders content masked by a given mesh. This function handles all stencil
- * buffer state changes internally, ensuring a clean state before and after.
- * @param drawMaskFunc - A function that renders the mesh to be used as the mask. (Your Function B)
- * @param drawContentFunc - A function that renders the content to be clipped by the mask. (Your Function A)
+ * Renders content masked by a given mesh.
+ * Handles all stencil buffer state changes internally, ensuring a clean state before and after.
+ * @param drawMaskFunc - A function that renders the mesh to be used as the mask.
+ * @param drawContentFunc - A function that renders the content to be clipped by the mask.
+ * @param invert - If true, inverts the mask, rendering content only outside the mask instead of only inside.
  */
-function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function): void {
+function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function, invert: boolean): void {
 	// Enable the stencil test before we do anything.
 	gl.enable(gl.STENCIL_TEST);
 
@@ -181,10 +182,11 @@ function executeMaskedDraw(drawMaskFunc: Function, drawContentFunc: Function): v
 		gl.colorMask(true, true, true, true);
 		gl.depthMask(true);
 
-		// Configure the stencil test to ONLY pass where the stencil value is 1.
-		// This restricts drawing to only the pixels inside our mask.
-		gl.stencilFunc(gl.EQUAL, 1, 0xFF);       // The test passes only if stencil value is 1.
-		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);   // Don't change the stencil buffer on pass or fail.
+		// Configure the stencil test to ONLY pass where the stencil value is 1 or not 1.
+		// This restricts drawing to only the pixels inside our mask, or outside.
+		const stencilCondition = invert ? gl.NOTEQUAL : gl.EQUAL;
+		gl.stencilFunc(stencilCondition, 1, 0xFF); // The test passes only if the stencil value is 1 (inside the mask) or not 1 (outside the mask).
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); // Don't change the stencil buffer on pass or fail.
 
 		// Execute the function that draws the main scene content.
 		drawContentFunc();

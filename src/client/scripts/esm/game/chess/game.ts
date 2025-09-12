@@ -179,6 +179,7 @@ function render(): void {
 			() => border.drawPlayableRegionMask(boardsim),
 			// The board tiles will only be drawn inside the mask
 			renderTilesAndPromoteLines,
+			false, // Only render inside the mask
 		);
 	} else {
 		// Render normally, spanning the whole screen
