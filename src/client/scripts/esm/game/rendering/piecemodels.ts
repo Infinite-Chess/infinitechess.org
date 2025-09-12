@@ -168,7 +168,7 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
  */
 function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	// const voidColor = preferences.getTintColorOfType(type); // Black, from the pieceTheme
-	const voidColor = gl.getParameter(gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field
+	const voidColor = gl.getParameter(gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field. DOESN'T EVEN MATTER SINCE IT'S A MASK!
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(voidColor);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
@@ -391,10 +391,11 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 
 
 /**
- * Renders ever piece type mesh of the game, including voids,
+ * Renders ever piece type mesh of the game, EXCLUDING voids,
  * translating and scaling them into position.
  */
-function renderAll(boardsim: Board, mesh: Mesh): void {
+function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
+	if (!mesh) return; // Mesh hasn't been generated yet
 
 	const boardPos = boardpos.getBoardPos();
 	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
@@ -403,7 +404,8 @@ function renderAll(boardsim: Board, mesh: Mesh): void {
 
 	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
 		// Only render voids
-		mesh.types[rawTypes.VOID]?.model.render(position, scale);
+		// NOT ANYMORE SINCE ADDING STAR FIELD ANIMATION (voids are rendered separately)
+		// mesh.types[rawTypes.VOID]?.model.render(position, scale);
 		return;
 	};
 
@@ -417,10 +419,23 @@ function renderAll(boardsim: Board, mesh: Mesh): void {
 	if (mesh.inverted !== correctInverted) rotateAll(mesh, correctInverted);
 
 
-	for (const meshData of Object.values(mesh.types)) {
-		// Use a custom tint uniform if our theme has custom colors for the players pieces
+	for (const [typeStr, meshData] of Object.entries(mesh.types)) {
+		const type = Number(typeStr);
+		if (type === rawTypes.VOID) continue; // Skip voids, they should be rendered separately
 		meshData.model.render(position, scale);
 	}
+}
+
+/** Renders the voids mesh. */
+function renderVoids(mesh: Mesh | undefined): void {
+	if (!mesh) return; // Mesh hasn't been generated yet
+	
+	const boardPos = boardpos.getBoardPos();
+	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
+	const boardScale = boardpos.getBoardScaleAsNumber();
+	const scale: Vec3 = [boardScale, boardScale, 1];
+
+	mesh.types[rawTypes.VOID]?.model.render(position, scale);
 }
 
 /**
@@ -446,6 +461,7 @@ export default {
 	overwritebufferdata,
 	deletebufferdata,
 	renderAll,
+	renderVoids,
 };
 
 export type {
