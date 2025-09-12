@@ -17,7 +17,12 @@ import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
 import frametracker from './frametracker.js';
+import gameslot from '../chess/gameslot.js';
+import boardutil from '../../chess/util/boardutil.js';
+import boardtiles from './boardtiles.js';
+import bounds from '../../util/math/bounds.js';
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
+import { rawTypes as r } from '../../chess/util/typeutil.js';
 
 
 
@@ -220,7 +225,9 @@ function applyVariance(base: number, variance: number): number {
 function update(): void {
 	if (!isInitialized) return;
 
-	frametracker.onVisualChange(); // TODO: Don't call this unless the star field is actually visible!  !!!!!!!!!!!!!!!!!!!!!!!!!
+	// Call for a render this frame if the starfield is visible
+	if (isStarfieldVisible()) frametracker.onVisualChange();
+	else console.log("Starfield not visible. Not rendering.")
 
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();
@@ -257,6 +264,29 @@ function update(): void {
 		// Randomize the age (since we may be creating a lot at once)
 		stars.push(createStar(true));
 	}
+}
+
+/** Only requests an animation frame if there's a good chance the starfield is visible. */
+function isStarfieldVisible(): boolean {
+	// If we're in perspective mode, there's a good chance we can
+	// see the sky, which the starfield is visible in.
+	if (perspective.getEnabled()) return true;
+
+	// If voids are present in the game, there's also a good chance
+	// we can see the starfield underneath them.
+	// It would take too much effort to determine if the void mesh
+	// overlaps with the screen, so just assume the're visible.
+	const { boardsim } = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
+	if (boardutil.getPieceCountOfType(boardsim.pieces, r.VOID) > 0) return true; // Voids are PRESENT
+
+	// At this point, if there isn't a world border, we know starfield is NOT visible.
+	if (boardsim.playableRegion === undefined) return false;
+
+	// There IS a world border.
+	// Last check is whether our screen is entirely contained within the playableRegion box.
+	// If so, the starfield is NOT visible.
+	const screenBox = boardtiles.gboundingBox(false);
+	return !bounds.boxContainsBox(boardsim.playableRegion, screenBox);
 }
 
 
