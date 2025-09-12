@@ -161,7 +161,7 @@ function generateLeaperMoves(m: bigint, n: bigint): Coords[] {
  * @param [slideLimit] Optional. The slideLimit gamerule value.
  * @returns Object containing the movesets of all pieces except pawns.
  */
-function getPieceDefaultMovesets(slideLimit: bigint | null = 5n): Movesets {
+function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 	if (typeof slideLimit !== 'bigint' && slideLimit !== null) throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	// Slide limits of all pieces. Negative the first index.
