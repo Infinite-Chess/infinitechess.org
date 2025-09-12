@@ -53,7 +53,7 @@ type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' 
 /** An object describing a single attribute inside our vertex data, and how many components it has per stride/vertex. */
 interface Attribute {
 	/** The name of the attribute. */
-	name: 'position' | 'texcoord' | 'color' | 'instanceposition' | 'instancecolor' | 'instancerotation' | 'instancetexcoord';
+	name: 'position' | 'texcoord' | 'color' | 'instanceposition' | 'instancecolor' | 'instancerotation' | 'instancetexcoord' | 'instancesize';
 	/** How many values the attribute has in a single stride/vertex of our data array. */
 	numComponents: number
 };

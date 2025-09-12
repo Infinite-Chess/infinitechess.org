@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/shaders.ts
+
 import { gl } from './webgl.js';
 
 
@@ -56,6 +58,7 @@ function initPrograms(): void {
 		createColoredTextureProgram_Instanced(),
 		createTintedTextureProgram(),
 		createColoredTextureInstancedPositionProgram(),
+		createStarfieldProgram(),
 	);
 }
 
@@ -718,6 +721,64 @@ function createColoredTextureInstancedPositionProgram(): ShaderProgram {
 		},
 	};
 }
+
+/**
+ * Creates and returns a shader program specifically for the starfield effect.
+ * It uses INSTANCED RENDERING where each instance has a unique position, color, and size.
+ * - Base vertex data defines a simple quad (the shape of one star).
+ * - Instance data provides position (vec2), color (vec4), and size (float) for each star.
+ */
+function createStarfieldProgram(): ShaderProgram {
+	const vsSource = `#version 300 es
+		// Base shape vertex (a corner of the star's quad)
+		in vec2 aVertexPosition;
+
+		// Per-instance attributes
+		in vec2 aInstancePosition; // Center position of the star (x,y)
+		in vec4 aInstanceColor;    // Color of the star (r,g,b,a)
+		in float aInstanceSize;    // Size of the star
+
+		uniform mat4 uTransformMatrix;
+
+		out vec4 vColor;
+
+		void main() {
+			// Scale the base quad vertex by the instance's size, then add the instance's position.
+			// This creates a quad of the correct size at the correct location.
+			vec2 finalPosition = (aVertexPosition * aInstanceSize) + aInstancePosition;
+
+			// We provide z=0.0 and w=1.0 for a complete 3D position vector
+			gl_Position = uTransformMatrix * vec4(finalPosition, 0.0, 1.0);
+			vColor = aInstanceColor;
+		}
+	`;
+
+	const fsSource = `#version 300 es
+		precision lowp float;
+		in vec4 vColor;
+		out vec4 fragColor;
+		void main() {
+			fragColor = vColor;
+		}
+	`;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			position:         gl.getAttribLocation(program, 'aVertexPosition'),
+			instanceposition: gl.getAttribLocation(program, 'aInstancePosition'),
+			instancecolor:    gl.getAttribLocation(program, 'aInstanceColor'),
+			instancesize:     gl.getAttribLocation(program, 'aInstanceSize'),
+		},
+		uniformLocations: {
+			transformMatrix:  gl.getUniformLocation(program, 'uTransformMatrix')!,
+		},
+	};
+}
+
+
 
 /**
  * Creates an actual program from the provided vertex shader and fragment shader source codes
