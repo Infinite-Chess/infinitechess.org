@@ -16,6 +16,7 @@ leaderboard = "Leaderboard"
 [header.settings]
 language = "Language"
 board = "Board" # Board color/theme
+board-theme = "Theme"
 board-starfield = "Starfield" # The Starfield space animation underneath void
 legalmoves = "Legal Moves" # Legal moves shape
 legalmoves-squares = "Squares"

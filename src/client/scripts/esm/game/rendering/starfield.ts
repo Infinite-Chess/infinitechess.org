@@ -145,6 +145,7 @@ document.addEventListener('starfield-toggle', (e: CustomEvent) => {
  */
 function init(): void {
 	if (isInitialized) throw Error("Starfield is already initialized.");
+	if (!preferences.getStarfieldMode()) return; // Starfield disabled
 
 	// First, calculate the initial desired number of stars.
 	desiredNumStars = getDesiredNumStars();
@@ -159,8 +160,6 @@ function init(): void {
 
 /** Closes the starfield system, resetting its state. */
 function terminate(): void {
-	if (!isInitialized) throw Error("Starfield is already terminated.");
-
 	// Clear any existing stars
 	stars.length = 0;
 	isInitialized = false;
@@ -241,7 +240,6 @@ function update(): void {
 
 	// Call for a render this frame if the starfield is visible
 	if (isStarfieldVisible()) frametracker.onVisualChange();
-	else console.log("Starfield not visible. Not rendering.");
 
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();

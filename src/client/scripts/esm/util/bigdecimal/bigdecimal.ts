@@ -1066,11 +1066,11 @@ function exp(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_B
 	let term = clone(sum);
 	let lastSum = FromBigInt(0n, mantissaBits);
 
-	const MAX_ITERATIONS = 100; // Safety break
+	const MAX_ITERATIONS = 100n; // Safety break
 
-	for (let i = 0; i < MAX_ITERATIONS; i++) {
+	for (let n = 1n; n <= MAX_ITERATIONS; n++) {
 		// console.log(`Iteration ${n}:`);
-		const n_bd = FromBigInt(BigInt(i), mantissaBits);
+		const n_bd = FromBigInt(n, mantissaBits);
 
 		// Calculate the next term: term = term * (y / n)
 		const y_div_n = divide_floating(y, n_bd, mantissaBits);
@@ -1394,7 +1394,7 @@ function printInfo(bd: BigDecimal): void {
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to Exact String: ${toExactString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to String: ${toString(bd)}`);
-	console.log(`Converted to Exact Number: ${toExactNumber(bd)}`);
+	// console.log(`Converted to Exact Number: ${toExactNumber(bd)}`);
 	console.log(`Converted to Number: ${toNumber(bd)}`);
 	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
 	console.log('----------------------------');

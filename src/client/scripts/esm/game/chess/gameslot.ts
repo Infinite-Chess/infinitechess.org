@@ -35,7 +35,6 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import selection from "./selection.js";
 import imagecache from "../../chess/rendering/imagecache.js";
 import boardutil from "../../chess/util/boardutil.js";
-import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
@@ -44,7 +43,6 @@ import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
 import premoves from "./premoves.js";
-import { animateMove } from "./graphicalchanges.js";
 import winconutil from "../../chess/util/winconutil.js";
 import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
@@ -55,6 +53,9 @@ import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
 import meshes from "../rendering/meshes.js";
+import starfield from "../rendering/starfield.js";
+import { players } from "../../chess/util/typeutil.js";
+import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
@@ -231,6 +232,9 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
 		animateMove(lastmove.changes, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
+
+	// Init the star field void animation
+	starfield.init();
 }
 
 /** The canvas will no longer render the current game */
@@ -267,6 +271,9 @@ function unloadGame(): void {
 	specialrighthighlights.onGameClose();
 	annotations.onGameUnload(); // Clear all user-drawn highlights
 	premoves.onGameUnload(); // Clear all premoves
+
+	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)
+	starfield.terminate();
 }
 
 /**

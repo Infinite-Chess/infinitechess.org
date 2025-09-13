@@ -18,9 +18,14 @@ const starfieldCheckbox = document.querySelector('.boolean-option.starfield inpu
 
 
 (function init() {
+	showCheckmarkOnSelectedOptions();
 	addThemesToThemesDropdown();
 })();
 
+
+function showCheckmarkOnSelectedOptions() {
+	starfieldCheckbox.checked = preferences.getStarfieldMode();
+}
 
 async function addThemesToThemesDropdown() {
 
@@ -46,7 +51,6 @@ async function addThemesToThemesDropdown() {
 	}
 
 	updateThemeSelectedStyling();
-
 }
 
 
