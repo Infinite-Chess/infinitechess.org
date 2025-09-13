@@ -195,7 +195,7 @@ function isViewRangeContainedInRenderRange(): boolean {
 
 	const floatingRenderRangeBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxOfRenderRange);
 	// Whether the camera view box exceeds the boundaries of the render range
-	return bounds.boxContainsBox(floatingRenderRangeBox, boundingBoxOfView);
+	return bounds.boxContainsBoxBD(floatingRenderRangeBox, boundingBoxOfView);
 }
 
 /** [PERSPECTIVE] Returns our approximate camera view range bounding box. */

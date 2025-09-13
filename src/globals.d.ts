@@ -18,6 +18,7 @@ declare global {
 		'socket-closed': CustomEvent<void>;
 		'premoves-toggle': CustomEvent<boolean>;
 		'lingering-annotations-toggle': CustomEvent<boolean>;
+		'starfield-toggle': CustomEvent<boolean>;
 		'ray-count-change': CustomEvent<number>;
 	}
 

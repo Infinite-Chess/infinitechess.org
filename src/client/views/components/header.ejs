@@ -166,7 +166,16 @@
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
                 <p class="text"><%=t('header.settings.board')%></p>
             </div>
+            <p class="theme-title"><%=t('header.settings.board-theme')%></p>
             <div class="theme-list"></div>
+            <!-- Board Boolean Options -->
+            <label class="boolean-option starfield">
+                <p class="text"><%=t('header.settings.board-starfield')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
         </div>
         <!-- Legal Move Shape -->
         <div class="legalmove-dropdown dropdown visibility-hidden">
@@ -195,36 +204,35 @@
                 <svg class="svg-selection"><use href="#svg-selection"></use></svg>
                 <p class="text"><%=t('header.settings.selection')%></p>
             </div>
-            <div class="selection-options">
-                <label class="selection-option drag">
-                    <p class="text"><%=t('header.settings.selection-drag')%></p>
-                    <div class="switch">
-                        <input type="checkbox">
-                        <span></span>
-                    </div>
-                </label>
-                <label class="selection-option premove">
-                    <p class="text"><%=t('header.settings.selection-premove')%></p>
-                    <div class="switch">
-                        <input type="checkbox">
-                        <span></span>
-                    </div>
-                </label>
-                <label class="selection-option animations">
-                    <p class="text"><%=t('header.settings.selection-animations')%></p>
-                    <div class="switch">
-                        <input type="checkbox">
-                        <span></span>
-                    </div>
-                </label>
-                <label class="selection-option lingering-annotations">
-                    <p class="text"><%=t('header.settings.selection-lingering_annotations')%></p>
-                    <div class="switch">
-                        <input type="checkbox">
-                        <span></span>
-                    </div>
-                </label>
-            </div>
+            <!-- Selection Boolean Options -->
+            <label class="boolean-option drag">
+                <p class="text"><%=t('header.settings.selection-drag')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option premove">
+                <p class="text"><%=t('header.settings.selection-premove')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option animations">
+                <p class="text"><%=t('header.settings.selection-animations')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option lingering-annotations">
+                <p class="text"><%=t('header.settings.selection-lingering_annotations')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
         </div>
         <!-- Perspective -->
         <div class="perspective-dropdown dropdown visibility-hidden">

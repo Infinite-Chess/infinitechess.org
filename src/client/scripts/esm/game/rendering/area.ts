@@ -212,7 +212,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
 		// Version that fits the entire screen on the zoom out
-		// if (!bounds.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
+		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
 		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
@@ -222,7 +222,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 			firstArea = calculateFromUnpaddedBox(currentBoardBoundingBox);
 		}
 		// Version that fits the entire screen on the zoom out
-		// if (!bounds.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {
+		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
 		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }

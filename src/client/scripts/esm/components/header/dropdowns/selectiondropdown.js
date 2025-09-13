@@ -11,10 +11,10 @@ const settingsDropdown = document.querySelector('.settings-dropdown');
 const selectionDropdown = document.querySelector('.selection-dropdown');
 const selectionDropdownTitle = document.querySelector('.selection-dropdown .dropdown-title');
 
-const dragCheckbox = document.querySelector('.selection-option.drag input');
-const premoveCheckbox = document.querySelector('.selection-option.premove input');
-const animationsCheckbox = document.querySelector('.selection-option.animations input');
-const lingeringAnnotationsCheckbox = document.querySelector('.selection-option.lingering-annotations input');
+const dragCheckbox = document.querySelector('.boolean-option.drag input');
+const premoveCheckbox = document.querySelector('.boolean-option.premove input');
+const animationsCheckbox = document.querySelector('.boolean-option.animations input');
+const lingeringAnnotationsCheckbox = document.querySelector('.boolean-option.lingering-annotations input');
 
 // Functions ---------------------------------------------------------------------------------
 

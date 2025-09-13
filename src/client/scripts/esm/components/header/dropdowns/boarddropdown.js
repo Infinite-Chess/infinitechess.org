@@ -11,15 +11,21 @@ const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-tit
 const boardDropdown = document.querySelector('.board-dropdown');
 const themeList = document.querySelector('.theme-list'); // Get the theme list div
 
+const starfieldCheckbox = document.querySelector('.boolean-option.starfield input');
 
 
 // Functions ---------------------------------------------------------------------------------
 
 
 (function init() {
+	showCheckmarkOnSelectedOptions();
 	addThemesToThemesDropdown();
 })();
 
+
+function showCheckmarkOnSelectedOptions() {
+	starfieldCheckbox.checked = preferences.getStarfieldMode();
+}
 
 async function addThemesToThemesDropdown() {
 
@@ -61,10 +67,14 @@ function close() {
 function initListeners() {
 	boardDropdownTitle.addEventListener('click', close);
 	initThemeChangeListeners();
+	// Starfield toggle
+	starfieldCheckbox.addEventListener('click', toggleStarfield);
 }
 function closeListeners() {
 	boardDropdownTitle.removeEventListener('click', close);
 	closeThemeChangeListeners();
+	// Starfield toggle
+	starfieldCheckbox.removeEventListener('click', toggleStarfield);
 }
 function initThemeChangeListeners() {
 	for (let i = 0; i < themeList.children.length; i++) {
@@ -99,6 +109,10 @@ function updateThemeSelectedStyling() {
 		if (selectTheme && theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');
 		else theme.classList.remove('selected');
 	}
+}
+
+function toggleStarfield() {
+	preferences.setStarfieldMode(starfieldCheckbox.checked);
 }
 
 export default {
