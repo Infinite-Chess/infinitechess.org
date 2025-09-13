@@ -240,7 +240,6 @@ function update(): void {
 
 	// Call for a render this frame if the starfield is visible
 	if (isStarfieldVisible()) frametracker.onVisualChange();
-	else console.log("Starfield not visible. Not rendering.");
 
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();

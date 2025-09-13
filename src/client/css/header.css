@@ -383,7 +383,7 @@ span.arrow-head-left {
 /* Language nested dropdown */
 
 .language-dropdown-item, .legalmove-option, .boolean-option {
-    display:flex;
+    display: flex;
     align-items: center;
     cursor: pointer;
 }
