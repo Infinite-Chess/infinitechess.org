@@ -149,15 +149,17 @@
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
                 <p class="text"><%=t('header.settings.language')%></p>
             </div>
-            <% for(let i = 0; i < languages.length; i++) { %>
-                <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
-                    <div class="language-names">
-                        <p class="name"><%= languages[i].name %></p>
-                        <p class="englishName"><%= languages[i].englishName %></p>
+            <div class="dropdown-scrollable">
+                <% for(let i = 0; i < languages.length; i++) { %>
+                    <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
+                        <div class="language-names">
+                            <p class="name"><%= languages[i].name %></p>
+                            <p class="englishName"><%= languages[i].englishName %></p>
+                        </div>
+                        <%- languages[i].code === language ? '<svg class="checkmark"><use href="#checkmark"></use></svg>' : '' %>
                     </div>
-                    <%- languages[i].code === language ? '<svg class="checkmark"><use href="#checkmark"></use></svg>' : '' %>
-                </div>
-            <% } %>
+                <% } %>
+            </div>
         </div>
         <!-- Board Theme -->
         <div class="board-dropdown dropdown visibility-hidden">
@@ -166,16 +168,18 @@
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
                 <p class="text"><%=t('header.settings.board')%></p>
             </div>
-            <p class="theme-title"><%=t('header.settings.board-theme')%></p>
-            <div class="theme-list"></div>
-            <!-- Board Boolean Options -->
-            <label class="boolean-option starfield">
-                <p class="text"><%=t('header.settings.board-starfield')%></p>
-                <div class="switch">
-                    <input type="checkbox">
-                    <span></span>
-                </div>
-            </label>
+            <div class="dropdown-scrollable">
+                <p class="theme-title"><%=t('header.settings.board-theme')%></p>
+                <div class="theme-list"></div>
+                <!-- Board Boolean Options -->
+                <label class="boolean-option starfield">
+                    <p class="text"><%=t('header.settings.board-starfield')%></p>
+                    <div class="switch">
+                        <input type="checkbox">
+                        <span></span>
+                    </div>
+                </label>
+            </div>
         </div>
         <!-- Legal Move Shape -->
         <div class="legalmove-dropdown dropdown visibility-hidden">

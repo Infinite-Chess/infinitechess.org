@@ -1,5 +1,9 @@
 :root {
+    /* THIS GETS OVERWRITTEN BY JAVASCRIPT in header.js that correctly sets the
+    viewport height based on how much screen space the home button bar takes up! */
+    --vh: 100vh;
     --header-height: 40px;
+    --dropdown-item-height: 43px;
     --header-link-hover-color: rgb(230, 230, 230);
     --currPage-background-color: rgb(237, 237, 237);
     --switch-on-color: rgb(97, 97, 97); /* Default value. Can be modified using javascript */
@@ -286,7 +290,7 @@ nav.compact-3 #svg-logout {
 .dropdown-title { /* The back button at the top of 2+ deep dropdown */
     display: flex;
     align-items: center;
-    height: 43px;
+    height: var(--dropdown-item-height);
     padding: 0 15px;
     cursor: pointer;
     border-bottom: 1px solid grey;
@@ -300,7 +304,7 @@ nav.compact-3 #svg-logout {
 .settings-dropdown-item {
     display: flex;
     align-items: center;
-    height: 43px;
+    height: var(--dropdown-item-height);
     padding: 0 15px 0 8px;
     cursor: pointer;
 }
@@ -404,6 +408,12 @@ span.arrow-head-left {
 
 
 /* Board theme nested dropdown */
+
+.dropdown-scrollable {
+    /* Set max height to bottom of screen */
+    max-height: calc(var(--vh) - var(--header-height) - var(--dropdown-item-height));
+    overflow-y: auto;
+}
 
 .board-dropdown {
     width: 211px;
