@@ -1394,7 +1394,7 @@ function printInfo(bd: BigDecimal): void {
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to Exact String: ${toExactString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to String: ${toString(bd)}`);
-	console.log(`Converted to Exact Number: ${toExactNumber(bd)}`);
+	// console.log(`Converted to Exact Number: ${toExactNumber(bd)}`);
 	console.log(`Converted to Number: ${toNumber(bd)}`);
 	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
 	console.log('----------------------------');
