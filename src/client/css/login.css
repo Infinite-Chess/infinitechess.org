@@ -64,7 +64,7 @@ main {
     margin-top: 12px;
 }
 
-label {
+.formfield label {
     font-size: 18px;
     vertical-align: middle;
     margin-right: 2px;
