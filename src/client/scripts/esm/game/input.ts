@@ -358,7 +358,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// Mark the LOGICAL pointer as held down, creating it if it doesn't exist.
 		if (!logicalPointers[logicalId]) logicalPointers[logicalId] = {
 			id: logicalId,
-			physical: physicalPointers[physicalId],
+			physical: physicalPointers[physicalId]!,
 			isHeld: true,
 		};
 		else {
