@@ -409,12 +409,18 @@ span.arrow-head-left {
     width: 211px;
 }
 
+p.theme-title {
+    text-align: center;
+    padding-top: 8px;
+}
+
 .theme-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, 45.5px);
     justify-content: center;
     gap: 14px; /* Combined margin from both axes (7px) */
-    padding: 16px;
+    padding: 12px 0px 16px;
+    border-bottom: 1px solid grey;
 }
 
 .theme-list img {
