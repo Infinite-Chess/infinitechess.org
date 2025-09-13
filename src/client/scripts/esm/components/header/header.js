@@ -90,3 +90,12 @@ document.querySelectorAll('.badge img').forEach((img) => {
 	});
 });
 
+
+// OVERRIDE the viewport height variable in header.css based on how
+// much screen space the home button bar takes up on mobile devices!
+// Just using 100vh is incorrect as the home button bar doesn't affect that.
+updateViewportHeight();
+window.addEventListener('resize', () => updateViewportHeight());
+function updateViewportHeight() {
+	document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`);
+}

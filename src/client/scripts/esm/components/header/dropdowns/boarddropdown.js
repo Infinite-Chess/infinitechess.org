@@ -51,7 +51,6 @@ async function addThemesToThemesDropdown() {
 	}
 
 	updateThemeSelectedStyling();
-
 }
 
 
