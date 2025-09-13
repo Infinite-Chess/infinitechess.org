@@ -38,7 +38,6 @@ import boardpos from "../rendering/boardpos.js";
 import guiclock from "../gui/guiclock.js";
 import boardeditor from "../misc/boardeditor.js";
 import guiboardeditor from "../gui/guiboardeditor.js";
-import starfield from "../rendering/starfield.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -380,9 +379,6 @@ function onFinishedLoading(): void {
 	// done with loading, there's not gonna be another lag spike..
 	loadingscreen.close();
 	gameslot.startStartingTransition(); // Play the zoom-in animation at the start of games.
-
-	// Init the star field void animation
-	starfield.init();
 }
 
 /**
@@ -422,8 +418,6 @@ function unloadGame(): void {
 	transition.terminate();
 
 	gui.prepareForOpen();
-
-	starfield.terminate();
 }
 
 
