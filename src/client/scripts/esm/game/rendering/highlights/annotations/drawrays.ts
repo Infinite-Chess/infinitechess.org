@@ -121,9 +121,8 @@ function update(rays: Ray[]): void {
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
-		const pointer = respectiveListener.getPointer(pointerId!);
-		if (pointer) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
-		if (pointer?.isHeld) { // Pointer is still holding
+		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
+		if (respectiveListener.isPointerHeld(pointerId!)) { // Pointer is still holding
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
 			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;

@@ -163,8 +163,7 @@ function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coor
 function hasPointerReleased(): boolean {
 	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
 	const respectiveListener = mouse.getRelevantListener();
-	const pointer = respectiveListener.getPointer(pointerId!);
-	return pointer === undefined || !pointer.isHeld;
+	return !respectiveListener.isPointerHeld(pointerId!);
 }
 
 /**

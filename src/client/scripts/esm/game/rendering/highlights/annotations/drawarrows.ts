@@ -106,9 +106,8 @@ function update(arrows: Arrow[]): void {
 		}
 
 		// Test if pointer released (finalize arrow)
-		const pointer = respectiveListener.getPointer(pointerId!);
-		if (pointer) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
-		if (!pointer || !pointer.isHeld) {
+		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
+		if (!respectiveListener.isPointerHeld(pointerId!)) {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
 			// else We drew a square highlight instead of an arrow
