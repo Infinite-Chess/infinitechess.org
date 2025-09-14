@@ -93,8 +93,8 @@ interface InputListener {
     // eslint-disable-next-line no-unused-vars
 	getPhysicalPointerIdOfPointer(pointerId: string): string | undefined;
 	/**
-	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
-	 * The mouse pointer's id is 'mouse'.
+	 * Returns the delta movement of the given PHYSICAL pointer id over the
+	 * past frame, if it still exists. The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPhysicalPointerDelta(physicalPointerId: string): DoubleCoords | undefined;
@@ -109,15 +109,20 @@ interface InputListener {
 	/** Returns the ids of all existing PHYSICAL pointers. */
 	getAllPhysicalPointerIds(): string[];
 	getPointerCount(): number;
+	/**
+	 * Whether the given LOGICAL pointer is currently being held down.
+	 * Which also happens to be true if the pointer still EXISTS.
+	 */
 	// eslint-disable-next-line no-unused-vars
 	isPointerHeld(pointerId: string): boolean;
+	/** Whether the given LOGICAL pointer still exists (held down). */
 	// eslint-disable-next-line no-unused-vars
 	pointerExists(pointerId: string): boolean;
 	/** Returns a list of all pointers that were pressed down this frame. */
 	getPointersDown(): string[];
 	/** Returns the number of pointers that were pressed down this frame. */
 	getPointersDownCount(): number;
-	/** Returns whether the provided pointer belongs to the provided physical pointer id. */
+	/** Returns whether the provided LOGICAL pointer belongs to the provided PHYSICAL pointer. */
     // eslint-disable-next-line no-unused-vars
 	doesPointerBelongToPhysicalPointer(logicalPointerId: string, physicalPointerId: string): boolean;
 	/** Returns how much the wheel has scrolled this frame. */
@@ -571,18 +576,17 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 				const touch: Touch = e.changedTouches[i]!;
 				const position = getRelativeMousePosition([touch.clientX, touch.clientY], element);
 
-				const touchId = getPhysicalPointerId(touch);
+				const physicalId = getPhysicalPointerId(touch);
 
 				// 1. Create the Physical Pointer
-				physicalPointers[touchId] = {
+				physicalPointers[physicalId] = {
 					isTouch: true,
-					id: touchId,
+					id: physicalId,
 					position,
 					delta: [0, 0],
 					positionHistory: [{ pos: [...position], time: Date.now() }],
 					velocity: [0, 0],
 				};
-
 				// console.log("Touch start: ", touch.identifier);
 
 				// Treat fingers as the left mouse button by default
@@ -626,10 +630,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				const touch: Touch = e.changedTouches[i]!;
 				// console.log("Touch end/cancel: ", touch.identifier);
-				const touchId = getPhysicalPointerId(touch);
-				// Destroy both pointers since it's a finger
-				delete logicalPointers[touchId];
-				delete physicalPointers[touchId];
+				const physicalId = getPhysicalPointerId(touch);
+				// Destroy both pointers since it's a touch
+				delete logicalPointers[physicalId];
+				delete physicalPointers[physicalId];
 
 				// Treat fingers as the left mouse button by default
 				const button = treatLeftAsRight ? Mouse.RIGHT : Mouse.LEFT;

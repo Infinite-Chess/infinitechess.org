@@ -78,7 +78,7 @@ function update(arrows: Arrow[]): void {
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
-			if (!pointerWorld) return; // Maybe we're looking into sky?
+			if (!pointerWorld) return stopDrawing(); // Maybe we're looking into sky?
 
 			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
@@ -130,7 +130,7 @@ function stopDrawing(): void {
  * @returns An object containing the results, such as whether a change was made, and what arrow was deleted if any.
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
-	if (!pointerWorld) return { changed: false, }; // Probably stopped drawing while looking into sky?
+	if (!pointerWorld) return { changed: false }; // Probably stopped drawing while looking into sky?
 
 	// console.log("Adding drawn arrow");
 	let drag_end: Coords;

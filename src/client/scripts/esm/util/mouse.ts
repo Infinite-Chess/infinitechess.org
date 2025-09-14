@@ -265,14 +265,15 @@ function getRelevantListener(): InputListener {
 }
 
 /**
- * Returns all the existing pointers' world coordinates,
- * depending on the relevant listener.
+ * Returns all the existing PHYSICAL pointers' world
+ * coordinates, depending on the relevant listener.
  */
 function getAllPointerWorlds(): DoubleCoords[] {
 	const allPhysicalPointerIds = getRelevantListener().getAllPhysicalPointerIds();
 	const pointerWorlds: DoubleCoords[] = [];
 	for (const id of allPhysicalPointerIds) {
 		const world = getPhysicalPointerWorld(id);
+		// Only push them if their world coordinates exist (won't if looking into sky)
 		if (world) pointerWorlds.push(world);
 	}
 	return pointerWorlds;

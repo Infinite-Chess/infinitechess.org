@@ -159,8 +159,8 @@ function update(): void {
 	// console.log("Hover square:", hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
-
 	if (!hoverSquare) return; // Looking into sky
+	
 	// Only exit during a transition after updating hover square
 	if (transition.areTransitioning()) return;
 
