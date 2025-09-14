@@ -97,7 +97,8 @@ function update(highlights: Square[]): void {
 	// If the pointer simulated a right click, add a highlight!
 	if (mouse.isMouseClicked(Mouse.RIGHT)) {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
-		const pointerWorld: DoubleCoords = mouse.getMouseWorld(Mouse.RIGHT)!;
+		const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT);
+		if (!pointerWorld) return; // Maybe we're looking into sky?
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 		const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);

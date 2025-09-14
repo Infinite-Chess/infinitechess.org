@@ -119,11 +119,12 @@ function update(rays: Ray[]): void {
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
-		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
+		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (respectiveListener.isPointerHeld(pointerId!)) { // Pointer is still holding
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
-			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;
+			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT);
+			if (!mouseCoords) return; // Maybe we're looking into sky?
 			if (!coordutil.areCoordsEqual(mouseCoords, drag_start!)) {
 				const squares = annotations.getSquares();
 				const index = squares.findIndex(coords => coordutil.areCoordsEqual(coords, drag_start!));
@@ -188,13 +189,16 @@ function getLines(rays: Ray[], color: Color): Line[] {
  * @returns An object containing the results, such as whether the ray was added, and what rays were deleted if any.
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
-	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld!);
+	if (!pointerWorld) return { added: false }; // Probably stopped drawing while looking into sky?
+
+	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
-	const mouseTileCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
+	const mouseTileCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT);
+	if (!mouseTileCoords) return { added: false }; // Could have let go while looking into sky?
 	const vector_unnormalized = coordutil.subtractBDCoords(mouseTileCoords, bd.FromCoords(drag_start!));
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);

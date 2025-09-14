@@ -148,8 +148,8 @@ function updateDragLocation(): void {
 		return;
 	} else {
 		// Normal drag location
-		worldLocation = mouse.getPointerWorld(pointerId!)!;
-		hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
+		worldLocation = mouse.getPointerWorld(pointerId!);
+		hoveredCoords = worldLocation ? space.convertWorldSpaceToCoords_Rounded(worldLocation): undefined;
 	}
 }
 

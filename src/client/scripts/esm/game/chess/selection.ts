@@ -67,7 +67,7 @@ let isOpponentPiece = false;
 let isPremove = false;
 
 /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
-let hoverSquare: CoordsSpecial; // Current square mouse is hovering over
+let hoverSquare: CoordsSpecial | undefined; // Current square mouse is hovering over
 /** Whether the {@link hoverSquare} is legal to move the selected piece to. */
 let hoverSquareLegal: boolean = false;
 
@@ -155,11 +155,12 @@ function update(): void {
 		return;
 	}
 
-	hoverSquare = mouse.getTileMouseOver_Integer()!; // Update the tile the mouse is hovering over, if any.
+	hoverSquare = mouse.getTileMouseOver_Integer(); // Update the tile the mouse is hovering over, if any.
 	// console.log("Hover square:", hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 
+	if (!hoverSquare) return; // Looking into sky
 	// Only exit during a transition after updating hover square
 	if (transition.areTransitioning()) return;
 
@@ -191,6 +192,10 @@ function update(): void {
  */
 function updateHoverSquareLegal(gamefile: FullGame): void {
 	if (!pieceSelected) return;
+	if (!hoverSquare) {
+		hoverSquareLegal = false;
+		return;
+	} 
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
@@ -215,7 +220,7 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	// We have clicked, test if we clicked a piece...
 
-	const pieceClicked = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hoverSquare);
+	const pieceClicked = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hoverSquare!);
 	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
 	// Is the type selectable by us? (not necessarily moveable)
@@ -267,9 +272,9 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
 
-	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
+	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare!, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
-	else if (hoverSquareLegal) moveGamefilePiece(gamefile, mesh, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+	else if (hoverSquareLegal) moveGamefilePiece(gamefile, mesh, hoverSquare!); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
@@ -280,7 +285,7 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-	moveGamefilePiece(gamefile, mesh, hoverSquare);
+	moveGamefilePiece(gamefile, mesh, hoverSquare!);
 	
 	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
@@ -508,7 +513,7 @@ function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece(): void {
-	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
+	if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (typeutil.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 

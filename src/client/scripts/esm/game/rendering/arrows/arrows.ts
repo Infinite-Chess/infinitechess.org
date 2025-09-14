@@ -751,7 +751,8 @@ function teleportToPieceIfClicked(piece: ArrowPiece, pieceWorld: DoubleCoords, v
 	else if ((listener_overlay.isMouseDown(Mouse.RIGHT) || listener_overlay.isMouseClicked(Mouse.RIGHT)) && listener_overlay.isMouseTouch(Mouse.RIGHT)) processMouseClick(Mouse.RIGHT, listener_overlay);
 
 	function processMouseClick(button: MouseButton, listener: typeof mouse | InputListener): void {
-		const clickWorld = mouse.getMouseWorld(button)!;
+		const clickWorld = mouse.getMouseWorld(button);
+		if (!clickWorld) return; // Maybe we're looking into sky?
 		const chebyshevDist = vectors.chebyshevDistanceDoubles(pieceWorld, clickWorld);
 		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
 			if (listener.isMouseClicked(button)) {

@@ -77,7 +77,8 @@ function update(arrows: Arrow[]): void {
 		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) {
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
-			pointerWorld = mouse.getPointerWorld(pointerId!)!;
+			pointerWorld = mouse.getPointerWorld(pointerId!);
+			if (!pointerWorld) return; // Maybe we're looking into sky?
 
 			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
@@ -106,7 +107,7 @@ function update(arrows: Arrow[]): void {
 		}
 
 		// Test if pointer released (finalize arrow)
-		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
+		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (!respectiveListener.isPointerHeld(pointerId!)) {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
@@ -129,11 +130,13 @@ function stopDrawing(): void {
  * @returns An object containing the results, such as whether a change was made, and what arrow was deleted if any.
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
+	if (!pointerWorld) return { changed: false, }; // Probably stopped drawing while looking into sky?
+
 	// console.log("Adding drawn arrow");
 	let drag_end: Coords;
 
-	const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld!);
-	const snapCoords = snapping.getWorldSnapCoords(pointerWorld!);
+	const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
+	const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
 
 	if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
 		if (closestEntityToWorld) {
@@ -145,7 +148,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 		}
 	} else {
 		// No snap
-		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld!);
+		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 	}
 
 	// Skip if end equals start (no arrow drawn)

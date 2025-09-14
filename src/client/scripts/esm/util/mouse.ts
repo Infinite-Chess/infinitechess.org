@@ -84,7 +84,9 @@ function getPhysicalPointerWorld(physicalPointerId: string): DoubleCoords | unde
 	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
 }
 
-function getCrossHairWorld(): DoubleCoords {
+function getCrossHairWorld(): DoubleCoords | undefined {
+	if (perspective.isLookingUp()) return;
+
 	const rotX = (Math.PI / 180) * perspective.getRotX();
 	const rotZ = (Math.PI / 180) * perspective.getRotZ();
 	

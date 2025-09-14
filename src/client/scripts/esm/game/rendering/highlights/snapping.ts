@@ -141,7 +141,8 @@ function teleportToEntitiesIfClicked(): void {
 
 	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only teleport if clicked
 
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT)!;
+	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+	if (!mouseWorld) return; // Maybe looking into sky?
 
 	const allEntitiesHovered = getAllEntitiesWorldHovers(mouseWorld);
 	
@@ -349,7 +350,8 @@ function teleportToSnapIfClicked(): void {
 	if (!isSnappingEnabledThisFrame()) return;
 	
 	if (mouse.isMouseClicked(Mouse.LEFT) || mouse.isMouseDown(Mouse.LEFT)) {
-		const world = mouse.getMouseWorld(Mouse.LEFT)!;
+		const world = mouse.getMouseWorld(Mouse.LEFT);
+		if (!world) return; // Maybe looking into sky?
 		const snap = snapPointerWorld(world);
 		if (snap === undefined) return; // No snap to teleport to
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
