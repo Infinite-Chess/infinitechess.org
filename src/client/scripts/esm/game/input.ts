@@ -59,9 +59,12 @@ interface InputListener {
 	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
     // eslint-disable-next-line no-unused-vars
 	isMouseTouch(button: MouseButton): boolean;
-	/** Returns the id of the pointer that most recently performed an action on the specified mouse button. */
+	/** Returns the id of the LOGICAL pointer that most recently performed an action on the specified mouse button. */
 	// eslint-disable-next-line no-unused-vars
 	getMouseId(button: MouseButton): string | undefined;
+	/** Returns the id of the PHYSICAL pointer that most recently performed an action on the specified mouse button. */
+	// eslint-disable-next-line no-unused-vars
+	getMousePhysicalId(button: MouseButton): string | undefined;
 	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
 	// eslint-disable-next-line no-unused-vars
 	getMousePosition(button: MouseButton): DoubleCoords | undefined;
@@ -77,12 +80,15 @@ interface InputListener {
 	 */
 	// eslint-disable-next-line no-unused-vars
 	setTreatLeftasRight(value: boolean): void,
-	/**
-	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
-	 * The mouse pointer's id is 'mouse'.
-	 */
+	/** Returns the position of the given LOGICAL pointer id, if it still exists. */
     // eslint-disable-next-line no-unused-vars
     getPointerPos(pointerId?: string): DoubleCoords | undefined;
+	/** Returns the position of the given PHYSICAL pointer id, if it still exists. */
+    // eslint-disable-next-line no-unused-vars
+    getPhysicalPointerPos(pointerId?: string): DoubleCoords | undefined;
+	/** Returns the PHYSICAL pointer id this pointer is attached to. */
+    // eslint-disable-next-line no-unused-vars
+	getPhysicalPointerIdOfPointer(pointerId: string): string | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
@@ -95,10 +101,10 @@ interface InputListener {
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): DoubleCoords | undefined;
-	/** Returns the ids of all existing pointers. */
+	/** Returns the ids of all existing LOGICAL pointers. */
 	getAllPointerIds(): string[];
-	/** Returns all existing pointers. */
-	getAllPointers(): LogicalPointer[];
+	/** Returns the ids of all existing PHYSICAL pointers. */
+	getAllPhysicalPointerIds(): string[];
 	getPointerCount(): number;
 	// eslint-disable-next-line no-unused-vars
 	isPointerHeld(pointerId: string): boolean;
@@ -108,6 +114,9 @@ interface InputListener {
 	getPointersDown(): string[];
 	/** Returns the number of pointers that were pressed down this frame. */
 	getPointersDownCount(): number;
+	/** Returns whether the provided pointer belongs to the provided physical pointer id. */
+    // eslint-disable-next-line no-unused-vars
+	doesPointerBelongToPhysicalPointer(logicalPointerId: string, physicalPointerId: string): boolean;
 	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
 	/** Whether the provided keyboard key was pressed down this frame. */
@@ -150,11 +159,17 @@ const MOUSE_POS_HISTORY_WINDOW_MILLIS = 80;
 
 
 
-/** A physical input source (mouse or a finger). Tracks position and movement. */
+/**
+ * Physical Pointers are assigned one trackable POSITION.
+ * But they may be linked to multiple Logical Pointers if
+ * it supports multiple mouse buttons (touches do not).
+ */
 type PhysicalPointer = {
-	isTouch: boolean;
-	/** 'mouse' or a touch identifier. */
+	/** The unique id of the pointer. */
 	id: string;
+	/** Whether the Physical Pointer is derived from a touch (finger). */
+	isTouch: boolean;
+	/** The position of the pointer relative to the top-left corner of the listener's element. */
 	position: DoubleCoords;
 	/** How many pixels the pointer has moved since last frame. */
 	delta: DoubleCoords;
@@ -164,14 +179,14 @@ type PhysicalPointer = {
 };
 
 /**
- * A logical action pointer. This is what the user of the script interacts with.
- * If a logical pointer EXISTS, it is considered "held down".
- * As soon as it is lifted, it is deleted.
+ * Logical Pointers represent one BUTTON ACTION continuously held down.
+ * Multiple Logical Pointers may be attached to one Physical Pointer.
+ * These are deleted as soon as the button is lifted up.
  */
 type LogicalPointer = {
-	/** 'mouse_Left', 'mouse_Right', 'mouse_Middle', or a touch identifier */
+	/** The unique id of the pointer. May be identical to its Physical Pointer's id if it's a touch pointer. */
 	id: string;
-	/** The PhysicalPointer it's linked to */
+	/** The Physical Pointer it's linked to. */
 	physical: PhysicalPointer;
 };
 
@@ -182,6 +197,8 @@ type LogicalPointer = {
 interface ClickInfo {
 	/** The id of the LOGICAL pointer that most recently pressed this mouse button. */
 	pointerId?: string;
+	/** The id of the PHYSICAL pointer tied to the logical pointer that most recently pressed this mouse button. */
+	physicalId?: string;
 	/** Whether this mouse button was pushed down THIS FRAME */
 	isDown: boolean;
 	/** Whether this mouse button is currently being held down. */
@@ -241,7 +258,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	/** Tracks the virtual pointers, one for each button action (left/right/middle). */
 	const logicalPointers: Record<string, LogicalPointer> = {};
 
-	/** A list of all pointer id's that were pressed down this frame. */
+	/** A list of all LOGICAL pointer id's that were pressed down this frame. */
 	const pointersDown: string[] = [];
 
 	/** 
@@ -338,10 +355,11 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// console.log("Mouse down: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
-		const physicalId = getPhysicalPointerId(e);
 		// Generate a unique logical ID for the action.
 		const logicalId = getLogicalPointerId(e, targetButton);
+		const physicalId = getPhysicalPointerId(e);
 		targetButtonInfo.pointerId = logicalId;
+		targetButtonInfo.physicalId = physicalId;
 		targetButtonInfo.isDown = true;
 		targetButtonInfo.isHeld = true;
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
@@ -349,7 +367,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
 		// Push them down anyway no matter which type of click.
 		// So that you can still pinch the board when fingers act as right clicks.
-		pointersDown.push(targetButtonInfo.pointerId!);
+		pointersDown.push(logicalId);
 
 		// Create LOGICAL pointer, which automatically means it's held down.
 		if (!logicalPointers[logicalId]) logicalPointers[logicalId] = {
@@ -398,8 +416,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// console.log("Mouse up: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
-		const pointerId = getPhysicalPointerId(e);
-		targetButtonInfo.pointerId = pointerId;
+		const logicalId = getLogicalPointerId(e, targetButton);
+		const physicalId = getPhysicalPointerId(e);
+		targetButtonInfo.pointerId = logicalId;
+		targetButtonInfo.physicalId = physicalId;
 		targetButtonInfo.isDown = false;
 		targetButtonInfo.isHeld = false;
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
@@ -410,7 +430,6 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		const index = pointersDown.indexOf(targetButtonInfo.pointerId!);
 		if (index !== -1) pointersDown.splice(index, 1);
 		
-		const logicalId = getLogicalPointerId(e, targetButton);
 		// Mark the LOGICAL pointer as no longer held.
 		// We have to delete it so that it doesn't inflate the pointer count.
 		delete logicalPointers[logicalId];
@@ -447,16 +466,13 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	 * 
 	 * If the pointer moves too much, don't simulate a click.
 	 */
-	function updateDeltaSinceDownForPointer(physicalId: string, delta: DoubleCoords): void {
+	function updateDeltaSinceDownForPointer(physicalPointerId: string, delta: DoubleCoords): void {
 		// Update the delta (deltaSinceDown) for simulated mouse clicks
 		Object.values(Mouse).forEach((targetButton) => {
 			const targetButtonInfo = clickInfo[targetButton];
-			// Only update the click info if the mouse is the pointer that most recently performed that click action.
-			if (!targetButtonInfo.pointerId) return;
-			// Find the logical pointer associated with this button action
-			const logicalPointer = logicalPointers[targetButtonInfo.pointerId];
-			if (!logicalPointer) return; // logicalPointer doesn't exist
-			if (logicalPointer.physical.id !== physicalId) return; // logicalPointer's physical pointer's id doesn't match
+
+			// Only update the click info's delta since down if the physical pointer that most recently performed that click action matches
+			if (targetButtonInfo.physicalId !== physicalPointerId) return;
 			
 			// Update the delta since down
 			targetButtonInfo.deltaSinceDown[0] += Math.abs(delta[0]);
@@ -496,23 +512,23 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// Mouse position tracking
 		addListener(element, 'mousemove', ((e: MouseEvent): void => {
 			atleastOneInputThisFrame = true;
-			const targetPointer = physicalPointers['mouse'];
-			if (!targetPointer) return; // Sometimes the 'mousemove' event is fired from touch events, even though the mouse pointer does not exist.
-			targetPointer.position = getRelativeMousePosition([e.clientX, e.clientY], element);
+			const physicalPointer = physicalPointers['mouse'];
+			if (!physicalPointer) return; // Sometimes the 'mousemove' event is fired from touch events, even though the mouse pointer does not exist.
+			physicalPointer.position = getRelativeMousePosition([e.clientX, e.clientY], element);
 			// console.log(`Updated pointer ${targetPointer.id} position:`, targetPointer.position);
 			// Update delta (Note: e.movementX/Y are relative to the document, it should be fine)
 			// Add to the current delta, in case this event is triggered multiple times in a frame.
-			targetPointer.delta[0] += e.movementX;
-			targetPointer.delta[1] += e.movementY;
+			physicalPointer.delta[0] += e.movementX;
+			physicalPointer.delta[1] += e.movementY;
 
 			// Update the delta (deltaSinceDown) for simulated mouse clicks
-			updateDeltaSinceDownForPointer(targetPointer.id, targetPointer.delta);
+			updateDeltaSinceDownForPointer(physicalPointer.id, physicalPointer.delta);
 			
 			// console.log("Mouse delta: ", targetPointer.delta);
 			// Update velocity
 			const now = Date.now();
-			targetPointer.positionHistory.push({ pos: [...targetPointer.position], time: now }); // Deep copy the mouse position to avoid modifying the original
-			recalcPointerVel(targetPointer, now);
+			physicalPointer.positionHistory.push({ pos: [...physicalPointer.position], time: now }); // Deep copy the mouse position to avoid modifying the original
+			recalcPointerVel(physicalPointer, now);
 			// console.log("Mouse relative position: ", targetPointer.position);
 		}) as EventListener);
 
@@ -593,7 +609,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 				physicalPointer.position = relativeTouchPos;
 
 				// Update the delta (deltaSinceDown) for simulated mouse clicks
-				updateDeltaSinceDownForPointer(touchId, physicalPointer.delta);
+				updateDeltaSinceDownForPointer(physicalPointer.id, physicalPointer.delta);
 
 				// Update velocity
 				const now = Date.now();
@@ -704,6 +720,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			return logicalPointer.physical.isTouch;
 		},
 		getMouseId: (button: MouseButton): string | undefined => clickInfo[button].pointerId,
+		getMousePhysicalId: (button: MouseButton): string | undefined => clickInfo[button].physicalId,
 		getMousePosition: (button: MouseButton): DoubleCoords | undefined => {
 			const logicalId = clickInfo[button].pointerId;
 			if (!logicalId) return undefined;
@@ -723,16 +740,23 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		isMouseClicked: (button: MouseButton): boolean => clickInfo[button].clicked,
 		isMouseDoubleClickDragged: (button: MouseButton): boolean => clickInfo[button].doubleClickDrag,
 		setTreatLeftasRight: (value: boolean): boolean => treatLeftAsRight = value,
-		getPointerPos: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.position ?? undefined,
-		getPointerDelta: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.delta ?? undefined,
-		getPointerVel: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.velocity ?? undefined,
+		getPointerPos: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.position,
+		getPhysicalPointerPos: (pointerId: string): DoubleCoords | undefined => physicalPointers[pointerId]?.position,
+		getPhysicalPointerIdOfPointer: (pointerId: string): string | undefined => logicalPointers[pointerId]?.physical.id,
+		getPointerDelta: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.delta,
+		getPointerVel: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.velocity,
 		getAllPointerIds: (): string[] => Object.keys(logicalPointers),
-		getAllPointers: (): LogicalPointer[] => Object.values(logicalPointers),
+		getAllPhysicalPointerIds: (): string[] => Object.keys(physicalPointers),
 		getPointerCount: (): number => Object.keys(logicalPointers).length,
 		isPointerHeld: (pointerId: string): boolean => logicalPointers[pointerId] !== undefined,
 		pointerExists: (pointerId: string): boolean => logicalPointers[pointerId] !== undefined,
 		getPointersDown: (): string[] => pointersDown,
 		getPointersDownCount: (): number => pointersDown.length,
+		doesPointerBelongToPhysicalPointer: (logicalPointerId: string, physicalPointerId: string): boolean => {
+			const logicalPointer = logicalPointers[logicalPointerId];
+			if (!logicalPointer) return false;
+			return logicalPointer.physical === physicalPointers[physicalPointerId];
+		},
 		getWheelDelta: (): number => wheelDelta,
 		isKeyDown: (keyCode: string): boolean => keyDowns.includes(keyCode),
 		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
@@ -742,15 +766,17 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 				target.removeEventListener(eventType, handler);
 			});
 			console.log("Closed event listeners of Input Listener");
-		}
+		},
 	};
 }
 
+/** Generates the unique PHYSICAL pointer id for the mouse or touch event. */
 function getPhysicalPointerId(e: MouseEvent | Touch): string {
 	const mouseEvent = e instanceof MouseEvent; // CAN'T USE instanceof Touch because it's not defined in Safari!
 	return mouseEvent ? 'mouse' : e.identifier.toString();
 }
 
+/** Generates the unique pointer id for the mouse or touch event and button action. */
 function getLogicalPointerId(e: MouseEvent | Touch, button: MouseButton): string {
 	const mouseEvent = e instanceof MouseEvent; // CAN'T USE instanceof Touch because it's not defined in Safari!
 	return mouseEvent ? `mouse_${MouseNames[button]}` : e.identifier.toString();

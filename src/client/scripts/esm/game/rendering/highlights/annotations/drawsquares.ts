@@ -54,8 +54,8 @@ const hover_opacity = 0.5;
 /** Returns a list of all drawn-square highlights being hovered over by any pointer. */
 function getAllSquaresHovered(highlights: Square[]): Coords[] {
 	const allHovered: Square[] = [];
-	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
-		const pointerWorld: DoubleCoords = mouse.getPointerWorld(pointerId)!;
+
+	for (const pointerWorld of mouse.getAllPointerWorlds()) {
 		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
 		hovered.forEach(coords => {
 			// Prevent duplicates

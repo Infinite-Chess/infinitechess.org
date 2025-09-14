@@ -115,9 +115,9 @@ function checkIfBoardDropped(): void {
 
 	const now = Date.now();
 
-	const allPointers = listener_overlay.getAllPointers();
+	const allLogicalPointers: string[] = listener_overlay.getAllPointerIds();
 
-	const pointer1Released = allPointers.every(p => p.id !== pointer1Id);
+	const pointer1Released = !allLogicalPointers.includes(pointer1Id!);
 
 	if (pointer2Id === undefined) { // 1 finger drag
 		if (pointer1Released) { // Finger has been released
@@ -125,7 +125,7 @@ function checkIfBoardDropped(): void {
 			cancelBoardDrag();
 		} // else still one finger holding the board
 	} else { // 2 finger drag
-		const pointer2Released = allPointers.every(p => p.id !== pointer2Id);
+		const pointer2Released = !allLogicalPointers.includes(pointer2Id);
 	
 		if (!pointer1Released && !pointer2Released) return; // Both fingers are still holding the board
 

@@ -26,16 +26,16 @@ import type { BDCoords, Coords, DoubleCoords } from "../chess/util/coordutil.js"
  * 
  * ONLY WORKS IF WE LEFT-CLICK-DRAG off the screen. NOT if we right-click-drag!
  */
-function getPointerPosition_Offscreen(pointerId: string): DoubleCoords | undefined {
-	if (pointerId === 'mouse') {
+function getPhysicalPointerPosition_Offscreen(physicalPointerId: string): DoubleCoords | undefined {
+	if (physicalPointerId === 'mouse') {
 		// The mouse on the document is sensitive to 'mousemove' events even when the mouse is outside the element/window.
 		// This allows us to continue dragging the board/piece even when the mouse is outside the window.
-		const mousePos = listener_document.getPointerPos(pointerId!);
+		const mousePos = listener_document.getPhysicalPointerPos(physicalPointerId);
 		if (!mousePos) return undefined;
 		// Make the coordinates relative to the element instead of the document.
 		return input2.getRelativeMousePosition(mousePos, listener_overlay.element);
 	} else {
-		return listener_overlay.getPointerPos(pointerId!);
+		return listener_overlay.getPhysicalPointerPos(physicalPointerId);
 	}
 }
 
@@ -45,9 +45,9 @@ function getPointerPosition_Offscreen(pointerId: string): DoubleCoords | undefin
  */
 function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
-		const mouseId = listener_overlay.getMouseId(button);
-		if (!mouseId) return undefined;
-		let mousePos = getPointerPosition_Offscreen(mouseId);
+		const physicalPointerId = listener_overlay.getMousePhysicalId(button);
+		if (!physicalPointerId) return undefined;
+		let mousePos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 		if (!mousePos) {
 			// Pointer likely doesn't exist anymore (touch event lifted).
 			// This will return its last known position.
@@ -59,12 +59,26 @@ function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefin
 }
 
 /**
- * Returns the world space coordinates of the mouse pointer,
+ * Returns the world space coordinates of the given pointer,
  * or the crosshair if in perspective mode.
  */
 function getPointerWorld(pointerId: string): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
-		const pointerPos = getPointerPosition_Offscreen(pointerId);
+		const physicalPointerId = listener_overlay.getPhysicalPointerIdOfPointer(pointerId);
+		if (!physicalPointerId) return undefined;
+		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
+		if (!pointerPos) return undefined;
+		return convertMousePositionToWorldSpace(pointerPos, listener_overlay.element);
+	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
+}
+
+/**
+ * Returns the world space coordinates of a PHYSICAL pointer,
+ * or the crosshair if in perspective mode.
+ */
+function getPhysicalPointerWorld(physicalPointerId: string): DoubleCoords | undefined {
+	if (!perspective.getEnabled()) {
+		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 		if (!pointerPos) return undefined;
 		return convertMousePositionToWorldSpace(pointerPos, listener_overlay.element);
 	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
@@ -121,23 +135,28 @@ function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | un
 	return space.convertWorldSpaceToCoords_Rounded(mouseWorld);
 }
 
+/** Returns the floating point tile the given LOGICAL pointer is over. */
 function getTilePointerOver_Float(pointerId: string): BDCoords | undefined {
+	const physicalPointerId = listener_overlay.getPhysicalPointerIdOfPointer(pointerId);
+	if (!physicalPointerId) return;
 	// const pointerCoords = listener_overlay.getPointerPos(pointerId)!;
-	const pointerCoords = getPointerPosition_Offscreen(pointerId);
+	const pointerCoords = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 	if (!pointerCoords) return undefined;
 
 	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_overlay.element);
 	return space.convertWorldSpaceToCoords(pointerWorld);
 }
 
-function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
-	// const pointerCoords = listener_overlay.getPointerPos(pointerId)!;
-	const pointerCoords = getPointerPosition_Offscreen(pointerId);
-	if (!pointerCoords) return undefined;
+// function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
+// 	const physicalPointerId = listener_overlay.getPhysicalPointerIdOfPointer(pointerId);
+// 	if (!physicalPointerId) return;
+// 	// const pointerCoords = listener_overlay.getPointerPos(pointerId)!;
+// 	const pointerCoords = getPhysicalPointerPosition_Offscreen(physicalPointerId);
+// 	if (!pointerCoords) return undefined;
 
-	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_overlay.element);
-	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
-}
+// 	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_overlay.element);
+// 	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+// }
 
 /**
  * Wrapper for reading the correct listener for whether the mouse button is down,
@@ -234,19 +253,20 @@ function getRelevantListener(): InputListener {
  * depending on the relevant listener.
  */
 function getAllPointerWorlds(): DoubleCoords[] {
-	const allPointersIds = getRelevantListener().getAllPointerIds();
-	return allPointersIds.map(id => getPointerWorld(id)!);
+	const allPointersIds = getRelevantListener().getAllPhysicalPointerIds();
+	return allPointersIds.map(id => getPhysicalPointerWorld(id)!);
 }
 
 
 export default {
 	getMouseWorld,
 	getPointerWorld,
+	getPhysicalPointerWorld,
 	convertMousePositionToWorldSpace,
 	getTileMouseOver_Float,
 	getTileMouseOver_Integer,
 	getTilePointerOver_Float,
-	getTilePointerOver_Integer,
+	// getTilePointerOver_Integer,
 	isMouseDown,
 	isMouseHeld,
 	isMouseClicked,

@@ -34,8 +34,6 @@ import { listener_overlay } from "../../../chess/game.js";
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
 
-const ZERO_COORDS = bd.FromCoords([0n, 0n]);
-
 
 /** The simplest form of a ray. */
 type BaseRay = { start: Coords, vector: Vec2 };
@@ -254,7 +252,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Coords {
 	// Since the targetVector can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
-	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
 	const normalizedVector = vectors.normalizeVectorBD(targetVector);
 
 	// Now we can use small numbers

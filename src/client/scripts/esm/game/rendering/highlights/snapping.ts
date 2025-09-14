@@ -440,11 +440,12 @@ function getAnnoteSnapPoints(trimDecimals: boolean): BDCoords[] {
 function render(): void {
 	if (!isSnappingEnabledThisFrame()) return;
 
-	const allPointerIds = mouse.getRelevantListener().getAllPointerIds();
+	const relevantListener = mouse.getRelevantListener();
+	const allPhysicalPointerIds = relevantListener.getAllPhysicalPointerIds();
 	const allSnaps: Snap[] = [];
-	for (const pointerId of allPointerIds) {
-		if (drawrays.areDrawing() && drawrays.getPointerId() === pointerId) continue; // Don't snap the pointer that is currently drawing a ray
-		const pointerWorld = mouse.getPointerWorld(pointerId)!;
+	for (const physicalPointerId of allPhysicalPointerIds) {
+		if (drawrays.areDrawing() && relevantListener.doesPointerBelongToPhysicalPointer(drawrays.getPointerId(), physicalPointerId)) continue; // Don't snap the physical pointer that is currently drawing a ray
+		const pointerWorld = mouse.getPhysicalPointerWorld(physicalPointerId)!;
 		if (getAllEntitiesWorldHovers(pointerWorld).length > 0) continue; // Don't snap if this pointer is hovering over an entity
 		const snap = snapPointerWorld(pointerWorld);
 		if (snap !== undefined) allSnaps.push(snap);
