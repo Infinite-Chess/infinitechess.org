@@ -7,7 +7,7 @@
 
 
 import { listener_document, listener_overlay } from "../game/chess/game.js";
-import input2, { InputListener, Mouse, MouseButton } from "../game/input.js";
+import input, { InputListener, Mouse, MouseButton } from "../game/input.js";
 import space from "../game/misc/space.js";
 import camera from "../game/rendering/camera.js";
 import perspective from "../game/rendering/perspective.js";
@@ -33,7 +33,7 @@ function getPhysicalPointerPosition_Offscreen(physicalPointerId: string): Double
 		const mousePos = listener_document.getPhysicalPointerPos(physicalPointerId);
 		if (!mousePos) return undefined;
 		// Make the coordinates relative to the element instead of the document.
-		return input2.getRelativeMousePosition(mousePos, listener_overlay.element);
+		return input.getRelativeMousePosition(mousePos, listener_overlay.element);
 	} else {
 		return listener_overlay.getPhysicalPointerPos(physicalPointerId);
 	}
