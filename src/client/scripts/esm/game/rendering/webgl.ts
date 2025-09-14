@@ -154,12 +154,15 @@ function executeWithInverseBlending(func: Function): void {
 /**
  * Renders content using a flexible stencil mask.
  * Handles all stencil buffer state changes internally, ensuring a clean state before and after.
- * @param {Function} drawInclusionMaskFunc - A function that renders the INCLUSION ZONE MASK. The main scene will appear inside this zone.
- * @param {Function} drawExclusionMaskFunc - A function that renders the EXCLUSION ZONE MASK. The main scene will NOT appear inside this zone.
- * @param {Function} drawContentFunc - A function that renders the main scene content. Will be masked.
- * @param priority - If both inclusion and exclusion masks are provided, this determines which mask takes priority in overlapping areas, otherwise it has no effect.
+ * @param drawInclusionMaskFunc - A function that renders the INCLUSION ZONE MASK. The main scene will appear inside this zone.
+ * @param drawExclusionMaskFunc - A function that renders the EXCLUSION ZONE MASK. The main scene will NOT appear inside this zone.
+ * @param drawContentFunc - A function that renders the main scene content. Will be masked.
+ * @param intersectionMode - Determines the behavior for intersections of the two mask types:
+ * 							'and' => Main scene will only be drawn where the inclusion mask and inversion of the exclusion mask intersect.
+ * 							'or' => Main scene will be drawn inside the inclusion mask and inversion of the exclusion mask.
+ * 							Has no effect if only one mask type is provided.
  */
-function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExclusionMaskFunc: Function | undefined, drawContentFunc: Function, priority: 'exclusion' | 'inclusion'): void {
+function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExclusionMaskFunc: Function | undefined, drawContentFunc: Function, intersectionMode: 'and' | 'or'): void {
 	if (!drawExclusionMaskFunc && !drawInclusionMaskFunc) throw Error("No mask functions provided.");
 
 	// Enable the stencil test.
@@ -176,7 +179,7 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 
 		// Draw the Masks
 
-		if (priority === 'exclusion') {
+		if (intersectionMode === 'and') {
 			drawInclusion();
 			drawExclusion();
 		} else {
@@ -210,7 +213,7 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 		if (drawExclusionMaskFunc && drawInclusionMaskFunc) {
 			// Case: COMPOSITE MASK (both exclusion and inclusion masks provided)
 			// The buffer now has 0s, 1s, and 2s.
-			if (priority === 'inclusion') {
+			if (intersectionMode === 'or') {
 				// We want to draw where it's 0 or 2 (not 1).
 				gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
 			} else {
@@ -227,7 +230,6 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 			gl.stencilFunc(gl.EQUAL, 2, 0xFF);
 		} else throw Error("Unexpected!");
 		
-
 		drawContentFunc();
 
 	} finally {

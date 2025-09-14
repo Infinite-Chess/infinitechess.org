@@ -49,7 +49,7 @@ const dragMinSizeVirtualPixels = {
 	mouse: 50, // Only applicable in 2D mode, not perspective
 	/** Mobile/touchscreen mode */
 	touch: 50
-};
+} as const;
 
 /**
  * The width of the box/rank/file outline used to emphasize the hovered square.
@@ -61,7 +61,7 @@ const outlineWidth = {
 	// make them a little less noticeable/distracting.
 	/** Mobile/touchscreen mode */
 	touch: 0.065
-};
+} as const;
 
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
 const touchscreenOffset: number = 1.6; // Default: 2
@@ -74,7 +74,7 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 	z: 0.6,
 	/** The color of the shadow of the dragged piece. */
 	shadowColor: [0.1, 0.1, 0.1, 0.5]
-};
+} as const;
 
 
 /** If true, `pieceSelected` is currently being held. */
@@ -148,8 +148,8 @@ function updateDragLocation(): void {
 		return;
 	} else {
 		// Normal drag location
-		worldLocation = mouse.getPointerWorld(pointerId!)!;
-		hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
+		worldLocation = mouse.getPointerWorld(pointerId!);
+		hoveredCoords = worldLocation ? space.convertWorldSpaceToCoords_Rounded(worldLocation) : undefined;
 	}
 }
 
@@ -163,8 +163,7 @@ function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coor
 function hasPointerReleased(): boolean {
 	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
 	const respectiveListener = mouse.getRelevantListener();
-	const pointer = respectiveListener.getPointer(pointerId!);
-	return pointer === undefined || !pointer.isHeld;
+	return !respectiveListener.isPointerHeld(pointerId!);
 }
 
 /**
@@ -240,7 +239,7 @@ function genPieceModel(): BufferModel | undefined {
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreenUsed = listener_overlay.isMouseTouch(Mouse.LEFT);
+	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
@@ -279,7 +278,7 @@ function genPieceModel(): BufferModel | undefined {
  */
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
-	const pointerIsTouch = listener_overlay.isMouseTouch(Mouse.LEFT);
+	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;

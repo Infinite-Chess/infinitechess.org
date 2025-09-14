@@ -22,6 +22,7 @@ import premoves from '../chess/premoves.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import boardtiles from '../rendering/boardtiles.js';
 import transition from '../rendering/transition.js';
+import space from '../misc/space.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 
 
@@ -159,8 +160,8 @@ function updateElement_Coords(): void {
 	// element_CoordsY.textContent = Math.floor(boardPos[1] + squareCenter)
 
 	// Tile mouse over
-	element_CoordsX.value = String(mouseTile ? mouseTile[0] : bd.floor(bd.add(boardPos[0], squareCenter)));
-	element_CoordsY.value = String(mouseTile ? mouseTile[1] : bd.floor(bd.add(boardPos[1], squareCenter)));
+	element_CoordsX.value = String(mouseTile ? mouseTile[0] : space.roundCoord(boardPos[0]));
+	element_CoordsY.value = String(mouseTile ? mouseTile[1] : space.roundCoord(boardPos[1]));
 }
 
 /**

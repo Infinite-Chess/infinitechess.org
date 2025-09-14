@@ -185,7 +185,7 @@ function render(): void {
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
 		() => border.drawPlayableRegionMask(boardsim), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
-		'inclusion'
+		'or' // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
 	);
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
@@ -193,7 +193,7 @@ function render(): void {
 		() => border.drawPlayableRegionMask(boardsim), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE
-		'exclusion'
+		'and' // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
 	);
 
 	if (camera.getDebug() && !perspective.getEnabled()) renderOutlineofScreenBox();

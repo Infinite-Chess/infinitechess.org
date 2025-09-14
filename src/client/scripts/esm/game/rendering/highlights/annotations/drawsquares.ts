@@ -54,8 +54,8 @@ const hover_opacity = 0.5;
 /** Returns a list of all drawn-square highlights being hovered over by any pointer. */
 function getAllSquaresHovered(highlights: Square[]): Coords[] {
 	const allHovered: Square[] = [];
-	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
-		const pointerWorld: DoubleCoords = mouse.getPointerWorld(pointerId)!;
+
+	for (const pointerWorld of mouse.getAllPointerWorlds()) {
 		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
 		hovered.forEach(coords => {
 			// Prevent duplicates
@@ -97,7 +97,8 @@ function update(highlights: Square[]): void {
 	// If the pointer simulated a right click, add a highlight!
 	if (mouse.isMouseClicked(Mouse.RIGHT)) {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
-		const pointerWorld: DoubleCoords = mouse.getMouseWorld(Mouse.RIGHT)!;
+		const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT);
+		if (!pointerWorld) return; // Maybe we're looking into sky?
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 		const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);

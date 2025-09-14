@@ -141,7 +141,8 @@ function teleportToEntitiesIfClicked(): void {
 
 	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only teleport if clicked
 
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT)!;
+	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+	if (!mouseWorld) return; // Maybe looking into sky?
 
 	const allEntitiesHovered = getAllEntitiesWorldHovers(mouseWorld);
 	
@@ -349,7 +350,8 @@ function teleportToSnapIfClicked(): void {
 	if (!isSnappingEnabledThisFrame()) return;
 	
 	if (mouse.isMouseClicked(Mouse.LEFT) || mouse.isMouseDown(Mouse.LEFT)) {
-		const world = mouse.getMouseWorld(Mouse.LEFT)!;
+		const world = mouse.getMouseWorld(Mouse.LEFT);
+		if (!world) return; // Maybe looking into sky?
 		const snap = snapPointerWorld(world);
 		if (snap === undefined) return; // No snap to teleport to
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
@@ -440,11 +442,13 @@ function getAnnoteSnapPoints(trimDecimals: boolean): BDCoords[] {
 function render(): void {
 	if (!isSnappingEnabledThisFrame()) return;
 
-	const allPointerIds = mouse.getRelevantListener().getAllPointerIds();
+	const relevantListener = mouse.getRelevantListener();
+	const allPhysicalPointerIds = relevantListener.getAllPhysicalPointerIds();
 	const allSnaps: Snap[] = [];
-	for (const pointerId of allPointerIds) {
-		if (drawrays.areDrawing() && drawrays.getPointerId() === pointerId) continue; // Don't snap the pointer that is currently drawing a ray
-		const pointerWorld = mouse.getPointerWorld(pointerId)!;
+	for (const physicalPointerId of allPhysicalPointerIds) {
+		if (drawrays.areDrawing() && relevantListener.doesPointerBelongToPhysicalPointer(drawrays.getPointerId(), physicalPointerId)) continue; // Don't snap the physical pointer that is currently drawing a ray
+		const pointerWorld = mouse.getPhysicalPointerWorld(physicalPointerId);
+		if (!pointerWorld) continue; // This pointer may be in the sky?
 		if (getAllEntitiesWorldHovers(pointerWorld).length > 0) continue; // Don't snap if this pointer is hovering over an entity
 		const snap = snapPointerWorld(pointerWorld);
 		if (snap !== undefined) allSnaps.push(snap);

@@ -34,8 +34,6 @@ import { listener_overlay } from "../../../chess/game.js";
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
 
-const ZERO_COORDS = bd.FromCoords([0n, 0n]);
-
 
 /** The simplest form of a ray. */
 type BaseRay = { start: Coords, vector: Vec2 };
@@ -92,7 +90,8 @@ function update(rays: Ray[]): void {
 		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) { // Double click drag this frame
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
-			pointerWorld = mouse.getPointerWorld(pointerId!)!;
+			pointerWorld = mouse.getPointerWorld(pointerId!);
+			if (!pointerWorld) return stopDrawing(); // Could have double click dragged while looking into sky?
 
 			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
@@ -121,12 +120,12 @@ function update(rays: Ray[]): void {
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
-		const pointer = respectiveListener.getPointer(pointerId!);
-		if (pointer) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
-		if (pointer?.isHeld) { // Pointer is still holding
+		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
+		if (respectiveListener.isPointerHeld(pointerId!)) { // Pointer is still holding
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
-			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;
+			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT);
+			if (!mouseCoords) return; // Maybe we're looking into sky?
 			if (!coordutil.areCoordsEqual(mouseCoords, drag_start!)) {
 				const squares = annotations.getSquares();
 				const index = squares.findIndex(coords => coordutil.areCoordsEqual(coords, drag_start!));
@@ -191,13 +190,16 @@ function getLines(rays: Ray[], color: Color): Line[] {
  * @returns An object containing the results, such as whether the ray was added, and what rays were deleted if any.
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
-	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld!);
+	if (!pointerWorld) return { added: false }; // Probably stopped drawing while looking into sky?
+
+	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
-	const mouseTileCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
+	const mouseTileCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT);
+	if (!mouseTileCoords) return { added: false }; // Could have let go while looking into sky?
 	const vector_unnormalized = coordutil.subtractBDCoords(mouseTileCoords, bd.FromCoords(drag_start!));
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
@@ -255,7 +257,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Coords {
 	// Since the targetVector can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
-	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
 	const normalizedVector = vectors.normalizeVectorBD(targetVector);
 
 	// Now we can use small numbers
