@@ -94,7 +94,7 @@ interface InputListener {
 	 * The mouse pointer's id is 'mouse'.
 	 */
     // eslint-disable-next-line no-unused-vars
-	getPointerDelta(pointerId: string): DoubleCoords | undefined;
+	getPhysicalPointerDelta(physicalPointerId: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
@@ -743,7 +743,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		getPointerPos: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.position,
 		getPhysicalPointerPos: (pointerId: string): DoubleCoords | undefined => physicalPointers[pointerId]?.position,
 		getPhysicalPointerIdOfPointer: (pointerId: string): string | undefined => logicalPointers[pointerId]?.physical.id,
-		getPointerDelta: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.delta,
+		getPhysicalPointerDelta: (physicalPointerId: string): DoubleCoords | undefined => physicalPointers[physicalPointerId]?.delta,
 		getPointerVel: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.velocity,
 		getAllPointerIds: (): string[] => Object.keys(logicalPointers),
 		getAllPhysicalPointerIds: (): string[] => Object.keys(physicalPointers),
