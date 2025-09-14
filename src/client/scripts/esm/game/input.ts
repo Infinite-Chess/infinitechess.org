@@ -376,13 +376,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		pointersDown.push(logicalId);
 
 		// Create LOGICAL pointer, which automatically means it's held down.
-		if (!logicalPointers[logicalId]) logicalPointers[logicalId] = {
+		logicalPointers[logicalId] = {
 			id: logicalId,
 			physical: physicalPointers[physicalId]!,
 		};
-		else {
-			console.log("Why does the logical pointer already exist??");
-		}
 
 		// Update click ------------
 		const previousTimeDown = targetButtonInfo.timeDownMillisHistory[targetButtonInfo.timeDownMillisHistory.length - 1];
