@@ -579,12 +579,6 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 					velocity: [0, 0],
 				};
 
-				// 2. Create the corresponding Logical Pointer
-				logicalPointers[touchId] = {
-					id: touchId,
-					physical: physicalPointers[touchId],
-				};
-
 				// console.log("Touch start: ", touch.identifier);
 
 				// Treat fingers as the left mouse button by default
