@@ -259,8 +259,13 @@ function getRelevantListener(): InputListener {
  * depending on the relevant listener.
  */
 function getAllPointerWorlds(): DoubleCoords[] {
-	const allPointersIds = getRelevantListener().getAllPhysicalPointerIds();
-	return allPointersIds.map(id => getPhysicalPointerWorld(id)!);
+	const allPhysicalPointerIds = getRelevantListener().getAllPhysicalPointerIds();
+	const pointerWorlds: DoubleCoords[] = [];
+	for (const id of allPhysicalPointerIds) {
+		const world = getPhysicalPointerWorld(id);
+		if (world) pointerWorlds.push(world);
+	}
+	return pointerWorlds;
 }
 
 

@@ -89,8 +89,10 @@ function update(rays: Ray[]): void {
 	if (!drag_start) { // Not currently drawing a ray
 		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) { // Double click drag this frame
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerWorld = mouse.getPointerWorld(pointerId!);
+			if (!pointerWorld) return; // Could have double click dragged while looking into sky?
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
-			pointerWorld = mouse.getPointerWorld(pointerId!)!;
+			
 
 			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
