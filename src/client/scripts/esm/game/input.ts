@@ -713,11 +713,9 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		cancelMouseClick: (button: MouseButton): number => clickInfo[button].timeDownMillisHistory.length = 0,
 		isMouseHeld: (button: MouseButton): boolean => clickInfo[button].isHeld ?? false,
 		isMouseTouch: (button: MouseButton): boolean => {
-			const logicalId = clickInfo[button].pointerId;
-			if (!logicalId) return false;
-			const logicalPointer = logicalPointers[logicalId];
-			if (!logicalPointer) return true; // If it's gone, it was a touch that has lifted.
-			return logicalPointer.physical.isTouch;
+			const physicalId = clickInfo[button].physicalId;
+			if (!physicalId) return false; // No first initial mouse action yet for that mouse button.
+			return physicalPointers[physicalId]?.isTouch ?? false;
 		},
 		getMouseId: (button: MouseButton): string | undefined => clickInfo[button].pointerId,
 		getMousePhysicalId: (button: MouseButton): string | undefined => clickInfo[button].physicalId,
