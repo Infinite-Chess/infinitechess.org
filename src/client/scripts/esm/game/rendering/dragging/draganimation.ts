@@ -239,7 +239,7 @@ function genPieceModel(): BufferModel | undefined {
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreenUsed = mouse.isMouseTouch(Mouse.LEFT);
+	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
@@ -278,7 +278,7 @@ function genPieceModel(): BufferModel | undefined {
  */
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
-	const pointerIsTouch = mouse.isMouseTouch(Mouse.LEFT);
+	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;

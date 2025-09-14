@@ -59,6 +59,9 @@ interface InputListener {
 	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
     // eslint-disable-next-line no-unused-vars
 	isMouseTouch(button: MouseButton): boolean;
+	/** Returns true if the given pointer is a touch (not mouse). */
+    // eslint-disable-next-line no-unused-vars
+	isPointerTouch(pointerId: string): boolean;
 	/** Returns the id of the LOGICAL pointer that most recently performed an action on the specified mouse button. */
 	// eslint-disable-next-line no-unused-vars
 	getMouseId(button: MouseButton): string | undefined;
@@ -711,6 +714,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (!physicalId) return false; // No first initial mouse action yet for that mouse button.
 			return physicalPointers[physicalId]?.isTouch ?? false;
 		},
+		isPointerTouch: (pointerId: string): boolean => logicalPointers[pointerId]?.physical.isTouch ?? false,
 		getMouseId: (button: MouseButton): string | undefined => clickInfo[button].pointerId,
 		getMousePhysicalId: (button: MouseButton): string | undefined => clickInfo[button].physicalId,
 		getMousePosition: (button: MouseButton): DoubleCoords | undefined => {
