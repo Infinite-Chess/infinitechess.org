@@ -49,7 +49,7 @@ const dragMinSizeVirtualPixels = {
 	mouse: 50, // Only applicable in 2D mode, not perspective
 	/** Mobile/touchscreen mode */
 	touch: 50
-};
+} as const;
 
 /**
  * The width of the box/rank/file outline used to emphasize the hovered square.
@@ -61,7 +61,7 @@ const outlineWidth = {
 	// make them a little less noticeable/distracting.
 	/** Mobile/touchscreen mode */
 	touch: 0.065
-};
+} as const;
 
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
 const touchscreenOffset: number = 1.6; // Default: 2
@@ -74,7 +74,7 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 	z: 0.6,
 	/** The color of the shadow of the dragged piece. */
 	shadowColor: [0.1, 0.1, 0.1, 0.5]
-};
+} as const;
 
 
 /** If true, `pieceSelected` is currently being held. */
