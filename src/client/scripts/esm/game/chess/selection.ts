@@ -513,7 +513,7 @@ function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece(): void {
-	if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
+	if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (typeutil.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 

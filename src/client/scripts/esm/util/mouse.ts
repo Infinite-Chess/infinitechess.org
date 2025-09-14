@@ -201,6 +201,16 @@ function isMouseDoubleClickDragged(button: MouseButton): boolean {
 }
 
 /**
+ * Wrapper for reading the correct listener for if the most recent
+ * pointer for a specific mouse button action is a touch (not mouse),
+ * depending on whether we're in perspective mode or not.
+ */
+function isMouseTouch(button: MouseButton): boolean {
+	if (perspective.isMouseLocked()) return listener_document.isMouseTouch(button);
+	else return listener_overlay.isMouseTouch(button);
+}
+
+/**
  * Wrapper for reading the correct listener for the mouse wheel delta,
  * depending on whether the mouse is locked or not (perspective mode).
  */
@@ -282,6 +292,7 @@ export default {
 	isMouseHeld,
 	isMouseClicked,
 	isMouseDoubleClickDragged,
+	isMouseTouch,
 	getWheelDelta,
 	claimMouseDown,
 	claimMouseClick,
