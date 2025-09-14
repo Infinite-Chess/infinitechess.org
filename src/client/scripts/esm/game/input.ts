@@ -196,6 +196,8 @@ type LogicalPointer = {
 	id: string;
 	/** The Physical Pointer it's linked to. */
 	physical: PhysicalPointer;
+	/** What button action this is for. */
+	button: MouseButton;
 };
 
 /**
@@ -384,6 +386,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		logicalPointers[logicalId] = {
 			id: logicalId,
 			physical: physicalPointers[physicalId]!,
+			button: targetButton,
 		};
 
 		// Update click ------------
