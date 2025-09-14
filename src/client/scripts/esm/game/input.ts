@@ -202,6 +202,8 @@ interface ClickInfo {
 	pointerId?: string;
 	/** The id of the PHYSICAL pointer tied to the logical pointer that most recently pressed this mouse button. */
 	physicalId?: string;
+	/** Whether the last action for this Button was from a touch. */
+	isTouch: boolean;
 	/** Whether this mouse button was pushed down THIS FRAME */
 	isDown: boolean;
 	/** Whether this mouse button is currently being held down. */
@@ -287,9 +289,9 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	let atleastOneInputThisFrame = false;
 
 	const clickInfo: Record<MouseButton, ClickInfo> = {
-		[Mouse.LEFT]: { isDown: false, isHeld: false, clicked: false, doubleClickDrag: false, timeDownMillisHistory: [], deltaSinceDown: [0, 0] },
-		[Mouse.MIDDLE]: { isDown: false, isHeld: false, clicked: false, doubleClickDrag: false, timeDownMillisHistory: [], deltaSinceDown: [0, 0] },
-		[Mouse.RIGHT]: { isDown: false, isHeld: false, clicked: false, doubleClickDrag: false, timeDownMillisHistory: [], deltaSinceDown: [0, 0] },
+		[Mouse.LEFT]: { isTouch: false, isDown: false, isHeld: false, clicked: false, doubleClickDrag: false, timeDownMillisHistory: [], deltaSinceDown: [0, 0] },
+		[Mouse.MIDDLE]: { isTouch: false, isDown: false, isHeld: false, clicked: false, doubleClickDrag: false, timeDownMillisHistory: [], deltaSinceDown: [0, 0] },
+		[Mouse.RIGHT]: { isTouch: false, isDown: false, isHeld: false, clicked: false, doubleClickDrag: false, timeDownMillisHistory: [], deltaSinceDown: [0, 0] },
 	};
 	
 	const eventHandlers: Record<string, { target: EventTarget; handler: EventListener }> = {};
@@ -363,6 +365,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		const physicalId = getPhysicalPointerId(e);
 		targetButtonInfo.pointerId = logicalId;
 		targetButtonInfo.physicalId = physicalId;
+		targetButtonInfo.isTouch = !(e instanceof MouseEvent); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.isDown = true;
 		targetButtonInfo.isHeld = true;
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
@@ -423,6 +426,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		const physicalId = getPhysicalPointerId(e);
 		targetButtonInfo.pointerId = logicalId;
 		targetButtonInfo.physicalId = physicalId;
+		targetButtonInfo.isTouch = !(e instanceof MouseEvent); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.isDown = false;
 		targetButtonInfo.isHeld = false;
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
@@ -709,11 +713,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		},
 		cancelMouseClick: (button: MouseButton): number => clickInfo[button].timeDownMillisHistory.length = 0,
 		isMouseHeld: (button: MouseButton): boolean => clickInfo[button].isHeld ?? false,
-		isMouseTouch: (button: MouseButton): boolean => {
-			const physicalId = clickInfo[button].physicalId;
-			if (!physicalId) return false; // No first initial mouse action yet for that mouse button.
-			return physicalPointers[physicalId]?.isTouch ?? false;
-		},
+		isMouseTouch: (button: MouseButton): boolean => clickInfo[button].isTouch,
 		isPointerTouch: (pointerId: string): boolean => logicalPointers[pointerId]?.physical.isTouch ?? false,
 		getMouseId: (button: MouseButton): string | undefined => clickInfo[button].pointerId,
 		getMousePhysicalId: (button: MouseButton): string | undefined => clickInfo[button].physicalId,
