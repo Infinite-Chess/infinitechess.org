@@ -75,7 +75,7 @@ function update(arrows: Arrow[]): void {
 
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
-		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && boarddrag.getBoardDraggablePointerCount() !== 2) {
+		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
@@ -99,14 +99,6 @@ function update(arrows: Arrow[]): void {
 		}
 	} else { // Currently drawing an arrow
 
-		// Prevent accidental arrow drawing when trying to zoom.
-		if (boarddrag.getBoardDraggablePointersDownCount() > 0 && boarddrag.getBoardDraggablePointerCount() === 2) {
-			// Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
-			listener_overlay.unclaimPointerDown(pointerId!);
-			stopDrawing();
-			return;
-		}
-
 		// Test if pointer released (finalize arrow)
 		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (!respectiveListener.isPointerHeld(pointerId!)) {
@@ -122,6 +114,12 @@ function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
 	pointerWorld = undefined;
+}
+
+/** If the given pointer is currently being used to draw an arrow, this stops using it. */
+function stealPointer(pointerIdToSteal: string): void {
+	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the arrow, don't stop using it.
+	stopDrawing();
 }
 
 /**
@@ -355,5 +353,6 @@ function getDataArrow(
 export default {
 	update,
 	stopDrawing,
+	stealPointer,
 	render,
 };

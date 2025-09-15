@@ -41,9 +41,6 @@ interface InputListener {
 	/** Removes the pointer down so that other scripts don't also use it. */
 	// eslint-disable-next-line no-unused-vars
 	claimPointerDown(pointerId: string): void;
-	/** Adds the pointer down so that other scripts may use it again. */
-	// eslint-disable-next-line no-unused-vars
-	unclaimPointerDown(pointerId: string): void;
 	/** Removes the simulated mouse click so that other scripts don't also use it. */
 	// eslint-disable-next-line no-unused-vars
 	claimMouseClick(button: MouseButton): void;
@@ -710,11 +707,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (index === -1) throw Error("Can't claim pointer down. Already claimed, or is not down.");
 			// console.error("Claiming pointer down2: ", pointerId);
 			pointersDown.splice(index, 1);
-		},
-		unclaimPointerDown: (pointerId: string): void => {
-			const index = pointersDown.indexOf(pointerId);
-			if (index !== -1) throw Error("Can't unclaim pointer, it was never claimed.");
-			pointersDown.push(pointerId);
+			// Also claim the mouse down if this pointer is the most recent pointer that performed that action.
+			Object.values(clickInfo).forEach((buttonInfo) => {
+				if (buttonInfo.pointerId === pointerId) buttonInfo.isDown = false;
+			});
 		},
 		claimMouseClick: (button: MouseButton): void => {
 			clickInfo[button].clicked = false;

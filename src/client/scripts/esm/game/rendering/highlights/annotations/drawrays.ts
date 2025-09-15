@@ -88,7 +88,7 @@ function update(rays: Ray[]): void {
 	const respectiveListener = mouse.getRelevantListener();
 
 	if (!drag_start) { // Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && boarddrag.getBoardDraggablePointerCount() !== 2) { // Double click drag this frame
+		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
@@ -110,14 +110,6 @@ function update(rays: Ray[]): void {
 			// console.log("Ray drag start:", drag_start);
 		}
 	} else { // Currently drawing a ray
-		
-		// Prevent accidental ray drawing when trying to zoom.
-		if (boarddrag.getBoardDraggablePointersDownCount() > 0 && boarddrag.getBoardDraggablePointerCount() === 2) {
-			// Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
-			listener_overlay.unclaimPointerDown(pointerId!);
-			stopDrawing();
-			return;
-		}
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
@@ -155,6 +147,12 @@ function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
 	pointerWorld = undefined;
+}
+
+/** If the given pointer is currently being used to draw a ray, this stops using it. */
+function stealPointer(pointerIdToSteal: string): void {
+	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the ray, don't stop using it.
+	stopDrawing();
 }
 
 /** Returns all the Rays converted to Lines, which are rendered easily. */
@@ -451,6 +449,7 @@ export default {
 	getPresetRays,
 	update,
 	getPointerId,
+	stealPointer,
 	stopDrawing,
 	getLines,
 	collapseRays,

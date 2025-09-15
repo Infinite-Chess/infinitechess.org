@@ -14,6 +14,9 @@ import vectors from "../../util/math/vectors.js";
 import coordutil from "../../chess/util/coordutil.js";
 import perspective from "./perspective.js";
 import transition from "./transition.js";
+import drawarrows from "./highlights/annotations/drawarrows.js";
+import drawrays from "./highlights/annotations/drawrays.js";
+import selection from "../chess/selection.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../chess/game.js";
 import { Mouse } from "../input.js";
@@ -101,63 +104,108 @@ function getBoardDraggablePointers(): string[] {
 	])];
 }
 
-/**
- * Returns the number of pointers that started pressing down this frame
- * that are capable of dragging the board. That is:
- * A. Left mouse button pointers
- * B. Touch pointers
- */
-function getBoardDraggablePointersDownCount(): number {
-	return getBoardDraggablePointersDown().length;
-}
 
 /**
- * Returns the number of currently existing pointers that are capable of dragging the board. That is:
- * A. Left mouse button pointers
- * B. Touch pointers
+ * Checks if the board needs to PINCHED (DOUBLE-GRABBED) by any new pointers presssed down this frame.
+ * Will NOT initiate a single-pointer grab!
  */
-function getBoardDraggablePointerCount(): number {
-	return getBoardDraggablePointers().length;
-}
-
-
-
-/** Checks if the board needs to be grabbed by any new pointers pressed down this frame. */
-function checkIfBoardGrabbed(): void {
+function checkIfBoardPinched(): void {
 	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen()) return;
+
+	if (pointer2Id !== undefined) return; // Already pinched
+
+	// All existing pointers that are either left mouse button, or a touch. May have been previously claimed (steal).
+	const allExistingPointers = getBoardDraggablePointers();
+
+	// This allows us to still start a pinch if we:
+	// A. Are dragging a piece or drawing an annote with one finger.
+	// B. Then put down a second finger to pinch the board.
+	// Desired behavior: Terminate the drag/annote, and start pinching the board.
+	if (!boardIsGrabbed && allExistingPointers.length < 2) return; // Not grabbed, and not enough pointers to pinch.
+
+	// We know we have enough pointers to pinch the board!
+	// If one of the pointers happens to already be in use, steal it!
+
+	// All pointers pressed down this frame that are either left mouse button, or a touch
+	const allPointersDown = getBoardDraggablePointersDown();
+
+	// For every existing pointer... (STEAL)
+	for (const pointerId of allExistingPointers) {
+		if (allPointersDown.includes(pointerId)) continue; // This pointer will be handled in the next loop, where it will also be claimed.
+		// This pointer may have been claimed elsewhere, STEAL it.
+		if (!boardIsGrabbed) {
+			initSinglePointerDrag(pointerId);
+			stealPointer(pointerId);
+		}
+	}
+	// For every new pointer touched down / created this frame...
+	for (const pointerId of allPointersDown) {
+		if (!boardIsGrabbed) {
+			listener_overlay.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
+			initSinglePointerDrag(pointerId);
+		} else if (pointer2Id === undefined) {
+			listener_overlay.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
+			initDoublePointerDrag(pointerId);
+		}
+	}
+}
+
+/** Checks if the board needs to SINGLE-GRABBED by any new pointers pressed down this frame. */
+function checkIfBoardSingleGrabbed(): void {
+	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen()) return;
+
+	if (boardIsGrabbed) return; // Already grabbed
 
 	// All pointers down that are either left mouse button, or a touch
 	const allPointersDown = getBoardDraggablePointersDown();
+	if (allPointersDown.length === 0) return; // No pointers down
 
-	// For every new pointer touched down / created this frame...
-	for (const pointerId of allPointersDown) {
-		listener_overlay.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
+	listener_overlay.claimPointerDown(allPointersDown[0]!); // Remove the pointer down so other scripts don't use it
+	initSinglePointerDrag(allPointersDown[0]!); // If multiple pointers down, just use the first one.
+}
 
-		if (!boardIsGrabbed) { // First pointer
-			// console.log('Board grabbed');
-			pointer1Id = pointerId;
-			pointer1BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer1Id!)!;
-			// console.log('pointer1BoardPosGrabbed', pointer1BoardPosGrabbed);
-			boardIsGrabbed = true;
-			boardpos.setPanVel([0,0]); // Erase all momentum
-		} else if (pointer2Id === undefined) { // Second pointer
-			// console.log('Board pinched');
+/**
+ * If the given pointer has been claimed by something else (piece dragging, arrow/ray drawing, etc),
+ * this will STEAL it from them, so that it can be used for board pinching, which takes priority.
+ * Essentially this just tells them to stop using it.
+ */
+function stealPointer(pointerId: string): void {
+	selection.stealPointer(pointerId);
+	drawarrows.stealPointer(pointerId);
+	drawrays.stealPointer(pointerId);
+}
 
-			pointer2Id = pointerId;
-			pointer2BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer2Id!)!;
-		
-			// Pixel distance
-			const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
-			const p2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
-			fingerPixelDist_WhenBoardPinched = vectors.euclideanDistanceDoubles(p1Pos, p2Pos);
-			if (fingerPixelDist_WhenBoardPinched === 0) throw Error('Finger pixel dist when pinching is 0');
-		
-			// Scale
-			scale_WhenBoardPinched = boardpos.getBoardScale();
-		} // else Already 2 fingers down, do nothing on a third
+/** Grabs board with the given pointer. */
+function initSinglePointerDrag(pointerId: string): void {
 
-		addCurrentPositionToHistory();
-	}
+	// console.log('Board grabbed with pointer', pointerId);
+	
+	pointer1Id = pointerId;
+	pointer1BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer1Id!)!;
+	// console.log('pointer1BoardPosGrabbed', pointer1BoardPosGrabbed);
+	boardIsGrabbed = true;
+	boardpos.setPanVel([0,0]); // Erase all momentum
+
+	addCurrentPositionToHistory();
+}
+
+/** Pinches board with given 2nd pointer. */
+function initDoublePointerDrag(pointerId: string): void {
+	if (pointer1Id === pointerId) throw Error("Cannot init board pinch with the same pointer.");
+
+	// console.log('Board pinched with pointer', pointerId);
+
+	pointer2Id = pointerId;
+	pointer2BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer2Id!)!;
+
+	// Pixel distance
+	const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
+	const p2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
+	fingerPixelDist_WhenBoardPinched = vectors.euclideanDistanceDoubles(p1Pos, p2Pos);
+	if (fingerPixelDist_WhenBoardPinched === 0) throw Error('Finger pixel dist when pinching is 0');
+
+	// Scale
+	scale_WhenBoardPinched = boardpos.getBoardScale();
 }
 
 /**
@@ -351,9 +399,8 @@ function removeOldPositions(now: number): void {
 
 export default {
 	isBoardDragging,
-	getBoardDraggablePointersDownCount,
-	getBoardDraggablePointerCount,
-	checkIfBoardGrabbed,
+	checkIfBoardPinched,
+	checkIfBoardSingleGrabbed,
 	dragBoard,
 	checkIfBoardDropped,
 	cancelBoardDrag,

@@ -115,7 +115,11 @@ function update(): void {
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
 
-	// NEEDS TO BE BEFORE selection.update() and boarddrag.checkIfBoardGrabbed()
+	// Check if the board needs to be pinched (will not single-pointer grab)
+	// This needs to be high up, as pinching the board has priority over the pointer than a lot of things.
+	boarddrag.checkIfBoardPinched();
+
+	// NEEDS TO BE BEFORE selection.update() and boarddrag.checkIfBoardSingleGrabbed()
 	// because the drawing tools of the boad editor might take precedence and claim the left mouse click
 	boardeditor.update();
 
@@ -126,7 +130,7 @@ function update(): void {
 	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
-	// NEEDS TO BE BEFORE boarddrag.checkIfBoardGrabbed() because that shift arrows needs to overwrite this.
+	// NEEDS TO BE BEFORE boarddrag.checkIfBoardSingleGrabbed() because that shift arrows needs to overwrite this.
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
@@ -145,9 +149,11 @@ function update(): void {
 
 	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
 	testIfEmptyBoardRegionClicked(gamefile, mesh); // If we clicked an empty region of the board, collapse annotations and cancel premoves.
+	// Now we can check if the board needs to be single-pointer grabbed,
+	// as other scripts may have claimed the pointer first.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
-	boarddrag.checkIfBoardGrabbed();
+	boarddrag.checkIfBoardSingleGrabbed();
 
 	gameloader.update(); // Updates whatever game is currently loaded.
 
