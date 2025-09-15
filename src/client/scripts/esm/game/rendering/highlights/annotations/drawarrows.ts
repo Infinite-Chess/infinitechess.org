@@ -12,6 +12,7 @@ import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../util/math/vectors.js";
 import boardpos from "../../boardpos.js";
+import boarddrag from "../../boarddrag.js";
 import { createModel } from "../../buffermodel.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
@@ -74,7 +75,7 @@ function update(arrows: Arrow[]): void {
 
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
-		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) {
+		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && boarddrag.getBoardDraggablePointerCount() !== 2) {
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
@@ -99,7 +100,7 @@ function update(arrows: Arrow[]): void {
 	} else { // Currently drawing an arrow
 
 		// Prevent accidental arrow drawing when trying to zoom.
-		if (listener_overlay.getPointersDownCount() > 0 && listener_overlay.getPointerCount() === 2) {
+		if (boarddrag.getBoardDraggablePointersDownCount() > 0 && boarddrag.getBoardDraggablePointerCount() === 2) {
 			// Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
 			listener_overlay.unclaimPointerDown(pointerId!);
 			stopDrawing();

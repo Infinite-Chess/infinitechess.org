@@ -35,7 +35,7 @@ interface InputListener {
 	/** Whether the given mouse button experienced a click-down this frame. */
     // eslint-disable-next-line no-unused-vars
     isMouseDown(button: MouseButton): boolean;
-	/** Removes the mouse down so that other scripts don't also use it. */
+	/** Removes the mouse down so that other scripts don't also use it. Also removes the pointer down. */
 	// eslint-disable-next-line no-unused-vars
 	claimMouseDown(button: MouseButton): void;
 	/** Removes the pointer down so that other scripts don't also use it. */
@@ -104,11 +104,13 @@ interface InputListener {
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): DoubleCoords | undefined;
-	/** Returns the ids of all existing LOGICAL pointers. */
-	getAllPointerIds(): string[];
+	/** Returns the ids of all existing LOGICAL pointers for the given button action. */
+    // eslint-disable-next-line no-unused-vars
+	getAllPointers(button: MouseButton): string[];
+	/** Returns the ids of all existing touch LOGICAL pointers, regardless of what button action they were for. */
+	getAllTouchPointers(): string[];
 	/** Returns the ids of all existing PHYSICAL pointers. */
-	getAllPhysicalPointerIds(): string[];
-	getPointerCount(): number;
+	getAllPhysicalPointers(): string[];
 	/**
 	 * Whether the given LOGICAL pointer is currently being held down.
 	 * Which also happens to be true if the pointer still EXISTS.
@@ -118,8 +120,11 @@ interface InputListener {
 	/** Whether the given LOGICAL pointer still exists (held down). */
 	// eslint-disable-next-line no-unused-vars
 	pointerExists(pointerId: string): boolean;
-	/** Returns a list of all pointers that were pressed down this frame. */
-	getPointersDown(): string[];
+	/** Returns a list of all LOGICAL pointers that were pressed down this frame for the given button action. */
+	// eslint-disable-next-line no-unused-vars
+	getPointersDown(button: MouseButton): string[];
+	/** Returns a list of all touch LOGICAL pointers that were pressed down this frame, regardless of what button action they were for. */
+	getTouchPointersDown(): string[];
 	/** Returns the number of pointers that were pressed down this frame. */
 	getPointersDownCount(): number;
 	/** Returns whether the provided LOGICAL pointer belongs to the provided PHYSICAL pointer. */
@@ -745,12 +750,13 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		getPhysicalPointerIdOfPointer: (pointerId: string): string | undefined => logicalPointers[pointerId]?.physical.id,
 		getPhysicalPointerDelta: (physicalPointerId: string): DoubleCoords | undefined => physicalPointers[physicalPointerId]?.delta,
 		getPointerVel: (pointerId: string): DoubleCoords | undefined => logicalPointers[pointerId]?.physical.velocity,
-		getAllPointerIds: (): string[] => Object.keys(logicalPointers),
-		getAllPhysicalPointerIds: (): string[] => Object.keys(physicalPointers),
-		getPointerCount: (): number => Object.keys(logicalPointers).length,
+		getAllPointers: (button: MouseButton): string[] => Object.values(logicalPointers).filter(p => p.button === button).map(p => p.id), // Filter out the ones not for the button action, and map to ids
+		getAllTouchPointers: (): string[] => Object.values(logicalPointers).filter(p => p.physical.isTouch).map(p => p.id), // Filter out the non-touch ones, and map to ids
+		getAllPhysicalPointers: (): string[] => Object.keys(physicalPointers),
 		isPointerHeld: (pointerId: string): boolean => logicalPointers[pointerId] !== undefined,
 		pointerExists: (pointerId: string): boolean => logicalPointers[pointerId] !== undefined,
-		getPointersDown: (): string[] => pointersDown,
+		getPointersDown: (button: MouseButton): string[] => pointersDown.filter(id => logicalPointers[id]!.button === button), // Filter out the ones not for the button action
+		getTouchPointersDown: (): string[] => pointersDown.filter(id => logicalPointers[id]!.physical.isTouch),
 		getPointersDownCount: (): number => pointersDown.length,
 		doesPointerBelongToPhysicalPointer: (logicalPointerId: string, physicalPointerId: string): boolean => {
 			const logicalPointer = logicalPointers[logicalPointerId];

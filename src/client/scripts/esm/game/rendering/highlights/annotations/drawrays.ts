@@ -21,6 +21,7 @@ import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
 import legalmovemodel from "../legalmovemodel.js";
 import meshes from "../../meshes.js";
+import boarddrag from "../../boarddrag.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
@@ -87,7 +88,7 @@ function update(rays: Ray[]): void {
 	const respectiveListener = mouse.getRelevantListener();
 
 	if (!drag_start) { // Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) { // Double click drag this frame
+		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && boarddrag.getBoardDraggablePointerCount() !== 2) { // Double click drag this frame
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
@@ -111,7 +112,7 @@ function update(rays: Ray[]): void {
 	} else { // Currently drawing a ray
 		
 		// Prevent accidental ray drawing when trying to zoom.
-		if (listener_overlay.getPointersDownCount() > 0 && listener_overlay.getPointerCount() === 2) {
+		if (boarddrag.getBoardDraggablePointersDownCount() > 0 && boarddrag.getBoardDraggablePointerCount() === 2) {
 			// Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
 			listener_overlay.unclaimPointerDown(pointerId!);
 			stopDrawing();
@@ -122,11 +123,11 @@ function update(rays: Ray[]): void {
 		// If not released, delete any Square present on the Ray start
 		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (respectiveListener.isPointerHeld(pointerId!)) { // Pointer is still holding
+			if (!pointerWorld) return; // Maybe we're looking into sky?
+			const pointerCoords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
-			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT);
-			if (!mouseCoords) return; // Maybe we're looking into sky?
-			if (!coordutil.areCoordsEqual(mouseCoords, drag_start!)) {
+			if (!coordutil.areCoordsEqual(pointerCoords, drag_start!)) {
 				const squares = annotations.getSquares();
 				const index = squares.findIndex(coords => coordutil.areCoordsEqual(coords, drag_start!));
 				if (index !== -1) {
@@ -198,8 +199,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
-	const mouseTileCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT);
-	if (!mouseTileCoords) return { added: false }; // Could have let go while looking into sky?
+	const mouseTileCoords = space.convertWorldSpaceToCoords(pointerWorld);
 	const vector_unnormalized = coordutil.subtractBDCoords(mouseTileCoords, bd.FromCoords(drag_start!));
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);

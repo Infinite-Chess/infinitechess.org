@@ -7,6 +7,8 @@
 
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
+import bounds from "../../../util/math/bounds.js";
+import gamefileutility from "../../../chess/util/gamefileutility.js";
 import transition from "../transition.js";
 import perspective from "../perspective.js";
 import miniimage from "../miniimage.js";
@@ -16,7 +18,6 @@ import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
 import spritesheet from "../spritesheet.js";
 import drawrays from "./annotations/drawrays.js";
 import coordutil from "../../../chess/util/coordutil.js";
@@ -26,10 +27,9 @@ import preferences from "../../../components/header/preferences.js";
 import geometry from "../../../util/math/geometry.js";
 import jsutil from "../../../util/jsutil.js";
 import primitives from "../primitives.js";
-import bounds from "../../../util/math/bounds.js";
+import boarddrag from "../boarddrag.js";
 import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";
 import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
-import { listener_overlay } from "../../chess/game.js";
 import { Mouse } from "../../input.js";
 import { BufferModel, createModel } from "../buffermodel.js";
 
@@ -153,7 +153,7 @@ function teleportToEntitiesIfClicked(): void {
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		mouse.claimMouseClick(Mouse.LEFT);
 		transition.singleZoomToCoordsList(allEntitiesHovered);
-	} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Allows second finger to grab the board
+	} else if (mouse.isMouseDown(Mouse.LEFT) && boarddrag.getBoardDraggablePointerCount() !== 2) { // Allows second finger to grab the board
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
@@ -357,7 +357,7 @@ function teleportToSnapIfClicked(): void {
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
 			mouse.claimMouseClick(Mouse.LEFT);
 			transition.singleZoomToBDCoords(snap.coords);
-		} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Latter condition ensures if a board pinch starts then prioritize board dragging
+		} else if (mouse.isMouseDown(Mouse.LEFT) && boarddrag.getBoardDraggablePointerCount() !== 2) { // Latter condition ensures if a board pinch starts then prioritize board dragging
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 		}
 	}
@@ -443,7 +443,7 @@ function render(): void {
 	if (!isSnappingEnabledThisFrame()) return;
 
 	const relevantListener = mouse.getRelevantListener();
-	const allPhysicalPointerIds = relevantListener.getAllPhysicalPointerIds();
+	const allPhysicalPointerIds = relevantListener.getAllPhysicalPointers();
 	const allSnaps: Snap[] = [];
 	for (const physicalPointerId of allPhysicalPointerIds) {
 		if (drawrays.areDrawing() && relevantListener.doesPointerBelongToPhysicalPointer(drawrays.getPointerId(), physicalPointerId)) continue; // Don't snap the physical pointer that is currently drawing a ray

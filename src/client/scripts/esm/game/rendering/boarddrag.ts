@@ -12,10 +12,11 @@ import boardpos from "./boardpos.js";
 import guipromotion from "../gui/guipromotion.js";
 import vectors from "../../util/math/vectors.js";
 import coordutil from "../../chess/util/coordutil.js";
-import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
-import { listener_overlay } from "../chess/game.js";
 import perspective from "./perspective.js";
 import transition from "./transition.js";
+import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
+import { listener_overlay } from "../chess/game.js";
+import { Mouse } from "../input.js";
 
 
 
@@ -71,12 +72,65 @@ function isBoardDragging(): boolean {
 	return boardIsGrabbed;
 }
 
+
+
+/**
+ * Returns the ids of all pointers that started pressing down this frame
+ * that are capable of dragging the board. That is:
+ * A. Left mouse button pointers
+ * B. Touch pointers
+ */
+function getBoardDraggablePointersDown(): string[] {
+	// Prevent duplicates by using a Set
+	return [...new Set([
+		...listener_overlay.getPointersDown(Mouse.LEFT),
+		...listener_overlay.getTouchPointersDown()
+	])];
+}
+
+/**
+ * Returns the ids of all existing pointers that are capable of dragging the board. That is:
+ * A. Left mouse button pointers
+ * B. Touch pointers
+ */
+function getBoardDraggablePointers(): string[] {
+	// Prevent duplicates by using a Set
+	return [...new Set([
+		...listener_overlay.getAllPointers(Mouse.LEFT),
+		...listener_overlay.getAllTouchPointers()
+	])];
+}
+
+/**
+ * Returns the number of pointers that started pressing down this frame
+ * that are capable of dragging the board. That is:
+ * A. Left mouse button pointers
+ * B. Touch pointers
+ */
+function getBoardDraggablePointersDownCount(): number {
+	return getBoardDraggablePointersDown().length;
+}
+
+/**
+ * Returns the number of currently existing pointers that are capable of dragging the board. That is:
+ * A. Left mouse button pointers
+ * B. Touch pointers
+ */
+function getBoardDraggablePointerCount(): number {
+	return getBoardDraggablePointers().length;
+}
+
+
+
 /** Checks if the board needs to be grabbed by any new pointers pressed down this frame. */
 function checkIfBoardGrabbed(): void {
 	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen()) return;
 
+	// All pointers down that are either left mouse button, or a touch
+	const allPointersDown = getBoardDraggablePointersDown();
+
 	// For every new pointer touched down / created this frame...
-	for (const pointerId of [...listener_overlay.getPointersDown()]) {
+	for (const pointerId of allPointersDown) {
 		listener_overlay.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
 
 		if (!boardIsGrabbed) { // First pointer
@@ -115,9 +169,10 @@ function checkIfBoardDropped(): void {
 
 	const now = Date.now();
 
-	const allLogicalPointers: string[] = listener_overlay.getAllPointerIds();
+	// All existing pointers that are either left mouse button, or a touch
+	const allPointers = getBoardDraggablePointers();
 
-	const pointer1Released = !allLogicalPointers.includes(pointer1Id!);
+	const pointer1Released = !allPointers.includes(pointer1Id!);
 
 	if (pointer2Id === undefined) { // 1 finger drag
 		if (pointer1Released) { // Finger has been released
@@ -125,7 +180,7 @@ function checkIfBoardDropped(): void {
 			cancelBoardDrag();
 		} // else still one finger holding the board
 	} else { // 2 finger drag
-		const pointer2Released = !allLogicalPointers.includes(pointer2Id);
+		const pointer2Released = !allPointers.includes(pointer2Id);
 	
 		if (!pointer1Released && !pointer2Released) return; // Both fingers are still holding the board
 
@@ -296,6 +351,8 @@ function removeOldPositions(now: number): void {
 
 export default {
 	isBoardDragging,
+	getBoardDraggablePointersDownCount,
+	getBoardDraggablePointerCount,
 	checkIfBoardGrabbed,
 	dragBoard,
 	checkIfBoardDropped,
