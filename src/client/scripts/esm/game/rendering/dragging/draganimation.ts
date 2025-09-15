@@ -159,24 +159,17 @@ function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coor
 	hoveredCoords = hoverSquare;
 }
 
+/** Returns the id of the pointer currently dragging a piece. */
+function getPointerIdDraggingPiece(): string | undefined {
+	if (!areDragging) throw Error("Unexpected!");
+	return pointerId;
+}
+
 /** Whether the pointer dragging the selected piece has released yet. */
 function hasPointerReleased(): boolean {
 	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
 	const respectiveListener = mouse.getRelevantListener();
 	return !respectiveListener.isPointerHeld(pointerId!);
-}
-
-/**
- * Places the pointer that was dragging the piece back into the pointers down list.
- * This allows other scripts to utilize it, such as boarddrag.
- * 
- * This should never be called if we're in persective mode,
- * where the respective listener is listener_document,
- * because we cannot drag the board.
- */
-function unclaimPointer(): void {
-	// console.log("Unclaiming pointer", pointerId);
-	listener_overlay.unclaimPointerDown(pointerId!);
 }
 
 // /** Returns the pointer id that is dragging the piece. */
@@ -398,8 +391,8 @@ export default {
 	pickUpPiece,
 	updateDragLocation,
 	setDragLocationAndHoverSquare,
+	getPointerIdDraggingPiece,
 	hasPointerReleased,
-	unclaimPointer,
 	dropPiece,
 	cancelDragging,
 	renderTransparentSquare,

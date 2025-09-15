@@ -153,7 +153,7 @@ function teleportToEntitiesIfClicked(): void {
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		mouse.claimMouseClick(Mouse.LEFT);
 		transition.singleZoomToCoordsList(allEntitiesHovered);
-	} else if (mouse.isMouseDown(Mouse.LEFT) && boarddrag.getBoardDraggablePointerCount() !== 2) { // Allows second finger to grab the board
+	} else if (mouse.isMouseDown(Mouse.LEFT)) { // Allows second finger to grab the board
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
@@ -357,7 +357,7 @@ function teleportToSnapIfClicked(): void {
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
 			mouse.claimMouseClick(Mouse.LEFT);
 			transition.singleZoomToBDCoords(snap.coords);
-		} else if (mouse.isMouseDown(Mouse.LEFT) && boarddrag.getBoardDraggablePointerCount() !== 2) { // Latter condition ensures if a board pinch starts then prioritize board dragging
+		} else if (mouse.isMouseDown(Mouse.LEFT)) {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 		}
 	}

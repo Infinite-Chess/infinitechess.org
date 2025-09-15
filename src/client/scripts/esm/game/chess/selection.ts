@@ -238,8 +238,6 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined): void {
 		selectPiece(gamefile, mesh, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
-		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
-		if (boarddrag.getBoardDraggablePointerCount() === 2) return;
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -256,11 +254,6 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
-	if (listener_overlay.isMouseDown(Mouse.LEFT) && boarddrag.getBoardDraggablePointerCount() === 2) { // Prevent accidental dragging when trying to zoom.
-		draganimation.unclaimPointer(); // Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
-		if (draganimation.getDragParity()) return unselectPiece();
-		return draganimation.dropPiece();
-	}
 
 	if (!draganimation.hasPointerReleased()) return; // The pointer has not released yet, don't drop it.
 
@@ -325,10 +318,6 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	// It is our piece type...
 	const isOurTurn = gameloader.isItOurTurn(player);
 	if (!isOurTurn && !preferences.getPremoveEnabled()) return 1; // Can select our piece when it's not our turn, but not draggable.
-	// The piece is also not considered draggable if this is exactly the second pointer down.
-	// But it still may be selected by a simulated click.
-	// This allows us to tap to select friendly pieces, even if we're already dragging with one finger.
-	if (boarddrag.isBoardDragging() && boarddrag.getBoardDraggablePointerCount() === 1) return 1;
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
 
@@ -507,6 +496,16 @@ function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	perspective.relockMouse();
 }
 
+/** If the given pointer is currently being used to drag a piece, this stops using it. */
+function stealPointer(pointerIdToSteal: string): void {
+	if (!pieceSelected || !draganimation.areDraggingPiece()) return;
+	const pointerDraggingPiece = draganimation.getPointerIdDraggingPiece();
+	if (pointerDraggingPiece !== pointerIdToSteal) return; // Not the pointer dragging the piece, don't stop using it.
+
+	if (draganimation.getDragParity()) return unselectPiece();
+	return draganimation.dropPiece();
+}
+
 
 // Rendering ---------------------------------------------------------------------------------------------------------
 
@@ -540,4 +539,5 @@ export default {
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
+	stealPointer,
 };
