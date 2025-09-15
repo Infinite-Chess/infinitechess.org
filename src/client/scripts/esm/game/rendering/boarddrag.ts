@@ -17,9 +17,9 @@ import transition from "./transition.js";
 import drawarrows from "./highlights/annotations/drawarrows.js";
 import drawrays from "./highlights/annotations/drawrays.js";
 import selection from "../chess/selection.js";
+import keybinds from "../misc/keybinds.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../chess/game.js";
-import { Mouse } from "../input.js";
 
 
 
@@ -84,9 +84,10 @@ function isBoardDragging(): boolean {
  * B. Touch pointers
  */
 function getBoardDraggablePointersDown(): string[] {
+	const mouseKeybind = keybinds.getBoardDragMouseButton();
 	// Prevent duplicates by using a Set
 	return [...new Set([
-		...listener_overlay.getPointersDown(Mouse.LEFT),
+		...listener_overlay.getPointersDown(mouseKeybind),
 		...listener_overlay.getTouchPointersDown()
 	])];
 }
@@ -97,9 +98,10 @@ function getBoardDraggablePointersDown(): string[] {
  * B. Touch pointers
  */
 function getBoardDraggablePointers(): string[] {
+	const mouseKeybind = keybinds.getBoardDragMouseButton();
 	// Prevent duplicates by using a Set
 	return [...new Set([
-		...listener_overlay.getAllPointers(Mouse.LEFT),
+		...listener_overlay.getAllPointers(mouseKeybind),
 		...listener_overlay.getAllTouchPointers()
 	])];
 }

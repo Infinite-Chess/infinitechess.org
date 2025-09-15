@@ -49,8 +49,9 @@ import starfield from '../rendering/starfield.js';
 import camera from '../rendering/camera.js';
 import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
+import keybinds from '../misc/keybinds.js';
 import { createModel } from '../rendering/buffermodel.js';
-import { CreateInputListener, InputListener, Mouse } from '../input.js';
+import { CreateInputListener, InputListener } from '../input.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -167,10 +168,11 @@ function update(): void {
  * we need to clear premoves and collapse annotations.
  */
 function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined): void {
-	if (boardeditor.isBoardEditorUsingDrawingTool()) return; // Don't collapse if the board editor is using a drawing tool
+	const mouseKeybind = keybinds.getCollapseMouseButton();
+	if (mouseKeybind === undefined) return; // No button is assigned to collaping annotes / cancelling premoves currently
 
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
+	if (mouse.isMouseClicked(mouseKeybind)) {
+		mouse.claimMouseClick(mouseKeybind);
 
 		premoves.cancelPremoves(gamefile, mesh);
 		annotations.Collapse();

@@ -17,8 +17,9 @@ import drawarrows from "./drawarrows.js";
 import gameloader from "../../../chess/gameloader.js";
 import drawrays from "./drawrays.js";
 import coordutil from "../../../../chess/util/coordutil.js";
-import boardeditor from "../../../misc/boardeditor.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
+import keybinds from "../../../misc/keybinds.js";
+import { Mouse } from "../../../input.js";
 
 
 
@@ -133,8 +134,11 @@ function clearAnnotes(annotes: Annotes): void {
 
 /** Main Adds/deletes annotations */
 function update(): void {
-	// Do not allow new annotations to be drawn (via right mouse click) if the board editor is using a drawing tool
-	if (boardeditor.isBoardEditorUsingDrawingTool()) return;
+	const mouseKeybind = keybinds.getAnnotationMouseButton();
+	if (mouseKeybind === undefined) return; // No button is assigned to drawing annotations currently
+	// When this throws, we need to go into drawarrows, drawsquares, and drawrays update methods
+	// and make it so the mouse button is accepted as an argument.
+	if (mouseKeybind !== Mouse.RIGHT) throw Error("Annote drawing only supports right mouse button.");
 
 	const annotes = getRelevantAnnotes();
 

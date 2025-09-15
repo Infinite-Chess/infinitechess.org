@@ -139,7 +139,7 @@ function getTool(): typeof currentTool {
 	return currentTool;
 }
 
-function isBoardEditorUsingDrawingTool(): boolean {
+function areUsingDrawingtool(): boolean {
 	return inBoardEditor && drawingTools.includes(currentTool);
 }
 
@@ -381,7 +381,7 @@ export default {
 	getColor,
 	setTool,
 	getTool,
-	isBoardEditorUsingDrawingTool,
+	areUsingDrawingtool,
 	update,
 	canUndo,
 	canRedo,
