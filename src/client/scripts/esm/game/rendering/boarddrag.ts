@@ -191,7 +191,10 @@ function initSinglePointerDrag(pointerId: string): void {
 
 /** Pinches board with given 2nd pointer. */
 function initDoublePointerDrag(pointerId: string): void {
-	if (pointer1Id === pointerId) throw Error("Cannot init board pinch with the same pointer.");
+	// Cannot pinch with the same pointer.
+	// This can happen in board editor if you drag board with right mouse,
+	// drag offscreen, let go, then right click to drag board again.
+	if (pointer1Id === pointerId) return;
 
 	// console.log('Board pinched with pointer', pointerId);
 
