@@ -4,6 +4,8 @@
 import guipause from './guipause.js';
 // @ts-ignore
 import stats from './stats.js';
+// @ts-ignore
+import statustext from './statustext.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
@@ -20,9 +22,9 @@ import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import premoves from '../chess/premoves.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
-import boardtiles from '../rendering/boardtiles.js';
 import transition from '../rendering/transition.js';
 import space from '../misc/space.js';
+import bimath from '../../util/bigdecimal/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 
 
@@ -143,8 +145,7 @@ function close(): void {
 }
 
 
-
-
+// =============================== Coordinate Fields ===============================
 
 
 // Update the division on the screen displaying your current coordinates
@@ -153,16 +154,124 @@ function updateElement_Coords(): void {
 
 	const boardPos = boardpos.getBoardPos();
 	const mouseTile = mouse.getTileMouseOver_Integer();
-	const squareCenter = boardtiles.getSquareCenter();
 
-	// Tile camera is over
-	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)
-	// element_CoordsY.textContent = Math.floor(boardPos[1] + squareCenter)
+	const xDisplayCoord = mouseTile ? mouseTile[0] : space.roundCoord(boardPos[0]);
+	const yDisplayCoord = mouseTile ? mouseTile[1] : space.roundCoord(boardPos[1]);
 
-	// Tile mouse over
-	element_CoordsX.value = String(mouseTile ? mouseTile[0] : space.roundCoord(boardPos[0]));
-	element_CoordsY.value = String(mouseTile ? mouseTile[1] : space.roundCoord(boardPos[1]));
+	// If the number is too big to fit in the input box, display it in exponential notation instead.
+	displayBigIntInInput(element_CoordsX, xDisplayCoord, 3);
+	displayBigIntInInput(element_CoordsY, yDisplayCoord, 3);
 }
+
+/**
+ * Formats a BigInt into a string with exponential notation.
+ * e.g., formatBigIntExponential(123456789n, 3) => "1.23e8"
+ * @param bigint The BigInt to format.
+ * @param precision The number of significant digits for the mantissa.
+ * @returns The formatted string.
+ */
+function formatBigIntExponential(bigint: bigint, precision: number): string {
+	// Work with the absolute value and track the sign
+	const isNegative = bigint < 0n;
+	const absString: string = bimath.abs(bigint).toString();
+
+	const exponent: number = absString.length - 1;
+
+	// Get the digits for the mantissa (the part before 'e')
+	const mantissaDigits: string = absString.substring(0, precision);
+
+	let mantissa: string;
+	if (mantissaDigits.length > 1) {
+		// Insert the decimal point, e.g., "123" -> "1.23"
+		mantissa = mantissaDigits[0] + '.' + mantissaDigits.substring(1);
+	} else {
+		// If precision is 1, no decimal point is needed
+		mantissa = mantissaDigits;
+	}
+	
+	// Re-attach the negative sign if needed and combine the parts
+	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
+}
+
+/**
+ * Displays a BigInt in an input element. If it overflows,
+ * it's displayed in exponential notation instead.
+ * @param inputElement The input element to display the number in.
+ * @param bigint The BigInt value to display.
+ * @param precision The precision for the exponential notation.
+ */
+function displayBigIntInInput(inputElement: HTMLInputElement, bigint: bigint, precision: number): void {
+	// First, try to display the full number by setting the .value
+	inputElement.value = bigint.toString();
+
+	// Check for overflow.
+	if (inputElement.scrollWidth > inputElement.clientWidth) {
+		// Format it and set the .value again.
+		inputElement.value = formatBigIntExponential(bigint, precision);
+	}
+}
+
+/**
+ * Parses a string representation (either standard or e-notation) into a BigInt.
+ * This is the inverse of {@link formatBigIntExponential}.
+ * @param value The string to parse. Can be "12345" or "1.23e8".
+ * @returns The resulting BigInt.
+ */
+function parseStringToBigInt(value: string): bigint {
+	const trimmedValue = value.trim();
+	if (trimmedValue === '') throw Error();
+
+	// Use case-insensitive check for 'e'
+	const eIndex = trimmedValue.toLowerCase().indexOf('e');
+
+	// Case 1: No scientific notation, just a plain integer string.
+	if (eIndex === -1) return BigInt(trimmedValue);
+
+	// Case 2: Scientific notation is present.
+	const mantissaStr = trimmedValue.substring(0, eIndex);
+	const exponentStr = trimmedValue.substring(eIndex + 1);
+
+	if (mantissaStr === '' || exponentStr === '') throw Error(); // Malformed e-notation: missing mantissa or exponent
+	
+	const exponent = parseInt(exponentStr, 10);
+	// Check if exponent is a valid integer number
+	if (isNaN(exponent) || !Number.isInteger(exponent)) throw Error();
+
+	// Since BigInts are whole numbers, a negative exponent would result in a fraction.
+	if (exponent < 0) throw Error();
+	
+	const isNegative = mantissaStr.startsWith('-');
+	const absMantissaStr = isNegative ? mantissaStr.substring(1) : mantissaStr;
+	
+	const decimalIndex = absMantissaStr.indexOf('.');
+	let allDigits: string;
+	let fractionalDigitsCount = 0;
+
+	if (decimalIndex === -1) {
+		// e.g., "123e5"
+		allDigits = absMantissaStr;
+	} else {
+		// e.g., "1.23" -> allDigits = "123", fractionalDigitsCount = 2
+		const integerPart = absMantissaStr.substring(0, decimalIndex);
+		const fractionalPart = absMantissaStr.substring(decimalIndex + 1);
+		
+		allDigits = integerPart + fractionalPart;
+		fractionalDigitsCount = fractionalPart.length;
+	}
+
+	// The number of zeros to append is the exponent minus the number of digits
+	// we already have after the decimal point.
+	const zerosToAppend = exponent - fractionalDigitsCount;
+	
+	const zeros = '0'.repeat(zerosToAppend);
+	const finalNumberString = `${isNegative ? '-' : ''}${allDigits}${zeros}`;
+	
+	return BigInt(finalNumberString);
+}
+
+
+// =================================================================================
+
 
 /**
  * Returns true if one of the coordinate fields is active (currently editing)
@@ -275,10 +384,18 @@ function callback_CoordsChange(): void {
 	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
 	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
 
-	const newX = BigInt(element_CoordsX.value);
-	const newY = BigInt(element_CoordsY.value);
+	let proposedX: bigint;
+	let proposedY: bigint;
+	try {
+		proposedX = parseStringToBigInt(element_CoordsX.value);
+		proposedY = parseStringToBigInt(element_CoordsY.value);
+	} catch (e) {
+		console.log(`Entered: [${element_CoordsX.value}, ${element_CoordsY.value}]`);
+		statustext.showStatus(translations['coords-invalid'], true);
+		return;
+	}
 
-	const newPos = bd.FromCoords([newX, newY]);
+	const newPos = bd.FromCoords([proposedX, proposedY]);
 	boardpos.setBoardPos(newPos);
 }
 

@@ -1,4 +1,8 @@
 {
+	"67": {
+		"note": "Added coords-invalid line 381",
+		"changes": []
+	},
 	"66": {
 		"note": "Added board-theme & board-starfield lines 19-20",
 		"changes": []

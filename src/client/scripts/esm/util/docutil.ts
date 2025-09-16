@@ -34,6 +34,7 @@ function copyToClipboard(text: string): void {
 
 /**
  * Returns true if the current device has a mouse pointer.
+ * Equivalent to whether the current device is a desktop device.
  */
 function isMouseSupported(): boolean {
 	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
