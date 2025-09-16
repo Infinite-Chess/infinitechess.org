@@ -22,6 +22,7 @@ import boardutil from '../../chess/util/boardutil.js';
 import boardtiles from './boardtiles.js';
 import bounds from '../../util/math/bounds.js';
 import gameloader from '../chess/gameloader.js';
+import docutil from '../../util/docutil.js';
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import { rawTypes as r } from '../../chess/util/typeutil.js';
 
@@ -145,11 +146,15 @@ document.addEventListener('starfield-toggle', (e: CustomEvent) => {
  */
 function init(): void {
 	if (isInitialized) throw Error("Starfield is already initialized.");
-	if (!preferences.getStarfieldMode()) return; // Starfield disabled
+	if (!couldStarfieldEverBeVisible()) {
+		// console.log("Starfield cannot ever be visible in this game, not initializing.");
+		return; // Starfield cannot be visible in this game
+	}
 
 	// First, calculate the initial desired number of stars.
 	desiredNumStars = getDesiredNumStars();
 
+	// Now populate the field.
 	for (let i = 0; i < desiredNumStars; i++) {
 		const star: Star = createStar(true);
 		stars.push(star);
@@ -160,10 +165,10 @@ function init(): void {
 
 /** Closes the starfield system, resetting its state. */
 function terminate(): void {
+	desiredNumStars = 0;
 	// Clear any existing stars
 	stars.length = 0;
 	isInitialized = false;
-	desiredNumStars = 0;
 }
 
 /**
@@ -239,7 +244,10 @@ function update(): void {
 	if (!isInitialized) return;
 
 	// Call for a render this frame if the starfield is visible
-	if (isStarfieldVisible()) frametracker.onVisualChange();
+	if (isStarfieldVisible()) {
+		frametracker.onVisualChange();
+		console.log("Starfield visible, requesting render.");
+	}
 
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();
@@ -278,7 +286,31 @@ function update(): void {
 	}
 }
 
-/** Only requests an animation frame if there's a good chance the starfield is visible. */
+/**
+ * Returns whether the starfield could at ANY point be visible during the current game.
+ * Doesn't care whether Starfield mode could be turned on later, as that is handled by the event listener.
+ */
+function couldStarfieldEverBeVisible(): boolean {
+	// If starfield is disabled, it will never be visible.
+	// (The fact it could be toggled on later is handled by the event listener)
+	if (!preferences.getStarfieldMode()) return false;
+
+	// If we're on desktop, perspective mode can be toggled, so the starfield could be visible.
+	if (docutil.isMouseSupported()) return true;
+
+	// On mobile...
+
+	// If voids can be present in the game, the starfield could be visible.
+	const { boardsim } = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
+	if (boardsim.existingRawTypes.includes(r.VOID)) return true; // Voids are PRESENT (or can be added in the editor)
+
+	// If there is a world border, the starfield could be visible.
+	if (boardsim.playableRegion !== undefined) return true;
+
+	return false;
+}
+
+/** Returns whether there's a good chance the starfield is visible RIGHT NOW. Assuming it's initialized. */
 function isStarfieldVisible(): boolean {
 	// If we're in perspective mode, there's a good chance we can
 	// see the sky, which the starfield is visible in.
