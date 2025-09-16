@@ -205,7 +205,7 @@ function displayBigIntInInput(inputElement: HTMLInputElement, bigint: bigint, pr
 	inputElement.value = bigint.toString();
 
 	// Check for overflow.
-	if (inputElement.scrollWidth > inputElement.clientWidth) {
+	if (inputElement.scrollWidth > inputElement.clientWidth + 1) { // Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
 		// Format it and set the .value again.
 		inputElement.value = formatBigIntExponential(bigint, precision);
 	}
