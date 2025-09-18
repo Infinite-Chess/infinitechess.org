@@ -21,7 +21,7 @@ const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
  * Called when the browser uses the /api/get-access-token API request. This reads any refresh token cookie present,
  * and gives them a new access token if they are signed in.
  * If they are not, it gives them a browser-id cookie to verify their identity.
- * @param {import("../../../types.js").IdentifiedRequest} req 
+ * @param {import("../../types.js").IdentifiedRequest} req 
  * @param {*} res 
  */
 function accessTokenIssuer(req, res) {

@@ -13,7 +13,7 @@ import { getTranslationForReq } from "../utility/translate.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 import type { Response } from 'express';
-import type { IdentifiedRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../types.js";
 
 // A specific type for the return value of getMemberDataByCriteria for this module
 type MemberVerificationData = {

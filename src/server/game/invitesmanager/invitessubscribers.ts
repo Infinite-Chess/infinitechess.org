@@ -11,7 +11,7 @@ import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { AuthMemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../types.js';
 
 /**
  * List of clients currently subscribed to invites list events, with their

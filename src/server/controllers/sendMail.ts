@@ -7,7 +7,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
-import { IdentifiedRequest } from '../../types.js';
+import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Type Definitions ---

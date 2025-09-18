@@ -17,7 +17,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 import type { SafeInvite, Invite, } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { AuthMemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../types.js';
 
 //-------------------------------------------------------------------------------------------
 

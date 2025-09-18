@@ -12,7 +12,7 @@ import { getMemberDataByCriteria } from "../database/memberManager.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 import type { Response } from "express";
-import type { IdentifiedRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../types.js";
 
 
 

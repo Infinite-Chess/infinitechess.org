@@ -117,7 +117,7 @@ function getPrefs(userId) {
 
 /**
  * Route that Handles a POST request to update user preferences in the database.
- * @param {import("../../types.js").IdentifiedRequest} req - Express request object
+ * @param {import("../types.js").IdentifiedRequest} req - Express request object
  * @param {Object} res - Express response object
  */
 function postPrefs(req, res) {

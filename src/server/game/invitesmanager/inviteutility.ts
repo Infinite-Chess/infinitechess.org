@@ -7,7 +7,7 @@
 
 import jsutil from '../../../shared/util/jsutil.js';
 
-import type { AuthMemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { Game } from '../gamemanager/gameutility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';

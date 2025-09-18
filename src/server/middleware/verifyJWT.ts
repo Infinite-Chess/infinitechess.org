@@ -7,7 +7,7 @@
  * if they are logged in.
  */
 
-import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../../types.js';
+import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../types.js';
 import { freshenSession, revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { isAccessTokenValid, isRefreshTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
 import { CustomWebSocket } from '../socket/socketUtility.js';

@@ -3,7 +3,7 @@
 
 /* eslint-disable no-unused-vars */
 
-import type { MemberInfo } from "./types";
+import type { MemberInfo } from "./server/types";
 
 declare global {
 

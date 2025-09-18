@@ -37,7 +37,7 @@ import clockweb from '../clockweb.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
-import type { AuthMemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../shared/chess/util/metadata.js';
 import type { Rating } from '../../database/leaderboardsManager.js';

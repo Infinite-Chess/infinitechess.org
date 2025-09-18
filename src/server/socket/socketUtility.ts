@@ -8,7 +8,7 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
-import type { AuthMemberInfo, ParsedCookies } from '../../types.js';
+import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 import type { Player } from '../../shared/chess/util/typeutil.js';
 
 

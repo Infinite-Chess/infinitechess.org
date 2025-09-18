@@ -10,7 +10,7 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 
-import type { IdentifiedRequest, ParsedCookies } from "../../types.js";
+import type { IdentifiedRequest, ParsedCookies } from "../types.js";
 import type { Request, Response } from "express";
 
 

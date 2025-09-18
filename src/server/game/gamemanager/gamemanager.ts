@@ -28,7 +28,7 @@ import ratingabuse from './ratingabuse.js';
 import type { Game, PlayerData } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
-import type { AuthMemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 
 //--------------------------------------------------------------------------------------------------------
