@@ -7,22 +7,22 @@
  */
 
 
-import type { Color } from "../../../util/math/math.js";
+import type { Color } from "../../../../../../shared/util/math/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
-import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
-import type { Vec3 } from "../../../util/math/vectors.js";
-import type { Piece } from "../../../chess/util/boardutil.js";
+import type { LegalMoves } from "../../../../../../shared/chess/logic/legalmoves.js";
+import type { Vec3 } from "../../../../../../shared/util/math/vectors.js";
+import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
 
 import typeutil from "../../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
-import moveutil from "../../../chess/util/moveutil.js";
+import moveutil from "../../../../../../shared/chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
 import boardpos from "../boardpos.js";
-import legalmoves from "../../../chess/logic/legalmoves.js";
-import bd from "../../../util/bigdecimal/bigdecimal.js";
-import coordutil, { Coords } from "../../../chess/util/coordutil.js";
+import legalmoves from "../../../../../../shared/chess/logic/legalmoves.js";
+import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
+import coordutil, { Coords } from "../../../../../../shared/chess/util/coordutil.js";
 import legalmovemodel from "../highlights/legalmovemodel.js";
 import arrows, { ArrowPiece } from "./arrows.js";
 import meshes from "../meshes.js";

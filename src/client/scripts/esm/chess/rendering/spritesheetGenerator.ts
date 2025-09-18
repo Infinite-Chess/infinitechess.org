@@ -5,7 +5,7 @@
  */
 
 
-import type { DoubleCoords } from "../util/coordutil.js";
+import type { DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
 
 
 

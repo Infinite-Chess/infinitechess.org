@@ -9,7 +9,7 @@
  */
 
 
-import type { DoubleCoords } from "../chess/util/coordutil.js";
+import type { DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
 
 import docutil from "../util/docutil.js";
 

@@ -9,10 +9,10 @@ import statustext from './statustext.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
-import boardutil from '../../chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
-import moveutil from '../../chess/util/moveutil.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
@@ -21,10 +21,10 @@ import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import premoves from '../chess/premoves.js';
-import bd from '../../util/bigdecimal/bigdecimal.js';
+import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import transition from '../rendering/transition.js';
 import space from '../misc/space.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 
 

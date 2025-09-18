@@ -13,14 +13,14 @@ import type { Rating } from '../../../../../../server/database/leaderboardsManag
 // @ts-ignore
 import websocket from '../../websocket.js';
 import localstorage from '../../../util/localstorage.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
 import tabnameflash from './tabnameflash.js';
 import disconnect from './disconnect.js';
 import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
-import moveutil from '../../../chess/util/moveutil.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
 
 

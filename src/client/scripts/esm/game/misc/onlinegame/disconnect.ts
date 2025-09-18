@@ -10,7 +10,7 @@
 
 import afk from "./afk.js";
 import gameslot from "../../chess/gameslot.js";
-import moveutil from "../../../chess/util/moveutil.js";
+import moveutil from "../../../../../../shared/chess/util/moveutil.js";
 import pingManager from "../../../util/pingManager.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";

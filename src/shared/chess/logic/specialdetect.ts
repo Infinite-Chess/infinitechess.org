@@ -3,10 +3,10 @@
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
+import typeutil from '../util/typeutil.js';
+import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
-import gamerules from '../../../../../shared/chess/variants/gamerules.js';
+import gamerules from '../variants/gamerules.js';
 import math from '../../util/math/math.js';
 import checkresolver from './checkresolver.js';
 import bimath from '../../util/bigdecimal/bimath.js';
@@ -14,15 +14,15 @@ import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import legalmoves from './legalmoves.js';
-import { players, rawTypes } from '../../../../../shared/chess/util/typeutil.js';
+import { players, rawTypes } from '../util/typeutil.js';
 // Import End
 
 import type { FullGame, Game, Board } from './gamefile.js';
-import type { MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
+import type { MoveDraft } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
-import type { CoordsSpecial } from '../../../../../shared/chess/logic/movepiece.js';
-import type { enpassantCreate } from '../../../../../shared/chess/logic/movepiece.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { CoordsSpecial } from './movepiece.js';
+import type { enpassantCreate } from './movepiece.js';
+import type { Player } from '../util/typeutil.js';
 
 /**
  * This detects if special moves are legal.

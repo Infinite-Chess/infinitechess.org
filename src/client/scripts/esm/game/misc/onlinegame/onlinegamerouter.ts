@@ -5,7 +5,7 @@ import type { Rating } from "../../../../../../server/database/leaderboardsManag
 import type { ClockValues } from "../../../../../../shared/chess/logic/clock.js";
 import type { MetaData } from "../../../../../../shared/chess/util/metadata.js";
 import type { LongFormatOut } from "../../../../../../shared/chess/logic/icn/icnconverter.js";
-import type { Game } from "../../../chess/logic/gamefile.js";
+import type { Game } from "../../../../../../shared/chess/logic/gamefile.js";
 import type { GameUpdateMessage, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";

@@ -9,14 +9,14 @@
 
 
 import moveutil from '../util/moveutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
-import gamerules from '../../../../../shared/chess/variants/gamerules.js';
-import { rawTypes as r, ext as e, players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import gamerules from '../variants/gamerules.js';
+import { rawTypes as r, ext as e, players, TypeGroup } from '../util/typeutil.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 
 
-import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
+import type { GameRules } from '../variants/gamerules.js';
 import type { Board } from './gamefile.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */

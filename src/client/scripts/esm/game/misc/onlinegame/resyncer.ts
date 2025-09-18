@@ -12,7 +12,7 @@
  */
 
 
-import type { FullGame } from "../../../chess/logic/gamefile.js";
+import type { FullGame } from "../../../../../../shared/chess/logic/gamefile.js";
 import type { GameUpdateMessage, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
@@ -21,12 +21,12 @@ import movesendreceive from "./movesendreceive.js";
 import onlinegame from "./onlinegame.js";
 import clock from "../../../../../../shared/chess/logic/clock.js";
 import selection from "../../chess/selection.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
+import gamefileutility from "../../../../../../shared/chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
-import moveutil from "../../../chess/util/moveutil.js";
+import moveutil from "../../../../../../shared/chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter.js";
-import legalmoves from "../../../chess/logic/legalmoves.js";
+import legalmoves from "../../../../../../shared/chess/logic/legalmoves.js";
 import animation from "../../rendering/animation.js";
 import guiclock from "../../gui/guiclock.js";
 import { animateMove } from "../../chess/graphicalchanges.js";

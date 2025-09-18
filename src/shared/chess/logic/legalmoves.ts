@@ -5,29 +5,29 @@
 
 
 import specialdetect from './specialdetect.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
+import winconutil from '../util/winconutil.js';
+import movepiece from './movepiece.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
+import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import movesets from './movesets.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
+import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
 import bounds from '../../util/math/bounds.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import typeutil, { players, rawTypes } from '../../../../../shared/chess/util/typeutil.js';
-import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players, rawTypes } from '../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
-import type { RawType, Player, RawTypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords, BDCoords } from '../util/coordutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
-import type { CoordsSpecial, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
+import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';

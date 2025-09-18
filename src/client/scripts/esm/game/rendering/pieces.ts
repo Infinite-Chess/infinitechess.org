@@ -4,8 +4,8 @@
  * including voids, and mini images.
  */
 
-import type { Board } from '../../chess/logic/gamefile.js';
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Mesh } from './piecemodels.js';
 
 import spritesheet from './spritesheet.js';

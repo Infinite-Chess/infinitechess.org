@@ -5,15 +5,15 @@
  * Enable by pressing `7`.
  */
 
-import type { BDCoords, Coords } from "../../../chess/util/coordutil.js";
-import type { Color } from "../../../util/math/math.js";
-import type { Vec3 } from "../../../util/math/vectors.js";
+import type { BDCoords, Coords } from "../../../../../../shared/chess/util/coordutil.js";
+import type { Color } from "../../../../../../shared/util/math/math.js";
+import type { Vec3 } from "../../../../../../shared/util/math/vectors.js";
 
 
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
 import gameslot from "../../chess/gameslot.js";
-import coordutil from "../../../chess/util/coordutil.js";
+import coordutil from "../../../../../../shared/chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import legalmovemodel from "./legalmovemodel.js";
 import boardpos from "../boardpos.js";

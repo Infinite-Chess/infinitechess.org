@@ -9,14 +9,14 @@ import perspective from '../perspective.js';
 import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
-import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
+import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { BufferModel, createModel } from '../buffermodel.js';
 
 
-import type { BDCoords } from '../../../chess/util/coordutil.js';
-import type { Color } from '../../../util/math/math.js';
-import type {  BoundingBoxBD } from '../../../util/math/bounds.js';
-import type { LineCoefficients } from '../../../util/math/vectors.js';
+import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type {  BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+import type { LineCoefficients } from '../../../../../../shared/util/math/vectors.js';
 
 
 

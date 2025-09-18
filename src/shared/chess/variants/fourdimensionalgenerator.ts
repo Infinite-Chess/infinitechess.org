@@ -13,8 +13,8 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 import coordutil from "../util/coordutil.js";
 import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
-import { rawTypes as r, ext as e } from "../../../../../shared/chess/util/typeutil.js";
-import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
+import { rawTypes as r, ext as e } from "../util/typeutil.js";
+import icnconverter from "../logic/icn/icnconverter.js";
 import bimath from "../../util/bigdecimal/bimath.js";
 
 

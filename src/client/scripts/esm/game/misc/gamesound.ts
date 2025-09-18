@@ -1,7 +1,7 @@
 
 // src/client/scripts/esm/game/misc/gamesound.ts
 
-import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
+import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import sound, { SoundObject } from "./sound.js";
 
 /**

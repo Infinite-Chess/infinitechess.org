@@ -10,18 +10,18 @@ import space from "../../../misc/space.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
-import vectors from "../../../../util/math/vectors.js";
+import vectors from "../../../../../../../shared/util/math/vectors.js";
 import boardpos from "../../boardpos.js";
 import boarddrag from "../../boarddrag.js";
 import { createModel } from "../../buffermodel.js";
 import { Mouse } from "../../../input.js";
-import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
 import { listener_overlay } from "../../../chess/game.js";
-import bd, { BigDecimal } from "../../../../util/bigdecimal/bigdecimal.js";
+import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
 
 
 import type { Arrow } from "./annotations.js";
-import type { Color } from "../../../../util/math/math.js";
+import type { Color } from "../../../../../../../shared/util/math/math.js";
 
 
 // Constants -----------------------------------------------------------------

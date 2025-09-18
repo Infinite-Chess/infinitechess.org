@@ -9,12 +9,12 @@
  */
 
 import type { FullGame } from "./gamefile.js";
-import type { Move } from "../../../../../shared/chess/logic/movepiece.js";
+import type { Move } from "./movepiece.js";
+import type { StateChange } from "./state.js";
 
 import boardchanges from "./boardchanges.js";
-import { StateChange } from "./state.js";
-import typeutil from "../../../../../shared/chess/util/typeutil.js";
-import { players, rawTypes } from "../../../../../shared/chess/util/typeutil.js";
+import typeutil from "../util/typeutil.js";
+import { players, rawTypes } from "../util/typeutil.js";
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${number|string}`; // `x,y,43` | `x,y,enpassant`

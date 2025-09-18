@@ -7,8 +7,8 @@
 
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
-import bounds from "../../../util/math/bounds.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
+import bounds from "../../../../../../shared/util/math/bounds.js";
+import gamefileutility from "../../../../../../shared/chess/util/gamefileutility.js";
 import transition from "../transition.js";
 import perspective from "../perspective.js";
 import miniimage from "../miniimage.js";
@@ -17,26 +17,26 @@ import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
 import gameslot from "../../chess/gameslot.js";
-import boardutil from "../../../chess/util/boardutil.js";
+import boardutil from "../../../../../../shared/chess/util/boardutil.js";
 import spritesheet from "../spritesheet.js";
 import drawrays from "./annotations/drawrays.js";
-import coordutil from "../../../chess/util/coordutil.js";
+import coordutil from "../../../../../../shared/chess/util/coordutil.js";
 import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
-import geometry from "../../../util/math/geometry.js";
+import geometry from "../../../../../../shared/util/math/geometry.js";
 import jsutil from "../../../../../../shared/util/jsutil.js";
 import primitives from "../primitives.js";
 import boarddrag from "../boarddrag.js";
-import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";
-import bd, { BigDecimal } from "../../../util/bigdecimal/bigdecimal.js";
+import vectors, { Ray, Vec2 } from "../../../../../../shared/util/math/vectors.js";
+import bd, { BigDecimal } from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { Mouse } from "../../input.js";
 import { BufferModel, createModel } from "../buffermodel.js";
 
 
-import type { BDCoords, Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
+import type { BDCoords, Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
-import type { Color } from "../../../util/math/math.js";
+import type { Color } from "../../../../../../shared/util/math/math.js";
 
 
 // Variables --------------------------------------------------------------

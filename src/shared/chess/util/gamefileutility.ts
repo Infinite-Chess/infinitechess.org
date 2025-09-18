@@ -4,21 +4,19 @@
  */
 
 import type { Coords } from './coordutil.js';
-import type { Player, RawTypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, RawTypeGroup } from './typeutil.js';
 import type { PieceMoveset } from '../logic/movesets.js';
 import type { Game, Board, FullGame } from '../logic/gamefile.js';
 import type { Vec2 } from '../../util/math/vectors.js';
 
 import boardutil from './boardutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
-import metadata from '../../../../../shared/chess/util/metadata.js';
+import metadata from './metadata.js';
 import bimath from '../../util/bigdecimal/bimath.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import bd from '../../util/bigdecimal/bigdecimal.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
-// @ts-ignore
-import gamerules from '../../../../../shared/chess/variants/gamerules.js';
+import winconutil from './winconutil.js';
+import bounds, { BoundingBox } from '../../util/math/bounds.js';
+import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 import wincondition from '../logic/wincondition.js';
 

@@ -4,25 +4,25 @@
  */
 
 
-import type { Coords } from '../../chess/util/coordutil.js';
-import type { Piece } from '../../chess/util/boardutil.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { Board } from '../../chess/logic/gamefile.js';
-import type { Vec3 } from '../../util/math/vectors.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 import { gl } from './webgl.js';
-import coordutil from '../../chess/util/coordutil.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import boardutil from '../../chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
 import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import geometry from '../../util/math/geometry.js';
-import vectors from '../../util/math/vectors.js';
-import bd from '../../util/bigdecimal/bigdecimal.js';
+import geometry from '../../../../../shared/util/math/geometry.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';

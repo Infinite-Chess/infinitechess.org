@@ -4,18 +4,18 @@
  */
 
 
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
-import type { VariantOptions } from '../../chess/logic/initvariant.js';
+import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import localstorage from '../../util/localstorage.js';
-import coordutil from '../../chess/util/coordutil.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
 import gameloader from './gameloader.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import movesequence from "../chess/movesequence.js";
 import selection from '../chess/selection.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -28,7 +28,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import enginegame from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 
 // Variables ----------------------------------------------------------------------------
 

@@ -5,7 +5,7 @@
  * This scripts contains utility methods for working with javascript objects.
  */
 
-import bimath from "../../client/scripts/esm/util/bigdecimal/bimath.js";
+import bimath from "./bigdecimal/bimath.js";
 
 
 /**

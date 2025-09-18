@@ -6,13 +6,13 @@
  */
 
 
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 import boardtiles from './boardtiles.js';
 import gameslot from '../chess/gameslot.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import boardpos from './boardpos.js';
-import bd from '../../util/bigdecimal/bigdecimal.js';
+import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { createModel } from './buffermodel.js';
 import primitives from './primitives.js';

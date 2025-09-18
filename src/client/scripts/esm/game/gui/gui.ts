@@ -12,8 +12,8 @@ import statustext from './statustext.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
-import vectors from '../../util/math/vectors.js';
-import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+import bigdecimal from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 
 

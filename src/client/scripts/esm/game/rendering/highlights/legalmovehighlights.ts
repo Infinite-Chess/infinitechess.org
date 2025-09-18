@@ -6,13 +6,13 @@
  * * All hovered arrows
  */
 
-import type { Color } from '../../../util/math/math.js';
-import type { BDCoords } from '../../../chess/util/coordutil.js';
-import type { Piece } from '../../../chess/util/boardutil.js';
-import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
-import type { Vec3 } from '../../../util/math/vectors.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 
-import coordutil from '../../../chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from './specialrighthighlights.js';
 import selection from '../../chess/selection.js';

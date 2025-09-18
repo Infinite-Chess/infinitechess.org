@@ -18,11 +18,11 @@ import space from '../misc/space.js';
 import boardtiles from './boardtiles.js';
 import boarddrag from './boarddrag.js';
 import boardpos from './boardpos.js';
-import math from '../../util/math/math.js';
+import math from '../../../../../shared/util/math/math.js';
 import area, { Area } from './area.js';
-import coordutil, { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
-import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
+import coordutil, { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 import meshes from './meshes.js';
 
 

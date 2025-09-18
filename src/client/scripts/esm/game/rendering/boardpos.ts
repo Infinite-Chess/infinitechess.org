@@ -14,11 +14,11 @@ import perspective from "./perspective.js";
 import transition from "./transition.js";
 import frametracker from "./frametracker.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
-import coordutil from "../../chess/util/coordutil.js";
-import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
+import coordutil from "../../../../../shared/chess/util/coordutil.js";
+import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 
 
-import type { BDCoords, DoubleCoords } from "../../chess/util/coordutil.js";
+import type { BDCoords, DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
 
 
 // BigDecimal Constants ---------------------------------------------------

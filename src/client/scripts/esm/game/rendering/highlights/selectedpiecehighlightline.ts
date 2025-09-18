@@ -12,10 +12,10 @@ import preferences from "../../../components/header/preferences.js";
 import selection from "../../chess/selection.js";
 import highlightline from "./highlightline.js";
 import boardpos from "../boardpos.js";
-import geometry from "../../../util/math/geometry.js";
-import bd from "../../../util/bigdecimal/bigdecimal.js";
-import coordutil, { BDCoords, Coords, CoordsKey } from "../../../chess/util/coordutil.js";
-import vectors, { Vec2, Vec2Key } from "../../../util/math/vectors.js";
+import geometry from "../../../../../../shared/util/math/geometry.js";
+import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
+import coordutil, { BDCoords, Coords, CoordsKey } from "../../../../../../shared/chess/util/coordutil.js";
+import vectors, { Vec2, Vec2Key } from "../../../../../../shared/util/math/vectors.js";
 
 
 

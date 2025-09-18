@@ -4,7 +4,7 @@
  */
 
 import vectors from '../../util/math/vectors.js';
-import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
+import { rawTypes } from '../util/typeutil.js';
 import specialdetect from './specialdetect.js';
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -13,8 +13,8 @@ import isprime from '../../util/isprime.js';
 // Type definitions...
 
 import type { Coords } from '../util/coordutil.js';
-import type { CoordsSpecial } from '../../../../../shared/chess/logic/movepiece.js';
-import type { RawTypeGroup, Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
+import type { CoordsSpecial } from './movepiece.js';
+import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 import type { Piece } from '../util/boardutil.js';
 import type { FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';

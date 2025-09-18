@@ -4,16 +4,16 @@
  */
 
 
-import type { Move, MoveDraft, castle, enpassant, promotion } from '../../../../../shared/chess/logic/movepiece.js';
-import type { CoordsSpecial } from '../../../../../shared/chess/logic/movepiece.js';
+import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
+import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player } from './typeutil.js';
 import type { Game, Board } from '../logic/gamefile.js';
-import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
-import type { _Move_Compact } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { GameRules } from '../variants/gamerules.js';
+import type { _Move_Compact } from '../logic/icn/icnconverter.js';
 
 import coordutil from './coordutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players } from './typeutil.js';
 
 
 // Type Definitions ------------------------------------------------------------------------------

@@ -9,7 +9,7 @@
  */
 
 
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 
 

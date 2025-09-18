@@ -6,9 +6,9 @@
 
 import gameslot from "../../chess/gameslot.js";
 import afk from "./afk.js";
-import moveutil from "../../../chess/util/moveutil.js";
+import moveutil from "../../../../../../shared/chess/util/moveutil.js";
 import gamesound from "../gamesound.js";
-import bd from "../../../util/bigdecimal/bigdecimal.js";
+import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 // @ts-ignore
 import loadbalancer from "../loadbalancer.js";
 

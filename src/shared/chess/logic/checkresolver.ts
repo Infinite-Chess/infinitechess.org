@@ -9,9 +9,9 @@
 
 
 import type { Piece } from "../util/boardutil.js";
-import type { CoordsSpecial, MoveDraft, path } from "../../../../../shared/chess/logic/movepiece.js";
+import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
-import type { Player } from "../../../../../shared/chess/util/typeutil.js";
+import type { Player } from "../util/typeutil.js";
 import type { LegalMoves } from './legalmoves.js';
 import type { FullGame } from "./gamefile.js";
 
@@ -20,11 +20,11 @@ import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
 import boardchanges from "./boardchanges.js";
 import coordutil from "../util/coordutil.js";
-import movepiece from "../../../../../shared/chess/logic/movepiece.js";
-import jsutil from "../../../../../shared/util/jsutil.js";
+import movepiece from "./movepiece.js";
+import jsutil from "../../util/jsutil.js";
 import moveutil from "../util/moveutil.js";
-import { players } from "../../../../../shared/chess/util/typeutil.js";
-import typeutil from "../../../../../shared/chess/util/typeutil.js";
+import { players } from "../util/typeutil.js";
+import typeutil from "../util/typeutil.js";
 import checkdetection from "./checkdetection.js";
 import legalmoves from "./legalmoves.js";
 import bimath from "../../util/bigdecimal/bimath.js";

@@ -14,12 +14,12 @@ import boardpos from "../boardpos.js";
 import annotations from "./annotations/annotations.js";
 import premoves from "../../chess/premoves.js";
 import preferences from "../../../components/header/preferences.js";
-import moveutil from "../../../chess/util/moveutil.js";
+import moveutil from "../../../../../../shared/chess/util/moveutil.js";
 import squarerendering from "./squarerendering.js";
 
 
-import type { Board } from "../../../chess/logic/gamefile.js";
-import type { Color } from "../../../util/math/math.js";
+import type { Board } from "../../../../../../shared/chess/logic/gamefile.js";
+import type { Color } from "../../../../../../shared/util/math/math.js";
 
 
 /**

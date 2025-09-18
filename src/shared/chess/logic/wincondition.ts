@@ -11,11 +11,11 @@ import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import typeutil, { RawType } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { RawType } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate, pieceCountToDisableCheckmate } from './checkmate.js';
-import { players, rawTypes, Player } from '../../../../../shared/chess/util/typeutil.js';
+import { players, rawTypes, Player } from '../util/typeutil.js';
 
 
 import type { Board, FullGame } from './gamefile.js';

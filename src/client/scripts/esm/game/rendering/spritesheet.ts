@@ -7,8 +7,8 @@
  */
 
 
-import type { Board } from '../../chess/logic/gamefile.js';
-import type{ DoubleCoords } from '../../chess/util/coordutil.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type{ DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';

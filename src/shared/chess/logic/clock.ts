@@ -6,9 +6,9 @@
  * if somebody loses on time.
  */
 
-import moveutil from '../../../client/scripts/esm/chess/util/moveutil.js';
+import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
-import gamefileutility from '../../../client/scripts/esm/chess/util/gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import typeutil from '../util/typeutil.js';
 import clockutil from '../util/clockutil.js';
 
@@ -16,7 +16,7 @@ import clockutil from '../util/clockutil.js';
 
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { MetaData } from '../util/metadata.js';
-import type { ClockDependant, Game } from '../../../client/scripts/esm/chess/logic/gamefile.js';
+import type { ClockDependant, Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */

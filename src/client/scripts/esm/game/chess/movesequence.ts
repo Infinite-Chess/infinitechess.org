@@ -7,20 +7,20 @@
  */
 
 
-import type { FullGame } from "../../chess/logic/gamefile.js";
+import type { FullGame } from "../../../../../shared/chess/logic/gamefile.js";
 import type { Edit, Move, MoveDraft} from "../../../../../shared/chess/logic/movepiece.js";
 
 
 import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
-import boardchanges from "../../chess/logic/boardchanges.js";
+import boardchanges from "../../../../../shared/chess/logic/boardchanges.js";
 import { animateMove, meshChanges } from "./graphicalchanges.js";
-import moveutil from "../../chess/util/moveutil.js";
+import moveutil from "../../../../../shared/chess/util/moveutil.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import piecemodels from "../rendering/piecemodels.js";
 import { Mesh } from "../rendering/piecemodels.js";
-import gamefileutility from "../../chess/util/gamefileutility.js";
+import gamefileutility from "../../../../../shared/chess/util/gamefileutility.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import movepiece from "../../../../../shared/chess/logic/movepiece.js";
 import guigameinfo from "../gui/guigameinfo.js";

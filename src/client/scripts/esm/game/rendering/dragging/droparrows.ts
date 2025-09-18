@@ -6,8 +6,8 @@
  */
 
 
-import type { Piece } from "../../../chess/util/boardutil.js";
-import type { Coords } from "../../../chess/util/coordutil.js";
+import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
+import type { Coords } from "../../../../../../shared/chess/util/coordutil.js";
 
 
 import arrows from "../arrows/arrows.js";
@@ -16,9 +16,9 @@ import draganimation from "./draganimation.js";
 import space from "../../misc/space.js";
 import typeutil from "../../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
-import legalmoves from "../../../chess/logic/legalmoves.js";
-import bd from "../../../util/bigdecimal/bigdecimal.js";
-import coordutil from "../../../chess/util/coordutil.js";
+import legalmoves from "../../../../../../shared/chess/logic/legalmoves.js";
+import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
+import coordutil from "../../../../../../shared/chess/util/coordutil.js";
 
 
 

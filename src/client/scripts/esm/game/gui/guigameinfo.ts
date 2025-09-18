@@ -13,7 +13,7 @@ import type { Rating } from '../../../../../server/database/leaderboardsManager.
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';

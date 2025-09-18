@@ -5,12 +5,12 @@
  */
 
 
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 import type { RawType, Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import preferences from '../../components/header/preferences.js';
-import pieceThemes from '../../components/header/pieceThemes.js';
+import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 
 
 // Variables -----------------------------------------------------------------

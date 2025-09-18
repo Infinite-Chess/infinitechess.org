@@ -15,11 +15,11 @@
 
 import camera from "../rendering/camera.js";
 import boardpos from '../rendering/boardpos.js';
-import bd from "../../util/bigdecimal/bigdecimal.js";
+import bd from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import board from "../rendering/boardtiles.js";
 
-import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
-import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 
 const HALF: BigDecimal = bd.FromNumber(0.5);

@@ -7,9 +7,9 @@
 
 
 
-import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 // @ts-ignore
 import invites from '../misc/invites.js';

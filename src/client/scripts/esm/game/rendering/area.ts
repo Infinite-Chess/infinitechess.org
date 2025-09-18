@@ -10,7 +10,7 @@
 
 import camera from './camera.js';
 import boardtiles from './boardtiles.js';
-import math from '../../util/math/math.js';
+import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import guinavigation from '../gui/guinavigation.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -18,11 +18,11 @@ import boardpos from './boardpos.js';
 import meshes from './meshes.js';
 import space from '../misc/space.js';
 import transition, { ZoomTransition } from './transition.js';
-import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import bounds, { BoundingBoxBD } from '../../util/math/bounds.js';
+import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 
-import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../../../../shared/chess/util/coordutil.js';
 
 
 

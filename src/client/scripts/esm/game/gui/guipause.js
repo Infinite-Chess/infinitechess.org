@@ -7,7 +7,7 @@ import copygame from '../chess/copygame.js';
 import pastegame from '../chess/pastegame.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guititle from './guititle.js';
-import moveutil from '../../chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
 import gameloader from '../chess/gameloader.js';

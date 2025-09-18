@@ -4,14 +4,14 @@
  */
 
 
-import gamefile from '../../chess/logic/gamefile.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
-import { CoordsKey } from '../../chess/util/coordutil.js';
+import { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
-import type { FullGame } from '../../chess/logic/gamefile.js';
-import type { VariantOptions } from '../../chess/logic/initvariant.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { _Move_In, LongFormatIn, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 
