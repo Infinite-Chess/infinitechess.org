@@ -1,21 +1,33 @@
-// This script deploys all files from /src/client to /dist in order to run the website.
-// Depending on the value of DEV_BUILD in /src/server/config/config.js, this happens either in development mode or in production mode.
-// Development mode: All files are simply copied over unmodified.
-// Production mode: All non-script and non-css assets are copied over unmodified,
-//                  but all ESM scripts are bundled by esbuild,
-//					all scripts are then minified with the use of @swc/core,
-//                  Further, all css files are minified by lightningcss.
 
-import { cp as copy, rm as remove, readFile, writeFile } from 'node:fs/promises';
+// build.js
+
+/**
+ * This script deploys all files and assets from /src/client to /dist in order to run the website.
+ * 
+ * Development mode: Transpile all TypeScript files to JavaScript.
+ * Production mode: Transpile and bundle all TypeScript files to JavaScript, and minify via @swc/core.
+ * 					Further, all css files are minified by lightningcss.
+ */
+
+import { cp as copy, rm as remove, readFile } from 'node:fs/promises';
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { insertScriptIntoHTML } from './src/server/utility/HTMLScriptInjector.js';
-import { BUNDLE_FILES } from './src/server/config/config.js';
+import { glob } from 'glob';
 import esbuild from 'esbuild';
 import path from "node:path";
+
+// Local imports
 import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
-import { execSync } from 'node:child_process';
+import { DEV_BUILD } from './src/server/config/config.js';
+
+
+// ================================= CONSTANTS =================================
+
+
+// Targetted browsers for CSS transpilation
+// Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
+const cssTargets = browserslistToTargets(browserslist('defaults'));
 
 
 /**
@@ -25,54 +37,144 @@ import { execSync } from 'node:child_process';
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
-const entryPoints = [
-	'dist/client/scripts/esm/game/main.js',
-	'dist/client/scripts/esm/components/header/header.js',
-	'dist/client/scripts/esm/views/index.js',
-	'dist/client/scripts/esm/views/member.js',
-	'dist/client/scripts/esm/views/leaderboard.js',
-	'dist/client/scripts/esm/views/login.js',
-	'dist/client/scripts/esm/views/createaccount.js',
-	'dist/client/scripts/esm/views/resetpassword.js',
-	'dist/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+const clientEntryPoints = [
+	'src/client/scripts/esm/game/main.js',
+	'src/client/scripts/esm/components/header/header.js',
+	'src/client/scripts/esm/views/index.ts',
+	'src/client/scripts/esm/views/member.ts',
+	'src/client/scripts/esm/views/leaderboard.ts',
+	'src/client/scripts/esm/views/login.ts',
+	'src/client/scripts/esm/views/createaccount.js',
+	'src/client/scripts/esm/views/resetpassword.ts',
+	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
+const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
 
-// Targetted browsers for CSS transpilation
-// Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
-const targets = browserslistToTargets(browserslist('defaults'));
+const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin('✅ Client Build successful.', '❌ Client Build failed.');
+const esbuildServerRebuildPlugin = getESBuildLogRebuildPlugin('✅ Server Build successful.', '❌ Server Build failed.');
+
+/** An esbuild plugin that logs everyone a build is finished. */
+function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
+	return {
+		name: 'log-rebuild',
+		setup(build) {
+			// This hook runs when a build has finished
+			build.onEnd(result => {
+				if (result.errors.length > 0) console.error(failureMessage);
+				else console.log(successMessage);
+			});
+		},
+	};
+}
+
+const esbuildClientOptions = {
+	bundle: true,
+	entryPoints: clientEntryPoints,
+	outdir: './dist/client/scripts/esm',
+	// Use the 'text' loader for shader files
+	loader: { '.glsl': 'text' }, // Any file import ending in .glsl is loaded as a raw text string
+	/**
+	 * Enable code splitting, which means if multiple entry points require the same module,
+	 * that dependancy will be separated out of both of them which means it isn't duplicated,
+	 * and there's only one instance of it per page.
+	 * This also means more requests to the server, but not many.
+	 * If this is false, multiple copies of the same code may be loaded onto a page,
+	 * each belonging to a separate entry point module.
+	 */
+	splitting: true, 
+	format: 'esm', // or 'cjs' for Common JS
+	sourcemap: true, // Enables sourcemaps for debugging in the browser.
+	// allowOverwrite: true, // Not needed?
+	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
+	plugins: [esbuildClientRebuildPlugin],
+};
+
+const esbuildServerOptions = {
+	// Transpile all TS files from BOTH directories
+	entryPoints: serverEntryPoints, 
+	platform: 'node',
+	bundle: false, // No bundling for the server. Just transpile each file individually
+	outdir: 'dist',
+	format: 'esm',
+	sourcemap: true, // Patches file paths from server console errors to the correct src/ file
+	plugins: [esbuildServerRebuildPlugin],
+};
 
 
+// ================================ BUILDING =================================
 
-/**
- * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
- * If multiple entry points share dependencies, then those dependencies will be split into separate modules,
- * which means they aren't duplicated, and there's only one instance of it per page.
- * This also means more requests to the server, but not many.
- */
-async function bundleESMScripts() {
-	await esbuild.build({
-		bundle: true,
-		entryPoints,
-		// outfile: './dist/scripts/game/main.js', // Old, for a single entry point
-		outdir: './dist/client/scripts/esm',
-		/**
-		 * Enable code splitting, which means if multiple entry points require the same module,
-		 * that dependancy will be separated out of both of them which means it isn't duplicated,
-		 * and there's only one instance of it per page.
-		 * This also means more requests to the server, but not many.
-		 * If this is false, multiple copies of the same code may be loaded onto a page,
-		 * each belonging to a separate entry point module.
-		 */
-		splitting: true, 
-		legalComments: 'none', // Even skips copyright noticies, such as in gl-matrix
-		format: 'esm', // or 'cjs' for Common JS
-		allowOverwrite: true,
-		// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
+
+/** Builds the client's scripts and assets. */
+async function buildClient(isDev) {
+	// console.log(`Building client in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
+
+	// 1. Copy static assets (HTML, EJS, images, etc.)
+
+	if (isDev) {
+		// Copy over everything that cpx (our asset copier) doesn't, such as ejs files.
+		await copy("./src/client/views", "./dist/client/views", { recursive: true });
+	} else {
+		// In production, copy over the stuff cpx (only dev) was in charge of.
+		await copy("./src/client", "./dist/client", {
+			recursive: true,
+			filter: (src) => {
+				// Never copy TypeScript files, esbuild handles them.
+				if (src.endsWith('.ts')) return false;
+				// Don't copy JavaScript files from the ESM directory, esbuild bundles them.
+				if (src.includes('/scripts/esm/') && src.endsWith('.js')) return false;
+				// Otherwise, copy the file. This includes assets and our CJS scripts.
+				return true;
+			}
+		});
+	}
+
+	// 2. Handle esbuild bundling
+	const context = await esbuild.context({
+		...esbuildClientOptions,
+		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
 	});
 
-	// Further minify them. This cuts off their size a further 60%!!!
-	await minifyDirectory('./dist/client/scripts/esm/', './dist/client/scripts/esm/', true); // true for ES Modules
+	if (isDev) {
+		await context.watch();
+		// console.log('esbuild is watching for CLIENT changes...');
+	}
+	/**
+	 * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
+	 * If multiple entry points share dependencies, then those dependencies will be split into separate modules,
+	 * which means they aren't duplicated, and there's only one instance of it per page.
+	 * This also means more requests to the server, but not many.
+	 */
+	else { // Production
+		// Build once and exit if not in watch mode
+		await context.rebuild();
+		context.dispose();
+		// console.log('Client esbuild bundling complete.');
+
+		// 3. Minify JS and CSS
+		// console.log('Minifying production assets...');
+		// Further minify them. This cuts off their size a further 60%!!!
+		await minifyScriptDirectory('./dist/client/scripts/cjs/', './dist/client/scripts/cjs/', false);
+		await minifyScriptDirectory('./dist/client/scripts/esm/', './dist/client/scripts/esm/', true);
+		await minifyCSSFiles();
+	}
 }
+
+/** Builds the server's scripts, transpiling them all into javascript (no bundling). */
+async function buildServer(isDev) {
+	// console.log(`Building server in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
+
+	const context = await esbuild.context(esbuildServerOptions);
+
+	if (isDev) {
+		await context.watch();
+		// console.log('esbuild is watching for SERVER changes...');
+	} else {
+		await context.rebuild();
+		context.dispose();
+		// console.log('Server build complete.');
+	}
+}
+
 
 /**
  * Minifies all JavaScript files in a directory and writes them to an output directory.
@@ -81,9 +183,9 @@ async function bundleESMScripts() {
  * @param {boolean} isModule - True if the scripts are ES Modules instead of CommonJS.
  * @returns {Promise<void>} Resolves when all files are minified.
  */
-async function minifyDirectory(inputDir, outputDir, isModule) {
+async function minifyScriptDirectory(inputDir, outputDir, isModule) {
 	const files = await getAllFilesInDirectoryWithExtension(inputDir, '.js');
-	
+		
 	for (const file of files) {
 		const inputFilePath = path.join(inputDir, file);
 		const outputFilePath = path.join(outputDir, file);
@@ -113,62 +215,30 @@ async function minifyCSSFiles() {
 	for (const file of cssFiles) {
 		// Minify css files
 		const { code } = transform({
-			targets: targets,
+			targets: cssTargets,
 			code: Buffer.from(await readFile(`./dist/client/css/${file}`, 'utf8')),
 			minify: true,
 		});
 		// Write into /dist
-		await writeFile_ensureDirectory(`./dist/client/css/${file}`, code);
+		writeFile_ensureDirectory(`./dist/client/css/${file}`, code);
 	}
 }
 
 
-
-// Delete the built "dist" folder from the last run
-await remove("./dist", {
-	recursive: true,
-	force: true,
-});
+// ================================ START BUILD ================================
 
 
-/**
- * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
- * Files will be bundled later if bundling is enabled.
- */
+/** Whether additional minifying of bundled scripts and css files should be skipped. */
+const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
+if (USE_DEVELOPMENT_BUILD && !DEV_BUILD) throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
 
-await copy("./src", "./dist", {
-	recursive: true,
-	force: true
-});
+// Start with a clean slate
+await remove("./dist", { recursive: true, force: true });
 
-if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) { // The compiler complains if there's nothing to compile
-	try {
-		execSync('tsc --build');
-	}
-	catch (e) {
-		console.error('TypeScript compilation failed with the following error:');
-		console.log(e.stdout.toString()); // Print TypeScript error output
-		console.log(e.stderr.toString()); // Print additional error details if available
-		process.exit(1);
-	}
-}
+// Await all so the script doesn't finish and node terminate before esbuild is done.
+await Promise.all([
+    buildClient(USE_DEVELOPMENT_BUILD),
+    buildServer(USE_DEVELOPMENT_BUILD)
+]);
 
-if (BUNDLE_FILES) { // BUNDLE files in production! Far fewer requests, and each file is significantly smaller!
-
-	// Minify all CJS scripts and copy them over to dist/
-	await minifyDirectory('./dist/client/scripts/cjs/', './dist/client/scripts/cjs/', false); // false for CommonJS Modules
-
-	// Bundle and Minify all ESM scripts and copy them over to dist/
-	await bundleESMScripts();
-
-	// Bundle and compress all css files
-	await minifyCSSFiles();
-}
-
-// Overwrite play.ejs, directly inserting htmlscript.js into it.
-/** The relative path to play.ejs */
-const playEJSPath = './dist/client/views/play.ejs';
-const playEJS = await readFile(playEJSPath, 'utf8');
-const htmlscriptJS = await readFile('./dist/client/scripts/cjs/game/htmlscript.js');
-const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
-await writeFile(playEJSPath, newPlayEJS, 'utf8');
+// console.log('Build process finished.');
