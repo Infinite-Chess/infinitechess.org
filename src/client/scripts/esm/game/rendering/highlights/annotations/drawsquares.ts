@@ -12,7 +12,7 @@ import snapping from "../snapping.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../util/math/vectors.js";
-import variant from "../../../../chess/variants/variant.js";
+import variant from "../../../../../../../shared/chess/variants/variant.js";
 import gameslot from "../../../chess/gameslot.js";
 import squarerendering from "../squarerendering.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";

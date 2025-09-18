@@ -9,15 +9,15 @@
 import boardutil from '../util/boardutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
-import typeutil from '../util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import legalmoves from './legalmoves.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
-import { players } from '../util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import type { Coords, CoordsKey } from '../util/coordutil.js';
-import type { CoordsSpecial } from './movepiece.js';
-import type { Player } from '../util/typeutil.js';
+import type { CoordsSpecial } from '../../../../../shared/chess/logic/movepiece.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Attacker } from './state.js';
 import type { Board, FullGame } from './gamefile.js';
 

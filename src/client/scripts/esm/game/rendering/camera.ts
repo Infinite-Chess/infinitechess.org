@@ -21,7 +21,7 @@ import stats from '../gui/stats.js';
 import mat4 from './gl-matrix.js';
 import perspective from './perspective.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
-import jsutil from '../../util/jsutil.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import guigameinfo from '../gui/guigameinfo.js';

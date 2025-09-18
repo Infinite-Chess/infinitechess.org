@@ -6,13 +6,13 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { TypeGroup } from '../../chess/util/typeutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../chess/logic/gamefile.js';
 import type { Vec3 } from '../../util/math/vectors.js';
 
 import { gl } from './webgl.js';
 import coordutil from '../../chess/util/coordutil.js';
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
 import miniimage from './miniimage.js';
@@ -25,7 +25,7 @@ import vectors from '../../util/math/vectors.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
-import { rawTypes } from '../../chess/util/typeutil.js';
+import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 
 // Type Definitions ---------------------------------------------------------------------------------

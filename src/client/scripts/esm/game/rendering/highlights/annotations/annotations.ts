@@ -12,7 +12,7 @@ import type { Ray } from "../../../../util/math/vectors.js";
 import drawsquares from "./drawsquares.js";
 import preferences from "../../../../components/header/preferences.js";
 import gameslot from "../../../chess/gameslot.js";
-import jsutil from "../../../../util/jsutil.js";
+import jsutil from "../../../../../../../shared/util/jsutil.js";
 import drawarrows from "./drawarrows.js";
 import gameloader from "../../../chess/gameloader.js";
 import drawrays from "./drawrays.js";

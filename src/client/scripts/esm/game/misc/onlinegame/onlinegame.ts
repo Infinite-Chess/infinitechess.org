@@ -6,8 +6,8 @@
 
 import type { ServerGameInfo } from './onlinegamerouter.js';
 import type { ParticipantState } from '../../../../../../server/game/gamemanager/gameutility.js';
-import type { Player, PlayerGroup } from '../../../chess/util/typeutil.js';
-import type { ClockValues } from '../../../chess/logic/clock.js';
+import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
+import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
 // @ts-ignore

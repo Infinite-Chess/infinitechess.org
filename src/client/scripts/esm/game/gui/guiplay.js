@@ -5,18 +5,18 @@ import statustext from './statustext.js';
 import invites from '../misc/invites.js';
 import gui from './gui.js';
 import guititle from './guititle.js';
-import timeutil from '../../util/timeutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
-import { players } from '../../chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../chess/variants/validleaderboard.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 // Import End
 
 
 // Type Definitions --------------------------------------------------------------------
 
-/** @typedef {import('../../chess/util/metadata.js').MetaData} MetaData*/
+/** @typedef {import('../../../../../shared/chess/util/metadata.js').MetaData} MetaData*/
 
 /**
  * An object containing the values of each of the invite options on the invite creation screen.

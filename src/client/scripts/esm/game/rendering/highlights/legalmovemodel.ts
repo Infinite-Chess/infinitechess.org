@@ -8,11 +8,11 @@
  * That also includes Rays.
  */
 
-import type { Player } from '../../../chess/util/typeutil.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Color } from '../../../util/math/math.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
-import type { MoveDraft } from '../../../chess/logic/movepiece.js';
+import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { LegalMoves, SlideLimits } from '../../../chess/logic/legalmoves.js';
 import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
 import type { Ray, Vec2, Vec2Key } from '../../../util/math/vectors.js';

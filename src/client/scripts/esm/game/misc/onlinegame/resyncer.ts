@@ -19,13 +19,13 @@ import type { Mesh } from "../../rendering/piecemodels.js";
 
 import movesendreceive from "./movesendreceive.js";
 import onlinegame from "./onlinegame.js";
-import clock from "../../../chess/logic/clock.js";
+import clock from "../../../../../../shared/chess/logic/clock.js";
 import selection from "../../chess/selection.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
-import icnconverter from "../../../chess/logic/icn/icnconverter.js";
+import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import animation from "../../rendering/animation.js";
 import guiclock from "../../gui/guiclock.js";

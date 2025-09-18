@@ -8,10 +8,10 @@
 import gameloader from "../chess/gameloader.js";
 import boardeditor from "../misc/boardeditor.js";
 import svgcache from "../../chess/rendering/svgcache.js";
-import typeutil, { rawTypes, players } from "../../chess/util/typeutil.js";
+import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../chess/gameslot.js";
 
-import type { Player } from "../../chess/util/typeutil.js";
+import type { Player } from "../../../../../shared/chess/util/typeutil.js";
 
 
 // Variables ---------------------------------------------------------------

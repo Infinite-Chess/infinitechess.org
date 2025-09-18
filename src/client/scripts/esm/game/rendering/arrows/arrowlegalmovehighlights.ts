@@ -13,7 +13,7 @@ import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 import type { Vec3 } from "../../../util/math/vectors.js";
 import type { Piece } from "../../../chess/util/boardutil.js";
 
-import typeutil from "../../../chess/util/typeutil.js";
+import typeutil from "../../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";

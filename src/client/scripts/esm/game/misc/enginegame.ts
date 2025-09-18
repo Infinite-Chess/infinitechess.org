@@ -3,16 +3,16 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 
-import type { MoveDraft } from '../../chess/logic/movepiece.js';
-import type { Player } from '../../chess/util/typeutil.js';
+import type { MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import selection from '../chess/selection.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
-import jsutil from '../../util/jsutil.js';
-import typeutil from '../../chess/util/typeutil.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 import premoves from '../chess/premoves.js';
 import perspective from '../rendering/perspective.js';

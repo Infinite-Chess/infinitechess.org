@@ -11,18 +11,18 @@
 
 
 import jsutil from "../../../util/jsutil.js";
-import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
+import coordutil, { Coords, CoordsKey } from "../../../../client/scripts/esm/chess/util/coordutil.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
-import icncommentutils, { CommandObject } from "./icncommentutils.js";
-import bimath from "../../../util/bigdecimal/bimath.js";
+import icncommentutils, { CommandObject } from "../../../../client/scripts/esm/chess/logic/icn/icncommentutils.js";
+import bimath from "../../../../client/scripts/esm/util/bigdecimal/bimath.js";
 
 
 // @ts-ignore
 import type { GameRules } from "../../variants/gamerules.js";
 import type { MetaData } from "../../util/metadata.js";
-import type { EnPassant, GlobalGameState } from "../state.js";
-import type { BaseRay } from "../../../game/rendering/highlights/annotations/drawrays.js";
+import type { EnPassant, GlobalGameState } from "../../../../client/scripts/esm/chess/logic/state.js";
+import type { BaseRay } from "../../../../client/scripts/esm/game/rendering/highlights/annotations/drawrays.js";
 
 
 // Type Definitions -------------------------------------------------------------------

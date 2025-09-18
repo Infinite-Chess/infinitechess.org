@@ -25,7 +25,7 @@ import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
 import geometry from "../../../util/math/geometry.js";
-import jsutil from "../../../util/jsutil.js";
+import jsutil from "../../../../../../shared/util/jsutil.js";
 import primitives from "../primitives.js";
 import boarddrag from "../boarddrag.js";
 import vectors, { Ray, Vec2 } from "../../../util/math/vectors.js";

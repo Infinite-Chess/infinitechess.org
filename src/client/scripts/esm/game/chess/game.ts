@@ -23,7 +23,7 @@ import guititle from '../gui/guititle.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
-import clock from '../../chess/logic/clock.js';
+import clock from '../../../../../shared/chess/logic/clock.js';
 import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';

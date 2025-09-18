@@ -13,7 +13,7 @@ import camera from "./camera.js";
 import perspective from "./perspective.js";
 import transition from "./transition.js";
 import frametracker from "./frametracker.js";
-import jsutil from "../../util/jsutil.js";
+import jsutil from "../../../../../shared/util/jsutil.js";
 import coordutil from "../../chess/util/coordutil.js";
 import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
 

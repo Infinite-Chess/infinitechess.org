@@ -4,22 +4,22 @@
  * displaying the clocks, and whos turn it currently is.
  */
 
-import type { MetaData } from '../../chess/util/metadata.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 
 
-import winconutil from '../../chess/util/winconutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-import { PlayerGroup, players } from '../../chess/util/typeutil.js';
+import { PlayerGroup, players } from '../../../../../shared/chess/util/typeutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import metadata from '../../chess/util/metadata.js';
+import metadata from '../../../../../shared/chess/util/metadata.js';
 import boardeditor from '../misc/boardeditor.js';
 
 

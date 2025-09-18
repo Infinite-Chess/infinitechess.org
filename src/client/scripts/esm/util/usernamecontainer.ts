@@ -5,7 +5,7 @@
 
 // @ts-ignore
 import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
-import metadata from "../chess/util/metadata.js";
+import metadata from "../../../../shared/chess/util/metadata.js";
 import docutil from "./docutil.js";
 
 

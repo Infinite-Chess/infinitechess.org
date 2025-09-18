@@ -8,7 +8,7 @@
 
 
 import type { FullGame } from "../../chess/logic/gamefile.js";
-import type { Edit, Move, MoveDraft} from "../../chess/logic/movepiece.js";
+import type { Edit, Move, MoveDraft} from "../../../../../shared/chess/logic/movepiece.js";
 
 
 import gameslot from "./gameslot.js";
@@ -22,10 +22,10 @@ import piecemodels from "../rendering/piecemodels.js";
 import { Mesh } from "../rendering/piecemodels.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-import movepiece from "../../chess/logic/movepiece.js";
+import movepiece from "../../../../../shared/chess/logic/movepiece.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
-import clock from "../../chess/logic/clock.js";
+import clock from "../../../../../shared/chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
 // @ts-ignore
 import stats from "../gui/stats.js";

@@ -4,8 +4,8 @@
 import { players } from "../../chess/util/typeutil.js";
 import jsutil from "../../util/jsutil.js";
 
-import type { Color } from "../../util/math/math.js";
-import type { PieceColorGroup } from "./pieceThemes.js";
+import type { Color } from "../../../client/scripts/esm/util/math/math.js";
+import type { PieceColorGroup } from "../../../client/scripts/esm/components/header/pieceThemes.js";
 
 /*
  * Strings for computed property names.

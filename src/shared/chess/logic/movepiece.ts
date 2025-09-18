@@ -6,27 +6,27 @@
  */
 
 
-import type { Board, FullGame } from './gamefile.js';
-import type { Piece } from '../util/boardutil.js';
-import type { Coords } from '../util/coordutil.js';
-import type { EnPassant, MoveState } from './state.js';
-import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { Board, FullGame } from '../../../client/scripts/esm/chess/logic/gamefile.js';
+import type { Piece } from '../../../client/scripts/esm/chess/util/boardutil.js';
+import type { Coords } from '../../../client/scripts/esm/chess/util/coordutil.js';
+import type { EnPassant, MoveState } from '../../../client/scripts/esm/chess/logic/state.js';
+import type { Change } from '../../../client/scripts/esm/chess/logic/boardchanges.js';
+import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
 
 
 import typeutil from '../util/typeutil.js';
-import coordutil from '../util/coordutil.js';
-import state from './state.js';
-import boardchanges from './boardchanges.js';
-import boardutil from '../util/boardutil.js';
-import moveutil from '../util/moveutil.js';
+import coordutil from '../../../client/scripts/esm/chess/util/coordutil.js';
+import state from '../../../client/scripts/esm/chess/logic/state.js';
+import boardchanges from '../../../client/scripts/esm/chess/logic/boardchanges.js';
+import boardutil from '../../../client/scripts/esm/chess/util/boardutil.js';
+import moveutil from '../../../client/scripts/esm/chess/util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
-import legalmoves from './legalmoves.js';
-import checkdetection from './checkdetection.js';
-import specialdetect from './specialdetect.js';
-import wincondition from './wincondition.js';
+import legalmoves from '../../../client/scripts/esm/chess/logic/legalmoves.js';
+import checkdetection from '../../../client/scripts/esm/chess/logic/checkdetection.js';
+import specialdetect from '../../../client/scripts/esm/chess/logic/specialdetect.js';
+import wincondition from '../../../client/scripts/esm/chess/logic/wincondition.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------

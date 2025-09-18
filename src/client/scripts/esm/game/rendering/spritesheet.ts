@@ -11,7 +11,7 @@ import type { Board } from '../../chess/logic/gamefile.js';
 import type{ DoubleCoords } from '../../chess/util/coordutil.js';
 
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 // @ts-ignore
 import texture from './texture.js';

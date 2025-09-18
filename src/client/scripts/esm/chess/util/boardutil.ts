@@ -3,15 +3,15 @@
  * This script contains utility methods for working with the organized pieces of a game.
  */
 
-import typeutil from "./typeutil.js";
+import typeutil from "../../../../../shared/chess/util/typeutil.js";
 import coordutil from "./coordutil.js";
-import jsutil from "../../util/jsutil.js";
+import jsutil from "../../../../../shared/util/jsutil.js";
 
 // Type Definitions -----------------------------------------------------------------------------------------
 
 import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
 import type { Coords } from "./coordutil.js";
-import type { RawType, Player } from "./typeutil.js";
+import type { RawType, Player } from "../../../../../shared/chess/util/typeutil.js";
 
 interface Piece {
 	type: number,

@@ -9,12 +9,12 @@ import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
 import { getPlayerLeaderboardRating, getEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import timeutil from '../../client/scripts/esm/util/timeutil.js';
-import metadata from '../../client/scripts/esm/chess/util/metadata.js';
+import timeutil from '../../shared/util/timeutil.js';
+import metadata from '../../shared/chess/util/metadata.js';
 
 /**
  * API route: /member/:member/data

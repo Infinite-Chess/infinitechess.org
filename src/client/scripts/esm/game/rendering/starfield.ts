@@ -24,7 +24,7 @@ import bounds from '../../util/math/bounds.js';
 import gameloader from '../chess/gameloader.js';
 import docutil from '../../util/docutil.js';
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
-import { rawTypes as r } from '../../chess/util/typeutil.js';
+import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 
 

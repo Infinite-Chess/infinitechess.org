@@ -5,16 +5,16 @@
  */
 
 
-import jsutil from '../../util/jsutil.js';
-import { _Move_In, LongFormatIn, PresetAnnotes } from '../../chess/logic/icn/icnconverter.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import { _Move_In, LongFormatIn, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import state from '../../chess/logic/state.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
-import type { Move } from '../../chess/logic/movepiece.js';
+import type { Move } from '../../../../../shared/chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
-import type { GameRules } from '../../chess/variants/gamerules.js';
+import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
 import type { FullGame } from '../../chess/logic/gamefile.js';
 
 

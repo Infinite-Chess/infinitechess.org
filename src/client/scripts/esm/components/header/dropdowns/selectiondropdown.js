@@ -2,7 +2,7 @@
 // This script allows us to enable or disable premoves and dragging pieces
 
 import preferences from "../preferences.js";
-import themes from "../themes.js";
+import themes from "../../../../../../shared/components/header/themes.js";
 
 // Document Elements -------------------------------------------------------------------------
 

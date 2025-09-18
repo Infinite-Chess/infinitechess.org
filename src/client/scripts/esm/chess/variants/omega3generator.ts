@@ -7,7 +7,7 @@
 
 
 import coordutil from '../util/coordutil.js';
-import { ext as e, rawTypes as r } from '../util/typeutil.js';
+import { ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 
 import type { Coords, CoordsKey } from '../util/coordutil.js';

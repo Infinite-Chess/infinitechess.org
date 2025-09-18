@@ -4,11 +4,11 @@
 import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import state from './state.js';
-import { rawTypes } from '../util/typeutil.js';
+import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
 
-import type { RawTypeGroup } from '../util/typeutil.js';
+import type { RawTypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Coords } from '../util/coordutil.js';
-import type { Edit, MoveDraft } from './movepiece.js';
+import type { Edit, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './gamefile.js';
 

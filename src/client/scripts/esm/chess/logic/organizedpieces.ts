@@ -11,7 +11,7 @@
  */
 
 
-import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
+import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../../../../../shared/chess/util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import movesets from "./movesets.js";
 import vectors, { Vec2, Vec2Key } from "../../util/math/vectors.js";
@@ -20,7 +20,7 @@ import bimath from "../../util/bigdecimal/bimath.js";
 import type { LineKey } from "../util/boardutil.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
-import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";
+import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../../../../../shared/chess/util/typeutil.js";
 
 
 // Type Definitions ----------------------------------------------------------------

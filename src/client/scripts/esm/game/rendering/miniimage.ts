@@ -20,15 +20,15 @@ import snapping from './highlights/snapping.js';
 import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import vectors from '../../util/math/vectors.js';
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import selection from '../chess/selection.js';
-import jsutil from '../../util/jsutil.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import boardtiles from './boardtiles.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import { Color } from '../../util/math/math.js';
 import boardutil, { Piece } from '../../chess/util/boardutil.js';
-import { players, TypeGroup } from '../../chess/util/typeutil.js';
+import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 
 

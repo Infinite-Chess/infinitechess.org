@@ -5,7 +5,7 @@
  * This script handles almost all of the queries we use to interact with the members table!
  */
 
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';

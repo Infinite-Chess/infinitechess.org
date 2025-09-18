@@ -17,7 +17,7 @@ import { cancelDisconnectTimer } from './afkdisconnect.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getGameData } from '../../database/gamesManager.js';
-import jsutil from '../../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../../shared/util/jsutil.js';
 import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import type { Game } from './gameutility.js';

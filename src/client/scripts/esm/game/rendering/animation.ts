@@ -23,7 +23,7 @@ import texturecache from '../../chess/rendering/texturecache.js';
 import vectors, { Vec3 } from '../../util/math/vectors.js';
 import { createModel, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import typeutil, { RawType, TypeGroup } from '../../chess/util/typeutil.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import meshes from './meshes.js';
 import perspective from './perspective.js';
 

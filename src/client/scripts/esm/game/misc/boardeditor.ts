@@ -9,7 +9,7 @@
 import boardchanges from '../../chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
-import icnconverter, { _Move_Compact } from '../../chess/logic/icn/icnconverter.js';
+import icnconverter, { _Move_Compact } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 import state from '../../chess/logic/state.js';
@@ -17,11 +17,11 @@ import boardutil from '../../chess/util/boardutil.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
-import { players, rawTypes } from '../../chess/util/typeutil.js';
+import { players, rawTypes } from '../../../../../shared/chess/util/typeutil.js';
 import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import movepiece from '../../chess/logic/movepiece.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import guinavigation from '../gui/guinavigation.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 // @ts-ignore
@@ -30,10 +30,10 @@ import statustext from '../gui/statustext.js';
 // Type Definitions -------------------------------------------------------------
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { Edit } from '../../chess/logic/movepiece.js';
+import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Player } from '../../chess/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board, FullGame } from '../../chess/logic/gamefile.js';
 
 

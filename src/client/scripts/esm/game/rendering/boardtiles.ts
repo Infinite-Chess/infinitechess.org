@@ -11,7 +11,7 @@ import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import type { BoundingBox, BoundingBoxBD } from '../../util/math/bounds.js';
 
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
-import jsutil from '../../util/jsutil.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import frametracker from './frametracker.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';

@@ -16,7 +16,7 @@ import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import annotations from "./annotations.js";
 import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
-import variant from "../../../../chess/variants/variant.js";
+import variant from "../../../../../../../shared/chess/variants/variant.js";
 import geometry from "../../../../util/math/geometry.js";
 import bd from "../../../../util/bigdecimal/bigdecimal.js";
 import legalmovemodel from "../legalmovemodel.js";

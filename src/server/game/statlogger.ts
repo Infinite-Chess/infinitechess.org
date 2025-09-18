@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import timeutil from '../../client/scripts/esm/util/timeutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 // @ts-ignore
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';

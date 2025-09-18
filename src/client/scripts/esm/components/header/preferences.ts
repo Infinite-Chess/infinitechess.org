@@ -1,12 +1,12 @@
 
-import themes from "./themes.js";
+import themes from "../../../../../shared/components/header/themes.js";
 import pieceThemes, { PieceColorGroup } from "./pieceThemes.js";
 import localstorage from "../../util/localstorage.js";
-import timeutil from "../../util/timeutil.js";
+import timeutil from "../../../../../shared/util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
-import jsutil from "../../util/jsutil.js";
+import jsutil from "../../../../../shared/util/jsutil.js";
 import docutil from "../../util/docutil.js";
-import typeutil from "../../chess/util/typeutil.js";
+import typeutil from "../../../../../shared/chess/util/typeutil.js";
 
 
 import type { Color } from "../../util/math/math.js";

@@ -5,12 +5,12 @@ import invites from './misc/invites.js';
 import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
 import localstorage from '../util/localstorage.js';
-import timeutil from '../util/timeutil.js';
-import uuid from '../util/uuid.js';
+import timeutil from '../../../../shared/util/timeutil.js';
+import uuid from '../../../../shared/util/uuid.js';
 import config from './config.js';
 import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
-import wsutil from '../util/wsutil.js';
+import wsutil from '../../../../shared/util/wsutil.js';
 import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 import docutil from '../util/docutil.js';
 // Import End

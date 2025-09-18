@@ -6,14 +6,14 @@
 
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { VariantOptions } from '../../chess/logic/initvariant.js';
-import type { Player } from '../../chess/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import localstorage from '../../util/localstorage.js';
 import coordutil from '../../chess/util/coordutil.js';
 import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
-import variant from '../../chess/variants/variant.js';
+import variant from '../../../../../shared/chess/variants/variant.js';
 import gameloader from './gameloader.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import movesequence from "../chess/movesequence.js";
@@ -21,13 +21,13 @@ import selection from '../chess/selection.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import validatorama from "../../util/validatorama.js";
-import validcheckmates from '../../chess/util/validcheckmates.js';
+import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
-import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import enginegame from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
-import winconutil from '../../chess/util/winconutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 
 // Variables ----------------------------------------------------------------------------

@@ -11,7 +11,7 @@ import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
-import type { Leaderboard } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
+import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------

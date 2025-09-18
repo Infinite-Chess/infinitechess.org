@@ -24,7 +24,7 @@ import guipromotion from "../gui/guipromotion.js";
 import boarddrag from "../rendering/boarddrag.js";
 import boardpos from "../rendering/boardpos.js";
 import selection from "../chess/selection.js";
-import jsutil from "../../util/jsutil.js";
+import jsutil from "../../../../../shared/util/jsutil.js";
 import animation from "../rendering/animation.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import piecemodels from "../rendering/piecemodels.js";

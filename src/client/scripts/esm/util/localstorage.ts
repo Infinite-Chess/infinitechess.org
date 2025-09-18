@@ -6,7 +6,7 @@
  * (unless the user clears their browser cache)
  */
 
-import jsutil from "./jsutil.js";
+import jsutil from "../../../../shared/util/jsutil.js";
 
 
 /** An entry in local storage */

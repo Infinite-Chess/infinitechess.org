@@ -20,7 +20,7 @@ import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
 import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
-import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import ratingabuse from './ratingabuse.js';
@@ -29,7 +29,7 @@ import type { Game, PlayerData } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { AuthMemberInfo } from '../../../types.js';
-import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 
 //--------------------------------------------------------------------------------------------------------
 

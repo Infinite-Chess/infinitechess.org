@@ -10,26 +10,26 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
-import type { MetaData } from "../../chess/util/metadata.js";
+import type { MetaData } from "../../../../../shared/chess/util/metadata.js";
 import type { ParticipantState, ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { ServerGameInfo } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional } from "./gameslot.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
-import type { Player } from "../../chess/util/typeutil.js";
-import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
+import type { Player } from "../../../../../shared/chess/util/typeutil.js";
+import type { PresetAnnotes } from "../../../../../shared/chess/logic/icn/icnconverter.js";
+import type { ClockValues } from "../../../../../shared/chess/logic/clock.js";
 
 
 import perspective from "../rendering/perspective.js";
 import transition from "../rendering/transition.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
-import timeutil from "../../util/timeutil.js";
+import timeutil from "../../../../../shared/util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 import loadingscreen from "../gui/loadingscreen.js";
-import { players } from "../../chess/util/typeutil.js";
+import { players } from "../../../../../shared/chess/util/typeutil.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import guinavigation from "../gui/guinavigation.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";

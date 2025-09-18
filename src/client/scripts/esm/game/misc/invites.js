@@ -2,16 +2,16 @@
 // Import Start
 import websocket from '../websocket.js';
 import localstorage from '../../util/localstorage.js';
-import clockutil from '../../chess/util/clockutil.js';
+import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
 import statustext from '../gui/statustext.js';
-import uuid from '../../util/uuid.js';
+import uuid from '../../../../../shared/util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 import docutil from '../../util/docutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import gamesound from './gamesound.js';
-import { players } from '../../chess/util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 // Import End
 
 "use strict";

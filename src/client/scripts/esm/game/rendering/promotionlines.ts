@@ -13,7 +13,7 @@ import gameslot from '../chess/gameslot.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import boardpos from './boardpos.js';
 import bd from '../../util/bigdecimal/bigdecimal.js';
-import { players } from '../../chess/util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { createModel } from './buffermodel.js';
 import primitives from './primitives.js';
 import camera from './camera.js';

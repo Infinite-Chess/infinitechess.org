@@ -11,7 +11,7 @@ import statustext from '../gui/statustext.js';
 import docutil from '../../util/docutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 import gamecompressor from './gamecompressor.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 

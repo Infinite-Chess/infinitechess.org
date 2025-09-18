@@ -1,10 +1,10 @@
 
 
-import type { PlayerGroup } from "../../../chess/util/typeutil.js";
+import type { PlayerGroup } from "../../../../../../shared/chess/util/typeutil.js";
 import type { Rating } from "../../../../../../server/database/leaderboardsManager.js";
-import type { ClockValues } from "../../../chess/logic/clock.js";
-import type { MetaData } from "../../../chess/util/metadata.js";
-import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
+import type { ClockValues } from "../../../../../../shared/chess/logic/clock.js";
+import type { MetaData } from "../../../../../../shared/chess/util/metadata.js";
+import type { LongFormatOut } from "../../../../../../shared/chess/logic/icn/icnconverter.js";
 import type { Game } from "../../../chess/logic/gamefile.js";
 import type { GameUpdateMessage, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 // @ts-ignore
@@ -26,15 +26,15 @@ import drawoffers from "./drawoffers.js";
 import gameloader from "../../chess/gameloader.js";
 import gameslot from "../../chess/gameslot.js";
 import guititle from "../../gui/guititle.js";
-import clock from "../../../chess/logic/clock.js";
+import clock from "../../../../../../shared/chess/logic/clock.js";
 import selection from "../../chess/selection.js";
 import onlinegame from "./onlinegame.js";
 import guiclock from "../../gui/guiclock.js";
-import icnconverter from "../../../chess/logic/icn/icnconverter.js";
+import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter.js";
 import validatorama from "../../../util/validatorama.js";
-import uuid from "../../../util/uuid.js";
-import metadata from "../../../chess/util/metadata.js";
-import { players, Player } from "../../../chess/util/typeutil.js";
+import uuid from "../../../../../../shared/util/uuid.js";
+import metadata from "../../../../../../shared/chess/util/metadata.js";
+import { players, Player } from "../../../../../../shared/chess/util/typeutil.js";
 import guigameinfo from "../../gui/guigameinfo.js";
 
 

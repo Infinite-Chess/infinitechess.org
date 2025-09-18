@@ -7,12 +7,12 @@
  */
 
 
-import type { MetaData } from "../../chess/util/metadata.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
-import type { Player } from "../../chess/util/typeutil.js";
+import type { MetaData } from "../../../../../shared/chess/util/metadata.js";
+import type { ClockValues } from "../../../../../shared/chess/logic/clock.js";
+import type { Player } from "../../../../../shared/chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
-import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
+import type { PresetAnnotes } from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import type { FullGame } from "../../chess/logic/gamefile.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
 
@@ -25,11 +25,11 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import piecemodels from "../rendering/piecemodels.js";
-import movepiece from "../../chess/logic/movepiece.js";
+import movepiece from "../../../../../shared/chess/logic/movepiece.js";
 import miniimage from "../rendering/miniimage.js";
 import animation from "../rendering/animation.js";
 import arrows from "../rendering/arrows/arrows.js";
-import clock from "../../chess/logic/clock.js";
+import clock from "../../../../../shared/chess/logic/clock.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import selection from "./selection.js";
@@ -43,7 +43,7 @@ import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
 import premoves from "./premoves.js";
-import winconutil from "../../chess/util/winconutil.js";
+import winconutil from "../../../../../shared/chess/util/winconutil.js";
 import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
 import bd from "../../util/bigdecimal/bigdecimal.js";
@@ -54,7 +54,7 @@ import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
 import meshes from "../rendering/meshes.js";
 import starfield from "../rendering/starfield.js";
-import { players } from "../../chess/util/typeutil.js";
+import { players } from "../../../../../shared/chess/util/typeutil.js";
 import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore

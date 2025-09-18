@@ -7,7 +7,7 @@
 
 import type { Coords } from "./movesets.js";
 import type { CoordsKey } from "../util/coordutil.js";
-import type { Edit, path } from "./movepiece.js";
+import type { Edit, path } from "../../../../../shared/chess/logic/movepiece.js";
 
 
 // Type Definitions ------------------------------------------------------------------------------------

@@ -18,7 +18,7 @@ import specialrighthighlights from './specialrighthighlights.js';
 import selection from '../../chess/selection.js';
 import frametracker from '../frametracker.js';
 import preferences from '../../../components/header/preferences.js';
-import typeutil from '../../../chess/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import boardpos from '../boardpos.js';
 import piecemodels from '../piecemodels.js';
 import legalmoveshapes from '../instancedshapes.js';

@@ -6,7 +6,7 @@
 
 
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { CoordsSpecial, MoveDraft } from '../../chess/logic/movepiece.js';
+import type { CoordsSpecial, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 import type { Game, FullGame, Board } from '../../chess/logic/gamefile.js';
@@ -16,7 +16,7 @@ import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import boardutil from '../../chess/util/boardutil.js';
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import movesequence from './movesequence.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
@@ -43,7 +43,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import specialdetect from '../../chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';
 import { animateMove } from './graphicalchanges.js';
-import { rawTypes, players } from '../../chess/util/typeutil.js';
+import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input.js';
 // @ts-ignore

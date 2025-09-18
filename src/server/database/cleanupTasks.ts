@@ -13,7 +13,7 @@ import { maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js'
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import db from './database.js'; // Adjust path
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import timeutil from '../../client/scripts/esm/util/timeutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 
 

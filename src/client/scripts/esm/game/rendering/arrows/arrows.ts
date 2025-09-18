@@ -20,10 +20,10 @@ import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import jsutil from '../../../util/jsutil.js';
+import jsutil from '../../../../../../shared/util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import organizedpieces from '../../../chess/logic/organizedpieces.js';
-import typeutil from '../../../chess/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import frametracker from '../frametracker.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
@@ -43,7 +43,7 @@ import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js
 import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
-import { rawTypes } from '../../../chess/util/typeutil.js';
+import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 
 
