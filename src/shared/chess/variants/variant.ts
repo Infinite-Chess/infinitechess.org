@@ -8,7 +8,7 @@
 import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { BaseRay } from '../../../client/scripts/esm/game/rendering/highlights/annotations/drawrays.js';
+import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from './gamerules.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 

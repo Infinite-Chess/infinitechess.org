@@ -144,8 +144,6 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
  */
 
 
-// import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-
 
 // type PlayerStats = {
 // 	elo: number;
