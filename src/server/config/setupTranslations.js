@@ -16,7 +16,10 @@ import zhTW from 'date-fns/locale/zh-TW/index.js';
 import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
-import { BUNDLE_FILES } from "./config.js";
+import { fileURLToPath } from 'node:url';
+import { insertScriptIntoHTML } from "../utility/HTMLScriptInjector.js";
+import { readFileSync, writeFileSync } from "node:fs";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * This dictionary tells use what code the date-fns package uses
@@ -56,8 +59,6 @@ const languageNames = {
 	'tr-TR': 'Turkish',
 };
 
-import { fileURLToPath } from 'node:url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = "./translation";
 
@@ -344,7 +345,6 @@ function translateStaticTemplates(translations) {
 						language: language,
 						newsHTML: translations[language].news,
 						viewsfolder: path.join(__dirname, '../../client/views'),
-						// BUNDLE_FILES, // EJS can read this to insert different attributes to elements if desired.
 					},
 				),
 			);
@@ -357,6 +357,9 @@ function translateStaticTemplates(translations) {
  * **Should be ran only once**.
  */
 function initTranslations() {
+	// NEEDS TO BE BEFORE EJS RENDERING as it copies play.ejs into every language!
+	injectHTMLScriptIntoPlayEJS(); // Inject htmlscript.js into play.ejs
+
 	const translations = loadTranslationsFolder(translationsFolder);
 
 	i18next.use(middleware.LanguageDetector).init({
@@ -369,6 +372,15 @@ function initTranslations() {
 	});
 
 	translateStaticTemplates(translations); // Compiles static files
+}
+
+function injectHTMLScriptIntoPlayEJS() {
+	// Overwrite play.ejs, directly inserting htmlscript.js into it.
+	/** The relative path to play.ejs */
+	const playEJS = readFileSync(path.join(__dirname, "../../../src/client/views/play.ejs"));
+	const htmlscriptJS = readFileSync(path.join(__dirname, '../../client/scripts/cjs/game/htmlscript.js'));
+	const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
+	writeFileSync(path.join(__dirname, "../../client/views/play.ejs"), newPlayEJS);
 }
 
 export {

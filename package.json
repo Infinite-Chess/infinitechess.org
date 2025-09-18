@@ -52,16 +52,25 @@
 		"@types/ws": "^8.5.13",
 		"@typescript-eslint/eslint-plugin": "^8.37.0",
 		"@typescript-eslint/parser": "^8.37.0",
+		"concurrently": "^9.2.1",
+		"cpx": "^1.5.0",
 		"eslint": "^9.16.0",
 		"globals": "^15.9.0",
 		"madge": "^8.0.0",
 		"typescript": "^5.7.2",
-		"typescript-eslint": "^8.37.0"
+		"typescript-eslint": "^8.37.0",
+		"wait-on": "^9.0.0"
 	},
 	"scripts": {
-		"build": "node build.js",
-		"watch": "nodemon",
-		"start": "node .",
+		"prod": "npm run prod:build && npm run prod:start",
+		"prod:build": "node build.js && tsc",
+		"prod:start": "node dist/server/server.js",
+		"dev": "concurrently -k \"npm:dev:*\" --prefix-colors \"green,grey,blue,white\"",
+		"dev:build": "node build.js --watch --dev",
+		"dev:server": "wait-on dist/server/server.js && nodemon",
+		"dev:tsc": "tsc --watch --preserveWatchOutput",
+		"dev:assets": "cpx 'src/**/*.{html,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}' dist --watch",
+		"dev:assets-cjs": "cpx 'src/client/scripts/cjs/**/*.js' dist/client/scripts/cjs --watch",
 		"build-images": "node src/server/utility/generateImages.js",
 		"generate-dependancy-graph": "node src/server/utility/generateDependancyGraph.js"
 	}

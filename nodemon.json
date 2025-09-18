@@ -1,9 +1,5 @@
 {
-	"ignore": [
-		"./database/**/*",
-		"./dist/**/*",
-		"./docs/*"
-	],
-	"exec": "npm run build && npm run start",
-	"ext": "js,html,css,jpg,png,gif,mp3,wav,webp,toml,ejs,json,mjs,md,ts"
+  "watch": ["dist/server", "dist/shared", "src/client/views", "src/client/scripts/cjs/game/htmlscript.js"],
+  "ext": "js,ejs",
+  "exec": "node --enable-source-maps dist/server/server.js"
 }
