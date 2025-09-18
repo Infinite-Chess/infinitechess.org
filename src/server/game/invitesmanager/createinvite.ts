@@ -26,11 +26,10 @@ import { Leaderboards, VariantLeaderboards } from '../../../shared/chess/variant
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 
-// @ts-ignore
-import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
+import type { ServerUsernameContainer } from '../../../shared/types.js';
 
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z.strictObject({
