@@ -13,7 +13,7 @@
 import type { MetaData } from "../../../../../shared/chess/util/metadata.js";
 import type { ParticipantState, ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { ServerGameInfo } from "../misc/onlinegame/onlinegamerouter.js";
-import type { Additional } from "./gameslot.js";
+import type { Additional } from "../../../../../shared/chess/logic/gamefile.js";
 import type { VariantOptions } from "../../../../../shared/chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../../../../shared/chess/util/typeutil.js";

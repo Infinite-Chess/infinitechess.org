@@ -8,13 +8,10 @@
 
 
 import type { MetaData } from "../../../../../shared/chess/util/metadata.js";
-import type { ClockValues } from "../../../../../shared/chess/logic/clock.js";
 import type { Player } from "../../../../../shared/chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
-import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
 import type { PresetAnnotes } from "../../../../../shared/chess/logic/icn/icnconverter.js";
-import type { FullGame } from "../../../../../shared/chess/logic/gamefile.js";
-import type { VariantOptions } from "../../../../../shared/chess/logic/initvariant.js";
+import type { Additional, FullGame } from "../../../../../shared/chess/logic/gamefile.js";
 
 import enginegame from '../misc/enginegame.js';
 import guinavigation from "../gui/guinavigation.js";
@@ -74,26 +71,6 @@ interface LoadOptions {
 	/** Preset ray overrides for the variant's rays. */
 	presetAnnotes?: PresetAnnotes,
 	additional?: Additional,
-}
-
-/** Additional options that may go into the gamefile constructor.
- * Typically used if we're pasting a game, or reloading an online one. */
-interface Additional {
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: ServerGameMoveMessage[],
-	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
-	variantOptions?: VariantOptions,
-	/** The conclusion of the game, if loading an online game that has already ended. */
-	gameConclusion?: string,
-	/** Any already existing clock values for the gamefile. */
-	clockValues?: ClockValues,
-	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor?: boolean,
-	/**
-	 * If present, the resulting gamefile will have a world border at this distance on all sides from the origin (0,0).
-	 * It is NOT equidistant from all sides of the current position.
-	 */
-	worldBorder?: bigint,
 }
 
 // Variables ---------------------------------------------------------------
