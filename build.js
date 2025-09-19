@@ -9,7 +9,7 @@
  * 					Further, all css files are minified by lightningcss.
  */
 
-import { cp as copy, rm as remove, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
