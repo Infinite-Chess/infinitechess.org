@@ -4,6 +4,11 @@
 import { gl } from './webgl.js';
 
 
+
+import vsSource_color from '../../../../shaders/color/vertex.glsl';
+import fsSource_color from '../../../../shaders/color/fragment.glsl';
+
+
 // Type definitions -------------------------------------------------------------------------------------------------------
 
 
@@ -70,36 +75,7 @@ function initPrograms(): void {
  * followed by the color data (4 numbers).
  */
 function createColorProgram(): ShaderProgram {
-	const specifyPointSize = false; // Can toggle true if we start rendering with gl.POINTS somewhere in the project
-	const pointSizeLine = specifyPointSize ? `gl_PointSize = ${(pointSize * window.devicePixelRatio).toFixed(1)};` : ''; // Default: 7.0
-	const vsSource = `#version 300 es
-		in vec4 aVertexPosition;
-		in vec4 aVertexColor;
-
-		uniform mat4 uTransformMatrix;
-
-		out vec4 vColor;
-
-		void main() {
-			gl_Position = uTransformMatrix * aVertexPosition;
-			vColor = aVertexColor;
-			${pointSizeLine}
-		}
-	`;
-	const fsSource = `#version 300 es
-		precision lowp float;
-
-		in vec4 vColor;
-
-		out vec4 fragColor;
-
-		void main() {
-			fragColor = vColor;
-		}
-	`;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+	const program = createShaderProgram(vsSource_color, fsSource_color);
 	return {
 		program,
 		attribLocations: {
