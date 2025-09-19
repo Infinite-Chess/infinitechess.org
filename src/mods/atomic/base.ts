@@ -42,7 +42,7 @@ class SimulatedChangeStack {
 	}
 }
 
-function draftHook(gamefile: FullGame, move: Move): false {
+function draftHook(gamefile: FullGame, move: Move): boolean {
 
 	// Better compositor please? lol no
 	const newChanges = new SimulatedChangeStack(gamefile);

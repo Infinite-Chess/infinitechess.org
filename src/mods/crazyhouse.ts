@@ -13,14 +13,14 @@ type CrazyhouseGui = {crazyhouse: {gui: TypeGroup<{
 	shown: boolean,
 }>}}
 
-function createCrazyhouseGui() {
+function createCrazyhouseGui(): void {
 	const container = document.createElement("div");
 	container.id = "crazyhouse-container";
 	container.style.position = "absolute";
 	document.getElementById("boardUI")!.appendChild(container);
 };
 
-function updateHome(gamefile: CrazyhouseState & CrazyhouseGui) {
+function updateHome(gamefile: CrazyhouseState & CrazyhouseGui): void {
 	const crazycontainer = document.querySelector("#boardUI #crazyhouse-container")!;
 	console.log(gamefile.crazyhouse);
 	for (const [sType, data] of Object.entries(gamefile.crazyhouse.gui)) {
@@ -38,7 +38,7 @@ function updateHome(gamefile: CrazyhouseState & CrazyhouseGui) {
 	}
 }
 
-function loadPieces(g: CrazyhouseGui,svgs: SVGElement[]) {
+function loadPieces(g: CrazyhouseGui,svgs: SVGElement[]): void {
 	for (const svg of svgs) {
 		const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
 		fo.setAttributeNS(null, "x", "20");
@@ -56,7 +56,7 @@ function loadPieces(g: CrazyhouseGui,svgs: SVGElement[]) {
 	}
 }
 
-function setup(gamefile: Construction<CrazyhouseState & CrazyhouseGui, FullGame & CrazyhouseState & CrazyhouseGui>) {
+function setup(gamefile: Construction<CrazyhouseState & CrazyhouseGui, FullGame & CrazyhouseState & CrazyhouseGui>): void {
 	gamefile.crazyhouse = {
 		inventory: {[r.PAWN + e.B]: 10, [r.QUEEN + e.W]: 99, [r.KING + e.W]: -1},
 		gui: {}
