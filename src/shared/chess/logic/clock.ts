@@ -120,7 +120,7 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 
 	if (colorTicking !== undefined) {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
-		if (clockValues.timeColorTickingLosesAt === undefined) throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()');
+		if (clockValues.timeColorTickingLosesAt === undefined) throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() before edit()');
 		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - now;
 		clockValues.clocks[colorTicking] = colorTickingTrueTimeRemaining;
 	}

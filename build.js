@@ -38,6 +38,7 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * into their own bundle!
  */
 const clientEntryPoints = [
+	'src/client/scripts/esm/modifiers/atomic.ts',
 	'src/client/scripts/esm/game/main.js',
 	'src/client/scripts/esm/components/header/header.js',
 	'src/client/scripts/esm/views/index.ts',

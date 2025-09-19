@@ -12,6 +12,7 @@ import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMoveMessage } from "../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
 import type { BoundingBox } from "../../util/math/bounds.js";
+import type { GameEvents } from "./events.js";
 
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
@@ -27,6 +28,7 @@ import gamerules from "../variants/gamerules.js";
 import wincondition from "./wincondition.js";
 import bounds from "../../util/math/bounds.js";
 import variant from "../variants/variant.js";
+import atomic from "../../../modifiers/atomic.js";
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -77,6 +79,7 @@ type Board = {
 	moves: Move[]
 	pieces: OrganizedPieces
 	state: GameState
+	events: GameEvents
 
 	colinearsPresent: boolean
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>
@@ -235,6 +238,9 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		pieceMovesets,
 		specialMoves,
 		playableRegion,
+		events: {
+			draftMoves: []
+		},
 		...editorDependentVars
 	};
 }

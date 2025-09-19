@@ -27,7 +27,7 @@ import legalmoves from './legalmoves.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
 import wincondition from './wincondition.js';
-
+import events from './events.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
@@ -146,6 +146,7 @@ interface Move extends Edit, MoveDraft, BaseMove {
 
 // Move Generating --------------------------------------------------------------------------------------------------
 
+type GenerateHook = (gamefile: FullGame, move: Move) => boolean
 
 /**
  * Generates a full Move object from a MoveDraft,
@@ -197,6 +198,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 		// Delete all special rights that should be revoked from the move.
 		queueSpecialRightDeletionStateChanges(boardsim, move);
 	}
+	events.runEvent(boardsim.events, "draftMoves", gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
@@ -513,7 +515,8 @@ export type {
 	promoteTrigger,
 	promotion,
 	castle,
-	path
+	path,
+	GenerateHook
 };
 
 export default {
