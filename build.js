@@ -108,27 +108,6 @@ const esbuildServerOptions = {
 async function buildClient(isDev) {
 	// console.log(`Building client in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
 
-	// 1. Copy static assets (HTML, EJS, images, etc.)
-
-	if (isDev) {
-		// Copy over everything that cpx (our asset copier) doesn't, such as ejs files.
-		await copy("./src/client/views", "./dist/client/views", { recursive: true });
-	} else {
-		// In production, copy over the stuff cpx (only dev) was in charge of.
-		await copy("./src/client", "./dist/client", {
-			recursive: true,
-			filter: (src) => {
-				// Never copy TypeScript files, esbuild handles them.
-				if (src.endsWith('.ts')) return false;
-				// Don't copy JavaScript files from the ESM directory, esbuild bundles them.
-				if (src.includes('/scripts/esm/') && src.endsWith('.js')) return false;
-				// Otherwise, copy the file. This includes assets and our CJS scripts.
-				return true;
-			}
-		});
-	}
-
-	// 2. Handle esbuild bundling
 	const context = await esbuild.context({
 		...esbuildClientOptions,
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
@@ -150,7 +129,7 @@ async function buildClient(isDev) {
 		context.dispose();
 		// console.log('Client esbuild bundling complete.');
 
-		// 3. Minify JS and CSS
+		// Minify JS and CSS
 		// console.log('Minifying production assets...');
 		// Further minify them. This cuts off their size a further 60%!!!
 		await minifyScriptDirectory('./dist/client/scripts/cjs/', './dist/client/scripts/cjs/', false);
@@ -231,9 +210,6 @@ async function minifyCSSFiles() {
 /** Whether additional minifying of bundled scripts and css files should be skipped. */
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 if (USE_DEVELOPMENT_BUILD && !DEV_BUILD) throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
-
-// Start with a clean slate
-await remove("./dist", { recursive: true, force: true });
 
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([
