@@ -20,8 +20,6 @@ import path from "node:path";
 // Local imports
 import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
 import { DEV_BUILD } from './src/server/config/config.js';
-import { getBundleExceptions } from './src/mods/modbundles.js';
-
 
 // ================================= CONSTANTS =================================
 
@@ -48,8 +46,8 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/createaccount.js',
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
-	...getBundleExceptions(['server']).map(p => `src/mods/${p}.ts`)
 ];
+
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
 
 const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin('✅ Client Build successful.', '❌ Client Build failed.');
@@ -72,7 +70,7 @@ function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
 const esbuildClientOptions = {
 	bundle: true,
 	entryPoints: clientEntryPoints,
-	outdir: './dist/',
+	outdir: './dist/client/scripts/esm',
 	// Use the 'text' loader for shader files
 	loader: { '.glsl': 'text' }, // Any file import ending in .glsl is loaded as a raw text string
 	/**

@@ -4,10 +4,6 @@
  * @author Idontuse
  */
 import type { GameEvents, LoadingEvents } from "../shared/chess/logic/events.js";
-// @ts-ignore
-import { getBundles } from "./modbundles.js";
-
-const MOD_LOCATION_BASE = '/scripts/esm/mods/';
 
 interface Eventable {
 	events: GameEvents<this>,
@@ -35,6 +31,25 @@ type ComponentName = Modname | 'game' | 'board' | 'match' | 'client' | 'events' 
 type SetupPair = [(gamefile: Construction<any>) => void | null, (gamefile: any) => void | null]
 const SETUPLENGTH = 2;
 
+const loadDict: {[name: string]: () => Promise<any>} = {
+	"atomic/base": () => import("./atomic/base.js"),
+	"atomic/graphics": () => import("./atomic/graphics.js")
+};
+
+const ModBundles: [string, ComponentName[]][] = [
+	["atomic/base", ['atomic', 'board', 'game']],
+	["atomic/graphics", ['atomic', 'board', 'game', 'client']],
+];
+
+// LATER: Switch to standard methods when we switch to ES2024+
+function isSubset<T>(s1: Iterable<T>, s2: Iterable<T>): boolean {
+	return (new Set([...s1, ...s2])).size === new Set(s1).size;
+}
+
+function getBundles(componenets: Iterable<ComponentName>): string[] {
+	return ModBundles.filter(v => isSubset(componenets, v[1])).map(v => v[0]);
+}
+
 let modCache: {
 	[name: string]: SetupPair
 } = {};
@@ -56,9 +71,9 @@ function isSetupValid(setup: unknown): setup is SetupPair {
 async function loadModList(complist: Set<ComponentName>): Promise<void> {
 	await Promise.all(getBundles(complist).map(async(mod: string) => {
 		if (mod in modCache) return;
-		const location = `${MOD_LOCATION_BASE}${mod}.js`;
-		console.log(`Importing a modifier from ${location}`);
-		const {default: setup} = await import(location);
+		if (!(mod in loadDict)) throw Error();
+		
+		const {default: setup} = await loadDict[mod]!();
 		if (!isSetupValid(setup)) throw Error(`Modifier at ${mod} is in invalid format`);
 		modCache[mod] = setup;
 	}));
