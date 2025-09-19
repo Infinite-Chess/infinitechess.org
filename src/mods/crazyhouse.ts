@@ -41,6 +41,10 @@ function updateHome(gamefile: CrazyhouseState & CrazyhouseGui) {
 function loadPieces(g: CrazyhouseGui,svgs: SVGElement[]) {
 	for (const svg of svgs) {
 		const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+		fo.setAttributeNS(null, "x", "20");
+		fo.setAttributeNS(null, "y", "20");
+		fo.setAttributeNS(null, "width", "20");
+		fo.setAttributeNS(null, "height", "20");
 		const p = document.createElement("p");
 		p.id = "count";
 		fo.appendChild(p);
