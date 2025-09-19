@@ -69,7 +69,7 @@
 		"prod:assets": "cpx 'src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}' dist",
 		"prod:assets-cjs": "cpx 'src/client/scripts/cjs/**/*.js' dist/client/scripts/cjs",
 		"dev": "npm run clean && concurrently -k \"npm:dev:*\" --prefix-colors \"green,grey,blue,white\"",
-		"dev:build": "node build.js --watch --dev",
+		"dev:build": "node build.js --dev",
 		"dev:server": "wait-on dist/server/server.js && nodemon",
 		"dev:tsc": "tsc --watch --preserveWatchOutput",
 		"dev:assets": "cpx 'src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}' dist --watch",
