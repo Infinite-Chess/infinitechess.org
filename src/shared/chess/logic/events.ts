@@ -44,12 +44,9 @@ function removeEventListener<E extends Eventlist, N extends keyof E & EventName,
 	if (listeners === undefined) {
 		return false;
 	}
-	for (let i = 0; i <= listeners.length; i++ ) {
-		if (listeners[i] !== listener) continue;
-		listeners.splice(i, 1);
-		return true;
-	}
-	return false;
+	const precount = listeners.length;
+	eventlist[event] = listeners.filter(l => l !== listener) as E[N];
+	return precount !== eventlist[event]!.length;
 }
 
 import type { Move } from "./movepiece";

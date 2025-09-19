@@ -12,7 +12,7 @@ import type { Player } from "../../../../../shared/chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { PresetAnnotes } from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import type { Additional, FullGame, Gamesim } from "../../../../../shared/chess/logic/gamefile.js";
-import type { Construction, ComponentName } from "../../../../../mods/modmanager.js";
+import type { Construction, ComponentName, Modname } from "../../../../../mods/modmanager.js";
 
 import enginegame from '../misc/enginegame.js';
 import guinavigation from "../gui/guinavigation.js";
@@ -58,13 +58,14 @@ import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
+import events from "../../chess/logic/events.js";
 
 // Type Definitions ----------------------------------------------------------
 
 
 /** Options for loading a game. */
 interface LoadOptions {
-	modlist?: [],
+	modlist?: Modname[],
 	/** The metadata of the game */
 	metadata: MetaData,
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
@@ -135,19 +136,19 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// console.log('Started loading game...');
 	const loadingGamefile: Construction<any, void> = {
 		events: {},
-		components: new Set<ComponentName>(['game', 'board', 'atomic']),
+		components: new Set<ComponentName>(['game', 'board', 'atomic', "client"]),
 	};
 	// The game should be considered loaded once the LOGICAL stuff is finished,
 	// but the loading animation should only be closed when
 	// both the LOGICAL and GRAPHICAL stuff are finished.
 
-	await modmanager.loadModList(loadOptions.modlist);
-	modmanager.setupModifiers(loadingGamefile, ['atomic']);
+	await modmanager.loadModList(loadOptions.modlist ?? ['atomic', 'crazyhouse']);
+	modmanager.setupModifiers(loadingGamefile, ['atomic', 'crazyhouse']);
 	
 	// First load the LOGICAL stuff...
 	loadLogical(loadingGamefile, loadOptions);
 	// console.log('Finished loading LOGICAL game stuff.');
-	
+	events.runEvent(loadedGamefile!.events, "fullyloaded", loadedGamefile!);
 	
 
 	// Play the start game sound once LOGICAL stuff is finished loading,

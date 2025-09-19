@@ -71,7 +71,7 @@ type ClockDependant = {
  * Use by client always, may not be used by the server.
  */
 type Board = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+	/** An array of all types of pieces that are in this game, with their color extension */
 	existingTypes: number[],
 	/** An array of all RAW piece types that are in this game. */
 	existingRawTypes: RawType[]

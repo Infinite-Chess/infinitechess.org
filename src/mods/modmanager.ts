@@ -7,7 +7,8 @@ import type { GameEvents } from "../shared/chess/logic/events.js";
 
 const MOD_LOCATION_BASE = '/scripts/esm/modifiers/';
 const modLocations = {
-	atomic: 'atomic.js'
+	atomic: 'atomic.js',
+	crazyhouse: 'crazyhouse.js'
 } as const;
 
 type Modname = keyof typeof modLocations
@@ -41,7 +42,7 @@ const modCache: {
 	[name in Modname]?: SetupFunc
 } = {};
 
-async function loadModList(modlist: Modname[] = ['atomic']): Promise<void> {
+async function loadModList(modlist: Modname[]): Promise<void> {
 	await Promise.all(modlist.map(async mod => {
 		if (mod in modCache) return;
 		const location = `${MOD_LOCATION_BASE}${modLocations[mod]}`;
@@ -52,15 +53,16 @@ async function loadModList(modlist: Modname[] = ['atomic']): Promise<void> {
 	}));
 }
 
-function setupModifiers(gamefile: Construction<any, void>, modList: Modname[] = ['atomic']): void {
+function setupModifiers(gamefile: Construction<any, void>, modList: Modname[]): void {
 	for (const mod of modList) {
 		if (modCache[mod] === undefined) throw Error("Mod has not been loaded into cache");
+		console.log(`Setting up ${mod}`);
 		modCache[mod](gamefile);
 	}
 }
 
 export type {
-	Gamefile, Construction, ComponentName
+	Gamefile, Construction, ComponentName, Modname
 };
 
 export default {

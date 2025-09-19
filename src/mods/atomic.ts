@@ -95,9 +95,10 @@ function renderNukeSites(gamefile: FullGame): false {
 }
 
 function setup(gamefile: Construction<void, FullGame>) {
-	
-	events.addEventListener(gamefile.events, "draftmoves", draftHook);
-	events.addEventListener(gamefile.events, "renderabovepieces", renderNukeSites);
+	if (gamefile.components.has("client")) {
+		events.addEventListener(gamefile.events, "draftmoves", draftHook);
+		events.addEventListener(gamefile.events, "renderabovepieces", renderNukeSites);
+	}
 	if (gamefile.components.has("game")) {
 		function swapCheckmateForRoyalCapture(gamefile: FullGame): false {
 			for (const w of Object.values(gamefile.basegame.gameRules.winConditions)) {
