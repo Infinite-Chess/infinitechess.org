@@ -19,13 +19,6 @@ import { NODE_ENV } from './env.js';
  */
 const DEV_BUILD = NODE_ENV === 'development';
 
-/** 
- * Whether we bundle and minify files to send to the client
- * Only disable for debugging and development
- */
-const BUNDLE_FILES = !DEV_BUILD || false; // Change false to true to always enable.
-if (!DEV_BUILD && !BUNDLE_FILES) throw new Error("BUNDLE_FILES must be true in production!!");
-
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
 const ARE_RATE_LIMITING = !DEV_BUILD || false; // Set to false to temporarily get around it, during development.
@@ -88,7 +81,6 @@ const printIncomingAndOutgoingMessages = false;
 
 export {
 	DEV_BUILD,
-	BUNDLE_FILES,
 	ARE_RATE_LIMITING,
 	simulatedWebsocketLatencyMillis,
 	GAME_VERSION,

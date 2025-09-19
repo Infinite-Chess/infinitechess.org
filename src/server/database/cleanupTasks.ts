@@ -13,7 +13,7 @@ import { maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js'
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import db from './database.js'; // Adjust path
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import timeutil from '../../client/scripts/esm/util/timeutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 
 
@@ -56,7 +56,7 @@ function checkDatabaseIntegrity(): void {
 
 /** Periodically deletes expired password reset tokens from the database. */
 function deleteExpiredPasswordResetTokens(): void {
-	console.log('Running cleanup of expired password reset tokens.');
+	// console.log('Running cleanup of expired password reset tokens.');
 	try {
 		const now = Date.now();
 
@@ -77,7 +77,7 @@ function deleteExpiredPasswordResetTokens(): void {
 
 /** Deletes all expired refresh tokens from the database in a single, efficient query. */
 function cleanUpExpiredRefreshTokens(): void {
-	console.log('Running cleanup of expired refresh tokens.');
+	// console.log('Running cleanup of expired refresh tokens.');
 	try {
 		const now = Date.now();
 		
@@ -103,7 +103,7 @@ function cleanUpExpiredRefreshTokens(): void {
  * their user_id to the deleted_members table, allowing us to reuse that id.
  */
 function removeOldUnverifiedMembers(): void {
-	console.log("Checking for old unverified accounts to remove.");
+	// console.log("Checking for old unverified accounts to remove.");
 	try {
 		// Calculate the cutoff time.
 		const cutoffTimestamp = Date.now() - maxExistenceTimeForUnverifiedAccountMillis;

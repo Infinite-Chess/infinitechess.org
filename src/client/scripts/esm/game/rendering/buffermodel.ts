@@ -12,7 +12,7 @@
 
 
 import type { ShaderProgram } from './shaders.js';
-import type { Vec3 } from '../../util/math/vectors.js';
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 import shaders from './shaders.js';
 import { createBufferFromData, updateBufferIndices } from './buffers.js';

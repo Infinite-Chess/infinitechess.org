@@ -15,7 +15,7 @@
 
 import docutil from "../util/docutil.js";
 import validatorama from "../util/validatorama.js";
-import validcheckmates from "../chess/util/validcheckmates.js";
+import validcheckmates from "../../../../shared/chess/util/validcheckmates.js";
 // @ts-ignore
 import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
 

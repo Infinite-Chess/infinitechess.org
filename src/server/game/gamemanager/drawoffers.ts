@@ -11,7 +11,7 @@
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 import type { Game } from './gameutility.js';
-import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 
 //--------------------------------------------------------------------------------------------------------
 

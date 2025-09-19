@@ -18,11 +18,10 @@ import icncommentutils, { CommandObject } from "./icncommentutils.js";
 import bimath from "../../../util/bigdecimal/bimath.js";
 
 
-// @ts-ignore
 import type { GameRules } from "../../variants/gamerules.js";
 import type { MetaData } from "../../util/metadata.js";
 import type { EnPassant, GlobalGameState } from "../state.js";
-import type { BaseRay } from "../../../game/rendering/highlights/annotations/drawrays.js";
+import type { BaseRay } from "../../../util/math/geometry.js";
 
 
 // Type Definitions -------------------------------------------------------------------

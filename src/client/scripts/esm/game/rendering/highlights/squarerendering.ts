@@ -13,11 +13,11 @@
 
 import space from "../../misc/space.js";
 import instancedshapes from "../instancedshapes.js";
-import bd from "../../../util/bigdecimal/bigdecimal.js";
+import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { BufferModelInstanced, createModel_Instanced } from "../buffermodel.js";
 
-import type { Coords } from "../../../chess/util/coordutil.js";
-import type { Color } from "../../../util/math/math.js";
+import type { Coords } from "../../../../../../shared/chess/util/coordutil.js";
+import type { Color } from "../../../../../../shared/util/math/math.js";
 
 
 /**

@@ -12,12 +12,12 @@
 import { getRecentNRatedGamesForUser, getOpponentsOfUserFromGames } from "../../database/playerGamesManager.js";
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 import { findRefreshTokensForUsers } from "../../database/refreshTokenManager.js";
-import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMultipleGameData } from "../../database/gamesManager.js";
-import timeutil from "../../../client/scripts/esm/util/timeutil.js";
+import timeutil from "../../../shared/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
-import winconutil from "../../../client/scripts/esm/chess/util/winconutil.js";
+import winconutil from "../../../shared/chess/util/winconutil.js";
 // @ts-ignore
 import { getMultipleMemberDataByCriteria } from "../../database/memberManager.js";
 

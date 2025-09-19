@@ -15,21 +15,21 @@ import guipause from '../gui/guipause.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import enginegame from '../misc/enginegame.js';
-import winconutil from '../../chess/util/winconutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 import gameloader from './gameloader.js';
-import { PlayerGroup } from '../../chess/util/typeutil.js';
+import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import gameformulator from './gameformulator.js';
-import boardutil from '../../chess/util/boardutil.js';
-import icnconverter, { _Move_Out, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
-import variant from '../../chess/variants/variant.js';
-import metadata from '../../chess/util/metadata.js';
-import { pieceCountToDisableCheckmate } from '../../chess/logic/checkmate.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import icnconverter, { _Move_Out, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import variant from '../../../../../shared/chess/variants/variant.js';
+import metadata from '../../../../../shared/chess/util/metadata.js';
+import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 
 
-import type { CoordsKey } from '../../chess/util/coordutil.js';
-import type { VariantOptions } from '../../chess/logic/initvariant.js';
-import type { MetaData, MetadataKey } from '../../chess/util/metadata.js';
+import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadata.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 

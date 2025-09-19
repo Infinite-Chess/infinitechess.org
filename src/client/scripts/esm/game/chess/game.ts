@@ -7,9 +7,9 @@
 
 
 
-import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 // @ts-ignore
 import invites from '../misc/invites.js';
@@ -23,7 +23,7 @@ import guititle from '../gui/guititle.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
-import clock from '../../chess/logic/clock.js';
+import clock from '../../../../../shared/chess/logic/clock.js';
 import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';

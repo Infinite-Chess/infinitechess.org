@@ -1,15 +1,15 @@
 
 // This script contains generalized methods for working with websocket objects.
 
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../shared/util/jsutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
-import type { AuthMemberInfo, ParsedCookies } from '../../types.js';
-import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
+import type { AuthMemberInfo, ParsedCookies } from '../types.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
 
 
 /** The socket object that contains all properties a normal socket has,

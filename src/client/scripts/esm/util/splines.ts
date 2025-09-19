@@ -5,13 +5,13 @@
  * This script contains utility methods for working with splines.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from "../chess/util/coordutil.js";
-import type { Color } from "./math/math.js";
-import type { BigDecimal } from "./bigdecimal/bigdecimal.js";
+import type { BDCoords, Coords, DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
+import type { Color } from "../../../../shared/util/math/math.js";
+import type { BigDecimal } from "../../../../shared/util/bigdecimal/bigdecimal.js";
 
 import { createModel } from "../game/rendering/buffermodel.js";
 import space from "../game/misc/space.js";
-import bd from "./bigdecimal/bigdecimal.js";
+import bd from "../../../../shared/util/bigdecimal/bigdecimal.js";
 import boardpos from "../game/rendering/boardpos.js";
 
 

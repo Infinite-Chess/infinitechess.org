@@ -6,10 +6,10 @@
  */
 
 import imagecache from './imagecache.js'; // Adjust path as needed
-import typeutil from '../../chess/util/typeutil.js'; // Import typeutil for filtering
+import typeutil from '../../../../../shared/chess/util/typeutil.js'; // Import typeutil for filtering
 
-import type { TypeGroup } from '../util/typeutil.js';
-import type { Board } from '../logic/gamefile.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 // @ts-ignore
 import texture from '../../game/rendering/texture.js';
 

@@ -5,13 +5,13 @@
  * This script handles queries to the player_games table. 
  */
 
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { allPlayerGamesColumns } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
-import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------

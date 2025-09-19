@@ -7,7 +7,7 @@
 import { onPlayerLostByAbandonment } from './gamemanager.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
 import gameutility, { Game } from './gameutility.js';
-import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 

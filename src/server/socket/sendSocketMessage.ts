@@ -8,8 +8,8 @@ import { WebSocket } from "ws";
 
 import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis } from "./echoTracker.js";
 import socketUtility from "./socketUtility.js";
-import uuid from "../../client/scripts/esm/util/uuid.js";
-import jsutil from "../../client/scripts/esm/util/jsutil.js";
+import uuid from "../../shared/util/uuid.js";
+import jsutil from "../../shared/util/jsutil.js";
 // @ts-ignore
 import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore

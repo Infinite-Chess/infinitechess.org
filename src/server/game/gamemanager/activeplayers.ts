@@ -3,9 +3,9 @@
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
 import type { CustomWebSocket } from "../../socket/socketUtility.js";
-import type { Player } from "../../../client/scripts/esm/chess/util/typeutil.js";
+import type { Player } from "../../../shared/chess/util/typeutil.js";
 import type { Game } from "./gameutility.js";
-import type { AuthMemberInfo } from "../../../types.js"; 
+import type { AuthMemberInfo } from "../../types.js"; 
 
 //--------------------------------------------------------------------------------------------------------
 

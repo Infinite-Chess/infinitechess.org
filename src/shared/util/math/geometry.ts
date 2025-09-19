@@ -30,6 +30,9 @@ type IntersectionPoint = {
 	positiveDotProduct: boolean;
 }
 
+/** The simplest form of a ray. */
+type BaseRay = { start: Coords, vector: Vec2 };
+
 
 // ======================================= Constants =======================================
 
@@ -655,4 +658,5 @@ export default {
 
 export type {
 	IntersectionPoint,
+	BaseRay,
 };

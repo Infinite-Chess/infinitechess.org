@@ -6,7 +6,7 @@
  */
 
 
-import type { Color } from "../../../../util/math/math.js";
+import type { Color } from "../../../../../../../shared/util/math/math.js";
 
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
@@ -16,17 +16,15 @@ import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import annotations from "./annotations.js";
 import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
-import variant from "../../../../chess/variants/variant.js";
-import geometry from "../../../../util/math/geometry.js";
-import bd from "../../../../util/bigdecimal/bigdecimal.js";
+import variant from "../../../../../../../shared/chess/variants/variant.js";
+import geometry, { BaseRay } from "../../../../../../../shared/util/math/geometry.js";
+import bd from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import legalmovemodel from "../legalmovemodel.js";
 import meshes from "../../meshes.js";
-import boarddrag from "../../boarddrag.js";
 import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
-import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../chess/util/coordutil.js";
-import vectors, { Ray, Vec2, Vec3 } from "../../../../util/math/vectors.js";
-import { listener_overlay } from "../../../chess/game.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
+import vectors, { Ray, Vec3 } from "../../../../../../../shared/util/math/vectors.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -35,9 +33,6 @@ import { listener_overlay } from "../../../chess/game.js";
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
 
-
-/** The simplest form of a ray. */
-type BaseRay = { start: Coords, vector: Vec2 };
 
 /**
  * The preset ray overrides if provided from the ICN.
@@ -458,8 +453,4 @@ export default {
 	getPresetOverrides,
 	clearPresetOverrides,
 	render,
-};
-
-export type {
-	BaseRay
 };

@@ -7,14 +7,14 @@
  */
 
 
-import type { Board } from "../../chess/logic/gamefile.js";
+import type { Board } from "../../../../../shared/chess/logic/gamefile.js";
 
 import meshes from "./meshes.js";
 import camera from "./camera.js";
 import primitives from "./primitives.js";
 import perspective from "./perspective.js";
 import boardtiles from "./boardtiles.js";
-import bounds, { DoubleBoundingBox } from "../../util/math/bounds.js";
+import bounds, { DoubleBoundingBox } from "../../../../../shared/util/math/bounds.js";
 import { createModel } from "./buffermodel.js";
 
 

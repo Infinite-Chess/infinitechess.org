@@ -81,7 +81,7 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 /** Closes the database connection. */
 function close(): void {
 	db.close();
-	console.log('Closed database.');
+	// console.log('Closed database.');
 }
 
 /** Checks if a column exists in a table. */

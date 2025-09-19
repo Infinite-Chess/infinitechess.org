@@ -1,4 +1,5 @@
-// tsconfig.json - CORRECTED VERSION
+// tsconfig.json
+
 {
 	"compilerOptions": {
 		"outDir": "./dist", 
@@ -14,8 +15,11 @@
 		"noPropertyAccessFromIndexSignature": true,
 		"noUncheckedIndexedAccess": true,
 		"strict": true,
+		"noEmit": true, // Do not emit outputs. We use tsc for type-checking only. ESBuild handles transpiling.
 		"noEmitOnError": true,
-		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
+		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+		// "allowJs": true, // Allows TypeScript to import JavaScript modules.
+		// "checkJs": true  // Reports errors in .js files based on JSDoc and inference.
 	},
 	// Tells TypeScript and every tool that uses this file (IntelliSense, ESLint): "My source code is in the src folder."
 	"include": [
@@ -23,6 +27,6 @@
 	], // Look for all source code inside the 'src' directory
 	"exclude": [
 		"node_modules", // Don't look in node_modules
-		"dist"          // Don't look in the output directory
+		"dist",         // Don't look in the output directory
 	]
 }

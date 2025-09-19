@@ -6,7 +6,7 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import { Rating } from "../../../../../server/database/leaderboardsManager.js";
+import { Rating } from "../../../server/database/leaderboardsManager.js";
 import { players } from "./typeutil.js";
 
 import type { Player } from "./typeutil.js";

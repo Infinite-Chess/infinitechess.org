@@ -3,9 +3,9 @@ import { ensureSelfSignedCertificate } from './generateCert.js';
 import { doesMemberOfUsernameExist, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { giveRole } from '../controllers/roles.js';
-import validcheckmates from '../../client/scripts/esm/chess/util/validcheckmates.js';
+import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { addUserToLeaderboard, updatePlayerLeaderboardRating } from '../database/leaderboardsManager.js';
-import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return; // Production

@@ -13,7 +13,7 @@ import camera from "../game/rendering/camera.js";
 import perspective from "../game/rendering/perspective.js";
 
 
-import type { BDCoords, Coords, DoubleCoords } from "../chess/util/coordutil.js";
+import type { BDCoords, Coords, DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
 
 
 /**

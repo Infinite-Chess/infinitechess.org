@@ -6,13 +6,13 @@
  */
 
 import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getEloOfPlayerInLeaderboard } from "../database/leaderboardsManager.js";
-import { Leaderboard } from "../../client/scripts/esm/chess/variants/validleaderboard.js";
+import { Leaderboard } from "../../shared/chess/variants/validleaderboard.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 import type { Response } from "express";
-import type { IdentifiedRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../types.js";
 
 
 

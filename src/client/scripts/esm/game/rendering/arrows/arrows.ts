@@ -9,41 +9,41 @@
  * Other scripts may add/remove arrows in between update() and render() calls.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../../chess/util/coordutil.js';
-import type { LineKey } from '../../../chess/util/boardutil.js';
-import type { Piece } from '../../../chess/util/boardutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { LineKey } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../buffermodel.js';
-import type { Change } from '../../../chess/logic/boardchanges.js';
-import type { Board } from '../../../chess/logic/gamefile.js';
+import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
+import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import jsutil from '../../../util/jsutil.js';
-import coordutil from '../../../chess/util/coordutil.js';
-import organizedpieces from '../../../chess/logic/organizedpieces.js';
-import typeutil from '../../../chess/util/typeutil.js';
+import jsutil from '../../../../../../shared/util/jsutil.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import frametracker from '../frametracker.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
-import boardutil from '../../../chess/util/boardutil.js';
-import boardchanges from '../../../chess/logic/boardchanges.js';
+import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
-import legalmoves from '../../../chess/logic/legalmoves.js';
-import geometry from '../../../util/math/geometry.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
+import geometry from '../../../../../../shared/util/math/geometry.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
 import transition from '../transition.js';
-import bimath from '../../../util/bigdecimal/bimath.js';
-import vectors, { Vec2, Vec2Key } from '../../../util/math/vectors.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
-import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
+import bimath from '../../../../../../shared/util/bigdecimal/bimath.js';
+import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
-import { rawTypes } from '../../../chess/util/typeutil.js';
+import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
 import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 
 

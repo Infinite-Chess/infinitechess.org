@@ -7,7 +7,7 @@ import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 /**
  * 
- * @param {import('../../types.js').IdentifiedRequest} req 
+ * @param {import('../types.js').IdentifiedRequest} req 
  * @param {*} res 
  * @returns 
  */

@@ -4,26 +4,26 @@
  * It also plays the sounds.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
-import type { Piece } from '../../chess/util/boardutil.js';
-import type { Color } from '../../util/math/math.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 import arrows from './arrows/arrows.js';
 import frametracker from './frametracker.js';
-import math from '../../util/math/math.js';
+import math from '../../../../../shared/util/math/math.js';
 import splines from '../../util/splines.js';
-import coordutil from '../../chess/util/coordutil.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import boardpos from './boardpos.js';
 import gamesound from '../misc/gamesound.js';
 import instancedshapes from './instancedshapes.js';
 import piecemodels from './piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import vectors, { Vec3 } from '../../util/math/vectors.js';
+import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import { createModel, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
-import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
-import typeutil, { RawType, TypeGroup } from '../../chess/util/typeutil.js';
+import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import meshes from './meshes.js';
 import perspective from './perspective.js';
 

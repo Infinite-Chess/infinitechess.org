@@ -10,8 +10,8 @@ import typeutil from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import { players, rawTypes } from '../util/typeutil.js';
 import legalmoves from './legalmoves.js';
+import { players, rawTypes } from '../util/typeutil.js';
 
 
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */

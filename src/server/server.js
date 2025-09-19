@@ -47,7 +47,8 @@ process.on('SIGINT', async() => { await handleCleanup('SIGINT'); }); // Ctrl>C w
 async function handleCleanup(signal) {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;
-	console.log(`\nReceived ${signal}. Cleaning up...`);
+	// console.log(`\nReceived ${signal}. Cleaning up...`);
+	console.log("Closing...");
 
 	await logAllGames();
 

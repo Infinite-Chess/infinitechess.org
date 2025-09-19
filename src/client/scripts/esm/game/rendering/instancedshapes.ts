@@ -13,8 +13,8 @@
  */
 
 
-import type { DoubleCoords } from "../../chess/util/coordutil.js";
-import type { Color } from "../../util/math/math.js";
+import type { DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
+import type { Color } from "../../../../../shared/util/math/math.js";
 
 import board from "./boardtiles.js";
 import primitives from "./primitives.js";

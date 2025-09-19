@@ -1,5 +1,5 @@
 
-import type { Vec3 } from '../../util/math/vectors.js';
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 import camera from './camera.js';
 

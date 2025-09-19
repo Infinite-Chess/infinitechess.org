@@ -11,7 +11,7 @@
 import { printIncomingAndClosingSockets } from "../config/config.js";
 import { handleUnsubbing } from "./generalrouter.js";
 import socketUtility from "./socketUtility.js";
-import uuid from "../../client/scripts/esm/util/uuid.js";
+import uuid from "../../shared/util/uuid.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------

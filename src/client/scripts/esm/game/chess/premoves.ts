@@ -6,28 +6,28 @@
  * Premoves are handled client-side, not server side.
  */
 
-import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import movesequence from './movesequence.js';
-import boardutil from '../../chess/util/boardutil.js';
-import typeutil from '../../chess/util/typeutil.js';
-import legalmoves from '../../chess/logic/legalmoves.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
-import coordutil from '../../chess/util/coordutil.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import boardpos from '../rendering/boardpos.js';
 import preferences from '../../components/header/preferences.js';
 import selection from './selection.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import gameslot from './gameslot.js';
-import specialdetect from '../../chess/logic/specialdetect.js';
+import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import animation from '../rendering/animation.js';
 import mouse from '../../util/mouse.js';
-import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../chess/logic/movepiece.js';
+import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
 import { Mouse } from '../input.js';
 

@@ -4,7 +4,7 @@ import { getClientIP } from '../utility/IP.js';
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../shared/util/jsutil.js';
 
 /** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
 

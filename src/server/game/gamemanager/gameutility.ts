@@ -13,15 +13,15 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 
 // Custom imports
-import timeutil from '../../../client/scripts/esm/util/timeutil.js';
-import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import variant from '../../../client/scripts/esm/chess/variants/variant.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
-import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
+import timeutil from '../../../shared/util/timeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import variant from '../../../shared/chess/variants/variant.js';
+import uuid from '../../../shared/util/uuid.js';
+import metadata from '../../../shared/chess/util/metadata.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { players } from '../../../shared/chess/util/typeutil.js';
+import { Leaderboards, VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 // @ts-ignore
@@ -29,17 +29,17 @@ import { getTimeServerRestarting } from '../timeServerRestarts.js';
 // @ts-ignore
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 // @ts-ignore
-import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
 // @ts-ignore
 import clockweb from '../clockweb.js';
 
 
-import type { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
-import type { GameRules } from '../../../client/scripts/esm/chess/variants/gamerules.js';
-import type { ClockValues } from '../../../client/scripts/esm/chess/logic/clock.js';
-import type { AuthMemberInfo } from '../../../types.js';
-import type { Player, PlayerGroup } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
+import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
+import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
+import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { MetaData } from '../../../shared/chess/util/metadata.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';

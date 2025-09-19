@@ -11,10 +11,10 @@ import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 // Custom imports
 import gameutility, { Game } from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 
 
-import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 

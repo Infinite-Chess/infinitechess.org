@@ -4,12 +4,13 @@ import pluginTypescript from "@typescript-eslint/eslint-plugin";
 import parserTypescript from "@typescript-eslint/parser";
 
 export default [
+	{
+		ignores: ["dist"], // Ignore all files in the distribution directory
+	},
 	pluginJs.configs.recommended,
 	{
 		files: ["**/*.js","**/*.ts"], // Apply the following rule overrides to both js and ts files...
 		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??
-		// FOR SOME REASON this doesn't work????????
-		// ignores: ["dist/"], // Ignore all files in the distribution directory
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
 			'no-unused-vars': 'warn', // Unused variables give a warning

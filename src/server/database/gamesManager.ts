@@ -5,7 +5,7 @@
  * This script handles queries to the games table. 
  */
 
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';

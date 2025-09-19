@@ -13,8 +13,8 @@
 
 import onlinegame from "./onlinegame.js";
 import gameslot from "../../chess/gameslot.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
-import moveutil from "../../../chess/util/moveutil.js";
+import gamefileutility from "../../../../../../shared/chess/util/gamefileutility.js";
+import moveutil from "../../../../../../shared/chess/util/moveutil.js";
 import pingManager from "../../../util/pingManager.js";
 import { listener_document, listener_overlay } from "../../chess/game.js";
 import gamesound from "../gamesound.js";

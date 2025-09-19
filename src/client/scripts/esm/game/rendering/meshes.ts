@@ -11,18 +11,18 @@
  */
 
 
-import type { Color } from "../../util/math/math.js";
-import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../util/math/bounds.js";
+import type { Color } from "../../../../../shared/util/math/math.js";
+import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../shared/util/math/bounds.js";
 
 import boardtiles from "./boardtiles.js";
 import boardpos from "./boardpos.js";
 import spritesheet from "./spritesheet.js";
 import primitives from "./primitives.js";
 import perspective from "./perspective.js";
-import { Vec3 } from "../../util/math/vectors.js";
-import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
-import coordutil, { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
-import bounds from "../../util/math/bounds.js";
+import { Vec3 } from "../../../../../shared/util/math/vectors.js";
+import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
+import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
+import bounds from "../../../../../shared/util/math/bounds.js";
 
 
 // Constants -------------------------------------------------------------------------

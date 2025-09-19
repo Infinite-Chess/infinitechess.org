@@ -16,7 +16,7 @@ import { areRolesHigherInPriority } from "../controllers/roles.js";
 import { deleteAllRefreshTokensForUser } from "../database/refreshTokenManager.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
 
-import type { IdentifiedRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../types.js";
 import type { Response } from "express";
 
 

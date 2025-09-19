@@ -20,7 +20,7 @@ import websocket from '../../websocket.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import onlinegame from './onlinegame.js';
-import moveutil from '../../../chess/util/moveutil.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
 import gamesound from '../gamesound.js';
 

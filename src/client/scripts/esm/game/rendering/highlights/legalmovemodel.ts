@@ -8,35 +8,35 @@
  * That also includes Rays.
  */
 
-import type { Player } from '../../../chess/util/typeutil.js';
-import type { Color } from '../../../util/math/math.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../chess/util/coordutil.js';
-import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
-import type { MoveDraft } from '../../../chess/logic/movepiece.js';
-import type { LegalMoves, SlideLimits } from '../../../chess/logic/legalmoves.js';
-import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
-import type { Ray, Vec2, Vec2Key } from '../../../util/math/vectors.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
+import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 
-import coordutil from '../../../chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import gameslot from '../../chess/gameslot.js';
-import boardutil from '../../../chess/util/boardutil.js';
+import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import preferences from '../../../components/header/preferences.js';
-import checkresolver from '../../../chess/logic/checkresolver.js';
+import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
 import boardtiles from '../boardtiles.js';
 import piecemodels from '../piecemodels.js';
 import legalmoveshapes from '../instancedshapes.js';
 import space from '../../misc/space.js';
-import vectors from '../../../util/math/vectors.js';
+import vectors from '../../../../../../shared/util/math/vectors.js';
 import instancedshapes from '../instancedshapes.js';
-import geometry, { IntersectionPoint } from '../../../util/math/geometry.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../util/math/bounds.js';
-import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
+import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
-import bimath from '../../../util/bigdecimal/bimath.js';
+import bimath from '../../../../../../shared/util/bigdecimal/bimath.js';
 
 
 // Type Definitions ------------------------------------------------------------

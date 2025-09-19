@@ -4,8 +4,8 @@
  * And it has an API for setting your preferences in the database.
  */
 
-import themes from "../../client/scripts/esm/components/header/themes.js";
-import jsutil from "../../client/scripts/esm/util/jsutil.js";
+import themes from "../../shared/components/header/themes.js";
+import jsutil from "../../shared/util/jsutil.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
 
@@ -117,7 +117,7 @@ function getPrefs(userId) {
 
 /**
  * Route that Handles a POST request to update user preferences in the database.
- * @param {import("../../types.js").IdentifiedRequest} req - Express request object
+ * @param {import("../types.js").IdentifiedRequest} req - Express request object
  * @param {Object} res - Express response object
  */
 function postPrefs(req, res) {

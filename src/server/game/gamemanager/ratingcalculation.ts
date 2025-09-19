@@ -2,8 +2,8 @@
  * Implementation of Glicko-1 algorithm for calculating rating changes arising from ranked games
  */
 
-import timeutil from '../../../client/scripts/esm/util/timeutil.js';
-import { PlayerGroup, type Player, players as p } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import timeutil from '../../../shared/util/timeutil.js';
+import { PlayerGroup, type Player, players as p } from '../../../shared/chess/util/typeutil.js';
 
 // Default variables, shared across all leaderboards ------------------------------------------------------------------
 
@@ -143,8 +143,6 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
  * https://discord.com/channels/1114425729569017918/1260310049889189908/1373014556254670970
  */
 
-
-// import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 
 // type PlayerStats = {

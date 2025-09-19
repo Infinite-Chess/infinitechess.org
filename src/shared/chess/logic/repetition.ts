@@ -10,9 +10,9 @@
 
 import type { FullGame } from "./gamefile.js";
 import type { Move } from "./movepiece.js";
+import type { StateChange } from "./state.js";
 
 import boardchanges from "./boardchanges.js";
-import { StateChange } from "./state.js";
 import typeutil from "../util/typeutil.js";
 import { players, rawTypes } from "../util/typeutil.js";
 

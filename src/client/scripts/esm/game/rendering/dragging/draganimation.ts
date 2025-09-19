@@ -7,25 +7,25 @@
 
 
 import type { BufferModel } from "../buffermodel.js";
-import type { Color } from "../../../util/math/math.js";
-import type { Coords, DoubleCoords } from "../../../chess/util/coordutil.js";
-import type { Piece } from "../../../chess/util/boardutil.js";
+import type { Color } from "../../../../../../shared/util/math/math.js";
+import type { Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
+import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
 
 
 import spritesheet from "../spritesheet.js";
-import coordutil from "../../../chess/util/coordutil.js";
+import coordutil from "../../../../../../shared/chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import { createModel } from "../buffermodel.js";
 import space from "../../misc/space.js";
 import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
 import preferences from "../../../components/header/preferences.js";
-import themes from "../../../components/header/themes.js";
-import typeutil from "../../../chess/util/typeutil.js";
+import themes from "../../../../../../shared/components/header/themes.js";
+import typeutil from "../../../../../../shared/chess/util/typeutil.js";
 import animation from "../animation.js";
 import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
-import bd from "../../../util/bigdecimal/bigdecimal.js";
+import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import boardtiles from "../boardtiles.js";
 import primitives from "../primitives.js";
 import { listener_overlay } from "../../chess/game.js";

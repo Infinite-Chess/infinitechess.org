@@ -1,15 +1,15 @@
 
-import moveutil from "../../chess/util/moveutil.js";
+import moveutil from "../../../../../shared/chess/util/moveutil.js";
 import gamesound from "../misc/gamesound.js";
-import clockutil from "../../chess/util/clockutil.js";
+import clockutil from "../../../../../shared/chess/util/clockutil.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-import { players } from "../../chess/util/typeutil.js";
-import clock from "../../chess/logic/clock.js";
+import { players } from "../../../../../shared/chess/util/typeutil.js";
+import clock from "../../../../../shared/chess/logic/clock.js";
 
 import type { SoundObject } from "../misc/sound.js";
-import type { Player, PlayerGroup } from "../../chess/util/typeutil.js";
-import type { Game } from "../../chess/logic/gamefile.js";
-import type { ClockData } from "../../chess/logic/clock.js";
+import type { Player, PlayerGroup } from "../../../../../shared/chess/util/typeutil.js";
+import type { Game } from "../../../../../shared/chess/logic/gamefile.js";
+import type { ClockData } from "../../../../../shared/chess/logic/clock.js";
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
 	[players.WHITE]: {

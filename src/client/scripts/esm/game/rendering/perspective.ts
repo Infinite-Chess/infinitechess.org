@@ -24,7 +24,7 @@ import docutil from '../../util/docutil.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 
 /** Whether perspective mode is enabled. */

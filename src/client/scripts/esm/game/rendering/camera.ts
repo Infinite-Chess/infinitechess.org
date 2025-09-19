@@ -21,16 +21,16 @@ import stats from '../gui/stats.js';
 import mat4 from './gl-matrix.js';
 import perspective from './perspective.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
-import jsutil from '../../util/jsutil.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import { gl } from './webgl.js';
-import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 
-import type { DoubleBoundingBox } from '../../util/math/bounds.js';
-import type { Vec3 } from '../../util/math/vectors.js';
+import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 
 

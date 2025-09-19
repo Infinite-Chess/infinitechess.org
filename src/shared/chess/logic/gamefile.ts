@@ -9,10 +9,9 @@ import type { OrganizedPieces } from "./organizedpieces.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { GameState, GlobalGameState } from "./state.js";
 import type { VariantOptions } from "./initvariant.js";
-import type { ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
+import type { ServerGameMoveMessage } from "../../../server/game/gamemanager/gameutility.js";
 import type { SpecialMoveFunction } from "./specialmove.js";
 import type { BoundingBox } from "../../util/math/bounds.js";
-import type { Additional } from "../../game/chess/gameslot.js";
 
 import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
@@ -116,6 +115,26 @@ type EditorDependent = {
 type FullGame = {
 	basegame: Game,
 	boardsim: Board
+}
+
+/** Additional options that may go into the gamefile constructor.
+ * Typically used if we're pasting a game, or reloading an online one. */
+interface Additional {
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
+	moves?: ServerGameMoveMessage[],
+	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
+	variantOptions?: VariantOptions,
+	/** The conclusion of the game, if loading an online game that has already ended. */
+	gameConclusion?: string,
+	/** Any already existing clock values for the gamefile. */
+	clockValues?: ClockValues,
+	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
+	editor?: boolean,
+	/**
+	 * If present, the resulting gamefile will have a world border at this distance on all sides from the origin (0,0).
+	 * It is NOT equidistant from all sides of the current position.
+	 */
+	worldBorder?: bigint,
 }
 
 /** Creates a new {@link Game} object from provided arguments */
@@ -258,6 +277,7 @@ export type {
 	FullGame,
 	Snapshot,
 	ClockDependant,
+	Additional,
 };
 
 export default {

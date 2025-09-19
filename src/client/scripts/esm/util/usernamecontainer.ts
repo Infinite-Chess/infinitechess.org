@@ -5,13 +5,12 @@
 
 // @ts-ignore
 import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
-import metadata from "../chess/util/metadata.js";
+import metadata from "../../../../shared/chess/util/metadata.js";
 import docutil from "./docutil.js";
 
 
 import type { Rating } from "../../../../server/database/leaderboardsManager.js";
-// @ts-ignore
-import type { ServerUsernameContainer } from "../game/misc/invites.js";
+import type { ServerUsernameContainer } from "../../../../shared/types.js";
 
 
 // Types ----------------------------------------------------------------------------------------

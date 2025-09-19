@@ -6,7 +6,7 @@
  * so we can display that info.
  */
 
-import { Leaderboards, VariantLeaderboards } from "../chess/variants/validleaderboard.js";
+import { Leaderboards, VariantLeaderboards } from "../../../../shared/chess/variants/validleaderboard.js";
 import usernamecontainer from "../util/usernamecontainer.js";
 import validatorama from "../util/validatorama.js";
 

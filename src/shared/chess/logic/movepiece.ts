@@ -11,7 +11,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
 
 

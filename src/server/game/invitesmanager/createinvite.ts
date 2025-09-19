@@ -18,19 +18,18 @@ import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { isServerRestarting } from '../updateServerRestart.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
-import variant from '../../../client/scripts/esm/chess/variants/variant.js';
+import uuid from '../../../shared/util/uuid.js';
+import variant from '../../../shared/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { players } from '../../../shared/chess/util/typeutil.js';
+import { Leaderboards, VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 
-// @ts-ignore
-import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
+import type { ServerUsernameContainer } from '../../../shared/types.js';
 
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z.strictObject({

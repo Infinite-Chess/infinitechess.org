@@ -8,11 +8,11 @@
 import checkmatepractice from '../chess/checkmatepractice.js';
 import guititle from './guititle.js';
 import validatorama from '../../util/validatorama.js';
-import validcheckmates from '../../chess/util/validcheckmates.js';
+import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import svgcache from '../../chess/rendering/svgcache.js';
-import { players } from '../../chess/util/typeutil.js';
-import typeutil from '../../chess/util/typeutil.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import style from './style.js';
 
