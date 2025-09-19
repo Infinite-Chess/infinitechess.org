@@ -142,8 +142,8 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// but the loading animation should only be closed when
 	// both the LOGICAL and GRAPHICAL stuff are finished.
 
-	await modmanager.loadModList(loadOptions.modlist ?? ['atomic', 'crazyhouse']);
-	modmanager.setupModifiers(loadingGamefile, ['atomic', 'crazyhouse']);
+	await modmanager.loadModList(loadOptions.modlist ?? ['atomic']);
+	modmanager.setupModifiers(loadingGamefile, ['atomic']);
 	
 	// First load the LOGICAL stuff...
 	loadLogical(loadingGamefile, loadOptions);
