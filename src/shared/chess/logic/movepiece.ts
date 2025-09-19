@@ -196,7 +196,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 		// Delete all special rights that should be revoked from the move.
 		queueSpecialRightDeletionStateChanges(boardsim, move);
 	}
-	events.runEvent(boardsim.events, "draftmoves", gamefile, move);
+	events.runEvent(gamefile.events, "draftmoves", gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;

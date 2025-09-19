@@ -2,6 +2,7 @@ import type { FullGame } from "../chess/logic/gamefile.js";
 import type { Move } from "../chess/logic/movepiece.js";
 import type { Coords } from "../chess/util/coordutil.js";
 import type { Change } from "../chess/logic/boardchanges.js";
+import type { Construction } from "./modmanager.js";
 
 import boardutil from "../chess/util/boardutil.js";
 import boardchanges from "../chess/logic/boardchanges.js";
@@ -93,13 +94,21 @@ function renderNukeSites(gamefile: FullGame): false {
 	return false;
 }
 
-function setup(gamefile: FullGame) {
-	for (const w of Object.values(gamefile.basegame.gameRules.winConditions)) {
-		if ("royalcapture" in w) continue;
-		w.push("royalcapture");
+function setup(gamefile: Construction<void, FullGame>) {
+	
+	events.addEventListener(gamefile.events, "draftmoves", draftHook);
+	events.addEventListener(gamefile.events, "renderabovepieces", renderNukeSites);
+	if (gamefile.components.has("game")) {
+		function swapCheckmateForRoyalCapture(gamefile: FullGame): false {
+			for (const w of Object.values(gamefile.basegame.gameRules.winConditions)) {
+				if ("royalcapture" in w) continue;
+				w.push("royalcapture");
+			}
+			events.removeEventListener(gamefile.events, "gameloaded", swapCheckmateForRoyalCapture);
+			return false;
+		}
+		events.addEventListener(gamefile.events, "gameloaded", swapCheckmateForRoyalCapture);
 	}
-	events.addEventListener(gamefile.boardsim.events, "draftmoves", draftHook);
-	events.addEventListener(gamefile.boardsim.events, "renderabovepieces", renderNukeSites);
 }
 
 export default setup;

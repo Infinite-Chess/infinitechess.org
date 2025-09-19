@@ -15,7 +15,7 @@ interface Eventlist {
 	[eventName: string]: ((...args: any[]) => boolean)[] | undefined
 }
 
-function runEvent<E extends Eventlist, N extends keyof E, A extends Parameters<ExtractArr<E[N]>>>(eventlist: E, event: N, ...args: A): boolean {
+function runEvent<E extends Eventlist, N extends keyof E & EventName, A extends Parameters<ExtractArr<E[N]>>>(eventlist: E, event: N, ...args: A): boolean {
 	const funcs = eventlist[event];
 	if (funcs === undefined) return false;
 	for (const f of funcs) {
@@ -27,7 +27,7 @@ function runEvent<E extends Eventlist, N extends keyof E, A extends Parameters<E
 	return false;
 }
 
-function addEventListener<E extends Eventlist, N extends keyof E, L extends ExtractArr<E[N]>>(eventlist: E, event: N, listener: L): void {
+function addEventListener<E extends Eventlist, N extends keyof E & EventName, L extends ExtractArr<E[N]>>(eventlist: E, event: N, listener: L): void {
 	const listeners = eventlist[event];
 	if (listeners === undefined) {
 		// @ts-ignore it should work but ts thinks there could be a specific subtype where this errors
@@ -39,7 +39,7 @@ function addEventListener<E extends Eventlist, N extends keyof E, L extends Extr
 	return;
 }
 
-function removeEventListener<E extends Eventlist, N extends keyof E, L extends ExtractArr<E[N]>>(eventlist: E, event: N, listener: L): boolean {
+function removeEventListener<E extends Eventlist, N extends keyof E & EventName, L extends ExtractArr<E[N]>>(eventlist: E, event: N, listener: L): boolean {
 	const listeners = eventlist[event];
 	if (listeners === undefined) {
 		return false;
@@ -52,13 +52,19 @@ function removeEventListener<E extends Eventlist, N extends keyof E, L extends E
 	return false;
 }
 
-import type { FullGame } from "./gamefile";
 import type { Move } from "./movepiece";
+import type { Game } from "./gamefile";
 
-interface GameEvents extends Eventlist {
-	draftmoves?: ((gamefile: FullGame, move: Move) => boolean)[],
-	renderbelowpieces?: ((gamefile: FullGame) => false)[],
-	renderabovepieces?: ((gamefile: FullGame) => false)[],
+type EventName = 'draftmoves' | 'renderbelowpieces' | 'renderabovepieces' | 'fullyloaded' | 'gameloaded' | 'boardloaded';
+
+interface GameEvents<G> extends Eventlist {
+	draftmoves?: ((gamefile: G, move: Move) => boolean)[],
+	renderbelowpieces?: ((gamefile: G) => false)[],
+	renderabovepieces?: ((gamefile: G) => false)[],
+
+	fullyloaded?: ((gamefile: G) => false)[],
+	gameloaded?: ((gamefile: any) => false)[],
+	boardloaded?: ((gamefile: any) => false)[]
 }
 
 export type {

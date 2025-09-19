@@ -11,7 +11,8 @@ import type { MetaData } from "../../../../../shared/chess/util/metadata.js";
 import type { Player } from "../../../../../shared/chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { PresetAnnotes } from "../../../../../shared/chess/logic/icn/icnconverter.js";
-import type { Additional, FullGame } from "../../../../../shared/chess/logic/gamefile.js";
+import type { Additional, FullGame, Gamesim } from "../../../../../shared/chess/logic/gamefile.js";
+import type { Construction, ComponentName } from "../../../../../mods/modmanager.js";
 
 import enginegame from '../misc/enginegame.js';
 import guinavigation from "../gui/guinavigation.js";
@@ -52,7 +53,7 @@ import gamesound from "../misc/gamesound.js";
 import meshes from "../rendering/meshes.js";
 import starfield from "../rendering/starfield.js";
 import { players } from "../../../../../shared/chess/util/typeutil.js";
-import modmanager from "../../../../../modifiers/modmanager.js";
+import modmanager from "../../../../../mods/modmanager.js";
 import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -132,18 +133,22 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// console.log("Loading gamefile...");
 
 	// console.log('Started loading game...');
-	
+	const loadingGamefile: Construction<any, void> = {
+		events: {},
+		components: new Set<ComponentName>(['game', 'board', 'atomic']),
+	};
 	// The game should be considered loaded once the LOGICAL stuff is finished,
 	// but the loading animation should only be closed when
 	// both the LOGICAL and GRAPHICAL stuff are finished.
 
 	await modmanager.loadModList(loadOptions.modlist);
-
+	modmanager.setupModifiers(loadingGamefile, ['atomic']);
+	
 	// First load the LOGICAL stuff...
-	loadLogical(loadOptions);
+	loadLogical(loadingGamefile, loadOptions);
 	// console.log('Finished loading LOGICAL game stuff.');
 	
-	modmanager.setupModifiers(loadOptions.modlist, loadedGamefile!);
+	
 
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
@@ -160,9 +165,9 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadOptions: LoadOptions): void {
+function loadLogical(loadingGamefile: Construction<Gamesim, FullGame>, loadOptions: LoadOptions): void {
 
-	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
+	loadedGamefile = gamefile.initFullGame(loadingGamefile, loadOptions.metadata, loadOptions.additional);
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
