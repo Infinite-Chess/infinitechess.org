@@ -142,7 +142,7 @@ interface Additional {
 }
 
 /** Creates a new {@link Game} object from provided arguments */
-function initGame(gamefile: Construction<{basegame: Game}, FullGame>, metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): void {
+function initGame<T extends {basegame: Game}>(gamefile: Construction<T>, metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): void {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(new Set(gameRules.turnOrder), metadata.TimeControl);
 	gamefile.basegame = {
@@ -158,11 +158,11 @@ function initGame(gamefile: Construction<{basegame: Game}, FullGame>, metadata: 
 		if (gamefile.basegame.untimed) throw Error('Cannot set clock values for untimed game. Should not have specified clockValues.');
 		clock.edit(gamefile.basegame.clocks, clockValues);
 	}
-	events.runEvent(gamefile.events, "gameloaded", gamefile);
+	events.runEvent(gamefile.events, "gameloaded", gamefile, gamefile.basegame);
 }
 
 /** Creates a new {@link Board} object from provided arguements */
-function initBoard(gamefile: Construction<{boardsim: Board}, FullGame>, gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false, worldBorder?: bigint): void {
+function initBoard<T extends {boardsim: Board}>(gamefile: Construction<T>, gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false, worldBorder?: bigint): void {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(gameRules, metadata, variantOptions);
 
 	const state: GameState = {
@@ -240,7 +240,7 @@ function initBoard(gamefile: Construction<{boardsim: Board}, FullGame>, gameRule
 		playableRegion,
 		...editorDependentVars
 	};
-	events.runEvent(gamefile.events, 'boardloaded', gamefile);
+	events.runEvent(gamefile.events, 'boardloaded', gamefile, gamefile.boardsim);
 }
 
 /** Attaches a board to a specific game. Used for loading a game after it was started. */
@@ -269,7 +269,7 @@ function loadGameWithBoard(gamefile: FullGame, moves: ServerGameMoveMessage[] = 
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
  */
-function initFullGame(gamefile: Construction<Gamesim, FullGame>, metadata: MetaData, additional: Additional = {}): FullGame {
+function initFullGame(gamefile: Construction<FullGame>, metadata: MetaData, additional: Additional = {}): FullGame {
 	initGame(gamefile, metadata, additional.variantOptions, additional.gameConclusion, additional.clockValues);
 	initBoard(gamefile, gamefile.basegame!.gameRules, gamefile.basegame!.metadata, additional.variantOptions, additional.editor, additional.worldBorder);
 	return loadGameWithBoard(gamefile as FullGame, additional.moves, additional.gameConclusion);

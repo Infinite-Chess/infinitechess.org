@@ -1,4 +1,4 @@
-import type { FullGame } from "../../shared/chess/logic/gamefile.js";
+import type { FullGame, Gamesim, Game } from "../../shared/chess/logic/gamefile.js";
 import type { Move } from "../../shared/chess/logic/movepiece.js";
 import type { Coords } from "../../shared/chess/util/coordutil.js";
 import type { Change } from "../../shared/chess/logic/boardchanges.js";
@@ -8,17 +8,13 @@ import boardutil from "../../shared/chess/util/boardutil.js";
 import boardchanges from "../../shared/chess/logic/boardchanges.js";
 import coordutil from "../../shared/chess/util/coordutil.js";
 import events from "../../shared/chess/logic/events.js";
-
-import { rawTypes } from "../../shared/chess/util/typeutil.js";
 import movesets from "../../shared/chess/logic/movesets.js";
-
-const NukeRange = [...movesets.getPieceDefaultMovesets()[rawTypes.KING]!.individual!, [0n, 0n]] as Coords[];
 
 class SimulatedChangeStack {
 	#changes: Change[];
-	#gamefile: FullGame;
+	#gamefile: Gamesim;
 
-	constructor(gamefile: FullGame) {
+	constructor(gamefile: Gamesim) {
 		this.#changes = [];
 		this.#gamefile = gamefile;
 	}
@@ -42,7 +38,7 @@ class SimulatedChangeStack {
 	}
 }
 
-function draftHook(gamefile: FullGame, move: Move): boolean {
+function draftHook<T extends FullGame & AtomicData>(gamefile: T, move: Move): boolean {
 
 	// Better compositor please? lol no
 	const newChanges = new SimulatedChangeStack(gamefile);
@@ -59,7 +55,7 @@ function draftHook(gamefile: FullGame, move: Move): boolean {
 				const cap = nukeSites.pop()!;
 				let hasMovedBeenNuked = false;
 				newChanges.pop();
-				for (const nukePos of NukeRange) {
+				for (const nukePos of gamefile.atomic) {
 					const a = coordutil.addCoords(cap.piece.coords, nukePos);
 
 					const isMovedPiece = coordutil.areCoordsEqual(a, c.piece.coords);
@@ -67,7 +63,7 @@ function draftHook(gamefile: FullGame, move: Move): boolean {
 					
 					const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, a);
 					if (piece === undefined || isMovedPiece) continue;
-					// @ts-ignore
+					// @ts-ignore this is 100% "legal"
 					boardchanges.queueCapture(newChanges, cap.main, piece, cap.order);
 				}
 				newChanges.push(c);
@@ -86,26 +82,24 @@ function draftHook(gamefile: FullGame, move: Move): boolean {
 
 
 
-function setup(gamefile: Construction<void, FullGame>): void {
-	events.addEventListener(gamefile.events, "draftmoves", draftHook);
-	if (gamefile.components.has("client")) {
-		
-		
-	}
-	if (gamefile.components.has("game")) {
-		function swapCheckmateForRoyalCapture(gamefile: FullGame): false {
-			for (const w of Object.values(gamefile.basegame.gameRules.winConditions)) {
-				if ("royalcapture" in w) continue;
-				w.push("royalcapture");
-			}
-			events.removeEventListener(gamefile.events, "gameloaded", swapCheckmateForRoyalCapture);
-			return false;
+function setupComponents(gamefile: Construction<FullGame & AtomicData>): void {
+	gamefile.atomic = [...movesets.generateCompassMoves(1n), [0n,0n]];
+	events.addEventListener(gamefile.events, "gameloaded", (gamefile: any, basegame: Game) => {
+		for (const w of Object.values(basegame.gameRules.winConditions)) {
+			if ("royalcapture" in w) continue;
+			w.push("royalcapture");
 		}
-		events.addEventListener(gamefile.events, "gameloaded", swapCheckmateForRoyalCapture);
+		return false;
 	}
+	);
 }
 
-export {
-	NukeRange
+function setupSystems(gamefile: FullGame & AtomicData): void {
+	events.addEventListener(gamefile.events, "draftmoves", draftHook);
+}
+
+type AtomicData = {atomic: readonly Coords[]}
+export type {
+	AtomicData
 };
-export default setup;
+export default [setupComponents, setupSystems];

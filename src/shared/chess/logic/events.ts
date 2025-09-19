@@ -49,8 +49,13 @@ function removeEventListener<E extends Eventlist, N extends keyof E & EventName,
 	return precount !== eventlist[event]!.length;
 }
 
+function removeEvent<E extends Eventlist, N extends keyof E & EventName>(eventlist: E, event: N): void {
+	delete eventlist[event];
+}
+
 import type { Move } from "./movepiece";
 import type { Game } from "./gamefile";
+import type { Board } from "./gamefile";
 
 type EventName = 'draftmoves' | 'renderbelowpieces' | 'renderabovepieces' | 'fullyloaded' | 'gameloaded' | 'boardloaded';
 
@@ -58,21 +63,22 @@ interface GameEvents<G> extends Eventlist {
 	draftmoves?: ((gamefile: G, move: Move) => boolean)[],
 	renderbelowpieces?: ((gamefile: G) => false)[],
 	renderabovepieces?: ((gamefile: G) => false)[],
+}
 
-	fullyloaded?: ((gamefile: G) => false)[],
-	gameloaded?: ((gamefile: any) => false)[],
-	boardloaded?: ((gamefile: any) => false)[]
+interface LoadingEvents<T> extends Eventlist {
+	gameloaded?: ((gamefile: T, basegame: Game) => false)[],
+	boardloaded?: ((gamefile: T, boardsim: Board) => false)[]
 }
 
 export type {
-	Eventlist,
-
-	GameEvents
+	GameEvents,
+	LoadingEvents
 };
 
 export default {
 	addEventListener,
 	removeEventListener,
-	
+
+	removeEvent,
 	runEvent,
 };

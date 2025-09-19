@@ -2,7 +2,6 @@ import type { Construction } from "./modmanager.js";
 import type { FullGame } from "../chess/logic/gamefile.js";
 import type { TypeGroup } from "../chess/util/typeutil.js";
 
-import events from "../chess/logic/events.js";
 import svgcache from "../chess/rendering/svgcache.js";
 import { rawTypes as r, ext as e } from "../chess/util/typeutil.js";
 
@@ -56,25 +55,20 @@ function loadPieces(g: CrazyhouseGui,svgs: SVGElement[]): void {
 	}
 }
 
-function setup(gamefile: Construction<CrazyhouseState & CrazyhouseGui, FullGame & CrazyhouseState & CrazyhouseGui>): void {
+function setup(gamefile: Construction<FullGame & CrazyhouseState & CrazyhouseGui>): void {
 	gamefile.crazyhouse = {
 		inventory: {[r.PAWN + e.B]: 10, [r.QUEEN + e.W]: 99, [r.KING + e.W]: -1},
 		gui: {}
 	};
-	if (gamefile.components.has("client")) {
-		createCrazyhouseGui();
-		events.addEventListener(gamefile.events, "fullyloaded", egg);
-	}
-
-	function egg(gamefile: FullGame & CrazyhouseGui & CrazyhouseState): false {
-		events.removeEventListener(gamefile.events, "fullyloaded", egg);
-
-		svgcache.getSVGElements(gamefile.boardsim.existingTypes, 50, 50).then(s => {
-			loadPieces(gamefile, s);
-			updateHome(gamefile);
-		});
-		return false;
-	}
+	createCrazyhouseGui();
 }
 
-export default setup;
+function setupPostload(gamefile: FullGame & CrazyhouseGui & CrazyhouseState): false {
+	svgcache.getSVGElements(gamefile.boardsim.existingTypes, 50, 50).then(s => {
+		loadPieces(gamefile, s);
+		updateHome(gamefile);
+	});
+	return false;
+}
+
+export default [setup, setupPostload];

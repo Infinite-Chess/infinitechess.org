@@ -1,7 +1,7 @@
 /** @type {[string, ComponentName[]][]} */
 const ModBundles = [
-	["atomic/base.js", ['atomic']],
-	["atomic/graphics.js", ['atomic', 'client']],
+	["atomic/base.js", ['atomic', 'board', 'game']],
+	["atomic/graphics.js", ['atomic', 'board', 'game', 'client']],
 ].map(m => [m[0], new Set(m[1])]);
 
 /** @typedef {import('./modmanager').ComponentName} ComponentName */

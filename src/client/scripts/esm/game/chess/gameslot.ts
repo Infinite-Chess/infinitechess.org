@@ -58,7 +58,6 @@ import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
-import events from "../../chess/logic/events.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -134,7 +133,7 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// console.log("Loading gamefile...");
 
 	// console.log('Started loading game...');
-	const loadingGamefile: Construction<any, void> = {
+	const loadingGamefile: Construction<FullGame> = {
 		events: {},
 		components: new Set<ComponentName>(['game', 'board', 'atomic', 'client']),
 	};
@@ -143,13 +142,13 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// both the LOGICAL and GRAPHICAL stuff are finished.
 
 	await modmanager.loadModList(loadingGamefile.components);
-	modmanager.setupModifiers(loadingGamefile);
+	modmanager.setupModifierComponents(loadingGamefile);
 	
 	// First load the LOGICAL stuff...
 	loadLogical(loadingGamefile, loadOptions);
 	// console.log('Finished loading LOGICAL game stuff.');
-	events.runEvent(loadedGamefile!.events, "fullyloaded", loadedGamefile!);
-	
+	loadingGamefile.events = {}; // clear all loading events
+	modmanager.setupModifierSystems(loadedGamefile!);
 
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
@@ -166,7 +165,7 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadingGamefile: Construction<Gamesim, FullGame>, loadOptions: LoadOptions): void {
+function loadLogical(loadingGamefile: Construction<FullGame>, loadOptions: LoadOptions): void {
 
 	loadedGamefile = gamefile.initFullGame(loadingGamefile, loadOptions.metadata, loadOptions.additional);
 
