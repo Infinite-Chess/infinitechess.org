@@ -7,7 +7,7 @@ import type { GameEvents, LoadingEvents } from "../shared/chess/logic/events.js"
 // @ts-ignore
 import { getBundles } from "./modbundles.js";
 
-const MOD_LOCATION_BASE = '/scripts/esm/modifiers/';
+const MOD_LOCATION_BASE = '/scripts/esm/mods/';
 
 interface Eventable {
 	events: GameEvents<this>,
@@ -24,7 +24,7 @@ interface PredictedEvent {
 type Construction<T> = PredictedEvent & Partial<T>
 
 type Modname = 'atomic' | 'crazyhouse' | 'clock'
-type ComponentName = Modname | 'game' | 'board' | 'match' | 'client' | 'events'
+type ComponentName = Modname | 'game' | 'board' | 'match' | 'client' | 'events' | 'server'
 
 /**
  * To stop ts freaking out about the extension format is we do a little thing called lying
@@ -56,7 +56,7 @@ function isSetupValid(setup: unknown): setup is SetupPair {
 async function loadModList(complist: Set<ComponentName>): Promise<void> {
 	await Promise.all(getBundles(complist).map(async(mod: string) => {
 		if (mod in modCache) return;
-		const location = `${MOD_LOCATION_BASE}${mod}`;
+		const location = `${MOD_LOCATION_BASE}${mod}.js`;
 		console.log(`Importing a modifier from ${location}`);
 		const {default: setup} = await import(location);
 		if (!isSetupValid(setup)) throw Error(`Modifier at ${mod} is in invalid format`);

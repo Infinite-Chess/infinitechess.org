@@ -44,7 +44,7 @@ import promotionlines from '../rendering/promotionlines.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
-import events from '../../chess/logic/events.js';
+import events from '../../../../../shared/chess/logic/events.js';
 import webgl from '../rendering/webgl.js';
 import starfield from '../rendering/starfield.js';
 import camera from '../rendering/camera.js';

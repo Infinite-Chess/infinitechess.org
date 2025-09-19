@@ -1,7 +1,7 @@
 /** @type {[string, ComponentName[]][]} */
 const ModBundles = [
-	["atomic/base.js", ['atomic', 'board', 'game']],
-	["atomic/graphics.js", ['atomic', 'board', 'game', 'client']],
+	["atomic/base", ['atomic', 'board', 'game']],
+	["atomic/graphics", ['atomic', 'board', 'game', 'client']],
 ].map(m => [m[0], new Set(m[1])]);
 
 /** @typedef {import('./modmanager').ComponentName} ComponentName */
@@ -27,7 +27,7 @@ function getBundles(componenets) {
 
 /**
  * 
- * @param {Iterable<ComponentName>} componenets 
+ * @param {Iterable<ComponentName>} exeptions
  * @returns {string[]}
  */
 function getBundleExceptions(exeptions) {

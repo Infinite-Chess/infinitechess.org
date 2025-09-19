@@ -20,6 +20,7 @@ import path from "node:path";
 // Local imports
 import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
 import { DEV_BUILD } from './src/server/config/config.js';
+import { getBundleExceptions } from './src/mods/modbundles.js';
 
 
 // ================================= CONSTANTS =================================
@@ -28,7 +29,6 @@ import { DEV_BUILD } from './src/server/config/config.js';
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
 const cssTargets = browserslistToTargets(browserslist('defaults'));
-import { getBundleExceptions } from './src/client/scripts/esm/modifiers/modbundles.js';
 
 
 /**
@@ -38,17 +38,17 @@ import { getBundleExceptions } from './src/client/scripts/esm/modifiers/modbundl
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
-const entryPoints = [
-	...getBundleExceptions(['server']),
-	'dist/client/scripts/esm/game/main.js',
-	'dist/client/scripts/esm/components/header/header.js',
-	'dist/client/scripts/esm/views/index.js',
-	'dist/client/scripts/esm/views/member.js',
-	'dist/client/scripts/esm/views/leaderboard.js',
-	'dist/client/scripts/esm/views/login.js',
-	'dist/client/scripts/esm/views/createaccount.js',
-	'dist/client/scripts/esm/views/resetpassword.js',
-	'dist/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+const clientEntryPoints = [
+	'src/client/scripts/esm/game/main.js',
+	'src/client/scripts/esm/components/header/header.js',
+	'src/client/scripts/esm/views/index.ts',
+	'src/client/scripts/esm/views/member.ts',
+	'src/client/scripts/esm/views/leaderboard.ts',
+	'src/client/scripts/esm/views/login.ts',
+	'src/client/scripts/esm/views/createaccount.js',
+	'src/client/scripts/esm/views/resetpassword.ts',
+	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+	...getBundleExceptions(['server']).map(p => `src/mods/${p}.ts`)
 ];
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
 
@@ -72,7 +72,7 @@ function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
 const esbuildClientOptions = {
 	bundle: true,
 	entryPoints: clientEntryPoints,
-	outdir: './dist/client/scripts/esm',
+	outdir: './dist/',
 	// Use the 'text' loader for shader files
 	loader: { '.glsl': 'text' }, // Any file import ending in .glsl is loaded as a raw text string
 	/**
