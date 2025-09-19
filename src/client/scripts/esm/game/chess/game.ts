@@ -44,6 +44,7 @@ import promotionlines from '../rendering/promotionlines.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
+import events from '../../chess/logic/events.js';
 import webgl from '../rendering/webgl.js';
 import starfield from '../rendering/starfield.js';
 import camera from '../rendering/camera.js';
@@ -223,6 +224,7 @@ function render(): void {
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
+		events.runEvent(gamefile.boardsim.events, "renderbelowpieces", gamefile);
 	});
     
 	// The rendering of the pieces needs to use the normal depth function, because the
@@ -237,6 +239,7 @@ function render(): void {
 		arrows.render();
 		annotations.render_abovePieces();
 		perspective.renderCrosshair();
+		events.runEvent(gamefile.boardsim.events, "renderabovepieces", gamefile);
 	});
 }
 

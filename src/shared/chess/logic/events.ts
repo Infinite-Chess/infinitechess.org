@@ -9,13 +9,10 @@
 // Disabling this  cause will be using func types lots
 /* eslint-disable no-unused-vars */
 
-// @ts-ignore
-import type gamefile from "../../src/client/scripts/esm/chess/logic/gamefile";
-
-type ExtractArr<T extends any[]> = T extends (infer U)[] ? U : never
+type ExtractArr<T> = T extends (infer U)[] ? U : never
  
 interface Eventlist {
-	[eventName: string]: ((...args: any[]) => boolean)[]
+	[eventName: string]: ((...args: any[]) => boolean)[] | undefined
 }
 
 function runEvent<E extends Eventlist, N extends keyof E, A extends Parameters<ExtractArr<E[N]>>>(eventlist: E, event: N, ...args: A): boolean {
@@ -55,11 +52,13 @@ function removeEventListener<E extends Eventlist, N extends keyof E, L extends E
 	return false;
 }
 
-import type { GenerateHook } from "./movepiece";
-
+import type { FullGame } from "./gamefile";
+import type { Move } from "./movepiece";
 
 interface GameEvents extends Eventlist {
-	draftMoves: GenerateHook[]
+	draftmoves?: ((gamefile: FullGame, move: Move) => boolean)[],
+	renderbelowpieces?: ((gamefile: FullGame) => false)[],
+	renderabovepieces?: ((gamefile: FullGame) => false)[],
 }
 
 export type {

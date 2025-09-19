@@ -146,8 +146,6 @@ interface Move extends Edit, MoveDraft, BaseMove {
 
 // Move Generating --------------------------------------------------------------------------------------------------
 
-type GenerateHook = (gamefile: FullGame, move: Move) => boolean
-
 /**
  * Generates a full Move object from a MoveDraft,
  * calculating and appending its board changes to its Changes list,
@@ -198,7 +196,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 		// Delete all special rights that should be revoked from the move.
 		queueSpecialRightDeletionStateChanges(boardsim, move);
 	}
-	events.runEvent(boardsim.events, "draftMoves", gamefile, move);
+	events.runEvent(boardsim.events, "draftmoves", gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
@@ -516,7 +514,6 @@ export type {
 	promotion,
 	castle,
 	path,
-	GenerateHook
 };
 
 export default {

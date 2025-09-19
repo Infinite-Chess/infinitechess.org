@@ -238,9 +238,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		pieceMovesets,
 		specialMoves,
 		playableRegion,
-		events: {
-			draftMoves: []
-		},
+		events: {},
 		...editorDependentVars
 	};
 }

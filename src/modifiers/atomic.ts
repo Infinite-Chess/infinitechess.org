@@ -8,7 +8,10 @@ import boardchanges from "../chess/logic/boardchanges.js";
 import coordutil from "../chess/util/coordutil.js";
 import events from "../chess/logic/events.js";
 
-const NukeRange = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1], [0, 0]] as Coords[];
+import { rawTypes } from "../chess/util/typeutil.js";
+import movesets from "../chess/logic/movesets.js";
+
+const NukeRange = [...movesets.getPieceDefaultMovesets()[rawTypes.KING]!.individual!, [0n, 0n]] as Coords[];
 
 class SimulatedChangeStack {
 	#changes: Change[];
@@ -53,7 +56,7 @@ function draftHook(gamefile: FullGame, move: Move) {
 				let hasMovedBeenNuked = false;
 				newChanges.pop();
 				for (const nukePos of NukeRange) {
-					const a = coordutil.addCoordinates(cap.piece.coords, nukePos);
+					const a = coordutil.addCoords(cap.piece.coords, nukePos);
 
 					const isMovedPiece = coordutil.areCoordsEqual(a, c.piece.coords);
 					hasMovedBeenNuked = hasMovedBeenNuked || coordutil.areCoordsEqual(a, c.endCoords);
@@ -77,8 +80,26 @@ function draftHook(gamefile: FullGame, move: Move) {
 	return false;
 }
 
+import mouse from "../util/mouse.js";
+import selection from "../game/chess/selection.js";
+import squarerendering from "../game/rendering/highlights/squarerendering.js";
+import typeutil from "../chess/util/typeutil.js";
+
+function renderNukeSites(gamefile: FullGame): false {
+	const hover = mouse.getTileMouseOver_Integer();
+	if (!selection.isAPieceSelected() || !hover || !boardutil.isPieceOnCoords(gamefile.boardsim.pieces, hover)) return false;
+	if (typeutil.getColorFromType(selection.getPieceSelected()!.type) === typeutil.getColorFromType(boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hover)!.type)) return false;
+	squarerendering.genModel(NukeRange.map(n => coordutil.addCoords(n, hover)), [1, 0, 0, 0.40]).render();
+	return false;
+}
+
 function setup(gamefile: FullGame) {
-	events.addEventListener(gamefile.boardsim.events, "draftMoves", draftHook);
+	for (const w of Object.values(gamefile.basegame.gameRules.winConditions)) {
+		if ("royalcapture" in w) continue;
+		w.push("royalcapture");
+	}
+	events.addEventListener(gamefile.boardsim.events, "draftmoves", draftHook);
+	events.addEventListener(gamefile.boardsim.events, "renderabovepieces", renderNukeSites);
 }
 
 export default setup;
