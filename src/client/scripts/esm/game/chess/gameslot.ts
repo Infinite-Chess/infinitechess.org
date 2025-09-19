@@ -11,7 +11,7 @@ import type { MetaData } from "../../../../../shared/chess/util/metadata.js";
 import type { Player } from "../../../../../shared/chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { PresetAnnotes } from "../../../../../shared/chess/logic/icn/icnconverter.js";
-import type { Additional, FullGame, Gamesim } from "../../../../../shared/chess/logic/gamefile.js";
+import type { Additional, FullGame } from "../../../../../shared/chess/logic/gamefile.js";
 import type { Construction, ComponentName, Modname } from "../../../../../mods/modmanager.js";
 
 import enginegame from '../misc/enginegame.js';
