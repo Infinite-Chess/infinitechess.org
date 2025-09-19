@@ -67,15 +67,15 @@
 		"prod": "npm run clean && npm run prod:assets && npm run prod:assets-cjs && npm run prod:build && npm run prod:server",
 		"prod:build": "node build.js && tsc",
 		"prod:server": "node dist/server/server.js",
-		"prod:assets": "cpx 'src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}' dist",
-		"prod:assets-cjs": "cpx 'src/client/scripts/cjs/**/*.js' dist/client/scripts/cjs",
+		"prod:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}\" dist",
+		"prod:assets-cjs": "cpx \"src/client/scripts/cjs/**/*.js\" dist/client/scripts/cjs",
 		"dev": "npm run clean && concurrently -k \"npm:dev:*\" --prefix-colors \"green,grey,blue,white\"",
 		"dev:build": "node build.js --dev",
 		"dev:server": "wait-on dist/server/server.js && nodemon",
 		"dev:tsc": "tsc --watch --preserveWatchOutput",
-		"dev:assets": "cpx 'src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}' dist --watch",
-		"dev:assets-cjs": "cpx 'src/client/scripts/cjs/**/*.js' dist/client/scripts/cjs --watch",
+		"dev:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}\" dist --watch",
+		"dev:assets-cjs": "cpx \"src/client/scripts/cjs/**/*.js\" dist/client/scripts/cjs --watch",
 		"build-images": "node src/server/utility/generateImages.js",
-		"generate-dependancy-graph": "node src/server/utility/generateDependancyGraph.js"
+		"generate-dependency-graph": "node src/server/utility/generateDependancyGraph.js"
 	}
 }
