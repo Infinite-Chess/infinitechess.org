@@ -136,14 +136,14 @@ async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	// console.log('Started loading game...');
 	const loadingGamefile: Construction<any, void> = {
 		events: {},
-		components: new Set<ComponentName>(['game', 'board', 'atomic', "client"]),
+		components: new Set<ComponentName>(['game', 'board', 'atomic', 'client']),
 	};
 	// The game should be considered loaded once the LOGICAL stuff is finished,
 	// but the loading animation should only be closed when
 	// both the LOGICAL and GRAPHICAL stuff are finished.
 
-	await modmanager.loadModList(loadOptions.modlist ?? ['atomic']);
-	modmanager.setupModifiers(loadingGamefile, ['atomic']);
+	await modmanager.loadModList(loadingGamefile.components);
+	modmanager.setupModifiers(loadingGamefile);
 	
 	// First load the LOGICAL stuff...
 	loadLogical(loadingGamefile, loadOptions);

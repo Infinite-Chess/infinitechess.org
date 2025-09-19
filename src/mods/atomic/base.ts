@@ -1,16 +1,16 @@
-import type { FullGame } from "../chess/logic/gamefile.js";
-import type { Move } from "../chess/logic/movepiece.js";
-import type { Coords } from "../chess/util/coordutil.js";
-import type { Change } from "../chess/logic/boardchanges.js";
-import type { Construction } from "./modmanager.js";
+import type { FullGame } from "../../shared/chess/logic/gamefile.js";
+import type { Move } from "../../shared/chess/logic/movepiece.js";
+import type { Coords } from "../../shared/chess/util/coordutil.js";
+import type { Change } from "../../shared/chess/logic/boardchanges.js";
+import type { Construction } from "../modmanager.js";
 
-import boardutil from "../chess/util/boardutil.js";
-import boardchanges from "../chess/logic/boardchanges.js";
-import coordutil from "../chess/util/coordutil.js";
-import events from "../chess/logic/events.js";
+import boardutil from "../../shared/chess/util/boardutil.js";
+import boardchanges from "../../shared/chess/logic/boardchanges.js";
+import coordutil from "../../shared/chess/util/coordutil.js";
+import events from "../../shared/chess/logic/events.js";
 
-import { rawTypes } from "../chess/util/typeutil.js";
-import movesets from "../chess/logic/movesets.js";
+import { rawTypes } from "../../shared/chess/util/typeutil.js";
+import movesets from "../../shared/chess/logic/movesets.js";
 
 const NukeRange = [...movesets.getPieceDefaultMovesets()[rawTypes.KING]!.individual!, [0n, 0n]] as Coords[];
 
@@ -23,23 +23,26 @@ class SimulatedChangeStack {
 		this.#gamefile = gamefile;
 	}
 
-	push(c: Change) {
+	push(c: Change): void {
 		this.#changes.push(c);
 		boardchanges.changeFuncs.forward[c.action]!(this.#gamefile, c);
 	}
 
-	pop() {
+	pop(): Change {
 		const c = this.#changes.pop();
 		if (c?.action! in boardchanges.changeFuncs.backward) boardchanges.changeFuncs.backward[c!.action]!(this.#gamefile, c!);
+		if (c === undefined) {
+			throw RangeError();
+		}
 		return c;
 	}
 
-	get changes() {
+	get changes(): Change[] {
 		return [...this.#changes];
 	}
 }
 
-function draftHook(gamefile: FullGame, move: Move) {
+function draftHook(gamefile: FullGame, move: Move): false {
 
 	// Better compositor please? lol no
 	const newChanges = new SimulatedChangeStack(gamefile);
@@ -81,23 +84,13 @@ function draftHook(gamefile: FullGame, move: Move) {
 	return false;
 }
 
-import mouse from "../util/mouse.js";
-import selection from "../game/chess/selection.js";
-import squarerendering from "../game/rendering/highlights/squarerendering.js";
-import typeutil from "../chess/util/typeutil.js";
 
-function renderNukeSites(gamefile: FullGame): false {
-	const hover = mouse.getTileMouseOver_Integer();
-	if (!selection.isAPieceSelected() || !hover || !boardutil.isPieceOnCoords(gamefile.boardsim.pieces, hover)) return false;
-	if (typeutil.getColorFromType(selection.getPieceSelected()!.type) === typeutil.getColorFromType(boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hover)!.type)) return false;
-	squarerendering.genModel(NukeRange.map(n => coordutil.addCoords(n, hover)), [1, 0, 0, 0.40]).render();
-	return false;
-}
 
-function setup(gamefile: Construction<void, FullGame>) {
+function setup(gamefile: Construction<void, FullGame>): void {
+	events.addEventListener(gamefile.events, "draftmoves", draftHook);
 	if (gamefile.components.has("client")) {
-		events.addEventListener(gamefile.events, "draftmoves", draftHook);
-		events.addEventListener(gamefile.events, "renderabovepieces", renderNukeSites);
+		
+		
 	}
 	if (gamefile.components.has("game")) {
 		function swapCheckmateForRoyalCapture(gamefile: FullGame): false {
@@ -112,4 +105,7 @@ function setup(gamefile: Construction<void, FullGame>) {
 	}
 }
 
+export {
+	NukeRange
+};
 export default setup;

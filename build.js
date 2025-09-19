@@ -28,6 +28,7 @@ import { DEV_BUILD } from './src/server/config/config.js';
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
 const cssTargets = browserslistToTargets(browserslist('defaults'));
+import { getBundleExceptions } from './src/client/scripts/esm/modifiers/modbundles.js';
 
 
 /**
@@ -37,17 +38,17 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
-const clientEntryPoints = [
-	'src/client/scripts/esm/modifiers/atomic.ts',
-	'src/client/scripts/esm/game/main.js',
-	'src/client/scripts/esm/components/header/header.js',
-	'src/client/scripts/esm/views/index.ts',
-	'src/client/scripts/esm/views/member.ts',
-	'src/client/scripts/esm/views/leaderboard.ts',
-	'src/client/scripts/esm/views/login.ts',
-	'src/client/scripts/esm/views/createaccount.js',
-	'src/client/scripts/esm/views/resetpassword.ts',
-	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+const entryPoints = [
+	...getBundleExceptions(['server']),
+	'dist/client/scripts/esm/game/main.js',
+	'dist/client/scripts/esm/components/header/header.js',
+	'dist/client/scripts/esm/views/index.js',
+	'dist/client/scripts/esm/views/member.js',
+	'dist/client/scripts/esm/views/leaderboard.js',
+	'dist/client/scripts/esm/views/login.js',
+	'dist/client/scripts/esm/views/createaccount.js',
+	'dist/client/scripts/esm/views/resetpassword.js',
+	'dist/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
 

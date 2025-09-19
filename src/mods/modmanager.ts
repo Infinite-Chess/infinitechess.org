@@ -4,15 +4,10 @@
  * @author Idontuse
  */
 import type { GameEvents } from "../shared/chess/logic/events.js";
+// @ts-ignore
+import { getBundles } from "./modbundles.js";
 
 const MOD_LOCATION_BASE = '/scripts/esm/modifiers/';
-const modLocations = {
-	atomic: 'atomic.js',
-	crazyhouse: 'crazyhouse.js'
-} as const;
-
-type Modname = keyof typeof modLocations
-type ComponentName = Modname | 'game' | 'board' | 'match' | 'client' | 'events'
 
 interface Eventable {
 	events: GameEvents<this>,
@@ -28,6 +23,9 @@ interface PredictedEvent<T> {
 
 type Construction<T, G> = PredictedEvent<G> & T
 
+type Modname = 'atomic' | 'crazyhouse'
+type ComponentName = Modname | 'game' | 'board' | 'match' | 'client' | 'events'
+
 /**
  * To stop ts freaking out about the extension format is we do a little thing called lying
  * Since imports are dynamic ts has no clue what the setup function index signatures are actually
@@ -36,25 +34,23 @@ type Construction<T, G> = PredictedEvent<G> & T
 // eslint-disable-next-line no-unused-vars
 type SetupFunc = (gamefile: Construction<any, void>) => void
 
-
 const modCache: {
-	// eslint-disable-next-line no-unused-vars
-	[name in Modname]?: SetupFunc
+	[name: string]: SetupFunc
 } = {};
 
-async function loadModList(modlist: Modname[]): Promise<void> {
-	await Promise.all(modlist.map(async mod => {
+async function loadModList(complist: ComponentName[]): Promise<void> {
+	await Promise.all(getBundles(complist).map(async(mod: string) => {
 		if (mod in modCache) return;
-		const location = `${MOD_LOCATION_BASE}${modLocations[mod]}`;
-		console.log(`Importing ${mod} from ${location}`);
+		const location = `${MOD_LOCATION_BASE}${mod}`;
+		console.log(`Importing a modifier from ${location}`);
 		const {default: setup} = await import(location);
-		if (typeof setup !== "function") throw Error(`${mod} mod is in invalid format`);
+		if (typeof setup !== "function") throw Error(`Modifier at ${mod} is in invalid format`);
 		modCache[mod] = setup;
 	}));
 }
 
-function setupModifiers(gamefile: Construction<any, void>, modList: Modname[]): void {
-	for (const mod of modList) {
+function setupModifiers(gamefile: Construction<void, void>): void {
+	for (const mod of getBundles(gamefile.components)) {
 		if (modCache[mod] === undefined) throw Error("Mod has not been loaded into cache");
 		console.log(`Setting up ${mod}`);
 		modCache[mod](gamefile);
