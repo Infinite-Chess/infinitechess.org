@@ -13,7 +13,7 @@ function renderNukeSites<T extends Gamesim & AtomicData>(gamefile: T): false {
 	const hover = mouse.getTileMouseOver_Integer();
 	if (!selection.isAPieceSelected() || !hover || !boardutil.isPieceOnCoords(gamefile.boardsim.pieces, hover)) return false;
 	if (typeutil.getColorFromType(selection.getPieceSelected()!.type) === typeutil.getColorFromType(boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hover)!.type)) return false;
-	squarerendering.genModel(gamefile.atomic.map(n => coordutil.addCoords(n, hover)), [1, 0, 0, 0.40]).render();
+	squarerendering.genModel(gamefile.atomic.nukeRange.map(n => coordutil.addCoords(n, hover)), [1, 0, 0, 0.40]).render();
 	return false;
 }
 
