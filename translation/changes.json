@@ -1,4 +1,8 @@
 {
+	"68": {
+		"note": "Deleted shaders_failed & failed_compiling_shaders, lines 366-367.",
+		"changes": []
+	},
 	"67": {
 		"note": "Added coords-invalid line 381",
 		"changes": []

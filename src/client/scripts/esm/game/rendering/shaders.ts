@@ -4,6 +4,30 @@
 import { gl } from './webgl.js';
 
 
+// Generic Shaders
+import vsSource_color from '../../../../shaders/color/vertex.glsl';
+import fsSource_color from '../../../../shaders/color/fragment.glsl';
+import vsSource_colorInstanced from '../../../../shaders/color/instanced/vertex.glsl';
+import fsSource_colorInstanced from '../../../../shaders/color/instanced/fragment.glsl';
+import vsSource_texture from '../../../../shaders/texture/vertex.glsl';
+import fsSource_texture from '../../../../shaders/texture/fragment.glsl';
+import vsSource_textureInstanced from '../../../../shaders/texture/instanced/vertex.glsl';
+import fsSource_textureInstanced from '../../../../shaders/texture/instanced/fragment.glsl';
+import vsSource_colorTexture from '../../../../shaders/color_texture/vertex.glsl';
+import fsSource_colorTexture from '../../../../shaders/color_texture/fragment.glsl';
+// Specialized Shaders
+import vsSource_miniImages from '../../../../shaders/mini_images/vertex.glsl';
+import fsSource_miniImages from '../../../../shaders/mini_images/fragment.glsl';
+import vsSource_highlights from '../../../../shaders/highlights/vertex.glsl';
+import fsSource_highlights from '../../../../shaders/highlights/fragment.glsl';
+import vsSource_arrows from '../../../../shaders/arrows/vertex.glsl';
+import fsSource_arrows from '../../../../shaders/arrows/fragment.glsl';
+import vsSource_arrowImages from '../../../../shaders/arrow_images/vertex.glsl';
+import fsSource_arrowImages from '../../../../shaders/arrow_images/fragment.glsl';
+import vsSource_starfield from '../../../../shaders/starfield/vertex.glsl';
+import fsSource_starfield from '../../../../shaders/starfield/fragment.glsl';
+
+
 // Type definitions -------------------------------------------------------------------------------------------------------
 
 
@@ -47,18 +71,17 @@ const programs: ShaderProgram[] = [];
  * */
 function initPrograms(): void {
 	programs.push(
-		createColorProgram(),
-		createColorProgram_Instanced(),
-		createColorProgram_Instanced_Plus(),
-		createSizedColorProgram_Instanced(),
-		createTextureProgram(),
-		createColoredTextureProgram(),
-		createTextureProgram_Instanced(),
-		createTintedInstancedTextureProgram(),
-		createColoredTextureProgram_Instanced(),
-		createTintedTextureProgram(),
-		createColoredTextureInstancedPositionProgram(),
-		createStarfieldProgram(),
+		createProgram_Color(),
+		createProgram_Color_Instanced(),
+		createProgram_Texture(),
+		createProgram_Texture_Instanced(),
+		createProgram_ColorTexture(),
+		
+		createProgram_MiniImages(),
+		createProgram_Highlights(),
+		createProgram_Arrows(),
+		createProgram_ArrowImages(),
+		createProgram_Starfield(),
 	);
 }
 
@@ -69,37 +92,8 @@ function initPrograms(): void {
  * Each point in the vertex data array must have positional data (2 or 3 numbers)
  * followed by the color data (4 numbers).
  */
-function createColorProgram(): ShaderProgram {
-	const specifyPointSize = false; // Can toggle true if we start rendering with gl.POINTS somewhere in the project
-	const pointSizeLine = specifyPointSize ? `gl_PointSize = ${(pointSize * window.devicePixelRatio).toFixed(1)};` : ''; // Default: 7.0
-	const vsSource = `#version 300 es
-		in vec4 aVertexPosition;
-		in vec4 aVertexColor;
-
-		uniform mat4 uTransformMatrix;
-
-		out vec4 vColor;
-
-		void main() {
-			gl_Position = uTransformMatrix * aVertexPosition;
-			vColor = aVertexColor;
-			${pointSizeLine}
-		}
-	`;
-	const fsSource = `#version 300 es
-		precision lowp float;
-
-		in vec4 vColor;
-
-		out vec4 fragColor;
-
-		void main() {
-			fragColor = vColor;
-		}
-	`;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Color(): ShaderProgram {
+	const program = createShaderProgram(vsSource_color, fsSource_color);
 	return {
 		program,
 		attribLocations: {
@@ -118,38 +112,8 @@ function createColorProgram(): ShaderProgram {
  * followed by color data (4 numbers),
  * with the instance-specific data array having position offsets (2 or 3 numbers).
  */
-function createColorProgram_Instanced(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;
-        in vec4 aVertexColor;
-		in vec4 aInstancePosition; // Per-instance position offset attribute
-
-        uniform mat4 uTransformMatrix;
-
-        out vec4 vColor;
-
-        void main() {
-			// Add the instance offset to the vertex position
-			vec4 transformedVertexPosition = vec4(aVertexPosition.xyz + aInstancePosition.xyz, 1.0);
-
-            gl_Position = uTransformMatrix * transformedVertexPosition;
-            vColor = aVertexColor;
-        }
-    `;
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec4 vColor;
-
-        out vec4 fragColor;
-
-        void main() {
-            fragColor = vColor;
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Color_Instanced(): ShaderProgram {
+	const program = createShaderProgram(vsSource_colorInstanced, fsSource_colorInstanced);
 	return {
 		program,
 		attribLocations: {
@@ -171,46 +135,8 @@ function createColorProgram_Instanced(): ShaderProgram {
  * * color (4 numbers),
  * * rotation offset (1 number)
  */
-function createColorProgram_Instanced_Plus(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;
-        in vec3 aInstancePosition; // Instance position offset (vec3: xyz)
-        in vec4 aInstanceColor;    // Instance color (vec4: rgba)
-        in float aInstanceRotation; // Instance rotation (float: radians)
-
-        uniform mat4 uTransformMatrix;
-
-        out vec4 vColor;
-
-        void main() {
-            // Create rotation matrix
-            float cosA = cos(aInstanceRotation);
-            float sinA = sin(aInstanceRotation);
-            mat2 rotMat = mat2(cosA, sinA, -sinA, cosA);
-            
-            // Rotate vertex position
-            vec2 rotated = rotMat * aVertexPosition.xy;
-            vec3 rotatedPosition = vec3(rotated, aVertexPosition.z);
-            
-            // Add instance position offset
-            vec3 finalPosition = rotatedPosition + aInstancePosition;
-            
-            gl_Position = uTransformMatrix * vec4(finalPosition, 1.0);
-            vColor = aInstanceColor;
-        }
-    `;
-
-	const fsSource = `#version 300 es
-        precision lowp float;
-        in vec4 vColor;
-        out vec4 fragColor;
-        void main() {
-            fragColor = vColor;
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Arrows(): ShaderProgram {
+	const program = createShaderProgram(vsSource_arrows, fsSource_arrows);
 	return {
 		program,
 		attribLocations: {
@@ -235,47 +161,8 @@ function createColorProgram_Instanced_Plus(): ShaderProgram {
  * with position (vec4) and color (vec4) attributes.
  * Instance data buffer should contain position offsets (vec3).
  */
-function createSizedColorProgram_Instanced(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;     // Base shape vertex position (e.g., from -0.5 to 0.5)
-        in vec4 aVertexColor;        // Base shape vertex color
-        in vec3 aInstancePosition;   // Per-instance position offset (center of the shape)
-
-        uniform mat4 uTransformMatrix; // Combined model-view-projection matrix
-        uniform float uSize;    // Desired size multiplier of the shape (scales aVertexPosition)
-
-        out vec4 vColor;             // Pass color to fragment shader
-
-        void main() {
-            // Scale the base vertex position's X and Y by the shape width.
-            // Assumes Z is 0 or handled appropriately, W is 1 for position.
-            vec3 scaledLocalPosition = vec3(aVertexPosition.xy * uSize, aVertexPosition.z);
-
-            // Add the instance-specific position offset to the scaled local position.
-            vec3 finalPosition = scaledLocalPosition + aInstancePosition;
-
-            // Transform the final position.
-            gl_Position = uTransformMatrix * vec4(finalPosition, 1.0);
-
-            // Pass the vertex color through.
-            vColor = aVertexColor;
-        }
-    `;
-
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec4 vColor;        // Interpolated color from vertex shader
-
-        out vec4 fragColor;    // Output fragment color
-
-        void main() {
-            fragColor = vColor; // Simply output the interpolated vertex color.
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Highlights(): ShaderProgram {
+	const program = createShaderProgram(vsSource_highlights, fsSource_highlights);
 	return {
 		program,
 		attribLocations: {
@@ -299,35 +186,8 @@ function createSizedColorProgram_Instanced(): ShaderProgram {
  * Each point in the vertex data must contain positional data (2 or 3 numbers)
  * followed by the texture data (2 numbers).
  */
-function createTextureProgram(): ShaderProgram  {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;
-        in vec2 aTextureCoord;
-
-        uniform mat4 uTransformMatrix;
-
-        out vec2 vTextureCoord;
-
-        void main(void) {
-            gl_Position = uTransformMatrix * aVertexPosition;
-            vTextureCoord = aTextureCoord;
-        }
-    `;
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec2 vTextureCoord;
-        uniform sampler2D uSampler;
-
-        out vec4 fragColor;
-
-        void main(void) {
-            fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap LOD bias so as to make the textures sharper.
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Texture(): ShaderProgram  {
+	const program = createShaderProgram(vsSource_texture, fsSource_texture);
 	return {
 		program,
 		attribLocations: {
@@ -355,40 +215,8 @@ function createTextureProgram(): ShaderProgram  {
  * 
  * The meshes obviously use more memory than the other shader programs.
  */
-function createColoredTextureProgram(): ShaderProgram  {
-	const vsSource = `#version 300 es
-		in vec4 aVertexPosition;
-		in vec2 aTextureCoord;
-		in vec4 aVertexColor;
-
-		uniform mat4 uTransformMatrix;
-
-		out vec2 vTextureCoord;
-		out vec4 vColor;
-
-		void main(void) {
-			gl_Position = uTransformMatrix * aVertexPosition;
-			vTextureCoord = aTextureCoord;
-			vColor = aVertexColor;
-		}
-    `;
-	const fsSource = `#version 300 es
-		precision lowp float;
-
-		in vec2 vTextureCoord;
-		in vec4 vColor;
-
-		uniform sampler2D uSampler;
-
-		out vec4 fragColor;
-
-		void main(void) {
-			fragColor = texture(uSampler, vTextureCoord, -0.5) * vColor; // Apply a mipmap LOD bias so as to make the textures sharper.
-		}
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_ColorTexture(): ShaderProgram  {
+	const program = createShaderProgram(vsSource_colorTexture, fsSource_colorTexture);
 	return {
 		program,
 		attribLocations: {
@@ -408,45 +236,8 @@ function createColoredTextureProgram(): ShaderProgram  {
  * to render instances with positional data and texture coordinates,
  * using instance-specific position offsets only.
  */
-function createTextureProgram_Instanced(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;        // Per-vertex position (vec4 for homogeneous coordinates)
-        in vec2 aTextureCoord;          // Per-vertex texture coordinates
-        in vec3 aInstancePosition;      // Per-instance position offset (vec3: xyz)
-
-        uniform mat4 uTransformMatrix;  // Transformation matrix
-
-        out vec2 vTextureCoord;         // To fragment shader
-
-        void main() {
-            // Apply instance position offset
-            vec4 offsetPosition = aVertexPosition + vec4(aInstancePosition, 0.0);
-            
-            // Transform position and pass through texture coords
-            gl_Position = uTransformMatrix * offsetPosition;
-            
-            // Pass texture coordinates directly to fragment shader
-            vTextureCoord = aTextureCoord;
-        }
-    `;
-
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec2 vTextureCoord;          // From vertex shader
-        uniform sampler2D uSampler;     // Texture sampler
-
-        out vec4 fragColor;             // Output color
-
-        void main() {
-            // Sample texture with LOD bias for sharpness
-            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
-            fragColor = texColor;
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Texture_Instanced(): ShaderProgram {
+	const program = createShaderProgram(vsSource_textureInstanced, fsSource_textureInstanced);
 	return {
 		program,
 		attribLocations: {
@@ -456,65 +247,6 @@ function createTextureProgram_Instanced(): ShaderProgram {
 		},
 		uniformLocations: {
 			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')!
-		},
-	};
-}
-
-/**
- * Creates and returns a shader program that uses INSTANCED RENDERING
- * with a universal tint color applied to all instances.
- */
-function createTintedInstancedTextureProgram(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;        // Per-vertex position
-        in vec2 aTextureCoord;          // Per-vertex texture coordinates
-        in vec3 aInstancePosition;      // Per-instance position offset
-
-        uniform mat4 uTransformMatrix;  // Transformation matrix
-
-        out vec2 vTextureCoord;         // To fragment shader
-
-        void main() {
-            // Apply instance position offset
-            vec4 offsetPosition = aVertexPosition + vec4(aInstancePosition, 0.0);
-            
-            // Transform position and pass through texture coords
-            gl_Position = uTransformMatrix * offsetPosition;
-            
-            // Pass texture coordinates to fragment shader
-            vTextureCoord = aTextureCoord;
-        }
-    `;
-
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec2 vTextureCoord;          // From vertex shader
-        uniform sampler2D uSampler;     // Texture sampler
-        uniform vec4 uTintColor;        // Universal tint color
-
-        out vec4 fragColor;             // Output color
-
-        void main() {
-            // Sample texture with LOD bias and apply universal tint
-            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
-            fragColor = texColor * uTintColor;
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
-	return {
-		program,
-		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
-		},
-		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			tintColor: gl.getUniformLocation(program, 'uTintColor')!,
 			uSampler: gl.getUniformLocation(program, 'uSampler')!
 		},
 	};
@@ -525,53 +257,8 @@ function createTintedInstancedTextureProgram(): ShaderProgram {
  * to render instances with positional data, texture coordinates, and instance-specific
  * position offsets, texture coordinate offsets, and color tinting.
  */
-function createColoredTextureProgram_Instanced(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;        // Per-vertex position (vec4 for homogeneous coordinates)
-        in vec2 aTextureCoord;          // Per-vertex texture coordinates
-        in vec3 aInstancePosition;      // Per-instance position offset (vec3: xyz)
-        in vec2 aInstanceTexCoord;      // Per-instance texture coordinate offset (vec2)
-        in vec4 aInstanceColor;         // Per-instance color (RGBA)
-
-        uniform mat4 uTransformMatrix;  // Transformation matrix
-
-        out vec2 vTextureCoord;         // To fragment shader
-        out vec4 vInstanceColor;        // To fragment shader
-
-        void main() {
-            // Apply instance position offset
-            vec4 offsetPosition = aVertexPosition + vec4(aInstancePosition, 0.0);
-            
-            // Transform position and pass through texture coords
-            gl_Position = uTransformMatrix * offsetPosition;
-            
-            // Apply texture coordinate offset and pass to fragment shader
-            vTextureCoord = aTextureCoord + aInstanceTexCoord;
-            
-            // Pass instance color to fragment shader
-            vInstanceColor = aInstanceColor;
-        }
-    `;
-
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec2 vTextureCoord;          // From vertex shader
-        in vec4 vInstanceColor;         // From vertex shader
-
-        uniform sampler2D uSampler;     // Texture sampler
-
-        out vec4 fragColor;             // Output color
-
-        void main() {
-            // Sample texture with LOD bias for sharpness
-            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
-            fragColor = texColor * vInstanceColor;
-        }
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_ArrowImages(): ShaderProgram {
+	const program = createShaderProgram(vsSource_arrowImages, fsSource_arrowImages);
 	return {
 		program,
 		attribLocations: {
@@ -589,123 +276,13 @@ function createColoredTextureProgram_Instanced(): ShaderProgram {
 }
 
 /**
- * Creates and return a shader program that is capable of rendering meshes
- * with a bound texture, and a universally-applied tint to every point
- * (not specific per vertex).
- * 
- * Each point in the vertex data must contain positional data (2 or 3 numbers),
- * followed by the texture data (2 numbers).
- * 
- * Set the tint during the render call by passing the `tintColor` uniform as an argument.
- * 
- * This is more memory efficient than the coloredTextureProgram,
- * if you don't require a unique tint value on each point.
- */
-function createTintedTextureProgram(): ShaderProgram  {
-	const vsSource = `#version 300 es
-		in vec4 aVertexPosition;
-		in vec2 aTextureCoord;
-
-		uniform mat4 uTransformMatrix;
-
-		out vec2 vTextureCoord;
-
-		void main(void) {
-			gl_Position = uTransformMatrix * aVertexPosition;
-			vTextureCoord = aTextureCoord;
-		}
-	`;
-	const fsSource = `#version 300 es
-		precision lowp float;
-
-		in vec2 vTextureCoord;
-
-		uniform vec4 uTintColor;
-		uniform sampler2D uSampler;
-
-		out vec4 fragColor;
-
-		void main(void) {
-			fragColor = texture(uSampler, vTextureCoord, -0.5) * uTintColor; // Apply a mipmap LOD bias so as to make the textures sharper.
-		}
-	`;
-
-
-	const program = createShaderProgram(vsSource, fsSource);
-
-	return {
-		program,
-		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
-		},
-		uniformLocations: {
-			tintColor: gl.getUniformLocation(program, 'uTintColor')!,
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')!
-		},
-	};
-}
-
-/**
  * Creates and returns a shader program that uses INSTANCED RENDERING
  * to render instances based on vertex data containing position, texture coordinates,
  * and vertex colors. Instance-specific data includes only position offsets.
  * The final color is the texture color multiplied by the vertex color.
  */
-function createColoredTextureInstancedPositionProgram(): ShaderProgram {
-	const vsSource = `#version 300 es
-        in vec4 aVertexPosition;        // Per-vertex position
-        in vec2 aTextureCoord;          // Per-vertex texture coordinate
-        in vec4 aVertexColor;           // Per-vertex color
-        in vec3 aInstancePosition;      // Per-instance position offset
-
-        uniform mat4 uTransformMatrix;  // Transformation matrix
-        uniform float uSize;    // Desired size multiplier of the shape (scales aVertexPosition)
-
-        out vec2 vTextureCoord;         // Pass texture coord to fragment shader
-        out vec4 vColor;                // Pass vertex color to fragment shader
-
-        void main() {
-            // Scale the base vertex position's X and Y by the shape width.
-            // Assumes Z is 0 or handled appropriately, W is 1 for position.
-            vec3 scaledLocalPosition = vec3(aVertexPosition.xy * uSize, aVertexPosition.z);
-
-            // Apply instance position offset to the base vertex position
-            vec3 finalPosition = scaledLocalPosition + aInstancePosition;
-
-            // Transform the final position
-            gl_Position = uTransformMatrix * vec4(finalPosition, 1.0);
-
-            // Pass texture coordinates and vertex color to the fragment shader
-            vTextureCoord = aTextureCoord;
-            vColor = aVertexColor;
-        }
-    `;
-
-	const fsSource = `#version 300 es
-        precision lowp float;
-
-        in vec2 vTextureCoord;          // Interpolated texture coordinate from vertex shader
-        in vec4 vColor;                 // Interpolated vertex color from vertex shader
-
-        uniform sampler2D uSampler;     // Texture sampler
-
-        out vec4 fragColor;             // Output fragment color
-
-        void main() {
-            // Sample the texture with LOD bias for sharpness
-            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
-
-            // Multiply the texture color by the vertex color
-            fragColor = texColor * vColor;
-        }
-
-		
-    `;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_MiniImages(): ShaderProgram {
+	const program = createShaderProgram(vsSource_miniImages, fsSource_miniImages);
 	return {
 		program,
 		attribLocations: {
@@ -728,42 +305,8 @@ function createColoredTextureInstancedPositionProgram(): ShaderProgram {
  * - Base vertex data defines a simple quad (the shape of one star).
  * - Instance data provides position (vec2), color (vec4), and size (float) for each star.
  */
-function createStarfieldProgram(): ShaderProgram {
-	const vsSource = `#version 300 es
-		// Base shape vertex (a corner of the star's quad)
-		in vec2 aVertexPosition;
-
-		// Per-instance attributes
-		in vec2 aInstancePosition; // Center position of the star (x,y)
-		in vec4 aInstanceColor;    // Color of the star (r,g,b,a)
-		in float aInstanceSize;    // Size of the star
-
-		uniform mat4 uTransformMatrix;
-
-		out vec4 vColor;
-
-		void main() {
-			// Scale the base quad vertex by the instance's size, then add the instance's position.
-			// This creates a quad of the correct size at the correct location.
-			vec2 finalPosition = (aVertexPosition * aInstanceSize) + aInstancePosition;
-
-			// We provide z=0.0 and w=1.0 for a complete 3D position vector
-			gl_Position = uTransformMatrix * vec4(finalPosition, 0.0, 1.0);
-			vColor = aInstanceColor;
-		}
-	`;
-
-	const fsSource = `#version 300 es
-		precision lowp float;
-		in vec4 vColor;
-		out vec4 fragColor;
-		void main() {
-			fragColor = vColor;
-		}
-	`;
-
-	const program = createShaderProgram(vsSource, fsSource);
-
+function createProgram_Starfield(): ShaderProgram {
+	const program = createShaderProgram(vsSource_starfield, fsSource_starfield);
 	return {
 		program,
 		attribLocations: {

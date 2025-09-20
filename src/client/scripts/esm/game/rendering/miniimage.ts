@@ -316,14 +316,16 @@ function render(): void {
 	const sortedNeutrals = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
 	const sortedColors = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
 
+	const size = snapping.getEntityWidthWorld();
+
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {
-			models[neut]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
-			models_hovered[neut]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+			models[neut]?.render(undefined, undefined, { size });
+			models_hovered[neut]?.render(undefined, undefined, { size });
 		}
 		for (const col of sortedColors) {
-			models[col]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
-			models_hovered[col]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+			models[col]?.render(undefined, undefined, { size });
+			models_hovered[col]?.render(undefined, undefined, { size });
 		}
 	});
 }
