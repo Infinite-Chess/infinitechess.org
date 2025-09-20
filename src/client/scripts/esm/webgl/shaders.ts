@@ -1,7 +1,7 @@
 
 // src/client/scripts/esm/game/rendering/shaders.ts
 
-import { gl } from './webgl.js';
+import { gl } from '../game/rendering/webgl.js';
 
 
 // Generic Shaders

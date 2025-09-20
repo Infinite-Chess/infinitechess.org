@@ -14,7 +14,7 @@
 import type { ShaderProgram } from './shaders.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
-import shaders from './shaders.js';
+import shaders from '../../webgl/shaders.js';
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import camera, { Mat4 } from './camera.js';
 import { gl } from './webgl.js';

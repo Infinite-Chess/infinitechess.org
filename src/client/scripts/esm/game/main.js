@@ -11,7 +11,7 @@ import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
 import localstorage from '../util/localstorage.js';
 import game from './chess/game.js';
-import shaders from './rendering/shaders.js';
+import shaders from '../webgl/shaders.js';
 import camera from './rendering/camera.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
