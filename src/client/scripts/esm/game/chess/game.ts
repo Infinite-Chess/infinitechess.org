@@ -10,6 +10,7 @@
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
 
 // @ts-ignore
 import invites from '../misc/invites.js';
@@ -179,7 +180,23 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 	}
 }
 
-function render(): void {
+/**
+ * Renders everthing in our game, and applies post processing effects to the final image.
+ */
+function render(pipeline: PostProcessingPipeline): void {
+	
+	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
+	pipeline.begin();
+
+	// 2. Render our 3D scene.
+	renderScene();
+
+	// 3. Tell the pipeline we are finished. It will handle drawing the result to the screen.
+	pipeline.end();
+}
+
+/** Renders all in our scene. */
+function renderScene(): void {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();

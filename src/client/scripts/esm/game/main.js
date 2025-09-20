@@ -102,7 +102,7 @@ function render() {
 	// console.log("Rendering this frame")
 
 	webgl.clearScreen(); // Clear the color buffer and depth buffers
-	game.render();
+	game.render(pipeline);
 
 	frametracker.onFrameRender();
 }
