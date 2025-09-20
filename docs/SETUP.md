@@ -2,9 +2,9 @@
 
 This guide walks you through the initial setup phase of the infinitechess.org server on your machine. This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
 
-**This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, request help in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
+**This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, many people are willing to assist you in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
-**Summary of the setup process below for experienced users:** Install VSCode and Node.js. Fork the repository and install the project dependencies via `npm install`. Now you can run `npx nodemon` to launch a live infinite chess server at `https://localhost:3443`. Optionally, you can also set up an email serivce now. You are now ready to test changes and contribute to the main project after reading the [Navigation Guide](./NAVIGATING.md)! **All these steps are explained in great detail below:**
+**SUMMARY of the setup process for experienced users:** Install Node.js. Fork the repo and install the project dependencies via `npm i`. Now you can run `npm run dev` to launch a live infinite chess server at `https://localhost:3443`. Read the [Navigation Guide](./NAVIGATING.md) to get a brief rundown of the project structure.
 
 
 
@@ -64,21 +64,22 @@ Inside the opened VSCode project, open a terminal window within it by going to T
 
 Run the following command to auto-install all project dependancies:
 ```
-npm install
+npm i
 ```
 
 To test run the server, and start it up from now on, enter the command:
 ```
-npx nodemon
+npm run dev
 ```
 
 The first time you run this, you should see something like:
 
-<img width="372" alt="345286338-2f0383ba-1a0d-4d82-808d-eeb9950a0d4a" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/81bfd3d2-3798-4d4d-9c58-f3b70b2c7e30">
+<img width="1187" height="481" alt="Screenshot 2025-09-19 at 9 52 21 PM" src="https://github.com/user-attachments/assets/52e70488-2126-47ad-a93f-b72d9a614b5e" />
 
-Subsequent times you start up the server will look like:
 
-<img width="369" alt="Screen Shot 2024-07-02 at 11 14 00 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/19682ebe-1a7d-4f10-a282-2a7f37e072fd">
+Subsequent startups will look something like:
+
+<img width="1185" height="209" alt="Screenshot 2025-09-19 at 9 53 17 PM" src="https://github.com/user-attachments/assets/474184a5-493e-4bae-a7a4-3ebd0ba325df" />
 
 You should now be able to connect to the server through local host! Open a web browser and go to:
 ```
@@ -97,12 +98,12 @@ Now you should now be able to browse the website and all it’s contents! Hooray
 
 <img width="1011" alt="5 orig" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7d9cda30-bda9-4cde-8b17-a8dcc9185b0d">
 
-Don't worry about the url bar telling you it's not secure. This can safely be ignored as you develop. It IS possible to get your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. [This one guy](https://stackoverflow.com/a/49784278) was able to figure it out though!
+Don't worry about the url bar telling you it's not secure. This can safely be ignored as you develop. It IS possible to get your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. [This one guy](https://stackoverflow.com/a/49784278) was able to figure it out though.
 
 Now, stop the server by clicking in the VSCode terminal window to re-focus it, and hit Ctrl > C.
 If done correctly, you should be met with the following. This means the server has stopped.
 
-<img width="273" alt="Screen Shot 2024-07-02 at 11 16 22 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/47c09831-1c17-490e-9eac-68e1a0cb5765">
+<img width="667" height="170" alt="Screenshot 2025-09-19 at 9 56 26 PM" src="https://github.com/user-attachments/assets/2e98bec2-8c1e-47e5-a1e3-a6139da03117" />
 
 
 
@@ -159,13 +160,6 @@ DO NOT LET your app password be leaked!!! If that happens, bad actors will be ab
 
 If your app password is ever leaked, or you suspect it might be, return to your [app passwords](https://myaccount.google.com/apppasswords) page, and click the trash button to delete it. This invalidates that password so it can no longer be used in your account. Then you may generate a new app password.
 
-At this stage, your `.env` file should be totally filled out, looking something like this:
-
-<img width="716" alt="10" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/6dc717f1-b463-4cef-bbfe-9f2a07acba5c">
-
-
-You do have the option of changing what port the server is hosted on locally, by modifying the `HTTPPORT_LOCAL` and `HTTPSPORT_LOCAL` variables. If you do, be sure you modify the url you are visiting to access the web server, according to the port you set. By default, you visit `https://localhost:3443`, but if you modify the port, the 3443 here needs to be changed to match what you set it to.
-
 Now upon creating a new account, you should see a message "Email is sent to member ExampleUsername!". If you see an error, or "Email environment variables not specified. Not sending email.", then it was setup incorrectly.
 
 Note that you will only be able click "Verify Account" in the verification emails if you  are on the same machine running the server, as the verification link contains `localhost` within it.
@@ -207,4 +201,4 @@ Now click "New pull request", followed by "Create pull request"! Your changes wi
 
 Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss with the others how we should best go about things!
 
-Next, read the [Navigation Guide](./NAVIGATING.md) to help you get started with navigating your workspace and contributing!
+Next, read the [Navigation Guide](./NAVIGATING.md) to get a rundown of the project structure, where the game code is located, etc.!
