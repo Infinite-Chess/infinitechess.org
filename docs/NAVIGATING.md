@@ -8,7 +8,9 @@ It is assumed you have already gone through the [Setup](./SETUP.md) process.
 ## Terminal Output
 
 
-After starting up the server via `npm run dev`, there are a few different processes that run in parallel. The grey `[server]` logs are from the server output, those are mainly what you're interested in. And the blue `[tsc]` logs are typescript errors, those don't prevent the server from running, but any that pop up should be patched as you go.
+After starting up the server via `npm run dev`, there are a few different processes that run in parallel. The green `[build]` is in charge of compiling all scripts into javascript, bundling them together, and copying them into the `dist/` directory, along with all other client assets. This directory is deleted and rebuilt automatically on every file change. The grey `[server]` logs are the output of the actual running server, these are mainly what you're gonna be interested in. And the blue `[tsc]` logs report any typescript errors, those don't prevent the server from running, but any that pop up should be patched as you go.
+
+<img width="1324" height="226" alt="Screenshot 2025-09-19 at 10 05 44 PM" src="https://github.com/user-attachments/assets/9bb6ecfc-90d2-4479-8010-551689c7759b" />
 
 
 ## Project Structure ##
@@ -37,7 +39,7 @@ The entire source code of the project is located in [src](../src/). This contain
 There are 4 automatically generated accounts for you to test with. The password for every one of these accounts is `1`-
 - `Member`: Regular permissions.
 - `Patron`: At the moment this holds no difference to member accounts.
-- `Admin`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands. Some commands allow you to see member info from the database without having to open `database.db` with the SQLite extension.
+- `Admin`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands.
 - `Owner`: Includes all Admin permissions. In addition, when invite creation is disabled inside `database/allowinvites.json`, they are still able to create invites.
 
 
@@ -56,13 +58,13 @@ While in-game, there are a few keys that will activate useful debugging modes-
 
 ## Making changes to the repository ##
 
-PLEASE seek approval in the [discord server](https://discord.com/channels/1114425729569017918/1115358966642393190) before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project. Generally, if you've spoken about the desired change with me, and we're on the same page about how it will be implemented, you don't have to worry!
+Please seek approval in the [discord server](https://discord.com/channels/1114425729569017918/1115358966642393190) before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project. Generally, if you've spoken about the desired change with me, and we're on the same page about how it will be implemented, you don't have to worry!
 
-I highly recommend enabling automatic hard refreshing in your browser's developer tools. Here's how to do that in Chrome:
+Sometimes after you modify a file, the browser doesn't detect that it was changed, so it doesn't load the new code after a refresh. To avoid this, I highly recommend enabling automatic hard refreshing in your browser's developer tools. Here's how to do that in Chrome:
 
 <img width="1134" alt="15" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/8dafd293-4817-460f-a877-aca2825ba2fb">
 
-And u the "Preferences" tab, check the box next to "Disable cache (while DevTools is open)". 
+And under the "Preferences" tab, check the box next to "Disable cache (while DevTools is open)". 
 
 <img width="1131" alt="16" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/0be82a5a-c40f-43dc-8fc4-c2f0cc250b56">
 
