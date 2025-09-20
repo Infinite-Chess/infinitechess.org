@@ -11,7 +11,6 @@
  */
 
 
-import type { ShaderProgram } from './shaders.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 import shaders from '../../webgl/shaders.js';
