@@ -74,11 +74,12 @@ npm run dev
 
 The first time you run this, you should see something like:
 
-<img width="372" alt="345286338-2f0383ba-1a0d-4d82-808d-eeb9950a0d4a" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/81bfd3d2-3798-4d4d-9c58-f3b70b2c7e30">
+<img width="1187" height="481" alt="Screenshot 2025-09-19 at 9 52 21 PM" src="https://github.com/user-attachments/assets/52e70488-2126-47ad-a93f-b72d9a614b5e" />
+
 
 Subsequent startups will look something like:
 
-<img width="369" alt="Screen Shot 2024-07-02 at 11 14 00 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/19682ebe-1a7d-4f10-a282-2a7f37e072fd">
+<img width="1185" height="209" alt="Screenshot 2025-09-19 at 9 53 17 PM" src="https://github.com/user-attachments/assets/474184a5-493e-4bae-a7a4-3ebd0ba325df" />
 
 You should now be able to connect to the server through local host! Open a web browser and go to:
 ```
@@ -102,7 +103,7 @@ Don't worry about the url bar telling you it's not secure. This can safely be ig
 Now, stop the server by clicking in the VSCode terminal window to re-focus it, and hit Ctrl > C.
 If done correctly, you should be met with the following. This means the server has stopped.
 
-<img width="273" alt="Screen Shot 2024-07-02 at 11 16 22 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/47c09831-1c17-490e-9eac-68e1a0cb5765">
+<img width="667" height="170" alt="Screenshot 2025-09-19 at 9 56 26 PM" src="https://github.com/user-attachments/assets/2e98bec2-8c1e-47e5-a1e3-a6139da03117" />
 
 
 
@@ -158,13 +159,6 @@ Now, fill in the `EMAIL_USERNAME` variable with the email of the gmail account y
 DO NOT LET your app password be leaked!!! If that happens, bad actors will be able to hack into your gmail account. If you only keep your app password within the `.env` file, it will not be uploaded to github, this is because ".env" is specified within the `.gitignore` file, which specifies what files to skip over when uploading to github.
 
 If your app password is ever leaked, or you suspect it might be, return to your [app passwords](https://myaccount.google.com/apppasswords) page, and click the trash button to delete it. This invalidates that password so it can no longer be used in your account. Then you may generate a new app password.
-
-At this stage, your `.env` file should be totally filled out, looking something like this:
-
-<img width="716" alt="10" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/6dc717f1-b463-4cef-bbfe-9f2a07acba5c">
-
-
-You do have the option of changing what port the server is hosted on locally, by modifying the `HTTPPORT_LOCAL` and `HTTPSPORT_LOCAL` variables. If you do, be sure you modify the url you are visiting to access the web server, according to the port you set. By default, you visit `https://localhost:3443`, but if you modify the port, the 3443 here needs to be changed to match what you set it to.
 
 Now upon creating a new account, you should see a message "Email is sent to member ExampleUsername!". If you see an error, or "Email environment variables not specified. Not sending email.", then it was setup incorrectly.
 
