@@ -152,7 +152,7 @@ export class PostProcessingPipeline {
 			gl.bindTexture(gl.TEXTURE_2D, this.readTexture);
 			gl.uniform1i(pass.program.getUniformLocation('u_sceneTexture'), 0);
 
-			gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (3 triangles)
+			gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (2 triangles)
 
 			this.swapFBOs(); // The FBO we just wrote to becomes the read FBO for the next pass
 		}
@@ -168,7 +168,7 @@ export class PostProcessingPipeline {
 		gl.bindTexture(gl.TEXTURE_2D, this.readTexture); // Read the result of the previous pass
 		gl.uniform1i(lastPass.program.getUniformLocation('u_sceneTexture'), 0);
 
-		gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (3 triangles)
+		gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (2 triangles)
 	}
 
 	/**
