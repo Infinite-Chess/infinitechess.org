@@ -1,7 +1,13 @@
 
 // src/client/scripts/esm/webgl/ShaderProgram.ts
 
-/** Does this show up too? */
+/**
+ * A wrapper around a WebGLProgram that handles the boilerplate of
+ * compiling, linking, and providing a clean interface for attributes and uniforms.
+ * @class ShaderProgram
+ * @template {Attribute} Attr - A union of string literals representing the attribute names.
+ * @template {Uniform} Uni - A union of string literals representing the uniform names.
+ */
 export class ShaderProgram<Attribute extends string, Uniform extends string> {
     private readonly program: WebGLProgram;
     private readonly gl: WebGLRenderingContext;
@@ -12,8 +18,13 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 
 
     /**
-     * Test jsdoc
-     * @param gl - Does this show up when calling the constructor?
+     * Creates, compiles, and links a WebGL program from vertex and fragment shader source.
+     * This constructor will throw an error if the shaders fail to compile or link.
+     * @constructor
+     * @param {WebGLRenderingContext} gl - The WebGL rendering context.
+     * @param {string} vertexSource - The GLSL source code for the vertex shader.
+     * @param {string} fragmentSource - The GLSL source code for the fragment shader.
+     * @throws {Error} If the shaders fail to compile or the program fails to link.
      */
     constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
         this.gl = gl;
