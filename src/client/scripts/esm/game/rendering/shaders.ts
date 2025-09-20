@@ -13,11 +13,13 @@ import vsSource_texture from '../../../../shaders/texture/vertex.glsl';
 import fsSource_texture from '../../../../shaders/texture/fragment.glsl';
 import vsSource_textureInstanced from '../../../../shaders/texture/instanced/vertex.glsl';
 import fsSource_textureInstanced from '../../../../shaders/texture/instanced/fragment.glsl';
-import vsSource_colorTexture from '../../../../shaders/colorTexture/vertex.glsl';
-import fsSource_colorTexture from '../../../../shaders/colorTexture/fragment.glsl';
+import vsSource_colorTexture from '../../../../shaders/color_texture/vertex.glsl';
+import fsSource_colorTexture from '../../../../shaders/color_texture/fragment.glsl';
 // Specialized Shaders
-import vsSource_entities from '../../../../shaders/entities/vertex.glsl';
-import fsSource_entities from '../../../../shaders/entities/fragment.glsl';
+import vsSource_miniImages from '../../../../shaders/mini_images/vertex.glsl';
+import fsSource_miniImages from '../../../../shaders/mini_images/fragment.glsl';
+import vsSource_highlights from '../../../../shaders/highlights/vertex.glsl';
+import fsSource_highlights from '../../../../shaders/highlights/fragment.glsl';
 import vsSource_arrows from '../../../../shaders/arrows/vertex.glsl';
 import fsSource_arrows from '../../../../shaders/arrows/fragment.glsl';
 import vsSource_arrowImages from '../../../../shaders/arrow_images/vertex.glsl';
@@ -75,7 +77,8 @@ function initPrograms(): void {
 		createProgram_Texture_Instanced(),
 		createProgram_ColorTexture(),
 		
-		createProgram_Entities(),
+		createProgram_MiniImages(),
+		createProgram_Highlights(),
 		createProgram_Arrows(),
 		createProgram_ArrowImages(),
 		createProgram_Starfield(),
@@ -158,8 +161,8 @@ function createProgram_Arrows(): ShaderProgram {
  * with position (vec4) and color (vec4) attributes.
  * Instance data buffer should contain position offsets (vec3).
  */
-function createProgram_Entities(): ShaderProgram {
-	const program = createShaderProgram(vsSource_entities, fsSource_entities);
+function createProgram_Highlights(): ShaderProgram {
+	const program = createShaderProgram(vsSource_highlights, fsSource_highlights);
 	return {
 		program,
 		attribLocations: {
@@ -273,8 +276,32 @@ function createProgram_ArrowImages(): ShaderProgram {
 }
 
 /**
+ * Creates and returns a shader program that uses INSTANCED RENDERING
+ * to render instances based on vertex data containing position, texture coordinates,
+ * and vertex colors. Instance-specific data includes only position offsets.
+ * The final color is the texture color multiplied by the vertex color.
+ */
+function createProgram_MiniImages(): ShaderProgram {
+	const program = createShaderProgram(vsSource_miniImages, fsSource_miniImages);
+	return {
+		program,
+		attribLocations: {
+			position: gl.getAttribLocation(program, 'aVertexPosition'),
+			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
+			color: gl.getAttribLocation(program, 'aVertexColor'),
+			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+		},
+		uniformLocations: {
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
+			size: gl.getUniformLocation(program, 'uSize')!,
+			uSampler: gl.getUniformLocation(program, 'uSampler')! // Added uSampler uniform location
+		},
+	};
+}
+
+/**
  * Creates and returns a shader program specifically for the starfield effect.
- * It uses INSTANCED RENDERING where  each instance has a unique position, color, and size.
+ * It uses INSTANCED RENDERING where each instance has a unique position, color, and size.
  * - Base vertex data defines a simple quad (the shape of one star).
  * - Instance data provides position (vec2), color (vec4), and size (float) for each star.
  */
