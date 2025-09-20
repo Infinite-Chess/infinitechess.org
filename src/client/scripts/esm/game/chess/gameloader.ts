@@ -134,7 +134,7 @@ async function startLocalGame(options: {
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
 
-	gameslot.loadGamefile({
+	await gameslot.loadGamefile({
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
@@ -188,7 +188,7 @@ async function startOnlineGame(options: {
 		clockValues: options.clockValues,
 	};
 
-	gameslot.loadGamefile({
+	await gameslot.loadGamefile({
 		metadata: options.metadata,
 		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
@@ -300,8 +300,8 @@ async function startBoardEditor(): Promise<void> {
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
-
-	gameslot.loadGamefile({
+	
+	await gameslot.loadGamefile({
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
@@ -349,7 +349,7 @@ async function pasteGame(options: {
 
 	gameslot.unloadGame();
 
-	gameslot.loadGamefile({
+	await gameslot.loadGamefile({
 		metadata: options.metadata,
 		viewWhitePerspective,
 		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
