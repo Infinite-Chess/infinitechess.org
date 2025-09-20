@@ -1,16 +1,16 @@
 #version 300 es
 
-in vec4 aVertexPosition;
-in vec2 aTextureCoord;
-in vec4 aVertexColor;
+in vec4 a_position;
+in vec2 a_texturecoord;
+in vec4 a_color;
 
-uniform mat4 uTransformMatrix;
+uniform mat4 u_transformmatrix;
 
 out vec2 vTextureCoord;
 out vec4 vColor;
 
 void main(void) {
-    gl_Position = uTransformMatrix * aVertexPosition;
-    vTextureCoord = aTextureCoord;
-    vColor = aVertexColor;
+    gl_Position = u_transformmatrix * a_position;
+    vTextureCoord = a_texturecoord;
+    vColor = a_color;
 }

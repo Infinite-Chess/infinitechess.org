@@ -1,17 +1,17 @@
 #version 300 es
 
-in vec4 aVertexPosition;
-in vec4 aVertexColor;
-in vec4 aInstancePosition; // Per-instance position offset attribute
+in vec4 a_position;
+in vec4 a_color;
+in vec4 a_instanceposition; // Per-instance position offset attribute
 
-uniform mat4 uTransformMatrix;
+uniform mat4 u_transformmatrix;
 
 out vec4 vColor;
 
 void main() {
     // Add the instance offset to the vertex position
-    vec4 transformedVertexPosition = vec4(aVertexPosition.xyz + aInstancePosition.xyz, 1.0);
+    vec4 transformedVertexPosition = vec4(a_position.xyz + a_instanceposition.xyz, 1.0);
 
-    gl_Position = uTransformMatrix * transformedVertexPosition;
-    vColor = aVertexColor;
+    gl_Position = u_transformmatrix * transformedVertexPosition;
+    vColor = a_color;
 }

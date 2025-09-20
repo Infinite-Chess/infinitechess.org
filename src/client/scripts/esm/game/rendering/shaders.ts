@@ -5,27 +5,27 @@ import { gl } from './webgl.js';
 
 
 // Generic Shaders
-import vsSource_color from '../../../../shaders/color/vertex.glsl';
-import fsSource_color from '../../../../shaders/color/fragment.glsl';
-import vsSource_colorInstanced from '../../../../shaders/color/instanced/vertex.glsl';
-import fsSource_colorInstanced from '../../../../shaders/color/instanced/fragment.glsl';
-import vsSource_texture from '../../../../shaders/texture/vertex.glsl';
-import fsSource_texture from '../../../../shaders/texture/fragment.glsl';
-import vsSource_textureInstanced from '../../../../shaders/texture/instanced/vertex.glsl';
-import fsSource_textureInstanced from '../../../../shaders/texture/instanced/fragment.glsl';
-import vsSource_colorTexture from '../../../../shaders/color_texture/vertex.glsl';
-import fsSource_colorTexture from '../../../../shaders/color_texture/fragment.glsl';
+import vsSource_color from '../../../shaders/color/vertex.glsl';
+import fsSource_color from '../../../shaders/color/fragment.glsl';
+import vsSource_colorInstanced from '../../../shaders/color/instanced/vertex.glsl';
+import fsSource_colorInstanced from '../../../shaders/color/instanced/fragment.glsl';
+import vsSource_texture from '../../../shaders/texture/vertex.glsl';
+import fsSource_texture from '../../../shaders/texture/fragment.glsl';
+import vsSource_textureInstanced from '../../../shaders/texture/instanced/vertex.glsl';
+import fsSource_textureInstanced from '../../../shaders/texture/instanced/fragment.glsl';
+import vsSource_colorTexture from '../../../shaders/color_texture/vertex.glsl';
+import fsSource_colorTexture from '../../../shaders/color_texture/fragment.glsl';
 // Specialized Shaders
-import vsSource_miniImages from '../../../../shaders/mini_images/vertex.glsl';
-import fsSource_miniImages from '../../../../shaders/mini_images/fragment.glsl';
-import vsSource_highlights from '../../../../shaders/highlights/vertex.glsl';
-import fsSource_highlights from '../../../../shaders/highlights/fragment.glsl';
-import vsSource_arrows from '../../../../shaders/arrows/vertex.glsl';
-import fsSource_arrows from '../../../../shaders/arrows/fragment.glsl';
-import vsSource_arrowImages from '../../../../shaders/arrow_images/vertex.glsl';
-import fsSource_arrowImages from '../../../../shaders/arrow_images/fragment.glsl';
-import vsSource_starfield from '../../../../shaders/starfield/vertex.glsl';
-import fsSource_starfield from '../../../../shaders/starfield/fragment.glsl';
+import vsSource_miniImages from '../../../shaders/mini_images/vertex.glsl';
+import fsSource_miniImages from '../../../shaders/mini_images/fragment.glsl';
+import vsSource_highlights from '../../../shaders/highlights/vertex.glsl';
+import fsSource_highlights from '../../../shaders/highlights/fragment.glsl';
+import vsSource_arrows from '../../../shaders/arrows/vertex.glsl';
+import fsSource_arrows from '../../../shaders/arrows/fragment.glsl';
+import vsSource_arrowImages from '../../../shaders/arrow_images/vertex.glsl';
+import fsSource_arrowImages from '../../../shaders/arrow_images/fragment.glsl';
+import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
+import fsSource_starfield from '../../../shaders/starfield/fragment.glsl';
 
 
 // Type definitions -------------------------------------------------------------------------------------------------------
@@ -97,11 +97,11 @@ function createProgram_Color(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			color: gl.getAttribLocation(program, 'aVertexColor')
+			position: gl.getAttribLocation(program, 'a_position'),
+			color: gl.getAttribLocation(program, 'a_color')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!
 		},
 	};
 }
@@ -117,12 +117,12 @@ function createProgram_Color_Instanced(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			color: gl.getAttribLocation(program, 'aVertexColor'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+			position: gl.getAttribLocation(program, 'a_position'),
+			color: gl.getAttribLocation(program, 'a_color'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!
 		},
 	};
 }
@@ -140,13 +140,13 @@ function createProgram_Arrows(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition'),
-			instancecolor: gl.getAttribLocation(program, 'aInstanceColor'),
+			position: gl.getAttribLocation(program, 'a_position'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition'),
+			instancecolor: gl.getAttribLocation(program, 'a_instancecolor'),
 			instancerotation: gl.getAttribLocation(program, 'aInstanceRotation')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!
 		},
 	};
 }
@@ -155,7 +155,7 @@ function createProgram_Arrows(): ShaderProgram {
  * Creates and returns a shader program that uses INSTANCED RENDERING
  * to render colored shapes.
  * Instance-specific data includes position offsets.
- * A uniform 'uSize' controls the size multiplier of all rendered shapes.
+ * A uniform 'u_size' controls the size multiplier of all rendered shapes.
  *
  * Base vertex data should define ONE shape (e.g., centered at origin)
  * with position (vec4) and color (vec4) attributes.
@@ -166,13 +166,13 @@ function createProgram_Highlights(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			color: gl.getAttribLocation(program, 'aVertexColor'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+			position: gl.getAttribLocation(program, 'a_position'),
+			color: gl.getAttribLocation(program, 'a_color'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			size: gl.getUniformLocation(program, 'uSize')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!,
+			size: gl.getUniformLocation(program, 'u_size')!
 		},
 	};
 }
@@ -191,12 +191,12 @@ function createProgram_Texture(): ShaderProgram  {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
+			position: gl.getAttribLocation(program, 'a_position'),
+			texcoord: gl.getAttribLocation(program, 'a_texturecoord'),
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!,
+			u_sampler: gl.getUniformLocation(program, 'u_sampler')!
 		},
 	};
 }
@@ -220,13 +220,13 @@ function createProgram_ColorTexture(): ShaderProgram  {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
-			color: gl.getAttribLocation(program, 'aVertexColor')
+			position: gl.getAttribLocation(program, 'a_position'),
+			texcoord: gl.getAttribLocation(program, 'a_texturecoord'),
+			color: gl.getAttribLocation(program, 'a_color')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!,
+			u_sampler: gl.getUniformLocation(program, 'u_sampler')!
 		},
 	};
 }
@@ -241,13 +241,13 @@ function createProgram_Texture_Instanced(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+			position: gl.getAttribLocation(program, 'a_position'),
+			texcoord: gl.getAttribLocation(program, 'a_texturecoord'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!,
+			u_sampler: gl.getUniformLocation(program, 'u_sampler')!
 		},
 	};
 }
@@ -262,15 +262,15 @@ function createProgram_ArrowImages(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition'),
-			instancetexcoord: gl.getAttribLocation(program, 'aInstanceTexCoord'),
-			instancecolor: gl.getAttribLocation(program, 'aInstanceColor')
+			position: gl.getAttribLocation(program, 'a_position'),
+			texcoord: gl.getAttribLocation(program, 'a_texturecoord'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition'),
+			instancetexcoord: gl.getAttribLocation(program, 'a_instancetexcoord'),
+			instancecolor: gl.getAttribLocation(program, 'a_instancecolor')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')!
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!,
+			u_sampler: gl.getUniformLocation(program, 'u_sampler')!
 		},
 	};
 }
@@ -286,15 +286,15 @@ function createProgram_MiniImages(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position: gl.getAttribLocation(program, 'aVertexPosition'),
-			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
-			color: gl.getAttribLocation(program, 'aVertexColor'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+			position: gl.getAttribLocation(program, 'a_position'),
+			texcoord: gl.getAttribLocation(program, 'a_texturecoord'),
+			color: gl.getAttribLocation(program, 'a_color'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition')
 		},
 		uniformLocations: {
-			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
-			size: gl.getUniformLocation(program, 'uSize')!,
-			uSampler: gl.getUniformLocation(program, 'uSampler')! // Added uSampler uniform location
+			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!,
+			size: gl.getUniformLocation(program, 'u_size')!,
+			u_sampler: gl.getUniformLocation(program, 'u_sampler')! // Added u_sampler uniform location
 		},
 	};
 }
@@ -310,13 +310,13 @@ function createProgram_Starfield(): ShaderProgram {
 	return {
 		program,
 		attribLocations: {
-			position:         gl.getAttribLocation(program, 'aVertexPosition'),
-			instanceposition: gl.getAttribLocation(program, 'aInstancePosition'),
-			instancecolor:    gl.getAttribLocation(program, 'aInstanceColor'),
-			instancesize:     gl.getAttribLocation(program, 'aInstanceSize'),
+			position:         gl.getAttribLocation(program, 'a_position'),
+			instanceposition: gl.getAttribLocation(program, 'a_instanceposition'),
+			instancecolor:    gl.getAttribLocation(program, 'a_instancecolor'),
+			instancesize:     gl.getAttribLocation(program, 'a_instancesize'),
 		},
 		uniformLocations: {
-			transformMatrix:  gl.getUniformLocation(program, 'uTransformMatrix')!,
+			transformMatrix:  gl.getUniformLocation(program, 'u_transformmatrix')!,
 		},
 	};
 }
@@ -374,14 +374,14 @@ function createShader(type: number, sourceText: string): WebGLShader { // type: 
 /**
  * Picks a compatible shader that will work with all the provided attributes and uniforms.
  * 
- * Uniforms you NEVER have to provide are [transformMatrix, uSampler],
- * because those are either present in every shader already, OR the uSampler uniform
+ * Uniforms you NEVER have to provide are [transformMatrix, u_sampler],
+ * because those are either present in every shader already, OR the u_sampler uniform
  * is assumed if you're using the 'texcoord' attribute.
  * 
  * An example of a uniform you WOULD specify is 'tintColor'.
  * 
  * @param attributes - A list of all attributes we need to use. (e.g. `['position','color']` for vertex data that doesn't use a texture)
- * @param [uniforms] Optional. Only provide if you need to use a uniform that is not one of the assumed [transformMatrix, uSampler]
+ * @param [uniforms] Optional. Only provide if you need to use a uniform that is not one of the assumed [transformMatrix, u_sampler]
  */
 function shaderPicker(attributes: string[], uniforms: string[] = []): ShaderProgram {
 
