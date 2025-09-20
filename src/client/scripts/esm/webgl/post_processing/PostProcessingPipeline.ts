@@ -1,15 +1,25 @@
 
 // src/client/scripts/esm/webgl/post_processing/PostProcessingPipeline.ts
 
-import { ProgramManager, ProgramMap } from "../ProgramManager";
+import { ProgramManager } from "../ProgramManager";
 import { ShaderProgram } from "../ShaderProgram";
+import { PassThroughPass } from "./passes/PassThroughPass";
+
 
 /** A Post Processing Effect. */
 export interface PostProcessPass {
-	// Each pass MUST provide its own shader program.
-	program: ShaderProgram<any, 'u_sceneTexture'>;
-	// We will add more to this later, like a render() method.
+	/** The shader program this pass uses. */
+	readonly program: ShaderProgram<string, string>;
+
+	/** 
+	 * Executes the render pass.
+	 * This method is responsible for activating the shader and setting its uniforms.
+	 * @param gl The WebGL2 rendering context.
+	 * @param inputTexture The texture to read from (the result of the previous pass).
+	 */
+	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void;
 }
+
 
 /**
  * Manages the post-processing pipeline for a raw WebGL2 application.
@@ -32,14 +42,14 @@ export class PostProcessingPipeline {
 	private sceneDepthStencilBuffer: WebGLRenderbuffer;
 
 	// This will hold the default shader for the "zero effects" case.
-	private passThroughProgram: ProgramMap['post_pass'];
+	private passThroughPass: PassThroughPass;
 
 
 	constructor(gl: WebGL2RenderingContext, programManager: ProgramManager) {
 		this.gl = gl;
 		
 		// Get the pass-through shader from your manager.
-		this.passThroughProgram = programManager.get('post_pass');
+		this.passThroughPass = new PassThroughPass(programManager.get('post_pass'));
 
 		// --- Create Framebuffers and Textures ---
 		const { fbo: fboA, texture: textureA } = this.createFBO();
@@ -139,7 +149,7 @@ export class PostProcessingPipeline {
 
 		// If the user has added no passes, we'll use our pass-through shader.
 		// This creates a unified code path for all scenarios.
-		const activePasses = this.passes.length > 0 ? this.passes : [{ program: this.passThroughProgram }];
+		const activePasses: PostProcessPass[] = this.passes.length > 0 ? this.passes : [this.passThroughPass];
 		
 		// 1. PING-PONG PASSES: Loop through all but the very last pass.
 		// These passes all render to the next FBO.
@@ -147,10 +157,7 @@ export class PostProcessingPipeline {
 			const pass = activePasses[i];
 			gl.bindFramebuffer(gl.FRAMEBUFFER, this.writeFBO); // Target the off-screen buffer
 
-			pass.program.use();
-			gl.activeTexture(gl.TEXTURE0);
-			gl.bindTexture(gl.TEXTURE_2D, this.readTexture);
-			gl.uniform1i(pass.program.getUniformLocation('u_sceneTexture'), 0);
+			pass.render(gl, this.readTexture);
 
 			gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (2 triangles)
 
@@ -163,10 +170,7 @@ export class PostProcessingPipeline {
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.clear(gl.COLOR_BUFFER_BIT); // Clear canvas before drawing final result
 
-		lastPass.program.use();
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, this.readTexture); // Read the result of the previous pass
-		gl.uniform1i(lastPass.program.getUniformLocation('u_sceneTexture'), 0);
+		lastPass.render(gl, this.readTexture)
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (2 triangles)
 	}
