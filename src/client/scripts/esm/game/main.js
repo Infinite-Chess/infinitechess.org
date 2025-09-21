@@ -29,8 +29,6 @@ function start() {
 	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
 	shaders.initPrograms(); // Initiates the few shader programs we will be using. The most common we'll be using is the textureProgram, but we also create a shader program for color, and another for tinted textures.
 	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
-	
-	window.addEventListener("resize", onScreenResize);
 
 	game.init();
 
@@ -41,11 +39,6 @@ function start() {
 	websocket.sendmessage('game', 'joingame', undefined, true);
 
 	gameLoop(); // Update & draw the scene repeatedly
-}
-
-function onScreenResize() {
-	camera.onScreenResize();
-	pipeline.resize();
 }
 
 function initListeners() {
@@ -87,7 +80,7 @@ function render() {
 	// console.log("Rendering this frame")
 
 	webgl.clearScreen(); // Clear the color buffer and depth buffers
-	game.render(pipeline);
+	game.render();
 
 	frametracker.onFrameRender();
 }

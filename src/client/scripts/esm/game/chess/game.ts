@@ -111,6 +111,13 @@ function init(): void {
 	gui.prepareForOpen();
 
 	guititle.open();
+
+	window.addEventListener("resize", onScreenResize);
+}
+
+function onScreenResize(): void {
+	camera.onScreenResize();
+	pipeline.resize(gl.canvas.width, gl.canvas.height);
 }
 
 // Update the game every single frame
@@ -247,7 +254,7 @@ function applyWashedOutPreset(pass: ColorGradePass): void {
 /**
  * Renders everthing in our game, and applies post processing effects to the final image.
  */
-function render(pipeline: PostProcessingPipeline): void {
+function render(): void {
 
 	// Constantly change the saturation according to time, for testing
 	colorGradePass.saturation = Math.sin(performance.now() / 1000) * 0.5 + 0.5; // Varies between 0.0 and 1.0
