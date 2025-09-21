@@ -1,5 +1,5 @@
 #version 300 es
-precision lowp float;
+precision mediump float;
 
 // The texture containing our rendered scene.
 uniform sampler2D u_sceneTexture;

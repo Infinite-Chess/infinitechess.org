@@ -1,6 +1,6 @@
 #version 300 es
 
-precision lowp float;
+precision mediump float;
 
 in vec2 vTextureCoord;          // From vertex shader
 in vec4 vInstanceColor;         // From vertex shader
