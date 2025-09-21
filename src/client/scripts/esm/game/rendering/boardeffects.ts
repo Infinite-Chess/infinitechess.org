@@ -91,7 +91,7 @@ function update(): void {
 
 
 	const deltaTime = loadbalancer.getDeltaTime(); // Seconds
-	// The logic lives here, in the conductor
+	
 	sineWavePass.time += deltaTime * sineWaveSpeed;
 	sineWavePass.angle += deltaTime * 3; // Rotate 3 degrees per second
 
