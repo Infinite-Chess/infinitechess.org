@@ -1,5 +1,5 @@
 #version 300 es
-precision lowp float;
+precision highp float;
 
 uniform sampler2D u_sceneTexture;
 

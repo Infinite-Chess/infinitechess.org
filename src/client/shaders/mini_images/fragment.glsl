@@ -1,6 +1,6 @@
 #version 300 es
 
-precision mediump float;
+precision highp float;
 
 in vec2 vTextureCoord;          // Interpolated texture coordinate from vertex shader
 in vec4 vColor;                 // Interpolated vertex color from vertex shader
