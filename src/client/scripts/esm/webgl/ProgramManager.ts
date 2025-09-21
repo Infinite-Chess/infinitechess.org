@@ -26,10 +26,11 @@ import fsSource_arrowImages from '../../../shaders/arrow_images/fragment.glsl';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
 import fsSource_starfield from '../../../shaders/starfield/fragment.glsl';
 // Post Processing Shaders
-import vsSource_postPass from '../../../shaders/post-pass/vertex.glsl';
-import fsSource_postPass from '../../../shaders/post-pass/fragment.glsl';
-import fsSource_colorGrade from '../../../shaders/color-grade/fragment.glsl';
+import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
+import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
+import fsSource_colorGrade from '../../../shaders/color_grade/fragment.glsl';
 import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
+import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 
 
 // =============================== Type Definitions ===============================
@@ -66,6 +67,8 @@ type Attributes_ColorGrade = never;
 type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_brightness' | 'u_contrast' | 'u_gamma' | 'u_saturation' | 'u_tintColor' | 'u_hueOffset';
 type Attributes_Vignette = never;
 type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_intensity';
+type Attributes_SineWave = never;
+type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time';
 
 
 // Each ShaderProgram type
@@ -86,6 +89,7 @@ type Program_Starfield = ShaderProgram<Attributes_Starfield, Uniforms_Starfield>
 type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
 type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
 type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
+type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 
 
 export interface ProgramMap {
@@ -107,6 +111,7 @@ export interface ProgramMap {
 	/** Post Processing Color Grading Shader. Several color effects. */
 	color_grade: Program_ColorGrade;
     vignette: Program_Vignette;
+	sine_wave: Program_SineWave;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -139,6 +144,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
     color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
     vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
+	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 };
 
 

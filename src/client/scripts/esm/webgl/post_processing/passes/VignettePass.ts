@@ -21,6 +21,7 @@ export class VignettePass implements PostProcessPass {
 	/** The strength of the darkening effect. 1.0 is fully black. Default is 0.8. */
 	public intensity: number = 0.8;
 
+	
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('vignette');
 	}

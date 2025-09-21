@@ -10,6 +10,7 @@ import type { PostProcessPass } from "../PostProcessingPipeline";
 export class PassThroughPass implements PostProcessPass {
 	readonly program: ProgramMap['post_pass'];
 
+	
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('post_pass');
 	}
