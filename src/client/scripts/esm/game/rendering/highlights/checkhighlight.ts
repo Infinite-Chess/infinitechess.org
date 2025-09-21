@@ -61,7 +61,7 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 		data.push(...dataRing);
 	}
 
-	return createModel(data, 2, "TRIANGLES", true);
+	return createModel(data, 2, "TRIANGLES", 'color', true);
 }
 
 

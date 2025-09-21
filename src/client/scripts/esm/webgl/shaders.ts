@@ -143,7 +143,7 @@ function createProgram_Arrows(): ShaderProgram {
 			position: gl.getAttribLocation(program, 'a_position'),
 			instanceposition: gl.getAttribLocation(program, 'a_instanceposition'),
 			instancecolor: gl.getAttribLocation(program, 'a_instancecolor'),
-			instancerotation: gl.getAttribLocation(program, 'aInstanceRotation')
+			instancerotation: gl.getAttribLocation(program, 'a_instancerotation')
 		},
 		uniformLocations: {
 			transformMatrix: gl.getUniformLocation(program, 'u_transformmatrix')!
@@ -371,62 +371,11 @@ function createShader(type: number, sourceText: string): WebGLShader { // type: 
 	return shader;
 }
 
-/**
- * Picks a compatible shader that will work with all the provided attributes and uniforms.
- * 
- * Uniforms you NEVER have to provide are [transformMatrix, u_sampler],
- * because those are either present in every shader already, OR the u_sampler uniform
- * is assumed if you're using the 'texcoord' attribute.
- * 
- * An example of a uniform you WOULD specify is 'tintColor'.
- * 
- * @param attributes - A list of all attributes we need to use. (e.g. `['position','color']` for vertex data that doesn't use a texture)
- * @param [uniforms] Optional. Only provide if you need to use a uniform that is not one of the assumed [transformMatrix, u_sampler]
- */
-function shaderPicker(attributes: string[], uniforms: string[] = []): ShaderProgram {
-
-	// Assume all are compatible to start, we'll eliminate the ones that aren't.
-	let compatibleShaders = Object.values(programs);
-
-	// Iterate through all existing shaders, check to see if they support each of our attributes and uniforms.
-	attributes.forEach((attrib) => {
-		compatibleShaders = compatibleShaders.filter((program) => program.attribLocations[attrib] !== undefined);
-	});
-	uniforms.forEach((uniform) => {
-		compatibleShaders = compatibleShaders.filter((program) => program.uniformLocations[uniform] !== undefined);
-	});
-
-	if (compatibleShaders.length === 0) throw Error(`Cannot find a shader compatible with the requested attributes and uniforms: ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}`);
-
-	// What if there are multiple shaders compatible?
-	// Use the least complex one (lowest number of attributes and uniforms)
-
-	const leastComplexShader = compatibleShaders.reduce((leastComplex, current) => {
-		const leastComplexComplexity = getShaderComplexity(leastComplex);
-		const currentComplexity = getShaderComplexity(current);
-		if (leastComplexComplexity === currentComplexity) throw Error(`Shaders have the same level of complexity, can't pick which one to use! Requested attributes and uniforms: ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}`);
-		// Return the shader with the least complexity
-		return currentComplexity < leastComplexComplexity ? current : leastComplex;
-	});
-
-	// Debug
-	// console.log(`Chose the below shader for requested attributes and uniforms ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}:`);
-	// console.log(leastComplexShader);
-	
-	return leastComplexShader;
-}
-
-/** The total number of attributes + uniforms in a given shader program. */
-function getShaderComplexity(program: ShaderProgram): number {
-	return Object.keys(program.attribLocations).length + Object.keys(program.uniformLocations).length;
-}
-
 
 
 export default {
 	initPrograms,
 	programs,
-	shaderPicker,
 };
 
 // Type definitions

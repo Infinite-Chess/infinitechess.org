@@ -280,7 +280,7 @@ function renderSplineDebug(
 	}
 
 	// Create and render the debug model.
-	createModel(vertexData, 2, "TRIANGLES", true).render();
+	createModel(vertexData, 2, "TRIANGLES", 'color', true).render();
 }
 
 

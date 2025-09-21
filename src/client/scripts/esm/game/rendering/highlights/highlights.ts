@@ -49,9 +49,9 @@ function highlightLastMove(boardsim: Board): void {
 	if (!lastMove) return; // Don't render if last move is undefined.
 
 	const color: Color = preferences.getLastMoveHighlightColor();
-	const size: number = boardpos.getBoardScaleAsNumber();
+	const u_size: number = boardpos.getBoardScaleAsNumber();
 
-	squarerendering.genModel([lastMove.startCoords, lastMove.endCoords], color).render(undefined, undefined, { size });
+	squarerendering.genModel([lastMove.startCoords, lastMove.endCoords], color).render(undefined, undefined, { u_size });
 }
 
 

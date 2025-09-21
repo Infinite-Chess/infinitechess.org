@@ -75,7 +75,7 @@ function render(): void {
 
 	// Create and Render the model
 
-	createModel(vertexData, 2, "TRIANGLES", true).render();
+	createModel(vertexData, 2, "TRIANGLES", 'color', true).render();
 }
 
 

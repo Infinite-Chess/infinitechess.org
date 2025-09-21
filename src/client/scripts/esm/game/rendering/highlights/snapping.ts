@@ -468,7 +468,7 @@ function render(): void {
 				start[0], start[1],   r, g, b, a,
 				end[0], end[1],       r, g, b, a
 			];
-			createModel(data, 2, 'LINES', true).render();
+			createModel(data, 2, 'LINES', 'color', true).render();
 		}
 	
 		// Next we render either the glow dot or the mini image of the piece.
@@ -483,7 +483,7 @@ function render(): void {
 	
 			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
 			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
-			createModel(data, 2, 'TRIANGLE_FAN', true).render();
+			createModel(data, 2, 'TRIANGLE_FAN', 'color', true).render();
 		} else {
 			// Render mini image of piece
 			const model = generateGhostImageModel(snap.type, coordsWorld);
@@ -512,7 +512,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): BufferMode
 
 	dataGhost.push(...data);
 	
-	return createModel(dataGhost, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	return createModel(dataGhost, 2, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
 }
 
 

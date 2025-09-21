@@ -246,7 +246,7 @@ function initCrosshairModel(): void {
         //     innerSide,  -innerSide,       r, g, b, a,
         //     -innerSide,  -innerSide,      r, g, b, a,
     ]);
-	crosshairModel = createModel(data, 2, "TRIANGLES", true); 
+	crosshairModel = createModel(data, 2, "TRIANGLES", 'color', true); 
 }
 
 function renderCrosshair(): void {

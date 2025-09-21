@@ -82,7 +82,7 @@ function regenModel(): void {
 	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
 	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
 	const vertexData: number[] = legalmoveshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
-	model = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(squaresToHighlight), "TRIANGLES", true);
+	model = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(squaresToHighlight), "TRIANGLES", 'colorInstanced', true);
 }
 
 function renderSpecialRights(): void {
@@ -101,8 +101,8 @@ function renderEnPassant(): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (!gamefile.boardsim.state.global.enpassant) return; // No enpassant gamefile property
 
-	const size = boardpos.getBoardScaleAsNumber();
-	squarerendering.genModel([gamefile.boardsim.state.global.enpassant.square], ENPASSANT_COLOR).render(undefined, undefined, { size });
+	const u_size = boardpos.getBoardScaleAsNumber();
+	squarerendering.genModel([gamefile.boardsim.state.global.enpassant.square], ENPASSANT_COLOR).render(undefined, undefined, { u_size });
 }
 
 /**

@@ -213,7 +213,7 @@ function renderTransparentSquare(): void {
 
 	const color: Color = [0,0,0,0];
 	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
-	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
+	return createModel(data, 2, "TRIANGLES", 'color', true).render([0,0,z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
@@ -260,7 +260,7 @@ function genPieceModel(): BufferModel | undefined {
 	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
 	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
-	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
+	return createModel(data, 3, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
 }
 
 /**
@@ -293,7 +293,7 @@ function genOutlineModel(): BufferModel {
 		data.push(...getBoxFrameData(hoveredCoords!));
 	}
 	
-	return createModel(data, 2, "TRIANGLES", true);
+	return createModel(data, 2, "TRIANGLES", 'color', true);
 }
 
 /**

@@ -88,8 +88,8 @@ const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
 
 /** The attribute info of each of the piece type models, excluding voids. */
 const ATTRIBUTE_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'texcoord', numComponents: 2 }],
-	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_texturecoord', numComponents: 2 }],
+	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }]
 };
 
 
@@ -156,7 +156,7 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	const tex = texturecache.getTexture(type);
 	return {
 		instanceData,
-		model: createModel_Instanced_GivenAttribInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', tex)
+		model: createModel_Instanced_GivenAttribInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', tex)
 	};
 }
 
@@ -174,7 +174,7 @@ function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 
 	return {
 		instanceData,
-		model: createModel_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', true)
+		model: createModel_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', 'colorInstanced', true)
 	};
 }
 

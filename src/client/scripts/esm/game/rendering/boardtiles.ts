@@ -232,7 +232,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], bottom, top);
 	
 	const data = primitives.Quad_ColorTexture(left, bottom, right, top, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
-	return createModel(data, 2, "TRIANGLES", true, boardTexture);
+	return createModel(data, 2, "TRIANGLES", 'colorTexture', true, boardTexture);
 }
 
 function renderMainBoard(): void {
@@ -392,7 +392,7 @@ function renderSolidCover(): void {
 	const data = primitives.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
 	data.push(...primitives.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
-	const model = createModel(data, 3, "TRIANGLES", true);
+	const model = createModel(data, 3, "TRIANGLES", 'color', true);
 
 	model.render();
 }

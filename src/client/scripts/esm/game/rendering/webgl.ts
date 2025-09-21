@@ -61,7 +61,7 @@ function setClearColor(newClearColor: Vec3): void {
 /**
  * Initiate the WebGL context. This is our web-based render engine.
  */
-function init(): WebGL2RenderingContext {
+function init(): void {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
 	if (!newContext) { // WebGL2 not supported
@@ -97,8 +97,6 @@ function init(): WebGL2RenderingContext {
 	}
 
 	gl.clearStencil(0); // Good practice, although 0 is the default
-
-	return gl;
 }
 
 /**

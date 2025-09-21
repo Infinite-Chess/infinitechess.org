@@ -13,10 +13,10 @@
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
-import shaders, { ShaderProgram } from '../../webgl/shaders.js';
+import { ShaderProgram } from '../../webgl/ShaderProgram.js';
+import { Attributes_All, ProgramManager, ProgramMap } from '../../webgl/ProgramManager.js';
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 import camera, { Mat4 } from './camera.js';
-import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
 
@@ -52,7 +52,7 @@ type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' 
 /** An object describing a single attribute inside our vertex data, and how many components it has per stride/vertex. */
 interface Attribute {
 	/** The name of the attribute. */
-	name: 'position' | 'texcoord' | 'color' | 'instanceposition' | 'instancecolor' | 'instancerotation' | 'instancetexcoord' | 'instancesize';
+	name: Attributes_All;
 	/** How many values the attribute has in a single stride/vertex of our data array. */
 	numComponents: number
 };
@@ -80,7 +80,7 @@ interface BaseBufferModel {
      * Applies any custom uniform values before rendering.
      * @param [position] - The positional translation, default [0,0,0]
      * @param [scale] - The scaling transformation, default [1,1,1]
-     * @param uniforms - Custom uniform values, for example, 'tintColor'. 
+     * @param uniforms - Custom uniform values, for example, 'u_size'. 
      */
 	render: (
 		// eslint-disable-next-line no-unused-vars
@@ -88,7 +88,7 @@ interface BaseBufferModel {
 		// eslint-disable-next-line no-unused-vars
 		scale?: Vec3,
 		// eslint-disable-next-line no-unused-vars
-		uniforms?: { [uniform: string]: number }
+		uniforms?: Record<string, any>
 	) => void
 }
 
@@ -119,9 +119,19 @@ interface BufferModelInstanced extends BaseBufferModel {
 // Variables ----------------------------------------------------------------------------------
 
 
+let gl: WebGL2RenderingContext;
+
+/** The global program manager, used to get shader programs for rendering models. */
+let programManager: ProgramManager;
+
 
 // Functions ----------------------------------------------------------------------------------
 
+
+function init(context: WebGL2RenderingContext, program_manager: ProgramManager): void {
+	gl = context;
+	programManager = program_manager;
+}
 
 /**
  * The universal function for creating a renderable model,
@@ -135,6 +145,7 @@ function createModel(
 	numPositionComponents: 2 | 3,
 	/** What drawing primitive to use. */
 	mode: PrimitiveType,
+	shader: keyof ProgramMap,
 	/** Whether the vertex data contains color attributes. */
 	usingColor: boolean,
 	/** If applicable, a texture to be bound when rendering (vertex data should contain texcoord attributes). */
@@ -142,7 +153,7 @@ function createModel(
 ): BufferModel {
 	const usingTexture = texture !== undefined;
 	const attribInfo = getAttribInfo(numPositionComponents, usingColor, usingTexture);
-	return createModel_GivenAttribInfo(data, attribInfo, mode, texture);
+	return createModel_GivenAttribInfo(data, attribInfo, mode, shader, texture);
 }
 
 /**
@@ -156,6 +167,7 @@ function createModel_Instanced(
 	instanceData: InputArray,
 	/** What drawing primitive to use. */
 	mode: PrimitiveType,
+	shader: keyof ProgramMap,
 	/** Whether the vertex data of a single instance contains color attributes, NOT THE INSTANCE-SPECIFIC DATA. */
 	usingColor: boolean,
 	/** If applicable, a texture to be bound when rendering (instance data should contain texcoord attributes). */
@@ -163,7 +175,7 @@ function createModel_Instanced(
 ): BufferModelInstanced {
 	const usingTexture = texture !== undefined;
 	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
-	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, texture);
+	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, texture);
 }
 
 /**
@@ -173,11 +185,11 @@ function createModel_Instanced(
  */
 function getAttribInfo(numPositionComponents: 2 | 3, usingColor: boolean, usingTexture: boolean): AttributeInfo {
 	if (usingColor && usingTexture) {
-		return [{ name: 'position', numComponents: numPositionComponents }, { name: 'texcoord', numComponents: 2 }, { name: 'color', numComponents: 4 }];
+		return [{ name: 'a_position', numComponents: numPositionComponents }, { name: 'a_texturecoord', numComponents: 2 }, { name: 'a_color', numComponents: 4 }];
 	} else if (usingColor) {
-		return [{ name: 'position', numComponents: numPositionComponents }, { name: 'color', numComponents: 4 }];
+		return [{ name: 'a_position', numComponents: numPositionComponents }, { name: 'a_color', numComponents: 4 }];
 	} else if (usingTexture) {
-		return [{ name: 'position', numComponents: numPositionComponents }, { name: 'texcoord', numComponents: 2 }];
+		return [{ name: 'a_position', numComponents: numPositionComponents }, { name: 'a_texturecoord', numComponents: 2 }];
 	} else throw new Error('Well we must be using ONE of either color or texcoord in our vertex data..');
 }
 
@@ -189,18 +201,18 @@ function getAttribInfo(numPositionComponents: 2 | 3, usingColor: boolean, usingT
 function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): AttributeInfoInstanced {
 	if (usingColor && usingTexture) {
 		return {
-			vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
-			instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }]
+			vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_color', numComponents: 4 }],
+			instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancetexcoord', numComponents: 2 }]
 		};
 	} else if (usingColor) {
 		return {
-			vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
-			instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+			vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_color', numComponents: 4 }],
+			instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }]
 		};
 	} else if (usingTexture) {
 		return {
-			vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
-			instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }]
+			vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
+			instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancetexcoord', numComponents: 2 }]
 		};
 	} else throw new Error('Well we must be using ONE of either color or texcoord in our vertex data..');
 }
@@ -208,10 +220,11 @@ function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): At
 /**
  * Creates a renderable model, given the AttributeInfo object.
  */
-function createModel_GivenAttribInfo(
+function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
 	data: InputArray,
 	attribInfo: AttributeInfo,
 	mode: PrimitiveType,
+	shader: K,
 	texture?: WebGLTexture
 ): BufferModel {
 	const stride = getStrideFromAttributeInfo(attribInfo);
@@ -224,6 +237,8 @@ function createModel_GivenAttribInfo(
 
 	const buffer = createBufferFromData(data);
 
+	const shaderProgram = programManager.get(shader);
+
 	return {
 		data,
 		updateBufferIndices: (
@@ -233,8 +248,8 @@ function createModel_GivenAttribInfo(
 		render: (
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
-			uniforms: { [uniform: string]: any } = {}
-		): void => render(buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
+			uniforms: Record<string, any> = {}
+		): void => render(shaderProgram, buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
 	};
 }
 
@@ -242,11 +257,12 @@ function createModel_GivenAttribInfo(
  * Creates a renderable model that uses instanced rendering,
  * given the AttributeInfo objects of both the vertex data and instance data arrays.
  */
-function createModel_Instanced_GivenAttribInfo(
+function createModel_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
 	vertexData: InputArray,
 	instanceData: InputArray,
 	attribInfoInstanced: AttributeInfoInstanced,
 	mode: PrimitiveType,
+	shader: K,
 	texture?: WebGLTexture
 ): BufferModelInstanced {
 	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
@@ -266,6 +282,8 @@ function createModel_Instanced_GivenAttribInfo(
 	const vertexBuffer = createBufferFromData(vertexData);
 	const instanceBuffer = createBufferFromData(instanceData);
 
+	const shaderProgram = programManager.get(shader);
+
 	return {
 		vertexData,
 		instanceData,
@@ -280,8 +298,8 @@ function createModel_Instanced_GivenAttribInfo(
 		render: (
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
-			uniforms: { [uniform: string]: any } = {}
-		): void => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
+			uniforms: Record<string, any> = {}
+		): void => render_Instanced(shaderProgram, vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};
 }
 
@@ -318,36 +336,32 @@ function ensureTypedArray(data: InputArray): TypedArray {
  * @param scale - The scale transformation of the object: `[x,y,z]`
  * @param stride - The vertex data's stride per vertex.
  * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
+ * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param vertexCount - The mesh's vertex count.
  * @param mode - Primitive rendering mode (e.g. "TRIANGLES" / "LINES"). See {@link validRenderModes}.
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function render(
+function render<A extends string, U extends string>(
+	shaderProgram: ShaderProgram<A, U>,
 	buffer: WebGLBuffer,
 	attribInfo: AttributeInfo,
 	position: Vec3,
 	scale: Vec3,
 	stride: number,
 	BYTES_PER_ELEMENT: number,
-	uniforms: { [uniform: string]: any },
+	uniforms: Record<string, any>,
 	vertexCount: number,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
 ): void {
-	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
-	const attributesUsed = Object.values(attribInfo).map((attrib) => attrib.name);
-	const uniformsUsed = Object.keys(uniforms);
-	const shader = shaders.shaderPicker(attributesUsed, uniformsUsed);
-
 	// Switch to the program
-	gl.useProgram(shader.program);
+	shaderProgram.use();
 
 	// Prepare the attributes...
-	enableAttributes(shader, buffer, attribInfo, stride, BYTES_PER_ELEMENT, false);
+	enableAttributes(shaderProgram, buffer, attribInfo, stride, BYTES_PER_ELEMENT, false);
 
 	// Prepare the uniforms...
-	setUniforms(shader, position, scale, uniforms, texture);
+	setUniforms(shaderProgram, position, scale, uniforms, texture);
 
 	// Call the draw function!
 	gl.drawArrays(gl[mode], 0, vertexCount);
@@ -371,13 +385,14 @@ function render(
  * @param vertexDataStride - The vertex data's stride per vertex of a single instance.
  * @param instanceDataStride - The instance-specific data's stride per instance.
  * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
+ * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param instanceVertexCount - The vertex count of a single instance, or the number of vertices in the vertex data.
  * @param instanceCount - The number of total instances, or the length of the instance-specific data divided by that data's stride.
  * @param mode - Primitive rendering mode (e.g. "TRIANGLES" / "LINES"). See {@link validRenderModes}.
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo, instanceDataAttribInfo, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture
+function render_Instanced<A extends string, U extends string>( // vertexBuffer, instanceBuffer, vertexDataAttribInfo, instanceDataAttribInfo, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture
+	shaderProgram: ShaderProgram<A, U>,
 	vertexBuffer: WebGLBuffer,
 	instanceBuffer: WebGLBuffer,
 	attribInfoInstanced: AttributeInfoInstanced,
@@ -387,28 +402,21 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	instanceDataStride: number,
 	BYTES_PER_ELEMENT_VData: number,
 	BYTES_PER_ELEMENT_IData: number,
-	uniforms: { [uniform: string]: any },
+	uniforms: Record<string, any>,
 	instanceVertexCount: number,
 	instanceCount: number,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
 ): void {
-	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
-	const attributesUsed_VertexData = Object.values(attribInfoInstanced.vertexDataAttribInfo).map((attrib) => attrib.name);
-	const attributesUsed_InstanceData = Object.values(attribInfoInstanced.instanceDataAttribInfo).map((attrib) => attrib.name);
-	const attributesUsed = [...attributesUsed_VertexData, ...attributesUsed_InstanceData];
-	const uniformsUsed = Object.keys(uniforms);
-	const shader = shaders.shaderPicker(attributesUsed, uniformsUsed);
-
 	// Switch to the program
-	gl.useProgram(shader.program);
+	shaderProgram.use();
 
 	// Prepare the attributes...
-	enableAttributes(shader, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT_VData, false); // The attributes of a single instance are NOT instance-specific
-	enableAttributes(shader, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT_IData, true); // Instance-specific
+	enableAttributes(shaderProgram, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT_VData, false); // The attributes of a single instance are NOT instance-specific
+	enableAttributes(shaderProgram, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT_IData, true); // Instance-specific
 
 	// Prepare the uniforms...
-	setUniforms(shader, position, scale, uniforms, texture);
+	setUniforms(shaderProgram, position, scale, uniforms, texture);
 
 	// Call the draw function! Render using drawArraysInstanced
 	gl.drawArraysInstanced(gl[mode], 0, instanceVertexCount, instanceCount);
@@ -431,7 +439,7 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
  * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
  * @param instanced - Whether the provided attributes to enable are instance-specific attributes (only updated once per instance instead of once per vertex)
  */
-function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number, instanced: boolean): void {
+function enableAttributes<A extends string, U extends string>(shader: ShaderProgram<A, U>, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number, instanced: boolean): void {
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
 	// IF WE BIND A VERTEX ARRAY OBJECT here, then unbind it after our initAttribute() calls,
@@ -444,13 +452,14 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
 	let currentOffsetBytes = 0; // how many bytes inside the buffer to start from.
 
 	for (const attrib of attribInfo) {
+		const attribLoc = shader.getAttributeLocation(attrib.name as A)!;
 		// Tell WebGL how to pull out the values from the vertex data and into the attribute in the shader code...
-		gl.vertexAttribPointer(shader.attribLocations[attrib.name]!, attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
-		gl.enableVertexAttribArray(shader.attribLocations[attrib.name]!); // Enable the attribute for use
+		gl.vertexAttribPointer(attribLoc, attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
+		gl.enableVertexAttribArray(attribLoc); // Enable the attribute for use
 		// Be sure to set this every time, even if it's to 0!
 		// If another shader set the same attribute index to be
 		// used for instanced rendering, it would otherwise never be reset!
-		gl.vertexAttribDivisor(shader.attribLocations[attrib.name]!, vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
+		gl.vertexAttribDivisor(attribLoc, vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
 
 		// Adjust our offset for the next attribute
 		currentOffsetBytes += attrib.numComponents * BYTES_PER_ELEMENT;
@@ -465,10 +474,10 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
  * @param shader - The currently bound shader program, and the one we'll be rendering with.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
+ * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniforms: { [uniform: string]: any }, texture?: WebGLTexture): void {
+function setUniforms<A extends string, U extends string>(shader: ShaderProgram<A, U>, position: Vec3, scale: Vec3, uniforms: Record<string, any>, texture?: WebGLTexture): void {
 
 	{
 		// Update the transformMatrix on the gpu, EVERY render call!!
@@ -493,7 +502,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
 		
 		// Send the transformMatrix to the gpu (every shader has this uniform)
-		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix']!, false, transformMatrix);
+		gl.uniformMatrix4fv(shader.getUniformLocation('u_transformmatrix' as U), false, transformMatrix);
 	}
 
 	if (texture) {
@@ -502,14 +511,16 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		// Tell the gpu we bound the texture to texture unit 0
-		gl.uniform1i(shader.uniformLocations['uSampler']!, 0);
+		gl.uniform1i(shader.getUniformLocation('u_sampler' as U)!, 0);
 	}
 
-	// Custom uniforms provided in the render call, for example 'tintColor'...
+	// Custom uniforms provided in the render call, for example 'u_size'...
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
-		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name]!, value);
-		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name]!, value);
+		const uLoc = shader.getUniformLocation(name as U);
+		if (uLoc === null) continue; // Skip if uniform isn't active (shader must have optimized it out if it is unused)
+
+		if (name === 'u_size') gl.uniform1f(uLoc, value);
 		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
 	}
 }
@@ -536,7 +547,12 @@ export {
 	BufferModelInstanced, // The type definition
 };
 
+export default {
+	init,
+};
+
 export type {
+	// AttributeInfo,
 	AttributeInfoInstanced,
 	TypedArray,
 };

@@ -45,7 +45,7 @@ type Attributes_ColorInstanced = 'a_position' | 'a_color' | 'a_instanceposition'
 type Uniforms_ColorInstanced = 'u_transformmatrix';
 type Attributes_Texture = 'a_position' | 'a_texturecoord';
 type Uniforms_Texture = 'u_transformmatrix' | 'u_sampler';
-type Attributes_TextureInstanced = 'a_position' | 'a_texturecoord' | 'a_color';
+type Attributes_TextureInstanced = 'a_position' | 'a_texturecoord' | 'a_instanceposition';
 type Uniforms_TextureInstanced = 'u_transformmatrix' | 'u_sampler';
 type Attributes_ColorTexture = 'a_position' | 'a_texturecoord' | 'a_color';
 type Uniforms_ColorTexture = 'u_transformmatrix' | 'u_sampler';
@@ -69,6 +69,10 @@ type Attributes_Vignette = never;
 type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_intensity';
 type Attributes_SineWave = never;
 type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time';
+
+
+/** The Super Union of all possible attributes. */
+export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Vignette | Attributes_SineWave;
 
 
 // Each ShaderProgram type
@@ -142,8 +146,8 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	starfield: { vertex: vsSource_starfield, fragment: fsSource_starfield },
 	// Post Processing Shaders
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
-    color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
-    vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
+	color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
+	vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 };
 

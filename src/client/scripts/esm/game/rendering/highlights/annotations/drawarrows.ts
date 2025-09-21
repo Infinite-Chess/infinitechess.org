@@ -198,7 +198,7 @@ function render(arrows: Arrow[]): void {
 		const data: number[] = arrows.flatMap(arrow => getDataArrow(arrow, color));
 	
 		// Render
-		createModel(data, 2, 'TRIANGLES', true).render(); // No transform needed
+		createModel(data, 2, 'TRIANGLES', 'color', true).render(); // No transform needed
 	}
 
 	// Remove the arrow currently being drawn

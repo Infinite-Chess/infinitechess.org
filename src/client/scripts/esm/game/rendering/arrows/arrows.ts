@@ -1123,20 +1123,20 @@ function regenerateModelAndRender(): void {
 	 * the edge of the screen. **Doesn't include** the little arrows.
 	 */
 	const attribInfoInstancedPictures: AttributeInfoInstanced = {
-		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'texcoord', numComponents: 2 }],
-		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }]
+		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_texturecoord', numComponents: 2 }],
+		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancetexcoord', numComponents: 2 }, { name: 'a_instancecolor', numComponents: 4 }]
 	};
-	const modelPictures = createModel_Instanced_GivenAttribInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", spritesheet.getSpritesheet());
+	const modelPictures = createModel_Instanced_GivenAttribInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", 'arrowImages', spritesheet.getSpritesheet());
 
 	/*
 	 * The buffer model of the little arrows on
 	 * the edge of the screen next to the mini piece images.
 	 */
 	const attribInfoInstancedArrows: AttributeInfoInstanced = {
-		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
-		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }, { name: 'instancerotation', numComponents: 1 }]
+		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
+		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancecolor', numComponents: 4 }, { name: 'a_instancerotation', numComponents: 1 }]
 	};
-	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES");
+	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES", 'arrows');
 
 	modelPictures.render();
 	modelArrows.render();

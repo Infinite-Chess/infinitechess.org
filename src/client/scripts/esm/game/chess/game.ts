@@ -51,7 +51,7 @@ import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
-import { createModel } from '../rendering/buffermodel.js';
+import buffermodel, { createModel } from '../rendering/buffermodel.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { ColorGradePass } from '../../webgl/post_processing/passes/ColorGradePass.js';
@@ -88,6 +88,7 @@ let sineWaveTime = 0;
 
 function init(): void {
 	programManager = new ProgramManager(gl);
+	buffermodel.init(gl, programManager);
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 
@@ -217,7 +218,7 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 
 // --- TSETING: Color Grade Presets for Different Moods ---
 
-function applyDullPreset(pass: ColorGradePass) {
+function applyDullPreset(pass: ColorGradePass): void {
 	pass.brightness = 0.05;
 	pass.contrast = 0.9;
 	pass.saturation = 0.4;
@@ -225,7 +226,7 @@ function applyDullPreset(pass: ColorGradePass) {
 	pass.hueOffset = 0.0;
 }
 
-function applyHellishPreset(pass: ColorGradePass) {
+function applyHellishPreset(pass: ColorGradePass): void {
 	pass.brightness = -0.1;
 	pass.contrast = 1.6;
 	pass.saturation = 1.2;
@@ -233,7 +234,7 @@ function applyHellishPreset(pass: ColorGradePass) {
 	pass.hueOffset = 0.0;
 }
 
-function applyWashedOutPreset(pass: ColorGradePass) {
+function applyWashedOutPreset(pass: ColorGradePass): void {
 	pass.brightness = 0.2;
 	pass.contrast = 0.7;
 	pass.saturation = 0.3;
@@ -254,9 +255,9 @@ function render(pipeline: PostProcessingPipeline): void {
 	// vignettePass.intensity = Math.sin(performance.now() / 500) * 0.2 + 0.8; // Varies between 0.6 and 1.0
 
 	// const deltaTime = loadbalancer.getDeltaTime(); // Seconds
-    // // The logic lives here, in the conductor
-    // sineWaveTime += deltaTime * sineWaveSpeed;
-    // sineWavePass.time = sineWaveTime;
+	// // The logic lives here, in the conductor
+	// sineWaveTime += deltaTime * sineWaveSpeed;
+	// sineWavePass.time = sineWaveTime;
 	
 	
 	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
@@ -348,7 +349,7 @@ function renderOutlineofScreenBox(): void {
 	const color: Color = [0,0,0, 0.5]; // Transparent Black
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createModel(data, 2, "LINE_LOOP", true).render();
+	createModel(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 

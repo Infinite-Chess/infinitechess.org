@@ -47,12 +47,12 @@ const MAX_ANIM_DIST_VPIXELS = bd.FromBigInt(2300n);
 /** The attribute info for all mini image vertex & attribute data. */
 const attribInfo: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [
-		{ name: 'position', numComponents: 2 },
-		{ name: 'texcoord', numComponents: 2 },
-		{ name: 'color', numComponents: 4 }
+		{ name: 'a_position', numComponents: 2 },
+		{ name: 'a_texturecoord', numComponents: 2 },
+		{ name: 'a_color', numComponents: 4 }
 	],
 	instanceDataAttribInfo: [
-		{ name: 'instanceposition', numComponents: 2 }
+		{ name: 'a_instanceposition', numComponents: 2 }
 	]
 };
 
@@ -303,12 +303,12 @@ function render(): void {
 
 		const type = Number(typeStr);
 		const tex: WebGLTexture = texturecache.getTexture(type);
-		models[type] = createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(thisInstanceData), attribInfo, 'TRIANGLES', tex);
+		models[type] = createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(thisInstanceData), attribInfo, 'TRIANGLES', 'miniImages', tex);
 		// Create the hovered model if it's non empty
 		if (instanceData_hovered[type]!.length > 0) {
 			const color_hovered = [1,1,1, 1] as Color; // Hovered mini images are fully opaque
 			const vertexData_hovered: number[] = instancedshapes.getDataColoredTexture(color_hovered, inverted);
-			models_hovered[type] = createModel_Instanced_GivenAttribInfo(vertexData_hovered, new Float32Array(instanceData_hovered[type]!), attribInfo, 'TRIANGLES', tex);
+			models_hovered[type] = createModel_Instanced_GivenAttribInfo(vertexData_hovered, new Float32Array(instanceData_hovered[type]!), attribInfo, 'TRIANGLES', 'miniImages', tex);
 		}
 	}
 
@@ -316,16 +316,16 @@ function render(): void {
 	const sortedNeutrals = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
 	const sortedColors = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
 
-	const size = snapping.getEntityWidthWorld();
+	const u_size = snapping.getEntityWidthWorld();
 
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {
-			models[neut]?.render(undefined, undefined, { size });
-			models_hovered[neut]?.render(undefined, undefined, { size });
+			models[neut]?.render(undefined, undefined, { u_size });
+			models_hovered[neut]?.render(undefined, undefined, { u_size });
 		}
 		for (const col of sortedColors) {
-			models[col]?.render(undefined, undefined, { size });
-			models_hovered[col]?.render(undefined, undefined, { size });
+			models[col]?.render(undefined, undefined, { u_size });
+			models_hovered[col]?.render(undefined, undefined, { u_size });
 		}
 	});
 }

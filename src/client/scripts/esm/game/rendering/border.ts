@@ -54,7 +54,7 @@ function drawPlayableRegionMask(boardsim: Board): void {
 	const { left, right, bottom, top } = worldBox;
 	const vertexData = primitives.Quad_Color(left, bottom, right, top, [0,0,0,1]); // Color doesn't matter since it's a mask
 
-	createModel(vertexData, 2, 'TRIANGLES', true).render();
+	createModel(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
 

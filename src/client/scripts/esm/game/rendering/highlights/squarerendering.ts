@@ -23,7 +23,7 @@ import type { Color } from "../../../../../../shared/util/math/math.js";
 /**
  * Generates a renderable buffer model for square highlights from given coordinates.
  * Doesn't require any position or scale tranformations before rendering, you can just call
- * `.render(undefined, undefined, { size: boardpos.getBoardScaleAsNumber() });` on the returned model.
+ * `.render(undefined, undefined, { u_size: boardpos.getBoardScaleAsNumber() });` on the returned model.
  * 
  * This type of model requires regeneration every single frame, so don't use it
  * if you have an arbitrary number of squares to render.
@@ -38,7 +38,7 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 		instanceData.push(...worldLoc);
 	});
 
-	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', true);
+	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', 'highlights', true);
 }
 
 

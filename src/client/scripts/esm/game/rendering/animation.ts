@@ -353,8 +353,7 @@ function renderTransparentSquares(): void {
 		return hidesData; 
 	});
 
-	createModel(data, 2, "TRIANGLES", true)
-		.render([0, 0, TRANSPARENT_SQUARE_Z]);
+	createModel(data, 2, "TRIANGLES", 'color', true).render([0, 0, TRANSPARENT_SQUARE_Z]);
 }
 
 /** [ZOOMED IN] Renders the animations of the pieces. */
@@ -417,7 +416,7 @@ function renderAnimations(): void {
 		for (const [typeStr, instance_data] of Object.entries(instanceData)) {
 			const type = Number(typeStr);
 			const texture = texturecache.getTexture(type);
-			createModel_Instanced_GivenAttribInfo(vertexData, instance_data, piecemodels.ATTRIBUTE_INFO, 'TRIANGLES', texture).render(undefined, scale);
+			createModel_Instanced_GivenAttribInfo(vertexData, instance_data, piecemodels.ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', texture).render(undefined, scale);
 		}
 	}
 

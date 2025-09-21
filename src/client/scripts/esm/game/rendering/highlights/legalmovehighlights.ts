@@ -102,7 +102,7 @@ function render(): void {
 
 	renderSelectedPieceLegalMoves();
 	arrowlegalmovehighlights.renderEachHoveredPieceLegalMoves();
-	if (camera.getDebug()) legalmovemodel.renderOutlineofRenderBox();
+	if (camera.getDebug()) legalmovemodel.renderOutlineOfRenderBox();
 }
 
 /**
@@ -136,7 +136,7 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	const coords = pieceSelected!.coords;
 	const offsetCoord = coordutil.subtractCoords(coords, legalmovemodel.getOffset());
 	const instanceData: bigint[] = [...offsetCoord];
-	model_SelectedPiece = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), "TRIANGLES", true),
+	model_SelectedPiece = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), "TRIANGLES", 'colorInstanced', true),
 	
 	frametracker.onVisualChange();
 }

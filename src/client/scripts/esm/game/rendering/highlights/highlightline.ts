@@ -76,7 +76,7 @@ function getRenderRange(): BoundingBoxBD {
 
 function genLinesModel(lines: Line[]): BufferModel {
 	const data: number[] = lines.flatMap(line => getLineData(line));
-	return createModel(data, 2, 'LINES', true);
+	return createModel(data, 2, 'LINES', 'color', true);
 }
 
 function getLineData(line: Line): number[] {
