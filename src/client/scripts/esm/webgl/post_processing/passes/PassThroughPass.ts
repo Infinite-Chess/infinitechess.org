@@ -1,6 +1,6 @@
 
-import { ProgramManager, ProgramMap } from "../../ProgramManager";
-import { PostProcessPass } from "../PostProcessingPipeline";
+import type { ProgramManager, ProgramMap } from "../../ProgramManager";
+import type { PostProcessPass } from "../PostProcessingPipeline";
 
 
 /**
