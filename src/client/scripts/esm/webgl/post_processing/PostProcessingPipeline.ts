@@ -17,6 +17,7 @@ export interface PostProcessPass {
 	 * @param gl The WebGL2 rendering context.
 	 * @param inputTexture The texture to read from (the result of the previous pass).
 	 */
+	// eslint-disable-next-line no-unused-vars
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void;
 }
 
@@ -93,11 +94,10 @@ export class PostProcessingPipeline {
 	}
 	
 	/**
-	 * Adds a post-processing pass to the pipeline.
-	 * @param pass The pass to add.
+	 * Updates the entire list of post processing effect passes.
 	 */
-	public addPass(pass: PostProcessPass): void {
-		this.passes.push(pass);
+	public setPasses(passes: PostProcessPass[]): void {
+		this.passes = passes;
 	}
 
 	/**
