@@ -7,24 +7,19 @@ import { ShaderProgram } from './ShaderProgram';
 import vsSource_color from '../../../shaders/color/vertex.glsl';
 import fsSource_color from '../../../shaders/color/fragment.glsl';
 import vsSource_colorInstanced from '../../../shaders/color/instanced/vertex.glsl';
-import fsSource_colorInstanced from '../../../shaders/color/instanced/fragment.glsl';
 import vsSource_texture from '../../../shaders/texture/vertex.glsl';
 import fsSource_texture from '../../../shaders/texture/fragment.glsl';
 import vsSource_textureInstanced from '../../../shaders/texture/instanced/vertex.glsl';
-import fsSource_textureInstanced from '../../../shaders/texture/instanced/fragment.glsl';
 import vsSource_colorTexture from '../../../shaders/color_texture/vertex.glsl';
 import fsSource_colorTexture from '../../../shaders/color_texture/fragment.glsl';
 // Specialized Shaders
 import vsSource_miniImages from '../../../shaders/mini_images/vertex.glsl';
 import fsSource_miniImages from '../../../shaders/mini_images/fragment.glsl';
 import vsSource_highlights from '../../../shaders/highlights/vertex.glsl';
-import fsSource_highlights from '../../../shaders/highlights/fragment.glsl';
 import vsSource_arrows from '../../../shaders/arrows/vertex.glsl';
-import fsSource_arrows from '../../../shaders/arrows/fragment.glsl';
 import vsSource_arrowImages from '../../../shaders/arrow_images/vertex.glsl';
 import fsSource_arrowImages from '../../../shaders/arrow_images/fragment.glsl';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
-import fsSource_starfield from '../../../shaders/starfield/fragment.glsl';
 // Post Processing Shaders
 import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
 import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
@@ -151,23 +146,22 @@ type ShaderSource = {
 const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	// Generic Shaders
 	color: { vertex: vsSource_color, fragment: fsSource_color },
-	colorInstanced: { vertex: vsSource_colorInstanced, fragment: fsSource_colorInstanced },
+	colorInstanced: { vertex: vsSource_colorInstanced, fragment: fsSource_color },
 	texture: { vertex: vsSource_texture, fragment: fsSource_texture },
-	textureInstanced: { vertex: vsSource_textureInstanced, fragment: fsSource_textureInstanced },
+	textureInstanced: { vertex: vsSource_textureInstanced, fragment: fsSource_texture },
 	colorTexture: { vertex: vsSource_colorTexture, fragment: fsSource_colorTexture },
 	// Specialized Shaders
 	miniImages: { vertex: vsSource_miniImages, fragment: fsSource_miniImages },
-	highlights: { vertex: vsSource_highlights, fragment: fsSource_highlights },
-	arrows: { vertex: vsSource_arrows, fragment: fsSource_arrows },
+	highlights: { vertex: vsSource_highlights, fragment: fsSource_color },
+	arrows: { vertex: vsSource_arrows, fragment: fsSource_color },
 	arrowImages: { vertex: vsSource_arrowImages, fragment: fsSource_arrowImages },
-	starfield: { vertex: vsSource_starfield, fragment: fsSource_starfield },
+	starfield: { vertex: vsSource_starfield, fragment: fsSource_color },
 	// Post Processing Shaders
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
 	color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
 	vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 };
-
 
 
 /**
