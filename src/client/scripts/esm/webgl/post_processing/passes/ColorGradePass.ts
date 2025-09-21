@@ -17,7 +17,10 @@ export class ColorGradePass implements PostProcessPass {
 	/** Adjusts contrast. 1.0 is no change. */
 	public contrast: number = 1.0;
 
-	/** Adjusts mid-tones. 1.0 is no change. */
+	/**
+	 * Adjusts mid-tones. 1.0 is no change.
+	 * MUST BE > 0!
+	 */
 	public gamma: number = 1.0;
 
 	/** Adjusts color intensity. 1.0 is no change, 0.0 is grayscale. */

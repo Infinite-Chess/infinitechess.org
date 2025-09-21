@@ -197,8 +197,6 @@ export class PostProcessingPipeline {
 	public resize(width: number, height: number): void {
 		const gl = this.gl;
 		
-		console.log(`Resizing post-processing pipeline to ${width}x${height}`);
-
 		// Resize the color textures
 		const textures = [this.readTexture, this.writeTexture];
 		for (const texture of textures) {

@@ -15,7 +15,7 @@ export class SineWavePass implements PostProcessPass {
 	public amplitude: [number, number] = [0.01, 0.01];
 
 	/** The number of full waves across the screen on the [x, y] axes. */
-	public frequency: [number, number] = [10.0, 10.0];
+	public frequency: [number, number] = [5.0, 5.0];
 
 	/** The current time, used to animate the waves. Increment this each frame. */
 	public time: number = 0.0;
