@@ -96,7 +96,7 @@ export class PostProcessingPipeline {
 	 * Adds a post-processing pass to the pipeline.
 	 * @param pass The pass to add.
 	 */
-	public addPass(pass: PostProcessPass) {
+	public addPass(pass: PostProcessPass): void {
 		this.passes.push(pass);
 	}
 
@@ -104,7 +104,7 @@ export class PostProcessingPipeline {
 	 * Call this BEFORE rendering your main 3D scene.
 	 * It binds the FBO, redirecting all subsequent draw calls to an off-screen texture.
 	 */
-	public begin() {
+	public begin(): void {
 		const gl = this.gl;
 
 		// Bind the FBO we will write the 3D scene into.
@@ -134,7 +134,7 @@ export class PostProcessingPipeline {
 	 * Call this AFTER your main 3D scene has been rendered.
 	 * It executes the post-processing passes and draws the final result to the canvas.
 	 */
-	public end() {
+	public end(): void {
 		const gl = this.gl;
 
 		// **IMPORTANT**: Detach the depth/stencil buffer.
@@ -154,7 +154,7 @@ export class PostProcessingPipeline {
 		// 1. PING-PONG PASSES: Loop through all but the very last pass.
 		// These passes all render to the next FBO.
 		for (let i = 0; i < activePasses.length - 1; i++) {
-			const pass = activePasses[i];
+			const pass = activePasses[i]!;
 			gl.bindFramebuffer(gl.FRAMEBUFFER, this.writeFBO); // Target the off-screen buffer
 
 			pass.render(gl, this.readTexture);
@@ -165,12 +165,12 @@ export class PostProcessingPipeline {
 		}
 		
 		// 2. FINAL PASS: Render the last effect directly to the screen.
-		const lastPass = activePasses[activePasses.length - 1];
+		const lastPass = activePasses[activePasses.length - 1]!;
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null); // Target the canvas
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.clear(gl.COLOR_BUFFER_BIT); // Clear canvas before drawing final result
 
-		lastPass.render(gl, this.readTexture)
+		lastPass.render(gl, this.readTexture);
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (2 triangles)
 	}
@@ -178,12 +178,12 @@ export class PostProcessingPipeline {
 	/**
 	 * Swaps the read and write FBOs for the ping-pong technique.
 	 */
-	private swapFBOs() {
-		let tempFBO = this.readFBO;
+	private swapFBOs(): void {
+		const tempFBO = this.readFBO;
 		this.readFBO = this.writeFBO;
 		this.writeFBO = tempFBO;
 
-		let tempTexture = this.readTexture;
+		const tempTexture = this.readTexture;
 		this.readTexture = this.writeTexture;
 		this.writeTexture = tempTexture;
 	}
@@ -194,8 +194,10 @@ export class PostProcessingPipeline {
 	 * @param width The new width of the canvas.
 	 * @param height The new height of the canvas.
 	 */
-	public resize(width: number, height: number) {
+	public resize(width: number, height: number): void {
 		const gl = this.gl;
+		
+		console.log(`Resizing post-processing pipeline to ${width}x${height}`);
 
 		// Resize the color textures
 		const textures = [this.readTexture, this.writeTexture];
