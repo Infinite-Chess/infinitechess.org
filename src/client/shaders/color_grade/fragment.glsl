@@ -1,5 +1,5 @@
 #version 300 es
-precision lowp float;
+precision highp float;
 
 // --- UNIFORMS ---
 uniform sampler2D u_sceneTexture;
@@ -50,7 +50,8 @@ void main() {
 
 	// 3. Apply Gamma Correction
 	// We use 1.0 / gamma which is the standard for gamma correction.
-	color.rgb = pow(color.rgb, vec3(1.0 / u_gamma));
+	// Use max() to ensure the input to pow() is never negative, preventing NaN errors.
+	color.rgb = pow(max(color.rgb, 0.0), vec3(1.0 / u_gamma));
 
 	// 4. Apply Saturation
 	// Calculate the grayscale value using the luminance vector.
