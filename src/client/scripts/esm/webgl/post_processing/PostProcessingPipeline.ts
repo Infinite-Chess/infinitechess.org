@@ -121,7 +121,6 @@ export class PostProcessingPipeline {
 
 		// Set the viewport to the FBO size and clear it.
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 		
 		// Enable blending if your main scene needs it.
