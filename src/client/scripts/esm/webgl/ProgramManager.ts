@@ -97,24 +97,41 @@ type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 
 
 export interface ProgramMap {
-	// Generic Shaders
+	// ======= Generic Shaders =======
+
+	/** Renders meshes with colored vertices. */
 	color: Program_Color;
+	/** Instance renders a mesh with colored vertices. */
 	colorInstanced: Program_ColorInstanced;
+	/** Renders a textured mesh. */
 	texture: Program_Texture;
+	/** Instance renders a textured mesh. */
 	textureInstanced: Program_TextureInstanced;
+	/** Renders a textured mesh with colored vertices. */
 	colorTexture: Program_ColorTexture;
-	// Specialized Shaders
+
+	// ======= Specialized Shaders =======
+
+	/** Renders mini images. */
 	miniImages: Program_MiniImages;
+	/** Renders mini images. Instance renders square highlights of a given size. */
 	highlights: Program_Highlights;
+	/** Renders arrows (not the images, but tha arrow tip). */
 	arrows: Program_Arrows;
+	/** Renders arrow images. */
 	arrowImages: Program_ArrowImages;
+	/** Renders the starfield squares. */
 	starfield: Program_Starfield;
-	// Post Processing Shaders
+
+	// ======= Post Processing Shaders =======
+
 	/** Post Processing Pass-Through Shader. Zero effects. */
 	post_pass: Program_PostPass;
 	/** Post Processing Color Grading Shader. Several color effects. */
 	color_grade: Program_ColorGrade;
+	/** Post Processing Vignette Effect. */
     vignette: Program_Vignette;
+	/** Post Processing Dual Axis Sine Wave Distortion Effect. */
 	sine_wave: Program_SineWave;
 }
 
