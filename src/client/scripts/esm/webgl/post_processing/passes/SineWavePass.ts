@@ -17,6 +17,9 @@ export class SineWavePass implements PostProcessPass {
 	/** The number of full waves across the screen on the [x, y] axes. */
 	public frequency: [number, number] = [5.0, 5.0];
 
+	/** The angle of the primary wave axis in degrees. The second wave is perpendicular. */
+	public angle: number = 0.0;
+
 	/** The current time, used to animate the waves. Increment this each frame. */
 	public time: number = 0.0;
 
@@ -30,11 +33,15 @@ export class SineWavePass implements PostProcessPass {
 		
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
+
+		// Convert angle from degrees to radians for the shader
+		const angleInRadians = this.angle * (Math.PI / 180.0);
 		
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 		gl.uniform2fv(this.program.getUniformLocation('u_amplitude'), this.amplitude);
 		gl.uniform2fv(this.program.getUniformLocation('u_frequency'), this.frequency);
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
+		gl.uniform1f(this.program.getUniformLocation('u_angle'), angleInRadians);
 	}
 }

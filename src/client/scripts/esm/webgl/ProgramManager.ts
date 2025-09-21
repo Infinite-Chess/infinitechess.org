@@ -68,7 +68,7 @@ type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_brightness' | 'u_contrast' | 'u
 type Attributes_Vignette = never;
 type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_intensity';
 type Attributes_SineWave = never;
-type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time';
+type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time' | 'u_angle';
 
 
 /** The Super Union of all possible attributes. */
