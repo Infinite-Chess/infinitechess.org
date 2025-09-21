@@ -6,6 +6,7 @@ uniform sampler2D u_sceneTexture;
 
 uniform float u_brightness; // 0.0 is no change
 uniform float u_contrast;   // 1.0 is no change
+uniform float u_gamma;      // 1.0 is no change
 uniform float u_saturation; // 1.0 is no change, 0.0 = grayscale
 uniform vec3 u_tintColor;   // vec3(1.0) is no change
 uniform float u_hueOffset;  // 0.0 is no change (0.0 to 1.0)
@@ -47,7 +48,11 @@ void main() {
 	// 2. Apply Contrast
 	color.rgb = (color.rgb - 0.5) * u_contrast + 0.5;
 
-	// 3. Apply Saturation
+	// 3. Apply Gamma Correction
+	// We use 1.0 / gamma which is the standard for gamma correction.
+	color.rgb = pow(color.rgb, vec3(1.0 / u_gamma));
+
+	// 4. Apply Saturation
 	// Calculate the grayscale value using the luminance vector.
 	// The dot product is a fast way to do (r*0.2126 + g*0.7152 + b*0.0722).
 	float luminance = dot(color.rgb, LUMINANCE_VECTOR);
@@ -56,10 +61,10 @@ void main() {
 	// mix() is a built-in GLSL function for linear interpolation.
 	color.rgb = mix(grayscale, color.rgb, u_saturation);
 
-	// 4. Apply Tint
+	// 5. Apply Tint
 	color.rgb *= u_tintColor;
 
-	// 5. Apply Hue Shift
+	// 6. Apply Hue Shift
 	vec3 hsv = rgb2hsv(color.rgb);
 	hsv.x += u_hueOffset;
 	hsv.x = fract(hsv.x); // Wrap the hue value around (0.0 to 1.0)

@@ -17,6 +17,9 @@ export class ColorGradePass implements PostProcessPass {
 	/** Adjusts contrast. 1.0 is no change. */
 	public contrast: number = 1.0;
 
+	/** Adjusts mid-tones. 1.0 is no change. */
+	public gamma: number = 1.0;
+
 	/** Adjusts color intensity. 1.0 is no change, 0.0 is grayscale. */
 	public saturation: number = 1.0;
 
@@ -42,6 +45,7 @@ export class ColorGradePass implements PostProcessPass {
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 		gl.uniform1f(this.program.getUniformLocation('u_brightness'), this.brightness);
 		gl.uniform1f(this.program.getUniformLocation('u_contrast'), this.contrast);
+		gl.uniform1f(this.program.getUniformLocation('u_gamma'), this.gamma);
 		gl.uniform1f(this.program.getUniformLocation('u_saturation'), this.saturation);
 		gl.uniform3fv(this.program.getUniformLocation('u_tintColor'), this.tint);
 		gl.uniform1f(this.program.getUniformLocation('u_hueOffset'), this.hueOffset);
