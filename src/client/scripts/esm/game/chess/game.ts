@@ -44,14 +44,19 @@ import promotionlines from '../rendering/promotionlines.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
-import webgl from '../rendering/webgl.js';
 import starfield from '../rendering/starfield.js';
 import camera from '../rendering/camera.js';
 import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
+import webgl, { gl } from '../rendering/webgl.js';
+import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
 import { createModel } from '../rendering/buffermodel.js';
 import { CreateInputListener, InputListener } from '../input.js';
+import { ProgramManager } from '../../webgl/ProgramManager.js';
+import { ColorGradePass } from '../../webgl/post_processing/passes/ColorGradePass.js';
+import { VignettePass } from '../../webgl/post_processing/passes/VignettePass.js';
+import { SineWavePass } from '../../webgl/post_processing/passes/SineWavePass.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -64,10 +69,38 @@ let listener_overlay: InputListener;
 let listener_document: InputListener;
 
 
+/** Manager of our Shaders */
+let programManager: ProgramManager;
+/** Manager of Post Processing Effects */
+let pipeline: PostProcessingPipeline;
+
+/** Our color grade post processing effect. */
+let colorGradePass: ColorGradePass;
+let vignettePass: VignettePass;
+
+let sineWavePass: SineWavePass;
+const sineWaveSpeed = 2.0;
+let sineWaveTime = 0;
+
+
 // Functions -------------------------------------------------------------------------------
 
 
 function init(): void {
+	programManager = new ProgramManager(gl);
+
+	pipeline = new PostProcessingPipeline(gl, programManager);
+
+	// sineWavePass = new SineWavePass(programManager);
+	// pipeline.addPass(sineWavePass);
+	colorGradePass = new ColorGradePass(programManager);
+	pipeline.addPass(colorGradePass);
+	// vignettePass = new VignettePass(programManager);
+	// pipeline.addPass(vignettePass);
+	
+	// TEST:
+	// applyHellishPreset(colorGradePass);
+	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
@@ -179,7 +212,65 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 	}
 }
 
-function render(): void {
+
+
+
+// --- TSETING: Color Grade Presets for Different Moods ---
+
+function applyDullPreset(pass: ColorGradePass) {
+	pass.brightness = 0.05;
+	pass.contrast = 0.9;
+	pass.saturation = 0.4;
+	pass.tint = [1.0, 1.0, 1.0]; // No tint
+	pass.hueOffset = 0.0;
+}
+
+function applyHellishPreset(pass: ColorGradePass) {
+	pass.brightness = -0.1;
+	pass.contrast = 1.6;
+	pass.saturation = 1.2;
+	pass.tint = [1.0, 0.4, 0.1]; // Reddish-orange tint
+	pass.hueOffset = 0.0;
+}
+
+function applyWashedOutPreset(pass: ColorGradePass) {
+	pass.brightness = 0.2;
+	pass.contrast = 0.7;
+	pass.saturation = 0.3;
+	pass.tint = [0.8, 0.8, 1.0]; // Slight cool tint
+	pass.hueOffset = 0.0;
+}
+
+
+
+/**
+ * Renders everthing in our game, and applies post processing effects to the final image.
+ */
+function render(pipeline: PostProcessingPipeline): void {
+
+	// Constantly change the saturation according to time, for testing
+	colorGradePass.saturation = Math.sin(performance.now() / 1000) * 0.5 + 0.5; // Varies between 0.0 and 1.0
+	
+	// vignettePass.intensity = Math.sin(performance.now() / 500) * 0.2 + 0.8; // Varies between 0.6 and 1.0
+
+	// const deltaTime = loadbalancer.getDeltaTime(); // Seconds
+    // // The logic lives here, in the conductor
+    // sineWaveTime += deltaTime * sineWaveSpeed;
+    // sineWavePass.time = sineWaveTime;
+	
+	
+	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
+	pipeline.begin();
+
+	// 2. Render our 3D scene.
+	renderScene();
+
+	// 3. Tell the pipeline we are finished. It will handle drawing the result to the screen.
+	pipeline.end();
+}
+
+/** Renders all in our scene. */
+function renderScene(): void {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();

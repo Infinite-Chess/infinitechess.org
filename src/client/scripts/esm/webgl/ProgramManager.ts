@@ -25,6 +25,12 @@ import vsSource_arrowImages from '../../../shaders/arrow_images/vertex.glsl';
 import fsSource_arrowImages from '../../../shaders/arrow_images/fragment.glsl';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
 import fsSource_starfield from '../../../shaders/starfield/fragment.glsl';
+// Post Processing Shaders
+import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
+import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
+import fsSource_colorGrade from '../../../shaders/color_grade/fragment.glsl';
+import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
+import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 
 
 // =============================== Type Definitions ===============================
@@ -54,6 +60,15 @@ type Attributes_ArrowImages = 'a_position' | 'a_texturecoord' | 'a_instanceposit
 type Uniforms_ArrowImages = 'u_transformmatrix' | 'u_sampler';
 type Attributes_Starfield = 'a_position' | 'a_instanceposition' | 'a_instancecolor' | 'a_instancesize';
 type Uniforms_Starfield = 'u_transformmatrix';
+// Post Processing Shaders
+type Attributes_PostPass = never;
+type Uniforms_PostPass = 'u_sceneTexture';
+type Attributes_ColorGrade = never;
+type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_brightness' | 'u_contrast' | 'u_gamma' | 'u_saturation' | 'u_tintColor' | 'u_hueOffset';
+type Attributes_Vignette = never;
+type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_intensity';
+type Attributes_SineWave = never;
+type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time';
 
 
 // Each ShaderProgram type
@@ -70,6 +85,11 @@ type Program_Highlights = ShaderProgram<Attributes_Highlights, Uniforms_Highligh
 type Program_Arrows = ShaderProgram<Attributes_Arrows, Uniforms_Arrows>;
 type Program_ArrowImages = ShaderProgram<Attributes_ArrowImages, Uniforms_ArrowImages>;
 type Program_Starfield = ShaderProgram<Attributes_Starfield, Uniforms_Starfield>;
+// Post Processing Shaders
+type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
+type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
+type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
+type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 
 
 export interface ProgramMap {
@@ -85,6 +105,13 @@ export interface ProgramMap {
 	arrows: Program_Arrows;
 	arrowImages: Program_ArrowImages;
 	starfield: Program_Starfield;
+	// Post Processing Shaders
+	/** Post Processing Pass-Through Shader. Zero effects. */
+	post_pass: Program_PostPass;
+	/** Post Processing Color Grading Shader. Several color effects. */
+	color_grade: Program_ColorGrade;
+    vignette: Program_Vignette;
+	sine_wave: Program_SineWave;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -112,7 +139,12 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	highlights: { vertex: vsSource_highlights, fragment: fsSource_highlights },
 	arrows: { vertex: vsSource_arrows, fragment: fsSource_arrows },
 	arrowImages: { vertex: vsSource_arrowImages, fragment: fsSource_arrowImages },
-	starfield: { vertex: vsSource_starfield, fragment: fsSource_starfield }
+	starfield: { vertex: vsSource_starfield, fragment: fsSource_starfield },
+	// Post Processing Shaders
+	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
+    color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
+    vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
+	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 };
 
 
@@ -122,13 +154,13 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
  * Ensures that each shader program is only compiled and linked once.
  */
 export class ProgramManager {
-	private readonly gl: WebGLRenderingContext;
+	private readonly gl: WebGL2RenderingContext;
 	// The cache stores programs by their key from ProgramMap. We use a base
 	// ShaderProgram type here internally, but the public `get` method provides full type safety.
 	private programCache: Map<keyof ProgramMap, ShaderProgram<any, any>> = new Map();
 
 
-	constructor(gl: WebGLRenderingContext) {
+	constructor(gl: WebGL2RenderingContext) {
 		this.gl = gl;
 	}
 

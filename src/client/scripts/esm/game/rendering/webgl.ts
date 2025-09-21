@@ -61,7 +61,7 @@ function setClearColor(newClearColor: Vec3): void {
 /**
  * Initiate the WebGL context. This is our web-based render engine.
  */
-function init(): void {
+function init(): WebGL2RenderingContext {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
 	if (!newContext) { // WebGL2 not supported
@@ -97,6 +97,8 @@ function init(): void {
 	}
 
 	gl.clearStencil(0); // Good practice, although 0 is the default
+
+	return gl;
 }
 
 /**
@@ -243,7 +245,6 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 // /**
 //  * Queries common WebGL context values and logs them to the console.
 //  * Each user device may have different supported values.
-//  * @param {WebGLRenderingContext} gl - The WebGL context.
 //  */
 // function queryWebGLContextInfo() {
 // 	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
