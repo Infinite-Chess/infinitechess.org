@@ -60,7 +60,7 @@ type Uniforms_Starfield = 'u_transformmatrix';
 type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';
 type Attributes_ColorGrade = never;
-type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_saturation';
+type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_brightness' | 'u_contrast' | 'u_saturation' | 'u_tintColor' | 'u_hueOffset';
 
 
 // Each ShaderProgram type
