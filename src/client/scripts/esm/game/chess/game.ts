@@ -56,6 +56,7 @@ import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { ColorGradePass } from '../../webgl/post_processing/passes/ColorGradePass.js';
 import { VignettePass } from '../../webgl/post_processing/passes/VignettePass.js';
+import { SineWavePass } from '../../webgl/post_processing/passes/SineWavePass.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -77,14 +78,21 @@ let pipeline: PostProcessingPipeline;
 let colorGradePass: ColorGradePass;
 let vignettePass: VignettePass;
 
+let sineWavePass: SineWavePass;
+const sineWaveSpeed = 2.0;
+let sineWaveTime = 0;
+
 
 // Functions -------------------------------------------------------------------------------
 
 
 function init(): void {
 	programManager = new ProgramManager(gl);
+
 	pipeline = new PostProcessingPipeline(gl, programManager);
 
+	// sineWavePass = new SineWavePass(programManager);
+	// pipeline.addPass(sineWavePass);
 	colorGradePass = new ColorGradePass(programManager);
 	pipeline.addPass(colorGradePass);
 	// vignettePass = new VignettePass(programManager);
@@ -244,6 +252,12 @@ function render(pipeline: PostProcessingPipeline): void {
 	colorGradePass.saturation = Math.sin(performance.now() / 1000) * 0.5 + 0.5; // Varies between 0.0 and 1.0
 	
 	// vignettePass.intensity = Math.sin(performance.now() / 500) * 0.2 + 0.8; // Varies between 0.6 and 1.0
+
+	// const deltaTime = loadbalancer.getDeltaTime(); // Seconds
+    // // The logic lives here, in the conductor
+    // sineWaveTime += deltaTime * sineWaveSpeed;
+    // sineWavePass.time = sineWaveTime;
+	
 	
 	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
 	pipeline.begin();
