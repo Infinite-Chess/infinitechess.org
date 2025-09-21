@@ -10,7 +10,6 @@
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
 
 // @ts-ignore
 import invites from '../misc/invites.js';
@@ -45,14 +44,17 @@ import promotionlines from '../rendering/promotionlines.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
-import webgl from '../rendering/webgl.js';
 import starfield from '../rendering/starfield.js';
 import camera from '../rendering/camera.js';
 import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
+import webgl, { gl } from '../rendering/webgl.js';
+import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
 import { createModel } from '../rendering/buffermodel.js';
 import { CreateInputListener, InputListener } from '../input.js';
+import { ProgramManager } from '../../webgl/ProgramManager.js';
+import { ColorGradePass } from '../../webgl/post_processing/passes/ColorGradePass.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -65,10 +67,25 @@ let listener_overlay: InputListener;
 let listener_document: InputListener;
 
 
+/** Manager of our Shaders */
+let programManager: ProgramManager;
+/** Manager of Post Processing Effects */
+let pipeline: PostProcessingPipeline;
+
+/** Our color grade post processing effect. */
+let colorGradePass: ColorGradePass;
+
+
 // Functions -------------------------------------------------------------------------------
 
 
 function init(): void {
+	programManager = new ProgramManager(gl);
+	pipeline = new PostProcessingPipeline(gl, programManager);
+
+	colorGradePass = new ColorGradePass(programManager);
+	pipeline.addPass(colorGradePass);
+	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
@@ -184,6 +201,9 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
  * Renders everthing in our game, and applies post processing effects to the final image.
  */
 function render(pipeline: PostProcessingPipeline): void {
+
+	// Constantly change the saturation according to time, for testing
+	colorGradePass.saturation = Math.sin(performance.now() / 1000) * 0.5 + 0.5; // Varies between 0.0 and 1.0
 	
 	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
 	pipeline.begin();

@@ -16,33 +16,18 @@ import camera from './rendering/camera.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
-import { ProgramManager } from '../webgl/ProgramManager.js';
-import { PostProcessingPipeline } from '../webgl/post_processing/PostProcessingPipeline.js';
 // Import End
 
 "use strict";
 
-/** @type {WebGL2RenderingContext} */
-let gl;
-/**
- * Manager of our Shaders
- * @type {ProgramManager}
- */
-let programManager;
-/**
- * Manager of Post Processing Effects
- * @type {PostProcessingPipeline}
- */
-let pipeline;
+
 
 
 // Starts the game. Runs automatically once the page is loaded. 
 function start() {
 	guiloading.closeAnimation(); // Stops the loading screen animation
-	gl = webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
+	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
 	shaders.initPrograms(); // Initiates the few shader programs we will be using. The most common we'll be using is the textureProgram, but we also create a shader program for color, and another for tinted textures.
-	programManager = new ProgramManager(gl);
-	pipeline = new PostProcessingPipeline(gl, programManager);
 	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
 	
 	window.addEventListener("resize", onScreenResize);
@@ -108,7 +93,3 @@ function render() {
 }
 
 globalThis.main = { start };
-
-export {
-	programManager,
-}
