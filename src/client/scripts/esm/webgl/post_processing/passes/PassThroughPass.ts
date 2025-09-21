@@ -1,20 +1,17 @@
 
-import { ProgramMap } from "../../ProgramManager";
+import { ProgramManager, ProgramMap } from "../../ProgramManager";
 import { PostProcessPass } from "../PostProcessingPipeline";
 
-
-/** The shader program this pass through uses. */
-type PassThroughProgram = ProgramMap['post_pass'];
 
 /**
  * A Post Processing Pass Through Effect, with zero effects.
  * Only required if we have no other effects.
  */
 export class PassThroughPass implements PostProcessPass {
-	readonly program: PassThroughProgram;
+	readonly program: ProgramMap['post_pass'];
 
-	constructor(program: PassThroughProgram) {
-		this.program = program;
+	constructor(programManager: ProgramManager) {
+		this.program = programManager.get('post_pass');
 	}
 
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {

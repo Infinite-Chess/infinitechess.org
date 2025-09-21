@@ -49,7 +49,7 @@ export class PostProcessingPipeline {
 		this.gl = gl;
 		
 		// Get the pass-through shader from your manager.
-		this.passThroughPass = new PassThroughPass(programManager.get('post_pass'));
+		this.passThroughPass = new PassThroughPass(programManager);
 
 		// --- Create Framebuffers and Textures ---
 		const { fbo: fboA, texture: textureA } = this.createFBO();

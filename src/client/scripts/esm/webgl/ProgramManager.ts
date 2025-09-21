@@ -27,6 +27,7 @@ import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
 import fsSource_starfield from '../../../shaders/starfield/fragment.glsl';
 import vsSource_postPass from '../../../shaders/post-pass/vertex.glsl';
 import fsSource_postPass from '../../../shaders/post-pass/fragment.glsl';
+import fsSource_colorGrade from '../../../shaders/color-grade/fragment.glsl';
 
 
 // =============================== Type Definitions ===============================
@@ -57,7 +58,9 @@ type Uniforms_ArrowImages = 'u_transformmatrix' | 'u_sampler';
 type Attributes_Starfield = 'a_position' | 'a_instanceposition' | 'a_instancecolor' | 'a_instancesize';
 type Uniforms_Starfield = 'u_transformmatrix';
 type Attributes_PostPass = never;
-type Uniforms_PostPass = 'u_sceneTexture'
+type Uniforms_PostPass = 'u_sceneTexture';
+type Attributes_ColorGrade = never;
+type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_saturation';
 
 
 // Each ShaderProgram type
@@ -75,6 +78,7 @@ type Program_Arrows = ShaderProgram<Attributes_Arrows, Uniforms_Arrows>;
 type Program_ArrowImages = ShaderProgram<Attributes_ArrowImages, Uniforms_ArrowImages>;
 type Program_Starfield = ShaderProgram<Attributes_Starfield, Uniforms_Starfield>;
 type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
+type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
 
 
 export interface ProgramMap {
@@ -92,6 +96,8 @@ export interface ProgramMap {
 	starfield: Program_Starfield;
 	/** Post Processing Pass-Through Shader. Zero effects. */
 	post_pass: Program_PostPass;
+	/** Post Processing Color Grading Shader. Several color effects. */
+	color_grade: Program_ColorGrade;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -121,6 +127,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	arrowImages: { vertex: vsSource_arrowImages, fragment: fsSource_arrowImages },
 	starfield: { vertex: vsSource_starfield, fragment: fsSource_starfield },
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
+    color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
 };
 
 
