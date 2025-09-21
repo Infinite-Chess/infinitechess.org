@@ -55,6 +55,7 @@ import { createModel } from '../rendering/buffermodel.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { ColorGradePass } from '../../webgl/post_processing/passes/ColorGradePass.js';
+import { VignettePass } from '../../webgl/post_processing/passes/VignettePass.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -74,6 +75,7 @@ let pipeline: PostProcessingPipeline;
 
 /** Our color grade post processing effect. */
 let colorGradePass: ColorGradePass;
+let vignettePass: VignettePass;
 
 
 // Functions -------------------------------------------------------------------------------
@@ -85,6 +87,8 @@ function init(): void {
 
 	colorGradePass = new ColorGradePass(programManager);
 	pipeline.addPass(colorGradePass);
+	// vignettePass = new VignettePass(programManager);
+	// pipeline.addPass(vignettePass);
 	
 	// TEST:
 	// applyHellishPreset(colorGradePass);
@@ -238,6 +242,8 @@ function render(pipeline: PostProcessingPipeline): void {
 
 	// Constantly change the saturation according to time, for testing
 	colorGradePass.saturation = Math.sin(performance.now() / 1000) * 0.5 + 0.5; // Varies between 0.0 and 1.0
+	
+	// vignettePass.intensity = Math.sin(performance.now() / 500) * 0.2 + 0.8; // Varies between 0.6 and 1.0
 	
 	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
 	pipeline.begin();
