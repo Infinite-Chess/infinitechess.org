@@ -86,6 +86,9 @@ function init(): void {
 	colorGradePass = new ColorGradePass(programManager);
 	pipeline.addPass(colorGradePass);
 	
+	// TEST:
+	// applyHellishPreset(colorGradePass);
+	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
@@ -196,6 +199,37 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 		annotations.Collapse();
 	}
 }
+
+
+
+
+// --- TSETING: Color Grade Presets for Different Moods ---
+
+function applyDullPreset(pass: ColorGradePass) {
+	pass.brightness = 0.05;
+	pass.contrast = 0.9;
+	pass.saturation = 0.4;
+	pass.tint = [1.0, 1.0, 1.0]; // No tint
+	pass.hueOffset = 0.0;
+}
+
+function applyHellishPreset(pass: ColorGradePass) {
+	pass.brightness = -0.1;
+	pass.contrast = 1.6;
+	pass.saturation = 1.2;
+	pass.tint = [1.0, 0.4, 0.1]; // Reddish-orange tint
+	pass.hueOffset = 0.0;
+}
+
+function applyWashedOutPreset(pass: ColorGradePass) {
+	pass.brightness = 0.2;
+	pass.contrast = 0.7;
+	pass.saturation = 0.3;
+	pass.tint = [0.8, 0.8, 1.0]; // Slight cool tint
+	pass.hueOffset = 0.0;
+}
+
+
 
 /**
  * Renders everthing in our game, and applies post processing effects to the final image.
