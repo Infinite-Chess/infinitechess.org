@@ -13,6 +13,10 @@ import { VignettePass } from "../../webgl/post_processing/passes/VignettePass.js
 import frametracker from "./frametracker.js";
 // @ts-ignore
 import loadbalancer from "../misc/loadbalancer.js";
+import camera from "./camera.js";
+import { listener_overlay } from "../chess/game.js";
+import { Mouse } from "../input.js";
+import { DropletState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass.js";
 
 
 
@@ -21,6 +25,12 @@ let pipeline: PostProcessingPipeline;
 
 let sineWavePass: SineWavePass;
 const sineWaveSpeed = 1;
+
+let waterRipplePass: WaterRipplePass;
+// // --- Application-Side Droplet Management ---
+// let activeDroplets: DropletState[] = [];
+// /** How long each ripple lasts before being removed, in seconds. */
+// const RIPPLE_LIFETIME = 3;
 
 
 
@@ -42,6 +52,8 @@ function init(programManager: ProgramManager, the_pipeline: PostProcessingPipeli
 	sineWavePass.frequency = [2.0, 2.0];
 	sineWavePass.angle = 0;
 
+	waterRipplePass = new WaterRipplePass(programManager, camera.canvas.width, camera.canvas.height);
+	
 
 	colorGradePass = new ColorGradePass(programManager);
 	// applyDullPreset(colorGradePass);
@@ -89,7 +101,8 @@ function update(): void {
 	frametracker.onVisualChange();
 
 	// Choose what effects are active this frame.
-	// pipeline.setPasses([sineWavePass, colorGradePass]);
+	pipeline.setPasses([sineWavePass, colorGradePass]);
+	// pipeline.setPasses([waterRipplePass, colorGradePass]);
 	// pipeline.setPasses([sineWavePass, colorGradePass, vignettePass]);
 
 
@@ -97,6 +110,36 @@ function update(): void {
 	
 	sineWavePass.time += deltaTime * sineWaveSpeed;
 	sineWavePass.angle += deltaTime * 3; // Rotate 3 degrees per second
+
+
+
+	// ============ Water Ripples ============
+	
+	// // Update droplet timers
+	// for (const droplet of activeDroplets) {
+	// 	droplet.time += deltaTime;
+	// }
+	// // Filter out old droplets
+	// activeDroplets = activeDroplets.filter(
+	// 	droplet => droplet.time < RIPPLE_LIFETIME
+	// );
+	// // Add a new droplet on mouse click
+	// if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
+	// 	const mousePos = listener_overlay.getMousePosition(Mouse.LEFT)!;
+
+	// 	// Convert world space to uv space
+	// 	const rect = camera.canvas.getBoundingClientRect();
+
+	// 	// Convert pixel coordinates to UV coordinates [0-1]
+	// 	const u = mousePos[0] / rect.width;
+	// 	const v = 1.0 - mousePos[1] / rect.height; // Y is inverted in WebGL
+
+	// 	// Create a new droplet with an elapsed time of 0
+	// 	activeDroplets.push({ center: [u, v], time: 0 });
+	// }
+	// // 3. FEED the active list to the pass
+	// waterRipplePass.updateDroplets(activeDroplets);
+
 
 
 
@@ -111,6 +154,11 @@ function getSineWaveVariation(min: number, max: number): number {
 	return min + (Math.sin(time) * 0.5 + 0.5) * (max - min);
 }
 
+function onScreenResize(): void {
+	const rect = camera.canvas.getBoundingClientRect();
+	waterRipplePass.setResolution(rect.width, rect.height);
+}
+
 
 
 
@@ -120,4 +168,5 @@ function getSineWaveVariation(min: number, max: number): number {
 export default {
 	init,
 	update,
+	onScreenResize,
 };
