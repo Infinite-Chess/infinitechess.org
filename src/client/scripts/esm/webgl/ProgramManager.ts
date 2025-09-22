@@ -200,10 +200,7 @@ export class ProgramManager {
 		if (!sources) throw Error(`Shader sources for program "${programName}" not found.`);
 
 		// 3. Create a new ShaderProgram instance.
-		//    The generic arguments for the new instance are inferred here,
-		//    but the return type of the `get` method is what provides the
-		//    type safety to the consumer.
-		console.log(`Compiling and linking shader program: ${programName}`);
+		// console.log(`Compiling and linking shader program: ${programName}`);
 		const program = new ShaderProgram(this.gl, sources.vertex, sources.fragment);
 
 		// 4. Store it in the cache for future requests.

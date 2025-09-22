@@ -22,6 +22,8 @@ let pipeline: PostProcessingPipeline;
 let sineWavePass: SineWavePass;
 const sineWaveSpeed = 1;
 
+
+
 /** Our color grade post processing effect. */
 let colorGradePass: ColorGradePass;
 
@@ -39,6 +41,7 @@ function init(programManager: ProgramManager, the_pipeline: PostProcessingPipeli
 	sineWavePass.amplitude = [0.003, 0.003]; // Default: 0.0035
 	sineWavePass.frequency = [2.0, 2.0];
 	sineWavePass.angle = 0;
+
 
 	colorGradePass = new ColorGradePass(programManager);
 	// applyDullPreset(colorGradePass);
@@ -86,7 +89,7 @@ function update(): void {
 	frametracker.onVisualChange();
 
 	// Choose what effects are active this frame.
-	pipeline.setPasses([sineWavePass, colorGradePass]);
+	// pipeline.setPasses([sineWavePass, colorGradePass]);
 	// pipeline.setPasses([sineWavePass, colorGradePass, vignettePass]);
 
 
@@ -95,6 +98,8 @@ function update(): void {
 	sineWavePass.time += deltaTime * sineWaveSpeed;
 	sineWavePass.angle += deltaTime * 3; // Rotate 3 degrees per second
 
+
+
 	// Constantly change the saturation according to time, for testing
 	// colorGradePass.saturation = getSineWaveVariation(0.3, 2);
 	
@@ -102,7 +107,7 @@ function update(): void {
 }
 
 function getSineWaveVariation(min: number, max: number): number {
-	const time = performance.now() / 400; // Seconds
+	const time = performance.now() / 1000; // Seconds
 	return min + (Math.sin(time) * 0.5 + 0.5) * (max - min);
 }
 
