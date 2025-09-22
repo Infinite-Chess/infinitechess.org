@@ -19,6 +19,8 @@ uniform float u_propagationSpeed;        // How fast the ripple's leading edge e
 uniform float u_oscillationSpeed;        // How fast the internal waves oscillate (phase shift/sec).
 uniform float u_frequency;               // The density of the rings in the ripple (waves per UV unit).
 uniform float u_falloff;                 // How quickly the trailing waves decay. Higher is faster.
+uniform float u_glintIntensity;          // Controls the brightness of the glint.
+uniform float u_glintExponent;           // Controls the sharpness/tightness of the glint. Higher is thinner.
 
 // Canvas Properties
 uniform vec2 u_resolution;               // The width and height of the canvas for aspect correction.
@@ -29,6 +31,7 @@ out vec4 out_color;
 void main() {
     // This vector will accumulate the distortion offset from all active droplets.
 	vec2 totalOffset = vec2(0.0);
+    float totalGlint = 0.0;
 
     // Loop through only the active droplets for this frame.
 	for (int i = 0; i < u_dropletCount; i++) {
@@ -58,10 +61,19 @@ void main() {
 		float rippleMagnitude = wave * waveMask * trailingFade;
 		vec2 direction = normalize(v_uv - center);
 		totalOffset += direction * rippleMagnitude * u_strength;
+
+		// Calculate the glint for this droplet
+        // Isolate the crest of the wave (the positive part).
+        float crest = max(0.0, wave);
+        // Raise it to a high power to create a tight hotspot and add it to the total.
+        totalGlint += pow(crest, u_glintExponent) * waveMask * trailingFade;
 	}
 
     // Apply the final, combined offset to the original texture coordinates.
 	vec2 distortedUV = v_uv + totalOffset;
-	
-	out_color = texture(u_sceneTexture, distortedUV);
+	vec4 color = texture(u_sceneTexture, distortedUV);
+    // Add the final accumulated glint
+    color.rgb += totalGlint * u_glintIntensity; // Glint intensity
+
+	out_color = color;
 }

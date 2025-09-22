@@ -27,10 +27,9 @@ let sineWavePass: SineWavePass;
 const sineWaveSpeed = 1;
 
 let waterRipplePass: WaterRipplePass;
-// // --- Application-Side Droplet Management ---
 // let activeDroplets: DropletState[] = [];
 // /** How long each ripple lasts before being removed, in seconds. */
-// const RIPPLE_LIFETIME = 3;
+// const RIPPLE_LIFETIME = 10;
 
 
 
@@ -53,6 +52,8 @@ function init(programManager: ProgramManager, the_pipeline: PostProcessingPipeli
 	sineWavePass.angle = 0;
 
 	waterRipplePass = new WaterRipplePass(programManager, camera.canvas.width, camera.canvas.height);
+	// waterRipplePass.propagationSpeed = 0.2;
+	// waterRipplePass.oscillationSpeed = 4;
 	
 
 	colorGradePass = new ColorGradePass(programManager);

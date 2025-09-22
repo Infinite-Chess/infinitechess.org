@@ -66,7 +66,7 @@ type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_inten
 type Attributes_SineWave = never;
 type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time' | 'u_angle';
 type Attributes_WaterRipple = never;
-type Uniforms_WaterDroplet = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_falloff' | 'u_resolution';
+type Uniforms_WaterDroplet = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_glintIntensity' | 'u_glintExponent' | 'u_falloff' | 'u_resolution';
 
 
 /** The Super Union of all possible attributes. */

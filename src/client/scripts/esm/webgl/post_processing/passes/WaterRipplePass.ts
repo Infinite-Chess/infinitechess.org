@@ -28,6 +28,11 @@ export class WaterRipplePass implements PostProcessPass {
 	/** How sharply the trailing waves decay. Hhigher values create a shorter tail. */
 	public falloff: number = 200.0;
 
+	/** The brightness of the white glow on the wave crests. */
+	public glintIntensity: number = 0.5;
+	/** The sharpness of the glint; higher values create a smaller, tighter highlight. */
+	public glintExponent: number = 7.0;
+
 	// --- Internal State ---
 	private activeDroplets: DropletState[] = [];
 	private resolution: [number, number] = [1, 1];
@@ -93,6 +98,8 @@ export class WaterRipplePass implements PostProcessPass {
 		gl.uniform1f(this.program.getUniformLocation('u_oscillationSpeed'), this.oscillationSpeed);
 		gl.uniform1f(this.program.getUniformLocation('u_frequency'), this.frequency);
 		gl.uniform1f(this.program.getUniformLocation('u_falloff'), this.falloff);
+		gl.uniform1f(this.program.getUniformLocation('u_glintIntensity'), this.glintIntensity);
+		gl.uniform1f(this.program.getUniformLocation('u_glintExponent'), this.glintExponent);
 		gl.uniform2fv(this.program.getUniformLocation('u_resolution'), this.resolution);
         
 		if (dropletCount > 0) {
