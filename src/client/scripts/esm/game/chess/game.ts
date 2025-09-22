@@ -100,6 +100,7 @@ function init(): void {
 function onScreenResize(): void {
 	camera.onScreenResize();
 	pipeline.resize(gl.canvas.width, gl.canvas.height);
+	boardeffects.onScreenResize();
 }
 
 // Update the game every single frame
