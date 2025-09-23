@@ -75,6 +75,7 @@
 		"dev:tsc": "tsc --watch --preserveWatchOutput",
 		"dev:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,glsl,toml,md}\" dist --watch",
 		"dev:assets-cjs": "cpx \"src/client/scripts/cjs/**/*.js\" dist/client/scripts/cjs --watch",
+		"build": "npm run prod",
 		"build-images": "node src/server/utility/generateImages.js",
 		"generate-dependency-graph": "node src/server/utility/generateDependancyGraph.js"
 	}
