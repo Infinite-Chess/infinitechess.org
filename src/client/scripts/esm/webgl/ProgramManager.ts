@@ -27,6 +27,7 @@ import fsSource_colorGrade from '../../../shaders/color_grade/fragment.glsl';
 import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
 import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 import fsSource_waterRipple from '../../../shaders/water_ripple/fragment.glsl';
+import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
 
 
 // =============================== Type Definitions ===============================
@@ -66,11 +67,13 @@ type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_inten
 type Attributes_SineWave = never;
 type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time' | 'u_angle';
 type Attributes_WaterRipple = never;
-type Uniforms_WaterDroplet = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_glintIntensity' | 'u_glintExponent' | 'u_falloff' | 'u_resolution';
+type Uniforms_WaterRipple = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_glintIntensity' | 'u_glintExponent' | 'u_falloff' | 'u_resolution';
+type Attributes_HeatWave = never;
+type Uniforms_HeatWave = 'u_sceneTexture' | 'u_noiseTexture' | 'u_time' | 'u_strength';
 
 
 /** The Super Union of all possible attributes. */
-export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple;
+export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave;
 
 
 // Each ShaderProgram type
@@ -92,7 +95,8 @@ type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
 type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
 type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
 type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
-type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterDroplet>;
+type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterRipple>;
+type Program_HeatWave = ShaderProgram<Attributes_HeatWave, Uniforms_HeatWave>;
 
 
 export interface ProgramMap {
@@ -132,7 +136,10 @@ export interface ProgramMap {
     vignette: Program_Vignette;
 	/** Post Processing Dual Axis Sine Wave Distortion Effect. */
 	sine_wave: Program_SineWave;
+	/** Post Processing Water Ripple Distortion Effect. */
     water_ripple: Program_WaterRipple;
+	/** Post Processing Heat Wave Distortion Effect. */
+    heat_wave: Program_HeatWave;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -167,6 +174,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 	water_ripple: { vertex: vsSource_postPass, fragment: fsSource_waterRipple },
+	heat_wave: { vertex: vsSource_postPass, fragment: fsSource_heatWave },
 };
 
 

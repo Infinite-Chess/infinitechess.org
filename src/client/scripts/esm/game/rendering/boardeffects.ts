@@ -17,6 +17,8 @@ import camera from "./camera.js";
 import { listener_overlay } from "../chess/game.js";
 import { Mouse } from "../input.js";
 import { DropletState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass.js";
+import texture from "./texture.js";
+import { HeatWavePass } from "../../webgl/post_processing/passes/HeatWavePass.js";
 
 
 
@@ -31,6 +33,8 @@ let waterRipplePass: WaterRipplePass;
 // /** How long each ripple lasts before being removed, in seconds. */
 // const RIPPLE_LIFETIME = 10;
 
+let heatWavePass: HeatWavePass;
+
 
 
 /** Our color grade post processing effect. */
@@ -42,7 +46,7 @@ let vignettePass: VignettePass;
 
 
 
-function init(programManager: ProgramManager, the_pipeline: PostProcessingPipeline): void {
+function init(gl: WebGL2RenderingContext, programManager: ProgramManager, the_pipeline: PostProcessingPipeline): void {
 	pipeline = the_pipeline;
 
 	sineWavePass = new SineWavePass(programManager);
@@ -54,6 +58,9 @@ function init(programManager: ProgramManager, the_pipeline: PostProcessingPipeli
 	waterRipplePass = new WaterRipplePass(programManager, camera.canvas.width, camera.canvas.height);
 	// waterRipplePass.propagationSpeed = 0.2;
 	// waterRipplePass.oscillationSpeed = 4;
+
+	const noiseTexture = texture.loadTexture(gl, 'heat-haze');
+	heatWavePass = new HeatWavePass(programManager, noiseTexture);
 	
 
 	colorGradePass = new ColorGradePass(programManager);
@@ -62,7 +69,7 @@ function init(programManager: ProgramManager, the_pipeline: PostProcessingPipeli
 	// applyWashedOutPreset(colorGradePass);
 
 	vignettePass = new VignettePass(programManager);
-	vignettePass.intensity = 0.6;
+	vignettePass.intensity = 0.5;
 }
 
 
@@ -102,8 +109,9 @@ function update(): void {
 	frametracker.onVisualChange();
 
 	// Choose what effects are active this frame.
-	pipeline.setPasses([sineWavePass, colorGradePass]);
+	// pipeline.setPasses([sineWavePass, colorGradePass]);
 	// pipeline.setPasses([waterRipplePass, colorGradePass]);
+	pipeline.setPasses([heatWavePass, colorGradePass]);
 	// pipeline.setPasses([sineWavePass, colorGradePass, vignettePass]);
 
 
@@ -140,6 +148,11 @@ function update(): void {
 	// }
 	// // 3. FEED the active list to the pass
 	// waterRipplePass.updateDroplets(activeDroplets);
+
+
+
+	// Update the time uniform to make the heat rise
+	heatWavePass.time = performance.now() / 2000; // Default: 2000 (strength 0.04)
 
 
 

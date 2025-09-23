@@ -82,7 +82,7 @@ function init(): void {
 	buffermodel.init(gl, programManager);
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
-	boardeffects.init(programManager, pipeline);
+	boardeffects.init(gl, programManager, pipeline);
 	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
