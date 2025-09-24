@@ -77,7 +77,7 @@ function configureMiddleware(app) {
 				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
 				objectSrc: ["'none'"],
 				frameSrc: ["'self'", 'https://www.youtube.com'],
-				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com"]
+				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "blob:"]
 			},
 		},
 	}));
