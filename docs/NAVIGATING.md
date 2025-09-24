@@ -58,7 +58,7 @@ While in-game, there are a few keys that will activate useful debugging modes-
 
 ## Making changes to the repository ##
 
-Please seek approval in the [discord server](https://discord.com/channels/1114425729569017918/1115358966642393190) before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project. Generally, if you've spoken about the desired change with me, and we're on the same page about how it will be implemented, you don't have to worry!
+Please seek approval in the [discord server](https://discord.com/channels/1114425729569017918/1115358966642393190) before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project. Generally, if you've spoken about the desired change with me, and we're on the same page about how it will be implemented, you don't have to worry! Also, check out the [list of open issues](https://github.com/Infinite-Chess/infinitechess.org/issues) for tasks you could claim!
 
 Sometimes after you modify a file, the browser doesn't detect that it was changed, so it doesn't load the new code after a refresh. To avoid this, I highly recommend enabling automatic hard refreshing in your browser's developer tools. Here's how to do that in Chrome:
 
@@ -84,4 +84,4 @@ Mobile devices differ from pc behavior because the user interacts with touch eve
 
 ## Conclusion ##
 
-Those are the basics! Have at it!
+Those are the basics! Have at it! Check out the [Issues](https://github.com/Infinite-Chess/infinitechess.org/issues) for tasks you could assist with! Working on these directly helps the next update to come quicker! If you want easier ones, look for the ones with the "simple" tag!
