@@ -152,7 +152,7 @@ function update(): void {
 
 
 	// Update the time uniform to make the heat rise
-	heatWavePass.time = performance.now() / 2000; // Default: 2000 (strength 0.04)
+	heatWavePass.time = performance.now() / 500; // Default: 500 (strength 0.04)
 
 
 

@@ -8,7 +8,7 @@ export class HeatWavePass implements PostProcessPass {
 	readonly program: ProgramMap['heat_wave'];
 	private noiseTexture: WebGLTexture;
 
-	/** The strength of the distortion effect. Default: 0.04 (time = performance.now() / 2000) */
+	/** The strength of the distortion effect. Default: 0.04 (time = performance.now() / 500) */
 	public strength: number = 0.04;
 
 	/** The current time, used to animate the waves. Increment this each frame. */
