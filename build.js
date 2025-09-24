@@ -21,7 +21,6 @@ import path from "node:path";
 import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
 import { DEV_BUILD } from './src/server/config/config.js';
 
-
 // ================================= CONSTANTS =================================
 
 
@@ -48,6 +47,7 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
+
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
 
 const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin('✅ Client Build successful.', '❌ Client Build failed.');
