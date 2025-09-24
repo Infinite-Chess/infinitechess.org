@@ -4,7 +4,7 @@
  */
 
 
-import { TypedArray } from "./buffermodel.js";
+import { TypedArray } from "../../webgl/buffermodel.js";
 import { gl } from "./webgl.js";
 
 

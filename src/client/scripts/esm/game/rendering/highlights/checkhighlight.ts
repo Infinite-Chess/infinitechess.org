@@ -10,7 +10,7 @@ import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
 import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from '../primitives.js';
-import { BufferModel, createModel } from '../buffermodel.js';
+import { BufferModel, createModel } from '../../../webgl/buffermodel.js';
 
 
 // Type Definitions ----------------------------------------------------------------

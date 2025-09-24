@@ -14,7 +14,7 @@ import statustext from '../gui/statustext.js';
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
 import camera, { Mat4 } from './camera.js';
-import { BufferModel, createModel } from './buffermodel.js';
+import { BufferModel, createModel } from '../../webgl/buffermodel.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';

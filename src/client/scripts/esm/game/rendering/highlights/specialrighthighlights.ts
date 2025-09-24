@@ -21,7 +21,7 @@ import legalmoveshapes from "../instancedshapes.js";
 import piecemodels from "../piecemodels.js";
 import squarerendering from "./squarerendering.js";
 import meshes from "../meshes.js";
-import { BufferModelInstanced, createModel_Instanced } from "../buffermodel.js";
+import { BufferModelInstanced, createModel_Instanced } from "../../../webgl/buffermodel.js";
 
 
 

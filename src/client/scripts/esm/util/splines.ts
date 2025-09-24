@@ -9,7 +9,7 @@ import type { BDCoords, Coords, DoubleCoords } from "../../../../shared/chess/ut
 import type { Color } from "../../../../shared/util/math/math.js";
 import type { BigDecimal } from "../../../../shared/util/bigdecimal/bigdecimal.js";
 
-import { createModel } from "../game/rendering/buffermodel.js";
+import { createModel } from "../webgl/buffermodel.js";
 import space from "../game/misc/space.js";
 import bd from "../../../../shared/util/bigdecimal/bigdecimal.js";
 import boardpos from "../game/rendering/boardpos.js";

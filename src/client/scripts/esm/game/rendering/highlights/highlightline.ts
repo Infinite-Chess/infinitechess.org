@@ -10,7 +10,7 @@ import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { BufferModel, createModel } from '../buffermodel.js';
+import { BufferModel, createModel } from '../../../webgl/buffermodel.js';
 
 
 import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';

@@ -12,7 +12,7 @@
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { LineKey } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { AttributeInfoInstanced } from '../buffermodel.js';
+import type { AttributeInfoInstanced } from '../../../webgl/buffermodel.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 
@@ -44,7 +44,7 @@ import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdeci
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
-import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
+import { createModel_Instanced_GivenAttribInfo } from '../../../webgl/buffermodel.js';
 
 
 // Type Definitions --------------------------------------------------------------------

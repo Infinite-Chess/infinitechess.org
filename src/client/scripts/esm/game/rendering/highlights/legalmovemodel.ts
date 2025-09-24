@@ -32,7 +32,7 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../../../webgl/buffermodel.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';

@@ -29,7 +29,7 @@ import perspective from './perspective.js';
 import { Color } from '../../../../../shared/util/math/math.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
+import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from '../../webgl/buffermodel.js';
 
 
 // Variables --------------------------------------------------------------

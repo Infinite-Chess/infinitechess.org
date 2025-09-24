@@ -31,7 +31,7 @@ import boarddrag from "../boarddrag.js";
 import vectors, { Ray, Vec2 } from "../../../../../../shared/util/math/vectors.js";
 import bd, { BigDecimal } from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { Mouse } from "../../input.js";
-import { BufferModel, createModel } from "../buffermodel.js";
+import { BufferModel, createModel } from "../../../webgl/buffermodel.js";
 
 
 import type { BDCoords, Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";

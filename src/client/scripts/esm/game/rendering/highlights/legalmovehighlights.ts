@@ -25,7 +25,7 @@ import legalmoveshapes from '../instancedshapes.js';
 import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
-import { BufferModelInstanced, createModel_Instanced } from '../buffermodel.js';
+import { BufferModelInstanced, createModel_Instanced } from '../../../webgl/buffermodel.js';
 
 
 // Variables -----------------------------------------------------------------------------

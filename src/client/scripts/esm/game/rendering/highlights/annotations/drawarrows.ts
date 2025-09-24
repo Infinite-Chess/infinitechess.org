@@ -13,7 +13,7 @@ import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../../../../shared/util/math/vectors.js";
 import boardpos from "../../boardpos.js";
 import boarddrag from "../../boarddrag.js";
-import { createModel } from "../../buffermodel.js";
+import { createModel } from "../../../../webgl/buffermodel.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
 import { listener_overlay } from "../../../chess/game.js";

@@ -21,7 +21,7 @@ import instancedshapes from './instancedshapes.js';
 import piecemodels from './piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import { createModel, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
+import { createModel, createModel_Instanced_GivenAttribInfo } from '../../webgl/buffermodel.js';
 import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import meshes from './meshes.js';
