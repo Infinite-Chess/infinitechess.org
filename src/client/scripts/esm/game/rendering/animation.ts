@@ -21,7 +21,7 @@ import instancedshapes from './instancedshapes.js';
 import piecemodels from './piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import { createRenderable, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
+import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import meshes from './meshes.js';
@@ -416,7 +416,7 @@ function renderAnimations(): void {
 		for (const [typeStr, instance_data] of Object.entries(instanceData)) {
 			const type = Number(typeStr);
 			const texture = texturecache.getTexture(type);
-			createRenderable_Instanced_GivenAttribInfo(vertexData, instance_data, piecemodels.ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', texture).render(undefined, scale);
+			createRenderable_Instanced_GivenInfo(vertexData, instance_data, piecemodels.ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', [{ texture, uniformName: 'u_sampler' }]).render(undefined, scale);
 		}
 	}
 

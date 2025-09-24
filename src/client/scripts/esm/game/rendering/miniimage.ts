@@ -29,7 +29,7 @@ import perspective from './perspective.js';
 import { Color } from '../../../../../shared/util/math/math.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import { RenderableInstanced, AttributeInfoInstanced, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
+import { RenderableInstanced, AttributeInfoInstanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 
 // Variables --------------------------------------------------------------
@@ -302,13 +302,13 @@ function render(): void {
 		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
 
 		const type = Number(typeStr);
-		const tex: WebGLTexture = texturecache.getTexture(type);
-		models[type] = createRenderable_Instanced_GivenAttribInfo(vertexData, new Float32Array(thisInstanceData), attribInfo, 'TRIANGLES', 'miniImages', tex);
+		const texture: WebGLTexture = texturecache.getTexture(type);
+		models[type] = createRenderable_Instanced_GivenInfo(vertexData, new Float32Array(thisInstanceData), attribInfo, 'TRIANGLES', 'miniImages', [{ texture, uniformName: 'u_sampler' }]);
 		// Create the hovered model if it's non empty
 		if (instanceData_hovered[type]!.length > 0) {
 			const color_hovered = [1,1,1, 1] as Color; // Hovered mini images are fully opaque
 			const vertexData_hovered: number[] = instancedshapes.getDataColoredTexture(color_hovered, inverted);
-			models_hovered[type] = createRenderable_Instanced_GivenAttribInfo(vertexData_hovered, new Float32Array(instanceData_hovered[type]!), attribInfo, 'TRIANGLES', 'miniImages', tex);
+			models_hovered[type] = createRenderable_Instanced_GivenInfo(vertexData_hovered, new Float32Array(instanceData_hovered[type]!), attribInfo, 'TRIANGLES', 'miniImages', [{ texture, uniformName: 'u_sampler' }]);
 		}
 	}
 

@@ -63,6 +63,14 @@ type AttributeInfo = Attribute[];
 /** An object containing the attribute info of both our vertex data and instance data. */
 type AttributeInfoInstanced = { vertexDataAttribInfo: AttributeInfo, instanceDataAttribInfo: AttributeInfo };
 
+/** A texture, along with its given uniform name in the desired shader. */
+interface TextureInfo {
+    texture: WebGLTexture;
+	/** e.g., 'u_sampler', 'u_noiseTexture' */
+    uniformName: string;
+}
+
+
 /**
  * **Call this** when you update specific vertex data within the source Float32Array!
  * FAST. Prevents you having to create a whole new model!
@@ -153,7 +161,9 @@ function createRenderable(
 ): Renderable {
 	const usingTexture = texture !== undefined;
 	const attribInfo = getAttribInfo(numPositionComponents, usingColor, usingTexture);
-	return createModel_GivenAttribInfo(data, attribInfo, mode, shader, texture);
+	const textureInfo: TextureInfo[] = [];
+	if (texture) textureInfo.push({ texture, uniformName: 'u_sampler' }); // Most models with a single texture use the 'u_sampler' uniform
+	return createRenderable_GivenInfo(data, attribInfo, mode, shader, textureInfo);
 }
 
 /**
@@ -175,7 +185,9 @@ function createRenderable_Instanced(
 ): RenderableInstanced {
 	const usingTexture = texture !== undefined;
 	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
-	return createRenderable_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, texture);
+	const textureInfo: TextureInfo[] = [];
+	if (texture) textureInfo.push({ texture, uniformName: 'u_sampler' }); // Most models with a single texture use the 'u_sampler' uniform
+	return createRenderable_Instanced_GivenInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, textureInfo);
 }
 
 /**
@@ -220,12 +232,12 @@ function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): At
 /**
  * Creates a renderable model, given the AttributeInfo object.
  */
-function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
+function createRenderable_GivenInfo<K extends keyof ProgramMap>(
 	data: InputArray,
 	attribInfo: AttributeInfo,
 	mode: PrimitiveType,
 	shader: K,
-	texture?: WebGLTexture
+	textures: TextureInfo[] = [],
 ): Renderable {
 	const stride = getStrideFromAttributeInfo(attribInfo);
 	if (data.length % stride !== 0) throw new Error("Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.");
@@ -258,7 +270,7 @@ function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: Record<string, any> = {}
-		): void => render(shaderProgram, vao, position, scale, uniforms, vertexCount, mode, texture),		
+		): void => render(shaderProgram, vao, position, scale, uniforms, vertexCount, mode, textures),		
 	};
 }
 
@@ -266,13 +278,13 @@ function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
  * Creates a renderable model that uses instanced rendering,
  * given the AttributeInfo objects of both the vertex data and instance data arrays.
  */
-function createRenderable_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
+function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
 	vertexData: InputArray,
 	instanceData: InputArray,
 	attribInfoInstanced: AttributeInfoInstanced,
 	mode: PrimitiveType,
 	shader: K,
-	texture?: WebGLTexture
+	textures: TextureInfo[] = [],
 ): RenderableInstanced {
 	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(attribInfoInstanced.instanceDataAttribInfo);
@@ -318,7 +330,7 @@ function createRenderable_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: Record<string, any> = {}
-		): void => render_Instanced(shaderProgram, vao, position, scale, uniforms, instanceVertexCount, instanceCount, mode, texture),		
+		): void => render_Instanced(shaderProgram, vao, position, scale, uniforms, instanceVertexCount, instanceCount, mode, textures),		
 	};
 }
 
@@ -366,7 +378,7 @@ function render<A extends string, U extends string>(
 	uniforms: Record<string, any>,
 	vertexCount: number,
 	mode: PrimitiveType,
-	texture?: WebGLTexture
+	textures: TextureInfo[],
 ): void {
 	// Switch to the program
 	shaderProgram.use();
@@ -375,7 +387,7 @@ function render<A extends string, U extends string>(
 	gl.bindVertexArray(vao);
 
 	// Prepare the uniforms...
-	setUniforms(shaderProgram, position, scale, uniforms, texture);
+	setUniforms(shaderProgram, position, scale, uniforms, textures);
 
 	// Call the draw function!
 	gl.drawArrays(gl[mode], 0, vertexCount);
@@ -383,10 +395,13 @@ function render<A extends string, U extends string>(
 	// Unbind the VAO.
 	gl.bindVertexArray(null);
 
-	// Unbind the texture
+	// Unbind textures from all units that were used.
 	// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
 	// We can't put it at the end of setUniforms()
-	if (texture) gl.bindTexture(gl.TEXTURE_2D, null);
+	textures.forEach((texInfo, i) => {
+		gl.activeTexture(gl.TEXTURE0 + i);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	});
 }
 
 /**
@@ -412,7 +427,7 @@ function render_Instanced<A extends string, U extends string>( // vertexBuffer, 
 	instanceVertexCount: number,
 	instanceCount: number,
 	mode: PrimitiveType,
-	texture?: WebGLTexture
+	textures: TextureInfo[],
 ): void {
 	// Switch to the program
 	shaderProgram.use();
@@ -421,7 +436,7 @@ function render_Instanced<A extends string, U extends string>( // vertexBuffer, 
 	gl.bindVertexArray(vao);
 
 	// Prepare the uniforms...
-	setUniforms(shaderProgram, position, scale, uniforms, texture);
+	setUniforms(shaderProgram, position, scale, uniforms, textures);
 
 	// Call the draw function! Render using drawArraysInstanced
 	gl.drawArraysInstanced(gl[mode], 0, instanceVertexCount, instanceCount);
@@ -429,10 +444,13 @@ function render_Instanced<A extends string, U extends string>( // vertexBuffer, 
 	// Unbind the VAO.
 	gl.bindVertexArray(null);
 
-	// Unbind the texture
+	// Unbind textures from all units that were used.
 	// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
 	// We can't put it at the end of setUniforms()
-	if (texture) gl.bindTexture(gl.TEXTURE_2D, null);
+	textures.forEach((texInfo, i) => {
+		gl.activeTexture(gl.TEXTURE0 + i);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	});
 }
 
 
@@ -480,7 +498,7 @@ function configureAttributes<A extends string, U extends string>(shaderProgram: 
  * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function setUniforms<A extends string, U extends string>(shaderProgram: ShaderProgram<A, U>, position: Vec3, scale: Vec3, uniforms: Record<string, any>, texture?: WebGLTexture): void {
+function setUniforms<A extends string, U extends string>(shaderProgram: ShaderProgram<A, U>, position: Vec3, scale: Vec3, uniforms: Record<string, any>, textures: TextureInfo[]): void {
 
 	{
 		// Update the transformMatrix on the gpu, EVERY render call!!
@@ -508,14 +526,21 @@ function setUniforms<A extends string, U extends string>(shaderProgram: ShaderPr
 		gl.uniformMatrix4fv(shaderProgram.getUniformLocation('u_transformmatrix' as U), false, transformMatrix);
 	}
 
-	if (texture) {
-		// The active texture unit is 0 by default, but needs to be set before you bind each texture IF YOU ARE PLANNING ON USING MULTIPLE TEXTURES,
-		// and then you must tell the GPU what texture unit each uSampler is bound to.
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		// Tell the gpu we bound the texture to texture unit 0
-		gl.uniform1i(shaderProgram.getUniformLocation('u_sampler' as U)!, 0);
-	}
+	textures.forEach((texInfo, i) => {
+		const uLoc = shaderProgram.getUniformLocation(texInfo.uniformName as U);
+		// Skip if the shader doesn't use this uniform. Useful for using the same model with different shaders?
+		if (uLoc === null) {
+			console.warn(`Uniform "${texInfo.uniformName}" not found in shader when trying to set texture. Skipping...`);
+			return;
+		}
+		
+		// Activate a unique texture unit for each texture.
+		gl.activeTexture(gl.TEXTURE0 + i);
+		// Bind the texture to that unit.
+		gl.bindTexture(gl.TEXTURE_2D, texInfo.texture);
+		// Tell the sampler uniform to use the texture unit we just activated.
+		gl.uniform1i(uLoc, i);
+	});
 
 	// Custom uniforms provided in the render call, for example 'u_size'...
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
@@ -544,8 +569,9 @@ function genWorldMatrix(position: Vec3, scale: Vec3): Mat4 {
 
 export {
 	createRenderable,
+	createRenderable_GivenInfo,
 	createRenderable_Instanced,
-	createRenderable_Instanced_GivenAttribInfo,
+	createRenderable_Instanced_GivenInfo,
 };
 
 export default {
