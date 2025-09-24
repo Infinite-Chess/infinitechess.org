@@ -38,9 +38,9 @@ const avif_options = {
 };
 
 // Source folder for original images
-const src_path = path.join(__dirname, `../../../dev-utils/image-sources/`);
+const src_path = path.join(__dirname, `dev-utils/image-sources/`);
 // Destination folder for compressed images
-const dest_path = path.join(__dirname, `../../client/img/`);
+const dest_path = path.join(__dirname, `src/client/img/`);
 
 const supportedExtensions = ['.png', '.jpg', '.jpeg'];
 
