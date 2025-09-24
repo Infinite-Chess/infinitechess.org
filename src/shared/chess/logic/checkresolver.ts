@@ -10,7 +10,7 @@
 
 import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
-import type { Coords } from "./movesets.js";
+import type { Coords } from "../util/coordutil.js";
 import type { Player } from "../util/typeutil.js";
 import type { LegalMoves } from './legalmoves.js';
 import type { FullGame } from "./gamefile.js";

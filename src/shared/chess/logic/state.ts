@@ -5,7 +5,7 @@
  */
 
 
-import type { Coords } from "./movesets.js";
+import type { Coords } from "../util/coordutil.js";
 import type { CoordsKey } from "../util/coordutil.js";
 import type { Edit, path } from "./movepiece.js";
 
