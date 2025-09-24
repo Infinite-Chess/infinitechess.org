@@ -6,7 +6,7 @@
  */
 
 
-import type { BufferModel } from "../../../webgl/buffermodel.js";
+import type { BufferModel } from "../../../webgl/Renderable.js";
 import type { Color } from "../../../../../../shared/util/math/math.js";
 import type { Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
 import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
@@ -15,7 +15,7 @@ import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../../../../shared/chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
-import { createModel } from "../../../webgl/buffermodel.js";
+import { createModel } from "../../../webgl/Renderable.js";
 import space from "../../misc/space.js";
 import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";

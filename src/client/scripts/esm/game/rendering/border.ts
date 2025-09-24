@@ -15,7 +15,7 @@ import primitives from "./primitives.js";
 import perspective from "./perspective.js";
 import boardtiles from "./boardtiles.js";
 import bounds, { DoubleBoundingBox } from "../../../../../shared/util/math/bounds.js";
-import { createModel } from "../../webgl/buffermodel.js";
+import { createModel } from "../../webgl/Renderable.js";
 
 
 

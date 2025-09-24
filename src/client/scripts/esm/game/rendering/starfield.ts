@@ -23,7 +23,7 @@ import boardtiles from './boardtiles.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import gameloader from '../chess/gameloader.js';
 import docutil from '../../util/docutil.js';
-import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from '../../webgl/buffermodel.js';
+import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 

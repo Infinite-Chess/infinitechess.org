@@ -9,7 +9,7 @@ import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Mesh } from './piecemodels.js';
 
 import spritesheet from './spritesheet.js';
-import { createModel } from '../../webgl/buffermodel.js';
+import { createModel } from '../../webgl/Renderable.js';
 import piecemodels from './piecemodels.js';
 import miniimage from './miniimage.js';
 import meshes from './meshes.js';

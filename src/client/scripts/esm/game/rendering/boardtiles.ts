@@ -4,7 +4,7 @@
  * We also keep track of what tile the mouse is currently hovering over.
  */
 
-import type { BufferModel } from '../../webgl/buffermodel.js';
+import type { BufferModel } from '../../webgl/Renderable.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
@@ -28,7 +28,7 @@ import texturecache from '../../chess/rendering/texturecache.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
-import { createModel } from '../../webgl/buffermodel.js';
+import { createModel } from '../../webgl/Renderable.js';
 import perspective from './perspective.js';
 import webgl, { gl } from './webgl.js';
 

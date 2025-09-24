@@ -14,7 +14,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import boardpos from './boardpos.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { createModel } from '../../webgl/buffermodel.js';
+import { createModel } from '../../webgl/Renderable.js';
 import primitives from './primitives.js';
 import camera from './camera.js';
 import meshes from './meshes.js';

@@ -52,7 +52,7 @@ import keybinds from '../misc/keybinds.js';
 import boardeffects from '../rendering/boardeffects.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
-import buffermodel, { createModel } from '../../webgl/buffermodel.js';
+import buffermodel, { createModel } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 

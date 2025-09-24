@@ -8,7 +8,7 @@
 
 
 import type { Color } from "../../../../../../shared/util/math/math.js";
-import type { BufferModelInstanced } from "../../../webgl/buffermodel.js";
+import type { BufferModelInstanced } from "../../../webgl/Renderable.js";
 import type { LegalMoves } from "../../../../../../shared/chess/logic/legalmoves.js";
 import type { Vec3 } from "../../../../../../shared/util/math/vectors.js";
 import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
