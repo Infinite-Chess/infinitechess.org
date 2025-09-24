@@ -100,11 +100,14 @@ async function initTextures(): Promise<void> {
 	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
 	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
 
-	const element_tilesTexture2 = await checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2);
-	tilesTexture_2 = texture.loadTexture(gl, element_tilesTexture2, { useMipmaps: false });
+	// Generate both images in parallel
+	const [tilesTexture_2_IMG, tilesTexture_256mips_IMG] = await Promise.all([
+		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2),
+		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256)
+	]);
 
-	const element_tilesTexture256mips = await checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256);
-	tilesTexture_256mips = texture.loadTexture(gl, element_tilesTexture256mips, { useMipmaps: true });
+	tilesTexture_2 = texture.loadTexture(gl, tilesTexture_2_IMG, { useMipmaps: false });
+	tilesTexture_256mips = texture.loadTexture(gl, tilesTexture_256mips_IMG, { useMipmaps: true });
 
 	frametracker.onVisualChange();
 }
