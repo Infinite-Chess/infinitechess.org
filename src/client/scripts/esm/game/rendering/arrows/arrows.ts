@@ -44,7 +44,7 @@ import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdeci
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
-import { createModel_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
+import { createRenderable_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -1126,7 +1126,7 @@ function regenerateModelAndRender(): void {
 		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_texturecoord', numComponents: 2 }],
 		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancetexcoord', numComponents: 2 }, { name: 'a_instancecolor', numComponents: 4 }]
 	};
-	const modelPictures = createModel_Instanced_GivenAttribInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", 'arrowImages', spritesheet.getSpritesheet());
+	const modelPictures = createRenderable_Instanced_GivenAttribInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", 'arrowImages', spritesheet.getSpritesheet());
 
 	/*
 	 * The buffer model of the little arrows on
@@ -1136,7 +1136,7 @@ function regenerateModelAndRender(): void {
 		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
 		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancecolor', numComponents: 4 }, { name: 'a_instancerotation', numComponents: 1 }]
 	};
-	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES", 'arrows');
+	const modelArrows = createRenderable_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES", 'arrows');
 
 	modelPictures.render();
 	modelArrows.render();

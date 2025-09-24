@@ -26,7 +26,7 @@ import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createRenderable_Instanced, createModel_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createRenderable_Instanced, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -156,7 +156,7 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	const tex = texturecache.getTexture(type);
 	return {
 		instanceData,
-		model: createModel_Instanced_GivenAttribInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', tex)
+		model: createRenderable_Instanced_GivenAttribInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', tex)
 	};
 }
 

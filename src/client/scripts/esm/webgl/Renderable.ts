@@ -175,7 +175,7 @@ function createRenderable_Instanced(
 ): BufferModelInstanced {
 	const usingTexture = texture !== undefined;
 	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
-	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, texture);
+	return createRenderable_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, texture);
 }
 
 /**
@@ -257,7 +257,7 @@ function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
  * Creates a renderable model that uses instanced rendering,
  * given the AttributeInfo objects of both the vertex data and instance data arrays.
  */
-function createModel_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
+function createRenderable_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
 	vertexData: InputArray,
 	instanceData: InputArray,
 	attribInfoInstanced: AttributeInfoInstanced,
@@ -542,7 +542,7 @@ function genWorldMatrix(position: Vec3, scale: Vec3): Mat4 {
 export {
 	createRenderable,
 	createRenderable_Instanced,
-	createModel_Instanced_GivenAttribInfo,
+	createRenderable_Instanced_GivenAttribInfo,
 	BufferModel, // The type definition
 	BufferModelInstanced, // The type definition
 };

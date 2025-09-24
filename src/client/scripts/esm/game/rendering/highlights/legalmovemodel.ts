@@ -32,7 +32,7 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createRenderable, createRenderable_Instanced, createModel_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createRenderable, createRenderable_Instanced, createRenderable_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
@@ -566,7 +566,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
 		}
 	}
 
-	return createModel_Instanced_GivenAttribInfo(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), ATTRIB_INFO, 'TRIANGLES', 'colorInstanced');
+	return createRenderable_Instanced_GivenAttribInfo(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), ATTRIB_INFO, 'TRIANGLES', 'colorInstanced');
 }
 
 
