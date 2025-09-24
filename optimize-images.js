@@ -30,7 +30,7 @@ const webp_options = {
 };
 const png_options = {
 	effort: 10, // 1-10. LOWER YIELDS BETTER COMPRESSION??? But lower image quality.
-	quality: 100, // Default if not specified: 100??? (with effor 1, try with 10)
+	quality: 100, // Default if not specified: 100.
 };
 const avif_options = {
 	effort: 9, // 0-9
