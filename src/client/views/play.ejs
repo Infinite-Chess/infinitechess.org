@@ -23,10 +23,6 @@
         <script defer src="/scripts/esm/game/main.js" type="module" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <!-- Javascript will add future styles in here. NEEDS TO BE BELOW OTHER STYLESHEET SO THIS TAKES PRECEDENCE -->
         <style id="style"></style>
-		<!-- DELETE LATER. Load the image inside the code, not the page.
-		 QUESTION: Does putting this in here prevent the main code from running until it has fully loaded? Whether it's defer'ed or smth? 
-		 AND WHAT IF THE BROWSER isn't compatible with webp??? -->
-		<img src="/img/noise_texture/heat_haze.webp" id="heat-haze">
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>

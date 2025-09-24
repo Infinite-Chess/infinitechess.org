@@ -5,7 +5,7 @@
  */
 
 import type { ProgramManager } from "../../webgl/ProgramManager.js";
-import type { PostProcessingPipeline } from "../../webgl/post_processing/PostProcessingPipeline.js";
+import type { PostProcessingPipeline, PostProcessPass } from "../../webgl/post_processing/PostProcessingPipeline.js";
 
 import { ColorGradePass } from "../../webgl/post_processing/passes/ColorGradePass.js";
 import { SineWavePass } from "../../webgl/post_processing/passes/SineWavePass.js";
@@ -19,6 +19,7 @@ import { Mouse } from "../input.js";
 import { DropletState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass.js";
 import texture from "./texture.js";
 import { HeatWavePass } from "../../webgl/post_processing/passes/HeatWavePass.js";
+import ImageLoader from "../../util/ImageLoader.js";
 
 
 
@@ -33,7 +34,7 @@ let waterRipplePass: WaterRipplePass;
 // /** How long each ripple lasts before being removed, in seconds. */
 // const RIPPLE_LIFETIME = 10;
 
-let heatWavePass: HeatWavePass;
+let heatWavePass: HeatWavePass | undefined;
 
 
 
@@ -59,8 +60,13 @@ function init(gl: WebGL2RenderingContext, programManager: ProgramManager, the_pi
 	// waterRipplePass.propagationSpeed = 0.2;
 	// waterRipplePass.oscillationSpeed = 4;
 
-	const noiseTexture = texture.loadTexture(gl, 'heat-haze');
-	heatWavePass = new HeatWavePass(programManager, noiseTexture);
+	// Fetch the heat haze texture from the server
+	ImageLoader.loadImage('img/noise_texture/heat_haze.webp').then(img => {
+		const noiseTexture = texture.loadTexture(gl, img);
+		heatWavePass = new HeatWavePass(programManager, noiseTexture);
+	}).catch(err => {
+		console.error("Failed to load heat haze texture:", err);
+	});
 	
 
 	colorGradePass = new ColorGradePass(programManager);
@@ -109,10 +115,12 @@ function update(): void {
 	frametracker.onVisualChange();
 
 	// Choose what effects are active this frame.
-	// pipeline.setPasses([sineWavePass, colorGradePass]);
-	// pipeline.setPasses([waterRipplePass, colorGradePass]);
-	pipeline.setPasses([heatWavePass, colorGradePass]);
-	// pipeline.setPasses([sineWavePass, colorGradePass, vignettePass]);
+	const activePasses: PostProcessPass[] = [colorGradePass];
+	// const activePasses: PostProcessPass[] = [sineWavePass, colorGradePass];
+	// const activePasses: PostProcessPass[] = [waterRipplePass, colorGradePass];
+	if (heatWavePass) activePasses.push(heatWavePass); // Only push if it's loaded
+
+	pipeline.setPasses(activePasses);
 
 
 	const deltaTime = loadbalancer.getDeltaTime(); // Seconds
@@ -152,7 +160,7 @@ function update(): void {
 
 
 	// Update the time uniform to make the heat rise
-	heatWavePass.time = performance.now() / 500; // Default: 500 (strength 0.04)
+	if (heatWavePass) heatWavePass.time = performance.now() / 500; // Default: 500 (strength 0.04)
 
 
 
