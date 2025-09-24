@@ -26,7 +26,7 @@ import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createRenderable_Instanced, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
+import { AttributeInfoInstanced, RenderableInstanced, createRenderable_Instanced, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ interface MeshData {
 	/** Infinite precision BIGINT instance data for performing arithmetic. */
 	instanceData: InstanceData,
 	/** Buffer model for rendering. (This automatically stores the instanceData32 array going into the gpu) */
-	model: BufferModelInstanced
+	model: RenderableInstanced
 }
 
 /** An object that contains the buffer models to render the pieces in a game. */

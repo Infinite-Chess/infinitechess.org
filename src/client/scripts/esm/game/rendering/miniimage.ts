@@ -29,7 +29,7 @@ import perspective from './perspective.js';
 import { Color } from '../../../../../shared/util/math/math.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import { BufferModelInstanced, AttributeInfoInstanced, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
+import { RenderableInstanced, AttributeInfoInstanced, createRenderable_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
 
 
 // Variables --------------------------------------------------------------
@@ -291,8 +291,8 @@ function render(): void {
 
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
 
-	const models: TypeGroup<BufferModelInstanced> = {};
-	const models_hovered: TypeGroup<BufferModelInstanced> = {};
+	const models: TypeGroup<RenderableInstanced> = {};
+	const models_hovered: TypeGroup<RenderableInstanced> = {};
 
 	// Create the models
 	for (const [typeStr, thisInstanceData] of Object.entries(instanceData)) {

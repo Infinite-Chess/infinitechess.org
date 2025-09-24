@@ -14,7 +14,7 @@
 import space from "../../misc/space.js";
 import instancedshapes from "../instancedshapes.js";
 import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
-import { BufferModelInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
+import { RenderableInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
 
 import type { Coords } from "../../../../../../shared/chess/util/coordutil.js";
 import type { Color } from "../../../../../../shared/util/math/math.js";
@@ -28,7 +28,7 @@ import type { Color } from "../../../../../../shared/util/math/math.js";
  * This type of model requires regeneration every single frame, so don't use it
  * if you have an arbitrary number of squares to render.
  */
-function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
+function genModel(highlights: Coords[], color: Color): RenderableInstanced {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 

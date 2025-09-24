@@ -73,7 +73,7 @@ type AttributeInfoInstanced = { vertexDataAttribInfo: AttributeInfo, instanceDat
 // eslint-disable-next-line no-unused-vars
 type UpdateBufferIndicesFunc = (changedIndicesStart: number, changedIndicesCount: number) => void;
 
-/** Contains the properties that both the {@link Renderable} and {@link BufferModelInstanced} types share. */
+/** Contains the properties that both the {@link Renderable} and {@link RenderableInstanced} types share. */
 interface BaseRenderable {
 	/** 
      * **Renders** the buffer model! Translates and scales according to the provided arguments.
@@ -102,7 +102,7 @@ interface Renderable extends BaseRenderable {
 }
 
 /** A renderable model that uses instanced rendering! */
-interface BufferModelInstanced extends BaseRenderable {
+interface RenderableInstanced extends BaseRenderable {
 	/** A reference to the vertex data of a SINGLE INSTANCE, stored in a Float32Array, that went into this model's buffer.
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
@@ -172,7 +172,7 @@ function createRenderable_Instanced(
 	usingColor: boolean,
 	/** If applicable, a texture to be bound when rendering (instance data should contain texcoord attributes). */
 	texture?: WebGLTexture
-): BufferModelInstanced {
+): RenderableInstanced {
 	const usingTexture = texture !== undefined;
 	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
 	return createRenderable_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, texture);
@@ -264,7 +264,7 @@ function createRenderable_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
 	mode: PrimitiveType,
 	shader: K,
 	texture?: WebGLTexture
-): BufferModelInstanced {
+): RenderableInstanced {
 	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(attribInfoInstanced.instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
@@ -551,7 +551,7 @@ export default {
 
 export type {
 	Renderable,
-	BufferModelInstanced,
+	RenderableInstanced,
 	// AttributeInfo,
 	AttributeInfoInstanced,
 	TypedArray,

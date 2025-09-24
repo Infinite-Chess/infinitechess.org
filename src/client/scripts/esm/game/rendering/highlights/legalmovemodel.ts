@@ -32,7 +32,7 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createRenderable, createRenderable_Instanced, createRenderable_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
+import { AttributeInfoInstanced, RenderableInstanced, createRenderable, createRenderable_Instanced, createRenderable_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
@@ -250,7 +250,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 	legalMoves: LegalMoves,
 	friendlyColor: Player,
 	highlightColor: Color
-): { NonCaptureModel: BufferModelInstanced, CaptureModel: BufferModelInstanced } {
+): { NonCaptureModel: RenderableInstanced, CaptureModel: RenderableInstanced } {
 
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
@@ -541,7 +541,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
  * Rays are square highlights starting from a single coord
  * and going in one direction to infinity, unobstructed.
  */
-function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
+function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
 	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: bigint[] = [];
 

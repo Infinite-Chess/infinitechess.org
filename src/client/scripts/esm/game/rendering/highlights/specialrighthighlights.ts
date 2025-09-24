@@ -21,7 +21,7 @@ import legalmoveshapes from "../instancedshapes.js";
 import piecemodels from "../piecemodels.js";
 import squarerendering from "./squarerendering.js";
 import meshes from "../meshes.js";
-import { BufferModelInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
+import { RenderableInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
 
 
 
@@ -35,7 +35,7 @@ const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
-let model: BufferModelInstanced | undefined;
+let model: RenderableInstanced | undefined;
 
 
 // Functions -------------------------------------------------------------------------------------

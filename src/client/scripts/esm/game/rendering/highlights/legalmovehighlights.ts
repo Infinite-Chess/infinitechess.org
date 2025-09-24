@@ -25,7 +25,7 @@ import legalmoveshapes from '../instancedshapes.js';
 import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
-import { BufferModelInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -40,18 +40,18 @@ let selectedPieceLegalMoves: LegalMoves | undefined;
  * A buffer model that contains the single square
  * highlight immediately underneath the selected piece.
  */
-let model_SelectedPiece: BufferModelInstanced | undefined;
+let model_SelectedPiece: RenderableInstanced | undefined;
 
 /**
  * An model using instanced-rendering for rendering the
  * non-capturing selected piece's legal move highlights
  */
-let model_NonCapture: BufferModelInstanced | undefined;
+let model_NonCapture: RenderableInstanced | undefined;
 /**
  * An model using instanced-rendering for rendering the
  * capturing selected piece's legal move highlights
  */
-let model_Capture: BufferModelInstanced | undefined;
+let model_Capture: RenderableInstanced | undefined;
 
 
 // Init Listeners --------------------------------------------------------------------------------
