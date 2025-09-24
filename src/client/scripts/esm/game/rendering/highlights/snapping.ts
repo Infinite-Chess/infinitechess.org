@@ -31,7 +31,7 @@ import boarddrag from "../boarddrag.js";
 import vectors, { Ray, Vec2 } from "../../../../../../shared/util/math/vectors.js";
 import bd, { BigDecimal } from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { Mouse } from "../../input.js";
-import { BufferModel, createModel } from "../../../webgl/Renderable.js";
+import { BufferModel, createRenderable } from "../../../webgl/Renderable.js";
 
 
 import type { BDCoords, Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
@@ -468,7 +468,7 @@ function render(): void {
 				start[0], start[1],   r, g, b, a,
 				end[0], end[1],       r, g, b, a
 			];
-			createModel(data, 2, 'LINES', 'color', true).render();
+			createRenderable(data, 2, 'LINES', 'color', true).render();
 		}
 	
 		// Next we render either the glow dot or the mini image of the piece.
@@ -483,7 +483,7 @@ function render(): void {
 	
 			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
 			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
-			createModel(data, 2, 'TRIANGLE_FAN', 'color', true).render();
+			createRenderable(data, 2, 'TRIANGLE_FAN', 'color', true).render();
 		} else {
 			// Render mini image of piece
 			const model = generateGhostImageModel(snap.type, coordsWorld);
@@ -512,7 +512,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): BufferMode
 
 	dataGhost.push(...data);
 	
-	return createModel(dataGhost, 2, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
+	return createRenderable(dataGhost, 2, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
 }
 
 

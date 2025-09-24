@@ -138,7 +138,7 @@ function init(context: WebGL2RenderingContext, program_manager: ProgramManager):
  * given the vertex data, attribute information,
  * primitive rendering mode, and texture.
  */
-function createModel(
+function createRenderable(
 	/** The array of vertex data of the mesh to be rendered. */
 	data: InputArray,
 	/** The number of position components for a single vertex: x,y,z */
@@ -540,7 +540,7 @@ function genWorldMatrix(position: Vec3, scale: Vec3): Mat4 {
 
 
 export {
-	createModel,
+	createRenderable,
 	createModel_Instanced,
 	createModel_Instanced_GivenAttribInfo,
 	BufferModel, // The type definition

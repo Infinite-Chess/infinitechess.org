@@ -14,7 +14,7 @@ import statustext from '../gui/statustext.js';
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
 import camera, { Mat4 } from './camera.js';
-import { BufferModel, createModel } from '../../webgl/Renderable.js';
+import { BufferModel, createRenderable } from '../../webgl/Renderable.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
@@ -246,7 +246,7 @@ function initCrosshairModel(): void {
         //     innerSide,  -innerSide,       r, g, b, a,
         //     -innerSide,  -innerSide,      r, g, b, a,
     ]);
-	crosshairModel = createModel(data, 2, "TRIANGLES", 'color', true); 
+	crosshairModel = createRenderable(data, 2, "TRIANGLES", 'color', true); 
 }
 
 function renderCrosshair(): void {

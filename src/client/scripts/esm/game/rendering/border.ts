@@ -15,7 +15,7 @@ import primitives from "./primitives.js";
 import perspective from "./perspective.js";
 import boardtiles from "./boardtiles.js";
 import bounds, { DoubleBoundingBox } from "../../../../../shared/util/math/bounds.js";
-import { createModel } from "../../webgl/Renderable.js";
+import { createRenderable } from "../../webgl/Renderable.js";
 
 
 
@@ -54,7 +54,7 @@ function drawPlayableRegionMask(boardsim: Board): void {
 	const { left, right, bottom, top } = worldBox;
 	const vertexData = primitives.Quad_Color(left, bottom, right, top, [0,0,0,1]); // Color doesn't matter since it's a mask
 
-	createModel(vertexData, 2, 'TRIANGLES', 'color', true).render();
+	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
 

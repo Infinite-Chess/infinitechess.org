@@ -52,7 +52,7 @@ import keybinds from '../misc/keybinds.js';
 import boardeffects from '../rendering/boardeffects.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
-import buffermodel, { createModel } from '../../webgl/Renderable.js';
+import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 
@@ -301,7 +301,7 @@ function renderOutlineofScreenBox(): void {
 	const color: Color = [0,0,0, 0.5]; // Transparent Black
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createModel(data, 2, "LINE_LOOP", 'color', true).render();
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 

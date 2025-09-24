@@ -10,7 +10,7 @@ import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
 import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from '../primitives.js';
-import { BufferModel, createModel } from '../../../webgl/Renderable.js';
+import { BufferModel, createRenderable } from '../../../webgl/Renderable.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -61,7 +61,7 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 		data.push(...dataRing);
 	}
 
-	return createModel(data, 2, "TRIANGLES", 'color', true);
+	return createRenderable(data, 2, "TRIANGLES", 'color', true);
 }
 
 

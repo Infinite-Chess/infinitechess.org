@@ -32,7 +32,7 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createRenderable, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
@@ -582,7 +582,7 @@ function renderOutlineOfRenderBox(): void {
 	const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
 	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
 
-	createModel(data, 2, "LINE_LOOP", 'color', true).render();
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 /**
@@ -593,7 +593,7 @@ function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
 	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(box);
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createModel(data, 2, "LINE_LOOP", 'color', true).render();
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 

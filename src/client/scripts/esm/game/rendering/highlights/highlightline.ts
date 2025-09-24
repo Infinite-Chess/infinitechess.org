@@ -10,7 +10,7 @@ import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { BufferModel, createModel } from '../../../webgl/Renderable.js';
+import { BufferModel, createRenderable } from '../../../webgl/Renderable.js';
 
 
 import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
@@ -76,7 +76,7 @@ function getRenderRange(): BoundingBoxBD {
 
 function genLinesModel(lines: Line[]): BufferModel {
 	const data: number[] = lines.flatMap(line => getLineData(line));
-	return createModel(data, 2, 'LINES', 'color', true);
+	return createRenderable(data, 2, 'LINES', 'color', true);
 }
 
 function getLineData(line: Line): number[] {

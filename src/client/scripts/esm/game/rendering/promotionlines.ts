@@ -14,7 +14,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import boardpos from './boardpos.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { createModel } from '../../webgl/Renderable.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 import primitives from './primitives.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
@@ -75,7 +75,7 @@ function render(): void {
 
 	// Create and Render the model
 
-	createModel(vertexData, 2, "TRIANGLES", 'color', true).render();
+	createRenderable(vertexData, 2, "TRIANGLES", 'color', true).render();
 }
 
 
