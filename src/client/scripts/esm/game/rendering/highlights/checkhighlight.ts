@@ -10,7 +10,7 @@ import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
 import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from '../primitives.js';
-import { BufferModel, createRenderable } from '../../../webgl/Renderable.js';
+import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -38,7 +38,7 @@ function render(boardsim: Board): void {
 /**
  * Generates the buffer model of the red-glow around each royal piece currently in check.
  */
-function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
+function genCheckHighlightModel(royalsInCheck: Coords[]): Renderable {
 	const color = preferences.getCheckHighlightColor(); // [r,g,b,a]
 	const colorOfPerimeter: Color = [color[0], color[1], color[2],  0]; // Same color, but zero opacity
 

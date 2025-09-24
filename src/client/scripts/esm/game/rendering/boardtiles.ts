@@ -4,7 +4,7 @@
  * We also keep track of what tile the mouse is currently hovering over.
  */
 
-import type { BufferModel } from '../../webgl/Renderable.js';
+import type { Renderable } from '../../webgl/Renderable.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
@@ -191,7 +191,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
  */
-function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): BufferModel | undefined {
+function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
 	const boardScale = boardpos.getBoardScale();
 	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
 	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);

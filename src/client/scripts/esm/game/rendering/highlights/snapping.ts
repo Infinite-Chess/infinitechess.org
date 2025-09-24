@@ -31,7 +31,7 @@ import boarddrag from "../boarddrag.js";
 import vectors, { Ray, Vec2 } from "../../../../../../shared/util/math/vectors.js";
 import bd, { BigDecimal } from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { Mouse } from "../../input.js";
-import { BufferModel, createRenderable } from "../../../webgl/Renderable.js";
+import { Renderable, createRenderable } from "../../../webgl/Renderable.js";
 
 
 import type { BDCoords, Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
@@ -493,7 +493,7 @@ function render(): void {
 }
 
 /** TODO: Dont use the spritesheet */
-function generateGhostImageModel(type: number, coords: DoubleCoords): BufferModel {
+function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
 
 	const dataGhost: number[] = [];
 

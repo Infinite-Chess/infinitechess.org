@@ -6,7 +6,7 @@
  */
 
 
-import type { BufferModel } from "../../../webgl/Renderable.js";
+import type { Renderable } from "../../../webgl/Renderable.js";
 import type { Color } from "../../../../../../shared/util/math/math.js";
 import type { Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
 import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
@@ -228,7 +228,7 @@ function renderPiece(): void {
  * Generates the model of the dragged piece and its shadow.
  * @returns The buffer model
  */
-function genPieceModel(): BufferModel | undefined {
+function genPieceModel(): Renderable | undefined {
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
@@ -269,7 +269,7 @@ function genPieceModel(): BufferModel | undefined {
  * On touchscreen the entire rank and file are outlined.
  * @returns The buffer model
  */
-function genOutlineModel(): BufferModel {
+function genOutlineModel(): Renderable {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);

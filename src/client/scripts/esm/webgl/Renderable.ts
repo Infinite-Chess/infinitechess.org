@@ -73,8 +73,8 @@ type AttributeInfoInstanced = { vertexDataAttribInfo: AttributeInfo, instanceDat
 // eslint-disable-next-line no-unused-vars
 type UpdateBufferIndicesFunc = (changedIndicesStart: number, changedIndicesCount: number) => void;
 
-/** Contains the properties that both the {@link BufferModel} and {@link BufferModelInstanced} types share. */
-interface BaseBufferModel {
+/** Contains the properties that both the {@link Renderable} and {@link BufferModelInstanced} types share. */
+interface BaseRenderable {
 	/** 
      * **Renders** the buffer model! Translates and scales according to the provided arguments.
      * Applies any custom uniform values before rendering.
@@ -93,7 +93,7 @@ interface BaseBufferModel {
 }
 
 /** A renderable model. */
-interface BufferModel extends BaseBufferModel {
+interface Renderable extends BaseRenderable {
 	/** A reference to the vertex data, stored in a Float32Array, that went into this model's buffer.
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
@@ -102,7 +102,7 @@ interface BufferModel extends BaseBufferModel {
 }
 
 /** A renderable model that uses instanced rendering! */
-interface BufferModelInstanced extends BaseBufferModel {
+interface BufferModelInstanced extends BaseRenderable {
 	/** A reference to the vertex data of a SINGLE INSTANCE, stored in a Float32Array, that went into this model's buffer.
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
@@ -150,7 +150,7 @@ function createRenderable(
 	usingColor: boolean,
 	/** If applicable, a texture to be bound when rendering (vertex data should contain texcoord attributes). */
 	texture?: WebGLTexture
-): BufferModel {
+): Renderable {
 	const usingTexture = texture !== undefined;
 	const attribInfo = getAttribInfo(numPositionComponents, usingColor, usingTexture);
 	return createModel_GivenAttribInfo(data, attribInfo, mode, shader, texture);
@@ -226,7 +226,7 @@ function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
 	mode: PrimitiveType,
 	shader: K,
 	texture?: WebGLTexture
-): BufferModel {
+): Renderable {
 	const stride = getStrideFromAttributeInfo(attribInfo);
 	if (data.length % stride !== 0) throw new Error("Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.");
 
@@ -543,8 +543,6 @@ export {
 	createRenderable,
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenAttribInfo,
-	BufferModel, // The type definition
-	BufferModelInstanced, // The type definition
 };
 
 export default {
@@ -552,6 +550,8 @@ export default {
 };
 
 export type {
+	Renderable,
+	BufferModelInstanced,
 	// AttributeInfo,
 	AttributeInfoInstanced,
 	TypedArray,
