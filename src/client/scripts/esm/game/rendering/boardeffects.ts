@@ -7,19 +7,19 @@
 import type { ProgramManager } from "../../webgl/ProgramManager.js";
 import type { PostProcessingPipeline, PostProcessPass } from "../../webgl/post_processing/PostProcessingPipeline.js";
 
+// @ts-ignore
+import loadbalancer from "../misc/loadbalancer.js";
+import frametracker from "./frametracker.js";
+import camera from "./camera.js";
+import ImageLoader from "../../util/ImageLoader.js";
+import TextureLoader from "../../webgl/TextureLoader.js";
 import { ColorGradePass } from "../../webgl/post_processing/passes/ColorGradePass.js";
 import { SineWavePass } from "../../webgl/post_processing/passes/SineWavePass.js";
 import { VignettePass } from "../../webgl/post_processing/passes/VignettePass.js";
-import frametracker from "./frametracker.js";
-// @ts-ignore
-import loadbalancer from "../misc/loadbalancer.js";
-import camera from "./camera.js";
 import { listener_overlay } from "../chess/game.js";
 import { Mouse } from "../input.js";
 import { DropletState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass.js";
-import texture from "./texture.js";
 import { HeatWavePass } from "../../webgl/post_processing/passes/HeatWavePass.js";
-import ImageLoader from "../../util/ImageLoader.js";
 
 
 
@@ -62,7 +62,7 @@ function init(gl: WebGL2RenderingContext, programManager: ProgramManager, the_pi
 
 	// Fetch the heat haze texture from the server
 	ImageLoader.loadImage('img/noise_texture/heat_haze.webp').then(img => {
-		const noiseTexture = texture.loadTexture(gl, img);
+		const noiseTexture = TextureLoader.loadTexture(gl, img);
 		heatWavePass = new HeatWavePass(programManager, noiseTexture);
 	}).catch(err => {
 		console.error("Failed to load heat haze texture:", err);

@@ -10,6 +10,9 @@ import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/co
 import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
+// @ts-ignore
+import style from '../gui/style.js';
+import camera from './camera.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
@@ -24,15 +27,10 @@ import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
+import TextureLoader from '../../webgl/TextureLoader.js';
 import { createModel } from './buffermodel.js';
 import perspective from './perspective.js';
 import webgl, { gl } from './webgl.js';
-// @ts-ignore
-import texture from './texture.js';
-// @ts-ignore
-import style from '../gui/style.js';
-// @ts-ignore
-import camera from './camera.js';
 
 
 
@@ -106,8 +104,8 @@ async function initTextures(): Promise<void> {
 		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256)
 	]);
 
-	tilesTexture_2 = texture.loadTexture(gl, tilesTexture_2_IMG, { useMipmaps: false });
-	tilesTexture_256mips = texture.loadTexture(gl, tilesTexture_256mips_IMG, { useMipmaps: true });
+	tilesTexture_2 = TextureLoader.loadTexture(gl, tilesTexture_2_IMG, { mipmaps: false });
+	tilesTexture_256mips = TextureLoader.loadTexture(gl, tilesTexture_256mips_IMG, { mipmaps: true });
 
 	frametracker.onVisualChange();
 }

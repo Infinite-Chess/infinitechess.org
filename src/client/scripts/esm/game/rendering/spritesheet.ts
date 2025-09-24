@@ -8,13 +8,12 @@
 
 
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
-import type{ DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
-import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-// @ts-ignore
-import texture from './texture.js';
+import TextureLoader from '../../webgl/TextureLoader.js';
+import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 
 
 // Type Definitions ---------------------------------------------------------------------
@@ -94,7 +93,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Boar
 
 	// Load the texture into webgl and initiate our spritesheet
 	// data that contains the texture coordinates of each piece!
-	spritesheet = texture.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { useMipmaps: true });
+	spritesheet = TextureLoader.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { mipmaps: true });
 	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
 }
 
