@@ -68,17 +68,17 @@ async function retryFetch(
 		const isLastAttempt = (attempt === options.maxAttempts);
 
 		try {
-			console.log(`retryFetch: Attempt ${attempt}/${options.maxAttempts} for ${urlString}...`);
+			// console.log(`retryFetch: Attempt ${attempt}/${options.maxAttempts} for ${urlString}...`);
 			const response = await fetch(url, fetchInit);
 
 			// Check for retryable server errors (5xx)
 			if (response.status >= 500 && response.status <= 599) {
 				if (isLastAttempt) {
-					console.warn(`retryFetch: Max attempts reached. Last attempt for ${urlString} resulted in status ${response.status}.`);
+					// console.warn(`retryFetch: Max attempts reached. Last attempt for ${urlString} resulted in status ${response.status}.`);
 					return response; // Return the final 5xx response
 				}
 				// Not the last attempt, so log and prepare for retry
-				console.warn(`retryFetch: Attempt ${attempt} for ${urlString} failed with status ${response.status}. Retrying...`);
+				// console.warn(`retryFetch: Attempt ${attempt} for ${urlString} failed with status ${response.status}. Retrying...`);
 				// Fall through to wait and retry
 			} else {
 				// Not a 5xx error. Could be 2xx (success), 4xx (client error), or other.
@@ -87,11 +87,11 @@ async function retryFetch(
 			}
 		} catch (error) { // Network error occurred
 			if (isLastAttempt) {
-				console.error(`retryFetch: Max attempts reached. Last attempt for ${urlString} failed with network error:`, error);
+				// console.error(`retryFetch: Max attempts reached. Last attempt for ${urlString} failed with network error:`, error);
 				throw error; // Re-throw the final network error
 			}
 			// Not the last attempt, so log and prepare for retry
-			console.warn(`retryFetch: Attempt ${attempt} for ${urlString} failed with network error: ${(error as Error).message}. Retrying...`);
+			// console.warn(`retryFetch: Attempt ${attempt} for ${urlString} failed with network error: ${(error as Error).message}. Retrying...`);
 			// Fall through to wait and retry
 		}
 
