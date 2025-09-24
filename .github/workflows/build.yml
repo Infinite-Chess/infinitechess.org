@@ -13,8 +13,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
-      - name: "Run dev build"
-        run: npm run dev:build
+      - name: "Run build"
+        run: npm run build
       - uses: actions/upload-artifact@v4
         with:
           name: Build
