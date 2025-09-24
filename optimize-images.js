@@ -29,7 +29,7 @@ const webp_options = {
 	quality: 100     // Controls visual quality (1-100). Default if not specified: 80. USE 100 FOR NOISE TEXTURES!
 };
 const png_options = {
-	effort: 1, // 1-10. LOWER YIELDS BETTER COMPRESSION???
+	effort: 10, // 1-10. LOWER YIELDS BETTER COMPRESSION??? But lower image quality.
 	quality: 100, // Default if not specified: 100??? (with effor 1, try with 10)
 };
 const avif_options = {
