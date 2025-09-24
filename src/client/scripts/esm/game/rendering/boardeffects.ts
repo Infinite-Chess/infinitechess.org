@@ -178,7 +178,6 @@ function onScreenResize(): void {
 
 
 
-
 export default {
 	init,
 	update,
