@@ -14,7 +14,7 @@
 import space from "../../misc/space.js";
 import instancedshapes from "../instancedshapes.js";
 import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
-import { BufferModelInstanced, createModel_Instanced } from "../../../webgl/Renderable.js";
+import { BufferModelInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
 
 import type { Coords } from "../../../../../../shared/chess/util/coordutil.js";
 import type { Color } from "../../../../../../shared/util/math/math.js";
@@ -38,7 +38,7 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 		instanceData.push(...worldLoc);
 	});
 
-	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', 'highlights', true);
+	return createRenderable_Instanced(vertexData, instanceData, 'TRIANGLES', 'highlights', true);
 }
 
 

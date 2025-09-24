@@ -32,7 +32,7 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createRenderable, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createRenderable, createRenderable_Instanced, createModel_Instanced_GivenAttribInfo } from '../../../webgl/Renderable.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
@@ -272,9 +272,9 @@ function generateModelsForPiecesLegalMoveHighlights(
 
 	return {
 		// The NON-CAPTURING legal move highlights model
-		NonCaptureModel: createModel_Instanced(vertexData_NonCapture, piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture), "TRIANGLES", 'colorInstanced', true),
+		NonCaptureModel: createRenderable_Instanced(vertexData_NonCapture, piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture), "TRIANGLES", 'colorInstanced', true),
 		// The CAPTURING legal move highlights model
-		CaptureModel: createModel_Instanced(vertexData_Capture, piecemodels.castBigIntArrayToFloat32(instanceData_Capture), "TRIANGLES", 'colorInstanced', true),
+		CaptureModel: createRenderable_Instanced(vertexData_Capture, piecemodels.castBigIntArrayToFloat32(instanceData_Capture), "TRIANGLES", 'colorInstanced', true),
 	};
 }
 

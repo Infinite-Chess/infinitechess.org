@@ -160,7 +160,7 @@ function createRenderable(
  * The universal function for creating a renderable model THAT USES INSTANCED RENDERING,
  * given the vertex data and instance data, both attribute informations, primitive rendering mode, and texture!
  */
-function createModel_Instanced( 
+function createRenderable_Instanced( 
 	/** The array of vertex data of a single instance of the mesh. */
 	vertexData: InputArray,
 	/** The instance-specific vertex data of the mesh. */
@@ -541,7 +541,7 @@ function genWorldMatrix(position: Vec3, scale: Vec3): Mat4 {
 
 export {
 	createRenderable,
-	createModel_Instanced,
+	createRenderable_Instanced,
 	createModel_Instanced_GivenAttribInfo,
 	BufferModel, // The type definition
 	BufferModelInstanced, // The type definition

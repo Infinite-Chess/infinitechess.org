@@ -21,7 +21,7 @@ import legalmoveshapes from "../instancedshapes.js";
 import piecemodels from "../piecemodels.js";
 import squarerendering from "./squarerendering.js";
 import meshes from "../meshes.js";
-import { BufferModelInstanced, createModel_Instanced } from "../../../webgl/Renderable.js";
+import { BufferModelInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
 
 
 
@@ -82,7 +82,7 @@ function regenModel(): void {
 	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
 	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
 	const vertexData: number[] = legalmoveshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
-	model = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(squaresToHighlight), "TRIANGLES", 'colorInstanced', true);
+	model = createRenderable_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(squaresToHighlight), "TRIANGLES", 'colorInstanced', true);
 }
 
 function renderSpecialRights(): void {

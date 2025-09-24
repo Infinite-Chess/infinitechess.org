@@ -26,7 +26,7 @@ import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createRenderable_Instanced, createModel_Instanced_GivenAttribInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -174,7 +174,7 @@ function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 
 	return {
 		instanceData,
-		model: createModel_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', 'colorInstanced', true)
+		model: createRenderable_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', 'colorInstanced', true)
 	};
 }
 
