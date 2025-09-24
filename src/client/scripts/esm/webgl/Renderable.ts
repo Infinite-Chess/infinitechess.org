@@ -239,6 +239,15 @@ function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
 
 	const shaderProgram = programManager.get(shader);
 
+	// Generate the VAO that stores the attribute configuration.
+
+	const vao = gl.createVertexArray();
+	if (!vao) throw new Error("Could not create Vertex Array Object");
+
+	gl.bindVertexArray(vao);
+	configureAttributes(shaderProgram, buffer, attribInfo, stride, BYTES_PER_ELEMENT, false);
+	gl.bindVertexArray(null); // Unbind. The configuration is now saved inside the 'vao' object.
+
 	return {
 		data,
 		updateBufferIndices: (
@@ -249,7 +258,7 @@ function createModel_GivenAttribInfo<K extends keyof ProgramMap>(
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: Record<string, any> = {}
-		): void => render(shaderProgram, buffer, attribInfo, position, scale, stride, BYTES_PER_ELEMENT, uniforms, vertexCount, mode, texture),		
+		): void => render(shaderProgram, vao, position, scale, uniforms, vertexCount, mode, texture),		
 	};
 }
 
@@ -284,6 +293,16 @@ function createRenderable_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
 
 	const shaderProgram = programManager.get(shader);
 
+	// Generate the VAO that stores the attribute configuration.
+
+	const vao = gl.createVertexArray();
+	if (!vao) throw new Error("Could not create Vertex Array Object");
+
+	gl.bindVertexArray(vao);
+	configureAttributes(shaderProgram, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT_VData, false);
+	configureAttributes(shaderProgram, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT_IData, true);
+	gl.bindVertexArray(null); // Unbind. The configuration is now saved inside the 'vao' object.
+
 	return {
 		vertexData,
 		instanceData,
@@ -299,7 +318,7 @@ function createRenderable_Instanced_GivenAttribInfo<K extends keyof ProgramMap>(
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: Record<string, any> = {}
-		): void => render_Instanced(shaderProgram, vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
+		): void => render_Instanced(shaderProgram, vao, position, scale, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};
 }
 
@@ -330,12 +349,10 @@ function ensureTypedArray(data: InputArray): TypedArray {
  * Renders a model. This handles everything from switching shader programs,
  * to preparing the attributes, preparing the uniforms, transforming the object
  * according to the provided position and scale, to the draw call.
- * @param buffer - The buffer that we have passed the vertex data into.
- * @param attribInfo - The AttributeInfo object, storing what attributes are in a single stride of the vertex data, and how many components they use.
+ * @param shaderProgram - The shader program to render with.
+ * @param vao - The Vertex Array Object that stores the attribute configuration.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
- * @param stride - The vertex data's stride per vertex.
- * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
  * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param vertexCount - The mesh's vertex count.
  * @param mode - Primitive rendering mode (e.g. "TRIANGLES" / "LINES"). See {@link validRenderModes}.
@@ -343,12 +360,9 @@ function ensureTypedArray(data: InputArray): TypedArray {
  */
 function render<A extends string, U extends string>(
 	shaderProgram: ShaderProgram<A, U>,
-	buffer: WebGLBuffer,
-	attribInfo: AttributeInfo,
+	vao: WebGLVertexArrayObject,
 	position: Vec3,
 	scale: Vec3,
-	stride: number,
-	BYTES_PER_ELEMENT: number,
 	uniforms: Record<string, any>,
 	vertexCount: number,
 	mode: PrimitiveType,
@@ -357,14 +371,17 @@ function render<A extends string, U extends string>(
 	// Switch to the program
 	shaderProgram.use();
 
-	// Prepare the attributes...
-	enableAttributes(shaderProgram, buffer, attribInfo, stride, BYTES_PER_ELEMENT, false);
+	// Bind the VAO. ONE call to restore all attribute configuration.
+	gl.bindVertexArray(vao);
 
 	// Prepare the uniforms...
 	setUniforms(shaderProgram, position, scale, uniforms, texture);
 
 	// Call the draw function!
 	gl.drawArrays(gl[mode], 0, vertexCount);
+
+	// Unbind the VAO.
+	gl.bindVertexArray(null);
 
 	// Unbind the texture
 	// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
@@ -376,15 +393,10 @@ function render<A extends string, U extends string>(
  * Renders a model that uses instanced rendering. This handles everything from switching shader programs,
  * to preparing the attributes, preparing the uniforms, transforming the object
  * according to the provided position and scale, to the draw call!
- * @param vertexBuffer - The buffer that we have passed the vertex data into of a single instance.
- * @param instanceBuffer - The buffer that we have passed the instance-specific data into.
- * @param vertexDataAttribInfo - The AttributeInfo object, storing what attributes are in a single stride of the vertex data of a single instance, and how many components they use.
- * @param instanceDataAttribInfo - The AttributeInfo object, storing what attributes are in a single stride of the instance-specific data, and how many components they use.
+ * @param shaderProgram - The shader program to render with.
+ * @param vao - The Vertex Array Object that stores the attribute configuration.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
- * @param vertexDataStride - The vertex data's stride per vertex of a single instance.
- * @param instanceDataStride - The instance-specific data's stride per instance.
- * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
  * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param instanceVertexCount - The vertex count of a single instance, or the number of vertices in the vertex data.
  * @param instanceCount - The number of total instances, or the length of the instance-specific data divided by that data's stride.
@@ -393,15 +405,9 @@ function render<A extends string, U extends string>(
  */
 function render_Instanced<A extends string, U extends string>( // vertexBuffer, instanceBuffer, vertexDataAttribInfo, instanceDataAttribInfo, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture
 	shaderProgram: ShaderProgram<A, U>,
-	vertexBuffer: WebGLBuffer,
-	instanceBuffer: WebGLBuffer,
-	attribInfoInstanced: AttributeInfoInstanced,
+	vao: WebGLVertexArrayObject,
 	position: Vec3,
 	scale: Vec3,
-	vertexDataStride: number,
-	instanceDataStride: number,
-	BYTES_PER_ELEMENT_VData: number,
-	BYTES_PER_ELEMENT_IData: number,
 	uniforms: Record<string, any>,
 	instanceVertexCount: number,
 	instanceCount: number,
@@ -411,15 +417,17 @@ function render_Instanced<A extends string, U extends string>( // vertexBuffer, 
 	// Switch to the program
 	shaderProgram.use();
 
-	// Prepare the attributes...
-	enableAttributes(shaderProgram, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT_VData, false); // The attributes of a single instance are NOT instance-specific
-	enableAttributes(shaderProgram, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT_IData, true); // Instance-specific
+	// Bind the VAO. ONE call to restore all attribute configuration.
+	gl.bindVertexArray(vao);
 
 	// Prepare the uniforms...
 	setUniforms(shaderProgram, position, scale, uniforms, texture);
 
 	// Call the draw function! Render using drawArraysInstanced
 	gl.drawArraysInstanced(gl[mode], 0, instanceVertexCount, instanceCount);
+
+	// Unbind the VAO.
+	gl.bindVertexArray(null);
 
 	// Unbind the texture
 	// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
@@ -430,29 +438,24 @@ function render_Instanced<A extends string, U extends string>( // vertexBuffer, 
 
 
 /**
- * Enables the attributes for use before a draw call.
+ * Configures the attributes for a shader program.
  * Tells the gpu how it will extract the data from the vertex data buffer.
- * @param shader - The currently bound shader program, and the one we'll be rendering with.
+ * @param shaderProgram - The currently bound shader program, and the one we'll be rendering with.
  * @param buffer - The buffer that we have passed the vertex data into.
  * @param attribInfo - The AttributeInfo object, storing what attributes are in a single stride of the vertex data, and how many components they use.
  * @param stride - The vertex data's stride per vertex.
  * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
  * @param instanced - Whether the provided attributes to enable are instance-specific attributes (only updated once per instance instead of once per vertex)
  */
-function enableAttributes<A extends string, U extends string>(shader: ShaderProgram<A, U>, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number, instanced: boolean): void {
+function configureAttributes<A extends string, U extends string>(shaderProgram: ShaderProgram<A, U>, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number, instanced: boolean): void {
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-
-	// IF WE BIND A VERTEX ARRAY OBJECT here, then unbind it after our initAttribute() calls,
-	// then for future render calls we don't need to make the same initAttribute() calls,
-	// but instead we just bind the vertex array object!
-	// ...
 
 	const stride_bytes = stride * BYTES_PER_ELEMENT; // # bytes in each vertex/line.
 	const vertexAttribDivisor = instanced ? 1 : 0; // 0 = attribs updated once per vertex   1 = updated once per instance
 	let currentOffsetBytes = 0; // how many bytes inside the buffer to start from.
 
 	for (const attrib of attribInfo) {
-		const attribLoc = shader.getAttributeLocation(attrib.name as A)!;
+		const attribLoc = shaderProgram.getAttributeLocation(attrib.name as A)!;
 		// Tell WebGL how to pull out the values from the vertex data and into the attribute in the shader code...
 		gl.vertexAttribPointer(attribLoc, attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
 		gl.enableVertexAttribArray(attribLoc); // Enable the attribute for use
@@ -471,13 +474,13 @@ function enableAttributes<A extends string, U extends string>(shader: ShaderProg
 /**
  * Sets the uniforms, preparing them before a draw call.
  * The worldMatrix uniform is updated with EVERY draw call!
- * @param shader - The currently bound shader program, and the one we'll be rendering with.
+ * @param shaderProgram - The currently bound shader program, and the one we'll be rendering with.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
  * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function setUniforms<A extends string, U extends string>(shader: ShaderProgram<A, U>, position: Vec3, scale: Vec3, uniforms: Record<string, any>, texture?: WebGLTexture): void {
+function setUniforms<A extends string, U extends string>(shaderProgram: ShaderProgram<A, U>, position: Vec3, scale: Vec3, uniforms: Record<string, any>, texture?: WebGLTexture): void {
 
 	{
 		// Update the transformMatrix on the gpu, EVERY render call!!
@@ -502,7 +505,7 @@ function setUniforms<A extends string, U extends string>(shader: ShaderProgram<A
 		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
 		
 		// Send the transformMatrix to the gpu (every shader has this uniform)
-		gl.uniformMatrix4fv(shader.getUniformLocation('u_transformmatrix' as U), false, transformMatrix);
+		gl.uniformMatrix4fv(shaderProgram.getUniformLocation('u_transformmatrix' as U), false, transformMatrix);
 	}
 
 	if (texture) {
@@ -511,13 +514,13 @@ function setUniforms<A extends string, U extends string>(shader: ShaderProgram<A
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		// Tell the gpu we bound the texture to texture unit 0
-		gl.uniform1i(shader.getUniformLocation('u_sampler' as U)!, 0);
+		gl.uniform1i(shaderProgram.getUniformLocation('u_sampler' as U)!, 0);
 	}
 
 	// Custom uniforms provided in the render call, for example 'u_size'...
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
-		const uLoc = shader.getUniformLocation(name as U);
+		const uLoc = shaderProgram.getUniformLocation(name as U);
 		if (uLoc === null) continue; // Skip if uniform isn't active (shader must have optimized it out if it is unused)
 
 		if (name === 'u_size') gl.uniform1f(uLoc, value);
