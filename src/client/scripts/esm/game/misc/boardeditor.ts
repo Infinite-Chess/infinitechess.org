@@ -199,7 +199,10 @@ function update(): void {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			beginEdit();
 		}
-		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
+		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) {
+			mouse.claimMouseClick(Mouse.LEFT); // Remove the click so other scripts don't use it
+			return endEdit();
+		}
 	}
 
 	// If not drawing, or if the current tool doesn't support drawing, there's nothing more to do
