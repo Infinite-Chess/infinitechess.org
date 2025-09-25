@@ -197,6 +197,7 @@ function update(): void {
 	if (drawingTools.includes(currentTool)) {
 		if (mouse.isMouseDown(Mouse.LEFT) && !drawing) {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
+			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
 			beginEdit();
 		}
 		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
