@@ -115,10 +115,12 @@ function update(): void {
 	frametracker.onVisualChange();
 
 	// Choose what effects are active this frame.
-	const activePasses: PostProcessPass[] = [colorGradePass];
-	// const activePasses: PostProcessPass[] = [sineWavePass, colorGradePass];
-	// const activePasses: PostProcessPass[] = [waterRipplePass, colorGradePass];
-	if (heatWavePass) activePasses.push(heatWavePass); // Only push if it's loaded
+	const activePasses: PostProcessPass[] = [];
+
+	// activePasses.push(sineWavePass);
+	// activePasses.push(waterRipplePass);
+	// if (heatWavePass) activePasses.push(heatWavePass); // Only push if it's loaded
+	// activePasses.push(colorGradePass);
 
 	pipeline.setPasses(activePasses);
 

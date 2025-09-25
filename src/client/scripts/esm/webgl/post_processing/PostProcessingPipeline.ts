@@ -146,7 +146,7 @@ export class PostProcessingPipeline {
 		// Swap so the scene we just rendered is now in the 'read' FBO.
 		this.swapFBOs();
 
-		// If the user has added no passes, we'll use our pass-through shader.
+		// If we have no added no passes, we'll use our pass-through shader.
 		// This creates a unified code path for all scenarios.
 		const activePasses: PostProcessPass[] = this.passes.length > 0 ? this.passes : [this.passThroughPass];
 		
