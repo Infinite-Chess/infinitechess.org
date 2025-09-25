@@ -4,8 +4,8 @@
  */
 
 
-import { TypedArray } from "../../webgl/Renderable.js";
-import { gl } from "./webgl.js";
+import { TypedArray } from "./Renderable.js";
+import { gl } from "../game/rendering/webgl.js";
 
 
 // Variables --------------------------------------------------------------------------------
