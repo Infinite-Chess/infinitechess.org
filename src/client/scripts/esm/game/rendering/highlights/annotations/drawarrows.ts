@@ -12,11 +12,9 @@ import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../../../../shared/util/math/vectors.js";
 import boardpos from "../../boardpos.js";
-import boarddrag from "../../boarddrag.js";
 import { createRenderable } from "../../../../webgl/Renderable.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
-import { listener_overlay } from "../../../chess/game.js";
 import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
 
 

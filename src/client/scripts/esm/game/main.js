@@ -21,7 +21,6 @@ import frametracker from './rendering/frametracker.js';
 
 
 
-
 // Starts the game. Runs automatically once the page is loaded. 
 function start() {
 	guiloading.closeAnimation(); // Stops the loading screen animation

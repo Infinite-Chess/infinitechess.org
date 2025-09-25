@@ -127,6 +127,7 @@ interface RenderableInstanced extends BaseRenderable {
 // Variables ----------------------------------------------------------------------------------
 
 
+/** The global WebGL2 rendering context. */
 let gl: WebGL2RenderingContext;
 
 /** The global program manager, used to get shader programs for rendering models. */
@@ -136,6 +137,7 @@ let programManager: ProgramManager;
 // Functions ----------------------------------------------------------------------------------
 
 
+/** Initializes the script with the WebGL2 rendering context and ProgramManager. */
 function init(context: WebGL2RenderingContext, program_manager: ProgramManager): void {
 	gl = context;
 	programManager = program_manager;

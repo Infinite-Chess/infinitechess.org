@@ -188,11 +188,9 @@ export class ProgramManager {
 	// ShaderProgram type here internally, but the public `get` method provides full type safety.
 	private programCache: Map<keyof ProgramMap, ShaderProgram<any, any>> = new Map();
 
-
 	constructor(gl: WebGL2RenderingContext) {
 		this.gl = gl;
 	}
-
 
 	/**
 	 * Retrieves a compiled and linked ShaderProgram from the cache, or creates it if it doesn't exist.

@@ -27,7 +27,6 @@ import preferences from "../../../components/header/preferences.js";
 import geometry from "../../../../../../shared/util/math/geometry.js";
 import jsutil from "../../../../../../shared/util/jsutil.js";
 import primitives from "../primitives.js";
-import boarddrag from "../boarddrag.js";
 import vectors, { Ray, Vec2 } from "../../../../../../shared/util/math/vectors.js";
 import bd, { BigDecimal } from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { Mouse } from "../../input.js";

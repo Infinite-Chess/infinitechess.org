@@ -209,16 +209,14 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 
 
 /**
- * Renders everthing in our game, and applies post processing effects to the final image.
+ * Renders everthing in-game, and applies post processing effects to the final image.
  */
 function render(): void {
-	// 1. Tell the pipeline to begin. All subsequent rendering will go to a texture.
+	// Tell the pipeline to begin. All subsequent rendering will go to a texture.
 	pipeline.begin();
-
-	// 2. Render our 3D scene.
+	// Render the game scene
 	renderScene();
-
-	// 3. Tell the pipeline we are finished. It will handle drawing the result to the screen.
+	// Tell the pipeline we are finished. It will handle drawing the result to the screen.
 	pipeline.end();
 }
 

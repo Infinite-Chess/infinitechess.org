@@ -112,7 +112,7 @@ function applyWashedOutPreset(pass: ColorGradePass): void {
 
 function update(): void {
 	// FOR TESTING: Render every single frame.
-	frametracker.onVisualChange();
+	// frametracker.onVisualChange();
 
 	// Choose what effects are active this frame.
 	const activePasses: PostProcessPass[] = [];
