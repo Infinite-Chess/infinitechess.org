@@ -491,7 +491,7 @@ function configureAttributes<A extends string, U extends string>(shaderProgram: 
 
 /**
  * Sets the uniforms, preparing them before a draw call.
- * The worldMatrix uniform is updated with EVERY draw call!
+ * The transformmatrix uniform is updated with EVERY draw call!
  * @param shaderProgram - The currently bound shader program, and the one we'll be rendering with.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
@@ -500,32 +500,12 @@ function configureAttributes<A extends string, U extends string>(shaderProgram: 
  */
 function setUniforms<A extends string, U extends string>(shaderProgram: ShaderProgram<A, U>, position: Vec3, scale: Vec3, uniforms: Record<string, any>, textures: TextureInfo[]): void {
 
-	{
-		// Update the transformMatrix on the gpu, EVERY render call!!
-		// This contains our camera, perspective projection, and the
-		// positional and scale transformations of the mesh we're rendering!
-		// If we do not update this draw call, the uniform value from
-		// the previous draw call will bleed through.
-	
-		const { projMatrix, viewMatrix } = camera.getProjAndViewMatrixes();
-	
-		// Order of matrix multiplication goes:
-		// uProjMatrix * uViewMatrix * uWorldMatrix ==> transformMatrix
-		// Then in the shader we will do:
-		// transformMatrix * positionVec4
-	
-		// The positional and scale transformation matrix of the single object we're rendering
-		const worldMatrix = genWorldMatrix(position, scale);
-	
-		// Multiply the matrices in order
-		const transformMatrix = mat4.create();
-		mat4.multiply(transformMatrix, projMatrix, viewMatrix);  // First multiply projMatrix and viewMatrix
-		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
-		
-		// Send the transformMatrix to the gpu (every shader has this uniform)
-		gl.uniformMatrix4fv(shaderProgram.getUniformLocation('u_transformmatrix' as U), false, transformMatrix);
-	}
+	// Calculate the final Model-View-Projection matrix for this object
+	const transformMatrix = genTransformMatrix(position, scale);
+	// Send the transformMatrix to the gpu (every shader has this uniform)
+	gl.uniformMatrix4fv(shaderProgram.getUniformLocation('u_transformmatrix' as U), false, transformMatrix);
 
+	// Bind and set all textures
 	textures.forEach((texInfo, i) => {
 		const uLoc = shaderProgram.getUniformLocation(texInfo.uniformName as U);
 		// Skip if the shader doesn't use this uniform. Useful for using the same model with different shaders?
@@ -575,15 +555,31 @@ function setUniforms<A extends string, U extends string>(shaderProgram: ShaderPr
 }
 
 /**
- * Generates a world matrix given a position and scale to transform it by!
+ * Calculates the final Model-View-Projection matrix for a given object.
+ * This combines the camera's view and projection with the object's model matrix.
+ */
+function genTransformMatrix(position: Vec3, scale: Vec3): Mat4 {
+	const { projMatrix, viewMatrix } = camera.getProjAndViewMatrixes();
+	const modelMatrix = genModelMatrix(position, scale);
+
+	// Multiply the matrices in order: projection * view * model (world)
+	const transformMatrix = mat4.create();
+	mat4.multiply(transformMatrix, projMatrix, viewMatrix);
+	mat4.multiply(transformMatrix, transformMatrix, modelMatrix);
+	
+	return transformMatrix;
+}
+
+/**
+ * Generates a model matrix given a position and scale to transform it by!
  * The gpu works with matrices REALLY FAST, so this is the most optimal way
  * to translate our models into position.
  */
-function genWorldMatrix(position: Vec3, scale: Vec3): Mat4 {
-	const worldMatrix = mat4.create();
-	mat4.scale(worldMatrix, worldMatrix, scale);
-	mat4.translate(worldMatrix, worldMatrix, position);
-	return worldMatrix;
+function genModelMatrix(position: Vec3, scale: Vec3): Mat4 {
+	const modelMatrix = mat4.create();
+	mat4.scale(modelMatrix, modelMatrix, scale);
+	mat4.translate(modelMatrix, modelMatrix, position);
+	return modelMatrix;
 }
 
 

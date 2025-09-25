@@ -9,7 +9,7 @@
  * 
  * viewMatrix  is the camera location and rotation.
  * projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
- * worldMatrix  is custom for each rendered object, translating it how desired.
+ * modelMatrix  is custom for each rendered object, translating it how desired.
  */
 
 
@@ -168,7 +168,7 @@ function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 	};
 }
 
-// Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
+// Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
 function init(): void {
 	initFOV();
 	initMatrixes();
