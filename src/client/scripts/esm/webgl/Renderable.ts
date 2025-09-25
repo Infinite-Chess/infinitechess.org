@@ -258,7 +258,8 @@ function createRenderable_GivenInfo<K extends keyof ProgramMap>(
 
 	gl.bindVertexArray(vao);
 	configureAttributes(shaderProgram, buffer, attribInfo, stride, BYTES_PER_ELEMENT, false);
-	gl.bindVertexArray(null); // Unbind. The configuration is now saved inside the 'vao' object.
+	gl.bindVertexArray(null); // Unbind VAO. The configuration is now saved inside the 'vao' object.
+	gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind the buffer next (configureAttributes() binds it)
 
 	return {
 		data,
@@ -313,7 +314,8 @@ function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
 	gl.bindVertexArray(vao);
 	configureAttributes(shaderProgram, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT_VData, false);
 	configureAttributes(shaderProgram, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT_IData, true);
-	gl.bindVertexArray(null); // Unbind. The configuration is now saved inside the 'vao' object.
+	gl.bindVertexArray(null); // Unbind VAO. The configuration is now saved inside the 'vao' object.
+	gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind the buffer next (configureAttributes() binds it)
 
 	return {
 		vertexData,
@@ -458,6 +460,7 @@ function render_Instanced<A extends string, U extends string>( // vertexBuffer, 
 /**
  * Configures the attributes for a shader program.
  * Tells the gpu how it will extract the data from the vertex data buffer.
+ * BINDS THE BUFFER FOR YOU.
  * @param shaderProgram - The currently bound shader program, and the one we'll be rendering with.
  * @param buffer - The buffer that we have passed the vertex data into.
  * @param attribInfo - The AttributeInfo object, storing what attributes are in a single stride of the vertex data, and how many components they use.
@@ -485,8 +488,6 @@ function configureAttributes<A extends string, U extends string>(shaderProgram: 
 		// Adjust our offset for the next attribute
 		currentOffsetBytes += attrib.numComponents * BYTES_PER_ELEMENT;
 	}
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind the buffer
 }
 
 /**
