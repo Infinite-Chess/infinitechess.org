@@ -4,7 +4,8 @@
 /**
  * This script contains all the functions used to generate renderable buffer models of the
  * game objects that the shader programs can use. It receives the object's vertex data to do so,
- * and the attribute information, if applicable, such as how many components of the vertex data
+ * the desired shader to use, the textures along with their uniform names, and the attribute
+ * information, if applicable, such as how many components of the vertex data
  * are dedicated to position, color, texture coordinates, etc.
  * 
  * It is also capable of instanced rendering.
