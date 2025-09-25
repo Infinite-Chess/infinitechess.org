@@ -8,7 +8,7 @@
  *    The the same subdirectory structure will be maintained.
  *
  * 2. Run the command:
- *    npm run build-images
+ *    npm run optimize-images
  *
  * Any images that already have atleast one version .webp, .png, or .avif
  * in `src/client/img/` will be skipped. This is because sometimes we only need one format.
