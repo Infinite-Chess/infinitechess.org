@@ -11,7 +11,7 @@
 
 import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial } from "./movepiece.js";
-import type { Coords } from "./movesets.js";
+import type { Coords } from "../util/coordutil.js";
 import type { Player } from "../util/typeutil.js";
 import type { Game, Board, FullGame } from "./gamefile.js";
 import type { MoveDraftEdit } from "./specialmove.js";

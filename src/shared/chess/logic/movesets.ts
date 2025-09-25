@@ -312,7 +312,6 @@ export default {
 export type {
 	Movesets,
 	PieceMoveset,
-	Coords,
 	BlockingFunction,
 	IgnoreFunction,
 	SpecialFunction
