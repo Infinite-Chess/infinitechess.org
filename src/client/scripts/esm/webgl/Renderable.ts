@@ -271,7 +271,7 @@ function createRenderable_GivenInfo<K extends keyof ProgramMap>(
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: Record<string, any> = {}
-		): void => render(shaderProgram, vao, position, scale, uniforms, vertexCount, mode, textures),		
+		): void => prepareAndExecuteRender(shaderProgram, vao, position, scale, uniforms, textures, () => gl.drawArrays(gl[mode], 0, vertexCount)),
 	};
 }
 
@@ -298,7 +298,7 @@ function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
 	const BYTES_PER_ELEMENT_IData = instanceData.BYTES_PER_ELEMENT;
 	
 
-	const instanceVertexCount = vertexData.length / vertexDataStride;
+	const vertexCount = vertexData.length / vertexDataStride; // The vertex count of our vertex data of one single instance
 	const instanceCount = instanceData.length / instanceDataStride;
 
 	const vertexBuffer = createBufferFromData(vertexData);
@@ -332,7 +332,7 @@ function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
 			position: Vec3 = [0, 0, 0],
 			scale: Vec3 = [1, 1, 1],
 			uniforms: Record<string, any> = {}
-		): void => render_Instanced(shaderProgram, vao, position, scale, uniforms, instanceVertexCount, instanceCount, mode, textures),		
+		): void => prepareAndExecuteRender(shaderProgram, vao, position, scale, uniforms, textures, () => gl.drawArraysInstanced(gl[mode], 0, vertexCount, instanceCount)),		
 	};
 }
 
@@ -360,92 +360,36 @@ function ensureTypedArray(data: InputArray): TypedArray {
 }
 
 /**
- * Renders a model. This handles everything from switching shader programs,
- * to preparing the attributes, preparing the uniforms, transforming the object
- * according to the provided position and scale, to the draw call.
+ * Renders a model, preparing the GPU state beforehand and cleaning up afterwards.
  * @param shaderProgram - The shader program to render with.
  * @param vao - The Vertex Array Object that stores the attribute configuration.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
- * @param vertexCount - The mesh's vertex count.
- * @param mode - Primitive rendering mode (e.g. "TRIANGLES" / "LINES"). See {@link validRenderModes}.
- * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
+ * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are transformmatrix, and all texture samplers.
+ * @param textures - The textures to bind.
+ * @param drawCallback - A function that executes the actual draw call, e.g. drawArrays() or drawArraysInstanced().
  */
-function render<A extends string, U extends string>(
+function prepareAndExecuteRender<A extends string, U extends string>(
 	shaderProgram: ShaderProgram<A, U>,
 	vao: WebGLVertexArrayObject,
 	position: Vec3,
 	scale: Vec3,
 	uniforms: Record<string, any>,
-	vertexCount: number,
-	mode: PrimitiveType,
 	textures: TextureInfo[],
+	drawCallback: () => void,
 ): void {
 	// Switch to the program
 	shaderProgram.use();
-
 	// Bind the VAO. ONE call to restore all attribute configuration.
 	gl.bindVertexArray(vao);
-
-	// Prepare the uniforms...
+	// Prepare the uniforms.
 	setUniforms(shaderProgram, position, scale, uniforms, textures);
 
 	// Call the draw function!
-	gl.drawArrays(gl[mode], 0, vertexCount);
+	drawCallback();
 
 	// Unbind the VAO.
 	gl.bindVertexArray(null);
-
-	// Unbind textures from all units that were used.
-	// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
-	// We can't put it at the end of setUniforms()
-	textures.forEach((texInfo, i) => {
-		gl.activeTexture(gl.TEXTURE0 + i);
-		gl.bindTexture(gl.TEXTURE_2D, null);
-	});
-}
-
-/**
- * Renders a model that uses instanced rendering. This handles everything from switching shader programs,
- * to preparing the attributes, preparing the uniforms, transforming the object
- * according to the provided position and scale, to the draw call!
- * @param shaderProgram - The shader program to render with.
- * @param vao - The Vertex Array Object that stores the attribute configuration.
- * @param position - The positional translation of the object: `[x,y,z]`
- * @param scale - The scale transformation of the object: `[x,y,z]`
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
- * @param instanceVertexCount - The vertex count of a single instance, or the number of vertices in the vertex data.
- * @param instanceCount - The number of total instances, or the length of the instance-specific data divided by that data's stride.
- * @param mode - Primitive rendering mode (e.g. "TRIANGLES" / "LINES"). See {@link validRenderModes}.
- * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
- */
-function render_Instanced<A extends string, U extends string>( // vertexBuffer, instanceBuffer, vertexDataAttribInfo, instanceDataAttribInfo, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture
-	shaderProgram: ShaderProgram<A, U>,
-	vao: WebGLVertexArrayObject,
-	position: Vec3,
-	scale: Vec3,
-	uniforms: Record<string, any>,
-	instanceVertexCount: number,
-	instanceCount: number,
-	mode: PrimitiveType,
-	textures: TextureInfo[],
-): void {
-	// Switch to the program
-	shaderProgram.use();
-
-	// Bind the VAO. ONE call to restore all attribute configuration.
-	gl.bindVertexArray(vao);
-
-	// Prepare the uniforms...
-	setUniforms(shaderProgram, position, scale, uniforms, textures);
-
-	// Call the draw function! Render using drawArraysInstanced
-	gl.drawArraysInstanced(gl[mode], 0, instanceVertexCount, instanceCount);
-
-	// Unbind the VAO.
-	gl.bindVertexArray(null);
-
 	// Unbind textures from all units that were used.
 	// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
 	// We can't put it at the end of setUniforms()
