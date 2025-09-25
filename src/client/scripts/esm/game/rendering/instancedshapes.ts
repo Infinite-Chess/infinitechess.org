@@ -92,8 +92,9 @@ function getDataLegalMoveSquare(color: Color): number[] {
  * @returns The vertex data for the "legal move dot" (circle).
  */
 function getDataLegalMoveDot(color: Color): number[] {
-	color[3] += DOTS.OPACITY_OFFSET; // Add the offset
-	color[3] = Math.min(color[3], 1); // Cap it
+	const colorCopy: Color = [...color]; // Don't mutate the original
+	colorCopy[3] += DOTS.OPACITY_OFFSET; // Add the offset
+	colorCopy[3] = Math.min(colorCopy[3], 1); // Cap it
 
 	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
@@ -101,7 +102,7 @@ function getDataLegalMoveDot(color: Color): number[] {
 	const y = coords[1] + (1 - board.getSquareCenterAsNumber()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
-	return primitives.Circle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, color);
+	return primitives.Circle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, colorCopy);
 }
 
 /**
