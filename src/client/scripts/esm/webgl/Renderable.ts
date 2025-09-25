@@ -542,14 +542,35 @@ function setUniforms<A extends string, U extends string>(shaderProgram: ShaderPr
 		gl.uniform1i(uLoc, i);
 	});
 
-	// Custom uniforms provided in the render call, for example 'u_size'...
-	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
-	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
+	// Handle custom uniforms provided in the render call.
+	for (const [name, value] of Object.entries(uniforms)) {
 		const uLoc = shaderProgram.getUniformLocation(name as U);
-		if (uLoc === null) continue; // Skip if uniform isn't active (shader must have optimized it out if it is unused)
+		
+		// It's common for game logic to pass uniforms that a specific shader might not use, so we just skip them.
+		if (uLoc === null) {
+			console.warn(`Uniform "${name}" not found in shader when trying to set custom uniform. Skipping...`);
+			continue;
+		}
 
-		if (name === 'u_size') gl.uniform1f(uLoc, value);
-		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
+		// Infer the correct uniform function from the value's type and structure
+		if (Array.isArray(value)) {
+			// Value is an array, treat it as a vector (e.g., vec2, vec3, vec4)
+			switch (value.length) {
+				case 2: gl.uniform2fv(uLoc, value); break;
+				case 3: gl.uniform3fv(uLoc, value); break;
+				case 4: gl.uniform4fv(uLoc, value); break;
+				default:
+					console.warn(`Unsupported array length for uniform "${name}". Expected 2, 3, or 4.`);
+			}
+		} else if (typeof value === 'number') {
+			// Value is a number, treat it as a float
+			gl.uniform1f(uLoc, value);
+		} else if (typeof value === 'boolean') {
+			// Value is a boolean, treat it as an integer (0 or 1)
+			gl.uniform1i(uLoc, value ? 1 : 0);
+		} else {
+			throw new Error(`Unsupported data type "${typeof value}" for uniform "${name}".`);
+		}
 	}
 }
 
