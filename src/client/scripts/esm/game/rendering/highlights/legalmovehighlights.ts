@@ -25,7 +25,7 @@ import legalmoveshapes from '../instancedshapes.js';
 import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
-import { BufferModelInstanced, createModel_Instanced } from '../buffermodel.js';
+import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -40,18 +40,18 @@ let selectedPieceLegalMoves: LegalMoves | undefined;
  * A buffer model that contains the single square
  * highlight immediately underneath the selected piece.
  */
-let model_SelectedPiece: BufferModelInstanced | undefined;
+let model_SelectedPiece: RenderableInstanced | undefined;
 
 /**
  * An model using instanced-rendering for rendering the
  * non-capturing selected piece's legal move highlights
  */
-let model_NonCapture: BufferModelInstanced | undefined;
+let model_NonCapture: RenderableInstanced | undefined;
 /**
  * An model using instanced-rendering for rendering the
  * capturing selected piece's legal move highlights
  */
-let model_Capture: BufferModelInstanced | undefined;
+let model_Capture: RenderableInstanced | undefined;
 
 
 // Init Listeners --------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ function render(): void {
 
 	renderSelectedPieceLegalMoves();
 	arrowlegalmovehighlights.renderEachHoveredPieceLegalMoves();
-	if (camera.getDebug()) legalmovemodel.renderOutlineofRenderBox();
+	if (camera.getDebug()) legalmovemodel.renderOutlineOfRenderBox();
 }
 
 /**
@@ -136,7 +136,7 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	const coords = pieceSelected!.coords;
 	const offsetCoord = coordutil.subtractCoords(coords, legalmovemodel.getOffset());
 	const instanceData: bigint[] = [...offsetCoord];
-	model_SelectedPiece = createModel_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), "TRIANGLES", true),
+	model_SelectedPiece = createRenderable_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), "TRIANGLES", 'colorInstanced', true),
 	
 	frametracker.onVisualChange();
 }

@@ -23,7 +23,7 @@ import boardtiles from './boardtiles.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import gameloader from '../chess/gameloader.js';
 import docutil from '../../util/docutil.js';
-import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
+import { AttributeInfoInstanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 
@@ -50,12 +50,12 @@ type Star = {
 /** The attribute info of our instanced models' vertex data. */
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [
-		{ name: 'position', numComponents: 2 }
+		{ name: 'a_position', numComponents: 2 }
 	],
 	instanceDataAttribInfo: [
-		{ name: 'instanceposition', numComponents: 2 },
-		{ name: 'instancecolor', numComponents: 4 },
-		{ name: 'instancesize', numComponents: 1 },
+		{ name: 'a_instanceposition', numComponents: 2 },
+		{ name: 'a_instancecolor', numComponents: 4 },
+		{ name: 'a_instancesize', numComponents: 1 },
 	]
 };
 
@@ -246,7 +246,7 @@ function update(): void {
 	// Call for a render this frame if the starfield is visible
 	if (isStarfieldVisible()) {
 		frametracker.onVisualChange();
-		console.log("Starfield visible, requesting render.");
+		// console.log("Starfield visible, requesting render.");
 	}
 
 	// Update the desired number of stars for this frame ---
@@ -385,7 +385,7 @@ function render(): void {
 	});
 
 	perspective.renderWithoutPerspectiveRotations(() => {
-		createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES').render();
+		createRenderable_Instanced_GivenInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES', 'starfield').render();
 	});
 }
 

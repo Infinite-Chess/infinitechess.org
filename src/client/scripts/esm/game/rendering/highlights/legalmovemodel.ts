@@ -32,7 +32,7 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createModel, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
+import { AttributeInfoInstanced, RenderableInstanced, createRenderable, createRenderable_Instanced, createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
@@ -58,8 +58,8 @@ type RayIterationInfo = {
 
 /** The attribute info for all legal move highlight instanced rendering models. */
 const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
-	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_color', numComponents: 4 }],
+	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }]
 };
 
 /**
@@ -250,7 +250,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 	legalMoves: LegalMoves,
 	friendlyColor: Player,
 	highlightColor: Color
-): { NonCaptureModel: BufferModelInstanced, CaptureModel: BufferModelInstanced } {
+): { NonCaptureModel: RenderableInstanced, CaptureModel: RenderableInstanced } {
 
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
@@ -272,9 +272,9 @@ function generateModelsForPiecesLegalMoveHighlights(
 
 	return {
 		// The NON-CAPTURING legal move highlights model
-		NonCaptureModel: createModel_Instanced(vertexData_NonCapture, piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture), "TRIANGLES", true),
+		NonCaptureModel: createRenderable_Instanced(vertexData_NonCapture, piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture), "TRIANGLES", 'colorInstanced', true),
 		// The CAPTURING legal move highlights model
-		CaptureModel: createModel_Instanced(vertexData_Capture, piecemodels.castBigIntArrayToFloat32(instanceData_Capture), "TRIANGLES", true),
+		CaptureModel: createRenderable_Instanced(vertexData_Capture, piecemodels.castBigIntArrayToFloat32(instanceData_Capture), "TRIANGLES", 'colorInstanced', true),
 	};
 }
 
@@ -541,7 +541,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
  * Rays are square highlights starting from a single coord
  * and going in one direction to infinity, unobstructed.
  */
-function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
+function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
 	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: bigint[] = [];
 
@@ -566,7 +566,7 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
 		}
 	}
 
-	return createModel_Instanced_GivenAttribInfo(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), ATTRIB_INFO, 'TRIANGLES');
+	return createRenderable_Instanced_GivenInfo(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), ATTRIB_INFO, 'TRIANGLES', 'colorInstanced');
 }
 
 
@@ -577,12 +577,12 @@ function genModelForRays(rays: Ray[], color: Color): BufferModelInstanced {
  * [DEBUG] Renders an outline of the box containing all legal move highlights.
  * Will only be visible if camera debug mode is on, as this is normally outside of the screen edge.
  */
-function renderOutlineofRenderBox(): void {
+function renderOutlineOfRenderBox(): void {
 	// const color: Color = [1,0,1, 1]; // Magenta
 	const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
 	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
 
-	createModel(data, 2, "LINE_LOOP", true).render();
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 /**
@@ -593,7 +593,7 @@ function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
 	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(box);
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createModel(data, 2, "LINE_LOOP", true).render();
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 
@@ -609,6 +609,6 @@ export default {
 	// Rays
 	genModelForRays,
 	// Rendering
-	renderOutlineofRenderBox,
+	renderOutlineOfRenderBox,
 	renderOutlineofFloatingBox,
 };

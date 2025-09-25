@@ -154,10 +154,10 @@ function render(highlights: Square[]): void {
 	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 
 	// If we're zoomed out, then the size of the highlights is constant.
-	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScaleAsNumber();
+	const u_size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScaleAsNumber();
 
 	// Render preset squares (only if zoomed in)
-	if (!boardpos.areZoomedOut() && presetSquares.length > 0) squarerendering.genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
+	if (!boardpos.areZoomedOut() && presetSquares.length > 0) squarerendering.genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { u_size });
 
 	// Early exit if no drawn-squares to draw
 	if (highlights.length === 0) return;
@@ -166,7 +166,7 @@ function render(highlights: Square[]): void {
 	const color = preferences.getAnnoteSquareColor();
 	color[3] += OPACITY_OFFSET; // Add opacity offset to make it more visible than rays
 
-	squarerendering.genModel(highlights, color).render(undefined, undefined, { size });
+	squarerendering.genModel(highlights, color).render(undefined, undefined, { u_size });
 
 	// Render hovered highlights
 
@@ -176,7 +176,7 @@ function render(highlights: Square[]): void {
 	if (allHovered.length > 0) {
 		const hoverColor = preferences.getAnnoteSquareColor();
 		hoverColor[3] = hover_opacity;
-		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { size });
+		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { u_size });
 	}
 }
 

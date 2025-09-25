@@ -6,7 +6,7 @@
  */
 
 
-import type { BufferModel } from "../buffermodel.js";
+import type { Renderable } from "../../../webgl/Renderable.js";
 import type { Color } from "../../../../../../shared/util/math/math.js";
 import type { Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
 import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
@@ -15,7 +15,7 @@ import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../../../../shared/chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
-import { createModel } from "../buffermodel.js";
+import { createRenderable } from "../../../webgl/Renderable.js";
 import space from "../../misc/space.js";
 import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
@@ -213,7 +213,7 @@ function renderTransparentSquare(): void {
 
 	const color: Color = [0,0,0,0];
 	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
-	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
+	return createRenderable(data, 2, "TRIANGLES", 'color', true).render([0,0,z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
@@ -228,7 +228,7 @@ function renderPiece(): void {
  * Generates the model of the dragged piece and its shadow.
  * @returns The buffer model
  */
-function genPieceModel(): BufferModel | undefined {
+function genPieceModel(): Renderable | undefined {
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
@@ -260,7 +260,7 @@ function genPieceModel(): BufferModel | undefined {
 	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
 	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
-	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
+	return createRenderable(data, 3, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
 }
 
 /**
@@ -269,7 +269,7 @@ function genPieceModel(): BufferModel | undefined {
  * On touchscreen the entire rank and file are outlined.
  * @returns The buffer model
  */
-function genOutlineModel(): BufferModel {
+function genOutlineModel(): Renderable {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
@@ -293,7 +293,7 @@ function genOutlineModel(): BufferModel {
 		data.push(...getBoxFrameData(hoveredCoords!));
 	}
 	
-	return createModel(data, 2, "TRIANGLES", true);
+	return createRenderable(data, 2, "TRIANGLES", 'color', true);
 }
 
 /**

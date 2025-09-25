@@ -380,11 +380,11 @@ function render(): void {
 		return self.findIndex(c => coordutil.areCoordsEqual(c, coords)) === index;
 	});
 
-	const size: number = boardpos.getBoardScaleAsNumber();
+	const u_size: number = boardpos.getBoardScaleAsNumber();
 	const color: Color = preferences.getAnnoteSquareColor();
 
 	// Render preset squares
-	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { size });
+	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { u_size });
 }
 
 

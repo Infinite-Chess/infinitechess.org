@@ -12,7 +12,7 @@
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { LineKey } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { AttributeInfoInstanced } from '../buffermodel.js';
+import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 
@@ -44,7 +44,7 @@ import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdeci
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
-import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
+import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -1123,20 +1123,21 @@ function regenerateModelAndRender(): void {
 	 * the edge of the screen. **Doesn't include** the little arrows.
 	 */
 	const attribInfoInstancedPictures: AttributeInfoInstanced = {
-		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'texcoord', numComponents: 2 }],
-		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }]
+		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_texturecoord', numComponents: 2 }],
+		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancetexcoord', numComponents: 2 }, { name: 'a_instancecolor', numComponents: 4 }]
 	};
-	const modelPictures = createModel_Instanced_GivenAttribInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", spritesheet.getSpritesheet());
+	const texture = spritesheet.getSpritesheet();
+	const modelPictures = createRenderable_Instanced_GivenInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", 'arrowImages', [{ texture, uniformName: 'u_sampler' }]);
 
 	/*
 	 * The buffer model of the little arrows on
 	 * the edge of the screen next to the mini piece images.
 	 */
 	const attribInfoInstancedArrows: AttributeInfoInstanced = {
-		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
-		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }, { name: 'instancerotation', numComponents: 1 }]
+		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
+		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }, { name: 'a_instancecolor', numComponents: 4 }, { name: 'a_instancerotation', numComponents: 1 }]
 	};
-	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES");
+	const modelArrows = createRenderable_Instanced_GivenInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES", 'arrows');
 
 	modelPictures.render();
 	modelArrows.render();

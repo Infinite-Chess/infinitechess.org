@@ -1,6 +1,6 @@
 #version 300 es
 
-precision lowp float;
+precision highp float;
 
 in vec2 vTextureCoord;          // From vertex shader
 uniform sampler2D u_sampler;     // Texture sampler

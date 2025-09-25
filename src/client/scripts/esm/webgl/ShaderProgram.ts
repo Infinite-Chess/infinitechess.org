@@ -10,7 +10,7 @@
  */
 export class ShaderProgram<Attribute extends string, Uniform extends string> {
 	private readonly program: WebGLProgram;
-	private readonly gl: WebGLRenderingContext;
+	private readonly gl: WebGL2RenderingContext;
 
 	// Caches for attribute and uniform locations to avoid expensive lookups
 	private attributeLocations: Map<string, number> = new Map();
@@ -24,7 +24,7 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
      * @param vertexSource - The GLSL source code for the vertex shader.
      * @param fragmentSource - The GLSL source code for the fragment shader.
      */
-	constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
+	constructor(gl: WebGL2RenderingContext, vertexSource: string, fragmentSource: string) {
 		this.gl = gl;
 		const vertexShader = this.compileShader(gl.VERTEX_SHADER, vertexSource);
 		const fragmentShader = this.compileShader(gl.FRAGMENT_SHADER, fragmentSource);

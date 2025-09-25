@@ -8,7 +8,7 @@
 
 
 import type { Color } from "../../../../../../shared/util/math/math.js";
-import type { BufferModelInstanced } from "../buffermodel.js";
+import type { RenderableInstanced } from "../../../webgl/Renderable.js";
 import type { LegalMoves } from "../../../../../../shared/chess/logic/legalmoves.js";
 import type { Vec3 } from "../../../../../../shared/util/math/vectors.js";
 import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
@@ -38,9 +38,9 @@ interface ArrowLegalMoves {
 	/** The calculated legal moves of the piece. */
 	legalMoves: LegalMoves,
 	/** The buffer model for rendering the non-capturing legal moves of the piece. */
-	model_NonCapture: BufferModelInstanced,
+	model_NonCapture: RenderableInstanced,
 	/** The buffer model for rendering the capturing legal moves of the piece. */
-	model_Capture: BufferModelInstanced,
+	model_Capture: RenderableInstanced,
 	/** The [r,b,g,a] values these legal move highlights should be rendered.
 	 * Depends on whether the piece is ours, a premove, or an opponent's piece. */
 	color: Color

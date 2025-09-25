@@ -53,7 +53,7 @@ const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/
 const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin('✅ Client Build successful.', '❌ Client Build failed.');
 const esbuildServerRebuildPlugin = getESBuildLogRebuildPlugin('✅ Server Build successful.', '❌ Server Build failed.');
 
-/** An esbuild plugin that logs everyone a build is finished. */
+/** An esbuild plugin that logs whenever a build is finished. */
 function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
 	return {
 		name: 'log-rebuild',

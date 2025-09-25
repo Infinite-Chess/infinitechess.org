@@ -12,11 +12,9 @@ import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../../../../shared/util/math/vectors.js";
 import boardpos from "../../boardpos.js";
-import boarddrag from "../../boarddrag.js";
-import { createModel } from "../../buffermodel.js";
+import { createRenderable } from "../../../../webgl/Renderable.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
-import { listener_overlay } from "../../../chess/game.js";
 import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
 
 
@@ -198,7 +196,7 @@ function render(arrows: Arrow[]): void {
 		const data: number[] = arrows.flatMap(arrow => getDataArrow(arrow, color));
 	
 		// Render
-		createModel(data, 2, 'TRIANGLES', true).render(); // No transform needed
+		createRenderable(data, 2, 'TRIANGLES', 'color', true).render(); // No transform needed
 	}
 
 	// Remove the arrow currently being drawn

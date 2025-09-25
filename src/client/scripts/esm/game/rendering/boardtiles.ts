@@ -4,12 +4,15 @@
  * We also keep track of what tile the mouse is currently hovering over.
  */
 
-import type { BufferModel } from './buffermodel.js';
+import type { Renderable } from '../../webgl/Renderable.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
+// @ts-ignore
+import style from '../gui/style.js';
+import camera from './camera.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
@@ -24,15 +27,10 @@ import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
-import { createModel } from './buffermodel.js';
+import TextureLoader from '../../webgl/TextureLoader.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 import perspective from './perspective.js';
 import webgl, { gl } from './webgl.js';
-// @ts-ignore
-import texture from './texture.js';
-// @ts-ignore
-import style from '../gui/style.js';
-// @ts-ignore
-import camera from './camera.js';
 
 
 
@@ -100,11 +98,14 @@ async function initTextures(): Promise<void> {
 	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
 	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
 
-	const element_tilesTexture2 = await checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2);
-	tilesTexture_2 = texture.loadTexture(gl, element_tilesTexture2, { useMipmaps: false });
+	// Generate both images in parallel
+	const [tilesTexture_2_IMG, tilesTexture_256mips_IMG] = await Promise.all([
+		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2),
+		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256)
+	]);
 
-	const element_tilesTexture256mips = await checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256);
-	tilesTexture_256mips = texture.loadTexture(gl, element_tilesTexture256mips, { useMipmaps: true });
+	tilesTexture_2 = TextureLoader.loadTexture(gl, tilesTexture_2_IMG, { mipmaps: false });
+	tilesTexture_256mips = TextureLoader.loadTexture(gl, tilesTexture_256mips_IMG, { mipmaps: true });
 
 	frametracker.onVisualChange();
 }
@@ -190,7 +191,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
  */
-function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): BufferModel | undefined {
+function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
 	const boardScale = boardpos.getBoardScale();
 	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
 	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
@@ -232,7 +233,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], bottom, top);
 	
 	const data = primitives.Quad_ColorTexture(left, bottom, right, top, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
-	return createModel(data, 2, "TRIANGLES", true, boardTexture);
+	return createRenderable(data, 2, "TRIANGLES", 'colorTexture', true, boardTexture);
 }
 
 function renderMainBoard(): void {
@@ -392,7 +393,7 @@ function renderSolidCover(): void {
 	const data = primitives.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
 	data.push(...primitives.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
-	const model = createModel(data, 3, "TRIANGLES", true);
+	const model = createRenderable(data, 3, "TRIANGLES", 'color', true);
 
 	model.render();
 }

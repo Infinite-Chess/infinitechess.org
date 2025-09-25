@@ -243,7 +243,6 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 // /**
 //  * Queries common WebGL context values and logs them to the console.
 //  * Each user device may have different supported values.
-//  * @param {WebGLRenderingContext} gl - The WebGL context.
 //  */
 // function queryWebGLContextInfo() {
 // 	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable

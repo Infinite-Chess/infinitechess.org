@@ -26,7 +26,7 @@ import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
-import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
+import { AttributeInfoInstanced, RenderableInstanced, createRenderable_Instanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ interface MeshData {
 	/** Infinite precision BIGINT instance data for performing arithmetic. */
 	instanceData: InstanceData,
 	/** Buffer model for rendering. (This automatically stores the instanceData32 array going into the gpu) */
-	model: BufferModelInstanced
+	model: RenderableInstanced
 }
 
 /** An object that contains the buffer models to render the pieces in a game. */
@@ -88,8 +88,8 @@ const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
 
 /** The attribute info of each of the piece type models, excluding voids. */
 const ATTRIBUTE_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'texcoord', numComponents: 2 }],
-	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_texturecoord', numComponents: 2 }],
+	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }]
 };
 
 
@@ -153,10 +153,10 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
-	const tex = texturecache.getTexture(type);
+	const texture = texturecache.getTexture(type);
 	return {
 		instanceData,
-		model: createModel_Instanced_GivenAttribInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', tex)
+		model: createRenderable_Instanced_GivenInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', [{ texture, uniformName: 'u_sampler' }])
 	};
 }
 
@@ -174,7 +174,7 @@ function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 
 	return {
 		instanceData,
-		model: createModel_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', true)
+		model: createRenderable_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', 'colorInstanced', true)
 	};
 }
 

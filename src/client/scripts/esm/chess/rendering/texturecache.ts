@@ -5,13 +5,12 @@
  * textures based on their source type. All textures are created with mipmaps enabled.
  */
 
-import imagecache from './imagecache.js'; // Adjust path as needed
-import typeutil from '../../../../../shared/chess/util/typeutil.js'; // Import typeutil for filtering
-
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
-// @ts-ignore
-import texture from '../../game/rendering/texture.js';
+
+import imagecache from './imagecache.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import TextureLoader from '../../webgl/TextureLoader.js';
 
 
 // Texture Cache Implementation ----------------------------------------------------------
@@ -43,8 +42,8 @@ async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board):
 	// 2. Iterate and create textures
 	for (const type of types) {
 		// Retrieve the pre-cached loaded image
-		const textureElement = imagecache.getPieceImage(type);
-		textureCache[type] = texture.loadTexture(gl, textureElement, { useMipmaps: true });
+		const img = imagecache.getPieceImage(type);
+		textureCache[type] = TextureLoader.loadTexture(gl, img, { mipmaps: true });
 		// console.log(`TextureCache: Cached texture for type ${typeutil.debugType(type)}`);
 	}
 	// console.log(`TextureCache: Initialization complete. Cached ${Object.keys(textureCache).length} textures.`);

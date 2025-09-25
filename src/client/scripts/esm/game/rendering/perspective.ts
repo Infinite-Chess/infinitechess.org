@@ -14,7 +14,7 @@ import statustext from '../gui/statustext.js';
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
 import camera, { Mat4 } from './camera.js';
-import { BufferModel, createModel } from './buffermodel.js';
+import { Renderable, createRenderable } from '../../webgl/Renderable.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
@@ -46,7 +46,7 @@ const crosshairThickness = 2.5; // Default: 2.5
 const crosshairWidth = 18; // Default: 16.7
 const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
 /** The buffer model of the mouse crosshair when in perspective mode. */
-let crosshairModel: BufferModel;
+let crosshairModel: Renderable;
 
 
 // Getters
@@ -246,7 +246,7 @@ function initCrosshairModel(): void {
         //     innerSide,  -innerSide,       r, g, b, a,
         //     -innerSide,  -innerSide,      r, g, b, a,
     ]);
-	crosshairModel = createModel(data, 2, "TRIANGLES", true); 
+	crosshairModel = createRenderable(data, 2, "TRIANGLES", 'color', true); 
 }
 
 function renderCrosshair(): void {

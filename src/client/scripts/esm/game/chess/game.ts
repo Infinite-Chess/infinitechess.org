@@ -44,14 +44,17 @@ import promotionlines from '../rendering/promotionlines.js';
 import transition from '../rendering/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
-import webgl from '../rendering/webgl.js';
 import starfield from '../rendering/starfield.js';
 import camera from '../rendering/camera.js';
 import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
-import { createModel } from '../rendering/buffermodel.js';
+import boardeffects from '../rendering/boardeffects.js';
+import webgl, { gl } from '../rendering/webgl.js';
+import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
+import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
+import { ProgramManager } from '../../webgl/ProgramManager.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -64,10 +67,23 @@ let listener_overlay: InputListener;
 let listener_document: InputListener;
 
 
+/** Manager of our Shaders */
+let programManager: ProgramManager;
+/** Manager of Post Processing Effects */
+let pipeline: PostProcessingPipeline;
+
+
+
 // Functions -------------------------------------------------------------------------------
 
 
 function init(): void {
+	programManager = new ProgramManager(gl);
+	buffermodel.init(gl, programManager);
+
+	pipeline = new PostProcessingPipeline(gl, programManager);
+	boardeffects.init(gl, programManager, pipeline);
+	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
@@ -77,10 +93,20 @@ function init(): void {
 	gui.prepareForOpen();
 
 	guititle.open();
+
+	window.addEventListener("resize", onScreenResize);
+}
+
+function onScreenResize(): void {
+	camera.onScreenResize();
+	pipeline.resize(gl.canvas.width, gl.canvas.height);
+	boardeffects.onScreenResize();
 }
 
 // Update the game every single frame
 function update(): void {
+	boardeffects.update(); // Update board post processing effects
+
 	controls.testOutGameToggles();
 	invites.update();
 	// Any input should trigger the next frame to render.
@@ -179,7 +205,23 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 	}
 }
 
+
+
+
+/**
+ * Renders everthing in-game, and applies post processing effects to the final image.
+ */
 function render(): void {
+	// Tell the pipeline to begin. All subsequent rendering will go to a texture.
+	pipeline.begin();
+	// Render the game scene
+	renderScene();
+	// Tell the pipeline we are finished. It will handle drawing the result to the screen.
+	pipeline.end();
+}
+
+/** Renders all in our scene. */
+function renderScene(): void {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
@@ -257,7 +299,7 @@ function renderOutlineofScreenBox(): void {
 	const color: Color = [0,0,0, 0.5]; // Transparent Black
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createModel(data, 2, "LINE_LOOP", true).render();
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
 
