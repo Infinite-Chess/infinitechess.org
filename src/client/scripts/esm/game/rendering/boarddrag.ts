@@ -197,17 +197,24 @@ function initDoublePointerDrag(pointerId: string): void {
 	// This can happen in board editor if you drag board with right mouse,
 	// drag offscreen, let go, then right click to drag board again.
 	if (pointer1Id === pointerId) return;
+	
+	// Pixel distance
+	const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
+	const p2Pos = listener_overlay.getPointerPos(pointerId)!;
+	const dist = vectors.euclideanDistanceDoubles(p1Pos, p2Pos);
+	if (dist === 0) {
+		// Error gracefully. Allows a rare bug where some users mouse
+		// makes two identical pointer down events in the same frame.
+		console.error('Finger pixel dist is 0. Skipping pinch.');
+		return;
+	}
 
 	// console.log('Board pinched with pointer', pointerId);
 
 	pointer2Id = pointerId;
 	pointer2BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer2Id!)!;
 
-	// Pixel distance
-	const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
-	const p2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
-	fingerPixelDist_WhenBoardPinched = vectors.euclideanDistanceDoubles(p1Pos, p2Pos);
-	if (fingerPixelDist_WhenBoardPinched === 0) throw Error('Finger pixel dist when pinching is 0');
+	fingerPixelDist_WhenBoardPinched = dist;
 
 	// Scale
 	scale_WhenBoardPinched = boardpos.getBoardScale();
