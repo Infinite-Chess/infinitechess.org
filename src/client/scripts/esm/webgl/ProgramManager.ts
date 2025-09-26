@@ -24,6 +24,7 @@ import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
 import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
 import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
 import fsSource_colorGrade from '../../../shaders/color_grade/fragment.glsl';
+import fsSource_posterize from '../../../shaders/posterize/fragment.glsl';
 import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
 import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 import fsSource_waterRipple from '../../../shaders/water_ripple/fragment.glsl';
@@ -62,6 +63,8 @@ type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';
 type Attributes_ColorGrade = never;
 type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_brightness' | 'u_contrast' | 'u_gamma' | 'u_saturation' | 'u_tintColor' | 'u_hueOffset';
+type Attributes_Posterize = never;
+type Uniforms_Posterize = 'u_sceneTexture' | 'u_levels';
 type Attributes_Vignette = never;
 type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_intensity';
 type Attributes_SineWave = never;
@@ -73,7 +76,7 @@ type Uniforms_HeatWave = 'u_sceneTexture' | 'u_noiseTexture' | 'u_time' | 'u_str
 
 
 /** The Super Union of all possible attributes. */
-export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave;
+export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave;
 
 
 // Each ShaderProgram type
@@ -93,6 +96,7 @@ type Program_Starfield = ShaderProgram<Attributes_Starfield, Uniforms_Starfield>
 // Post Processing Shaders
 type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
 type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
+type Program_Posterize = ShaderProgram<Attributes_Posterize, Uniforms_Posterize>;
 type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
 type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterRipple>;
@@ -132,6 +136,8 @@ export interface ProgramMap {
 	post_pass: Program_PostPass;
 	/** Post Processing Color Grading Shader. Several color effects. */
 	color_grade: Program_ColorGrade;
+	/** Post Processing Posterize Shader. */
+	posterize: Program_Posterize;
 	/** Post Processing Vignette Effect. */
     vignette: Program_Vignette;
 	/** Post Processing Dual Axis Sine Wave Distortion Effect. */
@@ -171,6 +177,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	// Post Processing Shaders
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
 	color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
+	posterize: { vertex: vsSource_postPass, fragment: fsSource_posterize },
 	vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 	water_ripple: { vertex: vsSource_postPass, fragment: fsSource_waterRipple },
