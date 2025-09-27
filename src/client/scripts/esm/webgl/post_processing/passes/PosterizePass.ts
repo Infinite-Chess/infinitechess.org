@@ -16,7 +16,7 @@ export class PosterizePass implements PostProcessPass {
 	 * A value of 4, for example, means each channel can only be one of 4 values.
 	 * Set 1 or less to effectively disable the effect.
 	 */
-	public levels: number = 6;
+	public levels: number = 8;
 
 
 	constructor(programManager: ProgramManager) {

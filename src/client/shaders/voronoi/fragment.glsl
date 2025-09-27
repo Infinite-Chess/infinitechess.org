@@ -14,7 +14,7 @@ uniform float u_max_brightness;
 // The input texture
 uniform sampler2D u_texture;
 
-in vec2 v_texCoord;
+in vec2 v_uv;
 
 out vec4 fragColor;
 
@@ -83,7 +83,7 @@ void main() {
     float voronoi_value = smoothstep(0.0, 1.0, min_dist);
 
     // 2. Sample the texture using the object's own UVs from the vertex shader
-    vec4 texture_color = texture(u_texture, v_texCoord);
+    vec4 texture_color = texture(u_texture, v_uv);
 
     // 3. Map the voronoi value to your desired brightness range
     float brightness_factor = mix(u_min_brightness, u_max_brightness, voronoi_value);

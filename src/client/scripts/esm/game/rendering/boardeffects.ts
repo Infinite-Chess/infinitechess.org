@@ -20,6 +20,8 @@ import { listener_overlay } from "../chess/game.js";
 import { Mouse } from "../input.js";
 import { DropletState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass.js";
 import { HeatWavePass } from "../../webgl/post_processing/passes/HeatWavePass.js";
+import { PosterizePass } from "../../webgl/post_processing/passes/PosterizePass.js";
+import { VoronoiDistortionPass } from "../../webgl/post_processing/passes/VoronoiDistortionPass.js";
 
 
 
@@ -28,6 +30,8 @@ let pipeline: PostProcessingPipeline;
 
 let sineWavePass: SineWavePass;
 const sineWaveSpeed = 1;
+
+let voronoiDistortionPass: VoronoiDistortionPass;
 
 let waterRipplePass: WaterRipplePass;
 // let activeDroplets: DropletState[] = [];
@@ -43,6 +47,8 @@ let colorGradePass: ColorGradePass;
 
 let vignettePass: VignettePass;
 
+let posterizePass: PosterizePass;
+
 
 
 
@@ -55,6 +61,9 @@ function init(gl: WebGL2RenderingContext, programManager: ProgramManager, the_pi
 	sineWavePass.amplitude = [0.003, 0.003]; // Default: 0.0035
 	sineWavePass.frequency = [2.0, 2.0];
 	sineWavePass.angle = 0;
+
+	voronoiDistortionPass = new VoronoiDistortionPass(programManager);
+
 
 	waterRipplePass = new WaterRipplePass(programManager, camera.canvas.width, camera.canvas.height);
 	// waterRipplePass.propagationSpeed = 0.2;
@@ -75,7 +84,9 @@ function init(gl: WebGL2RenderingContext, programManager: ProgramManager, the_pi
 	// applyWashedOutPreset(colorGradePass);
 
 	vignettePass = new VignettePass(programManager);
-	vignettePass.intensity = 0.5;
+	vignettePass.intensity = 0.8;
+
+	posterizePass = new PosterizePass(programManager);
 }
 
 
@@ -109,6 +120,8 @@ function applyWashedOutPreset(pass: ColorGradePass): void {
 }
 
 
+/** The next timestamp the voronoi distortion pass will randomize the time value. */
+let nextCrackTime: number = Date.now();
 
 function update(): void {
 	// FOR TESTING: Render every single frame.
@@ -118,9 +131,12 @@ function update(): void {
 	const activePasses: PostProcessPass[] = [];
 
 	// activePasses.push(sineWavePass);
+	// activePasses.push(voronoiDistortionPass);
 	// activePasses.push(waterRipplePass);
 	// if (heatWavePass) activePasses.push(heatWavePass); // Only push if it's loaded
 	// activePasses.push(colorGradePass);
+	// activePasses.push(vignettePass);
+	// activePasses.push(posterizePass);
 
 	pipeline.setPasses(activePasses);
 
@@ -129,6 +145,15 @@ function update(): void {
 	
 	sineWavePass.time += deltaTime * sineWaveSpeed;
 	sineWavePass.angle += deltaTime * 3; // Rotate 3 degrees per second
+
+	// voronoiDistortionPass.time = 632663; // Default: 0.1
+	// voronoiDistortionPass.time = performance.now() / 1000; // Default: 0.1
+	// voronoiDistortionPass.time = Math.floor(performance.now() / 400) * 10; // Default: 0.1
+	if (Date.now() > nextCrackTime) {
+		voronoiDistortionPass.time = performance.now() / 10;
+		const rand = Math.random() * Math.random();
+		nextCrackTime = Date.now() + 250 + rand * 3000;
+	}
 
 
 

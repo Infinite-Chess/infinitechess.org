@@ -75,7 +75,7 @@ type Uniforms_WaterRipple = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_drop
 type Attributes_HeatWave = never;
 type Uniforms_HeatWave = 'u_sceneTexture' | 'u_noiseTexture' | 'u_time' | 'u_strength';
 type Attributes_VoronoiDistortion = never;
-type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_resolution' | 'u_time' | 'u_density' | 'u_strength';
+type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_time' | 'u_density' | 'u_strength' | 'u_ridgeThickness' | 'u_ridgeStrength' | 'u_resolution';
 
 
 /** The Super Union of all possible attributes. */

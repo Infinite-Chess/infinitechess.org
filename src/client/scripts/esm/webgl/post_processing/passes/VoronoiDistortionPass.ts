@@ -14,17 +14,20 @@ export class VoronoiDistortionPass implements PostProcessPass {
 
 	// --- Public Properties to Control the Effect ---
 
-	/** The maximum strength of the distortion. Default is 0.02 */
-	public strength: number = 0.02;
-
-	/** The density of the Voronoi cells. Default is 10.0 */
-	public density: number = 10.0;
-    
-	/** The speed of the animation. Default is 0.1 */
-	public speed: number = 0.1;
-
 	/** The current time, used to animate the cells. Increment this each frame. */
 	public time: number = 0.0;
+
+	/** The density of the Voronoi cells. */
+	public density: number = 3.5;
+
+	/** The strength of the cells' distortion. */
+	public strength: number = 0.007;
+	
+	/** The thickness of the ridges between cells. */
+	public ridgeThickness = 0.015;
+
+	/** The strength of the ridges' lensing effect. */
+	public ridgeStrength = 0.03;
 
 
 	constructor(programManager: ProgramManager) {
@@ -39,10 +42,11 @@ export class VoronoiDistortionPass implements PostProcessPass {
 
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
-		gl.uniform2f(this.program.getUniformLocation('u_resolution'), gl.canvas.width, gl.canvas.height);
+		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);
 		gl.uniform1f(this.program.getUniformLocation('u_density'), this.density);
-		// Combine time and speed for the shader
-		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time * this.speed);
+		gl.uniform1f(this.program.getUniformLocation('u_ridgeThickness'), this.ridgeThickness);
+		gl.uniform1f(this.program.getUniformLocation('u_ridgeStrength'), this.ridgeStrength);
+		gl.uniform2f(this.program.getUniformLocation('u_resolution'), gl.canvas.width, gl.canvas.height);
 	}
 }

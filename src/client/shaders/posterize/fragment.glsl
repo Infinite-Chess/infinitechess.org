@@ -8,14 +8,14 @@ uniform sampler2D u_sceneTexture;
 uniform float u_levels;
 
 // The texture coordinates passed from the vertex shader
-in vec2 v_texCoord;
+in vec2 v_uv;
 
 // The final output color
 out vec4 out_color;
 
 void main() {
     // Sample the original color from the input texture
-    vec4 originalColor = texture(u_sceneTexture, v_texCoord);
+    vec4 originalColor = texture(u_sceneTexture, v_uv);
 
     // If levels are 1.0 or less, disable the effect and return the original color.
     // This prevents division by zero and provides an easy way to toggle the effect.
