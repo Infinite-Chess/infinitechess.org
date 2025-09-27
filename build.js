@@ -16,6 +16,7 @@ import { transform, browserslistToTargets } from 'lightningcss';
 import { glob } from 'glob';
 import esbuild from 'esbuild';
 import path from "node:path";
+import stripComments from 'glsl-strip-comments';
 
 // Local imports
 import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
@@ -67,12 +68,38 @@ function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
 	};
 }
 
+/** An esbuild plugin object that minifies GLSL shader files by stripping comments. */
+const GLSLMinifyPlugin = {
+	name: 'glsl-minify',
+	setup(build) {
+		// Intercept .glsl files and minify them
+		build.onLoad({ filter: /\.glsl$/ }, async(args) => {
+			try {
+				// Read the GLSL file
+				const source = await readFile(args.path, 'utf8');
+				// Strip comments from the GLSL source
+				const minified = stripComments(source);
+				// Return the minified content as text
+				return {
+					contents: minified,
+					loader: 'text'
+				};
+			} catch (error) {
+				return {
+					errors: [{
+						text: `Failed to minify GLSL file: ${error.message}`,
+						location: { file: args.path }
+					}]
+				};
+			}
+		});
+	},
+};
+
 const esbuildClientOptions = {
 	bundle: true,
 	entryPoints: clientEntryPoints,
 	outdir: './dist/client/scripts/esm',
-	// Use the 'text' loader for shader files
-	loader: { '.glsl': 'text' }, // Any file import ending in .glsl is loaded as a raw text string
 	/**
 	 * Enable code splitting, which means if multiple entry points require the same module,
 	 * that dependancy will be separated out of both of them which means it isn't duplicated,
@@ -86,7 +113,7 @@ const esbuildClientOptions = {
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// allowOverwrite: true, // Not needed?
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
-	plugins: [esbuildClientRebuildPlugin],
+	plugins: [esbuildClientRebuildPlugin, GLSLMinifyPlugin],
 };
 
 const esbuildServerOptions = {
