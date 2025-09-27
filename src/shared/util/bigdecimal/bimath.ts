@@ -106,6 +106,22 @@ function ln(bigint: bigint): number {
 	return Math.log(mantissa) + exponent * Math.LN2;
 }
 
+/**
+ * Estimates the number of base-10 digits in a bigint, excluding the sign.
+ * Accurate most of the time. 100% of the time within 1 digit.
+ * @param bigint - The BigInt to count digits for
+ * @returns The number of base-10 digits (excluding sign)
+ */
+function countDigits(bigint: bigint): number {
+	// Make it positive for digit counting
+	const abs_bigint = abs(bigint);
+	// Use bitLength for efficiency
+	const bitLen = bitLength_bisection(abs_bigint);
+	// Convert bit length to decimal digits: log10(2^bitLen) = bitLen * log10(2)
+	// Use Math.floor and add 1 for high accuracy, sacrificing exactness.
+	return Math.floor(bitLen * Math.log10(2)) + 1;
+}
+
 // /**
 //  * Calculates the logarithm of the specified base of the BigInt. Returns an integer.
 //  * @param bigint - The BigInt. 0+
@@ -447,7 +463,8 @@ function LCM(array: bigint[]): bigint {
 	let answer: bigint = array[0]!;
 	for (let i = 1; i < array.length; i++) {
 		const currentNumber = array[i]!;
-
+
+
 		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
 		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
 	}
@@ -467,6 +484,7 @@ export default {
 	// getBitAtPositionFromRight,
 	toDebugBinaryString,
 	bitLength_bisection,
+	countDigits,
 	estimateBigIntSize,
 	posMod,
 	min,
