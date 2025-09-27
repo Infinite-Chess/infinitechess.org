@@ -116,23 +116,14 @@ function countDigits(bigint: bigint): number {
 	if (bigint === ZERO) return 1;
 	
 	// Make it positive for digit counting
-	const abs_bigint = bigint < ZERO ? -bigint : bigint;
+	const abs_bigint = abs(bigint);
 	
 	// Use bitLength for efficiency
 	const bitLen = bitLength_bisection(abs_bigint);
 	
 	// Convert bit length to decimal digits: log10(2^bitLen) = bitLen * log10(2)
-	// We use Math.floor to get the lower bound, then add 1
-	const approxDigits = Math.floor(bitLen * Math.log10(2)) + 1;
-	
-	// For accuracy, verify with a quick check since this is an approximation
-	const powerOf10 = 10n ** BigInt(approxDigits - 1);
-	
-	// If our approximation is too low, increment
-	if (abs_bigint >= powerOf10 * 10n) return approxDigits + 1;
-	if (abs_bigint < powerOf10) return approxDigits - 1;
-	
-	return approxDigits;
+	// Use Math.floor and add 1 for best accuracy without verification
+	return Math.floor(bitLen * Math.log10(2)) + 1;
 }
 
 // /**
