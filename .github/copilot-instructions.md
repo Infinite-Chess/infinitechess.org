@@ -39,5 +39,10 @@
 - `src/client/img/`, `src/client/sounds/`, `src/client/shaders/` — Game assets
 - `translation/` — Localization
 
+## Key Guidelines
+1. Follow code standards and best practices of today.
+2. Maintain existing code structure and organization.
+3. Perform testing for new complex functions to ensure their output is as expected.
+
 ---
 **For questions or unclear patterns, ask for feedback or clarification from maintainers.**
