@@ -52,9 +52,12 @@ export class PostProcessingPipeline {
 		// Get the pass-through shader from your manager.
 		this.passThroughPass = new PassThroughPass(programManager);
 
+		const initialWidth = gl.canvas.width;
+		const initialHeight = gl.canvas.height;
+
 		// --- Create Framebuffers and Textures ---
-		const { fbo: fboA, texture: textureA } = this.createFBO();
-		const { fbo: fboB, texture: textureB } = this.createFBO();
+		const { fbo: fboA, texture: textureA } = this.createFBO(initialWidth, initialHeight);
+		const { fbo: fboB, texture: textureB } = this.createFBO(initialWidth, initialHeight);
 		this.readFBO = fboA;
 		this.readTexture = textureA;
 		this.writeFBO = fboB;
@@ -70,12 +73,22 @@ export class PostProcessingPipeline {
 	/**
 	 * Creates a single Framebuffer Object and its corresponding color texture.
 	 */
-	private createFBO(): { fbo: WebGLFramebuffer, texture: WebGLTexture } {
+	private createFBO(width: number, height: number): { fbo: WebGLFramebuffer, texture: WebGLTexture } {
 		const gl = this.gl;
 
 		const texture = gl.createTexture();
 		if (!texture) throw new Error("Could not create texture");
 		gl.bindTexture(gl.TEXTURE_2D, texture);
+
+		// Allocate storage for the texture IMMEDIATELY upon creation.
+		// Use RGBA8 for standard dynamic range. You could use RGBA16F for HDR.
+		// FIXES MOBILE BUG. Previousy we were attaching sizeless (0x0) textures
+		// to framebuffers; strict mobile drivers permanently mark these as invalid,
+		// while lenient desktop drivers allow it. This line allocates the texture's
+		// storage with the correct dimensions before attaching it, ensuring the
+		// framebuffer is valid from the start on all platforms.
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

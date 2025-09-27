@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/boardeffects.ts
+
 /**
  * This script controls the Post Processing Pass Effects on the
  * board when you are extremely far away from the origin.
