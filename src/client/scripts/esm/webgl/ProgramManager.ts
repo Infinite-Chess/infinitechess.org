@@ -29,6 +29,7 @@ import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
 import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 import fsSource_waterRipple from '../../../shaders/water_ripple/fragment.glsl';
 import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
+import fsSource_voronoiDistortion from '../../../shaders/voronoi_distortion/fragment.glsl';
 
 
 // =============================== Type Definitions ===============================
@@ -73,10 +74,12 @@ type Attributes_WaterRipple = never;
 type Uniforms_WaterRipple = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_glintIntensity' | 'u_glintExponent' | 'u_falloff' | 'u_resolution';
 type Attributes_HeatWave = never;
 type Uniforms_HeatWave = 'u_sceneTexture' | 'u_noiseTexture' | 'u_time' | 'u_strength';
+type Attributes_VoronoiDistortion = never;
+type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_resolution' | 'u_time' | 'u_density' | 'u_strength';
 
 
 /** The Super Union of all possible attributes. */
-export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave;
+export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave | Attributes_VoronoiDistortion;
 
 
 // Each ShaderProgram type
@@ -101,6 +104,7 @@ type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
 type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterRipple>;
 type Program_HeatWave = ShaderProgram<Attributes_HeatWave, Uniforms_HeatWave>;
+type Program_VoronoiDistortion = ShaderProgram<Attributes_VoronoiDistortion, Uniforms_VoronoiDistortion>;
 
 
 export interface ProgramMap {
@@ -146,6 +150,8 @@ export interface ProgramMap {
     water_ripple: Program_WaterRipple;
 	/** Post Processing Heat Wave Distortion Effect. */
     heat_wave: Program_HeatWave;
+    /** Post Processing Voronoi Cellular Noise Distortion Effect. */
+    voronoi_distortion: Program_VoronoiDistortion;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -182,6 +188,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 	water_ripple: { vertex: vsSource_postPass, fragment: fsSource_waterRipple },
 	heat_wave: { vertex: vsSource_postPass, fragment: fsSource_heatWave },
+	voronoi_distortion: { vertex: vsSource_postPass, fragment: fsSource_voronoiDistortion },
 };
 
 
