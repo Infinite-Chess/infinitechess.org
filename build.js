@@ -68,37 +68,33 @@ function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
 	};
 }
 
-/** An esbuild plugin that minifies GLSL shader files by stripping comments. */
-function getGLSLMinifyPlugin() {
-	return {
-		name: 'glsl-minify',
-		setup(build) {
-			// Intercept .glsl files and minify them
-			build.onLoad({ filter: /\.glsl$/ }, async (args) => {
-				try {
-					// Read the GLSL file
-					const source = await readFile(args.path, 'utf8');
-					
-					// Strip comments from the GLSL source
-					const minified = stripComments(source);
-					
-					// Return the minified content as text
-					return {
-						contents: minified,
-						loader: 'text'
-					};
-				} catch (error) {
-					return {
-						errors: [{
-							text: `Failed to minify GLSL file: ${error.message}`,
-							location: { file: args.path }
-						}]
-					};
-				}
-			});
-		},
-	};
-}
+/** An esbuild plugin object that minifies GLSL shader files by stripping comments. */
+const GLSLMinifyPlugin = {
+	name: 'glsl-minify',
+	setup(build) {
+		// Intercept .glsl files and minify them
+		build.onLoad({ filter: /\.glsl$/ }, async(args) => {
+			try {
+				// Read the GLSL file
+				const source = await readFile(args.path, 'utf8');
+				// Strip comments from the GLSL source
+				const minified = stripComments(source);
+				// Return the minified content as text
+				return {
+					contents: minified,
+					loader: 'text'
+				};
+			} catch (error) {
+				return {
+					errors: [{
+						text: `Failed to minify GLSL file: ${error.message}`,
+						location: { file: args.path }
+					}]
+				};
+			}
+		});
+	},
+};
 
 const esbuildClientOptions = {
 	bundle: true,
@@ -117,7 +113,7 @@ const esbuildClientOptions = {
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// allowOverwrite: true, // Not needed?
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
-	plugins: [esbuildClientRebuildPlugin, getGLSLMinifyPlugin()],
+	plugins: [esbuildClientRebuildPlugin, GLSLMinifyPlugin],
 };
 
 const esbuildServerOptions = {
