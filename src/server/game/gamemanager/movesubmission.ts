@@ -20,6 +20,7 @@ import gameutility, { Game } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import socketUtility from '../../socket/socketUtility.js';
+import bimath from '../../../shared/util/bigdecimal/bimath.js';
 
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
@@ -79,6 +80,14 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 		logEventsAndPrint(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
 	}
+	
+	// Check if the move exceeds the soft distance cap based on game duration
+	if (!isMoveWithinDistanceCap(moveDraft, game.timeCreated)) {
+		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		return sendSocketMessage(ws, "general", "printerror", "Move distance exceeds allowed limit for game duration.");
+	}
+	
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -113,6 +122,52 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 
 
 /**
+ * Calculates the number of digits in a bigint coordinate.
+ * @param coord - The coordinate to measure
+ * @returns The number of digits in the coordinate
+ */
+function getCoordinateDigits(coord: bigint): number {
+	return bimath.abs(coord).toString().length;
+}
+
+/**
+ * Calculates the maximum distance a move should be allowed based on game duration.
+ * Formula: Allow an extra 4.5 digits of coordinate per 1 second.
+ * @param gameStartTime - When the game was created (in milliseconds)
+ * @returns Maximum allowed coordinate digits
+ */
+function getMaxAllowedCoordinateDigits(gameStartTime: number): number {
+	const currentTime = Date.now();
+	const gameElapsedSeconds = (currentTime - gameStartTime) / 1000;
+	
+	// Start with a baseline of 1 digit (allows coordinates like -9 to 9)
+	const baselineDigits = 1;
+	const extraDigits = gameElapsedSeconds * 4.5;
+	
+	return Math.floor(baselineDigits + extraDigits);
+}
+
+/**
+ * Checks if a move's coordinates exceed the soft distance cap based on game duration.
+ * @param moveDraft - The parsed move to check
+ * @param gameStartTime - When the game was created (in milliseconds)
+ * @returns true if the move is within allowed distance, false otherwise
+ */
+function isMoveWithinDistanceCap(moveDraft: _Move_Out, gameStartTime: number): boolean {
+	const maxAllowedDigits = getMaxAllowedCoordinateDigits(gameStartTime);
+	
+	// Check all coordinates (start and end, both x and y)
+	const startXDigits = getCoordinateDigits(moveDraft.startCoords[0]);
+	const startYDigits = getCoordinateDigits(moveDraft.startCoords[1]);
+	const endXDigits = getCoordinateDigits(moveDraft.endCoords[0]);
+	const endYDigits = getCoordinateDigits(moveDraft.endCoords[1]);
+	
+	const maxDigitsInMove = Math.max(startXDigits, startYDigits, endXDigits, endYDigits);
+	
+	return maxDigitsInMove <= maxAllowedDigits;
+}
+
+/**
  * Returns true if their submitted move is in the format `x,y>x,y=3N`.
  * @param move - Their move submission.
  * @returns The move, if correctly formatted, otherwise false.
@@ -124,7 +179,7 @@ function doesMoveCheckOut(move: string): _Move_Out | false {
 		// THIS AUTOMATICALLY CHECKS if any coordinate would
 		// become Infinity when cast to a number!
 		moveDraft = icnconverter.parseCompactMove(move);
-	} catch (e) {
+	} catch {
 		// It either didn't pass the regex, or one of the coordinates is Infinity,
 		// OR the promoted piece abbreviation was invalid.
 		return false;
