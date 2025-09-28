@@ -117,6 +117,8 @@ function update(): void {
 		// Only do title screen updates
 		boardpos.update();
 		boardtiles.recalcVariables();
+		// Update the effect zone manager.
+		effectZoneManager!.update(getFurthestTileVisible());
 		return;
 	}
 
@@ -144,6 +146,9 @@ function update(): void {
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
+	
+	// Update the effect zone manager (after board variables are recalculated).
+	effectZoneManager!.update(getFurthestTileVisible());
 
 	// Check if the board needs to be pinched (will not single-pointer grab)
 	// This needs to be high up, as pinching the board has priority over the pointer than a lot of things.
@@ -184,9 +189,6 @@ function update(): void {
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardSingleGrabbed();
-
-	// Update the effect zone manager.
-	effectZoneManager!.update(getFurthestTileVisible());
 
 	gameloader.update(); // Updates whatever game is currently loaded.
 
