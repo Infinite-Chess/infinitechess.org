@@ -12,6 +12,9 @@ export class SineWavePass implements PostProcessPass {
 	readonly program: ProgramMap['sine_wave'];
 
 	// --- Public Properties to Control the Effect ---
+	
+	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
+	public masterStrength: number = 1.0;
 
 	/** The strength of the wave on the [x, y] axes. */
 	public amplitude: [number, number] = [0.01, 0.01];
@@ -41,6 +44,7 @@ export class SineWavePass implements PostProcessPass {
 		
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
+		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform2fv(this.program.getUniformLocation('u_amplitude'), this.amplitude);
 		gl.uniform2fv(this.program.getUniformLocation('u_frequency'), this.frequency);
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);

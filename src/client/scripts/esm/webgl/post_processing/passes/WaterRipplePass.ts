@@ -17,6 +17,13 @@ export class WaterRipplePass implements PostProcessPass {
 	private static readonly MAX_DROPLETS = 20; // MUST match the shader constant
 
 	// --- Global Effect Controls ---
+	
+	/**
+	 * A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect.
+	 * HAS NO EFFECT ON THE WATER RIPPLE PASS.
+	 */
+	public masterStrength: number = 1.0;
+
 	/** The overall strength and visibility of the distortion. */
 	public strength: number = 0.03;
 	/** How fast the ripple's leading edge expands outwards, in UV units per second. */

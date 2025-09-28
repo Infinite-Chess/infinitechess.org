@@ -11,6 +11,9 @@ export class VignettePass implements PostProcessPass {
 	readonly program: ProgramMap['vignette'];
 
 	// --- Public Properties to Control the Effect ---
+	
+	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
+	public masterStrength: number = 1.0;
 
 	/** The inner radius of the vignette, where darkening begins. Default is 0.3. */
 	public radius: number = 0.3;
@@ -34,6 +37,7 @@ export class VignettePass implements PostProcessPass {
 		
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
+		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1f(this.program.getUniformLocation('u_radius'), this.radius);
 		gl.uniform1f(this.program.getUniformLocation('u_softness'), this.softness);
 		gl.uniform1f(this.program.getUniformLocation('u_intensity'), this.intensity);

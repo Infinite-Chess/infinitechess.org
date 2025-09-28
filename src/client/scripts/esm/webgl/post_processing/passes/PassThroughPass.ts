@@ -12,6 +12,11 @@ import type { PostProcessPass } from "../PostProcessingPipeline";
 export class PassThroughPass implements PostProcessPass {
 	readonly program: ProgramMap['post_pass'];
 
+	/**
+	 * A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect.
+	 * HAS NO EFFECT IN THE PASS THROUGH PASS.
+	 */
+	public masterStrength: number = 1.0;
 	
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('post_pass');
@@ -23,7 +28,6 @@ export class PassThroughPass implements PostProcessPass {
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
 		
-		const location = this.program.getUniformLocation('u_sceneTexture');
-		gl.uniform1i(location, 0);
+		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 	}
 }

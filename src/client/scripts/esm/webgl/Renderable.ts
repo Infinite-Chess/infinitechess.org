@@ -546,7 +546,8 @@ export default {
 export type {
 	Renderable,
 	RenderableInstanced,
-	// AttributeInfo,
-	AttributeInfoInstanced,
 	TypedArray,
+	AttributeInfo,
+	AttributeInfoInstanced,
+	TextureInfo,
 };

@@ -3,7 +3,7 @@ precision highp float;
 
 
 // The master blend factor between the 'A' and 'B' effect slots.
-uniform float u_transitionAlpha;
+uniform float u_transitionProgress;
 
 // GLOBAL UNIFORMS (Needed by all effects)
 uniform sampler2D u_colorTexture;
@@ -107,7 +107,7 @@ void main() {
 	vec3 modulatedColorB = calculateEffectColor(u_effectTypeB, baseColor.rgb, screenUV);
 
 	// 3. Smoothly blend between the full results of the two slots.
-	vec3 blendedModulatedColor = mix(modulatedColorA, modulatedColorB, u_transitionAlpha);
+	vec3 blendedModulatedColor = mix(modulatedColorA, modulatedColorB, u_transitionProgress);
 
 	// 4. Apply the checkerboard mask to the final, blended effect.
 	vec3 finalRGB = mix(baseColor.rgb, blendedModulatedColor, maskValue);

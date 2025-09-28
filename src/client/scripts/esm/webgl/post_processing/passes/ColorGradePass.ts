@@ -11,6 +11,9 @@ export class ColorGradePass implements PostProcessPass {
 
 	// --- Public Properties to Control the Effect ---
 
+	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
+	public masterStrength: number = 1.0;
+
 	/** Adjusts overall brightness. 0.0 is no change. */
 	public brightness: number = 0.0;
 
@@ -46,6 +49,7 @@ export class ColorGradePass implements PostProcessPass {
 		
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
+		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1f(this.program.getUniformLocation('u_brightness'), this.brightness);
 		gl.uniform1f(this.program.getUniformLocation('u_contrast'), this.contrast);
 		gl.uniform1f(this.program.getUniformLocation('u_gamma'), this.gamma);

@@ -14,6 +14,9 @@ export class VoronoiDistortionPass implements PostProcessPass {
 
 	// --- Public Properties to Control the Effect ---
 
+	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
+	public masterStrength: number = 1.0;
+
 	/** The current time, used to animate the cells. Increment this each frame. */
 	public time: number = 0.0;
 
@@ -42,6 +45,7 @@ export class VoronoiDistortionPass implements PostProcessPass {
 
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
+		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);
 		gl.uniform1f(this.program.getUniformLocation('u_density'), this.density);

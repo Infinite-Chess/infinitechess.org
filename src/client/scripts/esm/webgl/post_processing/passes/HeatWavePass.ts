@@ -7,6 +7,11 @@ import type { PostProcessPass } from "../PostProcessingPipeline";
 export class HeatWavePass implements PostProcessPass {
 	readonly program: ProgramMap['heat_wave'];
 	private noiseTexture: WebGLTexture;
+	
+	// --- Public Properties to Control the Effect ---
+
+	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
+	public masterStrength: number = 1.0;
 
 	/** The strength of the distortion effect. Default: 0.04 (time = performance.now() / 500) */
 	public strength: number = 0.04;
@@ -33,6 +38,7 @@ export class HeatWavePass implements PostProcessPass {
 
 		// 3. Set the uniforms, telling the shader which texture unit to use for each
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0); // Use unit 0
+		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1i(this.program.getUniformLocation('u_noiseTexture'), 1); // Use unit 1
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);

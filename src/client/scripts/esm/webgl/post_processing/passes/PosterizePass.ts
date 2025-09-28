@@ -11,6 +11,9 @@ export class PosterizePass implements PostProcessPass {
 
 	// --- Public Properties for Control ---
 
+	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
+	public masterStrength: number = 1.0;
+
 	/**
 	 * The number of distinct color levels per channel (red, green, blue).
 	 * A value of 4, for example, means each channel can only be one of 4 values.
@@ -37,6 +40,7 @@ export class PosterizePass implements PostProcessPass {
 
 		// Set the uniforms for the shader
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
+		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1f(this.program.getUniformLocation('u_levels'), this.levels);
 	}
 }
