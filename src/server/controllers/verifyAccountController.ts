@@ -36,10 +36,11 @@ type MemberVerificationData = {
  * Route that verifies an account when the user clicks the link in the email.
  * If they are not signed in, this forwards them to the login page.
  */
-export async function verifyAccount(req: IdentifiedRequest, res: Response): Promise<void | Response<string,any>> {
+export async function verifyAccount(req: IdentifiedRequest, res: Response): Promise<void> {
 	if (!req.memberInfo) {
 		logEventsAndPrint("req.memberInfo must be defined for verify account route!", 'errLog.txt');
-		return res.status(500).redirect('/500');
+		res.status(500).redirect('/500');
+		return;
 	}
 
 	const claimedUsername = req.params['member'];
@@ -54,31 +55,36 @@ export async function verifyAccount(req: IdentifiedRequest, res: Response): Prom
 	
 	if (user_id === undefined) { // User not found
 		logEventsAndPrint(`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`, 'hackLog.txt');
-		return res.status(400).redirect(`/400`); // Bad request
+		res.status(400).redirect(`/400`); // Bad request
+		return;
 	}
 
 	if (!req.memberInfo.signedIn) { // Not logged in
 		logEventsAndPrint(`Forwarding user '${username}' to login before they can verify!`, 'loginAttempts.txt');
 		// Redirect them to the login page, BUT add a query parameter with the original verification url they were visiting!
 		const redirectTo = encodeURIComponent(req.originalUrl);
-		return res.redirect(`/login?redirectTo=${redirectTo}`);
+		res.redirect(`/login?redirectTo=${redirectTo}`);
+		return;
 	}
 
 	if (req.memberInfo.username !== username) { // Forbid them if they are logged in and NOT who they're wanting to verify!
 		logEventsAndPrint(`Member "${req.memberInfo.username}" of ID "${req.memberInfo.user_id}" attempted to verify member "${username}"!`, 'loginAttempts.txt');
-		return res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
+		res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
+		return;
 	}
 	
 	// Ignore if already verified.
 	if (is_verified === 1) {
 		logEventsAndPrint(`Member "${username}" of ID ${user_id} is already verified!`, 'loginAttempts.txt');
-		return res.redirect(`/member/${username}`);
+		res.redirect(`/member/${username}`);
+		return;
 	}
 
 	// Check if the verification code matches!
 	if (claimedCode !== verification_code) {
 		logEventsAndPrint(`Invalid account verification link! User "${username}", code "${claimedCode}" INCORRECT`, 'loginAttempts.txt');
-		return res.status(400).redirect(`/400`);
+		res.status(400).redirect(`/400`);
+		return;
 	}
 	
 	// VERIFY THEM..
