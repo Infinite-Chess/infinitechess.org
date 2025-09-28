@@ -1,7 +1,9 @@
+
+// @ts-ignore
+import loadbalancer from "../../../misc/loadbalancer";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
-import loadbalancer from "../../../misc/loadbalancer";
 import { Zone } from "../EffectZoneManager";
 
 
@@ -53,7 +55,7 @@ export class DustyDunesZone implements Zone {
 		this.windDirection += this.windRotationSpeed * this.windRotationParity * deltaTime;
 		if (this.windDirection > Math.PI * 2) this.windDirection -= Math.PI * 2;
 
-		// TESING: Update color grade uniforms here if needed.
+		// TESING: Update color grade properties here if needed.
 		// this.colorGradePass.hueOffset += 0.1 * deltaTime;
 	}
 
