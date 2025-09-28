@@ -464,7 +464,7 @@ function primalityTestBigint(
 				else if (y === nSubReduced) {
 					// The test passed: base^(d*2^i) = -1 (mod n) for the current i
 					// So n is a strong probable prime to this base (though n may still be composite)
-					return true;
+					break;
 				}
 				x = y;
 			}
