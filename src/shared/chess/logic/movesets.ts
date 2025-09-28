@@ -269,13 +269,13 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 			sliding: rookMoves,
 			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean): 0 | 1 | 2 => {
 				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
-				const isPrime = isprime.primalityTest(distance, null);
+				const isPrime = isprime.primalityTest(distance);
 				if (!isPrime) return 0; // Doesn't block, not even if it's a void. It hops over it!
 				return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 			},
 			ignore: (startCoords: Coords, endCoords: Coords): boolean => {
 				const distance = vectors.chebyshevDistance(startCoords, endCoords);
-				const isPrime = isprime.primalityTest(distance, null);
+				const isPrime = isprime.primalityTest(distance);
 				return isPrime;
 			}
 		},

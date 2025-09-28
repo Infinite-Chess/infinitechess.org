@@ -236,12 +236,12 @@ function montgomeryPow(n, exp, ctx) {
  * Otherwise, a RangeError will be thrown if any of the bases are outside the valid range, or a TypeError will
  * be thrown if `bases` is neither an array nor null/undefined.
  *
- * @param {BigIntResolvable[] | null} bases The array of bases to validate
+ * @param {BigIntResolvable[] | null | undefined} bases The array of bases to validate
  * @param {bigint} nSub One less than the number being primality tested
  * @returns {bigint[] | null} An array of BigInts provided all bases were valid, or null if the input was null
  */
 function validateBases(bases, nSub) {
-	if (bases === null) return null;
+	if (!bases) return null;
 	if (!Array.isArray(bases)) throw new TypeError(`invalid bases option (must be an array)`);
 	// Ensure all bases are valid BigInts within [2, n-2]
 	return bases.map(b => {
@@ -321,7 +321,7 @@ function modPowBigint(base, exponent, modulus) {
  * If `n` is a number/string smaller than Number.MAX_SAFE_INTEGER, then primalityTestNumber() is called.
  * If `n` is a bigint/string larger than Number.MAX_SAFE_INTEGER, then primalityTestBigint() is called.
  * @param {number|string|bigint} n - A number or bigint integer to be tested for primality.
- * @param {PrimalityTestOptions?} options - optional arguments passed along to primalityTestBigint() if necessary
+ * @param {PrimalityTestOptions?} [options] optional arguments passed along to primalityTestBigint() if necessary
  * @returns {boolean} true if all the primality tests passed, false otherwise
  */
 function primalityTest(n, options) {
