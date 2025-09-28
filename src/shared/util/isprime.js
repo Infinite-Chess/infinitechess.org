@@ -241,7 +241,7 @@ function montgomeryPow(n, exp, ctx) {
  * @returns {bigint[] | null} An array of BigInts provided all bases were valid, or null if the input was null
  */
 function validateBases(bases, nSub) {
-	if (bases == null) return null;
+	if (bases === null) return null;
 	if (!Array.isArray(bases)) throw new TypeError(`invalid bases option (must be an array)`);
 	// Ensure all bases are valid BigInts within [2, n-2]
 	return bases.map(b => {
@@ -283,8 +283,8 @@ function modSquaredNumber(base, modulus) {
  */
 function modPowNumber(base, exponent, modulus) {
 	let accumulator = 1;
-	while (exponent != 0) {
-		if (exponent % 2 == 0) {
+	while (exponent !== 0) {
+		if (exponent % 2 === 0) {
 			exponent = exponent / 2;
 			base = modSquaredNumber(base, modulus);
 		} else {
@@ -304,8 +304,8 @@ function modPowNumber(base, exponent, modulus) {
  */
 function modPowBigint(base, exponent, modulus) {
 	let accumulator = ONE;
-	while (exponent != ZERO) {
-		if (exponent % TWO == ZERO) {
+	while (exponent !== ZERO) {
+		if (exponent % TWO === ZERO) {
 			exponent = exponent / TWO;
 			base = (base ** TWO) % modulus;
 		} else {
@@ -342,7 +342,7 @@ function primalityTestNumber(n) {
 	// Handle some small special cases
 	if (n < 2) return false; // n = 0 or 1
 	else if (n < 4) return true; // n = 2 or 3
-	else if (n % 2 == 0) return false; // Quick short-circuit for other even n
+	else if (n % 2 === 0) return false; // Quick short-circuit for other even n
 	else if (n < LIMIT_2) bases = INT_BASES.slice(0, 1);
 	else if (n < LIMIT_2_3) bases = INT_BASES.slice(0, 2);
 	else if (n < LIMIT_2_3_5) bases = INT_BASES.slice(0, 3);
@@ -355,7 +355,7 @@ function primalityTestNumber(n) {
 	const nSub = n - 1;
 	let r = 0;
 	let d = nSub;
-	while (d % 2 == 0) {
+	while (d % 2 === 0) {
 		d = d / 2;
 		r += 1;
 	}
@@ -365,9 +365,9 @@ function primalityTestNumber(n) {
     
 		// Normal Miller-Rabin method => FAST for smaller numbers!
 		const modularpower = modPowNumber(base, d, n);
-		if (modularpower != 1) {
-			for (let i = 0, x = modularpower;  x != nSub; i += 1, x = modSquaredNumber(x,n)) {
-				if (i == r - 1) return false;
+		if (modularpower !== 1) {
+			for (let i = 0, x = modularpower;  x !== nSub; i += 1, x = modSquaredNumber(x,n)) {
+				if (i === r - 1) return false;
 			}
 		}
 	}
@@ -411,8 +411,8 @@ function primalityTestBigint(
 
 	// Either use the user-provided list of bases to test against, or determine how many random bases to test
 	const validBases = validateBases(bases, nSub);
-	if (validBases != null) numRounds = validBases.length;
-	else if (numRounds == null || numRounds < 1) {
+	if (validBases !== null) numRounds = validBases.length;
+	else if (numRounds === null || numRounds < 1) {
 		// If the number of testing rounds was not provided, pick a reasonable one based on the size of n
 		// Larger n have a vanishingly small chance to be falsely labelled probable primes, so we can balance speed and accuracy accordingly
 		numRounds = getAdaptiveNumRounds(nBits);
@@ -434,7 +434,7 @@ function primalityTestBigint(
 
 		for (let round = 0; round < numRounds; round++) {
 			let base;
-			if (validBases != null) {
+			if (validBases !== null) {
 				// Use the next user-specified base
 				base = validBases[baseIndex];
 				baseIndex++;
@@ -477,7 +477,7 @@ function primalityTestBigint(
 	} else { // Use Miller-Robin method (faster for smaller numbers, like below 1e30)
 		for (let round = 0; round < numRounds; round++) {
 			let base;
-			if (validBases != null) {
+			if (validBases !== null) {
 				// Use the next user-specified base
 				base = validBases[baseIndex];
 				baseIndex++;
@@ -496,9 +496,9 @@ function primalityTestBigint(
 
 			// normal Miller-Rabin
 			const modularpower = modPowBigint(base, d, n);
-			if (modularpower != ONE) {
-				for (let i = ZERO, x = modularpower;  x != nSub; i += ONE, x = (x ** TWO) % n) {
-					if (i == r - ONE) return false;
+			if (modularpower !== ONE) {
+				for (let i = ZERO, x = modularpower;  x !== nSub; i += ONE, x = (x ** TWO) % n) {
+					if (i === r - ONE) return false;
 				}
 			}
 		}

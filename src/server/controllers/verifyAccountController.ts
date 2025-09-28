@@ -36,7 +36,7 @@ type MemberVerificationData = {
  * Route that verifies an account when the user clicks the link in the email.
  * If they are not signed in, this forwards them to the login page.
  */
-export async function verifyAccount(req: IdentifiedRequest, res: Response) {
+export async function verifyAccount(req: IdentifiedRequest, res: Response): Promise<void | Response<string,any>> {
 	if (!req.memberInfo) {
 		logEventsAndPrint("req.memberInfo must be defined for verify account route!", 'errLog.txt');
 		return res.status(500).redirect('/500');
