@@ -4,7 +4,7 @@ import ImageLoader from "../../../util/ImageLoader";
 import TextureLoader from "../../../webgl/TextureLoader";
 import boardtiles from "../boardtiles";
 import frametracker from "../frametracker";
-import { PassThroughZone } from "./zones/AnimatedPassThrough";
+import { PassThroughZone } from "./zones/PassThroughZone";
 import { ProgramManager } from "../../../webgl/ProgramManager";
 import { DustyDunesZone } from "./zones/DustyDunesZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
