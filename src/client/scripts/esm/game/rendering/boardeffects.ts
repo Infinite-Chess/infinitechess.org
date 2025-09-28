@@ -205,10 +205,6 @@ function getSineWaveVariation(min: number, max: number): number {
 	return min + (Math.sin(time) * 0.5 + 0.5) * (max - min);
 }
 
-function onScreenResize(): void {
-	const rect = camera.canvas.getBoundingClientRect();
-	waterRipplePass.setResolution(rect.width, rect.height);
-}
 
 
 
@@ -218,6 +214,4 @@ function onScreenResize(): void {
 
 export default {
 	init,
-	update,
-	onScreenResize,
 };

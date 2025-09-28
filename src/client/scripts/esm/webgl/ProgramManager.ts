@@ -20,6 +20,9 @@ import vsSource_arrows from '../../../shaders/arrows/vertex.glsl';
 import vsSource_arrowImages from '../../../shaders/arrow_images/vertex.glsl';
 import fsSource_arrowImages from '../../../shaders/arrow_images/fragment.glsl';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
+// Surface Level Effects
+import vsSource_boardUberShader from '../../../shaders/board_uber_shader/vertex.glsl';
+import fsSource_boardUberShader from '../../../shaders/board_uber_shader/fragment.glsl';
 // Post Processing Shaders
 import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
 import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
@@ -59,6 +62,13 @@ type Attributes_ArrowImages = 'a_position' | 'a_texturecoord' | 'a_instanceposit
 type Uniforms_ArrowImages = 'u_transformmatrix' | 'u_sampler';
 type Attributes_Starfield = 'a_position' | 'a_instanceposition' | 'a_instancecolor' | 'a_instancesize';
 type Uniforms_Starfield = 'u_transformmatrix';
+// Surface Level Effects
+type Attributes_BoardUberShader = 'a_position' | 'a_texturecoord' | 'a_color';
+type Uniforms_BoardUberShader =
+	'u_transformmatrix' | 'u_transitionProgress' | 'u_colorTexture' |
+	'u_maskTexture' | 'u_noiseTexture' | 'u_time' | 'u_resolution' |
+	'u_effectTypeA' | 'u_effectTypeB' | 'u1_strength' | 'u1_scrollSpeed1' |
+	'u1_scrollSpeed2' | 'u1_noiseTiling';
 // Post Processing Shaders
 type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';
@@ -79,7 +89,7 @@ type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_time' | 'u_density' | 'u
 
 
 /** The Super Union of all possible attributes. */
-export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave | Attributes_VoronoiDistortion;
+export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_BoardUberShader | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_WaterRipple | Attributes_HeatWave | Attributes_VoronoiDistortion;
 
 
 // Each ShaderProgram type
@@ -96,6 +106,8 @@ type Program_Highlights = ShaderProgram<Attributes_Highlights, Uniforms_Highligh
 type Program_Arrows = ShaderProgram<Attributes_Arrows, Uniforms_Arrows>;
 type Program_ArrowImages = ShaderProgram<Attributes_ArrowImages, Uniforms_ArrowImages>;
 type Program_Starfield = ShaderProgram<Attributes_Starfield, Uniforms_Starfield>;
+// Surface Level Effects
+type Program_BoardUberShader = ShaderProgram<Attributes_BoardUberShader, Uniforms_BoardUberShader>;
 // Post Processing Shaders
 type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
 type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
@@ -133,6 +145,11 @@ export interface ProgramMap {
 	arrowImages: Program_ArrowImages;
 	/** Renders the starfield squares. */
 	starfield: Program_Starfield;
+
+	// ====== Surface Level Effects =======
+
+	/** Renders textured surfaces with a masked noise texture animated behind them. */
+	board_uber_shader: Program_BoardUberShader;
 
 	// ======= Post Processing Shaders =======
 
@@ -180,6 +197,8 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	arrows: { vertex: vsSource_arrows, fragment: fsSource_color },
 	arrowImages: { vertex: vsSource_arrowImages, fragment: fsSource_arrowImages },
 	starfield: { vertex: vsSource_starfield, fragment: fsSource_color },
+	// Surface Level Effects
+	board_uber_shader: { vertex: vsSource_boardUberShader, fragment: fsSource_boardUberShader },
 	// Post Processing Shaders
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
 	color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },

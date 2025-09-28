@@ -21,7 +21,8 @@ import { listener_document, listener_overlay } from '../chess/game.js';
  */
 
 let runTime; // In millis since the start of the program (updated at the beginning of each frame)
-let deltaTime; // Time in millis since last animation frame
+/** Time in seconds since last animation frame */
+let deltaTime;
 let lastFrameTime = 0;
 
 let lastAnimationLength = 0; // Time in millis last frame loop took to execute (Should be LESS than deltaTime if computer is able to keep up with monitor frefresh rate)
@@ -64,6 +65,7 @@ function getRunTime() {
 	return runTime;
 }
 
+/** Returns the amount of seconds that have passed since last frame. */
 function getDeltaTime() {
 	return deltaTime;
 }

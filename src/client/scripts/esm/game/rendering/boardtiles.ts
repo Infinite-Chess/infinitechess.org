@@ -4,7 +4,7 @@
  * We also keep track of what tile the mouse is currently hovering over.
  */
 
-import type { Renderable } from '../../webgl/Renderable.js';
+import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Renderable.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
@@ -28,7 +28,7 @@ import texturecache from '../../chess/rendering/texturecache.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 import perspective from './perspective.js';
 import webgl, { gl } from './webgl.js';
 
@@ -40,9 +40,12 @@ const TEN = bd.FromNumber(10);
 
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
-let tilesTexture_2: WebGLTexture; // Opaque, no mipmaps
+let tilesTexture_2: WebGLTexture | undefined; // Opaque, no mipmaps
 /** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
-let tilesTexture_256mips: WebGLTexture;
+let tilesTexture_256mips: WebGLTexture | undefined;
+
+let tilesMask: WebGLTexture | undefined;
+
 
 const squareCenter: number = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
 
@@ -144,6 +147,23 @@ function gboundingBoxFloat(): BoundingBoxBD {
 	return jsutil.deepCopyObject(boundingBoxFloat);
 }
 
+
+/** Loads the noise texture. */
+function init(): void {
+	// Generate the tiles mask texture
+	// checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => {
+	// checkerboardgenerator.createCheckerboardIMG('black', 'white', 256).then(tilesMask_IMG => {
+	checkerboardgenerator.createCheckerboardIMG('white', 'white', 256).then(tilesMask_IMG => {
+		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
+	});
+
+	// Initial generation of tile textures
+	updateTheme();
+
+	recalcVariables(); // Variables dependant on the board position & scale
+}
+
+
 /**
  * Returns a copy of the board bounding box, rounded away from the center
  * of the canvas to encapsulate the whole of any partially visible squares.
@@ -191,7 +211,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
  */
-function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
+function generateBoardModel(isFractal: boolean, { noise }: { noise?: WebGLTexture } = {}, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
 	const boardScale = boardpos.getBoardScale();
 	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
 	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
@@ -202,6 +222,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	}
 
 	const boardTexture = isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+	if (!boardTexture || !tilesMask) return; // Texture not loaded yet
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
 	const zoomTimesScale = bd.toNumber(bd.multiply_floating(boardScale, zoom));
@@ -233,19 +254,31 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], bottom, top);
 	
 	const data = primitives.Quad_ColorTexture(left, bottom, right, top, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
-	return createRenderable(data, 2, "TRIANGLES", 'colorTexture', true, boardTexture);
+
+	const attributeInfo: AttributeInfo = [
+		{ name: 'a_position', numComponents: 2 },
+		{ name: 'a_texturecoord', numComponents: 2 },
+		{ name: 'a_color', numComponents: 4 }
+	];
+	const textures: TextureInfo[] = [
+		{ texture: boardTexture, uniformName: 'u_colorTexture' },
+		{ texture: tilesMask, uniformName: 'u_maskTexture' }
+	];
+	if (noise) textures.push({ texture: noise, uniformName: 'u_noiseTexture' });
+	
+	return createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures);
 }
 
-function renderMainBoard(): void {
+function renderMainBoard(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<string, any>): void {
 	if (boardpos.isScaleSmallForInvisibleTiles()) return;
 
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
 	// The other option is to regenerate it as much as highlighted squares, with the bounding box.
-	const model = generateBoardModel(false);
+	const model = generateBoardModel(false, noiseTextures);
 	if (!model) return; // Too small, would cause graphical glitches to render
 
 	const z = getRelativeZ();
-	model.render([0,0,z]);
+	model.render([0,0,z], undefined, uniforms);
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
@@ -335,16 +368,16 @@ function darkenColor(): void {
 }
 
 // Renders board tiles
-function render(): void {
+function render(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<string, any>): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
-		renderMainBoard();
-		renderFractalBoards();
+		renderMainBoard(noiseTextures, uniforms);
+		renderFractalBoards(noiseTextures, uniforms);
 	});
 }
 
-function renderFractalBoards(): void {
+function renderFractalBoards(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<string, any>): void {
 	const z = getRelativeZ();
 
 	const e = -bd.log10(boardpos.getBoardScale());
@@ -364,7 +397,7 @@ function renderFractalBoards(): void {
 	let zoom = bd.powerInt(TEN, zeroCount);
 	let x = (firstInterval - e) / length;
 	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
-	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
+	generateBoardModel(true, noiseTextures, zoom, opacity)?.render([0,0,z], undefined, uniforms);
 
 	// 2nd most-zoomed out board
 	firstInterval -= interval;
@@ -375,7 +408,7 @@ function renderFractalBoards(): void {
 	zoom = bd.powerInt(TEN, zeroCount);
 	x = (firstInterval - e) / length; // 0 - 1
 	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
-	generateBoardModel(true, zoom, opacity)?.render([0,0,z]);
+	generateBoardModel(true, noiseTextures, zoom, opacity)?.render([0,0,z], undefined, uniforms);
 }
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
@@ -393,7 +426,7 @@ function renderSolidCover(): void {
 	const data = primitives.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
 	data.push(...primitives.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
-	const model = createRenderable(data, 3, "TRIANGLES", 'color', true);
+	const model = createRenderable(data, 3, 'TRIANGLES', 'color', true);
 
 	model.render();
 }
@@ -456,6 +489,7 @@ export default {
 	roundAwayBoundingBox,
 	gboundingBox,
 	gboundingBoxFloat,
+	init,
 	updateTheme,
 	resetColor,
 	darkenColor,
