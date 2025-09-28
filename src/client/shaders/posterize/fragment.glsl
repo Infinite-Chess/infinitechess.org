@@ -4,8 +4,8 @@ precision highp float;
 // The texture containing the scene to be posterized
 uniform sampler2D u_sceneTexture;
 
-// The number of color levels per channel
-uniform float u_levels;
+uniform float u_masterStrength; // 0.0 = no effect, 1.0 = full effect
+uniform float u_levels; // The number of color levels per channel
 
 // The texture coordinates passed from the vertex shader
 in vec2 v_uv;
@@ -17,20 +17,22 @@ void main() {
     // Sample the original color from the input texture
     vec4 originalColor = texture(u_sceneTexture, v_uv);
 
-    // If levels are 1.0 or less, disable the effect and return the original color.
+    // Calculate the fully posterized color
+    vec3 posterizedColor;
+
+    // If levels are 1.0 or less, the "posterized" color is just the original color.
     // This prevents division by zero and provides an easy way to toggle the effect.
     if (u_levels <= 1.0) {
-        out_color = originalColor;
-        return;
+        posterizedColor = originalColor.rgb;
+    } else {
+        // Apply the posterization formula
+        float numLevels = u_levels - 1.0;
+        posterizedColor = floor(originalColor.rgb * numLevels) / numLevels;
     }
 
-    // Apply the posterization formula
-    // 1. Multiply by levels to scale the color range
-    // 2. Use floor() to snap to the nearest lower integer
-    // 3. Divide by (levels - 1.0) to map the color back to the [0, 1] range
-    float numLevels = u_levels - 1.0;
-    vec3 posterizedColor = floor(originalColor.rgb * numLevels) / numLevels;
+    // Blend between the original and the posterized color using master strength.
+    vec3 finalRgb = mix(originalColor.rgb, posterizedColor, u_masterStrength);
 
-    // Output the final color, keeping the original alpha
-    out_color = vec4(posterizedColor, originalColor.a);
+    // Output the final color, preserving the original alpha
+    out_color = vec4(finalRgb, originalColor.a);
 }

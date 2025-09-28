@@ -4,6 +4,7 @@ precision highp float;
 // --- UNIFORMS ---
 uniform sampler2D u_sceneTexture;
 
+uniform float u_masterStrength; // 0.0 = no effect, 1.0 = full effect
 uniform float u_brightness; // 0.0 is no change
 uniform float u_contrast;   // 1.0 is no change
 uniform float u_gamma;      // 1.0 is no change
@@ -38,41 +39,46 @@ vec3 hsv2rgb(vec3 c) {
 
 void main() {
 	// Start with the original color from the scene
-	vec4 color = texture(u_sceneTexture, v_uv);
+	vec4 originalColor = texture(u_sceneTexture, v_uv);
+	vec4 processedColor = texture(u_sceneTexture, v_uv);
 
 	// --- ORDER OF OPERATIONS ---
 
 	// 1. Apply Brightness
-	color.rgb += u_brightness;
+	processedColor.rgb += u_brightness;
 
 	// 2. Apply Contrast
-	color.rgb = (color.rgb - 0.5) * u_contrast + 0.5;
+	processedColor.rgb = (processedColor.rgb - 0.5) * u_contrast + 0.5;
 
 	// 3. Apply Gamma Correction
 	// We use 1.0 / gamma which is the standard for gamma correction.
 	// Use max() to ensure the input to pow() is never negative, preventing NaN errors.
-	color.rgb = pow(max(color.rgb, 0.0), vec3(1.0 / u_gamma));
+	processedColor.rgb = pow(max(processedColor.rgb, 0.0), vec3(1.0 / u_gamma));
 
 	// 4. Apply Saturation
 	// Calculate the grayscale value using the luminance vector.
 	// The dot product is a fast way to do (r*0.2126 + g*0.7152 + b*0.0722).
-	float luminance = dot(color.rgb, LUMINANCE_VECTOR);
+	float luminance = dot(processedColor.rgb, LUMINANCE_VECTOR);
 	vec3 grayscale = vec3(luminance);
-	// Blend between the grayscale color and the original color.
+	// Blend between the grayscale processed color and the original color.
 	// mix() is a built-in GLSL function for linear interpolation.
-	color.rgb = mix(grayscale, color.rgb, u_saturation);
+	processedColor.rgb = mix(grayscale, processedColor.rgb, u_saturation);
 
 	// 5. Apply Tint
-	color.rgb *= u_tintColor;
+	processedColor.rgb *= u_tintColor;
 
 	// 6. Apply Hue Shift
-	vec3 hsv = rgb2hsv(color.rgb);
+	vec3 hsv = rgb2hsv(processedColor.rgb);
 	hsv.x += u_hueOffset;
 	hsv.x = fract(hsv.x); // Wrap the hue value around (0.0 to 1.0)
-	color.rgb = hsv2rgb(hsv);
+	processedColor.rgb = hsv2rgb(hsv);
 
-	// Clamp the final color to ensure it's in the valid 0.0-1.0 range
-	color.rgb = clamp(color.rgb, 0.0, 1.0);
+	// Clamp the processed color to ensure it's in the valid 0.0-1.0 range
+	processedColor.rgb = clamp(processedColor.rgb, 0.0, 1.0);
+
+	// Apply Master Strength
+	// Blend between the original color and the fully processed color
+	vec3 finalRgb = mix(originalColor.rgb, processedColor.rgb, u_masterStrength);
 	
-	out_color = color;
+	out_color = vec4(finalRgb, originalColor.a); // Preserve original alpha
 }

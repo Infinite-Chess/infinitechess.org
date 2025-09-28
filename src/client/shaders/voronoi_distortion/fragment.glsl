@@ -5,6 +5,7 @@ precision highp float;
 uniform sampler2D u_sceneTexture;
 
 // Effect Controls
+uniform float u_masterStrength; // 0.0 = no effect, 1.0 = full effect
 uniform float u_time;           // Used for animation
 uniform float u_density;        // Controls the number of Voronoi cells
 uniform float u_strength;       // The maximum strength of the cells' distortion
@@ -32,9 +33,12 @@ vec2 noise2x2(vec2 p) {
 
 
 void main() {
-    // Voronoi Cell Calculation
+    // Store the original, unaffected color
+    vec4 originalColor = texture(u_sceneTexture, v_uv);
 
-    // Normalize coordinates and adjust for aspect ratio to make cells more square
+	// Voronoi Cell Calculation
+
+    // Normalize coordinates and adjust for aspect ratio to keep cells roughly square.
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
     float aspect_ratio = u_resolution.x / u_resolution.y;
     uv.x *= aspect_ratio;
@@ -52,7 +56,7 @@ void main() {
 
     vec2 d1_vector = vec2(0.0); // Vector to the closest point
 
-    // Loop through a 3x3 grid of neighboring cells
+    // Loop through neighboring cells to find the two closest points
     for (float i = -1.0; i <= 1.0; i++) {
         for (float j = -1.0; j <= 1.0; j++) {
             vec2 adjGridCoords = vec2(i, j);
@@ -77,7 +81,7 @@ void main() {
         }
     }
 
-    // Distortion Calculation
+    // Calculate the main cell distortion
 
     // Determine the direction of distortion. We want to push *away* from the
     // closest point, which is the inverse of the vector *to* the closest point.
@@ -114,11 +118,12 @@ void main() {
 	// return;
 
 
-    // Final Texture Sampling
+    // Get the fully distorted color
 
     // Apply the calculated offset to the original texture coordinates
     vec2 distorted_uv = v_uv + total_offset;
+    vec4 distortedColor = texture(u_sceneTexture, distorted_uv);
 
-    // Sample the scene texture using the new, distorted coordinates.
-	out_color = texture(u_sceneTexture, distorted_uv);
+    // Blend between original and distorted color using master strength
+	out_color = mix(originalColor, distortedColor, u_masterStrength);
 }
