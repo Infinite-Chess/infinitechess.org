@@ -49,12 +49,13 @@ import camera from '../rendering/camera.js';
 import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
-import boardeffects from '../rendering/boardeffects.js';
+import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import webgl, { gl } from '../rendering/webgl.js';
-import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
+import { PostProcessingPipeline, PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline.js';
 import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
+import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -71,6 +72,8 @@ let listener_document: InputListener;
 let programManager: ProgramManager;
 /** Manager of Post Processing Effects */
 let pipeline: PostProcessingPipeline;
+/** Manager of Effect Zones */
+let effectZoneManager: EffectZoneManager | undefined;
 
 
 
@@ -82,13 +85,11 @@ function init(): void {
 	buffermodel.init(gl, programManager);
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
-	boardeffects.init(gl, programManager, pipeline);
+	boardtiles.init();
+	effectZoneManager = new EffectZoneManager(gl, programManager);
 	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
-
-	boardtiles.updateTheme();
-	boardtiles.recalcVariables(); // Variables dependant on the board position & scale
 
 	gui.prepareForOpen();
 
@@ -100,13 +101,10 @@ function init(): void {
 function onScreenResize(): void {
 	camera.onScreenResize();
 	pipeline.resize(gl.canvas.width, gl.canvas.height);
-	boardeffects.onScreenResize();
 }
 
 // Update the game every single frame
 function update(): void {
-	boardeffects.update(); // Update board post processing effects
-
 	controls.testOutGameToggles();
 	invites.update();
 	// Any input should trigger the next frame to render.
@@ -115,7 +113,12 @@ function update(): void {
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
-	if (!gamefile) return boardpos.update(); // On title screen. Updates the board's position and scale according to its velocity
+	if (!gamefile) {
+		// Only do title screen updates
+		boardpos.update();
+		boardtiles.recalcVariables();
+		return;
+	}
 
 	// There is a gamefile, update everything board-related...
 
@@ -182,6 +185,9 @@ function update(): void {
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardSingleGrabbed();
 
+	// Update the effect zone manager.
+	effectZoneManager!.update(getFurthestTileVisible());
+
 	gameloader.update(); // Updates whatever game is currently loaded.
 
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
@@ -214,9 +220,20 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 function render(): void {
 	// Tell the pipeline to begin. All subsequent rendering will go to a texture.
 	pipeline.begin();
+
 	// Render the game scene
 	renderScene();
-	// Tell the pipeline we are finished. It will handle drawing the result to the screen.
+
+	// Gather all post processing effects
+	const passes: PostProcessPass[] = [];
+	// FUTURE: Append water ripples of really far moves!
+	// Add the current effect zone passes
+	passes.push(...effectZoneManager!.getActivePostProcessPasses());
+	// Set them in the pipeline
+	pipeline.setPasses(passes);
+
+	// Tell the pipeline we are finished drawing the scene.
+	// It will handle drawing the result to the screen.
 	pipeline.end();
 }
 
@@ -226,7 +243,11 @@ function renderScene(): void {
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
-	if (!gamefile) return boardtiles.render(); // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
+	// if (!gamefile) return boardtiles.render(); // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
+	if (!gamefile) {
+		effectZoneManager!.renderBoard();
+		return;
+	}
 	
 	const boardsim = gamefile.boardsim;
 
@@ -284,7 +305,7 @@ function renderScene(): void {
 
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(): void {
-	boardtiles.render();
+	effectZoneManager!.renderBoard();
 	promotionlines.render();
 }
 
@@ -302,6 +323,17 @@ function renderOutlineofScreenBox(): void {
 	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
 
+
+/** Returns the absolute value of the furthest tile from the origin on our screen. */
+function getFurthestTileVisible(): bigint {
+	const tileBox = boardtiles.gboundingBox(false);
+	let furthest: bigint = 0n;
+	if (bimath.abs(tileBox.left) > furthest) furthest = bimath.abs(tileBox.left);
+	if (bimath.abs(tileBox.right) > furthest) furthest = bimath.abs(tileBox.right);
+	if (bimath.abs(tileBox.top) > furthest) furthest = bimath.abs(tileBox.top);
+	if (bimath.abs(tileBox.bottom) > furthest) furthest = bimath.abs(tileBox.bottom);
+	return furthest;
+}
 
 
 
