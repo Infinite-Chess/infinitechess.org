@@ -73,19 +73,19 @@ type Uniforms_BoardUberShader =
 type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';
 type Attributes_ColorGrade = never;
-type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_brightness' | 'u_contrast' | 'u_gamma' | 'u_saturation' | 'u_tintColor' | 'u_hueOffset';
+type Uniforms_ColorGrade = 'u_sceneTexture' | 'u_masterStrength' | 'u_brightness' | 'u_contrast' | 'u_gamma' | 'u_saturation' | 'u_tintColor' | 'u_hueOffset';
 type Attributes_Posterize = never;
-type Uniforms_Posterize = 'u_sceneTexture' | 'u_levels';
+type Uniforms_Posterize = 'u_sceneTexture' | 'u_masterStrength' | 'u_levels';
 type Attributes_Vignette = never;
-type Uniforms_Vignette = 'u_sceneTexture' | 'u_radius' | 'u_softness' | 'u_intensity';
+type Uniforms_Vignette = 'u_sceneTexture' | 'u_masterStrength' | 'u_radius' | 'u_softness' | 'u_intensity';
 type Attributes_SineWave = never;
-type Uniforms_SineWave = 'u_sceneTexture' | 'u_amplitude' | 'u_frequency' | 'u_time' | 'u_angle';
+type Uniforms_SineWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_amplitude' | 'u_frequency' | 'u_time' | 'u_angle';
 type Attributes_WaterRipple = never;
 type Uniforms_WaterRipple = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_glintIntensity' | 'u_glintExponent' | 'u_falloff' | 'u_resolution';
 type Attributes_HeatWave = never;
-type Uniforms_HeatWave = 'u_sceneTexture' | 'u_noiseTexture' | 'u_time' | 'u_strength';
+type Uniforms_HeatWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_noiseTexture' | 'u_time' | 'u_strength';
 type Attributes_VoronoiDistortion = never;
-type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_time' | 'u_density' | 'u_strength' | 'u_ridgeThickness' | 'u_ridgeStrength' | 'u_resolution';
+type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_masterStrength' | 'u_time' | 'u_density' | 'u_strength' | 'u_ridgeThickness' | 'u_ridgeStrength' | 'u_resolution';
 
 
 /** The Super Union of all possible attributes. */
