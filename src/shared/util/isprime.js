@@ -412,7 +412,7 @@ function primalityTestBigint(
 	// Either use the user-provided list of bases to test against, or determine how many random bases to test
 	const validBases = validateBases(bases, nSub);
 	if (validBases !== null) numRounds = validBases.length;
-	else if (numRounds === null || numRounds < 1) {
+	else if (!numRounds || numRounds < 1) {
 		// If the number of testing rounds was not provided, pick a reasonable one based on the size of n
 		// Larger n have a vanishingly small chance to be falsely labelled probable primes, so we can balance speed and accuracy accordingly
 		numRounds = getAdaptiveNumRounds(nBits);
