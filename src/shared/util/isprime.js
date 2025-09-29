@@ -128,7 +128,7 @@ function getReductionContext(base) {
 	if (!(base & ONE)) throw new Error(`base must be odd`);
 
 	// Select the auxiliary modulus r to be the smallest power of two greater than the base modulus
-	const numBits = bitLength(base);
+	const numBits = bimath.bitLength_bisection(base);
 	const littleShift = numBits;
 	const shift = BigInt(littleShift);
 	const r = ONE << shift;
@@ -207,7 +207,7 @@ function montgomeryMul(a, b, ctx) {
  */
 function montgomeryPow(n, exp, ctx) {
 	// Exponentiation by squaring
-	const expLen = BigInt(bitLength(exp));
+	const expLen = BigInt(bimath.bitLength_bisection(exp));
 	let result = montgomeryReduce(ONE, ctx);
 	for (let i = ZERO, x = n; i < expLen; ++i, x = montgomerySqr(x, ctx)) {
 		if (exp & (ONE << i)) result = montgomeryMul(result, x, ctx);
@@ -402,7 +402,7 @@ function primalityTestBigint(
 	else if (!(n & ONE)) return false; // Quick short-circuit for other even n
 	else if (n < LIMIT_DETERMINISM) bases = BIGINT_BASES;
 
-	const nBits = bitLength(n);
+	const nBits = bimath.bitLength_bisection(n);
 	const nSub = n - ONE;
 
 	// Represent n-1 as d * 2^r, with d odd
@@ -504,17 +504,6 @@ function primalityTestBigint(
 		}
 		return true;
 	}
-}
-
-/**
- * Calculates the length of `n` in bits.
- *
- * @param {bigint} n Any positive integer
- * @returns {number} The number of bits required to encode `n`
- */
-function bitLength(n) {
-	// Surprisingly, string conversion seems to be the most performant way to get the bit length of a BigInt at present...
-	return n.toString(2).length;
 }
 
 /**
