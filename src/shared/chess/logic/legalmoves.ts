@@ -392,7 +392,7 @@ function slide_CalcLegalLimit(
 }
 
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
-function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coords: Coords, step: Vec2, axis: 0 | 1): void {
+function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coords: Coords, step: Vec2, axis: 0 | 1): 5 {
 	if (boardsim.playableRegion === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
