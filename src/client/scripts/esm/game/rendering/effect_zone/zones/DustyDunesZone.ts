@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/effect_zone/zones/DustyDunesZone.ts
+
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
@@ -54,6 +56,7 @@ export class DustyDunesZone implements Zone {
 		const deltaTime = loadbalancer.getDeltaTime();
 		this.windDirection += this.windRotationSpeed * this.windRotationParity * deltaTime;
 		if (this.windDirection > Math.PI * 2) this.windDirection -= Math.PI * 2;
+		else if (this.windDirection < 0) this.windDirection += Math.PI * 2;
 
 		// TESING: Update color grade properties here if needed.
 		// this.colorGradePass.hueOffset += 0.1 * deltaTime;

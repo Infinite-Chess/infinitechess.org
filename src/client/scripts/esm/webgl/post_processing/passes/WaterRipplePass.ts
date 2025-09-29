@@ -2,11 +2,11 @@ import type { ProgramManager, ProgramMap } from "../../ProgramManager";
 import type { PostProcessPass } from "../PostProcessingPipeline";
 
 /** A simple structure to define a single droplet's state. */
-export interface DropletState {
+export interface RippleState {
 	/** The center of the droplet in UV coordinates [0-1, 0-1]. */
 	center: [number, number];
-	/** The elapsed time since the droplet was created, in seconds. */
-	time: number;
+	/** The time snapshot in millseconds the ripple was created. */
+	timeCreated: number;
 }
 
 /**
@@ -41,7 +41,7 @@ export class WaterRipplePass implements PostProcessPass {
 	public glintExponent: number = 7.0;
 
 	// --- Internal State ---
-	private activeDroplets: DropletState[] = [];
+	private activeDroplets: RippleState[] = [];
 	private resolution: [number, number] = [1, 1];
 	// Pre-allocated arrays for performance to avoid creating new arrays every frame
 	private centersArray: Float32Array = new Float32Array(WaterRipplePass.MAX_DROPLETS * 2);
@@ -64,7 +64,7 @@ export class WaterRipplePass implements PostProcessPass {
 	 * Call this every frame from your main application loop.
 	 * @param droplets An array of active droplet states.
 	 */
-	public updateDroplets(droplets: DropletState[]): void {
+	public updateDroplets(droplets: RippleState[]): void {
 		// Clamp the number of droplets to the maximum allowed by the shader
 		const count = Math.min(droplets.length, WaterRipplePass.MAX_DROPLETS);
 		this.activeDroplets = droplets.slice(-count); // Keep the most recent droplets
@@ -84,13 +84,15 @@ export class WaterRipplePass implements PostProcessPass {
 	}
 
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
+		const now = Date.now();
+
 		// --- 1. Prepare uniform data ---
 		const dropletCount = this.activeDroplets.length;
 		for (let i = 0; i < dropletCount; i++) {
 			const droplet = this.activeDroplets[i]!;
 			this.centersArray[i * 2 + 0] = droplet.center[0];
 			this.centersArray[i * 2 + 1] = droplet.center[1];
-			this.timesArray[i] = droplet.time;
+			this.timesArray[i] = (now - droplet.timeCreated) / 1000; // Convert to seconds
 		}
 
 		// --- 2. Set uniforms and render ---

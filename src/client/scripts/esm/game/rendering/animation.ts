@@ -20,12 +20,13 @@ import gamesound from '../misc/gamesound.js';
 import instancedshapes from './instancedshapes.js';
 import piecemodels from './piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import meshes from './meshes.js';
+import perspective from './perspective.js';
+import WaterRipples from './WaterRipples.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import meshes from './meshes.js';
-import perspective from './perspective.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -313,6 +314,8 @@ function playAnimationSound(animation: Animation): void {
 
 /** Flags the frame to be rendered if there are any animations, and adds an arrow indicator animation for each */
 function update(): void {
+	WaterRipples.update();
+
 	if (animations.length === 0) return;
 
 	frametracker.onVisualChange();

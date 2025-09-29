@@ -48,6 +48,15 @@ function easeInOut(t: number): number {
 }
 
 
+// Other -------------------------------------------------------------
+
+
+/** Returns a value oscillating between a min and max. */
+// function getSineWaveVariation(time: number, min: number, max: number): number {
+// 	return min + (Math.sin(time) * 0.5 + 0.5) * (max - min);
+// }
+
+
 // Exports -----------------------------------------------------
 
 
@@ -55,9 +64,10 @@ export default {
 	// Operations
 	clamp,
 	posMod,
-
 	// Easing Functions
 	easeInOut,
+	// Other
+	// getSineWaveVariation,
 };
 
 export type {

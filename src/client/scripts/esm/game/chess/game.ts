@@ -50,6 +50,7 @@ import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
 import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
+import WaterRipples from '../rendering/WaterRipples.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import { PostProcessingPipeline, PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline.js';
 import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
@@ -85,8 +86,9 @@ function init(): void {
 	buffermodel.init(gl, programManager);
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
-	boardtiles.init();
 	effectZoneManager = new EffectZoneManager(gl, programManager);
+	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
+	boardtiles.init();
 	
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
@@ -101,6 +103,7 @@ function init(): void {
 function onScreenResize(): void {
 	camera.onScreenResize();
 	pipeline.resize(gl.canvas.width, gl.canvas.height);
+	WaterRipples.onScreenResize(gl.canvas.width, gl.canvas.height);
 }
 
 // Update the game every single frame
@@ -228,7 +231,8 @@ function render(): void {
 
 	// Gather all post processing effects
 	const passes: PostProcessPass[] = [];
-	// FUTURE: Append water ripples of really far moves!
+	// Append water ripples of really far moves!
+	passes.push(...WaterRipples.getPass());
 	// Add the current effect zone passes
 	passes.push(...effectZoneManager!.getActivePostProcessPasses());
 	// Set them in the pipeline

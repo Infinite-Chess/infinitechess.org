@@ -17,10 +17,10 @@ export class SineWavePass implements PostProcessPass {
 	public masterStrength: number = 1.0;
 
 	/** The strength of the wave on the [x, y] axes. */
-	public amplitude: [number, number] = [0.01, 0.01];
+	public amplitude: [number, number] = [0.003, 0.003];
 
 	/** The number of full waves across the screen on the [x, y] axes. */
-	public frequency: [number, number] = [5.0, 5.0];
+	public frequency: [number, number] = [2.0, 2.0];
 
 	/** The angle of the primary wave axis in degrees. The second wave is perpendicular. */
 	public angle: number = 0.0;
