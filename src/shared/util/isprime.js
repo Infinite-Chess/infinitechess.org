@@ -128,7 +128,7 @@ function getReductionContext(base) {
 	if (!(base & ONE)) throw new Error(`base must be odd`);
 
 	// Select the auxiliary modulus r to be the smallest power of two greater than the base modulus
-	const numBits = bitLength(base);
+	const numBits = bimath.bitLength_bisection(base);
 	const littleShift = numBits;
 	const shift = BigInt(littleShift);
 	const r = ONE << shift;
@@ -207,7 +207,7 @@ function montgomeryMul(a, b, ctx) {
  */
 function montgomeryPow(n, exp, ctx) {
 	// Exponentiation by squaring
-	const expLen = BigInt(bitLength(exp));
+	const expLen = BigInt(bimath.bitLength_bisection(exp));
 	let result = montgomeryReduce(ONE, ctx);
 	for (let i = ZERO, x = n; i < expLen; ++i, x = montgomerySqr(x, ctx)) {
 		if (exp & (ONE << i)) result = montgomeryMul(result, x, ctx);
@@ -236,12 +236,12 @@ function montgomeryPow(n, exp, ctx) {
  * Otherwise, a RangeError will be thrown if any of the bases are outside the valid range, or a TypeError will
  * be thrown if `bases` is neither an array nor null/undefined.
  *
- * @param {BigIntResolvable[] | null} bases The array of bases to validate
+ * @param {BigIntResolvable[] | null | undefined} bases The array of bases to validate
  * @param {bigint} nSub One less than the number being primality tested
  * @returns {bigint[] | null} An array of BigInts provided all bases were valid, or null if the input was null
  */
 function validateBases(bases, nSub) {
-	if (bases == null) return null;
+	if (!bases) return null;
 	if (!Array.isArray(bases)) throw new TypeError(`invalid bases option (must be an array)`);
 	// Ensure all bases are valid BigInts within [2, n-2]
 	return bases.map(b => {
@@ -283,8 +283,8 @@ function modSquaredNumber(base, modulus) {
  */
 function modPowNumber(base, exponent, modulus) {
 	let accumulator = 1;
-	while (exponent != 0) {
-		if (exponent % 2 == 0) {
+	while (exponent !== 0) {
+		if (exponent % 2 === 0) {
 			exponent = exponent / 2;
 			base = modSquaredNumber(base, modulus);
 		} else {
@@ -304,8 +304,8 @@ function modPowNumber(base, exponent, modulus) {
  */
 function modPowBigint(base, exponent, modulus) {
 	let accumulator = ONE;
-	while (exponent != ZERO) {
-		if (exponent % TWO == ZERO) {
+	while (exponent !== ZERO) {
+		if (exponent % TWO === ZERO) {
 			exponent = exponent / TWO;
 			base = (base ** TWO) % modulus;
 		} else {
@@ -321,7 +321,7 @@ function modPowBigint(base, exponent, modulus) {
  * If `n` is a number/string smaller than Number.MAX_SAFE_INTEGER, then primalityTestNumber() is called.
  * If `n` is a bigint/string larger than Number.MAX_SAFE_INTEGER, then primalityTestBigint() is called.
  * @param {number|string|bigint} n - A number or bigint integer to be tested for primality.
- * @param {PrimalityTestOptions?} options - optional arguments passed along to primalityTestBigint() if necessary
+ * @param {PrimalityTestOptions?} [options] optional arguments passed along to primalityTestBigint() if necessary
  * @returns {boolean} true if all the primality tests passed, false otherwise
  */
 function primalityTest(n, options) {
@@ -342,7 +342,7 @@ function primalityTestNumber(n) {
 	// Handle some small special cases
 	if (n < 2) return false; // n = 0 or 1
 	else if (n < 4) return true; // n = 2 or 3
-	else if (n % 2 == 0) return false; // Quick short-circuit for other even n
+	else if (n % 2 === 0) return false; // Quick short-circuit for other even n
 	else if (n < LIMIT_2) bases = INT_BASES.slice(0, 1);
 	else if (n < LIMIT_2_3) bases = INT_BASES.slice(0, 2);
 	else if (n < LIMIT_2_3_5) bases = INT_BASES.slice(0, 3);
@@ -355,7 +355,7 @@ function primalityTestNumber(n) {
 	const nSub = n - 1;
 	let r = 0;
 	let d = nSub;
-	while (d % 2 == 0) {
+	while (d % 2 === 0) {
 		d = d / 2;
 		r += 1;
 	}
@@ -365,9 +365,9 @@ function primalityTestNumber(n) {
     
 		// Normal Miller-Rabin method => FAST for smaller numbers!
 		const modularpower = modPowNumber(base, d, n);
-		if (modularpower != 1) {
-			for (let i = 0, x = modularpower;  x != nSub; i += 1, x = modSquaredNumber(x,n)) {
-				if (i == r - 1) return false;
+		if (modularpower !== 1) {
+			for (let i = 0, x = modularpower;  x !== nSub; i += 1, x = modSquaredNumber(x,n)) {
+				if (i === r - 1) return false;
 			}
 		}
 	}
@@ -402,7 +402,7 @@ function primalityTestBigint(
 	else if (!(n & ONE)) return false; // Quick short-circuit for other even n
 	else if (n < LIMIT_DETERMINISM) bases = BIGINT_BASES;
 
-	const nBits = bitLength(n);
+	const nBits = bimath.bitLength_bisection(n);
 	const nSub = n - ONE;
 
 	// Represent n-1 as d * 2^r, with d odd
@@ -411,8 +411,8 @@ function primalityTestBigint(
 
 	// Either use the user-provided list of bases to test against, or determine how many random bases to test
 	const validBases = validateBases(bases, nSub);
-	if (validBases != null) numRounds = validBases.length;
-	else if (numRounds == null || numRounds < 1) {
+	if (validBases !== null) numRounds = validBases.length;
+	else if (!numRounds || numRounds < 1) {
 		// If the number of testing rounds was not provided, pick a reasonable one based on the size of n
 		// Larger n have a vanishingly small chance to be falsely labelled probable primes, so we can balance speed and accuracy accordingly
 		numRounds = getAdaptiveNumRounds(nBits);
@@ -434,7 +434,7 @@ function primalityTestBigint(
 
 		for (let round = 0; round < numRounds; round++) {
 			let base;
-			if (validBases != null) {
+			if (validBases !== null) {
 				// Use the next user-specified base
 				base = validBases[baseIndex];
 				baseIndex++;
@@ -464,7 +464,7 @@ function primalityTestBigint(
 				else if (y === nSubReduced) {
 					// The test passed: base^(d*2^i) = -1 (mod n) for the current i
 					// So n is a strong probable prime to this base (though n may still be composite)
-					return true;
+					break;
 				}
 				x = y;
 			}
@@ -477,7 +477,7 @@ function primalityTestBigint(
 	} else { // Use Miller-Robin method (faster for smaller numbers, like below 1e30)
 		for (let round = 0; round < numRounds; round++) {
 			let base;
-			if (validBases != null) {
+			if (validBases !== null) {
 				// Use the next user-specified base
 				base = validBases[baseIndex];
 				baseIndex++;
@@ -496,25 +496,14 @@ function primalityTestBigint(
 
 			// normal Miller-Rabin
 			const modularpower = modPowBigint(base, d, n);
-			if (modularpower != ONE) {
-				for (let i = ZERO, x = modularpower;  x != nSub; i += ONE, x = (x ** TWO) % n) {
-					if (i == r - ONE) return false;
+			if (modularpower !== ONE) {
+				for (let i = ZERO, x = modularpower;  x !== nSub; i += ONE, x = (x ** TWO) % n) {
+					if (i === r - ONE) return false;
 				}
 			}
 		}
 		return true;
 	}
-}
-
-/**
- * Calculates the length of `n` in bits.
- *
- * @param {bigint} n Any positive integer
- * @returns {number} The number of bits required to encode `n`
- */
-function bitLength(n) {
-	// Surprisingly, string conversion seems to be the most performant way to get the bit length of a BigInt at present...
-	return n.toString(2).length;
 }
 
 /**

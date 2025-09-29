@@ -25,7 +25,7 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
  * Responds to the request to fetch top (N = n_players) players of leaderboard
  * leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
  */
-const getLeaderboardData = async(req: IdentifiedRequest, res: Response) => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
+const getLeaderboardData = async(req: IdentifiedRequest, res: Response): Promise<void> => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
 
 	/** ID of leaderboard to be fetched */
 	const leaderboard_id = Number(req.params["leaderboard_id"]) as Leaderboard;
@@ -39,9 +39,14 @@ const getLeaderboardData = async(req: IdentifiedRequest, res: Response) => { // 
 	/** Whether the server should also look for and return the rank of the user making the request */
 	const find_requester_rank = Number(req.params["find_requester_rank"]) as 0 | 1;
 
-	if (Number.isNaN(start_rank) || Number.isNaN(n_players) || 
-		Number.isNaN(leaderboard_id) || Number.isNaN(find_requester_rank)) return res.status(404).json({ message: "Request incorrectly formatted." });
-	if (n_players > MAX_N_PLAYERS_REQUEST_CAP) return res.status(404).json({ message: "Too many leaderboard positions requested at once." });
+	if (Number.isNaN(start_rank) || Number.isNaN(n_players) || Number.isNaN(leaderboard_id) || Number.isNaN(find_requester_rank)) {
+		res.status(404).json({ message: "Request incorrectly formatted." });
+		return;
+	}
+	if (n_players > MAX_N_PLAYERS_REQUEST_CAP) {
+		res.status(404).json({ message: "Too many leaderboard positions requested at once." });
+		return;
+	}
 
 	/** Username of user whose global ranking should be returned. Set to undefined if its global rank should not be found. */
 	const requester_username = (find_requester_rank && req.memberInfo.signedIn ? req.memberInfo.username : undefined);
@@ -50,7 +55,8 @@ const getLeaderboardData = async(req: IdentifiedRequest, res: Response) => { // 
 	const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
 	if (top_players === undefined) {
 		logEventsAndPrint(`Retrieval of top ${n_players} players from start rank ${start_rank} of leaderboard ${leaderboard_id} upon user request failed.`, 'errLog.txt');
-		return res.status(500).json({ message: "Server error." }); // Generic message for database retrieval failed
+		res.status(500).json({ message: "Server error." }); // Generic message for database retrieval failed
+		return;
 	}
 
 	// Populate leaderboardData object with usernames and elos of players
@@ -102,7 +108,7 @@ const getLeaderboardData = async(req: IdentifiedRequest, res: Response) => { // 
 	};
 
 	// Return data
-	return res.json(sendData);
+	res.json(sendData);
 };
 
 export {

@@ -612,7 +612,7 @@ function rider_threatens(direction: DoubleCoords, piece_square: DoubleCoords, ta
 	if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
 	const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
 	if (!works) return false;
-	if (is_huygen && !isprime.primalityTest(distance, null)) return false;
+	if (is_huygen && !isprime.primalityTest(distance)) return false;
 	if (ignore_blockers) return true;
 	// loop over all potential blockers
 	for (let i = 0; i < coordlist.length; i++) {
@@ -621,7 +621,7 @@ function rider_threatens(direction: DoubleCoords, piece_square: DoubleCoords, ta
 
 		const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i]![0]! - piece_square[0]!, coordlist[i]![1]! - piece_square[1]!], direction);
 		if (!collinear) continue;
-		else if (is_huygen && !isprime.primalityTest(thispiecedistance, null)) continue;
+		else if (is_huygen && !isprime.primalityTest(thispiecedistance)) continue;
 		else if (thispiecedistance < distance) return false;
 	}
 	return true;
@@ -884,7 +884,7 @@ function add_suitable_squares_to_candidate_list(
 		const is_huygen = (pieceTypeDictionary[piecelist[piece_index]!]!.is_huygen ? true : false);
 		if (is_huygen) {
 			const distance = manhattanDistance(piece_square, target_square);
-			if (!isprime.primalityTest(distance, null)) continue candidates_loop;
+			if (!isprime.primalityTest(distance)) continue candidates_loop;
 		}
 
 		const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));
