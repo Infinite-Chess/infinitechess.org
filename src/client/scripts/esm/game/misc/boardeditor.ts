@@ -24,6 +24,7 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import guinavigation from '../gui/guinavigation.js';
 import organizedpieces from '../../../../../shared/chess/logic/organizedpieces.js';
+import arrows from '../rendering/arrows/arrows.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -195,7 +196,7 @@ function update(): void {
 
 	// Handle starting and ending the drawing state
 	if (drawingTools.includes(currentTool)) {
-		if (mouse.isMouseDown(Mouse.LEFT) && !drawing) {
+		if (mouse.isMouseDown(Mouse.LEFT) && !drawing && !arrows.areHoveringAtleastOneArrow()) {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
 			beginEdit();
