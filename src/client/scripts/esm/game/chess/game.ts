@@ -159,7 +159,7 @@ function update(): void {
 	boardeditor.update();
 
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
-	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
+	// BEFORE arrows.update(), since this may forward to front, which changes all arrows visible.
 	selection.update();
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
