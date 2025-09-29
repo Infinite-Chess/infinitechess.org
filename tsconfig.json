@@ -15,7 +15,6 @@
 		"noPropertyAccessFromIndexSignature": true,
 		"noUncheckedIndexedAccess": true,
 		"strict": true,
-		"noEmit": true, // Do not emit outputs. We use tsc for type-checking only. ESBuild handles transpiling.
 		"noEmitOnError": true,
 		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
 		// "allowJs": true, // Allows TypeScript to import JavaScript modules.
