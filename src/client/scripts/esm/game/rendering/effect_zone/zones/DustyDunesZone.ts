@@ -3,6 +3,7 @@
 
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
+import math from "../../../../../../../shared/util/math/math";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
@@ -20,29 +21,35 @@ export class DustyDunesZone implements Zone {
 	/** The strength of the effect. */
 	private strength: number = 0.35; // Default: 0.35
 
-	/** The vector offset in radians each scroll vector is from each other. */
-	private scrollDirectionsOffset: number = 0.6;
-
-	/** How much faster one scroll speed is greater than the other. */
-	private scrollSpeedOffset: number = 1.2;
-
 	/** How many times the noise texture should tile the screen. */
 	private noiseTiling: number = 1.5;
 
 	/** The average wind speed. */
 	private windSpeed: number = 0.6;
-	
+
+	/** How much faster one scroll speed is greater than the other. */
+	private windSpeedsOffset: number = 1.2;
+
+	/** The wind direction in radians. 0 is to the right. */
+	private windDirection: number = Math.random() * Math.PI * 2;
+
+	/** The vector offset in radians each scroll vector is from each other. */
+	private windDirectionsOffset: number = 0.6;
+
+	/** The direction the wind is rotating. Clockwise or counter-clockwise. */
+	private windRotationParity: -1 | 1 = Math.random() < 0.5 ? -1 : 1;
+
 	/** The speed at which the wind direction rotates, in radians per second. */
 	private windRotationSpeed: number = 0.0025;
 
 
 	// ============ State ============
 
-	/** The wind direction in radians. 0 is to the right. */
-	private windDirection: number = Math.random() * Math.PI * 2;
+	/** The accumulated UV offset for the first noise layer. Wrapped to [0,1]. */
+	private uvOffset1: [number, number] = [0, 0];
 
-	/** The direction the wind is rotating. Clockwise or counter-clockwise. */
-	private windRotationParity: -1 | 1 = Math.random() < 0.5 ? -1 : 1;
+	/** The accumulated UV offset for the second noise layer. Wrapped to [0,1]. */
+	private uvOffset2: [number, number] = [0, 0];
 
 
 	constructor(programManager: ProgramManager) {
@@ -51,38 +58,49 @@ export class DustyDunesZone implements Zone {
 	}
 
 
+	/** Responsible for calculating the exact UV offsets of the noise texture layers each frame. */
 	public update(): void {
-		// Animate the wind direction over time.
 		const deltaTime = loadbalancer.getDeltaTime();
+
+		// Optional animation of other properties
+		
+		// this.windSpeed = math.getSineWaveVariation(Date.now() / 1000, 0, 0.9);
+		// this.windDirectionsOffset = math.getSineWaveVariation(Date.now() / 1000, 0, 2.5);
+		// this.windSpeedsOffset = math.getSineWaveVariation(Date.now() / 1000, 1, 2.0);
+
+		// Animate the wind direction.
+	
 		this.windDirection += this.windRotationSpeed * this.windRotationParity * deltaTime;
 		if (this.windDirection > Math.PI * 2) this.windDirection -= Math.PI * 2;
 		else if (this.windDirection < 0) this.windDirection += Math.PI * 2;
 
-		// TESING: Update color grade properties here if needed.
-		// this.colorGradePass.hueOffset += 0.1 * deltaTime;
-	}
+		// Calculate the instantaneous velocity vectors for this frame.
+		const angle1 = this.windDirection - (this.windDirectionsOffset / 2);
+		const angle2 = this.windDirection + (this.windDirectionsOffset / 2);
 
-	public getUniforms(): Record<string, any> {
-		// The average wind direction is windDirection.
-		// Calculate the vectors for the two scroll speeds.
-		const angle1 = this.windDirection - (this.scrollDirectionsOffset / 2);
-		const angle2 = this.windDirection + (this.scrollDirectionsOffset / 2);
-
-		// Break up the scroll speeds into x and y components.
-		const scrollSpeed1 = [
+		const velocity1 = [
 			Math.cos(angle1) * this.windSpeed,
 			Math.sin(angle1) * this.windSpeed
 		];
-		const scrollSpeed2 = [
-			Math.cos(angle2) * this.windSpeed * this.scrollSpeedOffset,
-			Math.sin(angle2) * this.windSpeed * this.scrollSpeedOffset
+		const velocity2 = [
+			Math.cos(angle2) * this.windSpeed * this.windSpeedsOffset,
+			Math.sin(angle2) * this.windSpeed * this.windSpeedsOffset
 		];
 
+		// 3. Integrate: Add the displacement for this frame (velocity * deltaTime) to the total offset.
+		this.uvOffset1[0] += (velocity1[0]! * deltaTime) % 1;
+		this.uvOffset1[1] += (velocity1[1]! * deltaTime) % 1;
+		this.uvOffset2[0] += (velocity2[0]! * deltaTime) % 1;
+		this.uvOffset2[1] += (velocity2[1]! * deltaTime) % 1;
+	}
+
+	public getUniforms(): Record<string, any> {
+		// Pass the final accumulated offsets directly to the shader.
 		return {
 			u1_strength: this.strength,
-			u1_scrollSpeed1: scrollSpeed1,
-			u1_scrollSpeed2: scrollSpeed2,
 			u1_noiseTiling: this.noiseTiling,
+			u1_uvOffset1: this.uvOffset1,
+			u1_uvOffset2: this.uvOffset2,
 		};
 	}
 

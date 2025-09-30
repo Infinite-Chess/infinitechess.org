@@ -17,9 +17,9 @@ uniform float u_effectTypeB;
 
 // Dusty Wastes Uniforms
 uniform float u1_strength; // The opacity of the scrolling noise texture
-uniform vec2 u1_scrollSpeed1;
-uniform vec2 u1_scrollSpeed2;
 uniform float u1_noiseTiling; // How many times the noise texture repeats across the screen
+uniform vec2 u1_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
+uniform vec2 u1_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
 
 
 // INPUTS
@@ -38,18 +38,18 @@ vec3 DustyWastes(
 	
 	// --- Samplers ---
 	sampler2D noiseSampler,
-	float time,
 	
 	// --- Effect parameters ---
 	float noiseTiling,
-	vec2 scrollSpeed1,
-	vec2 scrollSpeed2,
+	vec2 offset1,
+	vec2 offset2,
 	float effectStrength
 ) {
 	const float NOISE_MULTIPLIER = 1.0; // Default: 1.13   Affects average final brightness to more closely match the original texture color
 
-	vec2 uv1 = screenUV * noiseTiling + time * scrollSpeed1;
-	vec2 uv2 = screenUV * noiseTiling + time * scrollSpeed2;
+    // Apply the pre-calculated offsets.
+	vec2 uv1 = screenUV * noiseTiling + offset1;
+	vec2 uv2 = screenUV * noiseTiling + offset2;
 
 	float noise1 = texture(noiseSampler, uv1).r;
 	float noise2 = texture(noiseSampler, uv2).r;
@@ -73,11 +73,10 @@ vec3 calculateEffectColor(
 			screenUV,
 			// Pass global uniforms
 			u_noiseTexture,
-			u_time,
 			// Pass effect-specific uniforms
 			u1_noiseTiling,
-			u1_scrollSpeed1,
-			u1_scrollSpeed2,
+			u1_uvOffset1,
+			u1_uvOffset2,
 			u1_strength
 		);
 	}
