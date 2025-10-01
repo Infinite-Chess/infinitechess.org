@@ -3,7 +3,7 @@ import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessin
 import { Zone } from "../EffectZoneManager";
 
 
-export class PassThroughZone implements Zone {
+export class TheBeginningZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 0;
@@ -19,5 +19,13 @@ export class PassThroughZone implements Zone {
 
 	public getPasses(): PostProcessPass[] {
 		return [];
+	}
+
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
 	}
 }

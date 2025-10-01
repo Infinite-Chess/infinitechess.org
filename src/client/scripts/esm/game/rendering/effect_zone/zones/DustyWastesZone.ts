@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/effect_zone/zones/DustyDunesZone.ts
+// src/client/scripts/esm/game/rendering/effect_zone/zones/DustyWastesZone.ts
 
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
@@ -10,10 +10,10 @@ import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
 
 
-export class DustyDunesZone implements Zone {
+export class DustyWastesZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 1;
+	readonly effectType: number = 2;
 
 	private colorGradePass: ColorGradePass;
 
@@ -97,14 +97,22 @@ export class DustyDunesZone implements Zone {
 	public getUniforms(): Record<string, any> {
 		// Pass the final accumulated offsets directly to the shader.
 		return {
-			u1_strength: this.strength,
-			u1_noiseTiling: this.noiseTiling,
-			u1_uvOffset1: this.uvOffset1,
-			u1_uvOffset2: this.uvOffset2,
+			u2_strength: this.strength,
+			u2_noiseTiling: this.noiseTiling,
+			u2_uvOffset1: this.uvOffset1,
+			u2_uvOffset2: this.uvOffset2,
 		};
 	}
 
 	public getPasses(): PostProcessPass[] {
 		return [this.colorGradePass];
+	}
+    
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
 	}
 }

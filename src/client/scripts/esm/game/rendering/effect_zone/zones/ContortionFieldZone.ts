@@ -42,4 +42,12 @@ export class ContortionFieldZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [this.sineWavePass];
 	}
+	
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
+	}
 }

@@ -28,7 +28,7 @@ const SUCCESSIVE_MOVES_CONFIG = {
 /** Config for controlling moves' reverb effect. */
 const REVERB_CONFIG = {
 	/** The maximum volume the reverb effect of a piece move can reach. */
-	volume: 3.5,
+	maxRatio: 3.5,
 	/** The duration of moves' reverb effects, in seconds. */
 	duration: 1.5,
 	/** The minimum distance a piece needs to move for a reverb effect to gradually increase in volume. */
@@ -90,11 +90,10 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	const volume = 1 * dampener;
 
 	const playbackRate = premove ? PREMOVE_CONFIG.playbackRate : 1; // Premove moves are played faster, so they sound more like a click.
-	// eslint-disable-next-line prefer-const
-	let { reverbVolume, reverbDuration } = calculateReverbOptions(distanceMoved);
-	if (reverbVolume) reverbVolume *= dampener;
+	
+	const { reverbRatio, reverbDuration } = calculateReverbRatio(distanceMoved);
 
-	sound.playSound(soundEffectName, { volume, reverbVolume, reverbDuration, delay: delaySecs, playbackRate });
+	sound.playSound(soundEffectName, { volume, reverbRatio, reverbDuration, delay: delaySecs, playbackRate });
 
 	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
 		const bellVolume = BELL_CONFIG.volume * dampener;
@@ -102,16 +101,16 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	}
 }
 
-/** Takes the distance a piece moved, and returns applicable reverbVol and reverbDur options. */
-function calculateReverbOptions(distanceMoved: BigDecimal): { reverbVolume: number, reverbDuration: number } | { reverbVolume: undefined, reverbDuration: undefined } {
+/** Takes the distance a piece moved, and returns the applicable reverb ratio and duration. */
+function calculateReverbRatio(distanceMoved: BigDecimal): { reverbRatio: number, reverbDuration: number } | { reverbRatio: undefined, reverbDuration: undefined } {
 	const distanceMovedNum = bd.toNumber(distanceMoved);
 	const x = (distanceMovedNum - REVERB_CONFIG.minDist) / (REVERB_CONFIG.maxDist - REVERB_CONFIG.minDist); // 0-1
-	if (x <= 0) return { reverbVolume: undefined, reverbDuration: undefined };
-	else if (x >= 1) return { reverbVolume: REVERB_CONFIG.volume, reverbDuration: REVERB_CONFIG.duration };
+	if (x <= 0) return { reverbRatio: undefined, reverbDuration: undefined };
+	else if (x >= 1) return { reverbRatio: REVERB_CONFIG.maxRatio, reverbDuration: REVERB_CONFIG.duration };
 
-	const reverbVolume = REVERB_CONFIG.volume * x; // No easing applied, for now
+	const reverbRatio = REVERB_CONFIG.maxRatio * x; // No easing applied, for now
 
-	return { reverbVolume, reverbDuration: REVERB_CONFIG.duration };
+	return { reverbRatio, reverbDuration: REVERB_CONFIG.duration };
 }
 
 function playGamestart(): SoundObject | undefined {
@@ -142,27 +141,25 @@ function playDrum(): SoundObject | undefined {
 /** Plays a few clock ticks at 1 minute remaining. */
 function playTick({
 	volume,
-	fadeInDuration,
 	offset
 }: {
 	volume?: number
-	fadeInDuration?: number,
 	offset?: number
 } = {}): SoundObject | undefined {
-	return sound.playSound('tick', { volume, offset, fadeInDuration }); // Default volume: 0.07
+	return sound.playSound('tick', { volume, offset });
 }
 
 /** Plays the ticking ambience during the last 10 seconds of timer remaining. */
 function playTicking(
 	{
-		fadeInDuration,
+		volume,
 		offset
 	}: {
-		fadeInDuration?: number,
+		volume?: number
 		offset?: number
 	} = {}
 ): SoundObject | undefined {
-	return sound.playSound('ticking', { volume: 0.18, offset, fadeInDuration });
+	return sound.playSound('ticking', { volume, offset });
 }
 
 function playViola_c3({ volume }: { volume?: number } = {}): SoundObject | undefined {

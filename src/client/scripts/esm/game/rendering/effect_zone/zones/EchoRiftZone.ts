@@ -19,6 +19,9 @@ export class EchoRiftZone implements Zone {
 	/** The next timestamp the voronoi distortion pass will update the time value, revealing a different pattern. */
 	private nextCrackTime: number = Date.now();
 
+	private baseMillisBetweenCracks: number = 300;
+	private maxMillisBetweenCracks: number = 4000;
+
 
 	constructor(programManager: ProgramManager) {
 		this.voronoiDistortionPass = new VoronoiDistortionPass(programManager);
@@ -35,7 +38,7 @@ export class EchoRiftZone implements Zone {
 		if (Date.now() > this.nextCrackTime) {
 			this.voronoiDistortionPass.time = performance.now() / 10;
 			const rand = Math.random() * Math.random(); // Bias towards smaller numbers
-			this.nextCrackTime = Date.now() + 250 + rand * 3000;
+			this.nextCrackTime = Date.now() + this.baseMillisBetweenCracks + rand * this.maxMillisBetweenCracks;
 		}
 	}
 
@@ -45,5 +48,13 @@ export class EchoRiftZone implements Zone {
 
 	public getPasses(): PostProcessPass[] {
 		return [this.voronoiDistortionPass];
+	}
+    
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
 	}
 }

@@ -49,7 +49,7 @@ function init(programManager: ProgramManager, width: number, height: number): vo
 
 function updateRippleLifetime(width: number, height: number): void {
 	rippleLifetime = RIPPLE_LIFETIME_BASE + RIPPLE_LIFETIME_MULTIPLIER * (width / height);
-	console.log(`ripple lifetime adjusted to ${rippleLifetime.toFixed(2)}s`);
+	// console.log(`ripple lifetime adjusted to ${rippleLifetime.toFixed(2)}s`);
 }
 
 function update(): void {

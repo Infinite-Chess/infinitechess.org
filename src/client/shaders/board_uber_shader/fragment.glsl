@@ -16,10 +16,10 @@ uniform float u_effectTypeA; // e.g., 0.0 for None, 1.0 for Dusty Wastes
 uniform float u_effectTypeB;
 
 // Dusty Wastes Uniforms
-uniform float u1_strength; // The opacity of the scrolling noise texture
-uniform float u1_noiseTiling; // How many times the noise texture repeats across the screen
-uniform vec2 u1_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
-uniform vec2 u1_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
+uniform float u2_strength; // The opacity of the scrolling noise texture
+uniform float u2_noiseTiling; // How many times the noise texture repeats across the screen
+uniform vec2 u2_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
+uniform vec2 u2_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
 
 
 // INPUTS
@@ -67,17 +67,17 @@ vec3 calculateEffectColor(
 	vec3 baseColor,
 	vec2 screenUV
 ) {
-	if (effectType == 1.0) {
+	if (effectType == 2.0) {
 		return DustyWastes(
 			baseColor,
 			screenUV,
 			// Pass global uniforms
 			u_noiseTexture,
 			// Pass effect-specific uniforms
-			u1_noiseTiling,
-			u1_uvOffset1,
-			u1_uvOffset2,
-			u1_strength
+			u2_noiseTiling,
+			u2_uvOffset1,
+			u2_uvOffset2,
+			u2_strength
 		);
 	}
 

@@ -4,9 +4,14 @@ import ImageLoader from "../../../util/ImageLoader";
 import TextureLoader from "../../../webgl/TextureLoader";
 import boardtiles from "../boardtiles";
 import frametracker from "../frametracker";
-import { PassThroughZone } from "./zones/PassThroughZone";
 import { ProgramManager } from "../../../webgl/ProgramManager";
-import { DustyDunesZone } from "./zones/DustyDunesZone";
+import { TheBeginningZone } from "./zones/TheBeginningZone";
+import { UndercurrentZone } from "./zones/UndercurrentZone";
+import { DustyWastesZone } from "./zones/DustyWastesZone";
+import { CrackedBarrensZone } from "./zones/CrackedBarrensZone";
+import { MoltenReachesZone } from "./zones/MoltenReachesZone";
+import { ContortionFieldZone } from "./zones/ContortionFieldZone";
+import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
 
 
@@ -18,9 +23,10 @@ export interface EffectZone {
 	readonly name: string;
 	/** The closest tile that this zone effect starts at. */
 	readonly start: bigint;
-	// eslint-disable-next-line no-unused-vars
-	readonly constructor: new (programManager: ProgramManager) => Zone;
 }
+
+/** Union of all Zone names. */
+type ZoneName = typeof EffectZoneManager.ZONES[number]['name'];
 
 /**
  * A constructed Zone, with methods for updating, obtaining
@@ -35,6 +41,10 @@ export interface Zone {
 	readonly getUniforms: () => Record<string, any>;
 	/** Returns the current post processing pass effects for this zone. */
 	readonly getPasses: () => PostProcessPass[];
+    /** Fades in the ambience. */
+	readonly fadeInAmbience: (transitionDurationMillis: number) => void;
+    /** Fades out the ambience, then stops the track playing. */
+	readonly fadeOutAmbience: (transitionDurationMillis: number) => void;
 }
 
 /**
@@ -42,25 +52,30 @@ export interface Zone {
  * and handles smooth, timed transitions between effect zones.
  */
 export class EffectZoneManager {
-	static readonly ZONES: EffectZone[] = [
+	static readonly ZONES = [
 		// Define zones in ascending order of their start distance.
-		{
-			name: 'Origin',
-			start: 0n,
-			constructor: PassThroughZone
-		},
-		{
-			name: 'Dusty Wastes',
-			start: 10n ** 9n,
-			constructor: DustyDunesZone
-		},
-	];
+		{ name: 'The Beginning', start: 0n },
+		// [PRODUCTION] Default distances:
+		// { name: 'Undercurrent',     start: 10n ** (3n * 3n) },
+		// { name: 'Dusty Wastes',     start: 10n ** (3n * 6n) },
+		// { name: 'Cracked Barrens',  start: 10n ** (3n * 9n) },
+		// { name: 'Molten Reaches',   start: 10n ** (3n * 12n) },
+		// { name: 'Contortion Field', start: 10n ** (3n * 15n) },
+		// { name: 'Echo Rift',        start: 10n ** (3n * 18n) },
+		// [TESTING] Much shorter distances:
+		{ name: 'Undercurrent',     start: BigInt(20) },
+		{ name: 'Dusty Wastes',     start: BigInt(40) },
+		{ name: 'Cracked Barrens',  start: BigInt(60) },
+		{ name: 'Molten Reaches',   start: BigInt(80) },
+		{ name: 'Contortion Field', start: BigInt(100) },
+		{ name: 'Echo Rift',        start: BigInt(120) },
+	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
 	private gl: WebGL2RenderingContext;
 
 	/** The constructed Zones. */
-	private zones: Record<string, Zone>;
+	private zones: Record<ZoneName, Zone>;
 
 	/** The noise texture used for zone effects. */
 	private noiseTexture: WebGLTexture | undefined;
@@ -84,19 +99,26 @@ export class EffectZoneManager {
 
 	constructor(gl: WebGL2RenderingContext, programManager: ProgramManager) {
 		this.gl = gl;
-
-		this.zones = {};
-		// Construct each zone
-		for (const zone of EffectZoneManager.ZONES) {
-			this.zones[zone.name] = new zone.constructor(programManager);
-		}
-
-		this.currentZone = this.zones['Origin']!;
-
+		
 		// Load noise textures
-		ImageLoader.loadImage('img/noise_texture/heat_haze.webp').then(image => {
-			this.noiseTexture = TextureLoader.loadTexture(gl, image);
+		const noiseTexture: Promise<WebGLTexture> = ImageLoader.loadImage('img/noise_texture/heat_haze.webp').then(image => {
+			const texture = TextureLoader.loadTexture(gl, image);
+			this.noiseTexture = texture;
+			return texture;
 		});
+
+		// Construct Zones
+		this.zones = {
+			'The Beginning': new TheBeginningZone(),
+			'Undercurrent': new UndercurrentZone(),
+			'Dusty Wastes': new DustyWastesZone(programManager),
+			'Cracked Barrens': new CrackedBarrensZone(),
+			'Molten Reaches': new MoltenReachesZone(programManager, noiseTexture),
+			'Contortion Field': new ContortionFieldZone(programManager),
+			'Echo Rift': new EchoRiftZone(programManager),
+		};
+
+		this.currentZone = this.zones['The Beginning'];
 	}
 
 
@@ -141,9 +163,12 @@ export class EffectZoneManager {
 			targetZoneForDistance !== this.currentZone
 		) {
 			// A new transition needs to start.
-			// console.log(`Starting transition from ${this.currentZone.name} to ${targetZoneForDistance.name}`);
+			// console.log('Starting transition to new zone.');
 			this.transitionTargetZone = targetZoneForDistance;
 			this.transitionStartTime = Date.now();
+			// Fade out the current zone's ambience and fade in the transitionTargetZone's
+			this.currentZone.fadeOutAmbience(this.transitionDuration);
+			this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
 		} else if (
 			this.transitionTargetZone && // A transition is active
 			targetZoneForDistance === this.currentZone && // And we've moved back into the 'from' zone's area
@@ -161,6 +186,10 @@ export class EffectZoneManager {
 			const elapsedTime = Date.now() - this.transitionStartTime!;
 			const remainingTime = this.transitionDuration - elapsedTime;
 			this.transitionStartTime = Date.now() - remainingTime;
+
+			// Fade out the current zone's ambience and fade in the transitionTargetZone's
+			this.currentZone.fadeOutAmbience(remainingTime);
+			this.transitionTargetZone.fadeInAmbience(remainingTime);
 		}
 
 		// --- 3. UPDATE TRANSITION PROGRESS OF ACTIVE EFFECTS ---
@@ -182,7 +211,7 @@ export class EffectZoneManager {
 
 		// Only all for an animation frame if the current zone isn't the origin, or if we're mid-transition.
 		// This ensures cpu usage isn't spiked from Zone Effects when near origin.
-		if (this.currentZone !== this.zones['Origin'] || this.transitionTargetZone) frametracker.onVisualChange();
+		if (this.currentZone !== this.zones['The Beginning'] || this.transitionTargetZone) frametracker.onVisualChange();
 	}
 
 	/**

@@ -27,10 +27,10 @@ export class VoronoiDistortionPass implements PostProcessPass {
 	public strength: number = 0.007;
 	
 	/** The thickness of the ridges between cells. */
-	public ridgeThickness = 0.015;
+	public ridgeThickness = 0.02;
 
 	/** The strength of the ridges' lensing effect. */
-	public ridgeStrength = 0.03;
+	public ridgeStrength = 0.04;
 
 
 	constructor(programManager: ProgramManager) {
