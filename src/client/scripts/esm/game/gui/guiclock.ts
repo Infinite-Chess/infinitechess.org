@@ -319,11 +319,13 @@ function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number): void {
 }
 
 function playTickingEffect(offset: number): void {
-	countdown.ticking.sound = gamesound.playTicking({ fadeInDuration: countdown.ticking.fadeInDuration, offset });
+	countdown.ticking.sound = gamesound.playTicking({ volume: 0.18, offset });
+	countdown.ticking.sound?.fadeIn(0.18, countdown.ticking.fadeInDuration);
 }
 
 function playTickEffect(offset: number): void {
-	countdown.tick.sound = gamesound.playTick({ volume: 0.07, fadeInDuration: countdown.tick.fadeInDuration, offset });
+	countdown.tick.sound = gamesound.playTick({ volume: 0, offset });
+	countdown.tick.sound?.fadeIn(0.07, countdown.tick.fadeInDuration);
 }
 
 export default {

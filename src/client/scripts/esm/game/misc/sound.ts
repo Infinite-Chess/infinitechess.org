@@ -17,14 +17,32 @@ interface SoundObject {
 	source: AudioBufferWithGainNode,
 	/** The source of the reverb-only part of the audio, if specified, with its attached `gainNode`. */
 	sourceReverb?: AudioBufferWithGainNode,
-	/** Stops the sound from playing. Could create static pops, if that happens use fadeOut() instead. */
+	/**
+	 * Stops the sound from playing.
+	 * If this creates static pops, use fadeOut() instead.
+	 */
 	stop: () => void
 	/**
 	 * Fades out the sound.
-	 * @param durationMillis - The duration of the fade out
+	 * [Looping sounds] Fades to silent and continues playing.
+	 * [Non-looping sounds] Fades to silent and then stops the sound entirely.
+	 * @param durationMillis - The duration of the fade out in milliseconds.
 	 */
 	// eslint-disable-next-line no-unused-vars
-	fadeOut: (durationMilis: number) => void
+	fadeOut: (durationMillis: number) => void
+	/**
+	 * Fades in the sound from its current volume to a target volume.
+	 * If you wish to fade-in a non-looping sound, initate the sound object with 0 volume initially.
+	 * @param targetVolume - The final volume level (0-1).
+	 * @param durationMillis - The duration of the fade-in effect in milliseconds.
+	 */
+	// eslint-disable-next-line no-unused-vars
+	fadeIn: (targetVolume: number, durationMillis: number) => void
+
+	/** Whether to loop the sound indefinitely. */
+	readonly looping: boolean,
+	/** The ratio of the main volume at which the reverb should play. */
+	readonly _reverbRatio: number, // CHANGED
 }
 
 type SoundTimeSnippet = readonly [number, number];
@@ -38,17 +56,17 @@ interface PlaySoundOptions {
 	delay?: number,
 	/** Offset into the start of the sound effect in milliseconds. The higher this is, the more chopped off the beginning is. Default: 0 (no offset) */
 	offset?: number,
-	/** Fade-in duration in seconds. Default: 0 (no fade-in) */
-	fadeInDuration?: number,
-	/** Volume of an optional reverb effect. Default: 0 (no reverb). */
-	reverbVolume?: number,
-	/** Duration of an optional reverb effect in seconds. Required if reverbVolume is specified. */
+	/** A ratio of the main volume for an optional reverb effect. Default: 0 (no reverb). 0.5 = 50% of main volume. */
+	reverbRatio?: number, // CHANGED
+	/** Duration of an optional reverb effect in seconds. Required if reverbRatio is specified. */
 	reverbDuration?: number,
 	/**
 	 * Playback rate of the sound. Default: 1. 1 = normal speed & pitch
 	 * Lower = slower & lower pitch. Higher = faster & higher pitch.
 	 */
 	playbackRate?: number
+	/** Whether the sound should loop indefinitely. Default: false */
+	loop?: boolean,
 }
 
 
@@ -103,12 +121,12 @@ function getAudioContext(): AudioContext {
 
 /**
  * Sets our audio context and decodedBuffer. This is called from our in-line javascript inside the html.
- * 
+ *
  * The sound spritesheet is loaded using javascript instead of an element
  * inside the document, because I need to grab the buffer.
  * And we put the javascript inline in the html to start it loading quicker,
  * because otherwise our sound only starts loading AFTER everything single script has loaded.
- * @param audioCtx 
+ * @param audioCtx
  * @param decodedBuffer - The decoded buffer of the loaded sound spritesheet.
  */
 function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer): void {
@@ -125,7 +143,8 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
 	if (!audioContext) throw Error(`Can't play sound ${soundName} when audioContext isn't initialized yet. (Still loading)`);
 
-	const { volume = 1, delay = 0, offset = 0, fadeInDuration = 0, reverbVolume = 0, reverbDuration, playbackRate = 1 } = playOptions;
+	// CHANGED: Added `loop`, removed `fadeInDuration`
+	const { volume = 1, delay = 0, offset = 0, reverbRatio = 0, reverbDuration, playbackRate = 1, loop = false } = playOptions;
 
 	const soundStamp = getSoundStamp(soundName); // [ timeStart, timeEnd ] Start and end time stamps in the sprite
 	const offsetSecs = offset / 1000;
@@ -135,36 +154,66 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 
 	// Calculate the desired start time by adding the delay
 	const currentTime = audioContext.currentTime;
-    
 	const startAt = currentTime + delay;
 
+	// We need an audio "source" to play our main sound effect. Several of these can exist at once for one audio context.
+
+	// Create the main audio source
+	const mainSource = createBufferSource(volume, playbackRate);
+	mainSource.loop = loop; // Set the loop property on the audio source itself.
+
+	// Create the reverb source if needed
+	let reverbSource: AudioBufferWithGainNode | undefined = undefined;
+	if (reverbRatio > 0) {
+		if (!reverbDuration) throw Error("Need to specify a reverb duration.");
+		const initialReverbVolume = volume * reverbRatio; // Calculate initial relative volume
+		reverbSource = createBufferSource(initialReverbVolume, playbackRate, reverbDuration);
+		reverbSource.loop = loop;
+	}
+
 	const soundObject: SoundObject = {
-		source: createBufferSource(volume, playbackRate),
-		sourceReverb: undefined,
+		source: mainSource,
+		sourceReverb: reverbSource,
+		looping: loop,
+		_reverbRatio: reverbRatio,
+
 		stop: (): void => {
 			soundObject.source.stop();
 			if (soundObject.sourceReverb) soundObject.sourceReverb.stop();
 		},
 		fadeOut: (durationMillis): void => {
-			fadeOut(soundObject.source, durationMillis);
-			if (soundObject.sourceReverb) fadeOut(soundObject.sourceReverb, durationMillis);
+			const fadeOutDurationSecs = durationMillis / 1000;
+			const now = audioContext.currentTime;
+			const fadeOutEndTime = now + fadeOutDurationSecs;
+			// Fade out the main source
+			fadeOut(soundObject.source, fadeOutEndTime);
+			// Fade out the reverb source if it exists
+			if (soundObject.sourceReverb) {
+				fadeOut(soundObject.sourceReverb, fadeOutEndTime);
+			}
+			// For non-looping sounds, schedule them to stop completely after the fade.
+			if (!soundObject.looping) setTimeout(() => soundObject.stop(), durationMillis);
+		},
+		fadeIn: (targetVolume, durationMillis): void => {
+			const fadeInDurationSecs = durationMillis / 1000;
+			const now = audioContext.currentTime;
+			const fadeInEndTime = now + fadeInDurationSecs;
+			// Fade in the main source to the specified target volume
+			fadeIn(soundObject.source, targetVolume, fadeInEndTime);
+			// Fade in the reverb source, retaining its original ratio
+			if (soundObject.sourceReverb) {
+				// Calculate the reverb's target volume based on the main target and the stored ratio.
+				const targetReverbVolume = targetVolume * soundObject._reverbRatio;
+				fadeIn(soundObject.sourceReverb, targetReverbVolume, fadeInEndTime);
+			}
 		}
 	};
 
-	// 1. We need an audio "source" to play our main sound effect. Several of these can exist at once for one audio context.
+	// Start the main source
 	soundObject.source.start(startAt, startTime, duration);
+	// Start the reverb source if it exists
+	if (soundObject.sourceReverb) soundObject.sourceReverb.start(startAt, startTime, duration);
 
-	// 2. If reverb is specified, we also need a source for that effect! We will play them both!
-	if (reverbVolume > 0) {
-		if (!reverbDuration) throw Error("Need to specify a reverb duration.");
-		soundObject.sourceReverb = createBufferSource(reverbVolume, playbackRate, reverbDuration);
-		soundObject.sourceReverb.start(startAt, startTime, duration);
-	} // else no reverb effect if reverbVolume is zero :)
-
-	if (fadeInDuration > 0) { // Apply a linear fade-in effect to the gain node.
-		fadeIn(soundObject.source, volume, fadeInDuration);
-		if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume, fadeInDuration);
-	}
 	return soundObject;
 }
 
@@ -195,7 +244,7 @@ function getStampDuration(stamp: SoundTimeSnippet): number { // [ startTimeSecs,
 function createBufferSource(volume: number, playbackRate: number = 1, reverbDurationSecs: number = 0): AudioBufferWithGainNode {
 	const source = audioContext.createBufferSource();
 	if (!audioDecodedBuffer) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
-	source.buffer = audioDecodedBuffer; // Assuming `decodedBuffer` is defined elsewhere
+	source.buffer = audioDecodedBuffer;
 
 	// What nodes do we want?
 
@@ -254,9 +303,9 @@ function impulseResponse(duration: number): AudioBuffer { // Duration in seconds
  * After an audio source buffer is created, it must be connected to the destination for us to hear sound!
  * Optionally, we can include nodes for modying the sound! Gain (volume), reverb...
  */
-function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, context: AudioContext, nodeList: (GainNode | ConvolverNode)[]): void { // nodeList is optional
+function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, context: AudioContext, nodeList: (GainNode | ConvolverNode)[]): void {
 	let currentConnection: AudioBufferSourceNode | GainNode | ConvolverNode = source; // Start at the beginning
-	
+
 	for (const thisNode of nodeList) {
 		// Connect the current connection to this node!
 		currentConnection.connect(thisNode);
@@ -265,7 +314,7 @@ function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, cont
 	}
 
 	// Finally connect to the destnation!
-	currentConnection.connect(context.destination); 
+	currentConnection.connect(context.destination);
 
 	// Only connect the source directly to the destination if we
 	// aren't going through any nodes!!
@@ -273,36 +322,34 @@ function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, cont
 }
 
 /**
- * Fades in the audio by gradually increasing the volume.
+ * Initiates a fade-in for an audio source's gain node. This is interruptible.
  * @param source - The audio source node to fade in, WITH ITS `gainNode` property attached.
  * @param targetVolume - The final volume level.
- * @param fadeDuration - The duration of the fade-in effect in seconds.
+ * @param endTime - The audioContext time at which the fade should complete.
  */
-function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, fadeDuration: number): void {
-	const currentTime = audioContext.currentTime;
-	source.gainNode.gain.setValueAtTime(0, currentTime);
-	source.gainNode.gain.linearRampToValueAtTime(targetVolume, currentTime + fadeDuration / 1000);
+function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, endTime: number): void {
+	const now = audioContext.currentTime;
+	// First, cancel any pending volume changes to make this interruptible.
+	source.gainNode.gain.cancelScheduledValues(now);
+	// Set the starting point for the ramp at the current volume.
+	source.gainNode.gain.setValueAtTime(source.gainNode.gain.value, now);
+	// Schedule the linear ramp to the target volume.
+	source.gainNode.gain.linearRampToValueAtTime(targetVolume, endTime);
 }
 
 /**
- * Fades out the audio source over a specified duration.
- * This can be used to prevent static pops when abruptly stopping audio.
- * This will be useful for fading out music, and can be tweaked to fade in music.
+ * Initiates a fade-out for an audio source's gain node. This is interruptible.
  * @param source - The audio source node to fade out, WITH ITS `gainNode` property attached.
- * @param durationMillis - The duration of the fade-out effect in milliseconds.
+ * @param endTime - The audioContext time at which the fade should complete.
  */
-function fadeOut(source: AudioBufferWithGainNode, durationMillis: number): void {
-	const durationSecs = durationMillis / 1000;
-	const currentTime = audioContext.currentTime;
-	const endTime = currentTime + durationSecs;
-
-	// First, set the gain value explicitly to ensure starting point for ramp
-	source.gainNode.gain.setValueAtTime(source.gainNode.gain.value, currentTime);
-	// Schedule the gain node to fade out
+function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
+	const now = audioContext.currentTime;
+	// First, cancel any pending volume changes to make this interruptible.
+	source.gainNode.gain.cancelScheduledValues(now);
+	// Set the starting point for the ramp at the current volume.
+	source.gainNode.gain.setValueAtTime(source.gainNode.gain.value, now);
+	// Schedule the linear ramp down to zero.
 	source.gainNode.gain.linearRampToValueAtTime(0, endTime);
-
-	// Stop the audio after fade-out duration.
-	setTimeout(() => source.stop(), durationMillis);
 }
 
 
