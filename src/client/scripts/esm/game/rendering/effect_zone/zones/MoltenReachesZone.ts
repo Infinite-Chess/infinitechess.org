@@ -8,7 +8,7 @@ import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWaveP
 export class MoltenReachesZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 4; // <-- UPDATE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	readonly effectType: number = 4;
 
 	/** Post processing effect creating heat waves. */
 	private heatWavePass: HeatWavePass;
@@ -18,8 +18,8 @@ export class MoltenReachesZone implements Zone {
 	private speed: number = 0.5;
 
 
-	constructor(programManager: ProgramManager, noise: WebGLTexture) {
-		this.heatWavePass = new HeatWavePass(programManager, noise);
+	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {
+		noise.then(texture => this.heatWavePass = new HeatWavePass(programManager, texture));
 	}
 
 
@@ -34,6 +34,7 @@ export class MoltenReachesZone implements Zone {
 	}
 
 	public getPasses(): PostProcessPass[] {
+		if (!this.heatWavePass) return [];
 		return [this.heatWavePass];
 	}
 }
