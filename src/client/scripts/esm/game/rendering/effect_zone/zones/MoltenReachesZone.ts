@@ -15,7 +15,7 @@ export class MoltenReachesZone implements Zone {
 
 
 	/** The speed of the moving heat waves. Default: 0.5 (strength 0.04) */
-	private speed: number = 0.5;
+	private speed: number = 1.0;
 
 
 	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {

@@ -7,26 +7,26 @@ import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWaveP
 
 export class CrackedBarrensZone implements Zone {
 
-    /** The unique integer id this effect zone gets. */
-    readonly effectType: number = 3;
+	/** The unique integer id this effect zone gets. */
+	readonly effectType: number = 3;
 
 
-    // constructor(programManager: ProgramManager) {
+	// constructor(programManager: ProgramManager) {
 
-    // }
+	// }
 
 
-    public update(): void {
-        // FUTURE: Animate slow evolution of cracked pockets (Voronoi Pattern).
-    }
+	public update(): void {
+		// FUTURE: Animate slow evolution of cracked pockets (Voronoi Pattern).
+	}
 
-    public getUniforms(): Record<string, any> {
-        return {};
-    }
+	public getUniforms(): Record<string, any> {
+		return {};
+	}
 
-    public getPasses(): PostProcessPass[] {
-        return [];
-    }
+	public getPasses(): PostProcessPass[] {
+		return [];
+	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
 

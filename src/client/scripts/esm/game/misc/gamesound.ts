@@ -91,7 +91,7 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 
 	const playbackRate = premove ? PREMOVE_CONFIG.playbackRate : 1; // Premove moves are played faster, so they sound more like a click.
 	
-	let { reverbRatio, reverbDuration } = calculateReverbRatio(distanceMoved);
+	const { reverbRatio, reverbDuration } = calculateReverbRatio(distanceMoved);
 
 	sound.playSound(soundEffectName, { volume, reverbRatio, reverbDuration, delay: delaySecs, playbackRate });
 

@@ -63,12 +63,12 @@ export class EffectZoneManager {
 		// { name: 'Contortion Field', start: 10n ** (3n * 15n) },
 		// { name: 'Echo Rift',        start: 10n ** (3n * 18n) },
 		// [TESTING] Much shorter distances:
-		{ name: 'Undercurrent',     start: BigInt(10 ** 1.5)},
-		{ name: 'Dusty Wastes',     start: BigInt(10 ** 2.0) },
-		{ name: 'Cracked Barrens',  start: BigInt(10 ** 2.5) },
-		{ name: 'Molten Reaches',   start: BigInt(10 ** 3.0) },
-		{ name: 'Contortion Field', start: BigInt(10 ** 3.5) },
-		{ name: 'Echo Rift',        start: BigInt(10 ** 4.0) },
+		{ name: 'Undercurrent',     start: BigInt(20) },
+		{ name: 'Dusty Wastes',     start: BigInt(40) },
+		{ name: 'Cracked Barrens',  start: BigInt(60) },
+		{ name: 'Molten Reaches',   start: BigInt(80) },
+		{ name: 'Contortion Field', start: BigInt(100) },
+		{ name: 'Echo Rift',        start: BigInt(120) },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -163,12 +163,12 @@ export class EffectZoneManager {
 			targetZoneForDistance !== this.currentZone
 		) {
 			// A new transition needs to start.
-			// console.log(`Starting transition from ${this.currentZone.name} to ${targetZoneForDistance.name}`);
+			// console.log('Starting transition to new zone.');
 			this.transitionTargetZone = targetZoneForDistance;
 			this.transitionStartTime = Date.now();
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
 			this.currentZone.fadeOutAmbience(this.transitionDuration);
-			this.currentZone.fadeInAmbience(this.transitionDuration);
+			this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
 		} else if (
 			this.transitionTargetZone && // A transition is active
 			targetZoneForDistance === this.currentZone && // And we've moved back into the 'from' zone's area
@@ -189,7 +189,7 @@ export class EffectZoneManager {
 
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
 			this.currentZone.fadeOutAmbience(remainingTime);
-			this.currentZone.fadeInAmbience(remainingTime);
+			this.transitionTargetZone.fadeInAmbience(remainingTime);
 		}
 
 		// --- 3. UPDATE TRANSITION PROGRESS OF ACTIVE EFFECTS ---
