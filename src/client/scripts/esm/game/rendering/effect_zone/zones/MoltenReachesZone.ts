@@ -24,7 +24,7 @@ export class MoltenReachesZone implements Zone {
 
 
 	public update(): void {
-		this.heatWavePass.time = performance.now() / 1000 * this.speed;
+		if (this.heatWavePass) this.heatWavePass.time = performance.now() / 1000 * this.speed;
 
 		// FUTURE: Update animation of heat pockets?
 	}
