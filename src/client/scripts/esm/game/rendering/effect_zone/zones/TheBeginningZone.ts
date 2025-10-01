@@ -20,4 +20,12 @@ export class TheBeginningZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [];
 	}
+
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
+	}
 }

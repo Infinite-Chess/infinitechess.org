@@ -54,7 +54,7 @@ export interface Zone {
 export class EffectZoneManager {
 	static readonly ZONES = [
 		// Define zones in ascending order of their start distance.
-		{ name: 'Origin', start: 0n },
+		{ name: 'The Beginning', start: 0n },
 		// [PRODUCTION] Default distances:
 		// { name: 'Undercurrent',     start: 10n ** (3n * 3n) },
 		// { name: 'Dusty Wastes',     start: 10n ** (3n * 6n) },
@@ -109,7 +109,7 @@ export class EffectZoneManager {
 
 		// Construct Zones
 		this.zones = {
-			'Origin': new TheBeginningZone(),
+			'The Beginning': new TheBeginningZone(),
 			'Undercurrent': new UndercurrentZone(),
 			'Dusty Wastes': new DustyWastesZone(programManager),
 			'Cracked Barrens': new CrackedBarrensZone(),
@@ -118,7 +118,7 @@ export class EffectZoneManager {
 			'Echo Rift': new EchoRiftZone(programManager),
 		};
 
-		this.currentZone = this.zones['Origin'];
+		this.currentZone = this.zones['The Beginning'];
 	}
 
 
@@ -211,7 +211,7 @@ export class EffectZoneManager {
 
 		// Only all for an animation frame if the current zone isn't the origin, or if we're mid-transition.
 		// This ensures cpu usage isn't spiked from Zone Effects when near origin.
-		if (this.currentZone !== this.zones['Origin'] || this.transitionTargetZone) frametracker.onVisualChange();
+		if (this.currentZone !== this.zones['The Beginning'] || this.transitionTargetZone) frametracker.onVisualChange();
 	}
 
 	/**

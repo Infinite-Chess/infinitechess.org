@@ -46,4 +46,12 @@ export class EchoRiftZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [this.voronoiDistortionPass];
 	}
+    
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
+	}
 }

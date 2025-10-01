@@ -107,4 +107,12 @@ export class DustyWastesZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [this.colorGradePass];
 	}
+    
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
+	}
 }

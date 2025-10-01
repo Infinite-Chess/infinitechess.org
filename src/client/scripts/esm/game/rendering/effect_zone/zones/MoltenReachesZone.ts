@@ -37,4 +37,12 @@ export class MoltenReachesZone implements Zone {
 		if (!this.heatWavePass) return [];
 		return [this.heatWavePass];
 	}
+    
+	public fadeInAmbience(transitionDurationMillis: number): void {
+
+	}
+
+	public fadeOutAmbience(transitionDurationMillis: number): void {
+
+	}
 }
