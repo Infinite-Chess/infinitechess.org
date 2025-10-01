@@ -11,7 +11,7 @@ export class MoltenReachesZone implements Zone {
 	readonly effectType: number = 4;
 
 	/** Post processing effect creating heat waves. */
-	private heatWavePass: HeatWavePass = undefined;
+	private heatWavePass: HeatWavePass | undefined = undefined;
 
 
 	/** The speed of the moving heat waves. Default: 0.5 (strength 0.04) */
