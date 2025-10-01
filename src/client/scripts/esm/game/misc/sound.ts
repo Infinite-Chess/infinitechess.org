@@ -42,7 +42,7 @@ interface SoundObject {
 	/** Whether to loop the sound indefinitely. */
 	readonly looping: boolean,
 	/** The ratio of the main volume at which the reverb should play. */
-	readonly _reverbRatio: number, // CHANGED
+	readonly _reverbRatio: number,
 }
 
 type SoundTimeSnippet = readonly [number, number];
@@ -57,7 +57,7 @@ interface PlaySoundOptions {
 	/** Offset into the start of the sound effect in milliseconds. The higher this is, the more chopped off the beginning is. Default: 0 (no offset) */
 	offset?: number,
 	/** A ratio of the main volume for an optional reverb effect. Default: 0 (no reverb). 0.5 = 50% of main volume. */
-	reverbRatio?: number, // CHANGED
+	reverbRatio?: number,
 	/** Duration of an optional reverb effect in seconds. Required if reverbRatio is specified. */
 	reverbDuration?: number,
 	/**
@@ -143,7 +143,6 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
 	if (!audioContext) throw Error(`Can't play sound ${soundName} when audioContext isn't initialized yet. (Still loading)`);
 
-	// CHANGED: Added `loop`, removed `fadeInDuration`
 	const { volume = 1, delay = 0, offset = 0, reverbRatio = 0, reverbDuration, playbackRate = 1, loop = false } = playOptions;
 
 	const soundStamp = getSoundStamp(soundName); // [ timeStart, timeEnd ] Start and end time stamps in the sprite
