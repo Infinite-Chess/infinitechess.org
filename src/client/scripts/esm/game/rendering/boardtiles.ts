@@ -33,6 +33,12 @@ import perspective from './perspective.js';
 import webgl, { gl } from './webgl.js';
 
 
+/**
+ * Optional noise textures to bind during rendering,
+ * for the uber shader to apply board Zone effects.
+ */
+type NoiseTextures = { perlinNoise?: WebGLTexture, whiteNoise?: WebGLTexture };
+
 
 const ONE = bd.FromNumber(1.0);
 const TWO = bd.FromNumber(2.0);
@@ -148,7 +154,7 @@ function gboundingBoxFloat(): BoundingBoxBD {
 }
 
 
-/** Loads the noise texture. */
+/** Loads the tiles texture. */
 function init(): void {
 	// Generate the tiles mask texture
 	// checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => {
@@ -211,7 +217,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
  */
-function generateBoardModel(isFractal: boolean, { noise }: { noise?: WebGLTexture } = {}, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
+function generateBoardModel(isFractal: boolean, { perlinNoise, whiteNoise }: NoiseTextures = {}, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
 	const boardScale = boardpos.getBoardScale();
 	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
 	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
@@ -264,12 +270,13 @@ function generateBoardModel(isFractal: boolean, { noise }: { noise?: WebGLTextur
 		{ texture: boardTexture, uniformName: 'u_colorTexture' },
 		{ texture: tilesMask, uniformName: 'u_maskTexture' }
 	];
-	if (noise) textures.push({ texture: noise, uniformName: 'u_noiseTexture' });
+	if (perlinNoise) textures.push({ texture: perlinNoise, uniformName: 'u_perlinNoiseTexture' });
+	if (whiteNoise) textures.push({ texture: whiteNoise, uniformName: 'u_whiteNoiseTexture' });
 	
 	return createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures);
 }
 
-function renderMainBoard(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<string, any>): void {
+function renderMainBoard(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
 	if (boardpos.isScaleSmallForInvisibleTiles()) return;
 
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
@@ -368,7 +375,7 @@ function darkenColor(): void {
 }
 
 // Renders board tiles
-function render(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<string, any>): void {
+function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
@@ -377,7 +384,7 @@ function render(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<stri
 	});
 }
 
-function renderFractalBoards(noiseTextures?: { noise?: WebGLTexture }, uniforms?: Record<string, any>): void {
+function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
 	const z = getRelativeZ();
 
 	const e = -bd.log10(boardpos.getBoardScale());
