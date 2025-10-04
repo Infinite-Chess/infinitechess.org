@@ -113,7 +113,7 @@ export class EffectZoneManager {
 			return texture;
 		});
 		
-        // Load white noise texture
+		// Load white noise texture
 		ImageLoader.loadImage('img/noise_texture/white_noise.webp').then(image => {
 			// Ensure texture filtering is set to NEAREST for a sharp, pixelated look
 			const texture = TextureLoader.loadTexture(gl, image, { mipmaps: false });
@@ -129,7 +129,7 @@ export class EffectZoneManager {
 			'Molten Reaches': new MoltenReachesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),
-            'Static': new StaticZone(programManager),
+			'Static': new StaticZone(programManager),
 		};
 
 		this.currentZone = this.zones['The Beginning'];
