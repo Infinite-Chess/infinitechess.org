@@ -65,10 +65,12 @@ type Uniforms_Starfield = 'u_transformmatrix';
 // Surface Level Effects
 type Attributes_BoardUberShader = 'a_position' | 'a_texturecoord' | 'a_color';
 type Uniforms_BoardUberShader =
-	'u_transformmatrix' | 'u_transitionProgress' | 'u_colorTexture' |
-	'u_maskTexture' | 'u_noiseTexture' | 'u_time' | 'u_resolution' |
-	'u_effectTypeA' | 'u_effectTypeB' | 'u2_strength' | 'u2_noiseTiling' |
-	'u2_uvOffset1' | 'u2_uvOffset2';
+    'u_transformmatrix' | 'u_transitionProgress' | 'u_colorTexture' |
+    'u_maskTexture' | 'u_perlinNoiseTexture' | 'u_whiteNoiseTexture' |
+	'u_time' | 'u_resolution' |
+    'u_effectTypeA' | 'u_effectTypeB' | 'u2_strength' | 'u2_noiseTiling' |
+    'u2_uvOffset1' | 'u2_uvOffset2' |
+    'u3_uvOffset' | 'u3_pixelSize';
 // Post Processing Shaders
 type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';

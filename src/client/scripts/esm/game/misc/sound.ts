@@ -45,17 +45,17 @@ interface SoundObject {
 	readonly _reverbRatio: number,
 }
 
-type SoundTimeSnippet = readonly [number, number];
-
 
 /** Config options for playing a sound. */
 interface PlaySoundOptions {
+	/** The time of the audio buffer to start playing, if not from the beginning. */
+	startTime?: number,
+	/** The duration to play the audio buffer for, if not for the whole duration. */
+	duration?: number,
 	/** Volume of the sound. Default: 1. Typical range: 0-1. Capped at {@link VOLUME_DANGER_THRESHOLD} for safety. */
 	volume?: number,
 	/** Delay before the sound starts playing in seconds. Default: 0 */
 	delay?: number,
-	/** Offset into the start of the sound effect in milliseconds. The higher this is, the more chopped off the beginning is. Default: 0 (no offset) */
-	offset?: number,
 	/** A ratio of the main volume for an optional reverb effect. Default: 0 (no reverb). 0.5 = 50% of main volume. */
 	reverbRatio?: number,
 	/** Duration of an optional reverb effect in seconds. Required if reverbRatio is specified. */
@@ -73,31 +73,6 @@ interface PlaySoundOptions {
 // Constants ----------------------------------------------------------------------------------------------
 
 
-/** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
-const soundStamps = {
-	gamestart: [0, 2],
-	move: [2, 2.21],
-	capture: [2.21,2.58],
-	bell: [2.58,5.57],
-	lowtime: [5.57, 6.30],
-	win: [6.30, 8.30],
-	draw: [8.30, 10.31],
-	loss: [10.31, 12.32],
-	drum1: [12.32, 16.32],
-	drum2: [16.32, 19.57],
-	tick: [19.57, 25.32],
-	ticking: [25.32, 36.82],
-	viola_staccato_c3: [36.82, 38.82],
-	violin_staccato_c4: [38.82, 40.82],
-	marimba_c2: [40.82, 42.82],
-	marimba_c2_soft: [42.82, 44.82],
-	base_staccato_c2: [44.82, 46.82],
-	// draw_offer: [46.89, 48.526]   Only present for the sound spritesheet in dev-utils that includes the draw offer sound
-} as const;
-
-type SoundName = keyof typeof soundStamps;
-
-
 /** Any volume above this is probably a mistake, so we reset it to 1 and log an error in the console. */
 const VOLUME_DANGER_THRESHOLD = 4;
 
@@ -107,8 +82,6 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 /** This context plays all our sounds. */
 let audioContext: AudioContext;
-/** The decoded audio buffer of our sound spritesheet. */
-let audioDecodedBuffer: AudioBuffer;
 
 
 // Initialization ----------------------------------------------------------------------------------
@@ -120,18 +93,16 @@ function getAudioContext(): AudioContext {
 }
 
 /**
- * Sets our audio context and decodedBuffer. This is called from our in-line javascript inside the html.
+ * Sets our audio context. This is called from our in-line javascript inside the html.
  *
  * The sound spritesheet is loaded using javascript instead of an element
  * inside the document, because I need to grab the buffer.
  * And we put the javascript inline in the html to start it loading quicker,
  * because otherwise our sound only starts loading AFTER everything single script has loaded.
- * @param audioCtx
- * @param decodedBuffer - The decoded buffer of the loaded sound spritesheet.
+ * @param audioCtx - The audio context to use for playing sounds.
  */
-function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer): void {
+function initAudioContext(audioCtx: AudioContext): void {
 	audioContext = audioCtx;
-	audioDecodedBuffer = decodedBuffer;
 }
 
 
@@ -139,17 +110,18 @@ function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer): v
 
 
 /** Plays the specified sound effect, with various options. */
-function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): SoundObject | undefined {
+function playSound(buffer: AudioBuffer | undefined, playOptions: PlaySoundOptions): SoundObject | undefined {
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
-	if (!audioContext) throw Error(`Can't play sound ${soundName} when audioContext isn't initialized yet. (Still loading)`);
+	if (!audioContext) {
+		console.warn(`Can't play sound when audioContext isn't initialized yet. (Still loading)`);
+		return;
+	}
+	if (!buffer) {
+		console.warn(`Can't play sound when buffer isn't loaded yet. (Still loading)`);
+		return;
+	}
 
-	const { volume = 1, delay = 0, offset = 0, reverbRatio = 0, reverbDuration, playbackRate = 1, loop = false } = playOptions;
-
-	const soundStamp = getSoundStamp(soundName); // [ timeStart, timeEnd ] Start and end time stamps in the sprite
-	const offsetSecs = offset / 1000;
-	const startTime = soundStamp[0] + offsetSecs;
-	const duration = getStampDuration(soundStamp) - offsetSecs; // Length of the sound effect in the sprite, in seconds
-	if (duration < 0) return; // Offset is greater than the sound length, the sound is already over.
+	const { startTime, duration, volume = 1, delay = 0, reverbRatio = 0, reverbDuration, playbackRate = 1, loop = false } = playOptions;
 
 	// Calculate the desired start time by adding the delay
 	const currentTime = audioContext.currentTime;
@@ -158,7 +130,7 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 	// We need an audio "source" to play our main sound effect. Several of these can exist at once for one audio context.
 
 	// Create the main audio source
-	const mainSource = createBufferSource(volume, playbackRate);
+	const mainSource = createBufferSource(buffer, volume, playbackRate);
 	mainSource.loop = loop; // Set the loop property on the audio source itself.
 
 	// Create the reverb source if needed
@@ -166,7 +138,7 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 	if (reverbRatio > 0) {
 		if (!reverbDuration) throw Error("Need to specify a reverb duration.");
 		const initialReverbVolume = volume * reverbRatio; // Calculate initial relative volume
-		reverbSource = createBufferSource(initialReverbVolume, playbackRate, reverbDuration);
+		reverbSource = createBufferSource(buffer, initialReverbVolume, playbackRate, reverbDuration);
 		reverbSource.loop = loop;
 	}
 
@@ -216,18 +188,6 @@ function playSound(soundName: SoundName, playOptions: PlaySoundOptions = {}): So
 	return soundObject;
 }
 
-/** Retrieves the sound time snippet for the specified sound. */
-function getSoundStamp(soundName: SoundName): SoundTimeSnippet {
-	const stamp = soundStamps[soundName];
-	if (!stamp) throw new Error(`Cannot return sound stamp for unknown sound "${soundName}".`);
-	return stamp;
-}
-
-/** Calculates the duration of a sound time snippet in seconds. */
-function getStampDuration(stamp: SoundTimeSnippet): number { // [ startTimeSecs, endTimeSecs ]
-	return stamp[1] - stamp[0];
-}
-
 
 // Audio Nodes ------------------------------------------------------------------------------------------
 
@@ -235,15 +195,15 @@ function getStampDuration(stamp: SoundTimeSnippet): number { // [ startTimeSecs,
 /**
  * Creates a new buffer source. These play our audio. Multiple sources can play multiple sounds at once.
  * Attaches the gain node to the source as the property `gainNode`.
+ * @param buffer - The audio buffer to play.
  * @param volume - The volume the gain node will be set at
  * @param playbackRate - How fast the audio is player. Lower = slower & lower pitch. Higher = faster & higher pitch.
  * @param [reverbDurationSecs] Optional. If specified, the sound will be transformed into a reverb. This is the duration of that reverb in seconds.
  * @returns The source
  */
-function createBufferSource(volume: number, playbackRate: number = 1, reverbDurationSecs: number = 0): AudioBufferWithGainNode {
+function createBufferSource(buffer: AudioBuffer, volume: number, playbackRate: number = 1, reverbDurationSecs: number = 0): AudioBufferWithGainNode {
 	const source = audioContext.createBufferSource();
-	if (!audioDecodedBuffer) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
-	source.buffer = audioDecodedBuffer;
+	source.buffer = buffer;
 
 	// What nodes do we want?
 
