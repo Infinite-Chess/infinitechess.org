@@ -24,9 +24,9 @@ uniform vec2 u2_uvOffset2; // The texture offset for noise layer 2 (calculated c
 
 // Static Zone Uniforms
 uniform float u3_strength; // The opacity of the white noise pixels
-uniform vec2 u3_uvOffset;
+uniform vec2 u3_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
 uniform float u3_pixelWidth; // How many pixels wide the white noise texture is
-uniform float u3_pixelSize;
+uniform float u3_pixelSize; // How many virtual pixels wide each static pixel should be
 
 // INPUTS
 in vec2 v_uv;           // The model's original UVs for color/mask
@@ -82,8 +82,6 @@ vec3 Static(
     float signedNoise = (noise * 2.0) - 1.0;
     return baseColor + (signedNoise * effectStrength); // Apply a brightness/darkness effect
 }
-// 256px / height
-// height px / height
 
 // Switchboard. Takes an effect type and returns the result at full strength.
 vec3 calculateEffectColor(

@@ -22,12 +22,7 @@ export class StaticZone implements Zone {
 	private readonly PIXEL_SIZE = 5;
 	/** How often the static pattern should change, in milliseconds. */
 	private readonly UPDATE_INTERVAL = 60;
-	// private readonly UPDATE_INTERVAL = 200;
-
-
-
-
-
+	// private readonly UPDATE_INTERVAL = 1000; // For testing
 
     
 	// --- STATE ---

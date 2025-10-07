@@ -58,13 +58,13 @@ export class EffectZoneManager {
 		// Define zones in ascending order of their start distance.
 		{ name: 'The Beginning', start: 0n },
 		// [PRODUCTION] Default distances:
-		// { name: 'Undercurrent',     start: 10n ** (3n * 3n) },
-		// { name: 'Dusty Wastes',     start: 10n ** (3n * 6n) },
-		// { name: 'Cracked Barrens',  start: 10n ** (3n * 9n) },
-		// { name: 'Molten Reaches',   start: 10n ** (3n * 12n) },
-		// { name: 'Contortion Field', start: 10n ** (3n * 15n) },
-		// { name: 'Echo Rift',        start: 10n ** (3n * 18n) },
-        // { name: 'Static',           start: 10n ** (3n * 21n) },
+		// { name: 'Undercurrent',     start: 10n ** 7n },
+		// { name: 'Dusty Wastes',     start: 10n ** 25n },
+		// { name: 'Cracked Barrens',  start: 10n ** 55n },
+		// { name: 'Molten Reaches',   start: 10n ** 91n },
+		// { name: 'Contortion Field', start: 10n ** 136n },
+		// { name: 'Echo Rift',        start: 10n ** 181n },
+        // { name: 'Static',           start: 10n ** 226n },
 		// [TESTING] Much shorter distances:
 		{ name: 'Undercurrent',     start: BigInt(20) },
 		{ name: 'Dusty Wastes',     start: BigInt(40) },
