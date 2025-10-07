@@ -94,6 +94,7 @@ document.addEventListener('click', callback_OnUserGesture);
 function callback_OnUserGesture(): void {
 	atleastOneUserGesture = true;
 	audioContext.resume();
+	console.log("Resuming audio context after user gesture.");
 	document.removeEventListener('mousedown', callback_OnUserGesture);
 	document.removeEventListener('click', callback_OnUserGesture);
 }
@@ -120,6 +121,7 @@ function initAudioContext(audioCtx: AudioContext): void {
 	audioContext = audioCtx;
 }
 
+/** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
 function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
 	return new Promise((resolve, reject) => {
 		if (!audioContext) {
@@ -134,7 +136,7 @@ function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
 // Sound Playing ------------------------------------------------------------------------------------------
 
 
-/** Plays the specified sound effect, with various options. */
+/** Plays the specified audio buffer with the specified options. */
 function playSound(buffer: AudioBuffer | undefined, playOptions: PlaySoundOptions): SoundObject | undefined {
 	if (!atleastOneUserGesture) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
 	if (!audioContext) {

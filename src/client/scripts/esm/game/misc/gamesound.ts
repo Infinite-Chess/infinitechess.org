@@ -54,7 +54,7 @@ const SUCCESSIVE_MOVES_CONFIG = {
 	threshold: 60,
 	/** The volume dampener for successive move sounds. */
 	dampener: 0.5,
-};
+} as const;
 /** Config for controlling moves' reverb effect. */
 const REVERB_CONFIG = {
 	/** The maximum volume the reverb effect of a piece move can reach. */
@@ -65,23 +65,23 @@ const REVERB_CONFIG = {
 	minDist: 15,
 	/** The distance a piece needs to move for the reverb effect to be at its max volume. */
 	maxDist: 80,
-};
+} as const;
 
 /** Config for the bell gong sound effect when moves are extremely large. */
 const BELL_CONFIG = {
 	/** The distance a piece needs to move for the bell sound to play. */
 	minDist: bd.FromBigInt(1_000_000n),
-	/** The volume of the bell gongs. */
+	/** The volume of the bell gongs, as a multiplier to the move sound's volume. */
 	volume: 0.6,
-};
+} as const;
 
 /** Config for playing premove sound effects. */
 const PREMOVE_CONFIG = {
 	/** Premove sounds are played faster so they sound more like a click. */
-	volume: 0.5,
-	/** Premove sounds are slightly quieter. */
 	playbackRate: 1.5,
-};
+	/** Premove sounds are slightly quieter. */
+	volume: 0.5,
+} as const;
 
 
 // Initiation Variables --------------------------------------------------------------------------
@@ -138,6 +138,26 @@ function getSoundTimeSnippet(soundName: SoundName): { startTime: number, duratio
 
 
 /**
+ * Plays a sound by name from the spritesheet.
+ * @param soundName The name of the sound to play.
+ * @param options Optional parameters like volume, delay, and offset.
+ * @returns A SoundObject if the sound is played, otherwise undefined.
+ */
+function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbRatio?: number, reverbDuration?: number, playbackRate?: number } = {}): SoundObject | undefined {
+	let { startTime, duration } = getSoundTimeSnippet(soundName);
+	const { volume, delay, offset, reverbRatio, reverbDuration, playbackRate } = options;
+
+	// If offset is specified, adjust the start time and duration accordingly
+	if (offset) {
+		const offsetSecs = offset / 1000;
+		startTime += offsetSecs;
+		duration -= offsetSecs;
+	}
+
+	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume, delay, reverbRatio, reverbDuration, playbackRate });
+}
+
+/**
  * Plays a piece move sound effect.
  * Automatically handles effects such as capture, reverb, bell, dampening, etc.
  * @param distanceMoved - How far the piece moved.
@@ -166,14 +186,11 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	
 	const { reverbRatio, reverbDuration } = calculateReverbRatio(distanceMoved);
 
-	const { startTime, duration } = getSoundTimeSnippet(soundEffectName);
-
-	sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume, reverbRatio, reverbDuration, delay: delaySecs, playbackRate });
+	playSoundEffect(soundEffectName, { volume, reverbRatio, reverbDuration, delay: delaySecs, playbackRate });
 
 	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
 		const bellVolume = BELL_CONFIG.volume * dampener;
-		const { startTime, duration } = getSoundTimeSnippet('bell');
-		sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: bellVolume, delay: delaySecs, playbackRate });
+		playSoundEffect('bell', { volume: bellVolume, delay: delaySecs, playbackRate });
 	}
 }
 
@@ -190,79 +207,53 @@ function calculateReverbRatio(distanceMoved: BigDecimal): { reverbRatio: number,
 }
 
 function playGamestart(): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('gamestart');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.4 });
+	return playSoundEffect('gamestart', { volume: 0.4 });
 }
 
 function playWin(delay?: number): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('win');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.7, delay });
+	return playSoundEffect('win', { volume: 0.7, delay });
 }
 
 function playDraw(delay?: number): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('draw');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.7, delay });
+	return playSoundEffect('draw', { volume: 0.7, delay });
 }
 
 function playLoss(delay?: number): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('loss');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.7, delay });
+	return playSoundEffect('loss', { volume: 0.7, delay });
 }
 
 function playLowtime(): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('lowtime');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration });
+	return playSoundEffect('lowtime');
 }
 
 function playDrum(): SoundObject | undefined {
-	const soundName = Math.random() > 0.5 ? 'drum1' : 'drum2'; // Randomly choose which drum. They sound ever slightly different.
-	const { startTime, duration } = getSoundTimeSnippet(soundName);
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.7 });
+	const soundName = Math.random() > 0.5 ? 'drum1' : 'drum2';
+	return playSoundEffect(soundName, { volume: 0.7 });
 }
 
-/** Plays a few clock ticks at 1 minute remaining. */
-function playTick({ volume, offset}: { volume?: number, offset?: number } = {}): SoundObject | undefined {
-	let { startTime, duration } = getSoundTimeSnippet('tick');
-	
-	// Adjust for offset
-	const offsetSecs = offset ?? 0 / 1000;
-	startTime += offsetSecs;
-	duration -= offsetSecs;
-
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume });
+function playTick({ volume, offset }: { volume?: number, offset?: number } = {}): SoundObject | undefined {
+	return playSoundEffect('tick', { volume, offset });
 }
 
-/** Plays the ticking ambience during the last 10 seconds of timer remaining. */
 function playTicking({ volume, offset }: { volume?: number, offset?: number } = {}): SoundObject | undefined {
-	let { startTime, duration } = getSoundTimeSnippet('ticking');
-
-	// Adjust for offset
-	const offsetSecs = offset ?? 0 / 1000;
-	startTime += offsetSecs;
-	duration -= offsetSecs;
-
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume });
+	return playSoundEffect('ticking', { volume, offset });
 }
 
 function playViola_c3({ volume }: { volume?: number } = {}): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('viola_staccato_c3');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume });
+	return playSoundEffect('viola_staccato_c3', { volume });
 }
 
 function playViolin_c4(): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('violin_staccato_c4');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.9 });
+	return playSoundEffect('violin_staccato_c4', { volume: 0.9 });
 }
 
 function playMarimba(): SoundObject | undefined {
 	const audioName = Math.random() > 0.15 ? 'marimba_c2_soft' : 'marimba_c2';
-	const { startTime, duration } = getSoundTimeSnippet(audioName);
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.4 });
+	return playSoundEffect(audioName, { volume: 0.4 });
 }
 
 function playBase(): SoundObject | undefined {
-	const { startTime, duration } = getSoundTimeSnippet('base_staccato_c2');
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume: 0.8 });
+	return playSoundEffect('base_staccato_c2', { volume: 0.8 });
 }
 
 
