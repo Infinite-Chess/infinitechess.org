@@ -1,5 +1,6 @@
 
 // src/client/scripts/esm/game/rendering/effect_zone/EffectZoneManager.ts
+
 import ImageLoader from "../../../util/ImageLoader";
 import TextureLoader from "../../../webgl/TextureLoader";
 import boardtiles from "../boardtiles";
@@ -12,6 +13,7 @@ import { CrackedBarrensZone } from "./zones/CrackedBarrensZone";
 import { MoltenReachesZone } from "./zones/MoltenReachesZone";
 import { ContortionFieldZone } from "./zones/ContortionFieldZone";
 import { EchoRiftZone } from "./zones/EchoRiftZone";
+import { StaticZone } from "./zones/StaticZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
 
 
@@ -56,12 +58,13 @@ export class EffectZoneManager {
 		// Define zones in ascending order of their start distance.
 		{ name: 'The Beginning', start: 0n },
 		// [PRODUCTION] Default distances:
-		// { name: 'Undercurrent',     start: 10n ** (3n * 3n) },
-		// { name: 'Dusty Wastes',     start: 10n ** (3n * 6n) },
-		// { name: 'Cracked Barrens',  start: 10n ** (3n * 9n) },
-		// { name: 'Molten Reaches',   start: 10n ** (3n * 12n) },
-		// { name: 'Contortion Field', start: 10n ** (3n * 15n) },
-		// { name: 'Echo Rift',        start: 10n ** (3n * 18n) },
+		// { name: 'Undercurrent',     start: 10n ** 7n },
+		// { name: 'Dusty Wastes',     start: 10n ** 25n },
+		// { name: 'Cracked Barrens',  start: 10n ** 55n },
+		// { name: 'Molten Reaches',   start: 10n ** 91n },
+		// { name: 'Contortion Field', start: 10n ** 136n },
+		// { name: 'Echo Rift',        start: 10n ** 181n },
+        // { name: 'Static',           start: 10n ** 226n },
 		// [TESTING] Much shorter distances:
 		{ name: 'Undercurrent',     start: BigInt(20) },
 		{ name: 'Dusty Wastes',     start: BigInt(40) },
@@ -69,6 +72,7 @@ export class EffectZoneManager {
 		{ name: 'Molten Reaches',   start: BigInt(80) },
 		{ name: 'Contortion Field', start: BigInt(100) },
 		{ name: 'Echo Rift',        start: BigInt(120) },
+		{ name: 'Static',           start: BigInt(140) },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -77,8 +81,10 @@ export class EffectZoneManager {
 	/** The constructed Zones. */
 	private zones: Record<ZoneName, Zone>;
 
-	/** The noise texture used for zone effects. */
-	private noiseTexture: WebGLTexture | undefined;
+	/** The perlin noise texture used for cloudy effects. */
+	private perlinNoiseTexture: WebGLTexture | undefined;
+	/** The white noise texture used for static effects. */
+	private whiteNoiseTexture: WebGLTexture | undefined;
 
 
 	// --- Transition State ---
@@ -100,11 +106,18 @@ export class EffectZoneManager {
 	constructor(gl: WebGL2RenderingContext, programManager: ProgramManager) {
 		this.gl = gl;
 		
-		// Load noise textures
-		const noiseTexture: Promise<WebGLTexture> = ImageLoader.loadImage('img/noise_texture/heat_haze.webp').then(image => {
+		// Load perlin noise texture
+		const noiseTexture: Promise<WebGLTexture> = ImageLoader.loadImage('img/noise_texture/perlin_noise.webp').then(image => {
 			const texture = TextureLoader.loadTexture(gl, image);
-			this.noiseTexture = texture;
+			this.perlinNoiseTexture = texture;
 			return texture;
+		});
+		
+		// Load white noise texture
+		ImageLoader.loadImage('img/noise_texture/white_noise.webp').then(image => {
+			// Ensure texture filtering is set to NEAREST for a sharp, pixelated look
+			const texture = TextureLoader.loadTexture(gl, image, { mipmaps: false });
+			this.whiteNoiseTexture = texture;
 		});
 
 		// Construct Zones
@@ -116,6 +129,7 @@ export class EffectZoneManager {
 			'Molten Reaches': new MoltenReachesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),
+			'Static': new StaticZone(programManager),
 		};
 
 		this.currentZone = this.zones['The Beginning'];
@@ -236,7 +250,10 @@ export class EffectZoneManager {
 		};
 
 		// Render board tiles
-		boardtiles.render({ noise: this.noiseTexture }, uniforms);
+		boardtiles.render({
+			perlinNoise: this.perlinNoiseTexture,
+			whiteNoise: this.whiteNoiseTexture
+		}, uniforms);
 	}
 
 	/**

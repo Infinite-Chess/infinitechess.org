@@ -5,10 +5,11 @@ precision highp float;
 // The master blend factor between the 'A' and 'B' effect slots.
 uniform float u_transitionProgress;
 
-// GLOBAL UNIFORMS (Needed by all effects)
+// GLOBAL UNIFORMS (May be needed by multiple effects)
 uniform sampler2D u_colorTexture;
 uniform sampler2D u_maskTexture;
-uniform sampler2D u_noiseTexture;
+uniform sampler2D u_perlinNoiseTexture;
+uniform sampler2D u_whiteNoiseTexture;
 uniform float u_time;
 uniform vec2 u_resolution; // Canvas dimensions
 
@@ -21,6 +22,11 @@ uniform float u2_noiseTiling; // How many times the noise texture repeats across
 uniform vec2 u2_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
 uniform vec2 u2_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
 
+// Static Zone Uniforms
+uniform float u3_strength; // The opacity of the white noise pixels
+uniform vec2 u3_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
+uniform float u3_pixelWidth; // How many pixels wide the white noise texture is
+uniform float u3_pixelSize; // How many virtual pixels wide each static pixel should be
 
 // INPUTS
 in vec2 v_uv;           // The model's original UVs for color/mask
@@ -28,7 +34,6 @@ in vec4 v_screenCoord;  // The screen-space coordinate for the noise
 in vec4 v_color;
 
 out vec4 out_color;
-
 
 // Applies the "Dusty Wastes" animated noise effect.
 vec3 DustyWastes(
@@ -40,10 +45,10 @@ vec3 DustyWastes(
 	sampler2D noiseSampler,
 	
 	// --- Effect parameters ---
+	float effectStrength,
 	float noiseTiling,
 	vec2 offset1,
-	vec2 offset2,
-	float effectStrength
+	vec2 offset2
 ) {
 	const float NOISE_MULTIPLIER = 1.0; // Default: 1.13   Affects average final brightness to more closely match the original texture color
 
@@ -60,6 +65,23 @@ vec3 DustyWastes(
 	return baseColor + (signedNoise * effectStrength);
 }
 
+// Applies the "Static" pixelated noise effect.
+vec3 Static(
+    vec3 baseColor,
+    vec2 screenUV,
+    sampler2D noiseSampler,
+	float effectStrength,
+    vec2 uvOffset,
+	float pixelWidth,
+    float pixelSize,
+	vec2 resolution	
+) {
+	// vec2 snappedUV = floor((screenUV * resolution) / pixelSize) * pixelSize / resolution + uvOffset;
+    vec2 snappedUV = screenUV * resolution[1] / pixelWidth / pixelSize + uvOffset;
+    float noise = texture(noiseSampler, snappedUV).r;
+    float signedNoise = (noise * 2.0) - 1.0;
+    return baseColor + (signedNoise * effectStrength); // Apply a brightness/darkness effect
+}
 
 // Switchboard. Takes an effect type and returns the result at full strength.
 vec3 calculateEffectColor(
@@ -72,14 +94,25 @@ vec3 calculateEffectColor(
 			baseColor,
 			screenUV,
 			// Pass global uniforms
-			u_noiseTexture,
+			u_perlinNoiseTexture,
 			// Pass effect-specific uniforms
+			u2_strength,
 			u2_noiseTiling,
 			u2_uvOffset1,
-			u2_uvOffset2,
-			u2_strength
+			u2_uvOffset2
 		);
-	}
+	} else if (effectType == 3.0) {
+        return Static(
+            baseColor,
+            screenUV,
+            u_whiteNoiseTexture,
+			u3_strength,
+            u3_uvOffset,
+			u3_pixelWidth,
+            u3_pixelSize,
+			u_resolution
+        );
+    }
 
 	// Default case: no effect
 	return baseColor;
