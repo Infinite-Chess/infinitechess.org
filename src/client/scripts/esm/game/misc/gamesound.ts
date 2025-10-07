@@ -8,7 +8,7 @@ import sound, { SoundObject } from "./sound.js";
  * This script is in charge of playing game sound effects.
  * It takes variables such as distances pieces moved
  * so it can deduce the correct sound play options when
- * calling {@link sound.playSound}.
+ * calling {@link sound.playAudio}.
  */
 
 
@@ -154,7 +154,7 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 		duration -= offsetSecs;
 	}
 
-	return sound.playSound(spritesheetDecodedBuffer, { startTime, duration, volume, delay, reverbRatio, reverbDuration, playbackRate });
+	return sound.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, reverbRatio, reverbDuration, playbackRate });
 }
 
 /**

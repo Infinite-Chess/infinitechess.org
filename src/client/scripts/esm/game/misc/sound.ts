@@ -81,14 +81,17 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 
 /** This context plays all our sounds. */
-let audioContext: AudioContext = new AudioContext();
+const audioContext: AudioContext = new AudioContext();
 
-// *true* if the user has started interacting with the page,
-// usually after a single mouse click. Some browsers prevent
-// audio playing until a user gesture, this helps us to
-// predict if our audio will be prevented from playing.
+/**
+ * Whether the user has interacted with the page at least once.
+ * 
+ * This is used to determine if we can play audio, as some browsers
+ * block audio playback until the user has interacted with the page.
+ */
 let atleastOneUserGesture = false;
 
+// We listen for the first user gesture to unlock audio playback.
 document.addEventListener('mousedown', callback_OnUserGesture);
 document.addEventListener('click', callback_OnUserGesture);
 function callback_OnUserGesture(): void {
@@ -102,24 +105,6 @@ function callback_OnUserGesture(): void {
 
 // Initialization ----------------------------------------------------------------------------------
 
-
-/** Returns our Audio Context */
-function getAudioContext(): AudioContext {
-	return audioContext;
-}
-
-/**
- * Sets our audio context. This is called from our in-line javascript inside the html.
- *
- * The sound spritesheet is loaded using javascript instead of an element
- * inside the document, because I need to grab the buffer.
- * And we put the javascript inline in the html to start it loading quicker,
- * because otherwise our sound only starts loading AFTER everything single script has loaded.
- * @param audioCtx - The audio context to use for playing sounds.
- */
-function initAudioContext(audioCtx: AudioContext): void {
-	audioContext = audioCtx;
-}
 
 /** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
 function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
@@ -137,7 +122,7 @@ function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
 
 
 /** Plays the specified audio buffer with the specified options. */
-function playSound(buffer: AudioBuffer | undefined, playOptions: PlaySoundOptions): SoundObject | undefined {
+function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOptions): SoundObject | undefined {
 	if (!atleastOneUserGesture) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
 	if (!audioContext) {
 		console.warn(`Can't play sound when audioContext isn't initialized yet. (Still loading)`);
@@ -348,13 +333,5 @@ export type {
 
 export default {
 	decodeAudioData,
-	playSound,
-};
-
-// We set this variable on the global object so that htmlscript can access them within the html document.
-// Only funcs necesary to htmlscript are here, if you need sound.js import it please
-// @ts-ignore
-globalThis.sound = {
-	getAudioContext,
-	initAudioContext
+	playAudio,
 };
