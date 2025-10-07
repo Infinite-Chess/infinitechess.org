@@ -100,19 +100,18 @@ let timeLastMoveOrCaptureSound = 0;
 // Spritesheet Buffer ----------------------------------------------------
 
 
-/**
- * Sets our audio context and decodedBuffer. This is called from our in-line javascript inside the html.
- *
- * The sound spritesheet is loaded using javascript instead of an element
- * inside the document, because I need to grab the buffer.
- * And we put the javascript inline in the html to start it loading quicker,
- * because otherwise our sound only starts loading AFTER everything single script has loaded.
- * @param audioCtx
- * @param decodedBuffer - The decoded buffer of the loaded sound spritesheet.
- */
-function receiveSpritesheetBuffer(decodedBuffer: AudioBuffer): void {
-	spritesheetDecodedBuffer = decodedBuffer;
-}
+// Fetch and decode the buffer of the sound spritesheet.
+fetch('sounds/soundspritesheet.mp3')
+	.then(response => response.arrayBuffer())
+	.then(arrayBuffer => sound.decodeAudioData(arrayBuffer))
+	.then(decodedBuffer => {
+		spritesheetDecodedBuffer = decodedBuffer;
+		console.log('Sound spritesheet loaded and decoded successfully.');
+	})
+	.catch(error => {
+		const message = (error instanceof Error) ? error.message : String(error);
+		console.error(`An error ocurred during loading of sound spritesheet: ${message}`);
+	});
 
 /** Retrieves the sound time snippet for the specified sound. */
 function getSoundStamp(soundName: SoundName): SoundTimeSnippet {
@@ -271,7 +270,6 @@ function playBase(): SoundObject | undefined {
 
 
 export default {
-	receiveSpritesheetBuffer,
 	playMove,
 	playGamestart,
 	playWin,

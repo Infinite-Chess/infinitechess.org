@@ -81,7 +81,22 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 
 /** This context plays all our sounds. */
-let audioContext: AudioContext;
+let audioContext: AudioContext = new AudioContext();
+
+// *true* if the user has started interacting with the page,
+// usually after a single mouse click. Some browsers prevent
+// audio playing until a user gesture, this helps us to
+// predict if our audio will be prevented from playing.
+let atleastOneUserGesture = false;
+
+document.addEventListener('mousedown', callback_OnUserGesture);
+document.addEventListener('click', callback_OnUserGesture);
+function callback_OnUserGesture(): void {
+	atleastOneUserGesture = true;
+	audioContext.resume();
+	document.removeEventListener('mousedown', callback_OnUserGesture);
+	document.removeEventListener('click', callback_OnUserGesture);
+}
 
 
 // Initialization ----------------------------------------------------------------------------------
@@ -105,13 +120,23 @@ function initAudioContext(audioCtx: AudioContext): void {
 	audioContext = audioCtx;
 }
 
+function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
+	return new Promise((resolve, reject) => {
+		if (!audioContext) {
+			reject("Audio context not initialized.");
+			return;
+		}
+		audioContext.decodeAudioData(buffer, (decodedData) => resolve(decodedData), (error) => reject(error));
+	});
+}
+
 
 // Sound Playing ------------------------------------------------------------------------------------------
 
 
 /** Plays the specified sound effect, with various options. */
 function playSound(buffer: AudioBuffer | undefined, playOptions: PlaySoundOptions): SoundObject | undefined {
-	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
+	if (!atleastOneUserGesture) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
 	if (!audioContext) {
 		console.warn(`Can't play sound when audioContext isn't initialized yet. (Still loading)`);
 		return;
@@ -320,8 +345,7 @@ export type {
 };
 
 export default {
-	getAudioContext,
-	initAudioContext,
+	decodeAudioData,
 	playSound,
 };
 
