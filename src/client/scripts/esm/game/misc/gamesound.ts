@@ -4,13 +4,13 @@
 import type { EffectConfig } from "./audioEffects.js";
 
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import sound, { SoundObject } from "../../audio/AudioManager.js";
+import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
 
 /**
  * This script is in charge of playing game sound effects.
  * It takes variables such as distances pieces moved
  * so it can deduce the correct sound play options when
- * calling {@link sound.playAudio}.
+ * calling {@link AudioManager.playAudio}.
  */
 
 
@@ -105,7 +105,7 @@ let timeLastMoveOrCaptureSound = 0;
 // Fetch and decode the buffer of the sound spritesheet.
 fetch('sounds/soundspritesheet.mp3')
 	.then(response => response.arrayBuffer())
-	.then(arrayBuffer => sound.decodeAudioData(arrayBuffer))
+	.then(arrayBuffer => AudioManager.decodeAudioData(arrayBuffer))
 	.then(decodedBuffer => {
 		spritesheetDecodedBuffer = decodedBuffer;
 		console.log('Sound spritesheet loaded and decoded successfully.');
@@ -160,7 +160,7 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 	const effects: EffectConfig[] = [];
 	if (reverbRatio && reverbDuration) effects.push({ type: 'reverb', durationSecs: reverbDuration, mix: reverbRatio });
 
-	return sound.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects });
+	return AudioManager.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects });
 }
 
 /**
