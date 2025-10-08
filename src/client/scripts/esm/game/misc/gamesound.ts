@@ -4,7 +4,7 @@
 import type { EffectConfig } from "./audioEffects.js";
 
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import sound, { SoundObject } from "./sound.js";
+import sound, { SoundObject } from "../../audio/AudioManager.js";
 
 /**
  * This script is in charge of playing game sound effects.

@@ -6,7 +6,7 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import { players } from "../../../../../shared/chess/util/typeutil.js";
 import clock from "../../../../../shared/chess/logic/clock.js";
 
-import type { SoundObject } from "../misc/sound.js";
+import type { SoundObject } from "../../audio/AudioManager.js";
 import type { Player, PlayerGroup } from "../../../../../shared/chess/util/typeutil.js";
 import type { Game } from "../../../../../shared/chess/logic/gamefile.js";
 import type { ClockData } from "../../../../../shared/chess/logic/clock.js";

@@ -1,11 +1,11 @@
 
-// src/client/scripts/esm/game/misc/sound.ts
+// src/client/scripts/esm/audio/AudioManager.ts
 
 /**
  * This module is responsible for creating and playing sounds using the Web Audio API.
  */
 
-import { createEffectNode, EffectConfig, NodeChain } from "./audioEffects";
+import { createEffectNode, EffectConfig, NodeChain } from "../game/misc/audioEffects";
 
 // Type Definitions ----------------------------------------------------------------------------------
 
