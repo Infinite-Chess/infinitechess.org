@@ -5,7 +5,7 @@
  * This module is responsible for creating and playing sounds using the Web Audio API.
  */
 
-import { createEffectNode, EffectConfig, NodeChain } from "../game/misc/audioEffects";
+import { createEffectNode, EffectConfig, NodeChain } from "./AudioEffects";
 
 // Type Definitions ----------------------------------------------------------------------------------
 

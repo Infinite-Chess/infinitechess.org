@@ -1,7 +1,7 @@
 
 // src/client/scripts/esm/game/misc/gamesound.ts
 
-import type { EffectConfig } from "./audioEffects.js";
+import type { EffectConfig } from "../../audio/AudioEffects.js";
 
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import AudioManager, { SoundObject } from "../../audio/AudioManager.js";

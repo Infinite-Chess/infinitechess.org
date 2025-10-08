@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/misc/audioEffects.ts
+// src/client/scripts/esm/audio/AudioEffects.ts
 
 /**
  * This module is responsible for creating and managing audio effects using the Web Audio API.
