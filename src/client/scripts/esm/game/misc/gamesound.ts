@@ -1,14 +1,16 @@
 
 // src/client/scripts/esm/game/misc/gamesound.ts
 
+import type { EffectConfig } from "../../audio/AudioEffects.js";
+
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import sound, { SoundObject } from "./sound.js";
+import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
 
 /**
  * This script is in charge of playing game sound effects.
  * It takes variables such as distances pieces moved
  * so it can deduce the correct sound play options when
- * calling {@link sound.playAudio}.
+ * calling {@link AudioManager.playAudio}.
  */
 
 
@@ -57,8 +59,8 @@ const SUCCESSIVE_MOVES_CONFIG = {
 } as const;
 /** Config for controlling moves' reverb effect. */
 const REVERB_CONFIG = {
-	/** The maximum volume the reverb effect of a piece move can reach. */
-	maxRatio: 3.5,
+	/** The maximum `wetLevel` to use for moves' reverb effects. */
+	maxWetLevel: 3.5,
 	/** The duration of moves' reverb effects, in seconds. */
 	duration: 1.5,
 	/** The minimum distance a piece needs to move for a reverb effect to gradually increase in volume. */
@@ -103,7 +105,7 @@ let timeLastMoveOrCaptureSound = 0;
 // Fetch and decode the buffer of the sound spritesheet.
 fetch('sounds/soundspritesheet.mp3')
 	.then(response => response.arrayBuffer())
-	.then(arrayBuffer => sound.decodeAudioData(arrayBuffer))
+	.then(arrayBuffer => AudioManager.decodeAudioData(arrayBuffer))
 	.then(decodedBuffer => {
 		spritesheetDecodedBuffer = decodedBuffer;
 		console.log('Sound spritesheet loaded and decoded successfully.');
@@ -143,9 +145,9 @@ function getSoundTimeSnippet(soundName: SoundName): { startTime: number, duratio
  * @param options Optional parameters like volume, delay, and offset.
  * @returns A SoundObject if the sound is played, otherwise undefined.
  */
-function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbRatio?: number, reverbDuration?: number, playbackRate?: number } = {}): SoundObject | undefined {
+function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbWetLevel?: number, reverbDuration?: number, playbackRate?: number } = {}): SoundObject | undefined {
 	let { startTime, duration } = getSoundTimeSnippet(soundName);
-	const { volume, delay, offset, reverbRatio, reverbDuration, playbackRate } = options;
+	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate } = options;
 
 	// If offset is specified, adjust the start time and duration accordingly
 	if (offset) {
@@ -154,7 +156,11 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 		duration -= offsetSecs;
 	}
 
-	return sound.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, reverbRatio, reverbDuration, playbackRate });
+	// Add reverb effect if specified
+	const effects: EffectConfig[] = [];
+	if (reverbWetLevel && reverbDuration) effects.push({ type: 'reverb', durationSecs: reverbDuration, dryLevel: 1, wetLevel: reverbWetLevel });
+
+	return AudioManager.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects });
 }
 
 /**
@@ -184,9 +190,9 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 
 	const playbackRate = premove ? PREMOVE_CONFIG.playbackRate : 1; // Premove moves are played faster, so they sound more like a click.
 	
-	const { reverbRatio, reverbDuration } = calculateReverbRatio(distanceMoved);
+	const { reverbWetLevel, reverbDuration } = calculateReverb(distanceMoved);
 
-	playSoundEffect(soundEffectName, { volume, reverbRatio, reverbDuration, delay: delaySecs, playbackRate });
+	playSoundEffect(soundEffectName, { volume, reverbWetLevel, reverbDuration, delay: delaySecs, playbackRate });
 
 	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
 		const bellVolume = BELL_CONFIG.volume * dampener;
@@ -194,16 +200,16 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	}
 }
 
-/** Takes the distance a piece moved, and returns the applicable reverb ratio and duration. */
-function calculateReverbRatio(distanceMoved: BigDecimal): { reverbRatio: number, reverbDuration: number } | { reverbRatio: undefined, reverbDuration: undefined } {
+/** Takes the distance a piece moved, and returns the applicable reverb wet level and duration. */
+function calculateReverb(distanceMoved: BigDecimal): { reverbWetLevel: number, reverbDuration: number } | { reverbWetLevel: undefined, reverbDuration: undefined } {
 	const distanceMovedNum = bd.toNumber(distanceMoved);
 	const x = (distanceMovedNum - REVERB_CONFIG.minDist) / (REVERB_CONFIG.maxDist - REVERB_CONFIG.minDist); // 0-1
-	if (x <= 0) return { reverbRatio: undefined, reverbDuration: undefined };
-	else if (x >= 1) return { reverbRatio: REVERB_CONFIG.maxRatio, reverbDuration: REVERB_CONFIG.duration };
+	if (x <= 0) return { reverbWetLevel: undefined, reverbDuration: undefined };
+	else if (x >= 1) return { reverbWetLevel: REVERB_CONFIG.maxWetLevel, reverbDuration: REVERB_CONFIG.duration };
 
-	const reverbRatio = REVERB_CONFIG.maxRatio * x; // No easing applied, for now
+	const reverbWetLevel = REVERB_CONFIG.maxWetLevel * x; // No easing applied, for now
 
-	return { reverbRatio, reverbDuration: REVERB_CONFIG.duration };
+	return { reverbWetLevel, reverbDuration: REVERB_CONFIG.duration };
 }
 
 function playGamestart(): SoundObject | undefined {

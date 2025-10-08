@@ -1,11 +1,11 @@
 
-// src/client/scripts/esm/game/misc/sound.ts
+// src/client/scripts/esm/audio/AudioManager.ts
 
 /**
- * This script controls the playing of our sound effects
- * from inside the sound spritesheet.
+ * This module is responsible for creating and playing sounds using the Web Audio API.
  */
 
+import { createEffectNode, EffectConfig, NodeChain } from "./AudioEffects";
 
 // Type Definitions ----------------------------------------------------------------------------------
 
@@ -15,8 +15,8 @@ type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode }
 interface SoundObject {
 	/** The source of the audio, with its attached `gainNode`. */
 	source: AudioBufferWithGainNode,
-	/** The source of the reverb-only part of the audio, if specified, with its attached `gainNode`. */
-	sourceReverb?: AudioBufferWithGainNode,
+	/** Whether to loop the sound indefinitely. */
+	readonly looping: boolean,
 	/**
 	 * Stops the sound from playing.
 	 * If this creates static pops, use fadeOut() instead.
@@ -38,11 +38,6 @@ interface SoundObject {
 	 */
 	// eslint-disable-next-line no-unused-vars
 	fadeIn: (targetVolume: number, durationMillis: number) => void
-
-	/** Whether to loop the sound indefinitely. */
-	readonly looping: boolean,
-	/** The ratio of the main volume at which the reverb should play. */
-	readonly _reverbRatio: number,
 }
 
 
@@ -56,10 +51,8 @@ interface PlaySoundOptions {
 	volume?: number,
 	/** Delay before the sound starts playing in seconds. Default: 0 */
 	delay?: number,
-	/** A ratio of the main volume for an optional reverb effect. Default: 0 (no reverb). 0.5 = 50% of main volume. */
-	reverbRatio?: number,
-	/** Duration of an optional reverb effect in seconds. Required if reverbRatio is specified. */
-	reverbDuration?: number,
+	/** An array of effects to apply to the sound. */
+	effects?: EffectConfig[],
 	/**
 	 * Playback rate of the sound. Default: 1. 1 = normal speed & pitch
 	 * Lower = slower & lower pitch. Higher = faster & higher pitch.
@@ -83,6 +76,18 @@ const VOLUME_DANGER_THRESHOLD = 4;
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
 
+/** A final safety compressor to prevent clipping from very high gain. */
+const limiter = new DynamicsCompressorNode(audioContext, {
+	threshold: -0.1, // Start compressing just before the signal hits 0dB
+	knee: 0,         // Hard knee for a strict ceiling
+	ratio: 20,       // A 20:1 ratio is considered "limiting"
+	attack: 0.001,   // Very fast attack to catch transients
+	release: 0.1     // Quick release
+});
+// Connect to the destination (speakers)
+limiter.connect(audioContext.destination);
+
+
 /**
  * Whether the user has interacted with the page at least once.
  * 
@@ -103,21 +108,6 @@ function callback_OnUserGesture(): void {
 }
 
 
-// Initialization ----------------------------------------------------------------------------------
-
-
-/** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
-function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
-	return new Promise((resolve, reject) => {
-		if (!audioContext) {
-			reject("Audio context not initialized.");
-			return;
-		}
-		audioContext.decodeAudioData(buffer, (decodedData) => resolve(decodedData), (error) => reject(error));
-	});
-}
-
-
 // Sound Playing ------------------------------------------------------------------------------------------
 
 
@@ -133,71 +123,79 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 		return;
 	}
 
-	const { startTime, duration, volume = 1, delay = 0, reverbRatio = 0, reverbDuration, playbackRate = 1, loop = false } = playOptions;
+	const { startTime, duration, volume = 1, delay = 0, playbackRate = 1, loop = false, effects = [] } = playOptions;
 
 	// Calculate the desired start time by adding the delay
-	const currentTime = audioContext.currentTime;
-	const startAt = currentTime + delay;
+	const startAt = audioContext.currentTime + delay;
 
 	// We need an audio "source" to play our main sound effect. Several of these can exist at once for one audio context.
 
-	// Create the main audio source
+	// 1. Create the fundamental source and its master gain node.
 	const mainSource = createBufferSource(buffer, volume, playbackRate);
 	mainSource.loop = loop; // Set the loop property on the audio source itself.
 
-	// Create the reverb source if needed
-	let reverbSource: AudioBufferWithGainNode | undefined = undefined;
-	if (reverbRatio > 0) {
-		if (!reverbDuration) throw Error("Need to specify a reverb duration.");
-		const initialReverbVolume = volume * reverbRatio; // Calculate initial relative volume
-		reverbSource = createBufferSource(buffer, initialReverbVolume, playbackRate, reverbDuration);
-		reverbSource.loop = loop;
-	}
+	// 2. Build the effects chain by asking the factory to create the nodes.
+	const effectNodes = effects.map(effectConfig => createEffectNode(audioContext, effectConfig));
 
+	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Limiter -> Destination
+	const masterGainNode = mainSource.gainNode;
+	connectNodeChain(masterGainNode, effectNodes);
+
+	// The SoundObject is now much simpler!
 	const soundObject: SoundObject = {
 		source: mainSource,
-		sourceReverb: reverbSource,
 		looping: loop,
-		_reverbRatio: reverbRatio,
 
 		stop: (): void => {
 			soundObject.source.stop();
-			if (soundObject.sourceReverb) soundObject.sourceReverb.stop();
 		},
 		fadeOut: (durationMillis): void => {
 			const fadeOutDurationSecs = durationMillis / 1000;
-			const now = audioContext.currentTime;
-			const fadeOutEndTime = now + fadeOutDurationSecs;
-			// Fade out the main source
+			const fadeOutEndTime = audioContext.currentTime + fadeOutDurationSecs;
+			// Fade the source to silent
 			fadeOut(soundObject.source, fadeOutEndTime);
-			// Fade out the reverb source if it exists
-			if (soundObject.sourceReverb) {
-				fadeOut(soundObject.sourceReverb, fadeOutEndTime);
-			}
 			// For non-looping sounds, schedule them to stop completely after the fade.
 			if (!soundObject.looping) setTimeout(() => soundObject.stop(), durationMillis);
 		},
 		fadeIn: (targetVolume, durationMillis): void => {
 			const fadeInDurationSecs = durationMillis / 1000;
-			const now = audioContext.currentTime;
-			const fadeInEndTime = now + fadeInDurationSecs;
-			// Fade in the main source to the specified target volume
+			const fadeInEndTime = audioContext.currentTime + fadeInDurationSecs;
+			// Fade the main source to the target volume
 			fadeIn(soundObject.source, targetVolume, fadeInEndTime);
-			// Fade in the reverb source, retaining its original ratio
-			if (soundObject.sourceReverb) {
-				// Calculate the reverb's target volume based on the main target and the stored ratio.
-				const targetReverbVolume = targetVolume * soundObject._reverbRatio;
-				fadeIn(soundObject.sourceReverb, targetReverbVolume, fadeInEndTime);
-			}
 		}
 	};
 
-	// Start the main source
+	// Start the playback
 	soundObject.source.start(startAt, startTime, duration);
-	// Start the reverb source if it exists
-	if (soundObject.sourceReverb) soundObject.sourceReverb.start(startAt, startTime, duration);
-
+	
+	scheduleDisconnection(mainSource, buffer, loop, delay, effects, duration, startTime);
+	
 	return soundObject;
+}
+
+/**
+ * Schedules disconnection of the audio nodes after the sound and its effects have finished playing.
+ * 
+ * Patches a bug on chrome, where when audio sources are played
+ * that have a reverb (or any other tail) effect, the audio nodes
+ * are garbage collected too early, cutting off the tail effect.
+ */
+function scheduleDisconnection(source: AudioBufferSourceNode, buffer: AudioBuffer, loop: boolean, delay: number, effects: EffectConfig[], duration?: number, startTime?: number): void {
+	if (loop) return;
+
+	const sourceDurationSecs = duration ?? (buffer.duration - (startTime ?? 0));
+	
+	// Find the longest tail duration among all applied effects.
+	const maxTailSecs = effects.reduce((max, effect) => {
+		if (effect.type === 'reverb') return Math.max(max, effect.durationSecs);
+		// Future effects with tails (e.g., delay) could be accounted for here.
+		else throw Error(`Sound effect type "${effect.type}" not accounted for in tail duration calculation.`);
+	}, 0);
+
+	const totalLifetimeMillis = (sourceDurationSecs + maxTailSecs + delay) * 1000;
+
+	// Keep a reference to the source for the entire lifetime of the sound + effects.
+	setTimeout(() => { source.disconnect(); }, totalLifetimeMillis);
 }
 
 
@@ -205,39 +203,23 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 
 
 /**
- * Creates a new buffer source. These play our audio. Multiple sources can play multiple sounds at once.
- * Attaches the gain node to the source as the property `gainNode`.
+ * Creates a new buffer source and its master gain node.
+ * It does NOT connect it to the destination, allowing an effects chain to be inserted later.
  * @param buffer - The audio buffer to play.
- * @param volume - The volume the gain node will be set at
- * @param playbackRate - How fast the audio is player. Lower = slower & lower pitch. Higher = faster & higher pitch.
- * @param [reverbDurationSecs] Optional. If specified, the sound will be transformed into a reverb. This is the duration of that reverb in seconds.
- * @returns The source
+ * @param volume - The initial volume of the sound (0-1).
+ * @param playbackRate - The playback rate of the sound. 1 = normal speed & pitch.
+ * @returns The created AudioBufferSourceNode with its attached GainNode as `gainNode` property.
  */
-function createBufferSource(buffer: AudioBuffer, volume: number, playbackRate: number = 1, reverbDurationSecs: number = 0): AudioBufferWithGainNode {
+function createBufferSource(buffer: AudioBuffer, volume: number, playbackRate: number = 1): AudioBufferWithGainNode {
 	const source = audioContext.createBufferSource();
 	source.buffer = buffer;
-
-	// What nodes do we want?
-
-	const nodes: (GainNode | ConvolverNode)[] = [];
-
-	// Gain (Volume) node
-	const gain = generateGainNode(audioContext, volume);
-	nodes.push(gain);
-	// @ts-ignore
-	source.gainNode = gain; // Attach to the source object so that it can be faded out/in on demand.
-
-	// Reverb node (if specified)
-	if (reverbDurationSecs > 0) {
-		const convolver = generateConvolverNode(audioContext, reverbDurationSecs);
-		nodes.push(convolver);
-	}
-
-	// Playback rate (speed & pitch) is NOT a node.
-	// This does not effect the duration of any applied reverb.
 	source.playbackRate.value = playbackRate;
 
-	connectSourceToDestinationWithNodes(source, audioContext, nodes);
+	const gainNode = generateGainNode(audioContext, volume);
+	source.connect(gainNode); // Connect source to its own master gain node
+
+	// @ts-ignore
+	source.gainNode = gainNode; // Attach for fading controls
 
 	return source as AudioBufferWithGainNode;
 }
@@ -253,43 +235,20 @@ function generateGainNode(audioContext: AudioContext, volume: number): GainNode 
 	return gainNode;
 }
 
-/** Generates a reverb effect node. */
-function generateConvolverNode(audioContext: AudioContext, durationSecs: number): ConvolverNode {
-	const impulse = impulseResponse(durationSecs);
-	return new ConvolverNode(audioContext, {buffer:impulse});
-}
-
-/** The mathematical function used by the convolver (reverb) node used to calculate the reverb effect! */
-function impulseResponse(duration: number): AudioBuffer { // Duration in seconds, decay
-	const decay = 2;
-	const sampleRate = audioContext.sampleRate;
-	const length = sampleRate * duration;
-	const impulse = audioContext.createBuffer(1, length, sampleRate);
-	const IR = impulse.getChannelData(0);
-	for (let i = 0; i < length; i++) IR[i] = (2 * Math.random() - 1) * Math.pow(1 - i / length,decay);
-	return impulse;
-}
-
 /**
- * After an audio source buffer is created, it must be connected to the destination for us to hear sound!
- * Optionally, we can include nodes for modying the sound! Gain (volume), reverb...
+ * Connects a starting node through a list of effect wrappers, ending at
+ * the master limiter (which is already connected to the destination).
  */
-function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, context: AudioContext, nodeList: (GainNode | ConvolverNode)[]): void {
-	let currentConnection: AudioBufferSourceNode | GainNode | ConvolverNode = source; // Start at the beginning
+function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void {
+	let currentNode: AudioNode = startNode;
 
-	for (const thisNode of nodeList) {
-		// Connect the current connection to this node!
-		currentConnection.connect(thisNode);
-		// Prep for next iteration
-		currentConnection = thisNode;
+	for (const effectWrapper of wrapperList) {
+		currentNode.connect(effectWrapper.input);
+		currentNode = effectWrapper.output; // The output of this effect is the input to the next one.
 	}
 
-	// Finally connect to the destnation!
-	currentConnection.connect(context.destination);
-
-	// Only connect the source directly to the destination if we
-	// aren't going through any nodes!!
-	// source.connect(audioContext.destination);
+	// Connect the very last node in the chain to the master bus instead of the final destination.
+	currentNode.connect(limiter);
 }
 
 /**
@@ -324,14 +283,29 @@ function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
 }
 
 
+// Utility ----------------------------------------------------------------------------------
+
+
+/** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
+function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
+	return new Promise((resolve, reject) => {
+		if (!audioContext) {
+			reject("Audio context not initialized.");
+			return;
+		}
+		audioContext.decodeAudioData(buffer, (decodedData) => resolve(decodedData), (error) => reject(error));
+	});
+}
+
+
 // Exports ----------------------------------------------------------------------
 
 
 export type {
-	SoundObject
+	SoundObject,
 };
 
 export default {
-	decodeAudioData,
 	playAudio,
+	decodeAudioData,
 };
