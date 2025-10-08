@@ -170,8 +170,37 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 
 	// Start the playback
 	soundObject.source.start(startAt, startTime, duration);
+	
+	scheduleDisconnection(mainSource, buffer, loop, delay, effects, duration, startTime);
+	
 	return soundObject;
 }
+
+/**
+ * Schedules disconnection of the audio nodes after the sound and its effects have finished playing.
+ * 
+ * Patches a bug on chrome, where when audio sources are played
+ * that have a reverb (or any other tail) effect, the audio nodes
+ * are garbage collected too early, cutting off the tail effect.
+ */
+function scheduleDisconnection(source: AudioBufferSourceNode, buffer: AudioBuffer, loop: boolean, delay: number, effects: EffectConfig[], duration?: number, startTime?: number): void {
+	if (loop) return;
+
+	const sourceDurationSecs = duration ?? (buffer.duration - (startTime ?? 0));
+	
+	// Find the longest tail duration among all applied effects.
+	const maxTailSecs = effects.reduce((max, effect) => {
+		if (effect.type === 'reverb') return Math.max(max, effect.durationSecs);
+		// Future effects with tails (e.g., delay) could be accounted for here.
+		else throw Error(`Sound effect type "${effect.type}" not accounted for in tail duration calculation.`);
+	}, 0);
+
+	const totalLifetimeMillis = (sourceDurationSecs + maxTailSecs + delay) * 1000;
+
+	// Keep a reference to the source for the entire lifetime of the sound + effects.
+	setTimeout(() => { source.disconnect(); }, totalLifetimeMillis);
+}
+
 
 // Audio Nodes ------------------------------------------------------------------------------------------
 
