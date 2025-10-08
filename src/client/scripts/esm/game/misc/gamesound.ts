@@ -1,6 +1,8 @@
 
 // src/client/scripts/esm/game/misc/gamesound.ts
 
+import type { EffectConfig } from "./audioEffects.js";
+
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import sound, { SoundObject } from "./sound.js";
 
@@ -57,8 +59,8 @@ const SUCCESSIVE_MOVES_CONFIG = {
 } as const;
 /** Config for controlling moves' reverb effect. */
 const REVERB_CONFIG = {
-	/** The maximum volume the reverb effect of a piece move can reach. */
-	maxRatio: 3.5,
+	/** The maximum `mix` value to use for moves' reverb effects. */
+	maxRatio: 0.78, // Old: 3.5 gain
 	/** The duration of moves' reverb effects, in seconds. */
 	duration: 1.5,
 	/** The minimum distance a piece needs to move for a reverb effect to gradually increase in volume. */
@@ -154,7 +156,11 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 		duration -= offsetSecs;
 	}
 
-	return sound.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, reverbRatio, reverbDuration, playbackRate });
+	// Add reverb effect if specified
+	const effects: EffectConfig[] = [];
+	if (reverbRatio && reverbDuration) effects.push({ type: 'reverb', durationSecs: reverbDuration, mix: reverbRatio });
+
+	return sound.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects });
 }
 
 /**
