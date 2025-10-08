@@ -76,6 +76,18 @@ const VOLUME_DANGER_THRESHOLD = 4;
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
 
+/** A final safety compressor to prevent clipping from very high gain. */
+const limiter = new DynamicsCompressorNode(audioContext, {
+	threshold: -0.1, // Start compressing just before the signal hits 0dB
+	knee: 0,         // Hard knee for a strict ceiling
+	ratio: 20,       // A 20:1 ratio is considered "limiting"
+	attack: 0.001,   // Very fast attack to catch transients
+	release: 0.1     // Quick release
+});
+// Connect to the destination (speakers)
+limiter.connect(audioContext.destination);
+
+
 /**
  * Whether the user has interacted with the page at least once.
  * 
@@ -93,21 +105,6 @@ function callback_OnUserGesture(): void {
 	console.log("Resuming audio context after user gesture.");
 	document.removeEventListener('mousedown', callback_OnUserGesture);
 	document.removeEventListener('click', callback_OnUserGesture);
-}
-
-
-// Initialization ----------------------------------------------------------------------------------
-
-
-/** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
-function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
-	return new Promise((resolve, reject) => {
-		if (!audioContext) {
-			reject("Audio context not initialized.");
-			return;
-		}
-		audioContext.decodeAudioData(buffer, (decodedData) => resolve(decodedData), (error) => reject(error));
-	});
 }
 
 
@@ -140,9 +137,9 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 	// 2. Build the effects chain by asking the factory to create the nodes.
 	const effectNodes = effects.map(effectConfig => createEffectNode(audioContext, effectConfig));
 
-	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Destination
+	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Limiter -> Destination
 	const masterGainNode = mainSource.gainNode;
-	connectNodeChain(masterGainNode, audioContext, effectNodes);
+	connectNodeChain(masterGainNode, effectNodes);
 
 	// The SoundObject is now much simpler!
 	const soundObject: SoundObject = {
@@ -239,10 +236,10 @@ function generateGainNode(audioContext: AudioContext, volume: number): GainNode 
 }
 
 /**
- * Connects a starting node through a list of effect wrappers, ending at the destination.
- * This logic is now clean and simple because every effect has a uniform shape.
+ * Connects a starting node through a list of effect wrappers, ending at
+ * the master limiter (which is already connected to the destination).
  */
-function connectNodeChain(startNode: AudioNode, context: AudioContext, wrapperList: NodeChain[]): void {
+function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void {
 	let currentNode: AudioNode = startNode;
 
 	for (const effectWrapper of wrapperList) {
@@ -250,8 +247,8 @@ function connectNodeChain(startNode: AudioNode, context: AudioContext, wrapperLi
 		currentNode = effectWrapper.output; // The output of this effect is the input to the next one.
 	}
 
-	// Connect the very last node in the chain to the destination (speakers).
-	currentNode.connect(context.destination);
+	// Connect the very last node in the chain to the master bus instead of the final destination.
+	currentNode.connect(limiter);
 }
 
 /**
@@ -286,6 +283,21 @@ function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
 }
 
 
+// Utility ----------------------------------------------------------------------------------
+
+
+/** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
+function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
+	return new Promise((resolve, reject) => {
+		if (!audioContext) {
+			reject("Audio context not initialized.");
+			return;
+		}
+		audioContext.decodeAudioData(buffer, (decodedData) => resolve(decodedData), (error) => reject(error));
+	});
+}
+
+
 // Exports ----------------------------------------------------------------------
 
 
@@ -294,6 +306,6 @@ export type {
 };
 
 export default {
-	decodeAudioData,
 	playAudio,
+	decodeAudioData,
 };
