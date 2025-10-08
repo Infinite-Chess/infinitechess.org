@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/audio/AudioEffects.ts
 
 /**
@@ -17,8 +16,15 @@ export interface NodeChain {
 
 /** The base configuration for any effect. */
 interface EffectConfigBase {
-	/** How much to blend the effect with the original sound. 0 = dry only (original sound), 1 = wet only (effect only). Default is 1. */
-	mix?: number;
+	/**
+	 * The volume of the "wet" (processed) signal. Default: 1.
+	 */
+	wetLevel?: number;
+	/**
+	 * The volume of the "dry" (original) signal. Default: 0.
+	 * Increase to allow some of the original signal to pass through unaffected.
+	 */
+	dryLevel?: number;
 }
 
 /** The configuration for a single effect in the effects chain. */
@@ -56,22 +62,21 @@ export function createEffectNode(audioContext: AudioContext, config: EffectConfi
 			throw new Error(`Unknown effect type specified in config.`);
 	}
 
-	// 2. Create the input and output nodes, and wire everything up according to the mix ratio.
+	// 2. Create the input and output nodes for parallel dry and wet signal paths.
 	const input = new GainNode(audioContext);
 	const output = new GainNode(audioContext);
 
-	// Determine the mix. Default to 1 (100% wet) if not specified.
-	const mix = config.mix === undefined ? 1 : Math.max(0, Math.min(1, config.mix));
-
-	if (mix < 1) {
-		// If the mix is not 100% wet, we need a dry path.
-		const dryGain = new GainNode(audioContext, { gain: 1 - mix });
+	// Determine the dry level. Default to 0 (0% passthrough) if not specified.
+	const dryLevel = config.dryLevel === undefined ? 0 : Math.max(0, config.dryLevel);
+	if (dryLevel > 0) {
+		const dryGain = new GainNode(audioContext, { gain: dryLevel });
 		input.connect(dryGain).connect(output);
 	}
 
-	if (mix > 0) {
-		// If the mix is not 0% wet, we need a wet path.
-		const wetGain = new GainNode(audioContext, { gain: mix });
+	// Determine the wet level. Default to 1 (100% effect) if not specified.
+	const wetLevel = config.wetLevel === undefined ? 1 : Math.max(0, config.wetLevel);
+	if (wetLevel > 0) {
+		const wetGain = new GainNode(audioContext, { gain: wetLevel });
 		input.connect(coreEffectNode).connect(wetGain).connect(output);
 	}
 
