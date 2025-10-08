@@ -23,7 +23,7 @@ interface EffectConfigBase {
 
 /** The configuration for a single effect in the effects chain. */
 export type EffectConfig = EffectConfigBase & (
-	| { type: 'reverb', durationSecs: number, mix: number }
+	| { type: 'reverb', durationSecs: number }
 	// Future effects will be added here, e.g.:
 	// | { type: 'filter', filterType: BiquadFilterType, frequency: number }
 )
