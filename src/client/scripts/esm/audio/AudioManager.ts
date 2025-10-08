@@ -88,32 +88,14 @@ const limiter = new DynamicsCompressorNode(audioContext, {
 limiter.connect(audioContext.destination);
 
 
-/**
- * Whether the user has interacted with the page at least once.
- * 
- * This is used to determine if we can play audio, as some browsers
- * block audio playback until the user has interacted with the page.
- */
-let atleastOneUserGesture = false;
-
-// We listen for the first user gesture to unlock audio playback.
-document.addEventListener('mousedown', callback_OnUserGesture);
-document.addEventListener('click', callback_OnUserGesture);
-function callback_OnUserGesture(): void {
-	atleastOneUserGesture = true;
-	audioContext.resume();
-	console.log("Resuming audio context after user gesture.");
-	document.removeEventListener('mousedown', callback_OnUserGesture);
-	document.removeEventListener('click', callback_OnUserGesture);
-}
-
 
 // Sound Playing ------------------------------------------------------------------------------------------
 
 
 /** Plays the specified audio buffer with the specified options. */
 function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOptions): SoundObject | undefined {
-	if (!atleastOneUserGesture) return; // Skip playing this sound (browsers won't allow it if we try, not until the user first interacts with the page)
+	// Attempt to resume if it was suspended (e.g., due to browser autoplay policy)
+	if (audioContext.state === 'suspended') audioContext.resume();
 	if (!audioContext) {
 		console.warn(`Can't play sound when audioContext isn't initialized yet. (Still loading)`);
 		return;
