@@ -154,6 +154,8 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 		const offsetSecs = offset / 1000;
 		startTime += offsetSecs;
 		duration -= offsetSecs;
+		// Don't play the sound if the offset exceeds the sound duration (can happen with 'tick' sound)
+		if (duration <= 0) return;
 	}
 
 	// Add reverb effect if specified
