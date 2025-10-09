@@ -202,8 +202,8 @@ export class EffectZoneManager {
 			this.transitionStartTime = Date.now() - remainingTime;
 
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
-			this.currentZone.fadeOutAmbience(remainingTime);
-			this.transitionTargetZone.fadeInAmbience(remainingTime);
+			this.currentZone.fadeOutAmbience(elapsedTime);
+			this.transitionTargetZone.fadeInAmbience(elapsedTime);
 		}
 
 		// --- 3. UPDATE TRANSITION PROGRESS OF ACTIVE EFFECTS ---
