@@ -44,8 +44,10 @@ export interface Zone {
 	/** Returns the current post processing pass effects for this zone. */
 	readonly getPasses: () => PostProcessPass[];
     /** Fades in the ambience. */
+	// eslint-disable-next-line no-unused-vars
 	readonly fadeInAmbience: (transitionDurationMillis: number) => void;
     /** Fades out the ambience, then stops the track playing. */
+	// eslint-disable-next-line no-unused-vars
 	readonly fadeOutAmbience: (transitionDurationMillis: number) => void;
 }
 

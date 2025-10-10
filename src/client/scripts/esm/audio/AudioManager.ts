@@ -89,6 +89,15 @@ limiter.connect(audioContext.destination);
 
 
 
+// Getters ----------------------------------------------------------------------------------------------
+
+
+/** Returns the global audio context. */
+export function getContext(): AudioContext {
+	return audioContext;
+}
+
+
 // Sound Playing ------------------------------------------------------------------------------------------
 
 
@@ -288,6 +297,7 @@ export type {
 };
 
 export default {
+	getContext,
 	playAudio,
 	decodeAudioData,
 };
