@@ -3,11 +3,11 @@
 
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
-import math from "../../../../../../../shared/util/math/math";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
+import { AmbienceController } from "../AmbienceController";
 
 
 export class DustyWastesZone implements Zone {
@@ -17,15 +17,18 @@ export class DustyWastesZone implements Zone {
 
 	private colorGradePass: ColorGradePass;
 
+	/** The ambience controller for this zone. */
+	private ambience: AmbienceController;
+
 
 	/** The strength of the effect. */
 	private strength: number = 0.35; // Default: 0.35
 
 	/** How many times the noise texture should tile the screen. */
-	private noiseTiling: number = 1.5;
+	private noiseTiling: number = 1.25;
 
 	/** The average wind speed. */
-	private windSpeed: number = 0.6;
+	private windSpeed: number = 0.7;
 
 	/** How much faster one scroll speed is greater than the other. */
 	private windSpeedsOffset: number = 1.2;
@@ -54,10 +57,89 @@ export class DustyWastesZone implements Zone {
 
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 0.7;
+		this.colorGradePass.saturation = 0.75;
 		
-		// Load the ambience
-		// Use: Pink noise (kind of sounds windy)
+		// Load the ambience...
+
+		const noiseConfig = {
+			masterVolume: 1,
+			layers: [ // hi
+				{
+					volume: {
+						base: 0.5,
+						lfo: {
+							wave: "perlin",
+							rate: 0.76,
+							depth: 0.12
+						}
+					},
+					source: {
+						type: "noise"
+					},
+					filters: [
+						{
+							type: "lowpass",
+							frequency: {
+								base: 271
+							},
+							Q: {
+								base: 1.0001
+							},
+							gain: {
+								base: 0
+							}
+						}
+					]
+				},
+				{
+					volume: {
+						base: 0.3
+					},
+					source: {
+						type: "noise"
+					},
+					filters: [
+						{
+							type: "bandpass",
+							frequency: {
+								base: 909,
+								lfo: {
+									wave: "perlin",
+									rate: 0.47,
+									depth: 203
+								}
+							},
+							Q: {
+								base: 29.9901
+							},
+							gain: {
+								base: 0
+							}
+						},
+						{
+							type: "bandpass",
+							frequency: {
+								base: 909,
+								lfo: {
+									wave: "perlin",
+									rate: 0.35,
+									depth: 201
+								}
+							},
+							Q: {
+								base: 10.7801
+							},
+							gain: {
+								base: 0
+							}
+						}
+					]
+				}
+			]
+		};
+
+		// Initialize the controller with the config.
+		// this.ambience = new AmbienceController(10, noiseConfig);
 	}
 
 
@@ -112,10 +194,10 @@ export class DustyWastesZone implements Zone {
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
-
+		// this.ambience.fadeIn(transitionDurationMillis, 0.4); // Pass the target volume
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
-
+		// this.ambience.fadeOut(transitionDurationMillis);
 	}
 }

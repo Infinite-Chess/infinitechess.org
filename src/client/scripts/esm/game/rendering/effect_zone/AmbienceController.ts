@@ -1,7 +1,6 @@
 
 // src/client/scripts/esm/effects/zones/AmbienceController.ts
 
-
 /**
  * This class manages a single ambience sound, including loading, playing, and fading it in and out.
  */

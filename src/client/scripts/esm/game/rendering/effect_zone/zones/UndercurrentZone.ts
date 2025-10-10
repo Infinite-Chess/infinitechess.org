@@ -25,12 +25,57 @@ export class UndercurrentZone implements Zone {
 	constructor() {
 		// Load the ambience...
 
-		// Define the recipe for the noise.
+		// Low wind
 		const noiseConfig: FilterConfig[] = [
-			{ type: 'lowpass', frequency: 500, Q: 1.5 },
-			{ type: 'peaking', frequency: 120, Q: 2, gain: 8 },
-			{ type: 'highpass', frequency: 50, Q: 1.0 }
+			// 1. Drastically cut almost all high frequencies. This does 90% of the work.
+			// The very low Q makes the cutoff very gentle and "watery".
+			{ type: 'lowpass', frequency: 200, Q: 1 },
+			// 2. Add a sharp, whistling "whoosh" sound around 4500 Hz.
+			// A high Q makes it sound more like a whistle than a general hiss.
+			{ type: 'peaking', frequency: 4500, Q: 4, gain: 20 },
 		];
+
+		// const config = {
+		// 	masterVolume: 1,
+		// 	layers: [
+		// 		{
+		// 			volume: {
+		// 				base: 1
+		// 			},
+		// 			source: {
+		// 				type: "noise"
+		// 			},
+		// 			filters: [
+		// 				{
+		// 					type: "lowpass",
+		// 					frequency: {
+		// 						base: 136
+		// 					},
+		// 					Q: {
+		// 						base: 1.0001
+		// 					},
+		// 					gain: {
+		// 						base: 0
+		// 					}
+		// 				},
+		// 				{
+		// 					type: "lowpass",
+		// 					frequency: {
+		// 						base: 138
+		// 					},
+		// 					Q: {
+		// 						base: 1.0001
+		// 					},
+		// 					gain: {
+		// 						base: 0
+		// 					}
+		// 				}
+		// 			]
+		// 		}
+		// 	]
+		// };
+
+
 
 		// Initialize the controller with the config.
 		this.ambience = new AmbienceController(10, noiseConfig);

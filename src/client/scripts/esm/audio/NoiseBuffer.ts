@@ -6,9 +6,19 @@
  */
 
 export interface FilterConfig {
+	/** The type of BiquadFilter to create. */
 	type: BiquadFilterType;
+	/** Where on the frequency spectrum the filter should work. */
 	frequency: number;
+	/**
+	 * The Q factor (resonance) of the filter. Optional.
+	 * Range: 0.0001 to 1000. Default: 1.
+	 */
 	Q?: number;
+	/**
+	 * The gain of the filter, in dB. Optional.
+	 * Only used for certain filter types: peaking, lowshelf, highshelf.
+	 */
 	gain?: number;
 }
 

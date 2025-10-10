@@ -94,7 +94,7 @@ export async function create(durationSecs: number, filterConfigs: FilterConfig[]
 
 			// Also reset the gain to 0 for a clean state.
 			masterGain.gain.cancelScheduledValues(audioContext.currentTime);
-			masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+			masterGain.gain.value = 0.0;
 		},
 		fadeIn: (targetVolume: number, durationMillis: number): void => {
 			applyPerceptualFade(audioContext, masterGain.gain, targetVolume, durationMillis, easeFunction, FADE_CURVE_RESOLUTION, false);
