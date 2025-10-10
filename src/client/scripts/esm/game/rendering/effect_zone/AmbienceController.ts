@@ -11,7 +11,9 @@ import type { FilterConfig } from "../../../audio/NoiseBuffer";
 import NoisePlayer, { INoisePlayer } from "../../../audio/NoisePlayer";
 
 
-export class AmbienceController {
+// DEPRICATE
+
+class AmbienceController {
 
 	/** A promise resolving to the ambience noise player, once created. */
 	private noisePlayerPromise: Promise<INoisePlayer> | undefined = undefined;

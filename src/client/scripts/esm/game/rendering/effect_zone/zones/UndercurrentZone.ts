@@ -10,7 +10,7 @@ import type { FilterConfig } from "../../../../audio/NoiseBuffer";
 import type { Zone } from "../EffectZoneManager";
 
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { AmbienceController } from "../AmbienceController";
+import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 
 
 export class UndercurrentZone implements Zone {
@@ -18,67 +18,55 @@ export class UndercurrentZone implements Zone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 1;
 
-	/** The ambience controller for this zone. */
-	private ambience: AmbienceController;
+	/** The soundscape player for this zone. */
+	private ambience: SoundscapePlayer;
 
 
 	constructor() {
 		// Load the ambience...
 
-		// Low wind
-		const noiseConfig: FilterConfig[] = [
-			// 1. Drastically cut almost all high frequencies. This does 90% of the work.
-			// The very low Q makes the cutoff very gentle and "watery".
-			{ type: 'lowpass', frequency: 200, Q: 1 },
-			// 2. Add a sharp, whistling "whoosh" sound around 4500 Hz.
-			// A high Q makes it sound more like a whistle than a general hiss.
-			{ type: 'peaking', frequency: 4500, Q: 4, gain: 20 },
-		];
+		const noiseConfig: SoundscapeConfig = {
+			masterVolume: 1,
+			layers: [
+				{
+					volume: {
+						base: 1
+					},
+					source: {
+						type: "noise"
+					},
+					filters: [
+						{
+							type: "lowpass",
+							frequency: {
+								base: 136
+							},
+							Q: {
+								base: 1.0001
+							},
+							gain: {
+								base: 0
+							}
+						},
+						{
+							type: "lowpass",
+							frequency: {
+								base: 138
+							},
+							Q: {
+								base: 1.0001
+							},
+							gain: {
+								base: 0
+							}
+						}
+					]
+				}
+			]
+		};
 
-		// const config = {
-		// 	masterVolume: 1,
-		// 	layers: [
-		// 		{
-		// 			volume: {
-		// 				base: 1
-		// 			},
-		// 			source: {
-		// 				type: "noise"
-		// 			},
-		// 			filters: [
-		// 				{
-		// 					type: "lowpass",
-		// 					frequency: {
-		// 						base: 136
-		// 					},
-		// 					Q: {
-		// 						base: 1.0001
-		// 					},
-		// 					gain: {
-		// 						base: 0
-		// 					}
-		// 				},
-		// 				{
-		// 					type: "lowpass",
-		// 					frequency: {
-		// 						base: 138
-		// 					},
-		// 					Q: {
-		// 						base: 1.0001
-		// 					},
-		// 					gain: {
-		// 						base: 0
-		// 					}
-		// 				}
-		// 			]
-		// 		}
-		// 	]
-		// };
-
-
-
-		// Initialize the controller with the config.
-		this.ambience = new AmbienceController(10, noiseConfig);
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
 
 
@@ -95,7 +83,7 @@ export class UndercurrentZone implements Zone {
 	}
 
 	public fadeInAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeIn(transitionDurationMillis, 0.4); // Pass the target volume
+		this.ambience.fadeIn(0.4, transitionDurationMillis); // Pass the target volume
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {

@@ -7,7 +7,7 @@ import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGr
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
-import { AmbienceController } from "../AmbienceController";
+import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 
 
 export class DustyWastesZone implements Zone {
@@ -17,8 +17,8 @@ export class DustyWastesZone implements Zone {
 
 	private colorGradePass: ColorGradePass;
 
-	/** The ambience controller for this zone. */
-	private ambience: AmbienceController;
+	/** The soundscape player for this zone. */
+	private ambience: SoundscapePlayer;
 
 
 	/** The strength of the effect. */
@@ -61,9 +61,9 @@ export class DustyWastesZone implements Zone {
 		
 		// Load the ambience...
 
-		const noiseConfig = {
+		const noiseConfig: SoundscapeConfig = {
 			masterVolume: 1,
-			layers: [ // hi
+			layers: [
 				{
 					volume: {
 						base: 0.5,
@@ -138,8 +138,8 @@ export class DustyWastesZone implements Zone {
 			]
 		};
 
-		// Initialize the controller with the config.
-		// this.ambience = new AmbienceController(10, noiseConfig);
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
 
 
@@ -194,10 +194,10 @@ export class DustyWastesZone implements Zone {
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
-		// this.ambience.fadeIn(transitionDurationMillis, 0.4); // Pass the target volume
+		this.ambience.fadeIn(0.4, transitionDurationMillis); // Pass the target volume
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
-		// this.ambience.fadeOut(transitionDurationMillis);
+		this.ambience.fadeOut(transitionDurationMillis);
 	}
 }
