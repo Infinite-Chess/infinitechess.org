@@ -533,6 +533,53 @@ p.theme-title {
 
 
 
+/* Sound dropdown */
+
+.sound-options {
+    text-align: center;
+}
+
+.sound-option {
+    font-size: 14px;
+    padding: 5px 0 10px;
+}
+
+.sound-option .sound-option-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 35px;
+}
+
+.sound-option .sound-option-title p { /* "Master Volume" */
+    padding-left: 6px;
+}
+
+.sound-option .slider-container {
+    display: flex;
+    margin-left: 8px;
+}
+
+.sound-option .slider {
+    width: 100%;
+}
+
+.sound-option .slider:hover {
+    cursor: pointer;
+}
+
+.sound-option .value {
+    padding-left: 5px;
+	text-align: left;
+    flex-shrink: 0;
+}
+
+.sound-option.master-volume .value {
+	width: 50px;
+}
+
+
+
 /* Reset default buttons */
 
 .reset-default-container {
