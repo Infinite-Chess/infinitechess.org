@@ -281,9 +281,6 @@ function setAdvancedEffectsMode(value: boolean): void {
 	if (typeof value !== 'boolean') throw new Error('Cannot set preference advanced_effects_enabled when it is not a boolean.');
 	preferences.advanced_effects_enabled = value;
 	savePreferences();
-
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('advanced-effects-toggle', { detail: value }));
 }
 
 function getMasterVolume(): number {
