@@ -769,7 +769,7 @@ function teleportToPieceIfClicked(piece: ArrowPiece, pieceWorld: DoubleCoords, v
 				// The target teleport coords
 				const telCoords = geometry.calcIntersectionPointOfLinesBD(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
 
-				TransitionManager.panTransition(telCoords, false);
+				TransitionManager.startPanTransition(telCoords, false);
 			} else { // Mouse down
 				listener.claimMouseDown(button); // Don't let the board be dragged by this mouse down, or start drawing an arrow by this finger down
 			}

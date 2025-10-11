@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/transition.ts
+// src/client/scripts/esm/game/rendering/transitions/TransitionManager.ts
 
 /**
  * This handles the smooth transitioning from one area of the board to another.
@@ -24,6 +24,8 @@ import coordutil, { BDCoords, Coords, DoubleCoords } from '../../../../../../sha
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
+import ZoomingTransition, { ZoomTransition } from './ZoomingTransition.js';
+import PanningTransition, { PanTransition } from './PanningTransition.js';
 
 
 // Type Definitions ----------------------------------------------------------------------
@@ -35,18 +37,6 @@ type Transition = ZoomTransition & {
 	isZoom: true;
 } | PanTransition & {
 	isZoom: false;
-}
-
-type ZoomTransition = {
-	/** The destination board location. */
-	destinationCoords: BDCoords;
-	/** The destination board location. */
-	destinationScale: BigDecimal;
-}
-
-type PanTransition = {
-	/** The destination board location. */
-	destinationCoords: BDCoords;
 }
 
 
@@ -83,9 +73,6 @@ const PAN_TRANSITION_CONFIG = {
 	MAX_PAN_DISTANCE: 90,
 } as const;
 
-
-const ONE = bd.FromBigInt(1n);
-const NEGONE = bd.FromBigInt(-1n);
 
 
 // Variables ----------------------------------------------------------------------
@@ -166,7 +153,7 @@ function onTransitionStart(): void {
 }
 
 /** Starts a Zooming Transition. */
-function zoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefined, ignoreHistory: boolean): void { // tel2 can be undefined, if only 1
+function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefined, ignoreHistory: boolean): void { // tel2 can be undefined, if only 1
 	onTransitionStart();
 
 	nextTransition = tel2;
@@ -198,7 +185,7 @@ function zoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefined, 
 }
 
 /** Starts a Panning Transition. */
-function panTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
+function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 	onTransitionStart();
 
 	destinationCoords = endCoord;
@@ -261,7 +248,7 @@ function zoomTransitionToArea(theArea: Area): void {
 		destinationCoords: theArea.coords,
 		destinationScale: theArea.scale,
 	};
-	zoomTransition(trans, undefined, false);
+	startZoomTransition(trans, undefined, false);
 }
 
 /** Appends the given transition to the history. */
@@ -283,7 +270,7 @@ function undoTransition(): void {
 		};
 		area.initTransitionFromArea(thisArea, true);
 	} else { // Panning transition
-		panTransition(previousTrans.destinationCoords, true);
+		startPanTransition(previousTrans.destinationCoords, true);
 	}
 }
 
@@ -304,90 +291,8 @@ function update(): void {
 	const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
 	const easedT = math.easeInOut(t);
 
-	if (isZoom) updateZoomingTransition(easedT);
-	else updatePanningTransition(t, easedT);
-}
-
-/** Updates the board position and scale for the current ZOOMING Transition. */
-function updateZoomingTransition(easedT: number): void {
-
-	// Scale
-
-	// Smoothly transition E (the logarithm of the scale), then convert back to scale
-	const newE = bd.FromNumber(originE + differenceE * easedT);
-	const newScale = bd.exp(newE);
-	boardpos.setBoardScale(newScale);
-
-	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
-	// SEE GRAPH ON DESMOS "World-space converted to boardPos" for my notes while writing this algorithm
-
-	const targetCoords = isZoomOut ? originCoords : destinationCoords;
-
-	// Calculate new world-space
-	const newWorldX = bd.FromNumber(originWorldSpace[0] + differenceWorldSpace[0] * easedT);
-	const newWorldY = bd.FromNumber(originWorldSpace[1] + differenceWorldSpace[1] * easedT);
-	// Convert to board position
-	const boardScale = boardpos.getBoardScale();
-	const shiftX = bd.divide_floating(newWorldX, boardScale);
-	const shiftY = bd.divide_floating(newWorldY, boardScale);
-	const newX = bd.subtract(targetCoords[0], shiftX);
-	const newY = bd.subtract(targetCoords[1], shiftY);
-
-	boardpos.setBoardPos([newX, newY]);
-}
-
-/** Updates the board position and scale for the current PANNING Transition. */
-function updatePanningTransition(t: number, easedT: number): void {
-
-	// What is the scale?
-	// What is the maximum distance we should pan b4 teleporting to the other half?
-	const boardScale = boardpos.getBoardScale();
-	const maxPanDist = bd.FromNumber(PAN_TRANSITION_CONFIG.MAX_PAN_DISTANCE);
-	const maxDistSquares = bd.divide_floating(maxPanDist, boardScale);
-	const transGreaterThanMaxDist = bd.compare(bd.abs(differenceCoords[0]), maxDistSquares) > 0 || bd.compare(bd.abs(differenceCoords[1]), maxDistSquares) > 0;
-
-	let newX: BigDecimal;
-	let newY: BigDecimal;
-
-	const difference = coordutil.copyBDCoords(differenceCoords);
-	const easedTBD = bd.FromNumber(easedT);
-
-	if (!transGreaterThanMaxDist) { // No mid-transition teleport required to maintain constant duration.
-		// Calculate new world-space
-		const addX = bd.multiply_fixed(difference[0], easedTBD);
-		const addY = bd.multiply_fixed(difference[1], easedTBD);
-		// Convert to board position
-		newX = bd.add(originCoords[0], addX);
-		newY = bd.add(originCoords[1], addY);
-	} else { // Mid-transition teleport REQUIRED to maintain constant duration.
-		// 1st half or 2nd half?
-		const firstHalf = t < 0.5;
-		const neg = firstHalf ? ONE : NEGONE;
-		const actualEasedT = bd.FromNumber(firstHalf ? easedT : 1 - easedT);
-
-		// Create a new, shorter vector that points in the exact same direction,
-		// but with a length that is visually manageable on screen.
-
-		// To preserve the vector's direction, we must scale it based on its largest component.
-		const absDiffX = bd.abs(difference[0]);
-		const absDiffY = bd.abs(difference[1]);
-		const maxComponent = bd.max(absDiffX, absDiffY);
-
-		const ratio = bd.divide_floating(maxDistSquares, maxComponent);
-
-		difference[0] = bd.multiply_floating(difference[0], ratio);
-		difference[1] = bd.multiply_floating(difference[1], ratio);
-
-		const target = firstHalf ? originCoords : destinationCoords;
-
-		const addX = bd.multiply_floating(bd.multiply_floating(difference[0], actualEasedT), neg);
-		const addY = bd.multiply_floating(bd.multiply_floating(difference[1], actualEasedT), neg);
-
-		newX = bd.add(target[0], addX);
-		newY = bd.add(target[1], addY);
-	}
-
-	boardpos.setBoardPos([newX, newY]);
+	if (isZoom) ZoomingTransition.updateZoomingTransition(easedT, originCoords, destinationCoords, originWorldSpace, differenceWorldSpace, originE, differenceE, isZoomOut);
+	else PanningTransition.updatePanningTransition(t, easedT, originCoords, destinationCoords, differenceCoords);
 }
 
 /** Sets the board position & scale to the destination of the current transition, and ends the transition. */
@@ -396,7 +301,7 @@ function finishTransition(): void { // Called at the end of a teleport
 	boardpos.setBoardPos(destinationCoords);
 	boardpos.setBoardScale(destinationScale);
 
-	if (nextTransition) zoomTransition(nextTransition, undefined, true);
+	if (nextTransition) startZoomTransition(nextTransition, undefined, true);
 	else isTransitioning = false;
 }
 
@@ -426,10 +331,13 @@ function terminate(): void {
 
 
 export default {
+	// Constants
+	ZOOM_TRANSITION_DURATION_MILLIS,
+	PAN_TRANSITION_CONFIG,
 	// Initiating Transitions
 	areTransitioning,
-	zoomTransition,
-	panTransition,
+	startZoomTransition,
+	startPanTransition,
 	zoomToCoordsList,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,

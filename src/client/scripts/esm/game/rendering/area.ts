@@ -17,12 +17,13 @@ import guigameinfo from '../gui/guigameinfo.js';
 import boardpos from './boardpos.js';
 import meshes from './meshes.js';
 import space from '../misc/space.js';
-import TransitionManager, { ZoomTransition } from './transitions/TransitionManager.js';
+import TransitionManager from './transitions/TransitionManager.js';
 import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 
 import type { BDCoords, Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { ZoomTransition } from './transitions/ZoomingTransition.js';
 
 
 
@@ -231,8 +232,8 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	const trans1: ZoomTransition | undefined = firstArea ? { destinationCoords: firstArea.coords, destinationScale: firstArea.scale } : undefined;
 	const trans2: ZoomTransition = { destinationCoords: thisArea.coords, destinationScale: thisArea.scale };
 
-	if (trans1) TransitionManager.zoomTransition(trans1, trans2, ignoreHistory);
-	else TransitionManager.zoomTransition(trans2, undefined, ignoreHistory);
+	if (trans1) TransitionManager.startZoomTransition(trans1, trans2, ignoreHistory);
+	else TransitionManager.startZoomTransition(trans2, undefined, ignoreHistory);
 }
 
 export default {
