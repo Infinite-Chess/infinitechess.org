@@ -25,6 +25,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import screenshake from './screenshake.js';
 import { gl } from './webgl.js';
 import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
@@ -228,6 +229,11 @@ function initViewMatrix(ignoreRotations?: boolean): void {
 	// Translates the view (camera) matrix to be looking at point..
 	//             Camera,     Position, Looking-at, Up-direction
 	mat4.lookAt(newViewMatrix, cameraPos, [0, 0, 0], [0, 1, 0]);
+	
+	// Screen Shake Integration
+	const shakeMatrix = screenshake.getShakeMatrix();
+	// Apply to our view matrix to shake the camera
+	mat4.multiply(newViewMatrix, newViewMatrix, shakeMatrix);
 
 	if (!ignoreRotations) perspective.applyRotations(newViewMatrix);
 

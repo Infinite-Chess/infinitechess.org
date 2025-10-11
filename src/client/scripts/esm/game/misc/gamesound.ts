@@ -3,6 +3,7 @@
 
 import type { EffectConfig } from "../../audio/AudioEffects.js";
 
+import screenshake from "../rendering/screenshake.js";
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
 
@@ -195,6 +196,9 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	const { reverbWetLevel, reverbDuration } = calculateReverb(distanceMoved);
 
 	playSoundEffect(soundEffectName, { volume, reverbWetLevel, reverbDuration, delay: delaySecs, playbackRate });
+
+	// [EXPERIMENTAL] Apply screen shake for very large moves
+	if (bd.toNumber(distanceMoved) > 1000) screenshake.trigger(0.7);
 
 	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
 		const bellVolume = BELL_CONFIG.volume * dampener;

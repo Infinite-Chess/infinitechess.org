@@ -51,6 +51,7 @@ import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
 import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import WaterRipples from '../rendering/WaterRipples.js';
+import screenshake from '../rendering/screenshake.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import { PostProcessingPipeline, PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline.js';
 import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
@@ -108,6 +109,7 @@ function onScreenResize(): void {
 
 // Update the game every single frame
 function update(): void {
+	screenshake.update();
 	controls.testOutGameToggles();
 	invites.update();
 	// Any input should trigger the next frame to render.
