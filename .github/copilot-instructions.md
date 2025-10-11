@@ -17,7 +17,7 @@
 - **Chess Logic:** Core chess rules and utilities are in `src/shared/chess/` and `src/shared/util/`.
 - **API Design:** REST endpoints and socket handlers are in `src/server/api/` and `src/server/socket/`.
 - **Config:** Server config in `src/server/config/`. Certificates in `cert/`.
-- **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`.
+- **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`.
 - **Assets:** Original images are placed in `dev-utils/image-sources/`. Use command `npm run optimize-images` to generate optimized versions into `src/client/img/`.
 
 ## Integration Points

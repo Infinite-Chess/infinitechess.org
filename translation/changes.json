@@ -1,4 +1,8 @@
 {
+	"69": {
+		"note": "Added sound, sound-master-volume, and sound-ambience, lines 32-34.",
+		"changes": []
+	},
 	"68": {
 		"note": "Deleted shaders_failed & failed_compiling_shaders, lines 366-367.",
 		"changes": []

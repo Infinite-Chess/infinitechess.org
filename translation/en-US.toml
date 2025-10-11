@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "68"
+version = "69"
 maintainer = "Naviary"
 
 [header]
@@ -29,6 +29,9 @@ selection-lingering_annotations = "Lingering Annotations"
 perspective = "Perspective" # Perspective-mode
 perspective-mouse-sensitivity = "Mouse Sensitivity"
 perspective-fov = "Field of View"
+sound = "Sound"
+sound-master-volume = "Master Volume"
+sound-ambience = "Ambience"
 ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
 reset-to-default = "Reset to default"
 

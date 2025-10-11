@@ -6,7 +6,9 @@ import boarddropdown from "./dropdowns/boarddropdown.js";
 import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
 import perspectivedropdown from "./dropdowns/perspectivedropdown.js";
 import selectiondropdown from "./dropdowns/selectiondropdown.js";
+import sounddropdown from "./dropdowns/sounddropdown.js";
 import preferences from "./preferences.js";
+import themes from "../../../../../shared/components/header/themes.js";
 // Only imported so its code runs
 // eslint-disable-next-line no-unused-vars
 import pingmeter from "./pingmeter.js";
@@ -25,6 +27,7 @@ const boardDropdownSelection = document.getElementById('board-settings-dropdown-
 const legalmoveDropdownSelection = document.getElementById('legalmove-settings-dropdown-item');
 const mouseDropdownSelection = document.getElementById('perspective-settings-dropdown-item');
 const selectionDropdownSelection = document.getElementById('selection-settings-dropdown-item');
+const soundDropdownSelection = document.getElementById('sound-settings-dropdown-item');
 
 // All nested dropdowns
 const languageDropdown = document.querySelector('.language-dropdown');
@@ -32,7 +35,8 @@ const boardDropdown = document.querySelector('.board-dropdown');
 const legalmoveDropdown = document.querySelector('.legalmove-dropdown');
 const perspectiveDropdown = document.querySelector('.perspective-dropdown');
 const selectionDropdown = document.querySelector('.selection-dropdown');
-const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown, perspectiveDropdown, selectionDropdown];
+const soundDropdown = document.querySelector('.sound-dropdown');
+const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown, perspectiveDropdown, selectionDropdown, soundDropdown];
 
 
 // Variables ---------------------------------------------------------------------------------
@@ -55,7 +59,11 @@ let settingsIsOpen = settings.classList.contains('open');
 	document.addEventListener('click', closeSettingsDropdownIfClickedAway);
 	document.addEventListener('touchstart', closeSettingsDropdownIfClickedAway);
 
-	// openSettingsDropdown(); // DELETE WHEN UPDATE DONE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	updateSwitchColor();
+	document.addEventListener('theme-change', updateSwitchColor);
+
+	// [DEBUGGING] Instantly open the settings dropdown on page refresh
+	// openSettingsDropdown();
 })();
 
 
@@ -86,6 +94,7 @@ function closeAllSettingsDropdownsExceptMainOne() {
 	legalmovedropdown.close();
 	selectiondropdown.close();
 	perspectivedropdown.close();
+	sounddropdown.close();
 }
 
 
@@ -100,6 +109,8 @@ function initSettingsListeners() {
 	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
 	selectionDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	selectionDropdownSelection.addEventListener('click', selectiondropdown.open);
+	soundDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	soundDropdownSelection.addEventListener('click', sounddropdown.open);
 }
 function closeSettingsListeners() {
 	languageDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
@@ -110,8 +121,10 @@ function closeSettingsListeners() {
 	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
 	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
-	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
+	selectionDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	selectionDropdownSelection.removeEventListener('click', selectiondropdown.open);
+	soundDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	soundDropdownSelection.removeEventListener('click', sounddropdown.open);
 }
 
 
@@ -125,6 +138,22 @@ function didEventClickAnyDropdown(event) {
 		if (dropdown.contains(event.target)) clickedDropdown = true;
 	});
 	return clickedDropdown;
+}
+
+
+/** Updates the color of all boolean switches on the settings menu, depending on the current theme. */
+function updateSwitchColor() {
+	const theme = preferences.getTheme();
+	const lightTiles = themes.getPropertyOfTheme(theme, "lightTiles");
+	const darkTiles = themes.getPropertyOfTheme(theme, "darkTiles");
+	
+	const AvgR = (lightTiles[0] + darkTiles[0]) / 2;
+	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
+	const AvgB = (lightTiles[2] + darkTiles[2]) / 2;
+	
+	const css = `rgb(${AvgR * 255}, ${AvgG * 255}, ${AvgB * 255})`;
+	const root = document.documentElement;
+	root.style.setProperty('--switch-on-color', css);
 }
 
 
