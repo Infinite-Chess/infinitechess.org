@@ -67,7 +67,7 @@ export class SoundscapePlayer {
 	 */
 	private initializeAndPlay(): void {
 		this.masterGain.gain.value = 0.0; // Always start silent
-		this.masterGain.connect(this.audioContext.destination);
+		this.masterGain.connect(AudioManager.getDestination()); // Connect to the global master gain
 
 		// Create the shared raw noise buffer data source
 		const bufferSize = NOISE_DURATION_SECS * this.audioContext.sampleRate;

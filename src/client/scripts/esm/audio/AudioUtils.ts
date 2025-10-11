@@ -37,7 +37,6 @@ function applyPerceptualFade(audioContext: AudioContext, gainParam: AudioParam, 
 	const startVolume: number = gainParam.value;
 
 	gainParam.cancelScheduledValues(now);
-	gainParam.setValueAtTime(startVolume, now);
 
 	const curve: Float32Array = new Float32Array(FADE_CURVE_RESOLUTION);
 	const MIN_GAIN = 0.00001; 

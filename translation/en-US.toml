@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "68"
+version = "70"
 maintainer = "Naviary"
 
 [header]
@@ -15,9 +15,10 @@ leaderboard = "Leaderboard"
 
 [header.settings]
 language = "Language"
-board = "Board" # Board color/theme
-board-theme = "Theme"
-board-starfield = "Starfield" # The Starfield space animation underneath void
+appearance = "Appearance" # Board color/theme and visual effects
+appearance-theme = "Theme"
+appearance-starfield = "Starfield" # The Starfield space animation underneath void
+appearance-advanced-effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
 legalmoves = "Legal Moves" # Legal moves shape
 legalmoves-squares = "Squares"
 legalmoves-dots = "Dots" # Dots and 4 corner triangles
@@ -29,6 +30,9 @@ selection-lingering_annotations = "Lingering Annotations"
 perspective = "Perspective" # Perspective-mode
 perspective-mouse-sensitivity = "Mouse Sensitivity"
 perspective-fov = "Field of View"
+sound = "Sound"
+sound-master-volume = "Master Volume"
+sound-ambience = "Ambience"
 ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
 reset-to-default = "Reset to default"
 

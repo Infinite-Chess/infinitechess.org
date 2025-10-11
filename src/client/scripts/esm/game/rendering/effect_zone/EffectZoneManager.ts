@@ -5,6 +5,7 @@ import ImageLoader from "../../../util/ImageLoader";
 import TextureLoader from "../../../webgl/TextureLoader";
 import boardtiles from "../boardtiles";
 import frametracker from "../frametracker";
+import preferences from "../../../components/header/preferences";
 import { ProgramManager } from "../../../webgl/ProgramManager";
 import { TheBeginningZone } from "./zones/TheBeginningZone";
 import { UndercurrentZone } from "./zones/UndercurrentZone";
@@ -25,6 +26,11 @@ export interface EffectZone {
 	readonly name: string;
 	/** The closest tile that this zone effect starts at. */
 	readonly start: bigint;
+	/**
+	 * Whether this zone uses advanced visual effects. If true, then
+	 * the Advanced Effects settings toggle may disable the zone.
+	 */
+	readonly advancedEffect?: boolean;
 }
 
 /** Union of all Zone names. */
@@ -58,23 +64,23 @@ export interface Zone {
 export class EffectZoneManager {
 	static readonly ZONES = [
 		// Define zones in ascending order of their start distance.
-		{ name: 'The Beginning', start: 0n },
+		{ name: 'The Beginning', start: 0n, advancedEffect: false },
 		// [PRODUCTION] Default distances:
-		// { name: 'Undercurrent',     start: 10n ** 7n },
-		// { name: 'Dusty Wastes',     start: 10n ** 25n },
-		// { name: 'Cracked Barrens',  start: 10n ** 55n },
-		// { name: 'Molten Reaches',   start: 10n ** 91n },
-		// { name: 'Contortion Field', start: 10n ** 136n },
-		// { name: 'Echo Rift',        start: 10n ** 181n },
-        // { name: 'Static',           start: 10n ** 226n },
+		// { name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false },
+		// { name: 'Dusty Wastes',     start: 10n ** 25n, advancedEffect: true },
+		// { name: 'Cracked Barrens',  start: 10n ** 55n, advancedEffect: true },
+		// { name: 'Molten Reaches',   start: 10n ** 91n, advancedEffect: true },
+		// { name: 'Contortion Field', start: 10n ** 136n, advancedEffect: true },
+		// { name: 'Echo Rift',        start: 10n ** 181n, advancedEffect: true },
+        // { name: 'Static',           start: 10n ** 226n, advancedEffect: true },
 		// [TESTING] Much shorter distances:
-		{ name: 'Undercurrent',     start: BigInt(20) },
-		{ name: 'Dusty Wastes',     start: BigInt(40) },
-		{ name: 'Cracked Barrens',  start: BigInt(60) },
-		{ name: 'Molten Reaches',   start: BigInt(80) },
-		{ name: 'Contortion Field', start: BigInt(100) },
-		{ name: 'Echo Rift',        start: BigInt(120) },
-		{ name: 'Static',           start: BigInt(140) },
+		{ name: 'Undercurrent',     start: BigInt(20), advancedEffect: false },
+		{ name: 'Dusty Wastes',     start: BigInt(40), advancedEffect: true },
+		{ name: 'Cracked Barrens',  start: BigInt(60), advancedEffect: true },
+		{ name: 'Molten Reaches',   start: BigInt(80), advancedEffect: true },
+		{ name: 'Contortion Field', start: BigInt(100), advancedEffect: true },
+		{ name: 'Echo Rift',        start: BigInt(120), advancedEffect: true },
+		{ name: 'Static',           start: BigInt(140), advancedEffect: true },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -135,24 +141,40 @@ export class EffectZoneManager {
 		};
 
 		this.currentZone = this.zones['The Beginning'];
-	}
 
+		// Set up a listener for the ambience-enabled preference changing.
+		document.addEventListener('ambience-toggle', (event: CustomEvent) => {
+			// Turn on/off the ambience of the current zone (and transition target zone, if applicable).
+			const enabled = event.detail;
+			if (!enabled) {
+				// Fade out any currently playing ambience.
+				this.currentZone.fadeOutAmbience(this.transitionDuration);
+				this.transitionTargetZone?.fadeOutAmbience(this.transitionDuration);
+			} else {
+				// Fade in the current zone's ambience.
+				this.currentZone.fadeInAmbience(this.transitionDuration);
+			}
+		});
+	}
 
 	/**
 	 * Finds the active zone for a given distance from the origin.
 	 */
 	private findZoneForDistance(distance: bigint): Zone {
+		const advancedEnabled = preferences.getAdvancedEffectsMode();
+
 		let furthestZone: Zone | undefined;
 		// Iterate through all proceeding zones in reverse to find
 		// the furthest one that starts before our current distance.
 		for (let i = EffectZoneManager.ZONES.length - 1; i >= 0; i--) {
 			const zone = EffectZoneManager.ZONES[i]!;
+			if (!advancedEnabled && zone.advancedEffect) continue; // Skip zones requiring advanced effects if they're disabled
 			if (distance >= zone.start) {
 				furthestZone = this.zones[zone.name];
 				break;
 			}
 		}
-		if (!furthestZone) throw new Error("No effect zones for distance " + distance);
+		if (!furthestZone) throw new Error(`No effect zones for distance ${distance}`);
 		return furthestZone;
 	}
 
@@ -183,8 +205,10 @@ export class EffectZoneManager {
 			this.transitionTargetZone = targetZoneForDistance;
 			this.transitionStartTime = Date.now();
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
-			this.currentZone.fadeOutAmbience(this.transitionDuration);
-			this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
+			if (preferences.getAmbienceEnabled()) {
+				this.currentZone.fadeOutAmbience(this.transitionDuration);
+				this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
+			}
 		} else if (
 			this.transitionTargetZone && // A transition is active
 			targetZoneForDistance === this.currentZone && // And we've moved back into the 'from' zone's area
@@ -204,8 +228,10 @@ export class EffectZoneManager {
 			this.transitionStartTime = Date.now() - remainingTime;
 
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
-			this.currentZone.fadeOutAmbience(elapsedTime);
-			this.transitionTargetZone.fadeInAmbience(elapsedTime);
+			if (preferences.getAmbienceEnabled()) {
+				this.currentZone.fadeOutAmbience(elapsedTime);
+				this.transitionTargetZone.fadeInAmbience(elapsedTime);
+			}
 		}
 
 		// --- 3. UPDATE TRANSITION PROGRESS OF ACTIVE EFFECTS ---
@@ -227,7 +253,7 @@ export class EffectZoneManager {
 
 		// Only all for an animation frame if the current zone isn't the origin, or if we're mid-transition.
 		// This ensures cpu usage isn't spiked from Zone Effects when near origin.
-		if (this.currentZone !== this.zones['The Beginning'] || this.transitionTargetZone) frametracker.onVisualChange();
+		if (this.currentZone !== this.zones['The Beginning'] && this.currentZone !== this.zones['Undercurrent'] || this.transitionTargetZone) frametracker.onVisualChange();
 	}
 
 	/**

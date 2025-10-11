@@ -62,11 +62,11 @@ export class DustyWastesZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.4,
+			masterVolume: 0.16,
 			layers: [
 				{
 					volume: {
-						base: 0.5,
+						base: 1,
 						lfo: {
 							wave: "perlin",
 							rate: 0.76,
@@ -93,7 +93,7 @@ export class DustyWastesZone implements Zone {
 				},
 				{
 					volume: {
-						base: 0.3
+						base: 0.5
 					},
 					source: {
 						type: "noise"

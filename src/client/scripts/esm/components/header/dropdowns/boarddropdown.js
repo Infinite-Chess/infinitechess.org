@@ -12,6 +12,7 @@ const boardDropdown = document.querySelector('.board-dropdown');
 const themeList = document.querySelector('.theme-list'); // Get the theme list div
 
 const starfieldCheckbox = document.querySelector('.boolean-option.starfield input');
+const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced-effects input');
 
 
 // Functions ---------------------------------------------------------------------------------
@@ -25,6 +26,7 @@ const starfieldCheckbox = document.querySelector('.boolean-option.starfield inpu
 
 function showCheckmarkOnSelectedOptions() {
 	starfieldCheckbox.checked = preferences.getStarfieldMode();
+	advancedEffectsCheckbox.checked = preferences.getAdvancedEffectsMode();
 }
 
 async function addThemesToThemesDropdown() {
@@ -68,12 +70,16 @@ function initListeners() {
 	initThemeChangeListeners();
 	// Starfield toggle
 	starfieldCheckbox.addEventListener('click', toggleStarfield);
+	// Advanced Effects toggle
+	advancedEffectsCheckbox.addEventListener('click', toggleAdvancedEffects);
 }
 function closeListeners() {
 	boardDropdownTitle.removeEventListener('click', close);
 	closeThemeChangeListeners();
 	// Starfield toggle
 	starfieldCheckbox.removeEventListener('click', toggleStarfield);
+	// Advanced Effects toggle
+	advancedEffectsCheckbox.removeEventListener('click', toggleAdvancedEffects);
 }
 function initThemeChangeListeners() {
 	for (let i = 0; i < themeList.children.length; i++) {
@@ -112,6 +118,10 @@ function updateThemeSelectedStyling() {
 
 function toggleStarfield() {
 	preferences.setStarfieldMode(starfieldCheckbox.checked);
+}
+
+function toggleAdvancedEffects() {
+	preferences.setAdvancedEffectsMode(advancedEffectsCheckbox.checked);
 }
 
 export default {

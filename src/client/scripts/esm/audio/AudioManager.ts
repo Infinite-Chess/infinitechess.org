@@ -5,6 +5,7 @@
  * This module is responsible for creating and playing sounds using the Web Audio API.
  */
 
+import preferences from "../components/header/preferences";
 import { createEffectNode, EffectConfig, NodeChain } from "./AudioEffects";
 
 // Type Definitions ----------------------------------------------------------------------------------
@@ -76,6 +77,15 @@ const VOLUME_DANGER_THRESHOLD = 4;
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
 
+/** A master gain node to control the overall volume of all sounds. */
+const masterGain = audioContext.createGain();
+masterGain.gain.value = preferences.getMasterVolume(); // Initialize to saved preference
+// Listen for changes to the master volume preference
+document.addEventListener('master-volume-change', (event: CustomEvent) => {
+	const newVolume = event.detail;
+	masterGain.gain.setValueAtTime(newVolume, audioContext.currentTime);
+});
+
 /** A final safety compressor to prevent clipping from very high gain. */
 const limiter = new DynamicsCompressorNode(audioContext, {
 	threshold: -0.1, // Start compressing just before the signal hits 0dB
@@ -84,18 +94,29 @@ const limiter = new DynamicsCompressorNode(audioContext, {
 	attack: 0.001,   // Very fast attack to catch transients
 	release: 0.1     // Quick release
 });
-// Connect to the destination (speakers)
-limiter.connect(audioContext.destination);
 
+// Connect the audio graph: Master Gain -> Limiter -> Destination (speakers)
+masterGain.connect(limiter);
+limiter.connect(audioContext.destination);
 
 
 // Getters ----------------------------------------------------------------------------------------------
 
 
 /** Returns the global audio context. */
-export function getContext(): AudioContext {
+function getContext(): AudioContext {
 	return audioContext;
 }
+
+/**
+ * All sound MUST route through the master gain node
+ * in order for the master volume control to work!
+ */
+function getDestination(): AudioNode {
+	return masterGain;
+}
+
+
 
 
 // Sound Playing ------------------------------------------------------------------------------------------
@@ -128,7 +149,7 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 	// 2. Build the effects chain by asking the factory to create the nodes.
 	const effectNodes = effects.map(effectConfig => createEffectNode(audioContext, effectConfig));
 
-	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Limiter -> Destination
+	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Master Gain -> Limiter -> Destination
 	const masterGainNode = mainSource.gainNode;
 	connectNodeChain(masterGainNode, effectNodes);
 
@@ -228,7 +249,7 @@ function generateGainNode(audioContext: AudioContext, volume: number): GainNode 
 
 /**
  * Connects a starting node through a list of effect wrappers, ending at
- * the master limiter (which is already connected to the destination).
+ * the master gain node (which is connected to the limiter and destination).
  */
 function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void {
 	let currentNode: AudioNode = startNode;
@@ -238,8 +259,8 @@ function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void 
 		currentNode = effectWrapper.output; // The output of this effect is the input to the next one.
 	}
 
-	// Connect the very last node in the chain to the master bus instead of the final destination.
-	currentNode.connect(limiter);
+	// Connect the very last node in the chain to the master gain node.
+	currentNode.connect(masterGain);
 }
 
 /**
@@ -298,6 +319,7 @@ export type {
 
 export default {
 	getContext,
+	getDestination,
 	playAudio,
 	decodeAudioData,
 };
