@@ -24,6 +24,7 @@ interface ClientSidePreferences {
 	drag_enabled: boolean;
 	premove_enabled: boolean;
 	starfield_enabled: boolean;
+	/** Master volume level from 0 (silent) to 1 (full volume) */
 	master_volume: number;
 	ambience_enabled: boolean;
 	[key: string]: any;
@@ -55,7 +56,7 @@ const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
 const default_lingering_annotations: boolean = false;
 const default_starfield_enabled: boolean = true;
-const default_master_volume: number = 100;
+const default_master_volume: number = 1;
 const default_ambience_enabled: boolean = true;
 
 
@@ -275,8 +276,12 @@ function getMasterVolume(): number {
 
 function setMasterVolume(master_volume: number): void {
 	if (typeof master_volume !== 'number') throw new Error('Cannot set preference master_volume when it is not a number.');
+	if (master_volume > 1) throw new Error('Cannot set master_volume > 1!');
 	preferences.master_volume = master_volume;
 	savePreferences();
+
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('master-volume-change', { detail: master_volume }));
 }
 
 function getAmbienceEnabled(): boolean {

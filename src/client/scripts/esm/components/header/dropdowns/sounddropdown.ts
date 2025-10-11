@@ -2,7 +2,6 @@
 // This script manages the sound settings dropdown
 
 import preferences from "../preferences.js";
-import themes from "../../../../../../shared/components/header/themes.js";
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -22,17 +21,13 @@ const ambienceCheckbox = document.querySelector('.boolean-option.ambience input'
 
 
 (function init(): void {
-
 	setInitialValues();
-	updateSwitchColor();
-	document.addEventListener('theme-change', updateSwitchColor);
-
 })();
 
 
 /** Update the sliders and checkboxes according to the already existing preferences */
 function setInitialValues(): void {
-	masterVolumeSlider.value = String(preferences.getMasterVolume());
+	masterVolumeSlider.value = String(preferences.getMasterVolume() * 100); // Preferences stores a value from 0 to 1
 	updateMasterVolumeOutput();
 
 	ambienceCheckbox.checked = preferences.getAmbienceEnabled();
@@ -67,37 +62,18 @@ function closeListeners(): void {
 
 function onMasterVolumeChange(event: Event): void {
 	const value = Number((event.currentTarget as HTMLInputElement).value);
-	setMasterVolume(value);
-}
-
-
-function setMasterVolume(value: number): void {
-	preferences.setMasterVolume(value);
+	preferences.setMasterVolume(value / 100); // Preferences expects a value from 0 to 1
 	updateMasterVolumeOutput();
-}
-
-
-function updateMasterVolumeOutput(): void {
-	const value = Number(masterVolumeSlider.value);
-	masterVolumeOutput.textContent = value + '%';
 }
 
 function toggleAmbience(): void {
 	preferences.setAmbienceEnabled(ambienceCheckbox.checked);
 }
 
-function updateSwitchColor(): void {
-	const theme = preferences.getTheme();
-	const lightTiles = themes.getPropertyOfTheme(theme, "lightTiles");
-	const darkTiles = themes.getPropertyOfTheme(theme, "darkTiles");
-	
-	const AvgR = (lightTiles[0] + darkTiles[0]) / 2;
-	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
-	const AvgB = (lightTiles[2] + darkTiles[2]) / 2;
-	
-	const css = `rgb(${AvgR * 255}, ${AvgG * 255}, ${AvgB * 255})`;
-	const root = document.documentElement;
-	root.style.setProperty('--switch-on-color', css);
+
+function updateMasterVolumeOutput(): void {
+	const value = Number(masterVolumeSlider.value);
+	masterVolumeOutput.textContent = value + '%';
 }
 
 

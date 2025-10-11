@@ -70,7 +70,7 @@ header label {
 }
 
 .svg-language, .svg-board, .svg-legalmove, .svg-perspective, .svg-selection,
-.svg-squares, .svg-mouse, .svg-camera,
+.svg-squares, .svg-mouse, .svg-sound, .svg-camera,
 .checkmark {
     width: 19px;
     aspect-ratio: 1;
@@ -87,6 +87,10 @@ header label {
 
 .svg-mouse {
     transform: scale(1.47);
+}
+
+.svg-sound {
+	transform: scale(1.25);
 }
 
 .svg-camera {
@@ -482,18 +486,14 @@ p.theme-title {
     margin: 0 2px 0 4px;
 }
 
-/* Perspective dropdown */
+/* Perspective & Sound dropdowns */
 
-.perspective-options {
-    text-align: center;
-}
-
-.perspective-option {
+.perspective-option, .sound-option {
     font-size: 14px;
     padding: 5px 0 10px;
 }
 
-.perspective-option .perspective-option-title {
+.perspective-option .perspective-option-title, .sound-option .sound-option-title {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -504,78 +504,31 @@ p.theme-title {
     padding-left: 6px;
 }
 
-.perspective-option .slider-container {
+.perspective-option .slider-container, .sound-option .slider-container {
     display: flex;
     margin-left: 8px;
 }
 
-.perspective-option .slider {
+.perspective-option .slider, .sound-option .slider {
     width: 100%;
 }
 
-.perspective-option .slider:hover {
+.perspective-option .slider:hover, .sound-option .slider:hover {
     cursor: pointer;
 }
 
-.perspective-option .value {
+.perspective-option .value, .sound-option .value {
     padding-left: 5px;
 	text-align: left;
     flex-shrink: 0;
 }
 
-.perspective-option.mouse-sensitivity .value {
+.perspective-option.mouse-sensitivity .value, .sound-option.master-volume .value {
 	width: 50px;
 }
 
 .perspective-option.fov .value {
     width: 35px;
-}
-
-
-
-/* Sound dropdown */
-
-.sound-options {
-    text-align: center;
-}
-
-.sound-option {
-    font-size: 14px;
-    padding: 5px 0 10px;
-}
-
-.sound-option .sound-option-title {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 35px;
-}
-
-.sound-option .sound-option-title p { /* "Master Volume" */
-    padding-left: 6px;
-}
-
-.sound-option .slider-container {
-    display: flex;
-    margin-left: 8px;
-}
-
-.sound-option .slider {
-    width: 100%;
-}
-
-.sound-option .slider:hover {
-    cursor: pointer;
-}
-
-.sound-option .value {
-    padding-left: 5px;
-	text-align: left;
-    flex-shrink: 0;
-}
-
-.sound-option.master-volume .value {
-	width: 50px;
 }
 
 
