@@ -19,6 +19,7 @@ declare global {
 		'premoves-toggle': CustomEvent<boolean>;
 		'lingering-annotations-toggle': CustomEvent<boolean>;
 		'starfield-toggle': CustomEvent<boolean>;
+		'advanced-effects-toggle': CustomEvent<boolean>;
 		'ray-count-change': CustomEvent<number>;
 	}
 

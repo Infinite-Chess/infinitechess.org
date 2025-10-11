@@ -15,9 +15,10 @@ leaderboard = "Leaderboard"
 
 [header.settings]
 language = "Language"
-board = "Board" # Board color/theme
+appearance = "Appearance" # Board color/theme and visual effects
 board-theme = "Theme"
 board-starfield = "Starfield" # The Starfield space animation underneath void
+board-advanced-effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
 legalmoves = "Legal Moves" # Legal moves shape
 legalmoves-squares = "Squares"
 legalmoves-dots = "Dots" # Dots and 4 corner triangles
