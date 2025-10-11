@@ -284,6 +284,8 @@ function setAdvancedEffectsMode(value: boolean): void {
 
 	// Dispatch an event so that the game code can detect it, if present.
 	document.dispatchEvent(new CustomEvent('advanced-effects-toggle', { detail: value }));
+}
+
 function getMasterVolume(): number {
 	return preferences.master_volume ?? default_master_volume;
 }
