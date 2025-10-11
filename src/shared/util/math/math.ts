@@ -47,6 +47,16 @@ function easeInOut(t: number): number {
 	return -0.5 * Math.cos(Math.PI * t) + 0.5;
 }
 
+/** Applies an ease-in interpolation. */
+function easeIn(t: number): number {
+	return t * t;
+}
+
+/** Applies an ease-out interpolation. */
+function easeOut(t: number): number {
+	return t * (2 - t);
+}
+
 
 // Other -------------------------------------------------------------
 
@@ -66,6 +76,8 @@ export default {
 	posMod,
 	// Easing Functions
 	easeInOut,
+	easeIn,
+	easeOut,
 	// Other
 	getSineWaveVariation,
 };

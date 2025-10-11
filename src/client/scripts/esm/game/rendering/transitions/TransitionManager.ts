@@ -1,15 +1,15 @@
-
 // src/client/scripts/esm/game/rendering/transitions/TransitionManager.ts
 
 /**
  * This handles the smooth transitioning from one area of the board to another.
- * 
+ *
  * There are two types of transitions:
- * 
+ *
  * Panning Transition - Quicker, doesn't zoom at all, teleports at the halfway t value so it can
  * span arbitrary distances in constant time.
- * 
- * Zooming Transition - Slower, doesn't teleport mid-transition, has to zoom to the area.
+ *
+ * Zooming Transition - Slower. For large differences in scale, it uses a 3-stage process to
+ * ensure a maximum duration is never exceeded, preventing infinitely long transitions.
  */
 
 
@@ -46,7 +46,7 @@ type Transition = ZoomTransition & {
 /** The maximum number of transitions we will retain in our history, for undoing transitions. */
 const HISTORY_CAP = 20;
 
-/** Stores config for the duration of Zooming Transitions. */
+/** Stores config for the duration of standard (short) Zooming Transitions. */
 const ZOOM_TRANSITION_DURATION_MILLIS = {
 	/** The minimum, or base amount. All transitions take atleast this long. */
 	BASE: 600, // Default: 600
@@ -60,6 +60,25 @@ const ZOOM_TRANSITION_DURATION_MILLIS = {
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	PERSPECTIVE_MULTIPLIER: 1.3,
 } as const;
+
+/**
+ * Config for long-distance Zooming Transitions that exceed the natural log threshold.
+ * This ensures that no matter how large the scale difference, the transition has a fixed, predictable duration.
+ */
+const LONG_ZOOM_CONFIG = {
+	/** The natural log difference that triggers a long zoom instead of a standard one. */
+	LN_DIFFERENCE_THRESHOLD: 10.0, // Default: 10.0 (e^10, about 22,000x scale change)
+	/** The fixed total duration of a long zoom transition. */
+	// DURATION_MILLIS: 3000,
+	DURATION_MILLIS: 9000, // Testing
+	/** How the total duration is split between the three stages. MUST sum to 1.0. */
+	STAGE_SPLIT: {
+		ACCELERATE: 0.25, // 25% of time accelerating scale
+		TRANSITION_FOCUS: 0.5, // 50% of time moving the focus point
+		DECELERATE: 0.25, // 25% of time decelerating scale
+	},
+} as const;
+
 
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
@@ -109,22 +128,13 @@ let isZoom: boolean;
  */
 let isZoomOut: boolean;
 
+
+// Shared State
+
 /** [EXACT] The origin coords. */
 let originCoords: BDCoords;
 /** [EXACT] The destination coords. */
 let destinationCoords: BDCoords;
-/**
- * If the current transition is a Panning Transition, this is the precalculated
- * difference between the current transition's origin and destination coords.
- */
-let differenceCoords: BDCoords;
-
-/** [ESTIMATION] If the current transition is a Zooming Transition, this is the origin world space coords. */
-let originWorldSpace: DoubleCoords;
-/** [ESTIMATION] If the current transition is a Zooming Transition, this is the destination world space coords. */
-let destinationWorldSpace: DoubleCoords;
-/** Precalculated difference between the current transition's calculated origin and destination world space coords. */
-let differenceWorldSpace: DoubleCoords;
 
 /** [EXACT] The origin scale. */
 let originScale: BigDecimal;
@@ -136,6 +146,37 @@ let originE: number;
 let destinationE: number;
 /** Precalculated difference between the current transition's origin and destination scale's "e" value. */
 let differenceE: number;
+
+
+// Pan-specific State
+
+/**
+ * If the current transition is a Panning Transition, this is the precalculated
+ * difference between the current transition's origin and destination coords.
+ */
+let differenceCoords: BDCoords;
+
+
+// Zoom-specific State
+
+/** [ESTIMATION] If the current transition is a Zooming Transition, this is the origin world space coords. */
+let originWorldSpace: DoubleCoords;
+/** [ESTIMATION] If the current transition is a Zooming Transition, this is the destination world space coords. */
+let destinationWorldSpace: DoubleCoords;
+/** Precalculated difference between the current transition's calculated origin and destination world space coords. */
+let differenceWorldSpace: DoubleCoords;
+
+
+// Long Zoom State
+
+let isLongZoom: boolean = false;
+let stageDurations: {
+	stage1_end: number;
+	stage2_end: number;
+	stage3_end: number;
+};
+let e_at_stage1_end: number;
+let e_at_stage2_start: number;
 
 
 // Initiating Transitions ---------------------------------------------------------------------
@@ -153,7 +194,7 @@ function onTransitionStart(): void {
 }
 
 /** Starts a Zooming Transition. */
-function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefined, ignoreHistory: boolean): void { // tel2 can be undefined, if only 1
+function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefined, ignoreHistory: boolean): void {
 	onTransitionStart();
 
 	nextTransition = tel2;
@@ -165,6 +206,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	differenceE = destinationE - originE;
 
 	isZoom = true;
+	isLongZoom = false;
 	isZoomOut = bd.compare(destinationScale, originScale) < 0;
 
 	// Determine world coordinates
@@ -178,9 +220,32 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	differenceWorldSpace = coordutil.subtractDoubleCoords(destinationWorldSpace, originWorldSpace);
 
 	// Perspective duration multiplier
-	const durationMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_DURATION_MILLIS.PERSPECTIVE_MULTIPLIER : 1;
-	durationMillis = (ZOOM_TRANSITION_DURATION_MILLIS.BASE + Math.abs(differenceE) * ZOOM_TRANSITION_DURATION_MILLIS.MULTIPLIER) * durationMultiplier;
-	
+	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_DURATION_MILLIS.PERSPECTIVE_MULTIPLIER : 1;
+
+	// Is this a standard zoom or a long-distance 3-stage zoom?
+	if (Math.abs(differenceE) > LONG_ZOOM_CONFIG.LN_DIFFERENCE_THRESHOLD) {
+		// Long Zoom
+		console.log("Starting long zoom transition");
+		isLongZoom = true;
+		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS * perspectiveMultiplier;
+
+		// Pre-calculate stage end times
+		stageDurations = {
+			stage1_end: durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE,
+			stage2_end: durationMillis * (LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE + LONG_ZOOM_CONFIG.STAGE_SPLIT.TRANSITION_FOCUS),
+			stage3_end: durationMillis, // Or durationMillis
+		};
+
+		// Pre-calculate the 'e' values at the boundaries of the stages
+		const e_change_in_edge_stages = Math.sign(differenceE) * LONG_ZOOM_CONFIG.LN_DIFFERENCE_THRESHOLD;
+		e_at_stage1_end = originE + e_change_in_edge_stages;
+		e_at_stage2_start = destinationE - e_change_in_edge_stages;
+	} else {
+		// Standard Zoom
+		isLongZoom = false;
+		durationMillis = (ZOOM_TRANSITION_DURATION_MILLIS.BASE + Math.abs(differenceE) * ZOOM_TRANSITION_DURATION_MILLIS.MULTIPLIER) * perspectiveMultiplier;
+	}
+
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos(), destinationScale: boardpos.getBoardScale() });
 }
 
@@ -288,12 +353,80 @@ function update(): void {
 		return;
 	}
 
-	const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
-	const easedT = math.easeInOut(t);
-
-	if (isZoom) ZoomingTransition.updateZoomingTransition(easedT, originCoords, destinationCoords, originWorldSpace, differenceWorldSpace, originE, differenceE, isZoomOut);
-	else PanningTransition.updatePanningTransition(t, easedT, originCoords, destinationCoords, differenceCoords);
+	if (isZoom) {
+		// Zooming Transition
+		if (!isLongZoom) {
+			const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
+			const easedT = math.easeInOut(t);
+			ZoomingTransition.updateSimpleZoomingTransition(easedT, originCoords, destinationCoords, originWorldSpace, differenceWorldSpace, originE, differenceE, isZoomOut);
+		} else {
+			updateLongZoomTransition(elapsedTime);
+		}
+	} else {
+		// Panning Transition
+		const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
+		const easedT = math.easeInOut(t);
+		PanningTransition.updatePanningTransition(t, easedT, originCoords, destinationCoords, differenceCoords);
+	}
 }
+
+
+/** Handles the 3-stage update logic for long-distance zooms. */
+function updateLongZoomTransition(elapsedTime: number): void {
+	let newE: BigDecimal;
+	let focusPointWorldSpace: DoubleCoords;
+	const targetCoords: BDCoords = isZoomOut ? originCoords : destinationCoords;
+
+	if (elapsedTime < stageDurations.stage1_end) {
+		// Stage 1: Accelerate Scale
+		const t = elapsedTime / (stageDurations.stage1_end);
+		const easedT = math.easeOut(t); // Use easeOut because we are accelerating *from* the start
+
+		// Focus point is LOCKED to the origin
+		focusPointWorldSpace = originWorldSpace;
+
+		// Interpolate 'e' only up to the threshold amount
+		const current_e_change = (e_at_stage1_end - originE) * easedT;
+		newE = bd.FromNumber(originE + current_e_change);
+
+	} else if (elapsedTime < stageDurations.stage2_end) {
+		// Stage 2: Transition Focus Point and Scale
+		const stage2_duration = stageDurations.stage2_end - stageDurations.stage1_end;
+		const stage2_elapsed = elapsedTime - stageDurations.stage1_end;
+		const t = stage2_elapsed / stage2_duration;
+		const easedT = math.easeInOut(t); // A smooth sine-like curve is good here
+
+		// Focus point transitions from origin to destination
+		const worldX = originWorldSpace[0] + differenceWorldSpace[0] * easedT;
+		const worldY = originWorldSpace[1] + differenceWorldSpace[1] * easedT;
+		focusPointWorldSpace = [worldX, worldY];
+
+		// Scale transitions through the vast middle-ground
+		const e_change_in_stage2 = e_at_stage2_start - e_at_stage1_end;
+		newE = bd.FromNumber(e_at_stage1_end + e_change_in_stage2 * easedT);
+
+	} else {
+		// Stage 3: Decelerate Scale
+		const stage3_duration = stageDurations.stage3_end - stageDurations.stage2_end;
+		const stage3_elapsed = elapsedTime - stageDurations.stage2_end;
+		const t = stage3_elapsed / stage3_duration;
+		const easedT = math.easeIn(t); // Use easeIn because we are decelerating *to* the end
+
+		// Focus point is LOCKED to the destination
+		focusPointWorldSpace = destinationWorldSpace;
+
+		// Interpolate 'e' for the final threshold amount
+		const current_e_change = (destinationE - e_at_stage2_start) * easedT;
+		newE = bd.FromNumber(e_at_stage2_start + current_e_change);
+	}
+
+	const newScale = bd.exp(newE);
+	boardpos.setBoardScale(newScale);
+
+	// In every stage, we use the same final calculation to set board position
+	ZoomingTransition.updateBoardPosFromFocus(targetCoords, focusPointWorldSpace, newScale);
+}
+
 
 /** Sets the board position & scale to the destination of the current transition, and ends the transition. */
 function finishTransition(): void { // Called at the end of a teleport
@@ -301,7 +434,7 @@ function finishTransition(): void { // Called at the end of a teleport
 	boardpos.setBoardPos(destinationCoords);
 	boardpos.setBoardScale(destinationScale);
 
-	if (nextTransition) startZoomTransition(nextTransition, undefined, true);
+	if (nextTransition) startZoomTransition(nextTransition, undefined, true); // true to ignore history for the second part of a two-step zoom
 	else isTransitioning = false;
 }
 
