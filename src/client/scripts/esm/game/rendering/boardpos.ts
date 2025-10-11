@@ -11,7 +11,7 @@ import guipause from "../gui/guipause.js";
 import loadbalancer from "../misc/loadbalancer.js";
 import camera from "./camera.js";
 import perspective from "./perspective.js";
-import transition from "./transitions/transition.js";
+import TransitionManager from "./transitions/TransitionManager.js";
 import frametracker from "./frametracker.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
 import coordutil from "../../../../../shared/chess/util/coordutil.js";
@@ -180,7 +180,7 @@ function isScaleSmallForInvisibleTiles(): boolean {
 // Called from game.updateBoard()
 function update(): void {
 	if (guipause.areWePaused()) return; // Exit if paused
-	if (transition.areTransitioning()) return; // Exit if we are teleporting
+	if (TransitionManager.areTransitioning()) return; // Exit if we are teleporting
 	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
 
 	panBoard();

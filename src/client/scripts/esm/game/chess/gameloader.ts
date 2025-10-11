@@ -22,7 +22,7 @@ import type { ClockValues } from "../../../../../shared/chess/logic/clock.js";
 
 
 import perspective from "../rendering/perspective.js";
-import transition from "../rendering/transitions/transition.js";
+import TransitionManager from "../rendering/transitions/TransitionManager.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import timeutil from "../../../../../shared/util/timeutil.js";
@@ -415,7 +415,7 @@ function unloadGame(): void {
 	perspective.disable();
 	typeOfGameWeAreIn = undefined;
 	boardpos.eraseMomentum();
-	transition.terminate();
+	TransitionManager.terminate();
 
 	gui.prepareForOpen();
 }

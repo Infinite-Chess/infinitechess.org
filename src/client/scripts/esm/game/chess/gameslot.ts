@@ -45,7 +45,7 @@ import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
 import bd from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import board from "../rendering/boardtiles.js";
-import transition from "../rendering/transitions/transition.js";
+import TransitionManager from "../rendering/transitions/TransitionManager.js";
 import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
@@ -225,7 +225,7 @@ function unloadGame(): void {
 	imagecache.deleteImageCache();
 	// texturecache.deleteTextureCache(gl);
 	selection.unselectPiece();
-	transition.eraseTelHist();
+	TransitionManager.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
 	removeCopyPasteGameListeners();
 
@@ -266,7 +266,7 @@ function startStartingTransition(): void {
 	const startScale = bd.multiply_fixed(centerArea.scale, amount);
 	boardpos.setBoardScale(startScale);
 	guinavigation.recenter();
-	transition.eraseTelHist();
+	TransitionManager.eraseTelHist();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
