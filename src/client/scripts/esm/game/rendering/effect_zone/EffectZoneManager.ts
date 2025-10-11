@@ -246,7 +246,7 @@ export class EffectZoneManager {
 
 		// Only all for an animation frame if the current zone isn't the origin, or if we're mid-transition.
 		// This ensures cpu usage isn't spiked from Zone Effects when near origin.
-		if (this.currentZone !== this.zones['The Beginning'] || this.transitionTargetZone) frametracker.onVisualChange();
+		if (this.currentZone !== this.zones['The Beginning'] && this.currentZone !== this.zones['Undercurrent'] || this.transitionTargetZone) frametracker.onVisualChange();
 	}
 
 	/**

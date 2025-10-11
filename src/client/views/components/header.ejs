@@ -114,7 +114,7 @@
             </div>
             <div id="board-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <p class="text"><%=t('header.settings.board')%></p>
+                <p class="text"><%=t('header.settings.appearance')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
@@ -177,14 +177,21 @@
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <p class="text"><%=t('header.settings.board')%></p>
+                <p class="text"><%=t('header.settings.appearance')%></p>
             </div>
             <div class="dropdown-scrollable">
-                <p class="theme-title"><%=t('header.settings.board-theme')%></p>
+                <p class="theme-title"><%=t('header.settings.appearance-theme')%></p>
                 <div class="theme-list"></div>
                 <!-- Board Boolean Options -->
                 <label class="boolean-option starfield">
-                    <p class="text"><%=t('header.settings.board-starfield')%></p>
+                    <p class="text"><%=t('header.settings.appearance-starfield')%></p>
+                    <div class="switch">
+                        <input type="checkbox">
+                        <span></span>
+                    </div>
+                </label>
+                <label class="boolean-option advanced-effects">
+                    <p class="text"><%=t('header.settings.appearance-advanced-effects')%></p>
                     <div class="switch">
                         <input type="checkbox">
                         <span></span>
