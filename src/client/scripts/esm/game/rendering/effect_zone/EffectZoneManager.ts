@@ -66,7 +66,7 @@ export class EffectZoneManager {
 		// Define zones in ascending order of their start distance.
 		{ name: 'The Beginning', start: 0n, advancedEffect: false },
 		// [PRODUCTION] Default distances:
-		// { name: 'Undercurrent',     start: 10n ** 4n, advancedEffect: false },
+		// { name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false },
 		// { name: 'Dusty Wastes',     start: 10n ** 25n, advancedEffect: true },
 		// { name: 'Cracked Barrens',  start: 10n ** 55n, advancedEffect: true },
 		// { name: 'Molten Reaches',   start: 10n ** 91n, advancedEffect: true },
@@ -162,7 +162,7 @@ export class EffectZoneManager {
 	 */
 	private findZoneForDistance(distance: bigint): Zone {
 		const advancedEnabled = preferences.getAdvancedEffectsMode();
-		
+
 		let furthestZone: Zone | undefined;
 		// Iterate through all proceeding zones in reverse to find
 		// the furthest one that starts before our current distance.

@@ -25,7 +25,7 @@ export class UndercurrentZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.4,
+			masterVolume: 0.36,
 			layers: [
 				{
 					volume: {
