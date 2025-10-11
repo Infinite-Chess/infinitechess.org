@@ -36,7 +36,7 @@ import geometry from '../../../../../../shared/util/math/geometry.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
-import transition from '../transition.js';
+import transition from '../transitions/transition.js';
 import bimath from '../../../../../../shared/util/bigdecimal/bimath.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';

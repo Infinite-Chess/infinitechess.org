@@ -11,7 +11,7 @@ import guipause from "../gui/guipause.js";
 import loadbalancer from "../misc/loadbalancer.js";
 import camera from "./camera.js";
 import perspective from "./perspective.js";
-import transition from "./transition.js";
+import transition from "./transitions/transition.js";
 import frametracker from "./frametracker.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
 import coordutil from "../../../../../shared/chess/util/coordutil.js";

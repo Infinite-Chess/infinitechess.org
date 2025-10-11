@@ -45,7 +45,7 @@ import copygame from "./copygame.js";
 import pastegame from "./pastegame.js";
 import bd from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import board from "../rendering/boardtiles.js";
-import transition from "../rendering/transition.js";
+import transition from "../rendering/transitions/transition.js";
 import perspective from "../rendering/perspective.js";
 import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";

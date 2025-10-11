@@ -13,7 +13,7 @@ import guipromotion from "../gui/guipromotion.js";
 import vectors from "../../../../../shared/util/math/vectors.js";
 import coordutil from "../../../../../shared/chess/util/coordutil.js";
 import perspective from "./perspective.js";
-import transition from "./transition.js";
+import transition from "./transitions/transition.js";
 import drawarrows from "./highlights/annotations/drawarrows.js";
 import drawrays from "./highlights/annotations/drawrays.js";
 import selection from "../chess/selection.js";

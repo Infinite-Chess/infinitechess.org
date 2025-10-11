@@ -22,7 +22,7 @@ import type { ClockValues } from "../../../../../shared/chess/logic/clock.js";
 
 
 import perspective from "../rendering/perspective.js";
-import transition from "../rendering/transition.js";
+import transition from "../rendering/transitions/transition.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import timeutil from "../../../../../shared/util/timeutil.js";

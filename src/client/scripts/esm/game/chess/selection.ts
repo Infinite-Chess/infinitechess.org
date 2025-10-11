@@ -38,7 +38,7 @@ import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import premoves from "../chess/premoves.js";
 import boardeditor from '../misc/boardeditor.js';
-import transition from '../rendering/transition.js';
+import transition from '../rendering/transitions/transition.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';

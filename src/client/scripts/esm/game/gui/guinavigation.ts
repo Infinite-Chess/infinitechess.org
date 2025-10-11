@@ -22,7 +22,7 @@ import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import premoves from '../chess/premoves.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
-import transition from '../rendering/transition.js';
+import transition from '../rendering/transitions/transition.js';
 import space from '../misc/space.js';
 import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';

@@ -17,7 +17,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import boardpos from './boardpos.js';
 import meshes from './meshes.js';
 import space from '../misc/space.js';
-import transition, { ZoomTransition } from './transition.js';
+import transition, { ZoomTransition } from './transitions/transition.js';
 import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 

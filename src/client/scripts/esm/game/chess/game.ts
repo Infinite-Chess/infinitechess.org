@@ -41,7 +41,7 @@ import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';
 import promotionlines from '../rendering/promotionlines.js';
-import transition from '../rendering/transition.js';
+import transition from '../rendering/transitions/transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
 import starfield from '../rendering/starfield.js';

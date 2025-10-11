@@ -33,7 +33,7 @@ import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
 import boardeditor from "./boardeditor.js";
 import vectors from "../../../../../shared/util/math/vectors.js";
-import transition from "../rendering/transition.js";
+import transition from "../rendering/transitions/transition.js";
 import { listener_document } from "../chess/game.js";
 
 
