@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "69"
+version = "70"
 maintainer = "Naviary"
 
 [header]
@@ -16,9 +16,9 @@ leaderboard = "Leaderboard"
 [header.settings]
 language = "Language"
 appearance = "Appearance" # Board color/theme and visual effects
-board-theme = "Theme"
-board-starfield = "Starfield" # The Starfield space animation underneath void
-board-advanced-effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
+appearance-theme = "Theme"
+appearance-starfield = "Starfield" # The Starfield space animation underneath void
+appearance-advanced-effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
 legalmoves = "Legal Moves" # Legal moves shape
 legalmoves-squares = "Squares"
 legalmoves-dots = "Dots" # Dots and 4 corner triangles
