@@ -20,6 +20,8 @@ declare global {
 		'lingering-annotations-toggle': CustomEvent<boolean>;
 		'starfield-toggle': CustomEvent<boolean>;
 		'advanced-effects-toggle': CustomEvent<boolean>;
+		'master-volume-change': CustomEvent<number>;
+		'ambience-toggle': CustomEvent<boolean>;
 		'ray-count-change': CustomEvent<number>;
 	}
 

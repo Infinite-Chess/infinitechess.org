@@ -62,7 +62,7 @@ export class DustyWastesZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 1,
+			masterVolume: 0.4,
 			layers: [
 				{
 					volume: {
@@ -194,7 +194,7 @@ export class DustyWastesZone implements Zone {
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeIn(0.4, transitionDurationMillis); // Pass the target volume
+		this.ambience.fadeIn(transitionDurationMillis); // Pass the target volume
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {

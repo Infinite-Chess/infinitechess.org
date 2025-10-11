@@ -17,7 +17,7 @@ import type { Color } from "../../../../../shared/util/math/math.js";
 
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled', 'starfield_enabled', 'advanced_effects_enabled'];
+const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled', 'starfield_enabled', 'advanced_effects_enabled', 'master_volume', 'ambience_enabled'];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
@@ -25,6 +25,9 @@ interface ClientSidePreferences {
 	premove_enabled: boolean;
 	starfield_enabled: boolean;
 	advanced_effects_enabled: boolean;
+	/** Master volume level from 0 (silent) to 1 (full volume) */
+	master_volume: number;
+	ambience_enabled: boolean;
 	[key: string]: any;
 }
 
@@ -55,6 +58,8 @@ const default_perspective_fov: number = 90;
 const default_lingering_annotations: boolean = false;
 const default_starfield_enabled: boolean = true;
 const default_advanced_effects_enabled: boolean = true;
+const default_master_volume: number = 1;
+const default_ambience_enabled: boolean = true;
 
 
 /**
@@ -83,6 +88,8 @@ function loadPreferences(): void {
 		lingering_annotations: default_lingering_annotations,
 		starfield_enabled: default_starfield_enabled,
 		advanced_effects_enabled: default_advanced_effects_enabled,
+		master_volume: default_master_volume,
+		ambience_enabled: default_ambience_enabled,
 	};
 
 	preferences = browserStoragePrefs;
@@ -277,6 +284,31 @@ function setAdvancedEffectsMode(value: boolean): void {
 
 	// Dispatch an event so that the game code can detect it, if present.
 	document.dispatchEvent(new CustomEvent('advanced-effects-toggle', { detail: value }));
+function getMasterVolume(): number {
+	return preferences.master_volume ?? default_master_volume;
+}
+
+function setMasterVolume(master_volume: number): void {
+	if (typeof master_volume !== 'number') throw new Error('Cannot set preference master_volume when it is not a number.');
+	if (master_volume > 1) throw new Error('Cannot set master_volume > 1!');
+	preferences.master_volume = master_volume;
+	savePreferences();
+
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('master-volume-change', { detail: master_volume }));
+}
+
+function getAmbienceEnabled(): boolean {
+	return preferences.ambience_enabled ?? default_ambience_enabled;
+}
+
+function setAmbienceEnabled(ambience_enabled: boolean): void {
+	if (typeof ambience_enabled !== 'boolean') throw new Error('Cannot set preference ambience_enabled when it is not a boolean.');
+	preferences.ambience_enabled = ambience_enabled;
+	savePreferences();
+
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('ambience-toggle', { detail: ambience_enabled }));
 }
 
 
@@ -499,6 +531,10 @@ export default {
 	setLingeringAnnotationsMode,
 	getAdvancedEffectsMode,
 	setAdvancedEffectsMode,
+	getMasterVolume,
+	setMasterVolume,
+	getAmbienceEnabled,
+	setAmbienceEnabled,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,

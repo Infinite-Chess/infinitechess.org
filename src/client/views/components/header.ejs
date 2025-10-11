@@ -54,6 +54,12 @@
             <symbol id="svg-selection" fill="none" viewBox="0 0 24 24">
               <path d="M7.92098 2.29951C6.93571 1.5331 5.5 2.23523 5.5 3.48349V20.4923C5.5 21.9145 7.2945 22.5382 8.17661 21.4226L12.3676 16.1224C12.6806 15.7267 13.1574 15.4958 13.6619 15.4958H20.5143C21.9425 15.4958 22.5626 13.6887 21.4353 12.8119L7.92098 2.29951Z" stroke="#555" stroke-linecap="round" stroke-width="3"/>
             </symbol>
+        </svg>
+        <!-- Sound svg -->
+        <svg>
+            <symbol id="svg-sound" fill="none" viewBox="0 0 240 240">
+                <g fill="#555" stroke="none"><path d="M183.6 193.6a10 10 0 01-7-2.9 10 10 0 01 0-14.1 80 80 0 00 0-113.2 10 10 0 01 14.1-14.1 100 100 0 01 0 141.4 10 10 0 01-7.1 2.9Z"/><path d="M155.4 165.4a10 10 0 01-7.1-3 10 10 0 01 0-14.1 40 40 0 00 0-56.6 10 10 0 01 14-14.1 60 60 0 01 0 84.8 10 10 0 01-7 3ZM113.8 40.8a10 10 0 00-10.9 2.1L65.7 80h-26a20 20 0 00-20 20v40a20 20 0 00 20 20h25.9l37 37.1A10 10 0 00 110 200a8.4 8.4 0 00 3.8-.8A10 10 0 00 120 190V50a10 10 0 00-6.2-9.2Z"/></g>
+            </symbol>
         </svg>          
         <!-- Undo arrow for resetting to default -->
         <svg>
@@ -124,6 +130,11 @@
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
                 <p class="text"><%=t('header.settings.perspective')%></p>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="sound-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-sound"><use href="#svg-sound"></use></svg>
+                <p class="text"><%=t('header.settings.sound')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div class="ping-meter hidden">
@@ -279,6 +290,32 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <!-- Sound -->
+        <div class="sound-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-sound"><use href="#svg-sound"></use></svg>
+                <p class="text"><%=t('header.settings.sound')%></p>
+            </div>
+            <div class="sound-options">
+                <div class="sound-option master-volume">
+                    <div class="sound-option-title">
+                        <p><%=t('header.settings.sound-master-volume')%></p>
+                    </div>
+                    <div class="slider-container">
+                        <input class="slider" type="range" min="0" max="100" value="100">
+                        <span class="value"></span>
+                    </div>
+                </div>
+				<label class="boolean-option ambience">
+					<p class="text"><%=t('header.settings.sound-ambience')%></p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
             </div>
         </div>
     </div>

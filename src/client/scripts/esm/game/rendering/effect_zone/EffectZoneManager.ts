@@ -5,6 +5,7 @@ import ImageLoader from "../../../util/ImageLoader";
 import TextureLoader from "../../../webgl/TextureLoader";
 import boardtiles from "../boardtiles";
 import frametracker from "../frametracker";
+import preferences from "../../../components/header/preferences";
 import { ProgramManager } from "../../../webgl/ProgramManager";
 import { TheBeginningZone } from "./zones/TheBeginningZone";
 import { UndercurrentZone } from "./zones/UndercurrentZone";
@@ -135,6 +136,20 @@ export class EffectZoneManager {
 		};
 
 		this.currentZone = this.zones['The Beginning'];
+
+		// Set up a listener for the ambience-enabled preference changing.
+		document.addEventListener('ambience-toggle', (event: CustomEvent) => {
+			// Turn on/off the ambience of the current zone (and transition target zone, if applicable).
+			const enabled = event.detail;
+			if (!enabled) {
+				// Fade out any currently playing ambience.
+				this.currentZone.fadeOutAmbience(this.transitionDuration);
+				this.transitionTargetZone?.fadeOutAmbience(this.transitionDuration);
+			} else {
+				// Fade in the current zone's ambience.
+				this.currentZone.fadeInAmbience(this.transitionDuration);
+			}
+		});
 	}
 
 
@@ -183,8 +198,10 @@ export class EffectZoneManager {
 			this.transitionTargetZone = targetZoneForDistance;
 			this.transitionStartTime = Date.now();
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
-			this.currentZone.fadeOutAmbience(this.transitionDuration);
-			this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
+			if (preferences.getAmbienceEnabled()) {
+				this.currentZone.fadeOutAmbience(this.transitionDuration);
+				this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
+			}
 		} else if (
 			this.transitionTargetZone && // A transition is active
 			targetZoneForDistance === this.currentZone && // And we've moved back into the 'from' zone's area
@@ -204,8 +221,10 @@ export class EffectZoneManager {
 			this.transitionStartTime = Date.now() - remainingTime;
 
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
-			this.currentZone.fadeOutAmbience(elapsedTime);
-			this.transitionTargetZone.fadeInAmbience(elapsedTime);
+			if (preferences.getAmbienceEnabled()) {
+				this.currentZone.fadeOutAmbience(elapsedTime);
+				this.transitionTargetZone.fadeInAmbience(elapsedTime);
+			}
 		}
 
 		// --- 3. UPDATE TRANSITION PROGRESS OF ACTIVE EFFECTS ---
