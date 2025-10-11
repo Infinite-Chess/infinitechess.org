@@ -9,7 +9,7 @@
 import guipause from "../../gui/guipause.js";
 import bounds from "../../../../../../shared/util/math/bounds.js";
 import gamefileutility from "../../../../../../shared/chess/util/gamefileutility.js";
-import transition from "../transition.js";
+import TransitionManager from "../transitions/TransitionManager.js";
 import perspective from "../perspective.js";
 import miniimage from "../miniimage.js";
 import drawsquares from "./annotations/drawsquares.js";
@@ -151,7 +151,7 @@ function teleportToEntitiesIfClicked(): void {
 
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		mouse.claimMouseClick(Mouse.LEFT);
-		transition.singleZoomToCoordsList(allEntitiesHovered);
+		TransitionManager.singleZoomToCoordsList(allEntitiesHovered);
 	} else if (mouse.isMouseDown(Mouse.LEFT)) { // Allows second finger to grab the board
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
@@ -355,7 +355,7 @@ function teleportToSnapIfClicked(): void {
 		if (snap === undefined) return; // No snap to teleport to
 		if (mouse.isMouseClicked(Mouse.LEFT)) {
 			mouse.claimMouseClick(Mouse.LEFT);
-			transition.singleZoomToBDCoords(snap.coords);
+			TransitionManager.singleZoomToBDCoords(snap.coords);
 		} else if (mouse.isMouseDown(Mouse.LEFT)) {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 		}

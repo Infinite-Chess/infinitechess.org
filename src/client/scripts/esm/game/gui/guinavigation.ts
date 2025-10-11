@@ -22,7 +22,7 @@ import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import premoves from '../chess/premoves.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
-import transition from '../rendering/transition.js';
+import TransitionManager from '../rendering/transitions/TransitionManager.js';
 import space from '../misc/space.js';
 import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
@@ -400,7 +400,7 @@ function callback_CoordsChange(): void {
 }
 
 function callback_Back(): void {
-	transition.undoTransition();
+	TransitionManager.undoTransition();
 }
 
 function callback_Expand(): void {
@@ -414,12 +414,12 @@ function callback_Expand(): void {
 
 	allCoords.push(...annoteSnapPoints);
 	if (allCoords.length === 0) allCoords.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
-	transition.zoomToCoordsList(allCoords);
+	TransitionManager.zoomToCoordsList(allCoords);
 }
 
 function recenter(): void {
 	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
-	transition.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
+	TransitionManager.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================
