@@ -56,7 +56,7 @@ const ZOOM_TRANSITION_DURATION_MILLIS = {
 	 * NOTE: For extremely large differences in scale from origin scale to destination scale,
 	 * Zooming Transitions take far too long. We should overhaul them when implementing infinite move distance. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	 */
-	MULTIPLIER: 70, // Default: 70
+	MULTIPLIER: 40, // Default: 70
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	PERSPECTIVE_MULTIPLIER: 1.3,
 } as const;
@@ -175,7 +175,7 @@ let differenceWorldSpace: DoubleCoords;
 
 
 // NEW: Long Zoom KINEMATIC State (pre-calculated in startZoomTransition)
-let isLongZoom: boolean = false;
+let isThreeStageModel: boolean = false; // Distinguishes between 2-stage and 3-stage
 let stageEndTimes: { stage1: number; stage2: number; stage3: number; };
 let accel_stage1: number; // The calculated acceleration for stage 1 (and deceleration for stage 3)
 let accel_stage2: number; // The calculated high acceleration for stage 2
@@ -231,40 +231,47 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	// Perspective duration multiplier
 	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_DURATION_MILLIS.PERSPECTIVE_MULTIPLIER : 1;
 
-	// Is this a standard zoom or a long-distance 3-stage zoom?
-	if (shouldBeLongZoom(differenceE)) {
-		// Long Zoom
-		console.log("Starting long zoom transition");
-		isLongZoom = true;
-		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS * perspectiveMultiplier;
+	// --- UNIFIED KINEMATIC MODEL SETUP ---
 
-		// Pre-calculate Kinematic Parameters
-		// Solve for the required accelerations.
+	// Calculate the "crossover" distance threshold.
+	// This is the maximum distance coverable by the fixed-duration 3-stage model
+	// before its middle acceleration (accel2) would need to exceed the edge acceleration.
+	const fixedDurationSecs = LONG_ZOOM_CONFIG.DURATION_MILLIS / 1000;
+	const t1_fixed = fixedDurationSecs * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE;
+	const t2_fixed = fixedDurationSecs * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE;
+	const accel1_signed = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
+	const crossoverDistance = accel1_signed * t1_fixed * (t1_fixed + t2_fixed);
 
-		// 1. Define time durations for each stage in SECONDS for physics calculations.
-		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
-		const t2 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
-		const t_s2_half = t2 / 2; // Stage 2 is split into acceleration and deceleration.
+	if (Math.abs(differenceE) > Math.abs(crossoverDistance)) {
+		console.log("Long Zoom: 3-Stages");
+		// --- CASE A: 3-STAGE MODEL (Long distances) ---
+		// The journey is long, so we use the fixed duration and calculate a higher
+		// acceleration for the middle "cruise" stage.
+		isThreeStageModel = true;
+		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS;
+
+		// This pre-calculation logic is the same as before, just moved here.
+		const t1 = t1_fixed;
+		const t_s2_half = t2_fixed / 2;
 
 		stageEndTimes = {
 			stage1: t1 * 1000,
-			stage2: (t1 + t2) * 1000,
+			stage2: (t1 + t2_fixed) * 1000,
 			stage3: durationMillis,
 		};
-
-		// 2. Set Stage 1 acceleration and determine the distance it covers.
-		// The direction of acceleration depends on the direction of the zoom.
-		accel_stage1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
 		
+		// Set Stage 1 acceleration and determine the distance it covers.
+		// The direction of acceleration depends on the direction of the zoom.
+		accel_stage1 = accel1_signed;
+
 		// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
 		// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
-		const dist_stage1 = 0.5 * accel_stage1 * t1 * t1;
-		const dist_stage3 = dist_stage1; // By symmetry.
+		const dist_stage1_and_3 = accel_stage1 * t1 * t1;
 
-		// 3. Calculate the remaining distance that must be covered in Stage 2.
-		const remaining_dist = differenceE - dist_stage1 - dist_stage3;
-		
-		// 4. Solve for the Stage 2 acceleration needed to cover that remaining distance.
+		// Calculate the remaining distance that must be covered in Stage 2.
+		const remaining_dist = differenceE - dist_stage1_and_3;
+
+		// Solve for the Stage 2 acceleration needed to cover that remaining distance.
 		// We use the formula: d = v₀t + 0.5at²
 		// For the first half of stage 2, v₀ is the velocity at the end of stage 1.
 		v_at_stage1_end = accel_stage1 * t1;
@@ -277,63 +284,41 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		// if (edgeAccelPositive && accel_stage2 < 0 || !edgeAccelPositive && accel_stage2 > 0) {
 		// 	console.warn("Calculated stage 2 acceleration has the wrong sign: " + accel_stage2);
 		// }
-
-		// 5. Pre-calculate all boundary conditions to use in the update loop.
-		e_at_stage1_end = originE + dist_stage1;
-		
+		// Pre-calculate all boundary conditions to use in the update loop.
+		e_at_stage1_end = originE + (0.5 * dist_stage1_and_3);
 		v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
 		e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
-
-		v_at_stage2_end = v_at_stage2_mid - accel_stage2 * t_s2_half; // Should equal v_at_stage1_end
+		v_at_stage2_end = v_at_stage2_mid - accel_stage2 * t_s2_half;
 		e_at_stage2_end = e_at_stage2_mid + (v_at_stage2_mid * t_s2_half) - (0.5 * accel_stage2 * t_s2_half * t_s2_half);
 
 	} else {
-		// Standard Zoom
-		isLongZoom = false;
-		durationMillis = (ZOOM_TRANSITION_DURATION_MILLIS.BASE + Math.abs(differenceE) * ZOOM_TRANSITION_DURATION_MILLIS.MULTIPLIER) * perspectiveMultiplier;
+		console.log("Long Zoom: 2-Stages");
+		// --- CASE B: 2-STAGE MODEL (Short distances) ---
+		// The journey is short. We cap the acceleration at EDGE_ACCELERATION
+		// and calculate the shorter duration required.
+		isThreeStageModel = false;
+		accel_stage1 = accel1_signed;
+		
+		// Solve for the duration of one half of the journey (the acceleration phase).
+		// d = 0.5at²  =>  t = sqrt(2d/a). Here, d = differenceE / 2.
+		// So, t_half = sqrt(differenceE / accel_stage1).
+		const t_half_secs = Math.sqrt(Math.abs(differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION));
+		
+		durationMillis = t_half_secs * 2 * 1000;
+
+		// There are only two stages now.
+		stageEndTimes = {
+			stage1: t_half_secs * 1000,
+			stage2: durationMillis,
+			stage3: durationMillis, // Not used, but set for safety
+		};
+
+		// Pre-calculate boundary conditions for the handoff.
+		v_at_stage1_end = accel_stage1 * t_half_secs;
+		e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
 	}
 
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos(), destinationScale: boardpos.getBoardScale() });
-}
-
-/**
- * Determines if a zoom transition is long enough to require the 3-stage long zoom model.
- * This is the case if the acceleration in stage 2 would be negative, causing the
- * transition to accelerate, decelerate, accelerate, then decelerate again.
- * @param differenceE The total natural log difference of the scale.
- * @returns True if the 3-stage long zoom model should be used.
- */
-function shouldBeLongZoom(differenceE: number): boolean {
-	// Get durations in seconds from the config.
-	const durationSeconds = LONG_ZOOM_CONFIG.DURATION_MILLIS / 1000;
-	const t1 = durationSeconds * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE;
-	const t2 = durationSeconds * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE;
-	const t_s2_half = t2 / 2;
-
-
-	// Get the edge acceleration. The sign depends on the direction of travel.
-	const accel1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
-
-	// Calculate the distance that would be covered by the edge stages alone.
-	// This is the distance of the "trapezoid" portion of the motion.
-	// d = v₀t + 0.5at². For stage 1, v₀=0. So d = 0.5at₁². Stage 3 is symmetrical.
-	const dist_stage1_and_3 = accel1 * t1 * t1; // This is 2 * (0.5 * accel1 * t1²)
-
-	// Calculate the remaining distance that must be covered in Stage 2.
-	const remaining_dist = differenceE - dist_stage1_and_3;
-
-	// Calculate the velocity at the end of stage 1. v = v₀ + at.
-	const v_at_stage1_end = accel1 * t1;
-
-	// Solve for the Stage 2 acceleration needed to cover the remaining distance.
-	// Based on d = v₀t + 0.5at², rearranged to a = (d - v₀t) * 2 / t²
-	// Here, d is half the remaining distance, v₀ is v_at_stage1_end, t is t_s2_half.
-	const accel2 = (remaining_dist - 2 * v_at_stage1_end * t_s2_half) / (t_s2_half * t_s2_half);
-
-	// Return true if the absolute required middle acceleration is less than the
-	// comfortable edge acceleration.
-	const edgeAccelPositive = Math.sign(differenceE) === 1;
-	return edgeAccelPositive && accel2 > LONG_ZOOM_CONFIG.EDGE_ACCELERATION || !edgeAccelPositive && accel2 < -LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
 }
 
 /** Starts a Panning Transition. */
@@ -442,14 +427,7 @@ function update(): void {
 
 	if (isZoom) {
 		// Zooming Transition
-		if (isLongZoom) {
-			updateLongZoomTransition(elapsedTime);
-		} else {
-			// Standard short zoom uses the original easing function
-			const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
-			const easedT = math.easeInOut(t);
-			ZoomingTransition.updateSimpleZoomingTransition(easedT, originCoords, destinationCoords, originWorldSpace, differenceWorldSpace, originE, differenceE, isZoomOut);
-		}
+		updateLongZoomTransition(elapsedTime);
 	} else {
 		// Panning Transition
 		const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
@@ -470,35 +448,43 @@ function updateLongZoomTransition(elapsedTime: number): void {
 	// Convert elapsed time to seconds for kinematic calculations
 	const t_sec = elapsedTime / 1000;
 
-	if (elapsedTime <= stageEndTimes.stage1) {
-		// STAGE 1: Constant positive acceleration
-		// console.log("Stage 1");
-		const t = t_sec;
-		currentE = originE + (0.5 * accel_stage1 * t * t);
-	} else if (elapsedTime <= stageEndTimes.stage2) {
-		// STAGE 2: Higher acceleration, then deceleration.
-		const t_s2 = t_sec - (stageEndTimes.stage1 / 1000); // Time into stage 2
-		const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
+	if (isThreeStageModel) {
+		// --- 3-STAGE UPDATE LOGIC (Same as before) ---
+		if (elapsedTime <= stageEndTimes.stage1) {
+			// STAGE 1: Constant positive acceleration
+			// console.log("Stage 1");
 
-		if (t_s2 <= t_s2_half) {
-			// First half of stage 2: high acceleration
-			// console.log("Stage 2 first half");
-			currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
+			const t = t_sec;
+			currentE = originE + (0.5 * accel_stage1 * t * t);
+		} else if (elapsedTime <= stageEndTimes.stage2) {
+			// STAGE 2: Higher acceleration, then deceleration.
+			// console.log("Stage 2");
+			const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+			const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
+			if (t_s2 <= t_s2_half) {
+				currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
+			} else {
+				const t_s2_b = t_s2 - t_s2_half;
+				currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
+			}
 		} else {
-			// Second half of stage 2: high deceleration
-			// console.log("Stage 2 second half");
-			const t_s2_b = t_s2 - t_s2_half; // Time into second half
-			currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
+			// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
+			// console.log("Stage 3");
+			const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
+			currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
 		}
 	} else {
-		// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
-		// console.log("Stage 3");
-		const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
-		currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
+		// --- 2-STAGE UPDATE LOGIC (New) ---
+		if (elapsedTime <= stageEndTimes.stage1) {
+			// Stage 1: Accelerate
+			const t = t_sec;
+			currentE = originE + (0.5 * accel_stage1 * t * t);
+		} else {
+			// Stage 2: Decelerate
+			const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+			currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) - (0.5 * accel_stage1 * t_s2 * t_s2);
+		}
 	}
-
-	// Calculate focus point progress based on the scale's progress.
-	// This ensures the pan is perfectly synchronized with the zoom's custom easing.
 
 	let scaleProgress = 0;
 	if (differenceE !== 0) scaleProgress = (currentE - originE) / differenceE;

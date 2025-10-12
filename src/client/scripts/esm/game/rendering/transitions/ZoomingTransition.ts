@@ -13,37 +13,6 @@ export type ZoomTransition = {
 	destinationScale: BigDecimal;
 }
 
-/** Updates the board position and scale for the current simple, short-distance transition. */
-function updateSimpleZoomingTransition(
-	easedT: number,
-	originCoords: BDCoords,
-	destinationCoords: BDCoords,
-	originWorldSpace: DoubleCoords,
-	differenceWorldSpace: DoubleCoords,
-	originE: number,
-	differenceE: number,
-	isZoomOut: boolean
-): void {
-
-	// Scale
-
-	// Smoothly transition E (the logarithm of the scale), then convert back to scale
-	const newE = bd.FromNumber(originE + differenceE * easedT);
-	const newScale = bd.exp(newE);
-	boardpos.setBoardScale(newScale);
-
-	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
-
-	const targetCoords = isZoomOut ? originCoords : destinationCoords;
-
-	// Calculate new world-space for the focus point
-	const newWorldX = originWorldSpace[0] + differenceWorldSpace[0] * easedT;
-	const newWorldY = originWorldSpace[1] + differenceWorldSpace[1] * easedT;
-
-	// Update board position based on the moving focus point
-	updateBoardPosFromFocus(targetCoords, [newWorldX, newWorldY], newScale);
-}
-
 /**
  * Calculates and sets the new board position based on a target coordinate,
  * a desired "focus point" in world space, and the current board scale.
@@ -71,6 +40,5 @@ function updateBoardPosFromFocus(targetCoords: BDCoords, focusPointWorldSpace: D
 
 
 export default {
-	updateSimpleZoomingTransition,
 	updateBoardPosFromFocus,
 };
