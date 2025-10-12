@@ -22,9 +22,9 @@ import frametracker from './frametracker.js';
 // Shake Parameters
 
 /** Maximum rotation in any direction (in degrees). */
-const MAX_ROTATION_DEGREES = 3;
+const MAX_ROTATION_DEGREES = 1.7; // Default: 2.1
 /** Maximum translation in any direction (in world units). */
-const MAX_TRANSLATION = 0.4;
+const MAX_TRANSLATION = 0.23; // Default: 0.28
 
 /** How quickly trauma fades. Higher is faster. */
 const TRAUMA_DECAY = 1.2;
@@ -44,6 +44,7 @@ let trauma = 0.0; // Current shake intensity, 0.0 to 1.0
  * @param amount The amount of trauma to add (usually between 0.1 and 1.0).
  */
 function trigger(amount: number): void {
+	// console.log("Shake trauma added: " + amount);
 	trauma = Math.min(trauma + amount, 1.0);
 	frametracker.onVisualChange(); // Request an animation frame
 	camera.onPositionChange(); // Camera will update its view matrix
@@ -71,7 +72,7 @@ function getShakeMatrix(): Mat4 {
 
 	// The intensity of the shake is proportional to the square of the trauma.
 	// This makes small amounts of trauma barely noticeable, and large amounts very dramatic.
-	const shakePower = trauma * trauma;
+	const shakePower = trauma;
 
 	/** Generates a random value in a [-1, 1] range. */
 	const getRandomNoise = (): number => (Math.random() - 0.5) * 2;
@@ -89,12 +90,13 @@ function getShakeMatrix(): Mat4 {
 	// Calculate Translation
 	const offsetX = MAX_TRANSLATION * shakePower * getRandomNoise();
 	const offsetY = MAX_TRANSLATION * shakePower * getRandomNoise();
+	const offsetZ = MAX_TRANSLATION * shakePower * getRandomNoise();
 
 	// Create the Transformation Matrix
 	const shakeMatrix = mat4.create();
 
 	// Apply translation
-	mat4.translate(shakeMatrix, shakeMatrix, [offsetX, offsetY, 0]);
+	mat4.translate(shakeMatrix, shakeMatrix, [offsetX, offsetY, offsetZ]);
 
 	// Apply rotations (order can matter, Z then X then Y is common)
 	mat4.rotateZ(shakeMatrix, shakeMatrix, rollRad);
