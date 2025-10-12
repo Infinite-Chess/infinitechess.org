@@ -74,7 +74,7 @@ function gameLoop() {
 function render() {
 	if (!frametracker.doWeRenderNextFrame()) return; // Only render the world though if any visual on the screen changed! This is to save cpu when there's no page interaction or we're afk.
 
-	// console.log("Rendering this frame")
+	// console.log("Rendering this frame");
 
 	webgl.clearScreen(); // Clear the color buffer and depth buffers
 	game.render();

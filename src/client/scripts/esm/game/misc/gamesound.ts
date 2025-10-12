@@ -3,6 +3,8 @@
 
 import type { EffectConfig } from "../../audio/AudioEffects.js";
 
+import screenshake from "../rendering/screenshake.js";
+import math from "../../../../../shared/util/math/math.js";
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
 
@@ -76,6 +78,16 @@ const BELL_CONFIG = {
 	/** The volume of the bell gongs, as a multiplier to the move sound's volume. */
 	volume: 0.6,
 } as const;
+
+/** Config for the screen shake effect for very large moves. */
+const SHAKE_CONFIG = {
+	/** The order of magnitude distance a piece needs to move for the screen shake to begin triggering. */
+	minDist: 4, // 10,000 squares => trauma begins increasing from 0
+	/** How much screen shake trauma is added per order of magnitude the piece moved. */
+	traumaMultiplier: 0.035,
+	/** A delay in milliseconds before the screen shake is triggered, to better sync with the audio. */
+	delay: 70,
+};
 
 /** Config for playing premove sound effects. */
 const PREMOVE_CONFIG = {
@@ -195,6 +207,11 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	const { reverbWetLevel, reverbDuration } = calculateReverb(distanceMoved);
 
 	playSoundEffect(soundEffectName, { volume, reverbWetLevel, reverbDuration, delay: delaySecs, playbackRate });
+
+	// Apply screen shake for very large moves
+	const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
+	const trauma = math.clamp(rawTrauma, 0, 1);
+	if (trauma > 0) setTimeout(() => screenshake.trigger(trauma), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
 
 	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
 		const bellVolume = BELL_CONFIG.volume * dampener;

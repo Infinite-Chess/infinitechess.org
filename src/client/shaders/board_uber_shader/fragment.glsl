@@ -16,13 +16,20 @@ uniform vec2 u_resolution; // Canvas dimensions
 uniform float u_effectTypeA; // e.g., 0.0 for None, 1.0 for Dusty Wastes
 uniform float u_effectTypeB;
 
-// Dusty Wastes Uniforms
+// Dusty Wastes Uniforms (Effect Type 2)
 uniform float u2_strength; // The opacity of the scrolling noise texture
 uniform float u2_noiseTiling; // How many times the noise texture repeats across the screen
 uniform vec2 u2_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
 uniform vec2 u2_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
 
-// Static Zone Uniforms
+// Searing Dunes Uniforms (Effect Type 4)
+uniform float u4_strength; // The opacity of the Searing Dunes wind effect
+uniform float u4_noiseTiling; // How many times the noise texture repeats across the screen
+uniform vec2 u4_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
+uniform vec2 u4_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
+uniform vec3 u4_sandColor; // The sand color for Searing Dunes
+
+// Static Zone Uniforms (Effect Type 3)
 uniform float u3_strength; // The opacity of the white noise pixels
 uniform vec2 u3_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
 uniform float u3_pixelWidth; // How many pixels wide the white noise texture is
@@ -63,6 +70,39 @@ vec3 DustyWastes(
 	float signedNoise = (finalNoise * 2.0) - 1.0;
 	
 	return baseColor + (signedNoise * effectStrength);
+}
+
+// Applies the "Searing Dunes" animated noise effect.
+vec3 SearingDunes(
+	vec3 baseColor,
+	vec2 screenUV,
+	sampler2D noiseSampler,
+	float effectStrength,
+	float noiseTiling,
+	vec2 offset1,
+	vec2 offset2,
+	vec3 sandColor
+) {
+	const float NOISE_MULTIPLIER = 1.0;
+	// Controls the sharpness of the sand wisps. Higher values = thinner, sharper wisps.
+	const float SHARPNESS = 8.0;
+
+	vec2 uv1 = screenUV * noiseTiling + offset1;
+	vec2 uv2 = screenUV * noiseTiling + offset2;
+
+	float noise1 = texture(noiseSampler, uv1).r;
+	float noise2 = texture(noiseSampler, uv2).r;
+
+	float finalNoise = noise1 * noise2 * NOISE_MULTIPLIER;
+	float sharpenedNoise = pow(finalNoise, SHARPNESS);
+
+	// This is now our blend factor. It represents "how much" we should mix in the sandColor.
+	// We scale it by the overall effectStrength and clamp to ensure it's a valid [0,1] value for mix().
+	float blendFactor = clamp(sharpenedNoise * effectStrength, 0.0, 1.0);
+
+	// Linearly interpolate from the base color to the sand color based on the blend factor.
+	// This will correctly darken the object if sandColor is dark, or lighten it if sandColor is light.
+	return mix(baseColor, sandColor, blendFactor);
 }
 
 // Applies the "Static" pixelated noise effect.
@@ -113,6 +153,18 @@ vec3 calculateEffectColor(
 			u_resolution
         );
     }
+	else if (effectType == 4.0) {
+		return SearingDunes(
+			baseColor,
+			screenUV,
+			u_perlinNoiseTexture,
+			u4_strength,
+			u4_noiseTiling,
+			u4_uvOffset1,
+			u4_uvOffset2,
+			u4_sandColor
+		);
+	}
 
 	// Default case: no effect
 	return baseColor;

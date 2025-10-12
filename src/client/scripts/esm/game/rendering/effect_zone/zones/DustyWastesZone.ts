@@ -33,9 +33,6 @@ export class DustyWastesZone implements Zone {
 	/** How much faster one scroll speed is greater than the other. */
 	private windSpeedsOffset: number = 1.2;
 
-	/** The wind direction in radians. 0 is to the right. */
-	private windDirection: number = Math.random() * Math.PI * 2;
-
 	/** The vector offset in radians each scroll vector is from each other. */
 	private windDirectionsOffset: number = 0.6;
 
@@ -47,6 +44,9 @@ export class DustyWastesZone implements Zone {
 
 
 	// ============ State ============
+
+	/** The wind direction in radians. 0 is to the right. */
+	private windDirection: number = Math.random() * Math.PI * 2;
 
 	/** The accumulated UV offset for the first noise layer. Wrapped to [0,1]. */
 	private uvOffset1: [number, number] = [0, 0];
