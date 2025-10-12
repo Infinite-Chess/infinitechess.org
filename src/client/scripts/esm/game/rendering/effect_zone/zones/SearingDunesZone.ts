@@ -26,16 +26,16 @@ export class SearingDunesZone implements Zone {
 
 
 	/** The sand color for the wind. */
-	private sandColor: [number, number, number] = [1.0, 0.35, 0.18]; // warm red-orange sand
+	private sandColor: [number, number, number] = [0.8, 0.35, 0.18]; // warm red-orange sand
 
 	/** The strength/opacity of the sandy wind effect. */
-	private windStrength: number = 0.25;
+	private windStrength: number = 100;
 
 	/** How many times the noise texture should tile the screen. */
 	private noiseTiling: number = 1.25;
 
 	/** The average wind speed. */
-	private windSpeed: number = 0.45;
+	private windSpeed: number = 0.4;
 
 	/** How much faster one scroll speed is greater than the other. */
 	private windSpeedsOffset: number = 1.2;

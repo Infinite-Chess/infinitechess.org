@@ -84,6 +84,8 @@ vec3 SearingDunes(
 	vec3 sandColor
 ) {
 	const float NOISE_MULTIPLIER = 1.0;
+	// Controls the sharpness of the sand wisps. Higher values = thinner, sharper wisps.
+	const float SHARPNESS = 8.0;
 
 	vec2 uv1 = screenUV * noiseTiling + offset1;
 	vec2 uv2 = screenUV * noiseTiling + offset2;
@@ -92,12 +94,15 @@ vec3 SearingDunes(
 	float noise2 = texture(noiseSampler, uv2).r;
 
 	float finalNoise = noise1 * noise2 * NOISE_MULTIPLIER;
-	float signedNoise = (finalNoise * 2.0) - 1.0;
+	float sharpenedNoise = pow(finalNoise, SHARPNESS);
 
-	// Use uniform sandColor
-	vec3 windEffect = sandColor * signedNoise * effectStrength;
+	// This is now our blend factor. It represents "how much" we should mix in the sandColor.
+	// We scale it by the overall effectStrength and clamp to ensure it's a valid [0,1] value for mix().
+	float blendFactor = clamp(sharpenedNoise * effectStrength, 0.0, 1.0);
 
-	return clamp(baseColor + windEffect, 0.0, 1.0);
+	// Linearly interpolate from the base color to the sand color based on the blend factor.
+	// This will correctly darken the object if sandColor is dark, or lighten it if sandColor is light.
+	return mix(baseColor, sandColor, blendFactor);
 }
 
 // Applies the "Static" pixelated noise effect.
