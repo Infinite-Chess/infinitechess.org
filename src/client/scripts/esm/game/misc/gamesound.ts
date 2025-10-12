@@ -85,6 +85,8 @@ const SHAKE_CONFIG = {
 	minDist: 4, // 10,000 squares => trauma begins increasing from 0
 	/** How much screen shake trauma is added per order of magnitude the piece moved. */
 	traumaMultiplier: 0.035,
+	/** A delay in milliseconds before the screen shake is triggered, to better sync with the audio. */
+	delay: 70,
 };
 
 /** Config for playing premove sound effects. */
@@ -209,7 +211,7 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 	// Apply screen shake for very large moves
 	const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
 	const trauma = math.clamp(rawTrauma, 0, 1);
-	if (trauma > 0) screenshake.trigger(trauma);
+	if (trauma > 0) setTimeout(() => screenshake.trigger(trauma), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
 
 	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
 		const bellVolume = BELL_CONFIG.volume * dampener;
