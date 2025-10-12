@@ -77,6 +77,13 @@ const LONG_ZOOM_CONFIG = {
 		TRANSITION_FOCUS: 0.5, // 50% of time moving the focus point
 		DECELERATE: 0.25, // 25% of time decelerating scale
 	},
+	/**
+	 * NEW KINEMATIC MODEL CONSTANT
+	 * The "comfortable" acceleration used for the start and end of the transition.
+	 * This is a design parameter that dictates the "feel" of the ease-in/out.
+	 * Units are in: ln(scale) / second^2. A higher value feels snappier.
+	 */
+	EDGE_ACCELERATION: 40.0, // Default: 40.0
 } as const;
 
 
@@ -169,14 +176,20 @@ let differenceWorldSpace: DoubleCoords;
 
 // Long Zoom State
 
+
+// NEW: Long Zoom KINEMATIC State (pre-calculated in startZoomTransition)
 let isLongZoom: boolean = false;
-let stageDurations: {
-	stage1_end: number;
-	stage2_end: number;
-	stage3_end: number;
-};
+let stageEndTimes: { stage1: number; stage2: number; stage3: number; };
+let accel_stage1: number; // The calculated acceleration for stage 1 (and deceleration for stage 3)
+let accel_stage2: number; // The calculated high acceleration for stage 2
+
+// Boundary conditions calculated to ensure continuity
 let e_at_stage1_end: number;
-let e_at_stage2_start: number;
+let v_at_stage1_end: number;
+let e_at_stage2_mid: number;
+let v_at_stage2_mid: number;
+let e_at_stage2_end: number;
+let v_at_stage2_end: number;
 
 
 // Initiating Transitions ---------------------------------------------------------------------
@@ -206,7 +219,6 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	differenceE = destinationE - originE;
 
 	isZoom = true;
-	isLongZoom = false;
 	isZoomOut = bd.compare(destinationScale, originScale) < 0;
 
 	// Determine world coordinates
@@ -229,17 +241,50 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		isLongZoom = true;
 		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS * perspectiveMultiplier;
 
-		// Pre-calculate stage end times
-		stageDurations = {
-			stage1_end: durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE,
-			stage2_end: durationMillis * (LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE + LONG_ZOOM_CONFIG.STAGE_SPLIT.TRANSITION_FOCUS),
-			stage3_end: durationMillis, // Or durationMillis
+		// Pre-calculate Kinematic Parameters
+		// Solve for the required accelerations.
+
+		// 1. Define time durations for each stage in SECONDS for physics calculations.
+		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
+		const t2 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.TRANSITION_FOCUS) / 1000;
+		const t_s2_half = t2 / 2; // Stage 2 is split into acceleration and deceleration.
+
+		stageEndTimes = {
+			stage1: t1 * 1000,
+			stage2: (t1 + t2) * 1000,
+			stage3: durationMillis,
 		};
 
-		// Pre-calculate the 'e' values at the boundaries of the stages
-		const e_change_in_edge_stages = Math.sign(differenceE) * LONG_ZOOM_CONFIG.LN_DIFFERENCE_THRESHOLD;
-		e_at_stage1_end = originE + e_change_in_edge_stages;
-		e_at_stage2_start = destinationE - e_change_in_edge_stages;
+		// 2. Set Stage 1 acceleration and determine the distance it covers.
+		// The direction of acceleration depends on the direction of the zoom.
+		accel_stage1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
+		
+		// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
+		// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
+		const dist_stage1 = 0.5 * accel_stage1 * t1 * t1;
+		const dist_stage3 = dist_stage1; // By symmetry.
+
+		// 3. Calculate the remaining distance that must be covered in Stage 2.
+		const remaining_dist = differenceE - dist_stage1 - dist_stage3;
+		
+		// 4. Solve for the Stage 2 acceleration needed to cover that remaining distance.
+		// We use the formula: d = v₀t + 0.5at²
+		// For the first half of stage 2, v₀ is the velocity at the end of stage 1.
+		v_at_stage1_end = accel_stage1 * t1;
+		// The distance for the first half of stage 2 is remaining_dist / 2.
+		// (remaining_dist / 2) = v_at_stage1_end * t_s2_half + 0.5 * a₂ * t_s2_half²
+		// Rearranging to solve for a₂:
+		accel_stage2 = (remaining_dist - 2 * v_at_stage1_end * t_s2_half) / (t_s2_half * t_s2_half);
+
+		// 5. Pre-calculate all boundary conditions to use in the update loop.
+		e_at_stage1_end = originE + dist_stage1;
+		
+		v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
+		e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
+
+		v_at_stage2_end = v_at_stage2_mid - accel_stage2 * t_s2_half; // Should equal v_at_stage1_end
+		e_at_stage2_end = e_at_stage2_mid + (v_at_stage2_mid * t_s2_half) - (0.5 * accel_stage2 * t_s2_half * t_s2_half);
+
 	} else {
 		// Standard Zoom
 		isLongZoom = false;
@@ -355,12 +400,13 @@ function update(): void {
 
 	if (isZoom) {
 		// Zooming Transition
-		if (!isLongZoom) {
+		if (isLongZoom) {
+			updateLongZoomTransition(elapsedTime);
+		} else {
+			// Standard short zoom uses the original easing function
 			const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
 			const easedT = math.easeInOut(t);
 			ZoomingTransition.updateSimpleZoomingTransition(easedT, originCoords, destinationCoords, originWorldSpace, differenceWorldSpace, originE, differenceE, isZoomOut);
-		} else {
-			updateLongZoomTransition(elapsedTime);
 		}
 	} else {
 		// Panning Transition
@@ -371,56 +417,63 @@ function update(): void {
 }
 
 
-/** Handles the 3-stage update logic for long-distance zooms. */
+/**
+ * Handles the 3-stage update logic for long-distance zoom transitions.
+ * Velocity is continuous.
+ */
 function updateLongZoomTransition(elapsedTime: number): void {
-	let newE: BigDecimal;
+	let currentE: number;
 	let focusPointWorldSpace: DoubleCoords;
 	const targetCoords: BDCoords = isZoomOut ? originCoords : destinationCoords;
 
-	if (elapsedTime < stageDurations.stage1_end) {
-		// Stage 1: Accelerate Scale
-		const t = elapsedTime / (stageDurations.stage1_end);
-		const easedT = math.easeOut(t); // Use easeOut because we are accelerating *from* the start
+	// Convert elapsed time to seconds for calculations
+	const t_sec = elapsedTime / 1000;
 
-		// Focus point is LOCKED to the origin
-		focusPointWorldSpace = originWorldSpace;
+	// STAGE 1: Constant positive acceleration
+	if (elapsedTime <= stageEndTimes.stage1) {
+		const t = t_sec;
+		currentE = originE + (0.5 * accel_stage1 * t * t);
 
-		// Interpolate 'e' only up to the threshold amount
-		const current_e_change = (e_at_stage1_end - originE) * easedT;
-		newE = bd.FromNumber(originE + current_e_change);
-
-	} else if (elapsedTime < stageDurations.stage2_end) {
-		// Stage 2: Transition Focus Point and Scale
-		const stage2_duration = stageDurations.stage2_end - stageDurations.stage1_end;
-		const stage2_elapsed = elapsedTime - stageDurations.stage1_end;
-		const t = stage2_elapsed / stage2_duration;
-		const easedT = math.easeInOut(t); // A smooth sine-like curve is good here
-
-		// Focus point transitions from origin to destination
-		const worldX = originWorldSpace[0] + differenceWorldSpace[0] * easedT;
-		const worldY = originWorldSpace[1] + differenceWorldSpace[1] * easedT;
+		// Focus point is locked to origin, but smoothly transitions during stage 2
+		const focusT = 0.0;
+		const worldX = originWorldSpace[0] + differenceWorldSpace[0] * focusT;
+		const worldY = originWorldSpace[1] + differenceWorldSpace[1] * focusT;
 		focusPointWorldSpace = [worldX, worldY];
 
-		// Scale transitions through the vast middle-ground
-		const e_change_in_stage2 = e_at_stage2_start - e_at_stage1_end;
-		newE = bd.FromNumber(e_at_stage1_end + e_change_in_stage2 * easedT);
+	} else if (elapsedTime <= stageEndTimes.stage2) {
+		// STAGE 2: Higher acceleration, then deceleration. Focus point moves.
+		const t_s2 = t_sec - (stageEndTimes.stage1 / 1000); // Time into stage 2
+		const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
+
+		if (t_s2 <= t_s2_half) {
+			// First half of stage 2: high acceleration
+			currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
+		} else {
+			// Second half of stage 2: high deceleration
+			const t_s2_b = t_s2 - t_s2_half; // Time into second half
+			currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
+		}
+
+		// Focus point smoothly transitions during this stage
+		const focusT = t_s2 / (t_s2_half * 2);
+		const easedFocusT = math.easeInOut(focusT);
+		const worldX = originWorldSpace[0] + differenceWorldSpace[0] * easedFocusT;
+		const worldY = originWorldSpace[1] + differenceWorldSpace[1] * easedFocusT;
+		focusPointWorldSpace = [worldX, worldY];
 
 	} else {
-		// Stage 3: Decelerate Scale
-		const stage3_duration = stageDurations.stage3_end - stageDurations.stage2_end;
-		const stage3_elapsed = elapsedTime - stageDurations.stage2_end;
-		const t = stage3_elapsed / stage3_duration;
-		const easedT = math.easeIn(t); // Use easeIn because we are decelerating *to* the end
+		// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
+		const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
+		currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
 
-		// Focus point is LOCKED to the destination
-		focusPointWorldSpace = destinationWorldSpace;
-
-		// Interpolate 'e' for the final threshold amount
-		const current_e_change = (destinationE - e_at_stage2_start) * easedT;
-		newE = bd.FromNumber(e_at_stage2_start + current_e_change);
+		// Focus point is locked to destination
+		const focusT = 1.0;
+		const worldX = originWorldSpace[0] + differenceWorldSpace[0] * focusT;
+		const worldY = originWorldSpace[1] + differenceWorldSpace[1] * focusT;
+		focusPointWorldSpace = [worldX, worldY];
 	}
 
-	const newScale = bd.exp(newE);
+	const newScale = bd.exp(bd.FromNumber(currentE));
 	boardpos.setBoardScale(newScale);
 
 	// In every stage, we use the same final calculation to set board position
