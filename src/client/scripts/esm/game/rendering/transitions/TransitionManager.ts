@@ -254,7 +254,6 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		isThreeStageModel = true;
 		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS;
 
-		// This pre-calculation logic is unchanged.
 		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
 		const t2 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
 		const t_s2_half = t2 / 2;
@@ -293,8 +292,10 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		e_at_stage1_end = originE + (0.5 * dist_stage1_and_3);
 		v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
 		e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
-		v_at_stage2_end = v_at_stage2_mid - accel_stage2 * t_s2_half;
-		e_at_stage2_end = e_at_stage2_mid + (v_at_stage2_mid * t_s2_half) - (0.5 * accel_stage2 * t_s2_half * t_s2_half);
+		
+		// By symmetry of the C¹ model within Stage 2, velocity at the end is guaranteed to match velocity at the start.
+		v_at_stage2_end = v_at_stage1_end; 
+		e_at_stage2_end = e_at_stage1_end + remaining_dist; // By definition
 
 	} else {
 		console.log("Using C-Infinity 1-Stage Model");
@@ -447,7 +448,7 @@ function updateLongZoomTransition(elapsedTime: number): void {
 	const t_sec = elapsedTime / 1000;
 
 	if (isThreeStageModel) {
-		// --- 3-STAGE UPDATE LOGIC (Same as before) ---
+		// --- 3-STAGE C¹ UPDATE LOGIC ---
 		if (elapsedTime <= stageEndTimes.stage1) {
 			// STAGE 1: Constant positive acceleration
 			// console.log("Stage 1");
@@ -455,14 +456,16 @@ function updateLongZoomTransition(elapsedTime: number): void {
 			const t = t_sec;
 			currentE = originE + (0.5 * accel_stage1 * t * t);
 		} else if (elapsedTime <= stageEndTimes.stage2) {
-			// STAGE 2: Higher acceleration, then deceleration.
+			// STAGE 2: Higher acceleration, then symmetrical deceleration.
 			// console.log("Stage 2");
 			const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
 			const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
 			if (t_s2 <= t_s2_half) {
+				// First half of Stage 2: Constant acceleration
 				currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
 			} else {
-				const t_s2_b = t_s2 - t_s2_half;
+				// Second half of Stage 2: Symmetrical constant deceleration
+				const t_s2_b = t_s2 - t_s2_half; // Time into the second half
 				currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
 			}
 		} else {
@@ -472,7 +475,7 @@ function updateLongZoomTransition(elapsedTime: number): void {
 			currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
 		}
 	} else {
-		// --- C-INFINITY 1-STAGE UPDATE LOGIC (New) ---
+		// --- C-INFINITY 1-STAGE UPDATE LOGIC ---
 		// Position with constant jerk is given by the cubic formula:
 		// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
 		// Since e₀ and v₀ are 0 relative to the start:
