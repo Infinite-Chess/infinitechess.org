@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/effect_zone/zones/SearingDunesZone.ts
+
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
