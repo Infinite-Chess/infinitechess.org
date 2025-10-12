@@ -49,7 +49,7 @@ const HISTORY_CAP = 20;
 /** Stores config for the duration of standard (short) Zooming Transitions. */
 const ZOOM_TRANSITION_DURATION_MILLIS = {
 	/** The minimum, or base amount. All transitions take atleast this long. */
-	BASE: 450, // Default: 600
+	BASE: 350, // Default: 600
 	/**
 	 * An additional amount added for every "e" level of scale difference, in millis.
 	 * 
@@ -177,16 +177,20 @@ let differenceWorldSpace: DoubleCoords;
 // NEW: Long Zoom KINEMATIC State (pre-calculated in startZoomTransition)
 let isThreeStageModel: boolean = false; // Distinguishes between 2-stage and 3-stage
 let stageEndTimes: { stage1: number; stage2: number; stage3: number; };
-let accel_stage1: number; // The calculated acceleration for stage 1 (and deceleration for stage 3)
-let accel_stage2: number; // The calculated high acceleration for stage 2
 
-// Boundary conditions calculated to ensure continuity
+// C¹ 3-Stage Model State
+let accel_stage1: number;
+let accel_stage2: number;
 let e_at_stage1_end: number;
 let v_at_stage1_end: number;
 let e_at_stage2_mid: number;
 let v_at_stage2_mid: number;
 let e_at_stage2_end: number;
 let v_at_stage2_end: number;
+
+// NEW: C-Infinity 1-Stage Model State
+let initial_accel_c_inf: number;
+let jerk_c_inf: number;
 
 
 // Initiating Transitions ---------------------------------------------------------------------
@@ -234,21 +238,23 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	// --- UNIFIED KINEMATIC MODEL SETUP ---
 
 	// Determine which model to use.
-	// We calculate the acceleration that a 2-stage model would REQUIRE to complete the
-	// journey in the maximum (long zoom) duration.
-	const t_half_for_test = (LONG_ZOOM_CONFIG.DURATION_MILLIS / 2000); // half duration in seconds
-	const required_accel = (t_half_for_test > 0) ? (differenceE / (t_half_for_test * t_half_for_test)) : 0;
+	// First, calculate the "natural" duration a C-infinity (constant jerk) transition would take
+	// if its initial acceleration were capped at our comfortable EDGE_ACCELERATION.
+	// The formula for distance with constant jerk is: d = (1/6) * a₀ * T².
+	// We rearrange to solve for T: T = sqrt(6 * d / a₀).
+	const natural_duration_secs = Math.sqrt(Math.abs(6 * differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION));
+	const natural_duration_millis = natural_duration_secs * 1000;
 
-	// Compare the required acceleration to our "comfortable" edge acceleration.
-	if (Math.abs(required_accel) > LONG_ZOOM_CONFIG.EDGE_ACCELERATION) {
-		console.log("Long Zoom: 3-Stages");
+	// Compare this natural duration to our maximum desired duration.
+	if (natural_duration_millis > LONG_ZOOM_CONFIG.DURATION_MILLIS) {
+		console.log("Using 3-Stage Model (Natural duration " + natural_duration_millis.toFixed(0) + "ms > " + LONG_ZOOM_CONFIG.DURATION_MILLIS + "ms)");
 		// --- CASE A: 3-STAGE MODEL (Long distances) ---
-		// The journey is long, so we use the fixed duration and calculate a higher
-		// acceleration for the middle "cruise" stage.
+		// The journey is too long to be completed in a reasonable time with the C-infinity profile.
+		// We MUST use the fixed-duration 3-stage model which adds a high-acceleration "cruise" phase.
 		isThreeStageModel = true;
 		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS;
 
-		// This pre-calculation logic is the same as before, just moved here.
+		// This pre-calculation logic is unchanged.
 		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
 		const t2 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
 		const t_s2_half = t2 / 2;
@@ -291,38 +297,25 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		e_at_stage2_end = e_at_stage2_mid + (v_at_stage2_mid * t_s2_half) - (0.5 * accel_stage2 * t_s2_half * t_s2_half);
 
 	} else {
-		console.log("Long Zoom: 2-Stages");
-		// --- CASE B: 2-STAGE MODEL (Short distances) ---
-		// The journey is short. For these transitions, we calculate a variable duration
-		// and then solve for the acceleration required to complete the journey in that time.
+		console.log("Using C-Infinity 1-Stage Model");
+		// --- CASE B: C-INFINITY 1-STAGE MODEL (Short to Medium distances) ---
+		// The journey is short enough to be handled by a single, perfectly smooth,
+		// C-infinity (constant jerk) motion profile.
 		isThreeStageModel = false;
 
-		// 1. Calculate a "natural" duration based on the configured edge acceleration.
-		const natural_t_half_secs = Math.sqrt(Math.abs(differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION));
-		const natural_duration_millis = natural_t_half_secs * 2 * 1000;
-
-		// 2. Add the base duration to ensure a minimum transition time, and cap at the long zoom duration.
+		// 1. Add the base duration to the natural duration, and cap at the long zoom duration.
 		durationMillis = ZOOM_TRANSITION_DURATION_MILLIS.BASE + natural_duration_millis;
 		durationMillis = Math.min(durationMillis, LONG_ZOOM_CONFIG.DURATION_MILLIS);
+		const T = durationMillis / 1000; // Final duration in seconds
 
-		// 3. Based on this new, final duration, recalculate the required acceleration.
-		// The total distance covered by a 2-stage (triangle) profile is d = a * t_half².
-		// We solve for a: a = d / t_half².
-		const t_half_secs = durationMillis / 2000;
-
-		if (t_half_secs > 0) accel_stage1 = differenceE / (t_half_secs * t_half_secs);
-		else accel_stage1 = 0; // No duration means no movement, so no acceleration.
-
-		// There are only two stages now.
-		stageEndTimes = {
-			stage1: t_half_secs * 1000,
-			stage2: durationMillis,
-			stage3: durationMillis, // Not used, but set for safety
-		};
-
-		// Pre-calculate boundary conditions for the handoff using the new acceleration and duration.
-		v_at_stage1_end = accel_stage1 * t_half_secs;
-		e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
+		// 2. Based on this final duration, solve for the required initial acceleration and jerk.
+		if (T > 0) {
+			initial_accel_c_inf = 6 * differenceE / (T * T);
+			jerk_c_inf = -2 * initial_accel_c_inf / T; // Jerk is constant throughout
+		} else {
+			initial_accel_c_inf = 0;
+			jerk_c_inf = 0;
+		}
 	}
 
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos(), destinationScale: boardpos.getBoardScale() });
@@ -451,8 +444,6 @@ function update(): void {
 function updateLongZoomTransition(elapsedTime: number): void {
 	let currentE: number;
 	const targetCoords: BDCoords = isZoomOut ? originCoords : destinationCoords;
-
-	// Convert elapsed time to seconds for kinematic calculations
 	const t_sec = elapsedTime / 1000;
 
 	if (isThreeStageModel) {
@@ -481,18 +472,14 @@ function updateLongZoomTransition(elapsedTime: number): void {
 			currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
 		}
 	} else {
-		// --- 2-STAGE UPDATE LOGIC (New) ---
-		if (elapsedTime <= stageEndTimes.stage1) {
-			// Stage 1: Accelerate
-			const t = t_sec;
-			currentE = originE + (0.5 * accel_stage1 * t * t);
-		} else {
-			// Stage 2: Decelerate
-			const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
-			currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) - (0.5 * accel_stage1 * t_s2 * t_s2);
-		}
+		// --- C-INFINITY 1-STAGE UPDATE LOGIC (New) ---
+		// Position with constant jerk is given by the cubic formula:
+		// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
+		// Since e₀ and v₀ are 0 relative to the start:
+		currentE = originE + (0.5 * initial_accel_c_inf * t_sec * t_sec) + ((1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec);
 	}
 
+	// This universal focus point logic remains perfect for both models.
 	let scaleProgress = 0;
 	if (differenceE !== 0) scaleProgress = (currentE - originE) / differenceE;
 
