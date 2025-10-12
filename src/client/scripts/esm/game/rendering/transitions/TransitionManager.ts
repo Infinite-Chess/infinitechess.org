@@ -49,7 +49,7 @@ const HISTORY_CAP = 20;
 /** Stores config for the duration of standard (short) Zooming Transitions. */
 const ZOOM_TRANSITION_DURATION_MILLIS = {
 	/** The minimum, or base amount. All transitions take atleast this long. */
-	BASE: 600, // Default: 600
+	BASE: 450, // Default: 600
 	/**
 	 * An additional amount added for every "e" level of scale difference, in millis.
 	 * 
@@ -294,17 +294,25 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	} else {
 		console.log("Long Zoom: 2-Stages");
 		// --- CASE B: 2-STAGE MODEL (Short distances) ---
-		// The journey is short. We cap the acceleration at EDGE_ACCELERATION
-		// and calculate the shorter duration required.
+		// The journey is short. For these transitions, we calculate a variable duration
+		// and then solve for the acceleration required to complete the journey in that time.
 		isThreeStageModel = false;
-		accel_stage1 = accel1_signed;
-		
-		// Solve for the duration of one half of the journey (the acceleration phase).
-		// d = 0.5at²  =>  t = sqrt(2d/a). Here, d = differenceE / 2.
-		// So, t_half = sqrt(differenceE / accel_stage1).
-		const t_half_secs = Math.sqrt(Math.abs(differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION));
-		
-		durationMillis = t_half_secs * 2 * 1000;
+
+		// 1. Calculate a "natural" duration based on the configured edge acceleration.
+		const natural_t_half_secs = Math.sqrt(Math.abs(differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION));
+		const natural_duration_millis = natural_t_half_secs * 2 * 1000;
+
+		// 2. Add the base duration to ensure a minimum transition time, and cap at the long zoom duration.
+		durationMillis = ZOOM_TRANSITION_DURATION_MILLIS.BASE + natural_duration_millis;
+		durationMillis = Math.min(durationMillis, LONG_ZOOM_CONFIG.DURATION_MILLIS);
+
+		// 3. Based on this new, final duration, recalculate the required acceleration.
+		// The total distance covered by a 2-stage (triangle) profile is d = a * t_half².
+		// We solve for a: a = d / t_half².
+		const t_half_secs = durationMillis / 2000;
+
+		if (t_half_secs > 0) accel_stage1 = differenceE / (t_half_secs * t_half_secs);
+		else accel_stage1 = 0; // No duration means no movement, so no acceleration.
 
 		// There are only two stages now.
 		stageEndTimes = {
@@ -313,7 +321,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 			stage3: durationMillis, // Not used, but set for safety
 		};
 
-		// Pre-calculate boundary conditions for the handoff.
+		// Pre-calculate boundary conditions for the handoff using the new acceleration and duration.
 		v_at_stage1_end = accel_stage1 * t_half_secs;
 		e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
 	}
