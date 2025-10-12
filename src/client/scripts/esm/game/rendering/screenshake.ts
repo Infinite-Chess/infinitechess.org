@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/screenShake.ts
+// src/client/scripts/esm/game/rendering/screenshake.ts
 
 /**
  * This module can apply a screen shake effect to the camera when requested.

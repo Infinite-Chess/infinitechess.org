@@ -10,7 +10,6 @@ import { ProgramManager } from "../../../webgl/ProgramManager";
 import { TheBeginningZone } from "./zones/TheBeginningZone";
 import { UndercurrentZone } from "./zones/UndercurrentZone";
 import { DustyWastesZone } from "./zones/DustyWastesZone";
-import { CrackedBarrensZone } from "./zones/CrackedBarrensZone";
 import { MoltenReachesZone } from "./zones/MoltenReachesZone";
 import { ContortionFieldZone } from "./zones/ContortionFieldZone";
 import { EchoRiftZone } from "./zones/EchoRiftZone";
@@ -68,7 +67,6 @@ export class EffectZoneManager {
 		// [PRODUCTION] Default distances:
 		// { name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false },
 		// { name: 'Dusty Wastes',     start: 10n ** 25n, advancedEffect: true },
-		// { name: 'Cracked Barrens',  start: 10n ** 55n, advancedEffect: true },
 		// { name: 'Molten Reaches',   start: 10n ** 91n, advancedEffect: true },
 		// { name: 'Contortion Field', start: 10n ** 136n, advancedEffect: true },
 		// { name: 'Echo Rift',        start: 10n ** 181n, advancedEffect: true },
@@ -76,11 +74,10 @@ export class EffectZoneManager {
 		// [TESTING] Much shorter distances:
 		{ name: 'Undercurrent',     start: BigInt(20), advancedEffect: false },
 		{ name: 'Dusty Wastes',     start: BigInt(40), advancedEffect: true },
-		{ name: 'Cracked Barrens',  start: BigInt(60), advancedEffect: true },
-		{ name: 'Molten Reaches',   start: BigInt(80), advancedEffect: true },
-		{ name: 'Contortion Field', start: BigInt(100), advancedEffect: true },
-		{ name: 'Echo Rift',        start: BigInt(120), advancedEffect: true },
-		{ name: 'Static',           start: BigInt(140), advancedEffect: true },
+		{ name: 'Molten Reaches',   start: BigInt(60), advancedEffect: true },
+		{ name: 'Contortion Field', start: BigInt(80), advancedEffect: true },
+		{ name: 'Echo Rift',        start: BigInt(100), advancedEffect: true },
+		{ name: 'Static',           start: BigInt(120), advancedEffect: true },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -133,7 +130,6 @@ export class EffectZoneManager {
 			'The Beginning': new TheBeginningZone(),
 			'Undercurrent': new UndercurrentZone(),
 			'Dusty Wastes': new DustyWastesZone(programManager),
-			'Cracked Barrens': new CrackedBarrensZone(),
 			'Molten Reaches': new MoltenReachesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),
