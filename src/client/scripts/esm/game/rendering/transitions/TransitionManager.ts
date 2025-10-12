@@ -233,16 +233,14 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 
 	// --- UNIFIED KINEMATIC MODEL SETUP ---
 
-	// Calculate the "crossover" distance threshold.
-	// This is the maximum distance coverable by the fixed-duration 3-stage model
-	// before its middle acceleration (accel2) would need to exceed the edge acceleration.
-	const fixedDurationSecs = LONG_ZOOM_CONFIG.DURATION_MILLIS / 1000;
-	const t1_fixed = fixedDurationSecs * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE;
-	const t2_fixed = fixedDurationSecs * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE;
-	const accel1_signed = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
-	const crossoverDistance = accel1_signed * t1_fixed * (t1_fixed + t2_fixed);
+	// Determine which model to use.
+	// We calculate the acceleration that a 2-stage model would REQUIRE to complete the
+	// journey in the maximum (long zoom) duration.
+	const t_half_for_test = (LONG_ZOOM_CONFIG.DURATION_MILLIS / 2000); // half duration in seconds
+	const required_accel = (t_half_for_test > 0) ? (differenceE / (t_half_for_test * t_half_for_test)) : 0;
 
-	if (Math.abs(differenceE) > Math.abs(crossoverDistance)) {
+	// Compare the required acceleration to our "comfortable" edge acceleration.
+	if (Math.abs(required_accel) > LONG_ZOOM_CONFIG.EDGE_ACCELERATION) {
 		console.log("Long Zoom: 3-Stages");
 		// --- CASE A: 3-STAGE MODEL (Long distances) ---
 		// The journey is long, so we use the fixed duration and calculate a higher
@@ -251,18 +249,19 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS;
 
 		// This pre-calculation logic is the same as before, just moved here.
-		const t1 = t1_fixed;
-		const t_s2_half = t2_fixed / 2;
+		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
+		const t2 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
+		const t_s2_half = t2 / 2;
 
 		stageEndTimes = {
 			stage1: t1 * 1000,
-			stage2: (t1 + t2_fixed) * 1000,
+			stage2: (t1 + t2) * 1000,
 			stage3: durationMillis,
 		};
 		
 		// Set Stage 1 acceleration and determine the distance it covers.
 		// The direction of acceleration depends on the direction of the zoom.
-		accel_stage1 = accel1_signed;
+		accel_stage1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
 
 		// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
 		// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
