@@ -6,7 +6,7 @@ import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWaveP
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 
 
-export class MoltenReachesZone implements Zone {
+export class SearingDunesZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 4;
