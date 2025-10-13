@@ -13,7 +13,7 @@ import guipromotion from "../gui/guipromotion.js";
 import vectors from "../../../../../shared/util/math/vectors.js";
 import coordutil from "../../../../../shared/chess/util/coordutil.js";
 import perspective from "./perspective.js";
-import TransitionManager from "./transitions/TransitionManager.js";
+import Transition from "./transitions/Transition.js";
 import drawarrows from "./highlights/annotations/drawarrows.js";
 import drawrays from "./highlights/annotations/drawrays.js";
 import selection from "../chess/selection.js";
@@ -112,7 +112,7 @@ function getBoardDraggablePointers(): string[] {
  * Will NOT initiate a single-pointer grab!
  */
 function checkIfBoardPinched(): void {
-	if (perspective.getEnabled() || TransitionManager.areTransitioning() || guipromotion.isUIOpen()) return;
+	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen()) return;
 
 	if (pointer2Id !== undefined) return; // Already pinched
 
@@ -154,7 +154,7 @@ function checkIfBoardPinched(): void {
 
 /** Checks if the board needs to SINGLE-GRABBED by any new pointers pressed down this frame. */
 function checkIfBoardSingleGrabbed(): void {
-	if (perspective.getEnabled() || TransitionManager.areTransitioning() || guipromotion.isUIOpen()) return;
+	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen()) return;
 
 	if (boardIsGrabbed) return; // Already grabbed
 

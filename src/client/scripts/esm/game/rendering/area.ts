@@ -5,7 +5,7 @@
  * This script handles the calculation of the "Area"s on screen that
  * will contain the desired list of piece coordinates when at a specific
  * camera position and scale (zoom), which can be used to tell
- * {@link TransitionManager} where to teleport to.
+ * {@link Transition} where to teleport to.
  */
 
 import camera from './camera.js';
@@ -17,7 +17,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import boardpos from './boardpos.js';
 import meshes from './meshes.js';
 import space from '../misc/space.js';
-import TransitionManager, { ZoomTransition } from './transitions/TransitionManager.js';
+import Transition, { ZoomTransition } from './transitions/Transition.js';
 import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
@@ -27,7 +27,7 @@ import type { BDCoords, Coords } from '../../../../../shared/chess/util/coorduti
 
 
 /**
- * An area object, containing the information {@link TransitionManager} needs
+ * An area object, containing the information {@link Transition} needs
  * to teleport/transition to this location on the board.
  */
 export interface Area {
@@ -231,8 +231,8 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	const trans1: ZoomTransition | undefined = firstArea ? { destinationCoords: firstArea.coords, destinationScale: firstArea.scale } : undefined;
 	const trans2: ZoomTransition = { destinationCoords: thisArea.coords, destinationScale: thisArea.scale };
 
-	if (trans1) TransitionManager.startZoomTransition(trans1, trans2, ignoreHistory);
-	else TransitionManager.startZoomTransition(trans2, undefined, ignoreHistory);
+	if (trans1) Transition.startZoomTransition(trans1, trans2, ignoreHistory);
+	else Transition.startZoomTransition(trans2, undefined, ignoreHistory);
 }
 
 export default {

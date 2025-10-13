@@ -33,7 +33,7 @@ import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
 import boardeditor from "./boardeditor.js";
 import vectors from "../../../../../shared/util/math/vectors.js";
-import TransitionManager from "../rendering/transitions/TransitionManager.js";
+import Transition from "../rendering/transitions/Transition.js";
 import { listener_document } from "../chess/game.js";
 
 
@@ -80,7 +80,7 @@ function updateNavControls(): void {
 
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
-	if (TransitionManager.areTransitioning()) return; // Exit if teleporting
+	if (Transition.areTransitioning()) return; // Exit if teleporting
 
 	// Keyboard
 	detectPanning(); // Movement (WASD)

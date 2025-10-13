@@ -41,7 +41,7 @@ import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';
 import promotionlines from '../rendering/promotionlines.js';
-import TransitionManager from '../rendering/transitions/TransitionManager.js';
+import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import border from '../rendering/border.js';
 import starfield from '../rendering/starfield.js';
@@ -147,7 +147,7 @@ function update(): void {
 
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
 	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
-	TransitionManager.update();
+	Transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/transitions/TransitionManager.ts
+// src/client/scripts/esm/game/rendering/transitions/Transition.ts
 
 /**
  * This handles the smooth transitioning from one area of the board to another.

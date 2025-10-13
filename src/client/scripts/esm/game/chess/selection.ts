@@ -38,7 +38,7 @@ import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import premoves from "../chess/premoves.js";
 import boardeditor from '../misc/boardeditor.js';
-import TransitionManager from '../rendering/transitions/TransitionManager.js';
+import Transition from '../rendering/transitions/Transition.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';
@@ -162,7 +162,7 @@ function update(): void {
 	if (!hoverSquare) return; // Looking into sky
 	
 	// Only exit during a transition after updating hover square
-	if (TransitionManager.areTransitioning()) return;
+	if (Transition.areTransitioning()) return;
 
 	// What should selection.ts do?
 
