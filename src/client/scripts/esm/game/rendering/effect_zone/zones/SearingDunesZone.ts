@@ -41,15 +41,15 @@ export class SearingDunesZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.43,
+			masterVolume: 0.018,
 			layers: [
 				{
 					volume: {
-						base: 0.01,
+						base: 1,
 						lfo: {
 							wave: "perlin",
 							rate: 0.22,
-							depth: 0.004
+							depth: 0.4
 						}
 					},
 					source: {

@@ -12,6 +12,7 @@ uniform sampler2D u_perlinNoiseTexture;
 uniform sampler2D u_whiteNoiseTexture;
 uniform float u_time;
 uniform vec2 u_resolution; // Canvas dimensions
+uniform float u_pixelDensity; // How many device pixels per virtual pixel
 
 uniform float u_effectTypeA; // e.g., 0.0 for None, 1.0 for Dusty Wastes
 uniform float u_effectTypeB;
@@ -74,10 +75,11 @@ vec3 Static(
     vec2 uvOffset,
 	float pixelWidth,
     float pixelSize,
-	vec2 resolution	
+	vec2 resolution,
+	float pixelDensity
 ) {
 	// vec2 snappedUV = floor((screenUV * resolution) / pixelSize) * pixelSize / resolution + uvOffset;
-    vec2 snappedUV = screenUV * resolution[1] / pixelWidth / pixelSize + uvOffset;
+    vec2 snappedUV = screenUV * resolution[1] / pixelWidth / pixelSize / pixelDensity + uvOffset;
     float noise = texture(noiseSampler, snappedUV).r;
     float signedNoise = (noise * 2.0) - 1.0;
     return baseColor + (signedNoise * effectStrength); // Apply a brightness/darkness effect
@@ -110,7 +112,8 @@ vec3 calculateEffectColor(
             u3_uvOffset,
 			u3_pixelWidth,
             u3_pixelSize,
-			u_resolution
+			u_resolution,
+			u_pixelDensity
         );
     }
 

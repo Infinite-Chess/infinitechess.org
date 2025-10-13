@@ -5,6 +5,7 @@ import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessin
 import { Zone } from "../EffectZoneManager";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
+import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 
 export class StaticZone implements Zone {
 
@@ -12,6 +13,9 @@ export class StaticZone implements Zone {
 	readonly effectType: number = 3;
 
 	private colorGradePass: ColorGradePass;
+	
+	/** The soundscape player for this zone. */
+	private ambience: SoundscapePlayer;
 
 	/** How many pixels wide the white noise texture is. */
 	private readonly TEXTURE_WIDTH = 256;
@@ -37,6 +41,39 @@ export class StaticZone implements Zone {
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 0.6;
 		this.colorGradePass.brightness = -0.1;
+
+		// Load the ambience...
+
+		const noiseConfig: SoundscapeConfig = {
+			masterVolume: 0.019,
+			layers: [
+				{
+					volume: {
+						base: 1
+					},
+					source: {
+						type: "noise"
+					},
+					filters: [
+						{
+							type: "highpass",
+							frequency: {
+								base: 900
+							},
+							Q: {
+								base: 1
+							},
+							gain: {
+								base: 0
+							}
+						}
+					]
+				}
+			]
+		};
+
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
 
 
@@ -67,10 +104,10 @@ export class StaticZone implements Zone {
 	}
 
 	public fadeInAmbience(transitionDurationMillis: number): void {
-        
+		this.ambience.fadeIn(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
-        
+		this.ambience.fadeOut(transitionDurationMillis);
 	}
 }

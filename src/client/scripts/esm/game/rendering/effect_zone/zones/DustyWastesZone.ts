@@ -62,7 +62,7 @@ export class DustyWastesZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.16,
+			masterVolume: 0.14,
 			layers: [
 				{
 					volume: {

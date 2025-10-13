@@ -72,12 +72,12 @@ export class EffectZoneManager {
 		// { name: 'Echo Rift',        start: 10n ** 181n, advancedEffect: true },
         // { name: 'Static',           start: 10n ** 226n, advancedEffect: true },
 		// [TESTING] Much shorter distances:
-		{ name: 'Undercurrent',     start: BigInt(20), advancedEffect: false },
-		{ name: 'Dusty Wastes',     start: BigInt(40), advancedEffect: true },
-		{ name: 'Searing Dunes',   start: BigInt(60), advancedEffect: true },
-		{ name: 'Contortion Field', start: BigInt(80), advancedEffect: true },
-		{ name: 'Echo Rift',        start: BigInt(100), advancedEffect: true },
-		{ name: 'Static',           start: BigInt(120), advancedEffect: true },
+		{ name: 'Undercurrent',     start: BigInt(20), advancedEffect: false }, // DONE
+		{ name: 'Dusty Wastes',     start: BigInt(40), advancedEffect: true }, // DONE
+		{ name: 'Searing Dunes',   start: BigInt(60), advancedEffect: true }, // DONE
+		{ name: 'Static',           start: BigInt(80), advancedEffect: true }, // DONE
+		{ name: 'Contortion Field', start: BigInt(100), advancedEffect: true },
+		{ name: 'Echo Rift',        start: BigInt(120), advancedEffect: true },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -266,6 +266,7 @@ export class EffectZoneManager {
 			// u_time: performance.now() / 1000, // <-- REENABLE ONCE WE HAVE OTHER ZONES THAT NEED IT!!!!!!!!!!!!!!
 			u_transitionProgress: this.transitionProgress,
 			u_resolution: [this.gl.canvas.width, this.gl.canvas.height],
+			u_pixelDensity: window.devicePixelRatio,
 			// Zone uniforms
 			u_effectTypeA: fromZone.effectType,
 			u_effectTypeB: toZone.effectType,
