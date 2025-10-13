@@ -51,6 +51,7 @@ import area from "../rendering/area.js";
 import gamesound from "../misc/gamesound.js";
 import meshes from "../rendering/meshes.js";
 import starfield from "../rendering/starfield.js";
+import screenshake from "../rendering/screenshake.js";
 import { players } from "../../../../../shared/chess/util/typeutil.js";
 import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
@@ -251,6 +252,7 @@ function unloadGame(): void {
 
 	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)
 	starfield.terminate();
+	screenshake.clear();
 }
 
 /**

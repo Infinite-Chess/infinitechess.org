@@ -50,6 +50,13 @@ function trigger(amount: number): void {
 	camera.onPositionChange(); // Camera will update its view matrix
 }
 
+/** Clears all trauma, stopping any shake immediately. */
+function clear(): void {
+	trauma = 0.0;
+	frametracker.onVisualChange();
+	camera.onPositionChange(); // Camera will update its view matrix
+}
+
 /**
  * Updates the trauma level. Called once per frame.
  */
@@ -112,6 +119,7 @@ function getShakeMatrix(): Mat4 {
 
 export default {
 	trigger,
+	clear,
 	update,
 	getShakeMatrix,
 };
