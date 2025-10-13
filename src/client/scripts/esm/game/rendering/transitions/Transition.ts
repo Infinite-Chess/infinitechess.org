@@ -130,14 +130,14 @@ let isZoomOut: boolean;
 
 // Shared State
 
-/** [EXACT] The origin coords. */
+/** The origin/start coords of the current transition. */
 let originCoords: BDCoords;
-/** [EXACT] The destination coords. */
+/** The destination coords. */
 let destinationCoords: BDCoords;
 
-/** [EXACT] The origin scale. */
+/** The origin/start scale of the current transition. */
 let originScale: BigDecimal;
-/** [EXACT] The destination scale. */
+/** The destination scale. */
 let destinationScale: BigDecimal;
 /** The logarithm of the origin scale. */
 let originE: number;
@@ -245,106 +245,114 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	// Determine which model to use by checking each profile's
 	// natural duration (excludes base duration or capping) in order.
 
-	// 1. First, the C-infinity model.
-	// Calculate its natural duration if capped at our comfortable EDGE_ACCELERATION.
+	// C-infinity model natural duration if capped at our comfortable EDGE_ACCELERATION.
 	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / edgeAccel)) * 1000;
-
-	// C¹ 2-stage model natural duration, which is acceleration-capped.
+	// C¹ 2-stage model natural duration, if capped at our comfortable EDGE_ACCELERATION.
 	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / edgeAccel)) * 2 * 1000;
 
-	if (natural_duration_c_inf_millis <= maxDuration) {
-		// --- CASE A: C-INFINITY 1-STAGE MODEL ---
-		console.log("Using C-Infinity 1-Stage Model");
-		zoomModel = 'C_INF';
+	if (natural_duration_c_inf_millis <= maxDuration) setupCInfinityModel(natural_duration_c_inf_millis, maxDuration);
+	else if (natural_duration_c_one_millis <= maxDuration) setupCOne2StageModel(natural_duration_c_one_millis, edgeAccel);
+	else setupCOne3StageModel(edgeAccel, maxDuration); // Both other models would take too long. Use the fixed-duration 3-stage profile.
 
-		// Add the base duration to the natural duration, and cap at the long zoom duration.
-		durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_millis);
-		durationMillis = Math.min(durationMillis, maxDuration);
-		const T = durationMillis / 1000; // Final duration in seconds
-
-		// Based on this final duration, solve for the required initial acceleration and jerk.
-		if (T > 0) {
-			initial_accel_c_inf = 6 * differenceE / (T * T);
-			jerk_c_inf = -2 * initial_accel_c_inf / T; // Jerk is constant throughout
-		} else {
-			initial_accel_c_inf = 0;
-			jerk_c_inf = 0;
-		}
-	} else if (natural_duration_c_one_millis <= maxDuration) {
-		// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
-		console.log("Using C¹ 2-Stage Model");
-		zoomModel = 'C_ONE_2_STAGE';
-		durationMillis = natural_duration_c_one_millis;
-		
-		accel_stage1 = Math.sign(differenceE) * edgeAccel;
-		const t_half_secs = durationMillis / 2000;
-
-		stageEndTimes = {
-			stage1: t_half_secs * 1000,
-			// Not used, but set for consistency
-			stage2: durationMillis, 
-			stage3: durationMillis,
-		};
-
-		// Pre-calculate boundary conditions for the handoff.
-		v_at_stage1_end = accel_stage1 * t_half_secs;
-		e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
-	} else {
-		// --- CASE C: 3-STAGE MODEL ---
-		console.log("Using C¹ 3-Stage Model");
-		// Both other models would take too long. Use the fixed-duration 3-stage profile.
-		zoomModel = 'C_ONE_3_STAGE';
-		durationMillis = maxDuration;
-
-		const t1 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
-		const t2 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
-		const t_s2_half = t2 / 2;
-
-		stageEndTimes = {
-			stage1: t1 * 1000,
-			stage2: (t1 + t2) * 1000,
-			stage3: durationMillis,
-		};
-		
-		// Set Stage 1 acceleration and determine the distance it covers.
-		// The direction of acceleration depends on the direction of the zoom.
-		accel_stage1 = Math.sign(differenceE) * edgeAccel;
-
-		// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
-		// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
-		const dist_stage1_and_3 = accel_stage1 * t1 * t1;
-
-		// Calculate the remaining distance that must be covered in Stage 2.
-		const remaining_dist = differenceE - dist_stage1_and_3;
-			
-		// Solve for the Stage 2 acceleration needed to cover that remaining distance.
-		// We use the formula: d = v₀t + 0.5at²
-		// For the first half of stage 2, v₀ is the velocity at the end of stage 1.
-		v_at_stage1_end = accel_stage1 * t1;
-		// The distance for the first half of stage 2 is remaining_dist / 2.
-		// (remaining_dist / 2) = v_at_stage1_end * t_s2_half + 0.5 * a₂ * t_s2_half²
-		// Rearranging to solve for a₂:
-		accel_stage2 = (remaining_dist - 2 * v_at_stage1_end * t_s2_half) / (t_s2_half * t_s2_half);
-
-		const edgeAccelPositive = Math.sign(differenceE) === 1;
-		if (edgeAccelPositive && accel_stage2 < 0 || !edgeAccelPositive && accel_stage2 > 0) {
-			console.warn("Calculated stage 2 acceleration has the wrong sign: " + accel_stage2);
-		}
-		
-		// Pre-calculate all boundary conditions to use in the update loop.
-		e_at_stage1_end = originE + (0.5 * dist_stage1_and_3);
-		v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
-		e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
-
-		// By symmetry of the C¹ model within Stage 2, velocity at the end is guaranteed to match velocity at the start.
-		v_at_stage2_end = v_at_stage1_end; 
-		e_at_stage2_end = e_at_stage1_end + remaining_dist; // By definition
-	}
-
-	console.log("Duration: " + durationMillis + "ms");
-
+	// console.log("Duration: " + durationMillis + "ms");
 
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos(), destinationScale: boardpos.getBoardScale() });
+}
+
+/** Sets up the C-Infinity 1-Stage Model for the current zoom transition. */
+function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration: number): void {
+	console.log("Using C-Infinity 1-Stage Model");
+	zoomModel = 'C_INF';
+
+	// Add the base duration to the natural duration, and cap at the long zoom duration.
+	durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_millis);
+	durationMillis = Math.min(durationMillis, maxDuration);
+	const T = durationMillis / 1000; // Final duration in seconds
+
+	// Based on this final duration, solve for the required initial acceleration and jerk.
+	if (T > 0) {
+		initial_accel_c_inf = 6 * differenceE / (T * T);
+		jerk_c_inf = -2 * initial_accel_c_inf / T; // Jerk is constant throughout
+	} else {
+		initial_accel_c_inf = 0;
+		jerk_c_inf = 0;
+	}
+}
+
+/** Sets up the C¹ 2-Stage Model for the current zoom transition. */
+function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: number): void {
+	// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
+	console.log("Using C¹ 2-Stage Model");
+	zoomModel = 'C_ONE_2_STAGE';
+
+	durationMillis = natural_duration_c_one_millis;
+	
+	accel_stage1 = Math.sign(differenceE) * edgeAccel;
+	const t_half_secs = durationMillis / 2000;
+
+	stageEndTimes = {
+		stage1: t_half_secs * 1000,
+		// Not used, but set for consistency
+		stage2: durationMillis, 
+		stage3: durationMillis,
+	};
+
+	// Pre-calculate boundary conditions for the handoff.
+	v_at_stage1_end = accel_stage1 * t_half_secs;
+	e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
+}
+
+/** Sets up the C¹ 3-Stage Model for the current zoom transition. */
+function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
+	// --- CASE C: 3-STAGE MODEL ---
+	console.log("Using C¹ 3-Stage Model");
+	zoomModel = 'C_ONE_3_STAGE';
+
+	durationMillis = maxDuration;
+
+	const t1 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
+	const t2 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
+	const t_s2_half = t2 / 2;
+
+	stageEndTimes = {
+		stage1: t1 * 1000,
+		stage2: (t1 + t2) * 1000,
+		stage3: durationMillis,
+	};
+	
+	// Set Stage 1 acceleration and determine the distance it covers.
+	// The direction of acceleration depends on the direction of the zoom.
+	accel_stage1 = Math.sign(differenceE) * edgeAccel;
+
+	// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
+	// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
+	const dist_stage1_and_3 = accel_stage1 * t1 * t1;
+
+	// Calculate the remaining distance that must be covered in Stage 2.
+	const remaining_dist = differenceE - dist_stage1_and_3;
+		
+	// Solve for the Stage 2 acceleration needed to cover that remaining distance.
+	// We use the formula: d = v₀t + 0.5at²
+	// For the first half of stage 2, v₀ is the velocity at the end of stage 1.
+	v_at_stage1_end = accel_stage1 * t1;
+	// The distance for the first half of stage 2 is remaining_dist / 2.
+	// (remaining_dist / 2) = v_at_stage1_end * t_s2_half + 0.5 * a₂ * t_s2_half²
+	// Rearranging to solve for a₂:
+	accel_stage2 = (remaining_dist - 2 * v_at_stage1_end * t_s2_half) / (t_s2_half * t_s2_half);
+
+	const edgeAccelPositive = Math.sign(differenceE) === 1;
+	if (edgeAccelPositive && accel_stage2 < 0 || !edgeAccelPositive && accel_stage2 > 0) {
+		console.warn("Calculated stage 2 acceleration has the wrong sign: " + accel_stage2);
+	}
+	
+	// Pre-calculate all boundary conditions to use in the update loop.
+	e_at_stage1_end = originE + (0.5 * dist_stage1_and_3);
+	v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
+	e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
+
+	// By symmetry of the C¹ model within Stage 2, velocity at the end is guaranteed to match velocity at the start.
+	v_at_stage2_end = v_at_stage1_end; 
+	e_at_stage2_end = e_at_stage1_end + remaining_dist; // By definition
 }
 
 /** Starts a Panning Transition. */
@@ -467,64 +475,69 @@ function update(): void {
  * Handles the kinematic update logic for all zoom transitions.
  */
 function updateZoomingTransition(elapsedTime: number): void {
-	let currentE: number;
-	const targetCoords: BDCoords = isZoomOut ? originCoords : destinationCoords;
 	const t_sec = elapsedTime / 1000;
+	let currentE: number;
 
-	switch (zoomModel) {
-		case 'C_INF': {
-			// --- C-INFINITY 1-STAGE UPDATE LOGIC ---
-			// Position with constant jerk is given by the cubic formula:
-			// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
-			// Since e₀ and v₀ are 0 relative to the start:
-			currentE = originE + (0.5 * initial_accel_c_inf * t_sec * t_sec) + ((1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec);
-			break;
-		}
-		case 'C_ONE_2_STAGE': {
-			// --- C¹ 2-STAGE UPDATE LOGIC ---
-			if (elapsedTime <= stageEndTimes.stage1) {
-				// Stage 1: Accelerate
-				const t = t_sec;
-				currentE = originE + (0.5 * accel_stage1 * t * t);
-			} else {
-				// Stage 2: Symmetrical Decelerate
-				const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
-				currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) - (0.5 * accel_stage1 * t_s2 * t_s2);
-			}
-			break;
-		}
-		case 'C_ONE_3_STAGE': {
-			// --- C¹ 3-STAGE UPDATE LOGIC ---
-			if (elapsedTime <= stageEndTimes.stage1) {
-				// STAGE 1: Constant positive acceleration
-				// console.log("Stage 1");
+	if (zoomModel === "C_INF") currentE = updateCInfinityTransition(t_sec);
+	else if (zoomModel === "C_ONE_2_STAGE") currentE = updateCOne2StageTransition(t_sec, elapsedTime);
+	else currentE = updateCOne3StageTransition(t_sec, elapsedTime);
 
-				const t = t_sec;
-				currentE = originE + (0.5 * accel_stage1 * t * t);
-			} else if (elapsedTime <= stageEndTimes.stage2) {
-				// STAGE 2: Higher acceleration, then symmetrical deceleration.
-				// console.log("Stage 2");
-				const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
-				const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
-				if (t_s2 <= t_s2_half) {
-					// First half of Stage 2: Constant acceleration
-					currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
-				} else {
-					// Second half of Stage 2: Symmetrical constant deceleration
-					const t_s2_b = t_s2 - t_s2_half; // Time into the second half
-					currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
-				}
-			} else {
-				// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
-				// console.log("Stage 3");
-				const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
-				currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
-			}
-			break;
-		}
+	applyZoomState(currentE);
+}
+
+/** Calculates the current "e" value for the current C-Infinity 1-Stage Model zoom transition. */
+function updateCInfinityTransition(t_sec: number): number {
+	// Position with constant jerk is given by the cubic formula:
+	// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
+	// Since e₀ and v₀ are 0 relative to the start:
+	return originE + (0.5 * initial_accel_c_inf * t_sec * t_sec) + ((1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec);
+}
+
+/** Calculates the current "e" value for the current C¹ 2-Stage Model zoom transition. */
+function updateCOne2StageTransition(t_sec: number, elapsedTime: number): number {
+	if (elapsedTime <= stageEndTimes.stage1) {
+		// Stage 1: Accelerate
+		const t = t_sec;
+		return originE + (0.5 * accel_stage1 * t * t);
+	} else {
+		// Stage 2: Symmetrical Decelerate
+		const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+		return e_at_stage1_end + (v_at_stage1_end * t_s2) - (0.5 * accel_stage1 * t_s2 * t_s2);
 	}
+}
 
+/** Calculates the current "e" value for the current C¹ 3-Stage Model zoom transition. */
+function updateCOne3StageTransition(t_sec: number, elapsedTime: number): number {
+	if (elapsedTime <= stageEndTimes.stage1) {
+		// STAGE 1: Constant positive acceleration
+		// console.log("Stage 1");
+		const t = t_sec;
+		return originE + (0.5 * accel_stage1 * t * t);
+	} else if (elapsedTime <= stageEndTimes.stage2) {
+		// STAGE 2: Higher acceleration, then symmetrical deceleration.
+		// console.log("Stage 2");
+		const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+		const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
+		if (t_s2 <= t_s2_half) {
+			// First half of Stage 2: Constant acceleration
+			return e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
+		} else {
+			// Second half of Stage 2: Symmetrical constant deceleration
+			const t_s2_b = t_s2 - t_s2_half; // Time into the second half
+			return e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
+		}
+	} else {
+		// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
+		// console.log("Stage 3");
+		const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
+		return e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
+	}
+}
+
+/** Applies the current board scale and position based on the given "e" value and focus point. */
+function applyZoomState(currentE: number): void {
 	// This focus point location logic is identical for all models.
+	const focus: BDCoords = isZoomOut ? originCoords : destinationCoords;
 
 	let scaleProgress = 0;
 	if (differenceE !== 0) scaleProgress = (currentE - originE) / differenceE;
@@ -544,8 +557,8 @@ function updateZoomingTransition(elapsedTime: number): void {
 	const shiftY = bd.divide_floating(worldY, newScale);
 
 	// Apply the shift to the target coordinates to get the new board position
-	const newX = bd.subtract(targetCoords[0], shiftX);
-	const newY = bd.subtract(targetCoords[1], shiftY);
+	const newX = bd.subtract(focus[0], shiftX);
+	const newY = bd.subtract(focus[1], shiftY);
 
 	boardpos.setBoardPos([newX, newY]);
 }
