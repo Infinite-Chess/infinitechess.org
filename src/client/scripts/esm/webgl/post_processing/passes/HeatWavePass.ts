@@ -42,5 +42,6 @@ export class HeatWavePass implements PostProcessPass {
 		gl.uniform1i(this.program.getUniformLocation('u_noiseTexture'), 1); // Use unit 1
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);
+		gl.uniform2f(this.program.getUniformLocation('u_resolution'), gl.canvas.width, gl.canvas.height);
 	}
 }

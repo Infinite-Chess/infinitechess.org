@@ -194,7 +194,7 @@ export class DustyWastesZone implements Zone {
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeIn(transitionDurationMillis); // Pass the target volume
+		this.ambience.fadeIn(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {

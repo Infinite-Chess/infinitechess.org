@@ -89,7 +89,7 @@ type Uniforms_SineWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_amplitude' |
 type Attributes_WaterRipple = never;
 type Uniforms_WaterRipple = 'u_sceneTexture' | 'u_centers' | 'u_times' | 'u_dropletCount' | 'u_strength' | 'u_propagationSpeed' | 'u_oscillationSpeed' | 'u_frequency' | 'u_glintIntensity' | 'u_glintExponent' | 'u_falloff' | 'u_resolution';
 type Attributes_HeatWave = never;
-type Uniforms_HeatWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_noiseTexture' | 'u_time' | 'u_strength';
+type Uniforms_HeatWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_noiseTexture' | 'u_time' | 'u_strength' | 'u_resolution';
 type Attributes_VoronoiDistortion = never;
 type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_masterStrength' | 'u_time' | 'u_density' | 'u_strength' | 'u_ridgeThickness' | 'u_ridgeStrength' | 'u_resolution';
 
