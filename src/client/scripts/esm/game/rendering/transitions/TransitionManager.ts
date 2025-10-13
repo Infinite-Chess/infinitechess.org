@@ -24,8 +24,6 @@ import coordutil, { BDCoords, Coords, DoubleCoords } from '../../../../../../sha
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
-import ZoomingTransition, { ZoomTransition } from './ZoomingTransition.js';
-import PanningTransition, { PanTransition } from './PanningTransition.js';
 
 
 // Type Definitions ----------------------------------------------------------------------
@@ -38,6 +36,19 @@ type Transition = ZoomTransition & {
 } | PanTransition & {
 	isZoom: false;
 }
+
+export type ZoomTransition = {
+	/** The destination board location. */
+	destinationCoords: BDCoords;
+	/** The destination board location. */
+	destinationScale: BigDecimal;
+}
+
+export type PanTransition = {
+	/** The destination board location. */
+	destinationCoords: BDCoords;
+}
+
 
 
 // Constants ----------------------------------------------------------------------
@@ -96,6 +107,9 @@ const PAN_TRANSITION_CONFIG = {
 	MAX_PAN_DISTANCE: 90,
 } as const;
 
+
+const ONE = bd.FromBigInt(1n);
+const NEGONE = bd.FromBigInt(-1n);
 
 
 // Variables ----------------------------------------------------------------------
@@ -161,21 +175,31 @@ let differenceE: number;
 let differenceCoords: BDCoords;
 
 
-// Zoom-specific State
+// Zoom-specific State, pre-calculated
 
 /** [ESTIMATION] If the current transition is a Zooming Transition, this is the origin world space coords. */
 let originWorldSpace: DoubleCoords;
-/** [ESTIMATION] If the current transition is a Zooming Transition, this is the destination world space coords. */
+/** If the current transition is a Zooming Transition, this is the destination world space coords. */
 let destinationWorldSpace: DoubleCoords;
 /** Precalculated difference between the current transition's calculated origin and destination world space coords. */
 let differenceWorldSpace: DoubleCoords;
 
-
-// Long Zoom State
-
-
-// NEW: Long Zoom KINEMATIC State (pre-calculated in startZoomTransition)
-let isThreeStageModel: boolean = false; // Distinguishes between 2-stage and 3-stage
+/**
+ * Which kinematic model to use for the current long zoom transition.
+ * 
+ * - C_INF: C-infinity, 1-stage model (shortest duration, smoothest).
+ *   Used if its natural duration fits within the cap transition duration.
+ * 
+ * - C_ONE_2_STAGE: C¹, velocity-continuous, 2-stage model.
+ *   Used if C_INF would take too long, but this model fits within the cap duration.
+ *   Without this fallback model, C_ONE_3_STAGE at specific zooms would have to
+ *   accelerate, decelerate, accelerate, then decelerate again, which feels bad.
+ * 
+ * - C_ONE_3_STAGE: C¹, velocity-continuous, 3-stage model with fixed duration.
+ *   Used if both other models would take too long.
+ *   Compresses the potentially arbitrarily large scale difference into stage 2.
+ */
+let zoomModel: 'C_INF' | 'C_ONE_2_STAGE' | 'C_ONE_3_STAGE';
 let stageEndTimes: { stage1: number; stage2: number; stage3: number; };
 
 // C¹ 3-Stage Model State
@@ -234,24 +258,59 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 
 	// Perspective duration multiplier
 	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_DURATION_MILLIS.PERSPECTIVE_MULTIPLIER : 1;
+    
+	// Determine which model to use by checking each profile's
+	// natural duration (excludes base duration or capping) in order.
 
-	// --- UNIFIED KINEMATIC MODEL SETUP ---
+	// 1. First, the C-infinity model.
+	// Calculate its natural duration if capped at our comfortable EDGE_ACCELERATION.
+	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION)) * 1000;
 
-	// Determine which model to use.
-	// First, calculate the "natural" duration a C-infinity (constant jerk) transition would take
-	// if its initial acceleration were capped at our comfortable EDGE_ACCELERATION.
-	// The formula for distance with constant jerk is: d = (1/6) * a₀ * T².
-	// We rearrange to solve for T: T = sqrt(6 * d / a₀).
-	const natural_duration_secs = Math.sqrt(Math.abs(6 * differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION));
-	const natural_duration_millis = natural_duration_secs * 1000;
+	// C¹ 2-stage model natural duration, which is acceleration-capped.
+	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION)) * 2 * 1000;
 
-	// Compare this natural duration to our maximum desired duration.
-	if (natural_duration_millis > LONG_ZOOM_CONFIG.DURATION_MILLIS) {
-		console.log("Using 3-Stage Model (Natural duration " + natural_duration_millis.toFixed(0) + "ms > " + LONG_ZOOM_CONFIG.DURATION_MILLIS + "ms)");
-		// --- CASE A: 3-STAGE MODEL (Long distances) ---
-		// The journey is too long to be completed in a reasonable time with the C-infinity profile.
-		// We MUST use the fixed-duration 3-stage model which adds a high-acceleration "cruise" phase.
-		isThreeStageModel = true;
+	if (natural_duration_c_inf_millis <= LONG_ZOOM_CONFIG.DURATION_MILLIS) {
+		// --- CASE A: C-INFINITY 1-STAGE MODEL ---
+		console.log("Using C-Infinity 1-Stage Model");
+		zoomModel = 'C_INF';
+
+		// Add the base duration to the natural duration, and cap at the long zoom duration.
+		durationMillis = ZOOM_TRANSITION_DURATION_MILLIS.BASE + natural_duration_c_inf_millis;
+		durationMillis = Math.min(durationMillis, LONG_ZOOM_CONFIG.DURATION_MILLIS);
+		const T = durationMillis / 1000; // Final duration in seconds
+
+		// Based on this final duration, solve for the required initial acceleration and jerk.
+		if (T > 0) {
+			initial_accel_c_inf = 6 * differenceE / (T * T);
+			jerk_c_inf = -2 * initial_accel_c_inf / T; // Jerk is constant throughout
+		} else {
+			initial_accel_c_inf = 0;
+			jerk_c_inf = 0;
+		}
+	} else if (natural_duration_c_one_millis <= LONG_ZOOM_CONFIG.DURATION_MILLIS) {
+		// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
+		console.log("Using C¹ 2-Stage Model");
+		zoomModel = 'C_ONE_2_STAGE';
+		durationMillis = natural_duration_c_one_millis;
+		
+		accel_stage1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
+		const t_half_secs = durationMillis / 2000;
+
+		stageEndTimes = {
+			stage1: t_half_secs * 1000,
+			// Not used, but set for consistency
+			stage2: durationMillis, 
+			stage3: durationMillis,
+		};
+
+		// Pre-calculate boundary conditions for the handoff.
+		v_at_stage1_end = accel_stage1 * t_half_secs;
+		e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
+	} else {
+		// --- CASE C: 3-STAGE MODEL ---
+		console.log("Using C¹ 3-Stage Model");
+		// Both other models would take too long. Use the fixed-duration 3-stage profile.
+		zoomModel = 'C_ONE_3_STAGE';
 		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS;
 
 		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
@@ -274,7 +333,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 
 		// Calculate the remaining distance that must be covered in Stage 2.
 		const remaining_dist = differenceE - dist_stage1_and_3;
-
+			
 		// Solve for the Stage 2 acceleration needed to cover that remaining distance.
 		// We use the formula: d = v₀t + 0.5at²
 		// For the first half of stage 2, v₀ is the velocity at the end of stage 1.
@@ -284,40 +343,23 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		// Rearranging to solve for a₂:
 		accel_stage2 = (remaining_dist - 2 * v_at_stage1_end * t_s2_half) / (t_s2_half * t_s2_half);
 
-		// const edgeAccelPositive = Math.sign(differenceE) === 1;
-		// if (edgeAccelPositive && accel_stage2 < 0 || !edgeAccelPositive && accel_stage2 > 0) {
-		// 	console.warn("Calculated stage 2 acceleration has the wrong sign: " + accel_stage2);
-		// }
+		const edgeAccelPositive = Math.sign(differenceE) === 1;
+		if (edgeAccelPositive && accel_stage2 < 0 || !edgeAccelPositive && accel_stage2 > 0) {
+			console.warn("Calculated stage 2 acceleration has the wrong sign: " + accel_stage2);
+		}
+		
 		// Pre-calculate all boundary conditions to use in the update loop.
 		e_at_stage1_end = originE + (0.5 * dist_stage1_and_3);
 		v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
 		e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
-		
+
 		// By symmetry of the C¹ model within Stage 2, velocity at the end is guaranteed to match velocity at the start.
 		v_at_stage2_end = v_at_stage1_end; 
 		e_at_stage2_end = e_at_stage1_end + remaining_dist; // By definition
-
-	} else {
-		console.log("Using C-Infinity 1-Stage Model");
-		// --- CASE B: C-INFINITY 1-STAGE MODEL (Short to Medium distances) ---
-		// The journey is short enough to be handled by a single, perfectly smooth,
-		// C-infinity (constant jerk) motion profile.
-		isThreeStageModel = false;
-
-		// 1. Add the base duration to the natural duration, and cap at the long zoom duration.
-		durationMillis = ZOOM_TRANSITION_DURATION_MILLIS.BASE + natural_duration_millis;
-		durationMillis = Math.min(durationMillis, LONG_ZOOM_CONFIG.DURATION_MILLIS);
-		const T = durationMillis / 1000; // Final duration in seconds
-
-		// 2. Based on this final duration, solve for the required initial acceleration and jerk.
-		if (T > 0) {
-			initial_accel_c_inf = 6 * differenceE / (T * T);
-			jerk_c_inf = -2 * initial_accel_c_inf / T; // Jerk is constant throughout
-		} else {
-			initial_accel_c_inf = 0;
-			jerk_c_inf = 0;
-		}
 	}
+
+	console.log("Duration: " + durationMillis + "ms");
+
 
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos(), destinationScale: boardpos.getBoardScale() });
 }
@@ -428,74 +470,156 @@ function update(): void {
 
 	if (isZoom) {
 		// Zooming Transition
-		updateLongZoomTransition(elapsedTime);
+		updateZoomingTransition(elapsedTime);
 	} else {
 		// Panning Transition
 		const t = elapsedTime / durationMillis; // 0-1 elapsed time (t) value
 		const easedT = math.easeInOut(t);
-		PanningTransition.updatePanningTransition(t, easedT, originCoords, destinationCoords, differenceCoords);
+		updatePanningTransition(t, easedT, originCoords, destinationCoords, differenceCoords);
 	}
 }
 
 
 /**
- * Handles the 3-stage kinematic update logic for long-distance
- * zooms, ensuring continuous velocity between stages.
+ * Handles the kinematic update logic for all zoom transitions.
  */
-function updateLongZoomTransition(elapsedTime: number): void {
+function updateZoomingTransition(elapsedTime: number): void {
 	let currentE: number;
 	const targetCoords: BDCoords = isZoomOut ? originCoords : destinationCoords;
 	const t_sec = elapsedTime / 1000;
 
-	if (isThreeStageModel) {
-		// --- 3-STAGE C¹ UPDATE LOGIC ---
-		if (elapsedTime <= stageEndTimes.stage1) {
-			// STAGE 1: Constant positive acceleration
-			// console.log("Stage 1");
-
-			const t = t_sec;
-			currentE = originE + (0.5 * accel_stage1 * t * t);
-		} else if (elapsedTime <= stageEndTimes.stage2) {
-			// STAGE 2: Higher acceleration, then symmetrical deceleration.
-			// console.log("Stage 2");
-			const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
-			const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
-			if (t_s2 <= t_s2_half) {
-				// First half of Stage 2: Constant acceleration
-				currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
-			} else {
-				// Second half of Stage 2: Symmetrical constant deceleration
-				const t_s2_b = t_s2 - t_s2_half; // Time into the second half
-				currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
-			}
-		} else {
-			// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
-			// console.log("Stage 3");
-			const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
-			currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
+	switch (zoomModel) {
+		case 'C_INF': {
+			// --- C-INFINITY 1-STAGE UPDATE LOGIC ---
+			// Position with constant jerk is given by the cubic formula:
+			// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
+			// Since e₀ and v₀ are 0 relative to the start:
+			currentE = originE + (0.5 * initial_accel_c_inf * t_sec * t_sec) + ((1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec);
+			break;
 		}
-	} else {
-		// --- C-INFINITY 1-STAGE UPDATE LOGIC ---
-		// Position with constant jerk is given by the cubic formula:
-		// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
-		// Since e₀ and v₀ are 0 relative to the start:
-		currentE = originE + (0.5 * initial_accel_c_inf * t_sec * t_sec) + ((1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec);
+		case 'C_ONE_2_STAGE': {
+			// --- C¹ 2-STAGE UPDATE LOGIC ---
+			if (elapsedTime <= stageEndTimes.stage1) {
+				// Stage 1: Accelerate
+				const t = t_sec;
+				currentE = originE + (0.5 * accel_stage1 * t * t);
+			} else {
+				// Stage 2: Symmetrical Decelerate
+				const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+				currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) - (0.5 * accel_stage1 * t_s2 * t_s2);
+			}
+			break;
+		}
+		case 'C_ONE_3_STAGE': {
+			// --- C¹ 3-STAGE UPDATE LOGIC ---
+			if (elapsedTime <= stageEndTimes.stage1) {
+				// STAGE 1: Constant positive acceleration
+				// console.log("Stage 1");
+
+				const t = t_sec;
+				currentE = originE + (0.5 * accel_stage1 * t * t);
+			} else if (elapsedTime <= stageEndTimes.stage2) {
+				// STAGE 2: Higher acceleration, then symmetrical deceleration.
+				// console.log("Stage 2");
+				const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+				const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
+				if (t_s2 <= t_s2_half) {
+					// First half of Stage 2: Constant acceleration
+					currentE = e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
+				} else {
+					// Second half of Stage 2: Symmetrical constant deceleration
+					const t_s2_b = t_s2 - t_s2_half; // Time into the second half
+					currentE = e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
+				}
+			} else {
+				// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
+				// console.log("Stage 3");
+				const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
+				currentE = e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
+			}
+			break;
+		}
 	}
 
-	// This universal focus point logic remains perfect for both models.
+	// This focus point location logic is identical for all models.
+
 	let scaleProgress = 0;
 	if (differenceE !== 0) scaleProgress = (currentE - originE) / differenceE;
-
-	const worldX = originWorldSpace[0] + differenceWorldSpace[0] * scaleProgress;
-	const worldY = originWorldSpace[1] + differenceWorldSpace[1] * scaleProgress;
-	const focusPointWorldSpace: DoubleCoords = [worldX, worldY];
 
 	// Apply the final scale and position to the board.
 	const newScale = bd.exp(bd.FromNumber(currentE));
 	boardpos.setBoardScale(newScale);
 
-	// In every stage, we use the same final calculation to set board position
-	ZoomingTransition.updateBoardPosFromFocus(targetCoords, focusPointWorldSpace, newScale);
+	// Calculate and set the new board position, based on where the focus point should be.
+	// SEE GRAPH ON DESMOS "World-space converted to boardPos" for my notes while writing this algorithm
+
+	const worldX = bd.FromNumber(originWorldSpace[0] + differenceWorldSpace[0] * scaleProgress);
+	const worldY = bd.FromNumber(originWorldSpace[1] + differenceWorldSpace[1] * scaleProgress);
+
+	// Convert the world-space offset to a board-space offset
+	const shiftX = bd.divide_floating(worldX, newScale);
+	const shiftY = bd.divide_floating(worldY, newScale);
+
+	// Apply the shift to the target coordinates to get the new board position
+	const newX = bd.subtract(targetCoords[0], shiftX);
+	const newY = bd.subtract(targetCoords[1], shiftY);
+
+	boardpos.setBoardPos([newX, newY]);
+}
+
+
+/** Updates the board position and scale for the current PANNING Transition. */
+function updatePanningTransition(t: number, easedT: number, originCoords: BDCoords, destinationCoords: BDCoords, differenceCoords: BDCoords): void {
+    
+	// What is the scale?
+	// What is the maximum distance we should pan b4 teleporting to the other half?
+	const boardScale = boardpos.getBoardScale();
+	const maxPanDist = bd.FromNumber(PAN_TRANSITION_CONFIG.MAX_PAN_DISTANCE);
+	const maxDistSquares = bd.divide_floating(maxPanDist, boardScale);
+	const transGreaterThanMaxDist = bd.compare(bd.abs(differenceCoords[0]), maxDistSquares) > 0 || bd.compare(bd.abs(differenceCoords[1]), maxDistSquares) > 0;
+
+	let newX: BigDecimal;
+	let newY: BigDecimal;
+
+	const difference = coordutil.copyBDCoords(differenceCoords);
+	const easedTBD = bd.FromNumber(easedT);
+
+	if (!transGreaterThanMaxDist) { // No mid-transition teleport required to maintain constant duration.
+		// Calculate new world-space
+		const addX = bd.multiply_fixed(difference[0], easedTBD);
+		const addY = bd.multiply_fixed(difference[1], easedTBD);
+		// Convert to board position
+		newX = bd.add(originCoords[0], addX);
+		newY = bd.add(originCoords[1], addY);
+	} else { // Mid-transition teleport REQUIRED to maintain constant duration.
+		// 1st half or 2nd half?
+		const firstHalf = t < 0.5;
+		const neg = firstHalf ? ONE : NEGONE;
+		const actualEasedT = bd.FromNumber(firstHalf ? easedT : 1 - easedT);
+
+		// Create a new, shorter vector that points in the exact same direction,
+		// but with a length that is visually manageable on screen.
+
+		// To preserve the vector's direction, we must scale it based on its largest component.
+		const absDiffX = bd.abs(difference[0]);
+		const absDiffY = bd.abs(difference[1]);
+		const maxComponent = bd.max(absDiffX, absDiffY);
+
+		const ratio = bd.divide_floating(maxDistSquares, maxComponent);
+
+		difference[0] = bd.multiply_floating(difference[0], ratio);
+		difference[1] = bd.multiply_floating(difference[1], ratio);
+
+		const target = firstHalf ? originCoords : destinationCoords;
+
+		const addX = bd.multiply_floating(bd.multiply_floating(difference[0], actualEasedT), neg);
+		const addY = bd.multiply_floating(bd.multiply_floating(difference[1], actualEasedT), neg);
+
+		newX = bd.add(target[0], addX);
+		newY = bd.add(target[1], addY);
+	}
+
+	boardpos.setBoardPos([newX, newY]);
 }
 
 
