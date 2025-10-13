@@ -64,7 +64,7 @@ const ZOOM_TRANSITION_CONFIG = {
 	/** The maximum duration any zooming transition can take. */
 	MAX_DURATION: 3500,
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
-	PERSPECTIVE_MULTIPLIER: 1.3,
+	DURATION_PERSPECTIVE_MULTIPLIER: 1.3,
 	/** The "comfortable" acceleration used for the start and end of the 2 & 3 stage models. */
 	EDGE_ACCELERATION: 40.0, // Default: 40.0
 	/** How the total duration of the 3-Stage Model is split between them. MUST sum to 1.0. */
@@ -238,26 +238,28 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	differenceWorldSpace = coordutil.subtractDoubleCoords(destinationWorldSpace, originWorldSpace);
 
 	// Perspective duration multiplier
-	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_CONFIG.PERSPECTIVE_MULTIPLIER : 1;
+	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_CONFIG.DURATION_PERSPECTIVE_MULTIPLIER : 1;
+	const maxDuration = ZOOM_TRANSITION_CONFIG.MAX_DURATION * perspectiveMultiplier;
+	const edgeAccel = ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION / perspectiveMultiplier;
     
 	// Determine which model to use by checking each profile's
 	// natural duration (excludes base duration or capping) in order.
 
 	// 1. First, the C-infinity model.
 	// Calculate its natural duration if capped at our comfortable EDGE_ACCELERATION.
-	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION)) * 1000;
+	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / edgeAccel)) * 1000;
 
 	// C¹ 2-stage model natural duration, which is acceleration-capped.
-	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION)) * 2 * 1000;
+	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / edgeAccel)) * 2 * 1000;
 
-	if (natural_duration_c_inf_millis <= ZOOM_TRANSITION_CONFIG.MAX_DURATION) {
+	if (natural_duration_c_inf_millis <= maxDuration) {
 		// --- CASE A: C-INFINITY 1-STAGE MODEL ---
 		console.log("Using C-Infinity 1-Stage Model");
 		zoomModel = 'C_INF';
 
 		// Add the base duration to the natural duration, and cap at the long zoom duration.
 		durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_millis);
-		durationMillis = Math.min(durationMillis, ZOOM_TRANSITION_CONFIG.MAX_DURATION);
+		durationMillis = Math.min(durationMillis, maxDuration);
 		const T = durationMillis / 1000; // Final duration in seconds
 
 		// Based on this final duration, solve for the required initial acceleration and jerk.
@@ -268,13 +270,13 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 			initial_accel_c_inf = 0;
 			jerk_c_inf = 0;
 		}
-	} else if (natural_duration_c_one_millis <= ZOOM_TRANSITION_CONFIG.MAX_DURATION) {
+	} else if (natural_duration_c_one_millis <= maxDuration) {
 		// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
 		console.log("Using C¹ 2-Stage Model");
 		zoomModel = 'C_ONE_2_STAGE';
 		durationMillis = natural_duration_c_one_millis;
 		
-		accel_stage1 = Math.sign(differenceE) * ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION;
+		accel_stage1 = Math.sign(differenceE) * edgeAccel;
 		const t_half_secs = durationMillis / 2000;
 
 		stageEndTimes = {
@@ -292,7 +294,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		console.log("Using C¹ 3-Stage Model");
 		// Both other models would take too long. Use the fixed-duration 3-stage profile.
 		zoomModel = 'C_ONE_3_STAGE';
-		durationMillis = ZOOM_TRANSITION_CONFIG.MAX_DURATION;
+		durationMillis = maxDuration;
 
 		const t1 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
 		const t2 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
@@ -306,7 +308,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		
 		// Set Stage 1 acceleration and determine the distance it covers.
 		// The direction of acceleration depends on the direction of the zoom.
-		accel_stage1 = Math.sign(differenceE) * ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION;
+		accel_stage1 = Math.sign(differenceE) * edgeAccel;
 
 		// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
 		// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
