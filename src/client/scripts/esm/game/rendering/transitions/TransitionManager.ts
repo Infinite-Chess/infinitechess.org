@@ -44,7 +44,7 @@ export type ZoomTransition = {
 	destinationScale: BigDecimal;
 }
 
-export type PanTransition = {
+type PanTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
 }
@@ -676,8 +676,4 @@ export default {
 	// Utility
 	eraseTelHist,
 	terminate,
-};
-
-export type {
-	ZoomTransition,
 };
