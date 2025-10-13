@@ -58,40 +58,21 @@ type PanTransition = {
 const HISTORY_CAP = 20;
 
 /** Stores config for the duration of standard (short) Zooming Transitions. */
-const ZOOM_TRANSITION_DURATION_MILLIS = {
-	/** The minimum, or base amount. All transitions take atleast this long. */
-	BASE: 350, // Default: 600
-	/**
-	 * An additional amount added for every "e" level of scale difference, in millis.
-	 * 
-	 * NOTE: For extremely large differences in scale from origin scale to destination scale,
-	 * Zooming Transitions take far too long. We should overhaul them when implementing infinite move distance. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	 */
-	MULTIPLIER: 40, // Default: 70
+const ZOOM_TRANSITION_CONFIG = {
+	/** The minimum duration any zooming transition must take. */
+	MIN_DURATION: 600, // Default: 600
+	/** The maximum duration any zooming transition can take. */
+	MAX_DURATION: 3500,
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	PERSPECTIVE_MULTIPLIER: 1.3,
-} as const;
-
-/**
- * Config for long-distance Zooming Transitions that exceed the natural log threshold.
- * This ensures that no matter how large the scale difference, the transition has a fixed, predictable duration.
- */
-const LONG_ZOOM_CONFIG = {
-	/** The fixed total duration of a long zoom transition. */
-	DURATION_MILLIS: 3500,
-	/** How the total duration is split between the three stages. MUST sum to 1.0. */
+	/** The "comfortable" acceleration used for the start and end of the 2 & 3 stage models. */
+	EDGE_ACCELERATION: 40.0, // Default: 40.0
+	/** How the total duration of the 3-Stage Model is split between them. MUST sum to 1.0. */
 	STAGE_SPLIT: {
 		ACCELERATE: 0.25, // 25% of time accelerating scale
-		CRUISE: 0.5, // 50% of time moving the focus point
-		DECELERATE: 0.25, // 25% of time decelerating scale
+		CRUISE: 0.5, // 50% arbitrarily fast scale change
+		DECELERATE: 0.25, // 25% decelerating scale
 	},
-	/**
-	 * NEW KINEMATIC MODEL CONSTANT
-	 * The "comfortable" acceleration used for the start and end of the transition.
-	 * This is a design parameter that dictates the "feel" of the ease-in/out.
-	 * Units are in: ln(scale) / second^2. A higher value feels snappier.
-	 */
-	EDGE_ACCELERATION: 40.0, // Default: 40.0
 } as const;
 
 
@@ -191,12 +172,12 @@ let differenceWorldSpace: DoubleCoords;
  *   Used if its natural duration fits within the cap transition duration.
  * 
  * - C_ONE_2_STAGE: C¹, velocity-continuous, 2-stage model.
- *   Used if C_INF would take too long, but this model fits within the cap duration.
+ *   Used if C_INF would take too long (4e36), but this model fits within the cap duration.
  *   Without this fallback model, C_ONE_3_STAGE at specific zooms would have to
  *   accelerate, decelerate, accelerate, then decelerate again, which feels bad.
  * 
  * - C_ONE_3_STAGE: C¹, velocity-continuous, 3-stage model with fixed duration.
- *   Used if both other models would take too long.
+ *   Used if both other models would take too long (4e54).
  *   Compresses the potentially arbitrarily large scale difference into stage 2.
  */
 let zoomModel: 'C_INF' | 'C_ONE_2_STAGE' | 'C_ONE_3_STAGE';
@@ -257,26 +238,26 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 	differenceWorldSpace = coordutil.subtractDoubleCoords(destinationWorldSpace, originWorldSpace);
 
 	// Perspective duration multiplier
-	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_DURATION_MILLIS.PERSPECTIVE_MULTIPLIER : 1;
+	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_CONFIG.PERSPECTIVE_MULTIPLIER : 1;
     
 	// Determine which model to use by checking each profile's
 	// natural duration (excludes base duration or capping) in order.
 
 	// 1. First, the C-infinity model.
 	// Calculate its natural duration if capped at our comfortable EDGE_ACCELERATION.
-	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION)) * 1000;
+	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION)) * 1000;
 
 	// C¹ 2-stage model natural duration, which is acceleration-capped.
-	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / LONG_ZOOM_CONFIG.EDGE_ACCELERATION)) * 2 * 1000;
+	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION)) * 2 * 1000;
 
-	if (natural_duration_c_inf_millis <= LONG_ZOOM_CONFIG.DURATION_MILLIS) {
+	if (natural_duration_c_inf_millis <= ZOOM_TRANSITION_CONFIG.MAX_DURATION) {
 		// --- CASE A: C-INFINITY 1-STAGE MODEL ---
 		console.log("Using C-Infinity 1-Stage Model");
 		zoomModel = 'C_INF';
 
 		// Add the base duration to the natural duration, and cap at the long zoom duration.
-		durationMillis = ZOOM_TRANSITION_DURATION_MILLIS.BASE + natural_duration_c_inf_millis;
-		durationMillis = Math.min(durationMillis, LONG_ZOOM_CONFIG.DURATION_MILLIS);
+		durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_millis);
+		durationMillis = Math.min(durationMillis, ZOOM_TRANSITION_CONFIG.MAX_DURATION);
 		const T = durationMillis / 1000; // Final duration in seconds
 
 		// Based on this final duration, solve for the required initial acceleration and jerk.
@@ -287,13 +268,13 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 			initial_accel_c_inf = 0;
 			jerk_c_inf = 0;
 		}
-	} else if (natural_duration_c_one_millis <= LONG_ZOOM_CONFIG.DURATION_MILLIS) {
+	} else if (natural_duration_c_one_millis <= ZOOM_TRANSITION_CONFIG.MAX_DURATION) {
 		// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
 		console.log("Using C¹ 2-Stage Model");
 		zoomModel = 'C_ONE_2_STAGE';
 		durationMillis = natural_duration_c_one_millis;
 		
-		accel_stage1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
+		accel_stage1 = Math.sign(differenceE) * ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION;
 		const t_half_secs = durationMillis / 2000;
 
 		stageEndTimes = {
@@ -311,10 +292,10 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		console.log("Using C¹ 3-Stage Model");
 		// Both other models would take too long. Use the fixed-duration 3-stage profile.
 		zoomModel = 'C_ONE_3_STAGE';
-		durationMillis = LONG_ZOOM_CONFIG.DURATION_MILLIS;
+		durationMillis = ZOOM_TRANSITION_CONFIG.MAX_DURATION;
 
-		const t1 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
-		const t2 = (durationMillis * LONG_ZOOM_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
+		const t1 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
+		const t2 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
 		const t_s2_half = t2 / 2;
 
 		stageEndTimes = {
@@ -325,7 +306,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 		
 		// Set Stage 1 acceleration and determine the distance it covers.
 		// The direction of acceleration depends on the direction of the zoom.
-		accel_stage1 = Math.sign(differenceE) * LONG_ZOOM_CONFIG.EDGE_ACCELERATION;
+		accel_stage1 = Math.sign(differenceE) * ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION;
 
 		// Distance covered in Stage 1 & 3 is determined by the fixed edge acceleration.
 		// Using d = v₀t + 0.5at², where v₀=0 for stage 1. Stage 3 is symmetrical.
@@ -659,9 +640,6 @@ function terminate(): void {
 
 
 export default {
-	// Constants
-	ZOOM_TRANSITION_DURATION_MILLIS,
-	PAN_TRANSITION_CONFIG,
 	// Initiating Transitions
 	areTransitioning,
 	startZoomTransition,

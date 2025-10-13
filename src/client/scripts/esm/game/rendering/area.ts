@@ -17,13 +17,12 @@ import guigameinfo from '../gui/guigameinfo.js';
 import boardpos from './boardpos.js';
 import meshes from './meshes.js';
 import space from '../misc/space.js';
-import TransitionManager from './transitions/TransitionManager.js';
+import TransitionManager, { ZoomTransition } from './transitions/TransitionManager.js';
 import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 
 import type { BDCoords, Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { ZoomTransition } from './transitions/ZoomingTransition.js';
 
 
 
