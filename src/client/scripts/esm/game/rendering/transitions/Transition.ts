@@ -8,8 +8,9 @@
  * Panning Transition - Quicker, doesn't zoom at all, teleports at the halfway t value so it can
  * span arbitrary distances in constant time.
  *
- * Zooming Transition - Slower. For large differences in scale, it uses a 3-stage process to
- * ensure a maximum duration is never exceeded, preventing infinitely long transitions.
+ * Zooming Transition - Slower. For varying differences in scale, it uses different
+ * models with varying stages. The goal is to perform the entire transition
+ * within a constant duration, while still feeling smooth and natural.
  */
 
 
@@ -57,7 +58,19 @@ type PanTransition = {
 /** The maximum number of transitions we will retain in our history, for undoing transitions. */
 const HISTORY_CAP = 20;
 
-/** Stores config for the duration of standard (short) Zooming Transitions. */
+/** Stores config for Panning Transitions. */
+const PAN_TRANSITION_CONFIG = {
+	/** Duration of ALL Panning Transitions. */
+	DURATION_MILLIS: 800,
+	/**
+	 * The maximum distance a Panning Transition will travel before
+	 * teleporting mid-transition to reach its destination in constant time,
+	 * in world space units (not affected by board scale).
+	 */
+	MAX_PAN_DISTANCE: 90,
+} as const;
+
+/** Stores config for Zooming Transitions. */
 const ZOOM_TRANSITION_CONFIG = {
 	/** The minimum duration any zooming transition must take. */
 	MIN_DURATION: 600, // Default: 600
@@ -73,19 +86,6 @@ const ZOOM_TRANSITION_CONFIG = {
 		CRUISE: 0.5, // 50% arbitrarily fast scale change
 		DECELERATE: 0.25, // 25% decelerating scale
 	},
-} as const;
-
-
-/** Stores config for Panning Transitions. */
-const PAN_TRANSITION_CONFIG = {
-	/** Duration of ALL Panning Transitions. */
-	DURATION_MILLIS: 800,
-	/**
-	 * The maximum distance a Panning Transition will travel before
-	 * teleporting mid-transition to reach its destination in constant time,
-	 * in world space units (not affected by board scale).
-	 */
-	MAX_PAN_DISTANCE: 90,
 } as const;
 
 
@@ -183,7 +183,11 @@ let differenceWorldSpace: DoubleCoords;
 let zoomModel: 'C_INF' | 'C_ONE_2_STAGE' | 'C_ONE_3_STAGE';
 let stageEndTimes: { stage1: number; stage2: number; stage3: number; };
 
-// C¹ 3-Stage Model State
+// C-infinity model state
+let initial_accel_c_inf: number;
+let jerk_c_inf: number;
+
+// C¹ models state
 let accel_stage1: number;
 let accel_stage2: number;
 let e_at_stage1_end: number;
@@ -193,9 +197,6 @@ let v_at_stage2_mid: number;
 let e_at_stage2_end: number;
 let v_at_stage2_end: number;
 
-// NEW: C-Infinity 1-Stage Model State
-let initial_accel_c_inf: number;
-let jerk_c_inf: number;
 
 
 // Initiating Transitions ---------------------------------------------------------------------
