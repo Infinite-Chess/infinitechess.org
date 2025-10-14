@@ -57,7 +57,7 @@ export class DustyWastesZone implements Zone {
 
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 0.75;
+		this.colorGradePass.saturation = 0.7;
 		
 		// Load the ambience...
 

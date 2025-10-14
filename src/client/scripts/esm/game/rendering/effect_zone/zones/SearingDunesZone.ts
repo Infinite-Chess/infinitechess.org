@@ -9,6 +9,7 @@ import { Zone } from "../EffectZoneManager";
 import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWavePass";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
 
 export class SearingDunesZone implements Zone {
@@ -26,55 +27,53 @@ export class SearingDunesZone implements Zone {
 
 
 	/** The speed of the moving heat waves. Default: 0.5 (strength 0.04) */
-	private heatWaveSpeed: number = 1.0;
+	private heatWaveSpeed: number = 2.0;
 
 
 	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {
 		noise.then(texture => this.heatWavePass = new HeatWavePass(programManager, texture));
 
 		this.colorGradePass = new ColorGradePass(programManager);
-		// this.colorGradePass.saturation = 1.2;
-		// this.colorGradePass.gamma = 1.2;
-		// this.colorGradePass.brightness = 0.2;
-		this.colorGradePass.tint = [1.0, 0.9, 0.9];
+		// this.colorGradePass.tint = [1.0, 0.9, 0.9];
 
 		// Load the ambience...
 
-		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.018,
-			layers: [
-				{
-					volume: {
-						base: 1,
-						lfo: {
-							wave: "perlin",
-							rate: 0.22,
-							depth: 0.4
-						}
-					},
-					source: {
-						type: "noise"
-					},
-					filters: [
-						{
-							type: "bandpass",
-							frequency: {
-								base: 7458
-							},
-							Q: {
-								base: 0.9601
-							},
-							gain: {
-								base: 0
-							}
-						}
-					]
-				}
-			]
-		};
+		// const noiseConfig: SoundscapeConfig = {
+		// 	masterVolume: 0.018,
+		// 	layers: [
+		// 		{
+		// 			volume: {
+		// 				base: 1,
+		// 				lfo: {
+		// 					wave: "perlin",
+		// 					rate: 0.22,
+		// 					depth: 0.4
+		// 				}
+		// 			},
+		// 			source: {
+		// 				type: "noise"
+		// 			},
+		// 			filters: [
+		// 				{
+		// 					type: "bandpass",
+		// 					frequency: {
+		// 						base: 7458
+		// 					},
+		// 					Q: {
+		// 						base: 0.9601
+		// 					},
+		// 					gain: {
+		// 						base: 0
+		// 					}
+		// 				}
+		// 			]
+		// 		}
+		// 	]
+		// };
 
 		// Initialize the player with the config.
-		this.ambience = new SoundscapePlayer(noiseConfig);
+		// this.ambience = new SoundscapePlayer(noiseConfig);
+		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 	}
 
 	/** Responsible for calculating the exact UV offsets of the noise texture layers each frame. */
