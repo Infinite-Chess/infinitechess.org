@@ -44,11 +44,11 @@ void main() {
 
 	// --- ORDER OF OPERATIONS ---
 
-	// 1. Apply Brightness
-	processedColor.rgb += u_brightness;
-
-	// 2. Apply Contrast
+	// 1. Apply Contrast
 	processedColor.rgb = (processedColor.rgb - 0.5) * u_contrast + 0.5;
+	
+	// 2. Apply Brightness
+	processedColor.rgb += u_brightness;
 
 	// 3. Apply Gamma Correction
 	// We use 1.0 / gamma which is the standard for gamma correction.
