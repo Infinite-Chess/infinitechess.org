@@ -1,3 +1,6 @@
+
+// src/client/scripts/esm/webgl/post_processing/passes/HeatWavePass.ts
+
 import type { ProgramManager, ProgramMap } from "../../ProgramManager";
 import type { PostProcessPass } from "../PostProcessingPipeline";
 
@@ -13,8 +16,8 @@ export class HeatWavePass implements PostProcessPass {
 	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
 	public masterStrength: number = 1.0;
 
-	/** The strength of the distortion effect. Default: 0.04 (time = performance.now() / 500) */
-	public strength: number = 0.04;
+	/** The strength of the distortion effect. */
+	public strength: number = 0.04; // Default: 0.04
 
 	/** The current time, used to animate the waves. Increment this each frame. */
 	public time: number = 0.0;

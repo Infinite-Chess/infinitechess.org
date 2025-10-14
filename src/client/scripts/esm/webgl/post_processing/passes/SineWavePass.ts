@@ -36,6 +36,7 @@ export class SineWavePass implements PostProcessPass {
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		this.program.use();
 		
+		// Bind the scene texture from the pipeline to TEXTURE UNIT 0
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
 
