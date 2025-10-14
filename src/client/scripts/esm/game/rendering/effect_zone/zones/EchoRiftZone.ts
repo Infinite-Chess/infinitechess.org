@@ -1,10 +1,11 @@
 
+import PerlinNoise from "../../../../util/PerlinNoise";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
 import { VoronoiDistortionPass } from "../../../../webgl/post_processing/passes/VoronoiDistortionPass";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
-import PerlinNoise from "../../../../util/PerlinNoise";
+import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 
 
 export class EchoRiftZone implements Zone {
@@ -16,6 +17,9 @@ export class EchoRiftZone implements Zone {
 
 	/** Post Processing Effect bending light through a crystalline voronoi distortion pattern structure. */
 	private voronoiDistortionPass: VoronoiDistortionPass;
+
+	/** The soundscape player for this zone. */
+	private ambience: SoundscapePlayer;
 
 	/** A 1D Perlin noise generator for randomizing color grade properties. */
 	private noiseGenerator: (t: number) => number;
@@ -46,6 +50,56 @@ export class EchoRiftZone implements Zone {
 		this.colorGradePass.contrast = 0.2;
 
 		this.noiseGenerator = PerlinNoise.create1DNoiseGenerator(30);
+
+		// Load the ambience...
+
+		const soundConfig: SoundscapeConfig = {
+			masterVolume: 1.0,
+			layers: [
+				{
+					volume: {
+						base: 0.7,
+						lfo: {
+							wave: "perlin",
+							rate: 1.13,
+							depth: 0.5
+						}
+					},
+					source: {
+						type: "noise"
+					},
+					filters: [
+						{
+							type: "lowpass",
+							frequency: {
+								base: 136
+							},
+							Q: {
+								base: 1.0001
+							},
+							gain: {
+								base: 0
+							}
+						},
+						{
+							type: "lowpass",
+							frequency: {
+								base: 139
+							},
+							Q: {
+								base: 1.0001
+							},
+							gain: {
+								base: 0
+							}
+						}
+					]
+				}
+			]
+		};
+
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(soundConfig);
 	}
 
 
@@ -76,10 +130,10 @@ export class EchoRiftZone implements Zone {
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
-
+		this.ambience.fadeIn(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
-
+		this.ambience.fadeOut(transitionDurationMillis);
 	}
 }
