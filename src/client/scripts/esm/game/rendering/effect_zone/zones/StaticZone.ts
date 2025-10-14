@@ -23,7 +23,7 @@ export class StaticZone implements Zone {
 	/** The strength of the effect. */
 	private strength: number = 0.05;
 	/** How large each "pixel" of the static should be, in screen pixels. */
-	private readonly PIXEL_SIZE = 5;
+	private readonly PIXEL_SIZE = 6;
 	/** How often the static pattern should change, in milliseconds. */
 	private readonly UPDATE_INTERVAL = 60;
 	// private readonly UPDATE_INTERVAL = 1000; // For testing
@@ -39,7 +39,7 @@ export class StaticZone implements Zone {
     
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 0.6;
+		this.colorGradePass.saturation = 0.5;
 		this.colorGradePass.brightness = -0.1;
 
 		// Load the ambience...

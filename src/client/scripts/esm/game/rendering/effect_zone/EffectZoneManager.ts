@@ -72,12 +72,12 @@ export class EffectZoneManager {
 		// { name: 'Echo Rift',        start: 10n ** 181n, advancedEffect: true },
         // { name: 'Static',           start: 10n ** 226n, advancedEffect: true },
 		// [TESTING] Much shorter distances:
-		{ name: 'Undercurrent',     start: BigInt(20), advancedEffect: false }, // DONE
-		{ name: 'Searing Dunes',   start: BigInt(40), advancedEffect: true }, // DONE
-		{ name: 'Contortion Field', start: BigInt(60), advancedEffect: true },
-		{ name: 'Dusty Wastes',     start: BigInt(80), advancedEffect: true }, // DONE
-		{ name: 'Static',           start: BigInt(100), advancedEffect: true }, // DONE
-		{ name: 'Echo Rift',        start: BigInt(120), advancedEffect: true },
+		{ name: 'Undercurrent',     start: 20n, advancedEffect: false },
+		{ name: 'Searing Dunes',   start: 40n, advancedEffect: true },
+		{ name: 'Contortion Field', start: 60n, advancedEffect: true },
+		{ name: 'Dusty Wastes',     start: 80n, advancedEffect: true },
+		{ name: 'Static',           start: 100n, advancedEffect: true },
+		{ name: 'Echo Rift',        start: 120n, advancedEffect: true },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -147,8 +147,10 @@ export class EffectZoneManager {
 				this.currentZone.fadeOutAmbience(this.transitionDuration);
 				this.transitionTargetZone?.fadeOutAmbience(this.transitionDuration);
 			} else {
-				// Fade in the current zone's ambience.
-				this.currentZone.fadeInAmbience(this.transitionDuration);
+				// If we're mid-transition, fade in the target zone's ambience.
+				if (this.transitionTargetZone) this.transitionTargetZone.fadeInAmbience(this.transitionDuration);
+				// Otherwise, fade in the current zone's ambience.
+				else this.currentZone.fadeInAmbience(this.transitionDuration);
 			}
 		});
 	}
