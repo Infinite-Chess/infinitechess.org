@@ -9,7 +9,8 @@
 import type { Zone } from "../EffectZoneManager";
 
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
 
 export class UndercurrentZone implements Zone {
@@ -24,48 +25,8 @@ export class UndercurrentZone implements Zone {
 	constructor() {
 		// Load the ambience...
 
-		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.36,
-			layers: [
-				{
-					volume: {
-						base: 1
-					},
-					source: {
-						type: "noise"
-					},
-					filters: [
-						{
-							type: "lowpass",
-							frequency: {
-								base: 136
-							},
-							Q: {
-								base: 1.0001
-							},
-							gain: {
-								base: 0
-							}
-						},
-						{
-							type: "lowpass",
-							frequency: {
-								base: 138
-							},
-							Q: {
-								base: 1.0001
-							},
-							gain: {
-								base: 0
-							}
-						}
-					]
-				}
-			]
-		};
-
 		// Initialize the player with the config.
-		this.ambience = new SoundscapePlayer(noiseConfig);
+		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 	}
 
 
