@@ -73,10 +73,10 @@ export class EffectZoneManager {
         // { name: 'Static',           start: 10n ** 226n, advancedEffect: true },
 		// [TESTING] Much shorter distances:
 		{ name: 'Undercurrent',     start: BigInt(20), advancedEffect: false }, // DONE
-		{ name: 'Dusty Wastes',     start: BigInt(40), advancedEffect: true }, // DONE
-		{ name: 'Searing Dunes',   start: BigInt(60), advancedEffect: true }, // DONE
-		{ name: 'Static',           start: BigInt(80), advancedEffect: true }, // DONE
-		{ name: 'Contortion Field', start: BigInt(100), advancedEffect: true },
+		{ name: 'Searing Dunes',   start: BigInt(40), advancedEffect: true }, // DONE
+		{ name: 'Contortion Field', start: BigInt(60), advancedEffect: true },
+		{ name: 'Dusty Wastes',     start: BigInt(80), advancedEffect: true }, // DONE
+		{ name: 'Static',           start: BigInt(100), advancedEffect: true }, // DONE
 		{ name: 'Echo Rift',        start: BigInt(120), advancedEffect: true },
 	] as const satisfies Readonly<EffectZone>[];
 
