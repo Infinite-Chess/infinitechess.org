@@ -18,7 +18,7 @@ const config: SoundscapeConfig = {
 						base: 136
 					},
 					Q: {
-						base: 1.0001
+						base: 1
 					},
 					gain: {
 						base: 0
@@ -30,7 +30,7 @@ const config: SoundscapeConfig = {
 						base: 138
 					},
 					Q: {
-						base: 1.0001
+						base: 1
 					},
 					gain: {
 						base: 0
