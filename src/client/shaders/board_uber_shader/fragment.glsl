@@ -1,6 +1,8 @@
 #version 300 es
 precision highp float;
 
+// src/client/shaders/board_uber_shader/fragment.glsl
+
 
 // The master blend factor between the 'A' and 'B' effect slots.
 uniform float u_transitionProgress;

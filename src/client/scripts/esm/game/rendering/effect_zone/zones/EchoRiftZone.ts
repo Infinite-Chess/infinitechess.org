@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/effect_zone/zones/EchoRiftZone.ts
+
 import PerlinNoise from "../../../../util/PerlinNoise";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";

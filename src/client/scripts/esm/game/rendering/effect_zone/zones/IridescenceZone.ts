@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/effect_zone/zones/Iridescence.ts
+// src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
 
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";

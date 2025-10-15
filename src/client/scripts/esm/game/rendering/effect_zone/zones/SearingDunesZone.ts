@@ -1,14 +1,12 @@
 
 // src/client/scripts/esm/game/rendering/effect_zone/zones/SearingDunesZone.ts
 
-// @ts-ignore
-import loadbalancer from "../../../misc/loadbalancer";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
 import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWavePass";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
 

@@ -15,7 +15,7 @@ import { ContortionFieldZone } from "./zones/ContortionFieldZone";
 import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { StaticZone } from "./zones/StaticZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
-import { IridescenceZone } from "./zones/Iridescence";
+import { IridescenceZone } from "./zones/IridescenceZone";
 
 
 /**
