@@ -16,6 +16,7 @@ import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { StaticZone } from "./zones/StaticZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
 import { IridescenceZone } from "./zones/IridescenceZone";
+import { ChromaticFlowZone } from "./zones/ChromaticFlowZone";
 
 
 /**
@@ -70,6 +71,7 @@ export class EffectZoneManager {
 		// { name: 'Searing Dunes',   start: 10n ** 36n, advancedEffect: true },
 		// { name: 'Contortion Field', start: 10n ** 81n, advancedEffect: true },
 		// { name: 'Iridescence',      start: 10n ** 140n, advancedEffect: true },
+		// { name: 'Chromatic Flow',   start: 10n ** 210n, advancedEffect: true },
 		// { name: 'Dusty Wastes',     start: 10n ** 300n, advancedEffect: true },
 		// { name: 'Static',           start: 10n ** 500n, advancedEffect: true },
 		// { name: 'Echo Rift',        start: 10n ** 1000n, advancedEffect: true },
@@ -78,6 +80,7 @@ export class EffectZoneManager {
 		{ name: 'Searing Dunes',    start: 40n, advancedEffect: true },
 		{ name: 'Contortion Field', start: 60n, advancedEffect: true },
 		{ name: 'Iridescence',      start: 80n, advancedEffect: true },
+		{ name: 'Chromatic Flow',   start: 100n, advancedEffect: true },
 		{ name: 'Dusty Wastes',     start: 140n, advancedEffect: true },
 		{ name: 'Static',           start: 160n, advancedEffect: true },
 		{ name: 'Echo Rift',        start: 180n, advancedEffect: true },
@@ -135,6 +138,7 @@ export class EffectZoneManager {
 			'Searing Dunes': new SearingDunesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
 			'Iridescence': new IridescenceZone(programManager),
+			'Chromatic Flow': new ChromaticFlowZone(),
 			'Dusty Wastes': new DustyWastesZone(programManager),
 			'Static': new StaticZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),

@@ -31,12 +31,71 @@ uniform vec2 u3_uvOffset; // The texture offset for the white noise (calculated 
 uniform float u3_pixelWidth; // How many pixels wide the white noise texture is
 uniform float u3_pixelSize; // How many virtual pixels wide each static pixel should be
 
+// Chromatic Flow Uniforms (Effect Type 9)
+const int MAX_COLORS = 8;
+uniform int u9_numColors;
+uniform vec3 u9_colors[MAX_COLORS];
+uniform float u9_flowDistance;
+uniform vec2 u9_flowDirectionVec;
+uniform float u9_gradientRepeat;
+uniform float u9_maskOffset;
+uniform float u9_strength;
+
+
 // INPUTS
 in vec2 v_uv;           // The model's original UVs for color/mask
 in vec4 v_screenCoord;  // The screen-space coordinate for the noise
 in vec4 v_color;
 
 out vec4 out_color;
+
+
+// Helper function to get a color from our procedural gradient.
+vec3 getColorFromRamp(float coord, int numColors, vec3 colors[MAX_COLORS]) {
+    if (numColors <= 1) {
+        return colors[0];
+    }
+
+    float scaledCoord = coord * float(numColors - 1);
+    int index1 = clamp(int(floor(scaledCoord)), 0, numColors - 2);
+    int index2 = clamp(index1 + 1, 0, numColors - 1);
+    float blendFactor = fract(scaledCoord);
+
+    return mix(colors[index1], colors[index2], blendFactor);
+}
+
+// Applies the "Chromatic Flow" procedural gradient effect.
+vec3 ChromaticFlow(
+    // --- Input values ---
+    vec3 baseColor,
+    vec2 screenUV,
+	float maskValue,
+
+    // --- Effect parameters ---
+    int numColors,
+    vec3 colors[MAX_COLORS],
+    float flowDistance,
+    vec2 flowDirectionVec,
+    float gradientRepeat,
+    float maskOffset,
+    float strength
+) {
+	// Project the screen UV onto the flow direction vector to get a 1D coordinate.
+	float projectedUv = dot(screenUV, flowDirectionVec);
+
+	// Add the scrolled distance, apply the repeat factor, and apply the mask offset.
+	float phase = (projectedUv * gradientRepeat) + flowDistance + (maskValue * maskOffset);
+
+	// Get the final wrapped coordinate for the color lookup.
+	float gradientCoord = fract(phase);
+
+	// Get the procedural color from our ramp.
+	vec3 gradientColor = getColorFromRamp(gradientCoord, numColors, colors);
+
+	// Blend the gradient color with the base tile color.
+	return mix(baseColor, gradientColor, strength);
+}
+
 
 // Applies the "Dusty Wastes" animated noise effect.
 vec3 DustyWastes(
@@ -91,7 +150,8 @@ vec3 Static(
 vec3 calculateEffectColor(
 	float effectType,
 	vec3 baseColor,
-	vec2 screenUV
+	vec2 screenUV,
+    float maskValue
 ) {
 	if (effectType == 2.0) {
 		return DustyWastes(
@@ -117,7 +177,21 @@ vec3 calculateEffectColor(
 			u_resolution,
 			u_pixelDensity
         );
-    }
+    } else if (effectType == 9.0) {
+		return ChromaticFlow(
+			baseColor,
+			screenUV,
+			maskValue,
+            // Pass effect-specific uniforms
+            u9_numColors,
+            u9_colors,
+            u9_flowDistance,
+            u9_flowDirectionVec,
+            u9_gradientRepeat,
+            u9_maskOffset,
+            u9_strength
+		);
+	}
 
 	// Default case: no effect
 	return baseColor;
@@ -126,7 +200,7 @@ vec3 calculateEffectColor(
 
 void main() {
 	// INITIAL SETUP
-	
+
 	vec4 baseColor = texture(u_colorTexture, v_uv) * v_color;
 	float maskValue = texture(u_maskTexture, v_uv).r;
 
@@ -138,16 +212,15 @@ void main() {
 	// UBER-SHADER LOGIC
 
 	// 1. Calculate the result for Slot A at full strength.
-	vec3 modulatedColorA = calculateEffectColor(u_effectTypeA, baseColor.rgb, screenUV);
+	vec3 modulatedColorA = calculateEffectColor(u_effectTypeA, baseColor.rgb, screenUV, maskValue);
 
 	// 2. Calculate the result for Slot B at full strength.
-	vec3 modulatedColorB = calculateEffectColor(u_effectTypeB, baseColor.rgb, screenUV);
+	vec3 modulatedColorB = calculateEffectColor(u_effectTypeB, baseColor.rgb, screenUV, maskValue);
 
 	// 3. Smoothly blend between the full results of the two slots.
 	vec3 blendedModulatedColor = mix(modulatedColorA, modulatedColorB, u_transitionProgress);
 
-	// 4. Apply the checkerboard mask to the final, blended effect.
-	vec3 finalRGB = mix(baseColor.rgb, blendedModulatedColor, maskValue);
-	
-	out_color = vec4(clamp(finalRGB, 0.0, 1.0), baseColor.a);
+	// 4. The final blended color is now applied directly to the whole tile.
+	// The mask is only used internally by effects that need it (like ChromaticFlow).
+	out_color = vec4(clamp(blendedModulatedColor, 0.0, 1.0), baseColor.a);
 }
