@@ -483,7 +483,7 @@ function updateZoomingTransition(elapsedTime: number): void {
 	else if (zoomModel === "C_ONE_2_STAGE") currentE = updateCOne2StageTransition(t_sec, elapsedTime);
 	else currentE = updateCOne3StageTransition(t_sec, elapsedTime);
 
-	applyZoomState(currentE);
+	applyZoomState(currentE, elapsedTime);
 }
 
 /** Calculates the current "e" value for the current C-Infinity 1-Stage Model zoom transition. */
@@ -536,12 +536,21 @@ function updateCOne3StageTransition(t_sec: number, elapsedTime: number): number 
 }
 
 /** Applies the current board scale and position based on the given "e" value and focus point. */
-function applyZoomState(currentE: number): void {
+function applyZoomState(currentE: number, elapsedTime: number): void {
 	// This focus point location logic is identical for all models.
 	const focus: BDCoords = isZoomOut ? originCoords : destinationCoords;
 
 	let scaleProgress = 0;
-	if (differenceE !== 0) scaleProgress = (currentE - originE) / differenceE;
+	if (differenceE !== 0) {
+		// Normal case: Tie focus point progress to the scale's kinematic progress.
+		scaleProgress = (currentE - originE) / differenceE;
+	} else {
+		// If there is no scale change, this is a pure pan.
+		// Tie focus point progress to time instead.
+		// Fixes a bug where zooms with equal start and end scale don't pan the position.
+		const t = elapsedTime / durationMillis;
+		scaleProgress = math.easeInOut(t); // Use a standard ease-in-out for the pan.
+	}
 
 	// Apply the final scale and position to the board.
 	const newScale = bd.exp(bd.FromNumber(currentE));
