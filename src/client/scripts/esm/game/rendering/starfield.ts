@@ -109,7 +109,7 @@ export const CONFIG = {
 	/** The duration of the fade-in/out at the start/end of a star's life, in seconds. */
 	fadeDuration: 3.0, 
 	// fadeDuration: 0.0, 
-};
+} as const;
 
 
 // Module State ------------------------------------------------------------

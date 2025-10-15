@@ -46,7 +46,7 @@ function render(): void {
 
 	if (gamefile.boardsim.editor) {
 		// In editor mode, the promotion lines extend to the edges of the screen
-		({ left, right } = camera.getScreenBoundingBox(false));
+		({ left, right } = camera.getRespectiveScreenBox());
 	} else {
 		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim); // Integer box
 		// Round the box away to encapsulate the entirity of all squares
