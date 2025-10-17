@@ -117,15 +117,28 @@ function getDebug(): boolean {
  * Returns a copy of the current screen bounding box,
  * or the world-space coordinates of the edges of the canvas.
  * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
+ * @param [pad] Whether to add a small padding to the box to account for screen shakes.
  * @returns The bounding box of the screen
  */
-function getScreenBoundingBox(debugMode: boolean = DEBUG): DoubleBoundingBox {
-	return jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
+function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false): DoubleBoundingBox {
+	const box = jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
+	const PAD_AMOUNT = 0.01; // 1%
+	if (pad) {
+		// Add a small padding to the box so that things right at the edge don't get cut off
+		const paddingAmountX = (box.right - box.left) * PAD_AMOUNT; 
+		const paddingAmountY = (box.top - box.bottom) * PAD_AMOUNT;
+		box.left -= paddingAmountX;
+		box.right += paddingAmountX;
+		box.bottom -= paddingAmountY;
+		box.top += paddingAmountY;
+	}
+	return box;
 }
 
 /**
  * Returns the respective world-space bounding box containing the whole screen,
  * depending on whether we're in perspective mode or not.
+ * Intended for knowing how far out to render items to the edge.
  * 
  * In perspective, the range of visibility is much greater.
  * 
@@ -136,7 +149,7 @@ function getRespectiveScreenBox(): DoubleBoundingBox {
 		const dist = perspective.distToRenderBoard;
 		return { left: -dist, right: dist, bottom: -dist, top: dist };
 	} else {
-		return getScreenBoundingBox(false);
+		return getScreenBoundingBox(false, true);
 	}
 }
 

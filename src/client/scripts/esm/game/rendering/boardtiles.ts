@@ -157,9 +157,9 @@ function gboundingBoxFloat(): BoundingBoxBD {
 /** Loads the tiles texture. */
 function init(): void {
 	// Generate the tiles mask texture
-	// checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => {
+	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => {
 	// checkerboardgenerator.createCheckerboardIMG('black', 'white', 256).then(tilesMask_IMG => {
-	checkerboardgenerator.createCheckerboardIMG('white', 'white', 256).then(tilesMask_IMG => {
+	// checkerboardgenerator.createCheckerboardIMG('white', 'white', 256).then(tilesMask_IMG => {
 		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
 	});
 

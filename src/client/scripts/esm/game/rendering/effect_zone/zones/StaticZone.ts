@@ -39,8 +39,8 @@ export class StaticZone implements Zone {
     
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 0.5;
-		this.colorGradePass.brightness = -0.1;
+		this.colorGradePass.saturation = 0.35; // Default: 0.5
+		this.colorGradePass.brightness = -0.15; // Default: -0.1
 
 		// Load the ambience...
 

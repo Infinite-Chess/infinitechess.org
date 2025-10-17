@@ -29,11 +29,13 @@ function fade(t: number): number {
  */
 // eslint-disable-next-line no-unused-vars
 export function create1DNoiseGenerator(period: number): (t: number) => number {
+	if (period > 256) throw Error("Period must be 256 or less.");
+
 	// Pre-calculate random gradients for the length of the period.
 	// For 1D noise, a "gradient" is just a random number, either 1 or -1.
 	const gradients = new Array(period);
 	for (let i = 0; i < period; i++) {
-		gradients[i] = (perm[i] % 2 === 0) ? 1 : -1;
+		gradients[i] = (perm[i]! % 2 === 0) ? 1 : -1;
 	}
 
 	return (t: number) => {
