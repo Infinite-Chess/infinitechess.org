@@ -262,7 +262,7 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 
 /** Sets up the C-Infinity 1-Stage Model for the current zoom transition. */
 function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration: number): void {
-	console.log("Using C-Infinity 1-Stage Model");
+	// console.log("Using C-Infinity 1-Stage Model");
 	zoomModel = 'C_INF';
 
 	// Add the base duration to the natural duration, and cap at the long zoom duration.
@@ -283,7 +283,7 @@ function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration:
 /** Sets up the C¹ 2-Stage Model for the current zoom transition. */
 function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: number): void {
 	// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
-	console.log("Using C¹ 2-Stage Model");
+	// console.log("Using C¹ 2-Stage Model");
 	zoomModel = 'C_ONE_2_STAGE';
 
 	durationMillis = natural_duration_c_one_millis;
@@ -306,7 +306,7 @@ function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: 
 /** Sets up the C¹ 3-Stage Model for the current zoom transition. */
 function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 	// --- CASE C: 3-STAGE MODEL ---
-	console.log("Using C¹ 3-Stage Model");
+	// console.log("Using C¹ 3-Stage Model");
 	zoomModel = 'C_ONE_3_STAGE';
 
 	durationMillis = maxDuration;

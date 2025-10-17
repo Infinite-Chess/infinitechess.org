@@ -31,16 +31,32 @@ uniform vec2 u3_uvOffset; // The texture offset for the white noise (calculated 
 uniform float u3_pixelWidth; // How many pixels wide the white noise texture is
 uniform float u3_pixelSize; // How many virtual pixels wide each static pixel should be
 
-// Chromatic Flow Uniforms (Effect Type 9)
-const int MAX_COLORS = 8;
-uniform int u9_numColors;
-uniform vec3 u9_colors[MAX_COLORS];
+// Spectral Edge Uniforms (Effect Type 8)
+uniform float u8_flowDistance;
+uniform vec2 u8_flowDirectionVec;
+uniform float u8_gradientRepeat;
+uniform float u8_maskOffset;
+uniform float u8_strength;
+uniform vec3 u8_color1;
+uniform vec3 u8_color2;
+uniform vec3 u8_color3;
+uniform vec3 u8_color4;
+uniform vec3 u8_color5;
+uniform vec3 u8_color6;
+
+// Iridescence Uniforms (Effect Type 9)
+uniform float u9_numColors;
 uniform float u9_flowDistance;
 uniform vec2 u9_flowDirectionVec;
 uniform float u9_gradientRepeat;
 uniform float u9_maskOffset;
 uniform float u9_strength;
-
+uniform vec3 u9_color1;
+uniform vec3 u9_color2;
+uniform vec3 u9_color3;
+uniform vec3 u9_color4;
+uniform vec3 u9_color5;
+uniform vec3 u9_color6;
 
 // INPUTS
 in vec2 v_uv;           // The model's original UVs for color/mask
@@ -49,36 +65,48 @@ in vec4 v_color;
 
 out vec4 out_color;
 
+// Helper function to get a color from a procedural gradient.
+vec3 getColorFromRamp(float coord, vec3 color1, vec3 color2, vec3 color3, vec3 color4, vec3 color5, vec3 color6) {
+    vec3 color = u9_color1; // Default to the first color
 
-// Helper function to get a color from our procedural gradient.
-vec3 getColorFromRamp(float coord, int numColors, vec3 colors[MAX_COLORS]) {
-    if (numColors <= 1) {
-        return colors[0];
-    }
-
-    float scaledCoord = coord * float(numColors - 1);
-    int index1 = clamp(int(floor(scaledCoord)), 0, numColors - 2);
-    int index2 = clamp(index1 + 1, 0, numColors - 1);
+    // Scale coord by the number of colors to create N segments,
+    // allowing the last segment to wrap back to the first.
+	float NUM_COLORS = 6.0;
+    float scaledCoord = coord * NUM_COLORS;
+    int index = int(floor(scaledCoord));
     float blendFactor = fract(scaledCoord);
 
-    return mix(colors[index1], colors[index2], blendFactor);
+    // This chain of if-statements acts as an array lookup.
+    if (index == 0) color = mix(color1, color2, blendFactor);
+    else if (index == 1) color = mix(color2, color3, blendFactor);
+    else if (index == 2) color = mix(color3, color4, blendFactor);
+    else if (index == 3) color = mix(color4, color5, blendFactor);
+    else if (index == 4) color = mix(color5, color6, blendFactor);
+    else if (index >= 5) color = mix(color6, color1, blendFactor); // Wrap back to the first
+
+    return color;
 }
 
-// Applies the "Chromatic Flow" procedural gradient effect.
-vec3 ChromaticFlow(
+// Applies a color gradient flow procedural gradient effect.
+vec3 ColorFlow(
     // --- Input values ---
     vec3 baseColor,
     vec2 screenUV,
 	float maskValue,
 
     // --- Effect parameters ---
-    int numColors,
-    vec3 colors[MAX_COLORS],
     float flowDistance,
     vec2 flowDirectionVec,
     float gradientRepeat,
     float maskOffset,
-    float strength
+    float strength,
+	// --- Color stops ---
+	vec3 color1,
+	vec3 color2,
+	vec3 color3,
+	vec3 color4,
+	vec3 color5,
+	vec3 color6
 ) {
 	// Project the screen UV onto the flow direction vector to get a 1D coordinate.
 	float projectedUv = dot(screenUV, flowDirectionVec);
@@ -90,7 +118,7 @@ vec3 ChromaticFlow(
 	float gradientCoord = fract(phase);
 
 	// Get the procedural color from our ramp.
-	vec3 gradientColor = getColorFromRamp(gradientCoord, numColors, colors);
+	vec3 gradientColor = getColorFromRamp(gradientCoord, color1, color2, color3, color4, color5, color6);
 
 	// Blend the gradient color with the base tile color.
 	return mix(baseColor, gradientColor, strength);
@@ -177,19 +205,43 @@ vec3 calculateEffectColor(
 			u_resolution,
 			u_pixelDensity
         );
-    } else if (effectType == 9.0) {
-		return ChromaticFlow(
+    } else if (effectType == 8.0) {
+		return ColorFlow(
+			baseColor,
+			screenUV,
+			maskValue,
+			// Pass effect-specific uniforms
+			u8_flowDistance,
+			u8_flowDirectionVec,
+			u8_gradientRepeat,
+			u8_maskOffset,
+			u8_strength,
+			// Color stops
+			u8_color1,
+			u8_color2,
+			u8_color3,
+			u8_color4,
+			u8_color5,
+			u8_color6
+		);
+	} else if (effectType == 9.0) {
+		return ColorFlow(
 			baseColor,
 			screenUV,
 			maskValue,
             // Pass effect-specific uniforms
-            u9_numColors,
-            u9_colors,
             u9_flowDistance,
             u9_flowDirectionVec,
             u9_gradientRepeat,
             u9_maskOffset,
-            u9_strength
+            u9_strength,
+			// Color stops
+			u9_color1,
+			u9_color2,
+			u9_color3,
+			u9_color4,
+			u9_color5,
+			u9_color6
 		);
 	}
 
@@ -221,6 +273,6 @@ void main() {
 	vec3 blendedModulatedColor = mix(modulatedColorA, modulatedColorB, u_transitionProgress);
 
 	// 4. The final blended color is now applied directly to the whole tile.
-	// The mask is only used internally by effects that need it (like ChromaticFlow).
+	// The mask is only used internally by effects that need it (like color flow).
 	out_color = vec4(clamp(blendedModulatedColor, 0.0, 1.0), baseColor.a);
 }

@@ -16,7 +16,7 @@ import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { StaticZone } from "./zones/StaticZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
 import { IridescenceZone } from "./zones/IridescenceZone";
-import { ChromaticFlowZone } from "./zones/ChromaticFlowZone";
+import { SpectralEdgeZone } from "./zones/SpectralEdgeZone";
 
 
 /**
@@ -67,23 +67,23 @@ export class EffectZoneManager {
 		// Define zones in ascending order of their start distance.
 		{ name: 'The Beginning', start: 0n, advancedEffect: false },
 		// [PRODUCTION] Default distances:
-		// { name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false },
-		// { name: 'Searing Dunes',   start: 10n ** 36n, advancedEffect: true },
-		// { name: 'Contortion Field', start: 10n ** 81n, advancedEffect: true },
-		// { name: 'Iridescence',      start: 10n ** 140n, advancedEffect: true },
-		// { name: 'Chromatic Flow',   start: 10n ** 210n, advancedEffect: true },
-		// { name: 'Dusty Wastes',     start: 10n ** 300n, advancedEffect: true },
-		// { name: 'Static',           start: 10n ** 500n, advancedEffect: true },
-		// { name: 'Echo Rift',        start: 10n ** 1000n, advancedEffect: true },
+		{ name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false },
+		{ name: 'Searing Dunes',   start: 10n ** 33n, advancedEffect: true },
+		{ name: 'Contortion Field', start: 10n ** 63n, advancedEffect: true },
+		{ name: 'Spectral Edge',   start: 10n ** 111n, advancedEffect: true },
+		{ name: 'Iridescence',   start: 10n ** 159n, advancedEffect: true },
+		{ name: 'Dusty Wastes',     start: 10n ** 500n, advancedEffect: true },
+		{ name: 'Static',           start: 10n ** 750n, advancedEffect: true },
+		{ name: 'Echo Rift',        start: 10n ** 1000n, advancedEffect: true },
 		// [TESTING] Much shorter distances:
-		{ name: 'Undercurrent',     start: 20n, advancedEffect: false },
-		{ name: 'Searing Dunes',    start: 40n, advancedEffect: true },
-		{ name: 'Contortion Field', start: 60n, advancedEffect: true },
-		{ name: 'Iridescence',      start: 80n, advancedEffect: true },
-		{ name: 'Chromatic Flow',   start: 100n, advancedEffect: true },
-		{ name: 'Dusty Wastes',     start: 140n, advancedEffect: true },
-		{ name: 'Static',           start: 160n, advancedEffect: true },
-		{ name: 'Echo Rift',        start: 180n, advancedEffect: true },
+		// { name: 'Undercurrent',     start: 20n, advancedEffect: false },
+		// { name: 'Searing Dunes',    start: 40n, advancedEffect: true },
+		// { name: 'Contortion Field', start: 60n, advancedEffect: true },
+		// { name: 'Spectral Edge',   start: 80n, advancedEffect: true },
+		// { name: 'Iridescence',   start: 100n, advancedEffect: true },
+		// { name: 'Dusty Wastes',     start: 120n, advancedEffect: true },
+		// { name: 'Static',           start: 140n, advancedEffect: true },
+		// { name: 'Echo Rift',        start: 160n, advancedEffect: true },
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -137,8 +137,8 @@ export class EffectZoneManager {
 			'Undercurrent': new UndercurrentZone(),
 			'Searing Dunes': new SearingDunesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
-			'Iridescence': new IridescenceZone(programManager),
-			'Chromatic Flow': new ChromaticFlowZone(),
+			'Spectral Edge': new SpectralEdgeZone(),
+			'Iridescence': new IridescenceZone(),
 			'Dusty Wastes': new DustyWastesZone(programManager),
 			'Static': new StaticZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),

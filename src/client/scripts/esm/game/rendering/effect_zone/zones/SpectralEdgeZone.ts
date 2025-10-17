@@ -1,5 +1,4 @@
-
-// src/client/scripts/esm/game/rendering/effect_zone/zones/ChromaticFlowZone.ts
+// src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
 
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
@@ -9,10 +8,10 @@ import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
 
-export class ChromaticFlowZone implements Zone {
+export class SpectralEdgeZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 9;
+	readonly effectType: number = 8;
 
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
@@ -30,19 +29,19 @@ export class ChromaticFlowZone implements Zone {
 	];
 
 	/** Determines how strongly the gradient colors are blended with the original board tile colors. */
-	private strength: number = 0.5;
+	private strength: number = 0.3;
 
 	/** The base speed at which the gradient texture scrolls across the screen. */
-	private flowSpeed: number = 0.05;
+	private flowSpeed: number = 0.10; // Default: 0.07
 
 	/** The speed at which the flow direction changes over time, in radians per second. */
-	private flowRotationSpeed: number = 0.02;
+	private flowRotationSpeed: number = 0.0025; // Default: 0.0025
 
 	/** How many times the full gradient repeats across the screen along the direction of flow. */
-	private gradientRepeat: number = 1.2;
+	private gradientRepeat: number = 0.7; // Default: 1.2
 
 	/** The phase shift applied to the light tiles' gradient, as a percentage of the gradient's total length. */
-	private maskOffset: number = 0.1;
+	private maskOffset: number = 0.06; // Default: 0.06
 
 
 	// --- State Properties ---
@@ -50,12 +49,9 @@ export class ChromaticFlowZone implements Zone {
 	/** The current direction of the flow, in radians. */
 	private flowDirection: number = Math.random() * Math.PI * 2;
 
-	/** A single float representing the total distance the wave has traveled along its direction. */
-	private flowDistance: number = 0.0;
 
 
 	constructor() {
-		// Using the Undercurrent soundscape ambience.
 		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 	}
 
@@ -70,34 +66,36 @@ export class ChromaticFlowZone implements Zone {
 	}
 
 	public getUniforms(): Record<string, any> {
-		// Pre-calculate the direction vector ONCE on the CPU.
+		// Pre-calculate the direction vector
 		const flowDirectionVec: [number, number] = [
 			Math.cos(this.flowDirection),
 			Math.sin(this.flowDirection)
 		];
 		
-		// Flatten the colors array for the shader uniform.
-		const flattenedColors = this.colors.flat();
-
 		const flowDistance = performance.now() / 1000 * this.flowSpeed;
 
-		return {
-			// --- Chromatic Flow Uniforms (Effect Type 9) ---
-			u9_numColors: this.colors.length,
-			u9_colors: flattenedColors,
-			u9_flowDistance: flowDistance,
-			u9_flowDirectionVec: flowDirectionVec,
-			u9_gradientRepeat: this.gradientRepeat,
-			u9_maskOffset: this.maskOffset,
-			u9_strength: this.strength,
+		const uniforms: Record<string, any> = {
+			u8_flowDistance: flowDistance,
+			u8_flowDirectionVec: flowDirectionVec,
+			u8_gradientRepeat: this.gradientRepeat,
+			u8_maskOffset: this.maskOffset,
+			u8_strength: this.strength,
 		};
+
+		// Add each color as a separate uniform.
+		for (let i = 0; i < this.colors.length; i++) {
+			// Use the color if it exists, otherwise pad with black.
+			const color = this.colors[i] || [0, 0, 0];
+			uniforms[`u8_color${i + 1}`] = color;
+		}
+
+		return uniforms;
 	}
 
 	public getPasses(): PostProcessPass[] {
-		// This zone does not use any post-processing passes.
 		return [];
 	}
-    
+	
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
 	}
