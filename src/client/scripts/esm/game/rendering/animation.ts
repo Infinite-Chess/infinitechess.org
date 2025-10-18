@@ -187,7 +187,7 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	if (new Set([...typesInvolved, ...typeutil.SVGLESS_TYPES]).size < typesInvolved.size + typeutil.SVGLESS_TYPES.size) instant = true; // Instant animations still play the sound
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
-	if (instant) return gamesound.playMove(totalDistance, showKeyframes.size !== 0, premove);
+	if (instant) return gamesound.playMove(totalDistance, showKeyframes.size !== 0, premove, path[path.length - 1]!);
 
 	
 
@@ -304,7 +304,7 @@ function scheduleAnimationRemoval(animation: Animation): void {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation): void {
-	gamesound.playMove(animation.totalDistance, animation.showKeyframes.size !== 0, animation.premove);
+	gamesound.playMove(animation.totalDistance, animation.showKeyframes.size !== 0, animation.premove, animation.path[animation.path.length - 1]!);
 	animation.soundPlayed = true;
 }
 

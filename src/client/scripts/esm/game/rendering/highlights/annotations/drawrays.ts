@@ -447,6 +447,7 @@ export default {
 	stealPointer,
 	stopDrawing,
 	getLines,
+	findClosestPredefinedVector,
 	collapseRays,
 	dispatchRayCountEvent,
 	setPresetOverrides,

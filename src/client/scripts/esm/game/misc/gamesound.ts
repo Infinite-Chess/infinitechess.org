@@ -2,9 +2,11 @@
 // src/client/scripts/esm/game/misc/gamesound.ts
 
 import type { EffectConfig } from "../../audio/AudioEffects.js";
+import type { Coords } from "../../../../../shared/chess/util/coordutil.js";
 
 import screenshake from "../rendering/screenshake.js";
 import math from "../../../../../shared/util/math/math.js";
+import WaterRipples from "../rendering/WaterRipples.js";
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
 
@@ -38,7 +40,7 @@ const soundStamps = {
 	marimba_c2: [40.82, 42.82],
 	marimba_c2_soft: [42.82, 44.82],
 	base_staccato_c2: [44.82, 46.82],
-	// draw_offer: [46.89, 48.526]   Only present for the sound spritesheet in dev-utils that includes the draw offer sound
+	ripple: [46.82, 50.0],
 } as const;
 
 type SoundName = keyof typeof soundStamps;
@@ -78,6 +80,10 @@ const BELL_CONFIG = {
 	/** The volume of the bell gongs, as a multiplier to the move sound's volume. */
 	volume: 0.6,
 } as const;
+
+/** The minimum distance a piece needs to move for the water droplet ripple effect to trigger. */
+// const RIPPLE_MIN_DIST = bd.FromBigInt(10n ** 100n); // 10^100 squares
+const RIPPLE_MIN_DIST = bd.FromBigInt(20n); // FOR TESTING
 
 /** Config for the screen shake effect for very large moves. */
 const SHAKE_CONFIG = {
@@ -161,6 +167,11 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 	let { startTime, duration } = getSoundTimeSnippet(soundName);
 	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate } = options;
 
+	if (soundName === 'ripple') {
+		console.warn("Don't have new move sound effect in the sound spritesheet yet! Can't play it.");
+		return;
+	}
+
 	// If offset is specified, adjust the start time and duration accordingly
 	if (offset) {
 		const offsetSecs = offset / 1000;
@@ -184,7 +195,7 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
  * @param capture - Whether this move made a capture.
  * @param premove - Whether this move is a premove.
  */
-function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean): void {
+function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean, destination?: Coords): void {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -208,14 +219,22 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean)
 
 	playSoundEffect(soundEffectName, { volume, reverbWetLevel, reverbDuration, delay: delaySecs, playbackRate });
 
-	// Apply screen shake for very large moves
-	const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
-	const trauma = math.clamp(rawTrauma, 0, 1);
-	if (trauma > 0) setTimeout(() => screenshake.trigger(trauma), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
+	
+	if (destination && bd.compare(distanceMoved, RIPPLE_MIN_DIST) >= 0) {
+		// Trigger water dropplet ripple effect
+		WaterRipples.addRipple(destination);
+		playSoundEffect('ripple', { volume, delay: delaySecs, playbackRate });
+	} else {
+		// Apply screen shake for very large moves
+		const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
+		const trauma = math.clamp(rawTrauma, 0, 1);
+		if (trauma > 0) setTimeout(() => screenshake.trigger(trauma), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
 
-	if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) { // Play the bell sound too
-		const bellVolume = BELL_CONFIG.volume * dampener;
-		playSoundEffect('bell', { volume: bellVolume, delay: delaySecs, playbackRate });
+		if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
+			// Move is large enough to play the bell sound too
+			const bellVolume = BELL_CONFIG.volume * dampener;
+			playSoundEffect('bell', { volume: bellVolume, delay: delaySecs, playbackRate });
+		}
 	}
 }
 

@@ -6,7 +6,7 @@
  */
 
 import type { BigDecimal } from "../bigdecimal/bigdecimal.js";
-import type { BDCoords, Coords } from "../../chess/util/coordutil.js";
+import type { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
 
 import bd from "../bigdecimal/bigdecimal.js";
 
@@ -206,6 +206,18 @@ function boxContainsSquareBD(box: BoundingBoxBD, square: BDCoords): boolean {
 }
 
 /**
+ * Returns true if the provided double box contains the square coordinate.
+ */
+function boxContainsSquareDouble(box: DoubleBoundingBox, square: DoubleCoords): boolean {
+	if (square[0] < box.left) return false;
+	if (square[0] > box.right) return false;
+	if (square[1] < box.bottom) return false;
+	if (square[1] > box.top) return false;
+
+	return true;
+}
+
+/**
  * Calculates the center of a bounding box.
  */
 function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
@@ -247,6 +259,7 @@ export default {
 	areBoxesDisjoint,
 	boxContainsSquare,
 	boxContainsSquareBD,
+	boxContainsSquareDouble,
 	calcCenterOfBoundingBox,
 
 	// Debugging
