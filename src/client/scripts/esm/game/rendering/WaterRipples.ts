@@ -86,13 +86,14 @@ function addRipple(sourceCoords: Coords): void {
 	let elapsedTimeOffset: number = 0;
 
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
+		console.log("Ripple source outside of padded screen.");
 		const vectorToSource = coordutil.subtractBDCoords(bigdecimal.FromCoords(sourceCoords), boardpos.getBoardPos());
 		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
 
-		if (closestVector[0] === -1n) rippleX = screenBox.left - rippleWorldFromEdge;
-		else if (closestVector[0] === 1n) rippleX = screenBox.right + rippleWorldFromEdge;
-		if (closestVector[1] === -1n) rippleY = screenBox.bottom - rippleWorldFromEdge;
-		else if (closestVector[1] === 160n) rippleY = screenBox.top + rippleWorldFromEdge;
+		if (closestVector[0] === -1n) rippleX = paddedScreenBox.left;
+		else if (closestVector[0] === 1n) rippleX = paddedScreenBox.right;
+		if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+		else if (closestVector[1] === 160n) rippleY = paddedScreenBox.top;
 
 		elapsedTimeOffset = ELAPSED_TIME_OFFSET;
 	}
@@ -102,7 +103,7 @@ function addRipple(sourceCoords: Coords): void {
 
 	// Convert world coordinates to UV coordinates [0-1]
 	const u = (rippleX - screenBox.left) / screenWidthWorld;
-	const v = 1.0 - (rippleY - screenBox.bottom) / screenHeightWorld; // Y is inverted in WebGL
+	const v = (rippleY - screenBox.bottom) / screenHeightWorld;
 
 	// Create a new droplet
 	activeDroplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
