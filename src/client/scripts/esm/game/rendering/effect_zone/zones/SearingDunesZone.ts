@@ -5,7 +5,6 @@ import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessin
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
 import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWavePass";
-import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
