@@ -385,37 +385,44 @@ function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): 
 }
 
 function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
+	console.log("--------------------------");
 	const z = getRelativeZ();
 
-	const e = -bd.log10(boardpos.getBoardScale());
+	// Determine at what "e" the main boards tiles are 1 virtual pixel wide.
+	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
+	const eWhen1TileIs1VirtualPixel = bd.log10(scaleWhen1TileIs1VirtualPixel);
 
-	const startE = 0.5; // 0.5   lower = starts coming in quicker
-	if (e < startE) return;
+	const currentE = bd.log10(boardpos.getBoardScale());
 
-	const interval = 3;
-	const length = 6;
-	const capOpacity = 0.7;
+	// The e value of the most-zoomed out board we render.
+	// This one's opacity is always 1.0
+	// The e value when that board's tiles will be 1 virtual pixel wide.
+	const mostZoomedOutE = Math.floor((currentE - eWhen1TileIs1VirtualPixel) / 3) * 3 + eWhen1TileIs1VirtualPixel;
+	console.log("mostZoomedOutE:", mostZoomedOutE);
 
-	let firstInterval = Math.floor((e - startE) / interval) * interval + startE;
-	let zeroCount = 3 * (firstInterval - startE) / interval + 3; // Always a multiple of 3
-	// console.log(firstInterval, zeroCount)
+	// The e value of the next zoomed-in board.
+	// It's opacity ranges from 1.0 to 0.0 as it approaches its respective 
+	// The e value when that board's tiles will be 1 virtual pixel wide.
+	const nextZoomedInE = mostZoomedOutE + 3;
+	console.log("nextZoomedInE:", nextZoomedInE);
 
-	// Most-zoomed out board
-	let zoom = bd.powerInt(TEN, zeroCount);
-	let x = (firstInterval - e) / length;
-	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
-	generateBoardModel(true, noiseTextures, zoom, opacity)?.render([0,0,z], undefined, uniforms);
+	// Determine the opacity of the next zoomed-in board.
+	const nextZoomedInOpacity = currentE - nextZoomedInE;
+	console.log("nextZoomedInOpacity:", nextZoomedInOpacity);
 
-	// 2nd most-zoomed out board
-	firstInterval -= interval;
-	if (firstInterval < 0) return;
+	if (nextZoomedInOpacity < 0) throw Error("nextZoomedInOpacity is less than 0!");
+	// If the next zoomed in board's opacity > 1.0, then do ONLY render
+	// this board and not the maxZoomedOutE!
 
-	// To divide a bigdecimal by 10^3, we just subtract 3 from the exponent
-	zeroCount -= 3;
-	zoom = bd.powerInt(TEN, zeroCount);
-	x = (firstInterval - e) / length; // 0 - 1
-	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
-	generateBoardModel(true, noiseTextures, zoom, opacity)?.render([0,0,z], undefined, uniforms);
+	// First, render the most zoomed out board (always at 1.0 opacity)
+	let zoom = bd.powerInt(TEN, mostZoomedOutE - eWhen1TileIs1VirtualPixel);
+	generateBoardModel(true, noiseTextures, zoom, 1.0)?.render([0,0,z], undefined, uniforms);
+
+	// Second, ONLY render the next zoomed IN board if its opacity < 1.0
+	if (nextZoomedInOpacity < 1.0) {
+		zoom = bd.powerInt(TEN, nextZoomedInE - eWhen1TileIs1VirtualPixel);
+		generateBoardModel(true, noiseTextures, zoom, nextZoomedInOpacity)?.render([0,0,z], undefined, uniforms);
+	}
 }
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
