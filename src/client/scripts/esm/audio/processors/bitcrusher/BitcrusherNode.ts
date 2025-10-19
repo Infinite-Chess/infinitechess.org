@@ -26,7 +26,7 @@ export class BitcrusherNode extends AudioWorkletNode {
 
 	/**
      * The number of bits to quantize the audio signal to.
-     * Range: 1 to 16.
+     * Range: 1 to 16. Lower = more distortion.
      */
 	get bitDepth(): AudioParam | undefined {
 		return this.parameters.get('bitDepth');
