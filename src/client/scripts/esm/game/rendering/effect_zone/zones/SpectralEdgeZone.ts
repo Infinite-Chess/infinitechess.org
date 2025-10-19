@@ -32,7 +32,7 @@ export class SpectralEdgeZone implements Zone {
 	private strength: number = 0.3;
 
 	/** The base speed at which the gradient texture scrolls across the screen. */
-	private flowSpeed: number = 0.10; // Default: 0.07
+	private flowSpeed: number = 0.07; // Default: 0.07
 
 	/** The speed at which the flow direction changes over time, in radians per second. */
 	private flowRotationSpeed: number = 0.0025; // Default: 0.0025
@@ -41,7 +41,7 @@ export class SpectralEdgeZone implements Zone {
 	private gradientRepeat: number = 0.7; // Default: 1.2
 
 	/** The phase shift applied to the light tiles' gradient, as a percentage of the gradient's total length. */
-	private maskOffset: number = 0.06; // Default: 0.06
+	private maskOffset: number = 0.07; // Default: 0.06
 
 
 	// --- State Properties ---

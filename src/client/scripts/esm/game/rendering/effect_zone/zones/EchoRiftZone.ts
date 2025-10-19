@@ -2,6 +2,7 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/EchoRiftZone.ts
 
 import PerlinNoise from "../../../../util/PerlinNoise";
+import AudioManager from "../../../../audio/AudioManager";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
@@ -133,9 +134,11 @@ export class EchoRiftZone implements Zone {
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
+		AudioManager.fadeInDownsampler(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeOut(transitionDurationMillis);
+		AudioManager.fadeOutDownsampler(transitionDurationMillis);
 	}
 }
