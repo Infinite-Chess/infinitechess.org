@@ -3,6 +3,26 @@
 
 import type { AudioParamDescriptor } from "../worklet-types";
 
+/*
+ * These need to be declared in every audio worklet processor file,
+ * because apparently our typescript setup doesn't have the
+ * AudioWorkletGlobalScope, and nothing I do will add it.
+ */
+
+/* eslint-disable no-unused-vars */
+declare abstract class AudioWorkletProcessor {
+	static get parameterDescriptors(): AudioParamDescriptor[];
+	constructor(options?: any);
+	abstract process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean;
+}
+
+declare function registerProcessor(
+	name: string,
+	processorCtor: typeof AudioWorkletProcessor
+): void;
+/* eslint-enable no-unused-vars */
+
+
 /** Parameters for the BitcrusherProcessor. */
 interface BitcrusherParameters extends Record<string, Float32Array> {
 	bitDepth: Float32Array;
@@ -11,23 +31,23 @@ interface BitcrusherParameters extends Record<string, Float32Array> {
 
 /** An AudioWorkletProcessor that applies a bitcrusher and/or downsampling effect to audio. */
 class BitcrusherProcessor extends AudioWorkletProcessor {
-	static get parameterDescriptors(): AudioParamDescriptor[] {
+	static override get parameterDescriptors(): AudioParamDescriptor[] {
 		return [
-            {
-            	name: 'bitDepth',
-            	defaultValue: 8,
-            	minValue: 1,
-            	maxValue: 16,
-            	automationRate: 'k-rate',
-            },
-            {
-            	name: 'downsampling',
-            	defaultValue: 1,
-            	minValue: 1,
-            	maxValue: 40,
-            	automationRate: 'k-rate',
-            },
-        ];
+			{
+				name: 'bitDepth',
+				defaultValue: 8,
+				minValue: 1,
+				maxValue: 16,
+				automationRate: 'k-rate',
+			},
+			{
+				name: 'downsampling',
+				defaultValue: 1,
+				minValue: 1,
+				maxValue: 40,
+				automationRate: 'k-rate',
+			},
+		];
 	}
 
 	private phase = 0;
@@ -56,7 +76,7 @@ class BitcrusherProcessor extends AudioWorkletProcessor {
 
 				// Downsampling
 				if (this.phase % downsamplingValue < 1) this.lastSampleValue = inputChannel[i]!;
-        
+
 				// Bit-depth reduction
 				const step = Math.pow(0.5, bitDepthValue);
 				outputChannel[i] = step * Math.floor(this.lastSampleValue / step + 0.5);

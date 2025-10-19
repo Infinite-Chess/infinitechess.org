@@ -1,4 +1,5 @@
 
+// src/client/scripts/esm/audio/processors/worklet-types.ts
 
 /**
  * Stores missing audio worklet typescript types that apparently

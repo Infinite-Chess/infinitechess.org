@@ -15,7 +15,7 @@ export class BitcrusherNode extends AudioWorkletNode {
 	public static async create(context: AudioContext): Promise<BitcrusherNode> {
 		try {
 			// Load the worklet processor from the specified URL
-			await context.audioWorklet.addModule('scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.ts');
+			await context.audioWorklet.addModule('scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.js');
 			// Once loaded, create an instance of the node
 			return new BitcrusherNode(context);
 		} catch (e) {
