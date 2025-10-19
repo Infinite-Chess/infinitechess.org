@@ -76,6 +76,9 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
+/** The input node for our global effects bus. All sounds route through this before the master gain. */
+const effectsBusInput: GainNode = audioContext.createGain(); // The input to our global effects chain
+
 
 /** A master gain node to control the overall volume of all sounds. */
 const masterGain = audioContext.createGain();
@@ -95,7 +98,8 @@ const limiter = new DynamicsCompressorNode(audioContext, {
 	release: 0.1     // Quick release
 });
 
-// Connect the audio graph: Master Gain -> Limiter -> Destination (speakers)
+// Connect the audio graph: Effect Bus -> Master Gain -> Limiter -> Destination (speakers)
+effectsBusInput.connect(masterGain);
 masterGain.connect(limiter);
 limiter.connect(audioContext.destination);
 
@@ -109,8 +113,9 @@ function getContext(): AudioContext {
 }
 
 /**
- * All sound MUST route through the master gain node
- * in order for the master volume control to work!
+ * Returns the master gain node. All sounds MUST route through the
+ * master gain node in order for the master volume control to work!
+ * This should be used for sounds that need to BYPASS the global effects bus (e.g., ambiences).
  */
 function getDestination(): AudioNode {
 	return masterGain;
@@ -150,8 +155,7 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 	const effectNodes = effects.map(effectConfig => createEffectNode(audioContext, effectConfig));
 
 	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Master Gain -> Limiter -> Destination
-	const masterGainNode = mainSource.gainNode;
-	connectNodeChain(masterGainNode, effectNodes);
+	connectNodeChain(mainSource.gainNode, effectNodes);
 
 	// The SoundObject is now much simpler!
 	const soundObject: SoundObject = {
@@ -260,7 +264,7 @@ function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void 
 	}
 
 	// Connect the very last node in the chain to the master gain node.
-	currentNode.connect(masterGain);
+	currentNode.connect(effectsBusInput);
 }
 
 /**
