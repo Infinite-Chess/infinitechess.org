@@ -76,9 +76,6 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
-/** The input node for our global effects bus. All sounds route through this before the master gain. */
-const effectsBusInput: GainNode = audioContext.createGain(); // The input to our global effects chain
-
 
 /** A master gain node to control the overall volume of all sounds. */
 const masterGain = audioContext.createGain();
@@ -98,8 +95,7 @@ const limiter = new DynamicsCompressorNode(audioContext, {
 	release: 0.1     // Quick release
 });
 
-// Connect the audio graph: Effect Bus -> Master Gain -> Limiter -> Destination (speakers)
-effectsBusInput.connect(masterGain);
+// Connect the audio graph: Master Gain -> Limiter -> Destination (speakers)
 masterGain.connect(limiter);
 limiter.connect(audioContext.destination);
 
@@ -264,7 +260,7 @@ function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void 
 	}
 
 	// Connect the very last node in the chain to the master gain node.
-	currentNode.connect(effectsBusInput);
+	currentNode.connect(masterGain);
 }
 
 /**
