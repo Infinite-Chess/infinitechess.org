@@ -82,8 +82,8 @@ const BELL_CONFIG = {
 } as const;
 
 /** The minimum distance a piece needs to move for the water droplet ripple effect to trigger. */
-// const RIPPLE_MIN_DIST = bd.FromBigInt(10n ** 100n); // 10^100 squares
-const RIPPLE_MIN_DIST = bd.FromBigInt(20n); // FOR TESTING
+const RIPPLE_MIN_DIST = bd.FromBigInt(10n ** 100n); // 10^100 squares
+// const RIPPLE_MIN_DIST = bd.FromBigInt(20n); // FOR TESTING
 
 /** Config for the screen shake effect for very large moves. */
 const SHAKE_CONFIG = {
