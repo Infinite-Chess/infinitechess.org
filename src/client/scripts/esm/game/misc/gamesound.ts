@@ -91,7 +91,10 @@ const SHAKE_CONFIG = {
 	minDist: 4, // 10,000 squares => trauma begins increasing from 0
 	/** How much screen shake trauma is added per order of magnitude the piece moved. */
 	traumaMultiplier: 0.035,
-	/** A delay in milliseconds before the screen shake is triggered, to better sync with the audio. */
+	/**
+	 * A delay in milliseconds before the screen shake is triggered, to better sync with the audio.
+	 * ALSO CONTROLS DELAY of water ripple being added, too.
+	 */
 	delay: 70,
 };
 
@@ -126,7 +129,7 @@ fetch('sounds/soundspritesheet.mp3')
 	.then(arrayBuffer => AudioManager.decodeAudioData(arrayBuffer))
 	.then(decodedBuffer => {
 		spritesheetDecodedBuffer = decodedBuffer;
-		console.log('Sound spritesheet loaded and decoded successfully.');
+		// console.log('Sound spritesheet loaded and decoded successfully.');
 	})
 	.catch(error => {
 		const message = (error instanceof Error) ? error.message : String(error);
@@ -168,7 +171,7 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate } = options;
 
 	if (soundName === 'ripple') {
-		console.warn("Don't have new move sound effect in the sound spritesheet yet! Can't play it.");
+		// console.warn("Don't have new move sound effect in the sound spritesheet yet! Can't play it.");
 		return;
 	}
 
@@ -222,7 +225,7 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 	
 	if (destination && bd.compare(distanceMoved, RIPPLE_MIN_DIST) >= 0) {
 		// Trigger water dropplet ripple effect
-		WaterRipples.addRipple(destination);
+		setTimeout(() => WaterRipples.addRipple(destination), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
 		playSoundEffect('ripple', { volume, delay: delaySecs, playbackRate });
 	} else {
 		// Apply screen shake for very large moves

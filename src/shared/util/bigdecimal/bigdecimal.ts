@@ -651,7 +651,7 @@ function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * This uses the "exponentiation by squaring" algorithm for efficiency.
  */
 function powerInt(base: BigDecimal, exp: number): BigDecimal {
-	if (!Number.isInteger(exp)) throw new Error("Exponent must be an integer.");
+	if (!Number.isInteger(exp)) throw new Error("Exponent must be an integer. Received: " + exp);
 
 	// Handle negative exponents by inverting the base: base^-n = (1/base)^n
 	if (exp < 0) {

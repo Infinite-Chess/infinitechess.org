@@ -20,18 +20,21 @@ import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes
 // Constants --------------------------------------------------------------------------------
 
 
-/** The distance beyond the screen edge that ripples are capped at, in virtual pixels. */
-const RIPPLE_PIXELS_FROM_EDGE = 200;
+/**
+ * The distance beyond the screen edge that ripples are capped at, in virtual pixels,
+ * PER virtual pixel of screen height, as the ripple speed is proportional to screen height.
+ */
+const RIPPLE_DIST_FROM_EDGE = 0.54; // Default: 0.54
 /** The lifetime offset applied to ripples beyond the screen edge so that we see their ripple sooner. */
-const ELAPSED_TIME_OFFSET = 0;
+const ELAPSED_TIME_OFFSET = -200; // Default: -200
 
 /**
  * How long each ripple lasts before being removed, in seconds,
  * on a PERFECTLY SQUARE canvas.
  */
-const RIPPLE_LIFETIME_BASE = 0.7;
+const RIPPLE_LIFETIME_BASE = 1.1;
 /** How much longer ripples last per screen ratio of width/height. */
-const RIPPLE_LIFETIME_MULTIPLIER = 0.45;
+const RIPPLE_LIFETIME_MULTIPLIER = 0.5;
 
 
 // Variables --------------------------------------------------------------------------------
@@ -39,7 +42,7 @@ const RIPPLE_LIFETIME_MULTIPLIER = 0.45;
 
 let waterRipplePass: WaterRipplePass;
 
-let activeDroplets: RippleState[] = [];
+const activeDroplets: RippleState[] = [];
 
 /**
  * ACTUAL ripple lifetime, dependent on screen ratio, as the more
@@ -71,7 +74,9 @@ function addRipple(sourceCoords: Coords): void {
 	// Convert coords to world space
 	const sourceWorldSpace = space.convertCoordToWorldSpace(bigdecimal.FromCoords(sourceCoords));
 
-	const rippleWorldFromEdge = space.convertPixelsToWorldSpace_Virtual(RIPPLE_PIXELS_FROM_EDGE);
+	const screenHeight = camera.canvas.height / window.devicePixelRatio;
+	const pixelPadding = RIPPLE_DIST_FROM_EDGE * screenHeight;
+	const rippleWorldFromEdge = space.convertPixelsToWorldSpace_Virtual(pixelPadding);
 	// The screen rectangle in world space
 	const screenBox = camera.getScreenBoundingBox(false);
 	const paddedScreenBox = {
@@ -86,16 +91,29 @@ function addRipple(sourceCoords: Coords): void {
 	let elapsedTimeOffset: number = 0;
 
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
-		console.log("Ripple source outside of padded screen.");
+		// console.log("Ripple source outside of padded screen.");
 		const vectorToSource = coordutil.subtractBDCoords(bigdecimal.FromCoords(sourceCoords), boardpos.getBoardPos());
 		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
 
-		if (closestVector[0] === -1n) rippleX = paddedScreenBox.left;
-		else if (closestVector[0] === 1n) rippleX = paddedScreenBox.right;
-		if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
-		else if (closestVector[1] === 160n) rippleY = paddedScreenBox.top;
+		if (closestVector[0] === 0n) {
+			rippleX = 0;
+			if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+			else if (closestVector[1] === 1n) rippleY = paddedScreenBox.top;
+		} else if (closestVector[0] === 1n) {
+			rippleX = paddedScreenBox.right;
+			if (closestVector[1] === 0n) rippleY = 0;
+			else if (closestVector[1] === 1n) rippleY = paddedScreenBox.top;
+			else if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+		} else if (closestVector[0] === -1n) {
+			rippleX = paddedScreenBox.left;
+			if (closestVector[1] === 0n) rippleY = 0;
+			else if (closestVector[1] === 1n) rippleY = paddedScreenBox.top;
+			else if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+		}
 
-		elapsedTimeOffset = ELAPSED_TIME_OFFSET;
+		// More offset for diagonals to account for greater distance from screen edge to ripple source
+		const isDiagonal = closestVector[0] !== 0n && closestVector[1] !== 0n;
+		elapsedTimeOffset = isDiagonal ? ELAPSED_TIME_OFFSET * 1.7 : ELAPSED_TIME_OFFSET;
 	}
 
 	const screenWidthWorld = screenBox.right - screenBox.left;
@@ -113,9 +131,13 @@ function update(): void {
 	const now = Date.now();
 
 	// Filter out old droplets
-	activeDroplets = activeDroplets.filter(
-		droplet => now < droplet.timeCreated + rippleLifetime * 1000 // Convert seconds to milliseconds
-	);
+	for (let i = activeDroplets.length - 1; i >= 0; i--) {
+		const droplet = activeDroplets[i]!;
+		if (now >= droplet.timeCreated + rippleLifetime * 1000) { // Convert seconds to milliseconds
+			activeDroplets.splice(i, 1);
+			// console.log("Removed ripple droplet.");
+		}
+	}
 
 	// FEED the active list to the pass
 	waterRipplePass.updateDroplets(activeDroplets);
