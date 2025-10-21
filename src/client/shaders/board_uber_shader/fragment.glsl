@@ -3,33 +3,22 @@ precision highp float;
 
 // src/client/shaders/board_uber_shader/fragment.glsl
 
+// GLOBAL UNIFORMS (May be used by several effects)
+uniform sampler2D u_colorTexture;
+uniform sampler2D u_maskTexture; // This texture has white pixels where light tiles are and black pixels where dark tiles are.
+uniform sampler2D u_perlinNoiseTexture;
+uniform sampler2D u_whiteNoiseTexture;
+uniform float u_time;
+uniform vec2 u_resolution; // Canvas dimensions, used for aspect correction
+uniform float u_pixelDensity; // How many device pixels per virtual pixel
+
+// The integers representing the unique id of effect types A & B this frame.
+uniform float u_effectTypeA;
+uniform float u_effectTypeB;
 
 // The master blend factor between the 'A' and 'B' effect slots.
 uniform float u_transitionProgress;
 
-// GLOBAL UNIFORMS (May be needed by multiple effects)
-uniform sampler2D u_colorTexture;
-uniform sampler2D u_maskTexture;
-uniform sampler2D u_perlinNoiseTexture;
-uniform sampler2D u_whiteNoiseTexture;
-uniform float u_time;
-uniform vec2 u_resolution; // Canvas dimensions
-uniform float u_pixelDensity; // How many device pixels per virtual pixel
-
-uniform float u_effectTypeA; // e.g., 0.0 for None, 1.0 for Dusty Wastes
-uniform float u_effectTypeB;
-
-// Dusty Wastes Uniforms (Effect Type 6)
-uniform float u6_strength; // The opacity of the scrolling noise texture
-uniform float u6_noiseTiling; // How many times the noise texture repeats across the screen
-uniform vec2 u6_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
-uniform vec2 u6_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
-
-// Static Zone Uniforms (Effect Type 7)
-uniform float u7_strength; // The opacity of the white noise pixels
-uniform vec2 u7_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
-uniform float u7_pixelWidth; // How many pixels wide the white noise texture is
-uniform float u7_pixelSize; // How many virtual pixels wide each static pixel should be
 
 // Spectral Edge Uniforms (Effect Type 4)
 uniform float u4_flowDistance;
@@ -57,6 +46,19 @@ uniform vec3 u5_color4;
 uniform vec3 u5_color5;
 uniform vec3 u5_color6;
 
+// Dusty Wastes Uniforms (Effect Type 6)
+uniform float u6_strength; // The opacity of the scrolling noise texture
+uniform float u6_noiseTiling; // How many times the noise texture repeats across the screen
+uniform vec2 u6_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
+uniform vec2 u6_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
+
+// Static Zone Uniforms (Effect Type 7)
+uniform float u7_strength; // The opacity of the white noise pixels
+uniform vec2 u7_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
+uniform float u7_pixelWidth; // How many pixels wide the white noise texture is
+uniform float u7_pixelSize; // How many virtual pixels wide each static pixel should be
+
+
 // INPUTS
 in vec2 v_uv;           // The model's original UVs for color/mask
 in vec4 v_screenCoord;  // The screen-space coordinate for the noise
@@ -64,9 +66,10 @@ in vec4 v_color;
 
 out vec4 out_color;
 
+
 // Helper function to get a color from a procedural gradient.
 vec3 getColorFromRamp(float coord, vec3 color1, vec3 color2, vec3 color3, vec3 color4, vec3 color5, vec3 color6) {
-    vec3 color = u5_color1; // Default to the first color
+    vec3 color = u5_color1;
 
     // Scale coord by the number of colors to create N segments,
     // allowing the last segment to wrap back to the first.
@@ -81,7 +84,7 @@ vec3 getColorFromRamp(float coord, vec3 color1, vec3 color2, vec3 color3, vec3 c
     else if (index == 2) color = mix(color3, color4, blendFactor);
     else if (index == 3) color = mix(color4, color5, blendFactor);
     else if (index == 4) color = mix(color5, color6, blendFactor);
-    else if (index >= 5) color = mix(color6, color1, blendFactor); // Wrap back to the first
+    else if (index == 5) color = mix(color6, color1, blendFactor); // Wrap back to the first
 
     return color;
 }
@@ -92,7 +95,6 @@ vec3 ColorFlow(
     vec3 baseColor,
     vec2 screenUV,
 	float maskValue,
-
     // --- Effect parameters ---
     float flowDistance,
     vec2 flowDirectionVec,
@@ -123,16 +125,13 @@ vec3 ColorFlow(
 	return mix(baseColor, gradientColor, strength);
 }
 
-
 // Applies the "Dusty Wastes" animated noise effect.
 vec3 DustyWastes(
 	// --- Input values ---
 	vec3 baseColor,
 	vec2 screenUV,
-	
 	// --- Samplers ---
 	sampler2D noiseSampler,
-	
 	// --- Effect parameters ---
 	float effectStrength,
 	float noiseTiling,
@@ -180,31 +179,7 @@ vec3 calculateEffectColor(
 	vec2 screenUV,
     float maskValue
 ) {
-	if (effectType == 6.0) {
-		return DustyWastes(
-			baseColor,
-			screenUV,
-			// Pass global uniforms
-			u_perlinNoiseTexture,
-			// Pass effect-specific uniforms
-			u6_strength,
-			u6_noiseTiling,
-			u6_uvOffset1,
-			u6_uvOffset2
-		);
-	} else if (effectType == 7.0) {
-        return Static(
-            baseColor,
-            screenUV,
-            u_whiteNoiseTexture,
-			u7_strength,
-            u7_uvOffset,
-			u7_pixelWidth,
-            u7_pixelSize,
-			u_resolution,
-			u_pixelDensity
-        );
-    } else if (effectType == 4.0) {
+	if (effectType == 4.0) {
 		return ColorFlow(
 			baseColor,
 			screenUV,
@@ -242,7 +217,31 @@ vec3 calculateEffectColor(
 			u5_color5,
 			u5_color6
 		);
-	}
+	} else if (effectType == 6.0) {
+		return DustyWastes(
+			baseColor,
+			screenUV,
+			// Pass global uniforms
+			u_perlinNoiseTexture,
+			// Pass effect-specific uniforms
+			u6_strength,
+			u6_noiseTiling,
+			u6_uvOffset1,
+			u6_uvOffset2
+		);
+	} else if (effectType == 7.0) {
+        return Static(
+            baseColor,
+            screenUV,
+            u_whiteNoiseTexture,
+			u7_strength,
+            u7_uvOffset,
+			u7_pixelWidth,
+            u7_pixelSize,
+			u_resolution,
+			u_pixelDensity
+        );
+    }
 
 	// Default case: no effect
 	return baseColor;
