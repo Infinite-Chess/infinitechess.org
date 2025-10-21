@@ -28,9 +28,10 @@ import texturecache from '../../chess/rendering/texturecache.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
-import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 import perspective from './perspective.js';
+import math from '../../../../../shared/util/math/math.js';
 import webgl, { gl } from './webgl.js';
+import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 
 
 /**
@@ -50,6 +51,11 @@ let tilesTexture_2: WebGLTexture | undefined; // Opaque, no mipmaps
 /** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
 let tilesTexture_256mips: WebGLTexture | undefined;
 
+/**
+ * A mask texture for the tiles, used to apply Zone effects to selective light/dark tiles.
+ * White pixels represent light tile pixels, black pixels represent dark tile pixels.
+ * Independent of theme.
+ */
 let tilesMask: WebGLTexture | undefined;
 
 
@@ -157,9 +163,8 @@ function gboundingBoxFloat(): BoundingBoxBD {
 /** Loads the tiles texture. */
 function init(): void {
 	// Generate the tiles mask texture
-	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => {
-	// checkerboardgenerator.createCheckerboardIMG('black', 'white', 256).then(tilesMask_IMG => {
-	// checkerboardgenerator.createCheckerboardIMG('white', 'white', 256).then(tilesMask_IMG => {
+	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
+	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => { 
 		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
 	});
 
@@ -216,19 +221,19 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 /**
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
+ * @param noise - Noise textures for zone effects, if they are loaded.
+ * @param zoom - The zoom level to generate the board model at. Main board: 1.0
  */
-function generateBoardModel(isFractal: boolean, { perlinNoise, whiteNoise }: NoiseTextures = {}, zoom: BigDecimal = ONE, opacity: number = 1.0): Renderable | undefined {
-	const boardScale = boardpos.getBoardScale();
-	const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
-	const relativeScaleWhen1TileIs1VirtualPixel = bd.divide_floating(scaleWhen1TileIs1VirtualPixel, zoom);
-	if (bd.compare(boardScale, relativeScaleWhen1TileIs1VirtualPixel) < 0) {
-		// STOP rendering to avoid glitches! Too small
-		// console.log(`Skipping generating board model of zoom ${bd.toNumber(zoom)}. Scale is too small.`);
-		return;
-	}
+function generateBoardModel({ perlinNoise, whiteNoise }: NoiseTextures = {}, zoom: BigDecimal, opacity: number = 1.0): Renderable | undefined {
+	if (!tilesMask) return; // Mask texture not loaded yet
 
+	const boardScale = boardpos.getBoardScale();
+	
+	/** Whether this is NOT the main board (zoom level 1.0) */
+	const isFractal = !bd.areEqual(zoom, ONE);
+	// Fractal boards get the texture with no antialiasing, but some moire.
 	const boardTexture = isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
-	if (!boardTexture || !tilesMask) return; // Texture not loaded yet
+	if (!boardTexture) return; // Texture not loaded yet
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
 	const zoomTimesScale = bd.toNumber(bd.multiply_floating(boardScale, zoom));
@@ -274,18 +279,6 @@ function generateBoardModel(isFractal: boolean, { perlinNoise, whiteNoise }: Noi
 	if (whiteNoise) textures.push({ texture: whiteNoise, uniformName: 'u_whiteNoiseTexture' });
 	
 	return createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures);
-}
-
-function renderMainBoard(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
-	if (boardpos.isScaleSmallForInvisibleTiles()) return;
-
-	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
-	// The other option is to regenerate it as much as highlighted squares, with the bounding box.
-	const model = generateBoardModel(false, noiseTextures);
-	if (!model) return; // Too small, would cause graphical glitches to render
-
-	const z = getRelativeZ();
-	model.render([0,0,z], undefined, uniforms);
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
@@ -379,13 +372,12 @@ function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): 
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
-		renderMainBoard(noiseTextures, uniforms);
+		// renderMainBoard(noiseTextures, uniforms);
 		renderFractalBoards(noiseTextures, uniforms);
 	});
 }
 
 function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
-	console.log("--------------------------");
 	const z = getRelativeZ();
 
 	// Determine at what "e" the main boards tiles are 1 virtual pixel wide.
@@ -393,36 +385,39 @@ function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<st
 	const eWhen1TileIs1VirtualPixel = bd.log10(scaleWhen1TileIs1VirtualPixel);
 
 	const currentE = bd.log10(boardpos.getBoardScale());
+	// console.log("currentE:", currentE);
 
-	// The e value of the most-zoomed out board we render.
-	// This one's opacity is always 1.0
-	// The e value when that board's tiles will be 1 virtual pixel wide.
-	const mostZoomedOutE = Math.floor((currentE - eWhen1TileIs1VirtualPixel) / 3) * 3 + eWhen1TileIs1VirtualPixel;
-	console.log("mostZoomedOutE:", mostZoomedOutE);
+	// Board 1 (most zoomed in, always rendered, but may be fading out)
+	const board1_E = Math.floor((currentE - eWhen1TileIs1VirtualPixel) / 3) * 3 + eWhen1TileIs1VirtualPixel;
+	// console.log("board1_E:", board1_E);
 
-	// The e value of the next zoomed-in board.
-	// It's opacity ranges from 1.0 to 0.0 as it approaches its respective 
-	// The e value when that board's tiles will be 1 virtual pixel wide.
-	const nextZoomedInE = mostZoomedOutE + 3;
-	console.log("nextZoomedInE:", nextZoomedInE);
+	/**
+	 * How many orders of magnitude of the scale to transition
+	 * board 1's opacity from 1.0 to 0.0. Larger = slower fade.
+	 */
+	const E_FADE_DIST = 0.9;
+	const board1_Opacity = Math.min(-(board1_E - currentE) / E_FADE_DIST, 1.0);
+	const board1_Opacity_Eased = math.easeOut(board1_Opacity);
+	// console.log("nextZoomedInOpacity:", board1_Opacity_Eased);
 
-	// Determine the opacity of the next zoomed-in board.
-	const nextZoomedInOpacity = currentE - nextZoomedInE;
-	console.log("nextZoomedInOpacity:", nextZoomedInOpacity);
+	// Board 2 (more zoomed out, always 1.0 opacity, but ONLY rendered when board 1 is fading out)
+	const board2_E = board1_E - 3;
+	// console.log("board2_E:", board2_E);
 
-	if (nextZoomedInOpacity < 0) throw Error("nextZoomedInOpacity is less than 0!");
-	// If the next zoomed in board's opacity > 1.0, then do ONLY render
-	// this board and not the maxZoomedOutE!
-
-	// First, render the most zoomed out board (always at 1.0 opacity)
-	let zoom = bd.powerInt(TEN, mostZoomedOutE - eWhen1TileIs1VirtualPixel);
-	generateBoardModel(true, noiseTextures, zoom, 1.0)?.render([0,0,z], undefined, uniforms);
-
-	// Second, ONLY render the next zoomed IN board if its opacity < 1.0
-	if (nextZoomedInOpacity < 1.0) {
-		zoom = bd.powerInt(TEN, nextZoomedInE - eWhen1TileIs1VirtualPixel);
-		generateBoardModel(true, noiseTextures, zoom, nextZoomedInOpacity)?.render([0,0,z], undefined, uniforms);
+	// ONLY render board2 if the first board has started fading.
+	// It's always rendered on bottom at 1.0 opacity.
+	if (board1_Opacity_Eased < 1.0) {
+		// console.log("Rendering 2nd board");
+		const power = -Math.round(board2_E - eWhen1TileIs1VirtualPixel); // Rounding is ONLY necessary due to correct tiny floating point inaccuracies. This MUST be an integer.
+		const zoom = bd.powerInt(TEN, power);
+		generateBoardModel(noiseTextures, zoom, 1.0)?.render([0,0,z], undefined, uniforms);
 	}
+
+	// ALWAYS render board 1 (most zoomed in).
+	// This is rendered on top, and may be fading out.
+	const power = -Math.round(board1_E - eWhen1TileIs1VirtualPixel); // Rounding is ONLY necessary due to correct tiny floating point inaccuracies. This MUST be an integer.
+	const zoom = bd.powerInt(TEN, power);
+	generateBoardModel(noiseTextures, zoom, board1_Opacity_Eased)?.render([0,0,z], undefined, uniforms);
 }
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
