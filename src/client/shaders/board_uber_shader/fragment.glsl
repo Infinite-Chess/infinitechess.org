@@ -19,44 +19,43 @@ uniform float u_pixelDensity; // How many device pixels per virtual pixel
 uniform float u_effectTypeA; // e.g., 0.0 for None, 1.0 for Dusty Wastes
 uniform float u_effectTypeB;
 
-// Dusty Wastes Uniforms (Effect Type 2)
-uniform float u2_strength; // The opacity of the scrolling noise texture
-uniform float u2_noiseTiling; // How many times the noise texture repeats across the screen
-uniform vec2 u2_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
-uniform vec2 u2_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
+// Dusty Wastes Uniforms (Effect Type 6)
+uniform float u6_strength; // The opacity of the scrolling noise texture
+uniform float u6_noiseTiling; // How many times the noise texture repeats across the screen
+uniform vec2 u6_uvOffset1; // The texture offset for noise layer 1 (calculated cpu side for more control)
+uniform vec2 u6_uvOffset2; // The texture offset for noise layer 2 (calculated cpu side for more control)
 
-// Static Zone Uniforms (Effect Type 3)
-uniform float u3_strength; // The opacity of the white noise pixels
-uniform vec2 u3_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
-uniform float u3_pixelWidth; // How many pixels wide the white noise texture is
-uniform float u3_pixelSize; // How many virtual pixels wide each static pixel should be
+// Static Zone Uniforms (Effect Type 7)
+uniform float u7_strength; // The opacity of the white noise pixels
+uniform vec2 u7_uvOffset; // The texture offset for the white noise (calculated cpu side for more control)
+uniform float u7_pixelWidth; // How many pixels wide the white noise texture is
+uniform float u7_pixelSize; // How many virtual pixels wide each static pixel should be
 
-// Spectral Edge Uniforms (Effect Type 8)
-uniform float u8_flowDistance;
-uniform vec2 u8_flowDirectionVec;
-uniform float u8_gradientRepeat;
-uniform float u8_maskOffset;
-uniform float u8_strength;
-uniform vec3 u8_color1;
-uniform vec3 u8_color2;
-uniform vec3 u8_color3;
-uniform vec3 u8_color4;
-uniform vec3 u8_color5;
-uniform vec3 u8_color6;
+// Spectral Edge Uniforms (Effect Type 4)
+uniform float u4_flowDistance;
+uniform vec2 u4_flowDirectionVec;
+uniform float u4_gradientRepeat;
+uniform float u4_maskOffset;
+uniform float u4_strength;
+uniform vec3 u4_color1;
+uniform vec3 u4_color2;
+uniform vec3 u4_color3;
+uniform vec3 u4_color4;
+uniform vec3 u4_color5;
+uniform vec3 u4_color6;
 
-// Iridescence Uniforms (Effect Type 9)
-uniform float u9_numColors;
-uniform float u9_flowDistance;
-uniform vec2 u9_flowDirectionVec;
-uniform float u9_gradientRepeat;
-uniform float u9_maskOffset;
-uniform float u9_strength;
-uniform vec3 u9_color1;
-uniform vec3 u9_color2;
-uniform vec3 u9_color3;
-uniform vec3 u9_color4;
-uniform vec3 u9_color5;
-uniform vec3 u9_color6;
+// Iridescence Uniforms (Effect Type 5)
+uniform float u5_flowDistance;
+uniform vec2 u5_flowDirectionVec;
+uniform float u5_gradientRepeat;
+uniform float u5_maskOffset;
+uniform float u5_strength;
+uniform vec3 u5_color1;
+uniform vec3 u5_color2;
+uniform vec3 u5_color3;
+uniform vec3 u5_color4;
+uniform vec3 u5_color5;
+uniform vec3 u5_color6;
 
 // INPUTS
 in vec2 v_uv;           // The model's original UVs for color/mask
@@ -67,7 +66,7 @@ out vec4 out_color;
 
 // Helper function to get a color from a procedural gradient.
 vec3 getColorFromRamp(float coord, vec3 color1, vec3 color2, vec3 color3, vec3 color4, vec3 color5, vec3 color6) {
-    vec3 color = u9_color1; // Default to the first color
+    vec3 color = u5_color1; // Default to the first color
 
     // Scale coord by the number of colors to create N segments,
     // allowing the last segment to wrap back to the first.
@@ -181,67 +180,67 @@ vec3 calculateEffectColor(
 	vec2 screenUV,
     float maskValue
 ) {
-	if (effectType == 2.0) {
+	if (effectType == 6.0) {
 		return DustyWastes(
 			baseColor,
 			screenUV,
 			// Pass global uniforms
 			u_perlinNoiseTexture,
 			// Pass effect-specific uniforms
-			u2_strength,
-			u2_noiseTiling,
-			u2_uvOffset1,
-			u2_uvOffset2
+			u6_strength,
+			u6_noiseTiling,
+			u6_uvOffset1,
+			u6_uvOffset2
 		);
-	} else if (effectType == 3.0) {
+	} else if (effectType == 7.0) {
         return Static(
             baseColor,
             screenUV,
             u_whiteNoiseTexture,
-			u3_strength,
-            u3_uvOffset,
-			u3_pixelWidth,
-            u3_pixelSize,
+			u7_strength,
+            u7_uvOffset,
+			u7_pixelWidth,
+            u7_pixelSize,
 			u_resolution,
 			u_pixelDensity
         );
-    } else if (effectType == 8.0) {
+    } else if (effectType == 4.0) {
 		return ColorFlow(
 			baseColor,
 			screenUV,
 			maskValue,
 			// Pass effect-specific uniforms
-			u8_flowDistance,
-			u8_flowDirectionVec,
-			u8_gradientRepeat,
-			u8_maskOffset,
-			u8_strength,
+			u4_flowDistance,
+			u4_flowDirectionVec,
+			u4_gradientRepeat,
+			u4_maskOffset,
+			u4_strength,
 			// Color stops
-			u8_color1,
-			u8_color2,
-			u8_color3,
-			u8_color4,
-			u8_color5,
-			u8_color6
+			u4_color1,
+			u4_color2,
+			u4_color3,
+			u4_color4,
+			u4_color5,
+			u4_color6
 		);
-	} else if (effectType == 9.0) {
+	} else if (effectType == 5.0) {
 		return ColorFlow(
 			baseColor,
 			screenUV,
 			maskValue,
             // Pass effect-specific uniforms
-            u9_flowDistance,
-            u9_flowDirectionVec,
-            u9_gradientRepeat,
-            u9_maskOffset,
-            u9_strength,
+            u5_flowDistance,
+            u5_flowDirectionVec,
+            u5_gradientRepeat,
+            u5_maskOffset,
+            u5_strength,
 			// Color stops
-			u9_color1,
-			u9_color2,
-			u9_color3,
-			u9_color4,
-			u9_color5,
-			u9_color6
+			u5_color1,
+			u5_color2,
+			u5_color3,
+			u5_color4,
+			u5_color5,
+			u5_color6
 		);
 	}
 

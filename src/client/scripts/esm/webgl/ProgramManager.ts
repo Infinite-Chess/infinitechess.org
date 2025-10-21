@@ -72,9 +72,9 @@ type Uniforms_BoardUberShader =
     // Effect Selectors
     'u_effectTypeA' | 'u_effectTypeB' |
     // "Dusty Wastes" Uniforms
-    'u2_strength' | 'u2_noiseTiling' | 'u2_uvOffset1' | 'u2_uvOffset2' |
+    'u6_strength' | 'u6_noiseTiling' | 'u6_uvOffset1' | 'u6_uvOffset2' |
     // "Static Zone" Uniforms
-    'u3_strength' | 'u3_uvOffset' | 'u3_pixelWidth' | 'u3_pixelSize';
+    'u7_strength' | 'u7_uvOffset' | 'u7_pixelWidth' | 'u7_pixelSize';
 // Post Processing Shaders
 type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';

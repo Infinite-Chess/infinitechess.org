@@ -11,7 +11,7 @@ import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 export class SpectralEdgeZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 8;
+	readonly effectType: number = 4;
 
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
@@ -75,18 +75,18 @@ export class SpectralEdgeZone implements Zone {
 		const flowDistance = performance.now() / 1000 * this.flowSpeed;
 
 		const uniforms: Record<string, any> = {
-			u8_flowDistance: flowDistance,
-			u8_flowDirectionVec: flowDirectionVec,
-			u8_gradientRepeat: this.gradientRepeat,
-			u8_maskOffset: this.maskOffset,
-			u8_strength: this.strength,
+			u4_flowDistance: flowDistance,
+			u4_flowDirectionVec: flowDirectionVec,
+			u4_gradientRepeat: this.gradientRepeat,
+			u4_maskOffset: this.maskOffset,
+			u4_strength: this.strength,
 		};
 
 		// Add each color as a separate uniform.
 		for (let i = 0; i < this.colors.length; i++) {
 			// Use the color if it exists, otherwise pad with black.
 			const color = this.colors[i] || [0, 0, 0];
-			uniforms[`u8_color${i + 1}`] = color;
+			uniforms[`u4_color${i + 1}`] = color;
 		}
 
 		return uniforms;
