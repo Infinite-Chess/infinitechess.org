@@ -1,6 +1,7 @@
 
 // src/client/scripts/esm/game/rendering/effect_zone/zones/StaticZone.ts
 
+import AudioManager from "../../../../audio/AudioManager";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { Zone } from "../EffectZoneManager";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
@@ -105,9 +106,11 @@ export class StaticZone implements Zone {
 
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
+		AudioManager.fadeInDownsampler(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeOut(transitionDurationMillis);
+		AudioManager.fadeOutDownsampler(transitionDurationMillis);
 	}
 }

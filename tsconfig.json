@@ -23,7 +23,7 @@
 	// Tells TypeScript and every tool that uses this file (IntelliSense, ESLint): "My source code is in the src folder."
 	"include": [
 		"src"
-	], // Look for all source code inside the 'src' directory
+	],
 	"exclude": [
 		"node_modules", // Don't look in node_modules
 		"dist",         // Don't look in the output directory

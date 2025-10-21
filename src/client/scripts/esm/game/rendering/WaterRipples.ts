@@ -3,15 +3,38 @@
  * This scripts managers the animated water ripple effect for extremely large moves.
  */
 
-import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass";
-import { PostProcessPass } from "../../webgl/post_processing/PostProcessingPipeline";
-import { ProgramManager } from "../../webgl/ProgramManager";
-import frametracker from "./frametracker";
-// [TESTING]
-import { listener_overlay } from "../chess/game";
-import { Mouse } from "../input";
-import camera from "./camera";
+import type { PostProcessPass } from "../../webgl/post_processing/PostProcessingPipeline";
+import type { ProgramManager } from "../../webgl/ProgramManager";
 
+import frametracker from "./frametracker";
+import camera from "./camera";
+import space from "../misc/space";
+import bigdecimal from "../../../../../shared/util/bigdecimal/bigdecimal";
+import boardpos from "./boardpos";
+import drawrays from "./highlights/annotations/drawrays";
+import bounds from "../../../../../shared/util/math/bounds";
+import coordutil, { Coords } from "../../../../../shared/chess/util/coordutil";
+import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass";
+
+
+// Constants --------------------------------------------------------------------------------
+
+
+/**
+ * The distance beyond the screen edge that ripples are capped at, in virtual pixels,
+ * PER virtual pixel of screen height, as the ripple speed is proportional to screen height.
+ */
+const RIPPLE_DIST_FROM_EDGE = 0.54; // Default: 0.54
+/** The lifetime offset applied to ripples beyond the screen edge so that we see their ripple sooner. */
+const ELAPSED_TIME_OFFSET = -200; // Default: -200
+
+/**
+ * How long each ripple lasts before being removed, in seconds,
+ * on a PERFECTLY SQUARE canvas.
+ */
+const RIPPLE_LIFETIME_BASE = 1.1;
+/** How much longer ripples last per screen ratio of width/height. */
+const RIPPLE_LIFETIME_MULTIPLIER = 0.5;
 
 
 // Variables --------------------------------------------------------------------------------
@@ -19,15 +42,7 @@ import camera from "./camera";
 
 let waterRipplePass: WaterRipplePass;
 
-let activeDroplets: RippleState[] = [];
-
-/**
- * How long each ripple lasts before being removed, in seconds,
- * on a PERFECTLY SQUARE canvas.
- */
-const RIPPLE_LIFETIME_BASE = 0.7;
-/** How much longer ripples last per screen ratio of width/height. */
-const RIPPLE_LIFETIME_MULTIPLIER = 0.45;
+const activeDroplets: RippleState[] = [];
 
 /**
  * ACTUAL ripple lifetime, dependent on screen ratio, as the more
@@ -41,8 +56,6 @@ let rippleLifetime: number;
 
 function init(programManager: ProgramManager, width: number, height: number): void {
 	waterRipplePass = new WaterRipplePass(programManager, width, height);
-	// waterRipplePass.propagationSpeed = 0.2;
-	// waterRipplePass.oscillationSpeed = 4;
 
 	updateRippleLifetime(width, height);
 }
@@ -52,30 +65,80 @@ function updateRippleLifetime(width: number, height: number): void {
 	// console.log(`ripple lifetime adjusted to ${rippleLifetime.toFixed(2)}s`);
 }
 
+
+/**
+ * Adds a ripple droplet at the given source coordinates.
+ * Caps the ripple to be just off-screen if the source is significantly off-screen.
+ */
+function addRipple(sourceCoords: Coords): void {
+	// Convert coords to world space
+	const sourceWorldSpace = space.convertCoordToWorldSpace(bigdecimal.FromCoords(sourceCoords));
+
+	const screenHeight = camera.canvas.height / window.devicePixelRatio;
+	const pixelPadding = RIPPLE_DIST_FROM_EDGE * screenHeight;
+	const rippleWorldFromEdge = space.convertPixelsToWorldSpace_Virtual(pixelPadding);
+	// The screen rectangle in world space
+	const screenBox = camera.getScreenBoundingBox(false);
+	const paddedScreenBox = {
+		left: screenBox.left - rippleWorldFromEdge,
+		right: screenBox.right + rippleWorldFromEdge,
+		top: screenBox.top + rippleWorldFromEdge,
+		bottom: screenBox.bottom - rippleWorldFromEdge,
+	};
+
+	let rippleX: number = sourceWorldSpace[0];
+	let rippleY: number = sourceWorldSpace[1];
+	let elapsedTimeOffset: number = 0;
+
+	// Don't let the ripple source be too far off-screen
+	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
+		// console.log("Ripple source outside of padded screen.");
+		const vectorToSource = coordutil.subtractBDCoords(bigdecimal.FromCoords(sourceCoords), boardpos.getBoardPos());
+		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
+
+		if (closestVector[0] === 0n) {
+			rippleX = 0;
+			if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+			else if (closestVector[1] === 1n) rippleY = paddedScreenBox.top;
+		} else if (closestVector[0] === 1n) {
+			rippleX = paddedScreenBox.right;
+			if (closestVector[1] === 0n) rippleY = 0;
+			else if (closestVector[1] === 1n) rippleY = paddedScreenBox.top;
+			else if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+		} else if (closestVector[0] === -1n) {
+			rippleX = paddedScreenBox.left;
+			if (closestVector[1] === 0n) rippleY = 0;
+			else if (closestVector[1] === 1n) rippleY = paddedScreenBox.top;
+			else if (closestVector[1] === -1n) rippleY = paddedScreenBox.bottom;
+		}
+
+		// More offset for diagonals to account for greater distance from screen edge to ripple source
+		const isDiagonal = closestVector[0] !== 0n && closestVector[1] !== 0n;
+		elapsedTimeOffset = isDiagonal ? ELAPSED_TIME_OFFSET * 1.7 : ELAPSED_TIME_OFFSET;
+	}
+
+	const screenWidthWorld = screenBox.right - screenBox.left;
+	const screenHeightWorld = screenBox.top - screenBox.bottom;
+
+	// Convert world coordinates to UV coordinates [0-1]
+	const u = (rippleX - screenBox.left) / screenWidthWorld;
+	const v = (rippleY - screenBox.bottom) / screenHeightWorld;
+
+	// Create a new droplet
+	activeDroplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
+}
+
 function update(): void {
 	const now = Date.now();
 
 	// Filter out old droplets
-	activeDroplets = activeDroplets.filter(
-		droplet => now < droplet.timeCreated + rippleLifetime * 1000 // Convert seconds to milliseconds
-	);
-
-
-	// [TESTING] Add a new droplet on mouse click
-	// if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
-	// 	const mousePos = listener_overlay.getMousePosition(Mouse.LEFT)!;
-
-	// 	// Convert world space to uv space
-	// 	const rect = camera.canvas.getBoundingClientRect();
-
-	// 	// Convert pixel coordinates to UV coordinates [0-1]
-	// 	const u = mousePos[0] / rect.width;
-	// 	const v = 1.0 - mousePos[1] / rect.height; // Y is inverted in WebGL
-
-	// 	// Create a new droplet with an elapsed time of 0
-	// 	activeDroplets.push({ center: [u, v], timeCreated: now });
-	// }
-
+	for (let i = activeDroplets.length - 1; i >= 0; i--) {
+		const droplet = activeDroplets[i]!;
+		if (now >= droplet.timeCreated + rippleLifetime * 1000) { // Convert seconds to milliseconds
+			activeDroplets.splice(i, 1);
+			// console.log("Removed ripple droplet.");
+		}
+	}
 
 	// FEED the active list to the pass
 	waterRipplePass.updateDroplets(activeDroplets);
@@ -102,6 +165,7 @@ function onScreenResize(width: number, height: number): void {
 
 export default {
 	init,
+	addRipple,
 	update,
 	getPass,
 	onScreenResize,

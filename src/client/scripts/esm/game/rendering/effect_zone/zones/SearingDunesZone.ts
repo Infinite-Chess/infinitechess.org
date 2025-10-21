@@ -5,7 +5,6 @@ import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessin
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
 import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWavePass";
-import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
 import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
@@ -14,8 +13,6 @@ export class SearingDunesZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 4;
-
-	private colorGradePass: ColorGradePass;
 
 	/** Post processing effect creating heat waves. */
 	private heatWavePass: HeatWavePass | undefined = undefined;
@@ -30,9 +27,6 @@ export class SearingDunesZone implements Zone {
 
 	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {
 		noise.then(texture => this.heatWavePass = new HeatWavePass(programManager, texture));
-
-		this.colorGradePass = new ColorGradePass(programManager);
-		// this.colorGradePass.tint = [1.0, 0.9, 0.9];
 
 		// Load the ambience...
 
@@ -84,9 +78,8 @@ export class SearingDunesZone implements Zone {
 	}
 
 	public getPasses(): PostProcessPass[] {
-		const activePasses: PostProcessPass[] = [this.colorGradePass];
-		if (this.heatWavePass) activePasses.push(this.heatWavePass);
-		return activePasses;
+		if (this.heatWavePass) return [this.heatWavePass];
+		return [];
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {

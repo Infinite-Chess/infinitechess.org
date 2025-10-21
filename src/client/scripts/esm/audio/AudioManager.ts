@@ -6,7 +6,9 @@
  */
 
 import preferences from "../components/header/preferences";
+import AudioUtils from "./AudioUtils";
 import { createEffectNode, EffectConfig, NodeChain } from "./AudioEffects";
+import { DownsamplerNode } from "./processors/downsampler/DownsamplerNode";
 
 // Type Definitions ----------------------------------------------------------------------------------
 
@@ -77,6 +79,17 @@ const VOLUME_DANGER_THRESHOLD = 4;
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
 
+/** An input bus for all sound chains before they reach the master gain. Allows for global effects. */
+const effectsBus = audioContext.createGain();
+/** The global downsampler effect node. Null until the worklet is loaded. */
+let globalDownsampler: DownsamplerNode | null = null;
+/** The gain node for the "dry" (unprocessed) signal path around the downsampler. */
+const downsamplerDryGain = audioContext.createGain();
+downsamplerDryGain.gain.value = 1; // Default to 100% dry signal
+/** The gain node for the "wet" (processed) signal path through the downsampler. */
+const downsamplerWetGain = audioContext.createGain();
+downsamplerWetGain.gain.value = 0; // Default to 0% wet signal
+
 /** A master gain node to control the overall volume of all sounds. */
 const masterGain = audioContext.createGain();
 masterGain.gain.value = preferences.getMasterVolume(); // Initialize to saved preference
@@ -95,9 +108,39 @@ const limiter = new DynamicsCompressorNode(audioContext, {
 	release: 0.1     // Quick release
 });
 
-// Connect the audio graph: Master Gain -> Limiter -> Destination (speakers)
+// Connect the audio graph: Effects Bus -> Master Gain -> Limiter -> Destination (speakers)
+// Initially, connect the effectsBus directly to masterGain as a bypass until the downsampler loads.
+effectsBus.connect(masterGain);
 masterGain.connect(limiter);
 limiter.connect(audioContext.destination);
+
+// Asynchronously load and initialize the Downsampler worklet.
+(async() => {
+	try {
+		const downsamplerNode = await DownsamplerNode.create(audioContext);
+		globalDownsampler = downsamplerNode;
+
+		// Set the static parameters for the downsampler effect
+		globalDownsampler.downsampling!.value = 20; // Default: 20
+
+		// Re-wire the audio graph to include the dry/wet downsampler paths
+		effectsBus.disconnect(masterGain); // Disconnect the bypass
+
+		// Dry path
+		effectsBus.connect(downsamplerDryGain);
+		downsamplerDryGain.connect(masterGain);
+		
+		// Wet path
+		effectsBus.connect(globalDownsampler);
+		globalDownsampler.connect(downsamplerWetGain);
+		downsamplerWetGain.connect(masterGain);
+
+		// console.log('Global downsampler effect initialized successfully.');
+	} catch (error) {
+		console.error('Failed to initialize global downsampler effect. Audio will remain clean.', error);
+		// If it fails, the initial bypass connection from effectsBus to masterGain remains active.
+	}
+})();
 
 
 // Getters ----------------------------------------------------------------------------------------------
@@ -109,14 +152,37 @@ function getContext(): AudioContext {
 }
 
 /**
- * All sound MUST route through the master gain node
- * in order for the master volume control to work!
+ * Returns the master gain node. All sounds MUST route through the
+ * master gain node in order for the master volume control to work!
+ * This should be used for sounds that need to BYPASS the global effects bus (such as ambiences).
  */
 function getDestination(): AudioNode {
 	return masterGain;
 }
 
 
+// Public API -------------------------------------------------------------------------------------------
+
+
+/** Fades in the global downsampler effect over a given duration. */
+function fadeInDownsampler(durationMillis: number): void {
+	if (!globalDownsampler) {
+		console.warn("Downsampler not loaded yet, cannot fade in.");
+		return;
+	}
+	AudioUtils.applyPerceptualFade(audioContext, downsamplerDryGain.gain, 0, durationMillis);
+	AudioUtils.applyPerceptualFade(audioContext, downsamplerWetGain.gain, 1, durationMillis);
+}
+
+/** Fades out the global downsampler effect over a given duration. */
+function fadeOutDownsampler(durationMillis: number): void {
+	if (!globalDownsampler) {
+		console.warn("Downsampler not loaded yet, cannot fade out.");
+		return;
+	}
+	AudioUtils.applyPerceptualFade(audioContext, downsamplerDryGain.gain, 1, durationMillis);
+	AudioUtils.applyPerceptualFade(audioContext, downsamplerWetGain.gain, 0, durationMillis);
+}
 
 
 // Sound Playing ------------------------------------------------------------------------------------------
@@ -149,9 +215,8 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 	// 2. Build the effects chain by asking the factory to create the nodes.
 	const effectNodes = effects.map(effectConfig => createEffectNode(audioContext, effectConfig));
 
-	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Master Gain -> Limiter -> Destination
-	const masterGainNode = mainSource.gainNode;
-	connectNodeChain(masterGainNode, effectNodes);
+	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Effects Bus -> Master Gain -> Limiter -> Destination
+	connectNodeChain(mainSource.gainNode, effectNodes);
 
 	// The SoundObject is now much simpler!
 	const soundObject: SoundObject = {
@@ -249,7 +314,7 @@ function generateGainNode(audioContext: AudioContext, volume: number): GainNode 
 
 /**
  * Connects a starting node through a list of effect wrappers, ending at
- * the master gain node (which is connected to the limiter and destination).
+ * the global effects bus (which is connected to the master gain, limiter, and destination).
  */
 function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void {
 	let currentNode: AudioNode = startNode;
@@ -259,8 +324,8 @@ function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void 
 		currentNode = effectWrapper.output; // The output of this effect is the input to the next one.
 	}
 
-	// Connect the very last node in the chain to the master gain node.
-	currentNode.connect(masterGain);
+	// Connect the very last node in the chain to the global effects bus.
+	currentNode.connect(effectsBus);
 }
 
 /**
@@ -318,8 +383,14 @@ export type {
 };
 
 export default {
+	// Getters
 	getContext,
 	getDestination,
+	// Public API
+	fadeInDownsampler,
+	fadeOutDownsampler,
+	// Sound Playing
 	playAudio,
+	// Utility
 	decodeAudioData,
 };
