@@ -26,7 +26,7 @@ import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes
  */
 const RIPPLE_DIST_FROM_EDGE = 0.54; // Default: 0.54
 /** The lifetime offset applied to ripples beyond the screen edge so that we see their ripple sooner. */
-const ELAPSED_TIME_OFFSET = -200; // Default: -200
+const ELAPSED_TIME_OFFSET = -230; // Default: -230
 
 /**
  * How long each ripple lasts before being removed, in seconds,

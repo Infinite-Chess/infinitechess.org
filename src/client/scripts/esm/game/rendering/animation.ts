@@ -122,7 +122,7 @@ const SPLINES: {
  */
 const TRANSPARENT_SQUARE_Z: number = 0.01;
 /** By adding a negative offset, the sound doesn't appear delayed. */
-const SOUND_OFFSET: number = -100;
+const SOUND_OFFSET: number = 0; // TODO: Delete after next update, after some time with zero delay, to make sure we still like it.
 /** The maximum distance an animation can be without teleporting mid-animation. */
 const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
 

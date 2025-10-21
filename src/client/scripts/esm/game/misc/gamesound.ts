@@ -23,24 +23,24 @@ import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
 
 /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
 const soundStamps = {
-	gamestart: [0, 2],
-	move: [2, 2.21],
-	capture: [2.21,2.58],
-	bell: [2.58,5.57],
-	lowtime: [5.57, 6.30],
-	win: [6.30, 8.30],
-	draw: [8.30, 10.31],
-	loss: [10.31, 12.32],
-	drum1: [12.32, 16.32],
-	drum2: [16.32, 19.57],
-	tick: [19.57, 25.32],
-	ticking: [25.32, 36.82],
-	viola_staccato_c3: [36.82, 38.82],
-	violin_staccato_c4: [38.82, 40.82],
-	marimba_c2: [40.82, 42.82],
-	marimba_c2_soft: [42.82, 44.82],
-	base_staccato_c2: [44.82, 46.82],
-	ripple: [46.82, 50.82],
+	gamestart: [0, 2.008],
+	move: [2.009, 2.150],
+	capture: [2.151,2.462],
+	bell: [2.463,5.402],
+	lowtime: [5.404, 5.985],
+	win: [5.986, 7.994],
+	draw: [7.995, 10.003],
+	loss: [10.004, 12.012],
+	drum1: [12.013, 16.012],
+	drum2: [16.013, 19.262],
+	tick: [19.263 , 25.012],
+	ticking: [25.013, 36.357],
+	viola_staccato_c3: [36.359, 38.357],
+	violin_staccato_c4: [38.359, 40.357],
+	marimba_c2: [40.359, 42.356],
+	marimba_c2_soft: [42.357, 44.356],
+	base_staccato_c2: [44.357, 46.354],
+	ripple: [46.356, 50.354],
 } as const;
 
 type SoundName = keyof typeof soundStamps;
@@ -103,11 +103,6 @@ const SHAKE_CONFIG = {
 	minDist: 4, // 10,000 squares => trauma begins increasing from 0
 	/** How much screen shake trauma is added per order of magnitude the piece moved. */
 	traumaMultiplier: 0.035,
-	/**
-	 * A delay in milliseconds before the screen shake is triggered, to better sync with the audio.
-	 * ALSO CONTROLS DELAY of water ripple being added and sound played, too.
-	 */
-	delay: 70,
 };
 
 /** Config for playing premove sound effects. */
@@ -236,16 +231,15 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 		// Calculate playback rate based on distance moved
 		const eDifference = bd.log10(distanceMoved) - bd.log10(RIPPLE_CONFIG.minDist);
 		const ripplePlayrate = Math.max(RIPPLE_CONFIG.maxPlaybackRate - (eDifference * RIPPLE_CONFIG.playbackRateReductionPerE), RIPPLE_CONFIG.minPlaybackRate);
-		setTimeout(() => {
-			playSoundEffect('ripple', { volume: rippleVolume, delay: delaySecs, playbackRate: ripplePlayrate })
-			WaterRipples.addRipple(destination);
-			screenshake.trigger(0.25);
-		}, SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
+
+		playSoundEffect('ripple', { volume: rippleVolume, delay: delaySecs, playbackRate: ripplePlayrate });
+		WaterRipples.addRipple(destination);
+		screenshake.trigger(0.25);
 	} else {
 		// Apply screen shake for very large moves
 		const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
 		const trauma = math.clamp(rawTrauma, 0, 1);
-		if (trauma > 0) setTimeout(() => screenshake.trigger(trauma), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
+		if (trauma > 0) screenshake.trigger(trauma); // Delay slightly so it syncs better with the audio
 
 		if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
 			// Move is large enough to play the bell sound too

@@ -77,7 +77,7 @@ const countdown: {
          */
 		sound: undefined,
 		timeoutID: undefined,
-		timeToStartFromEnd: 10380,
+		timeToStartFromEnd: 10220,
 		fadeInDuration: 300,
 		fadeOutDuration: 100,
 	},
