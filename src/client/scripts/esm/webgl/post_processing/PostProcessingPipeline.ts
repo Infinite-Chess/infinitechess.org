@@ -84,9 +84,8 @@ export class PostProcessingPipeline {
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 
 		// Allocate storage for the texture IMMEDIATELY upon creation.
-		// Use RGBA8 for standard dynamic range. You could use RGBA16F for HDR.
 		// FIXES MOBILE BUG. Previousy we were attaching sizeless (0x0) textures
-		// to framebuffers; strict mobile drivers permanently mark these as invalid,
+		// to framebuffers. Strict mobile drivers permanently mark these as invalid,
 		// while lenient desktop drivers allow it. This line allocates the texture's
 		// storage with the correct dimensions before attaching it, ensuring the
 		// framebuffer is valid from the start on all platforms.
