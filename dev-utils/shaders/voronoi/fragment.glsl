@@ -1,6 +1,13 @@
 #version 300 es
 precision highp float;
 
+// This shader was replaced by a voronoi_distortion shader
+// for the Echo Rift zone effect. I am not 100% sure this
+// shader is working as is, nor polished. But if not, its
+// arithmetic could be modeled after the voronoi_distortion
+// shader to produce results and tileable randomness as desired.
+
+
 // Uniforms for customization
 uniform vec2 u_resolution;
 uniform float u_time;
