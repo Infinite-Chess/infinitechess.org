@@ -1,4 +1,8 @@
 {
+	"71": {
+		"note": "Added coords-exceeded line 384.",
+		"changes": []
+	},
 	"70": {
 		"note": "Renamed board, board-theme, and board-starfield to appearance, appearance-theme, appearance-starfield, lines 18-20. Also, added appearance-advanced-effects on line 21.",
 		"changes": []

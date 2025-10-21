@@ -101,7 +101,7 @@ function glimitToDampScale(): number {
 
 
 function setBoardPos(newPos: BDCoords): void {
-	// Enforce fixed point model
+	// Enforce fixed point model. Catches bugs during development.
 	if (!bd.hasDefaultPrecision(newPos[0])) throw Error(`Cannot set board position X to [${newPos[0].divex}] ${bd.toString(newPos[0])}. Does not have default precision.`);
 	if (!bd.hasDefaultPrecision(newPos[1])) throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${bd.toString(newPos[1])}. Does not have default precision.`);
 
