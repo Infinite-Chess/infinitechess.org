@@ -122,11 +122,15 @@ function getDebug(): boolean {
  */
 function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false): DoubleBoundingBox {
 	const box = jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
-	const PAD_AMOUNT = 0.01; // 1%
 	if (pad) {
+		const width = box.right - box.left;
+		const height = box.top - box.bottom;
+		const longestSide = Math.max(width, height);
+		let PAD_AMOUNT = 0.04; // 4% of longest side
+		PAD_AMOUNT = Math.max(PAD_AMOUNT, PAD_AMOUNT * width / height); // Increase that if the screen is wider than taller
 		// Add a small padding to the box so that things right at the edge don't get cut off
-		const paddingAmountX = (box.right - box.left) * PAD_AMOUNT; 
-		const paddingAmountY = (box.top - box.bottom) * PAD_AMOUNT;
+		const paddingAmountX = longestSide * PAD_AMOUNT; 
+		const paddingAmountY = longestSide * PAD_AMOUNT;
 		box.left -= paddingAmountX;
 		box.right += paddingAmountX;
 		box.bottom -= paddingAmountY;
