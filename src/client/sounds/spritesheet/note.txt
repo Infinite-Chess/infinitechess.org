@@ -1,0 +1,1 @@
+Sound spritesheet was compressed to opus format, using stereo, 48000Hz, and 64 Bitrate.

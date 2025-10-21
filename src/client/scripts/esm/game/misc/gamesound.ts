@@ -40,7 +40,7 @@ const soundStamps = {
 	marimba_c2: [40.82, 42.82],
 	marimba_c2_soft: [42.82, 44.82],
 	base_staccato_c2: [44.82, 46.82],
-	ripple: [46.82, 50.0],
+	ripple: [46.82, 50.82],
 } as const;
 
 type SoundName = keyof typeof soundStamps;
@@ -81,9 +81,21 @@ const BELL_CONFIG = {
 	volume: 0.6,
 } as const;
 
-/** The minimum distance a piece needs to move for the water droplet ripple effect to trigger. */
-const RIPPLE_MIN_DIST = bd.FromBigInt(10n ** 100n); // 10^100 squares
-// const RIPPLE_MIN_DIST = bd.FromBigInt(20n); // FOR TESTING
+const RIPPLE_CONFIG = {
+	/** The minimum distance a piece needs to move for the water droplet ripple effect to trigger. */
+	minDist: bd.FromBigInt(10n ** 100n), // 10^100 squares
+	// minDist: bd.FromBigInt(20n), // FOR TESTING
+	maxPlaybackRate: 1.18,
+	minPlaybackRate: 1.0,
+	/**
+	 * How much slower the playback rate is, depending on how far you move.
+	 * 0.002 yields .18 playback rate travel in e90
+	 */
+	playbackRateReductionPerE: 0.002, // Default: 0.002
+	/** The volume of the ripple sound effecet, as a multiplier to the move sound's volume. */
+	volume: 0.8,
+} as const;
+
 
 /** Config for the screen shake effect for very large moves. */
 const SHAKE_CONFIG = {
@@ -93,7 +105,7 @@ const SHAKE_CONFIG = {
 	traumaMultiplier: 0.035,
 	/**
 	 * A delay in milliseconds before the screen shake is triggered, to better sync with the audio.
-	 * ALSO CONTROLS DELAY of water ripple being added, too.
+	 * ALSO CONTROLS DELAY of water ripple being added and sound played, too.
 	 */
 	delay: 70,
 };
@@ -124,7 +136,7 @@ let timeLastMoveOrCaptureSound = 0;
 
 
 // Fetch and decode the buffer of the sound spritesheet.
-fetch('sounds/soundspritesheet.mp3')
+fetch('sounds/spritesheet/soundspritesheet.opus')
 	.then(response => response.arrayBuffer())
 	.then(arrayBuffer => AudioManager.decodeAudioData(arrayBuffer))
 	.then(decodedBuffer => {
@@ -169,11 +181,6 @@ function getSoundTimeSnippet(soundName: SoundName): { startTime: number, duratio
 function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbWetLevel?: number, reverbDuration?: number, playbackRate?: number } = {}): SoundObject | undefined {
 	let { startTime, duration } = getSoundTimeSnippet(soundName);
 	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate } = options;
-
-	if (soundName === 'ripple') {
-		// console.warn("Don't have new move sound effect in the sound spritesheet yet! Can't play it.");
-		return;
-	}
 
 	// If offset is specified, adjust the start time and duration accordingly
 	if (offset) {
@@ -223,11 +230,17 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 
 	playSoundEffect(soundEffectName, { volume, reverbWetLevel, reverbDuration, delay: delaySecs, playbackRate });
 
-	
-	if (destination && bd.compare(distanceMoved, RIPPLE_MIN_DIST) >= 0) {
+	if (destination && bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
 		// Trigger water dropplet ripple effect
-		setTimeout(() => WaterRipples.addRipple(destination), SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
-		playSoundEffect('ripple', { volume, delay: delaySecs, playbackRate });
+		const rippleVolume = volume * RIPPLE_CONFIG.volume;
+		// Calculate playback rate based on distance moved
+		const eDifference = bd.log10(distanceMoved) - bd.log10(RIPPLE_CONFIG.minDist);
+		const ripplePlayrate = Math.max(RIPPLE_CONFIG.maxPlaybackRate - (eDifference * RIPPLE_CONFIG.playbackRateReductionPerE), RIPPLE_CONFIG.minPlaybackRate);
+		setTimeout(() => {
+			playSoundEffect('ripple', { volume: rippleVolume, delay: delaySecs, playbackRate: ripplePlayrate })
+			WaterRipples.addRipple(destination);
+			screenshake.trigger(0.25);
+		}, SHAKE_CONFIG.delay); // Delay slightly so it syncs better with the audio
 	} else {
 		// Apply screen shake for very large moves
 		const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
@@ -236,7 +249,7 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 
 		if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
 			// Move is large enough to play the bell sound too
-			const bellVolume = BELL_CONFIG.volume * dampener;
+			const bellVolume = volume * BELL_CONFIG.volume;
 			playSoundEffect('bell', { volume: bellVolume, delay: delaySecs, playbackRate });
 		}
 	}
