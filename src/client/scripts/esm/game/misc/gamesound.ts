@@ -197,6 +197,7 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
  * @param distanceMoved - How far the piece moved.
  * @param capture - Whether this move made a capture.
  * @param premove - Whether this move is a premove.
+ * @param destination - Optional. The destination coordinates of the piece move, for ripple effects.
  */
 function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean, destination?: Coords): void {
 	// Update the time since the last move sound was played

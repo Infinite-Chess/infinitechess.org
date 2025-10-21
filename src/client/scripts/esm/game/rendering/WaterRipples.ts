@@ -90,6 +90,7 @@ function addRipple(sourceCoords: Coords): void {
 	let rippleY: number = sourceWorldSpace[1];
 	let elapsedTimeOffset: number = 0;
 
+	// Don't let the ripple source be too far off-screen
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
 		// console.log("Ripple source outside of padded screen.");
 		const vectorToSource = coordutil.subtractBDCoords(bigdecimal.FromCoords(sourceCoords), boardpos.getBoardPos());

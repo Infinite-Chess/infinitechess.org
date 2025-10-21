@@ -154,7 +154,7 @@ function getContext(): AudioContext {
 /**
  * Returns the master gain node. All sounds MUST route through the
  * master gain node in order for the master volume control to work!
- * This should be used for sounds that need to BYPASS the global effects bus (e.g., ambiences).
+ * This should be used for sounds that need to BYPASS the global effects bus (such as ambiences).
  */
 function getDestination(): AudioNode {
 	return masterGain;

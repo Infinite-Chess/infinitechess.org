@@ -78,9 +78,8 @@ export class SearingDunesZone implements Zone {
 	}
 
 	public getPasses(): PostProcessPass[] {
-		const activePasses: PostProcessPass[] = [];
-		if (this.heatWavePass) activePasses.push(this.heatWavePass);
-		return activePasses;
+		if (this.heatWavePass) return [this.heatWavePass];
+		return [];
 	}
     
 	public fadeInAmbience(transitionDurationMillis: number): void {
