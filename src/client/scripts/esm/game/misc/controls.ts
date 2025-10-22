@@ -62,9 +62,9 @@ const scaleAccel_Mobile: number = 14.0; // Acceleration of board scaling   Defau
  * This is the scale velocity cap when using Space/Shift.
  * It is NOT the absoulte cap which you can reach by scrolling.
  */
-const scaleVelCap = 1.0; // Default: 1
+const scaleVelCap = 2.0; // Default: 1
 
-/** The  scale velocity cap when u sing the scroll wheel (higher). */
+/** The scale velocity cap when u sing the scroll wheel (higher). */
 const scaleVelCap_Scroll = 2.5;
 
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */

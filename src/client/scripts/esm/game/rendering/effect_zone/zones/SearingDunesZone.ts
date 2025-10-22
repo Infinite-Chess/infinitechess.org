@@ -12,7 +12,7 @@ import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 export class SearingDunesZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 4;
+	readonly effectType: number = 2;
 
 	/** Post processing effect creating heat waves. */
 	private heatWavePass: HeatWavePass | undefined = undefined;

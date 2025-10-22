@@ -13,7 +13,7 @@ import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/Soundscape
 export class DustyWastesZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 2;
+	readonly effectType: number = 6;
 
 	private colorGradePass: ColorGradePass;
 
@@ -182,10 +182,10 @@ export class DustyWastesZone implements Zone {
 	public getUniforms(): Record<string, any> {
 		// Pass the final accumulated offsets directly to the shader.
 		return {
-			u2_strength: this.strength,
-			u2_noiseTiling: this.noiseTiling,
-			u2_uvOffset1: this.uvOffset1,
-			u2_uvOffset2: this.uvOffset2,
+			u6_strength: this.strength,
+			u6_noiseTiling: this.noiseTiling,
+			u6_uvOffset1: this.uvOffset1,
+			u6_uvOffset2: this.uvOffset2,
 		};
 	}
 

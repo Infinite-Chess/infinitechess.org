@@ -14,7 +14,7 @@ import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/Soundscape
 export class EchoRiftZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 5; // <-- UPDATE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	readonly effectType: number = 8;
 
 	private colorGradePass: ColorGradePass;
 

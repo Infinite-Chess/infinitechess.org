@@ -65,16 +65,21 @@ type Uniforms_Starfield = 'u_transformmatrix';
 // Surface Level Effects
 type Attributes_BoardUberShader = 'a_position' | 'a_texturecoord' | 'a_color';
 type Uniforms_BoardUberShader =
-    // General Uniforms
-    'u_transformmatrix' | 'u_transitionProgress' | 'u_colorTexture' |
-    'u_maskTexture' | 'u_perlinNoiseTexture' | 'u_whiteNoiseTexture' |
-    'u_time' | 'u_resolution' |
-    // Effect Selectors
-    'u_effectTypeA' | 'u_effectTypeB' |
-    // "Dusty Wastes" Uniforms
-    'u2_strength' | 'u2_noiseTiling' | 'u2_uvOffset1' | 'u2_uvOffset2' |
-    // "Static Zone" Uniforms
-    'u3_strength' | 'u3_uvOffset' | 'u3_pixelWidth' | 'u3_pixelSize';
+    // Global Uniforms
+    'u_colorTexture' | 'u_maskTexture' | 'u_perlinNoiseTexture' | 'u_whiteNoiseTexture' |
+    'u_time' | 'u_resolution' | 'u_pixelDensity' |
+    // Uber-Shader Logic
+    'u_effectTypeA' | 'u_effectTypeB' | 'u_transitionProgress' |
+    // "Spectral Edge" Uniforms (Effect Type 4)
+    'u4_flowDistance' | 'u4_flowDirectionVec' | 'u4_gradientRepeat' | 'u4_maskOffset' | 'u4_strength' |
+	'u4_color1' | 'u4_color2' | 'u4_color3' | 'u4_color4' | 'u4_color5' | 'u4_color6' |
+    // "Iridescence" Uniforms (Effect Type 5)
+    'u5_flowDistance' | 'u5_flowDirectionVec' | 'u5_gradientRepeat' | 'u5_maskOffset' | 'u5_strength' |
+	'u5_color1' | 'u5_color2' | 'u5_color3' | 'u5_color4' | 'u5_color5' | 'u5_color6' |
+    // "Dusty Wastes" Uniforms (Effect Type 6)
+    'u6_strength' | 'u6_noiseTiling' | 'u6_uvOffset1' | 'u6_uvOffset2' |
+    // "Static Zone" Uniforms (Effect Type 7)
+    'u7_strength' | 'u7_uvOffset' | 'u7_pixelWidth' | 'u7_pixelSize';
 // Post Processing Shaders
 type Attributes_PostPass = never;
 type Uniforms_PostPass = 'u_sceneTexture';

@@ -11,7 +11,7 @@ import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/Soundscape
 export class StaticZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 3;
+	readonly effectType: number = 7;
 
 	private colorGradePass: ColorGradePass;
 	
@@ -93,10 +93,10 @@ export class StaticZone implements Zone {
 
 	public getUniforms(): Record<string, any> {
 		return {
-			u3_strength: this.strength,
-			u3_uvOffset: this.uvOffset,
-			u3_pixelWidth: this.TEXTURE_WIDTH,
-			u3_pixelSize: this.PIXEL_SIZE,
+			u7_strength: this.strength,
+			u7_uvOffset: this.uvOffset,
+			u7_pixelWidth: this.TEXTURE_WIDTH,
+			u7_pixelSize: this.PIXEL_SIZE,
 		};
 	}
 

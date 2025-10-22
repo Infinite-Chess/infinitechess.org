@@ -14,7 +14,7 @@ import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 export class ContortionFieldZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 6; // <-- UPDATE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	readonly effectType: number = 3;
 
 	/** Post Processing Effect creating heat waves. */
 	private sineWavePass: SineWavePass;

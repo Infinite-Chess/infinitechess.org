@@ -11,7 +11,7 @@ import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 export class IridescenceZone implements Zone {
 
 	/** The unique integer id this effect zone gets. */
-	readonly effectType: number = 9;
+	readonly effectType: number = 5;
 
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
@@ -75,18 +75,18 @@ export class IridescenceZone implements Zone {
 		const flowDistance = performance.now() / 1000 * this.flowSpeed;
 
 		const uniforms: Record<string, any> = {
-			u9_flowDistance: flowDistance,
-			u9_flowDirectionVec: flowDirectionVec,
-			u9_gradientRepeat: this.gradientRepeat,
-			u9_maskOffset: this.maskOffset,
-			u9_strength: this.strength,
+			u5_flowDistance: flowDistance,
+			u5_flowDirectionVec: flowDirectionVec,
+			u5_gradientRepeat: this.gradientRepeat,
+			u5_maskOffset: this.maskOffset,
+			u5_strength: this.strength,
 		};
 
 		// Add each color as a separate uniform.
 		for (let i = 0; i < this.colors.length; i++) {
 			// Use the color if it exists, otherwise pad with black.
 			const color = this.colors[i] || [0, 0, 0];
-			uniforms[`u9_color${i + 1}`] = color;
+			uniforms[`u5_color${i + 1}`] = color;
 		}
 
 		return uniforms;
