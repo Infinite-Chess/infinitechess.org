@@ -1,11 +1,14 @@
+
 // src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
+
+import type { Zone } from "../EffectZoneManager";
 
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { Zone } from "../EffectZoneManager";
-import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
+import IridescenceSoundscape from "../soundscapes/IridescenceSoundscape";
+import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
+import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 
 
 export class SpectralEdgeZone implements Zone {
@@ -52,7 +55,27 @@ export class SpectralEdgeZone implements Zone {
 
 
 	constructor() {
-		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
+		// Load the ambience...
+
+		const noiseConfig: SoundscapeConfig = {
+			masterVolume: 0.25,
+			layers: [
+				// Undercurrent layer
+				{
+					// Custom volume
+					volume: {
+						base: 0.8
+					},
+					source: UndercurrentSoundscape.config.layers[0]!.source,
+					filters: UndercurrentSoundscape.config.layers[0]!.filters
+				},
+				// Partial of Iridescence layers
+				...IridescenceSoundscape.layers12
+			]
+		};
+
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
 
 
