@@ -129,47 +129,33 @@ vec3 ColorFlow(
 vec3 DustyWastes(
 	// --- Input values ---
 	vec3 baseColor,
-	vec2 screenUV,
-	// --- Samplers ---
-	sampler2D noiseSampler,
-	// --- Effect parameters ---
-	float effectStrength,
-	float noiseTiling,
-	vec2 offset1,
-	vec2 offset2
+	vec2 screenUV
 ) {
 	const float NOISE_MULTIPLIER = 1.0; // Default: 1.13   Affects average final brightness to more closely match the original texture color
 
     // Apply the pre-calculated offsets.
-	vec2 uv1 = screenUV * noiseTiling + offset1;
-	vec2 uv2 = screenUV * noiseTiling + offset2;
+	vec2 uv1 = screenUV * u6_noiseTiling + u6_uvOffset1;
+	vec2 uv2 = screenUV * u6_noiseTiling + u6_uvOffset2;
 
-	float noise1 = texture(noiseSampler, uv1).r;
-	float noise2 = texture(noiseSampler, uv2).r;
+	float noise1 = texture(u_perlinNoiseTexture, uv1).r;
+	float noise2 = texture(u_perlinNoiseTexture, uv2).r;
 
 	float finalNoise = noise1 * noise2 * NOISE_MULTIPLIER;
 	float signedNoise = (finalNoise * 2.0) - 1.0;
 	
-	return baseColor + (signedNoise * effectStrength);
+	return baseColor + (signedNoise * u6_strength);
 }
 
 // Applies the "Static" pixelated noise effect.
 vec3 Static(
     vec3 baseColor,
-    vec2 screenUV,
-    sampler2D noiseSampler,
-	float effectStrength,
-    vec2 uvOffset,
-	float pixelWidth,
-    float pixelSize,
-	vec2 resolution,
-	float pixelDensity
+    vec2 screenUV
 ) {
-	// vec2 snappedUV = floor((screenUV * resolution) / pixelSize) * pixelSize / resolution + uvOffset;
-    vec2 snappedUV = screenUV * resolution[1] / pixelWidth / pixelSize / pixelDensity + uvOffset;
-    float noise = texture(noiseSampler, snappedUV).r;
+	// vec2 snappedUV = floor((screenUV * u_resolution) / u7_pixelSize) * u7_pixelSize / u_resolution + u7_uvOffset;
+    vec2 snappedUV = screenUV * u_resolution[1] / u7_pixelWidth / u7_pixelSize / u_pixelDensity + u7_uvOffset;
+    float noise = texture(u_whiteNoiseTexture, snappedUV).r;
     float signedNoise = (noise * 2.0) - 1.0;
-    return baseColor + (signedNoise * effectStrength); // Apply a brightness/darkness effect
+    return baseColor + (signedNoise * u7_strength); // Apply a brightness/darkness effect
 }
 
 // Switchboard. Takes an effect type and returns the result at full strength.
@@ -220,26 +206,12 @@ vec3 calculateEffectColor(
 	} else if (effectType == 6.0) {
 		return DustyWastes(
 			baseColor,
-			screenUV,
-			// Pass global uniforms
-			u_perlinNoiseTexture,
-			// Pass effect-specific uniforms
-			u6_strength,
-			u6_noiseTiling,
-			u6_uvOffset1,
-			u6_uvOffset2
+			screenUV
 		);
 	} else if (effectType == 7.0) {
         return Static(
             baseColor,
-            screenUV,
-            u_whiteNoiseTexture,
-			u7_strength,
-            u7_uvOffset,
-			u7_pixelWidth,
-            u7_pixelSize,
-			u_resolution,
-			u_pixelDensity
+            screenUV
         );
     }
 
