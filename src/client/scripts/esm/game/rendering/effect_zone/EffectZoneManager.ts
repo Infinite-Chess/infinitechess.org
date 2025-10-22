@@ -68,13 +68,13 @@ export class EffectZoneManager {
 		{ name: 'The Beginning', start: 0n, advancedEffect: false }, // 0
 		// [PRODUCTION] Default distances:
 		{ name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false }, // 1
-		{ name: 'Searing Dunes',   start: 10n ** 33n, advancedEffect: true }, // 2
-		{ name: 'Contortion Field', start: 10n ** 63n, advancedEffect: true }, // 3
-		{ name: 'Spectral Edge',   start: 10n ** 111n, advancedEffect: true }, // 4
-		{ name: 'Iridescence',   start: 10n ** 159n, advancedEffect: true }, // 5
-		{ name: 'Dusty Wastes',     start: 10n ** 500n, advancedEffect: true }, // 6
-		{ name: 'Static',           start: 10n ** 750n, advancedEffect: true }, // 7
-		{ name: 'Echo Rift',        start: 10n ** 1000n, advancedEffect: true }, // 8
+		{ name: 'Searing Dunes',   start: 10n ** 40n, advancedEffect: true }, // 2
+		{ name: 'Contortion Field', start: 10n ** 80n, advancedEffect: true }, // 3
+		{ name: 'Spectral Edge',   start: 10n ** 120n, advancedEffect: true }, // 4
+		{ name: 'Iridescence',   start: 10n ** 180n, advancedEffect: true }, // 5
+		{ name: 'Dusty Wastes',     start: 10n ** 330n, advancedEffect: true }, // 6
+		{ name: 'Static',           start: 10n ** 480n, advancedEffect: true }, // 7
+		{ name: 'Echo Rift',        start: 10n ** 780n, advancedEffect: true }, // 8
 		// [TESTING] Much shorter distances:
 		// { name: 'Undercurrent',     start: 20n, advancedEffect: false }, // 1
 		// { name: 'Searing Dunes',    start: 40n, advancedEffect: true }, // 2
