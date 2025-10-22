@@ -83,13 +83,14 @@ const BELL_CONFIG = {
 
 const RIPPLE_CONFIG = {
 	/** The minimum distance a piece needs to move for the water droplet ripple effect to trigger. */
-	minDist: bd.FromBigInt(10n ** 100n), // 10^100 squares
+	minDist: bd.FromBigInt(10n ** 120n), // 10^100 squares
 	// minDist: bd.FromBigInt(20n), // FOR TESTING
 	maxPlaybackRate: 1.18,
 	minPlaybackRate: 1.0,
 	/**
 	 * How much slower the playback rate is, depending on how far you move.
 	 * 0.002 yields .18 playback rate travel in e90
+	 * At current settings, it stops decreasing at about e210, 30e after Iridescence zone begins.
 	 */
 	playbackRateReductionPerE: 0.002, // Default: 0.002
 	/** The volume of the ripple sound effecet, as a multiplier to the move sound's volume. */
@@ -101,7 +102,10 @@ const RIPPLE_CONFIG = {
 const SHAKE_CONFIG = {
 	/** The order of magnitude distance a piece needs to move for the screen shake to begin triggering. */
 	minDist: 4, // 10,000 squares => trauma begins increasing from 0
-	/** How much screen shake trauma is added per order of magnitude the piece moved. */
+	/**
+	 * How much screen shake trauma is added per order of magnitude the piece moved.
+	 * 0.012 yields 1.0 shake trauma at about 1e90
+	 */
 	traumaMultiplier: 0.012,
 };
 
@@ -231,6 +235,7 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 		// Calculate playback rate based on distance moved
 		const eDifference = bd.log10(distanceMoved) - bd.log10(RIPPLE_CONFIG.minDist);
 		const ripplePlayrate = Math.max(RIPPLE_CONFIG.maxPlaybackRate - (eDifference * RIPPLE_CONFIG.playbackRateReductionPerE), RIPPLE_CONFIG.minPlaybackRate);
+		// console.log("Ripple playrate:", ripplePlayrate);
 
 		playSoundEffect('ripple', { volume: rippleVolume, delay: delaySecs, playbackRate: ripplePlayrate });
 		WaterRipples.addRipple(destination);
