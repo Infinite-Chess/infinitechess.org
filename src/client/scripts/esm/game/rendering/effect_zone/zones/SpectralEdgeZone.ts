@@ -66,8 +66,8 @@ export class SpectralEdgeZone implements Zone {
 					volume: {
 						base: 0.8
 					},
-					source: UndercurrentSoundscape.config.layers[0]!.source,
-					filters: UndercurrentSoundscape.config.layers[0]!.filters
+					source: UndercurrentSoundscape.source,
+					filters: UndercurrentSoundscape.filters
 				},
 				// Partial of Iridescence layers
 				...IridescenceSoundscape.layers12
