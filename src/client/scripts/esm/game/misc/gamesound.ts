@@ -102,7 +102,7 @@ const SHAKE_CONFIG = {
 	/** The order of magnitude distance a piece needs to move for the screen shake to begin triggering. */
 	minDist: 4, // 10,000 squares => trauma begins increasing from 0
 	/** How much screen shake trauma is added per order of magnitude the piece moved. */
-	traumaMultiplier: 0.035,
+	traumaMultiplier: 0.012,
 };
 
 /** Config for playing premove sound effects. */
