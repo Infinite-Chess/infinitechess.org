@@ -82,6 +82,8 @@ const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us a
  * The maximum divex a BigDecimal is allowed to have.
  * Beyond this, the divex is assumed to be running away towards Infinity, so an error is thrown.
  * Can be adjusted if you want more maximum precision.
+ * 
+ * This shouldn't effect the size of the mantissa of floating point operations, though.
  */
 const MAX_DIVEX = 1e5; // Default: 1e3 (100,000)
 
@@ -1107,6 +1109,10 @@ function exp(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_B
 // Floating-Point Model Helpers ====================================================
 
 
+// [DEBUGGING] DELETE BEFORE NEXT UPDATE:
+const excessivelyLargeMantissa_Positive = 10n ** 16n;
+const excessivelyLargeMantissa_Negative = -excessivelyLargeMantissa_Positive;
+
 /**
  * Normalizes a BigDecimal to enforce a true floating-point precision model.
  * For any number, it trims the mantissa to `precisionBits` to standardize precision,
@@ -1131,6 +1137,9 @@ function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PREC
 	// Round using the consistent "half towards positive infinity" method.
 	const half = ONE << (shiftAmount - ONE);
 	const finalBigInt = (bd.bigint + half) >> shiftAmount;
+
+	// [DEBUGGING] DELETE BEFORE NEXT UPDATE:
+	if (finalBigInt > excessivelyLargeMantissa_Positive || finalBigInt < excessivelyLargeMantissa_Negative) throw new Error('Mantissa is too big!');
 
 	return { bigint: finalBigInt, divex: newDivex };
 }
