@@ -41,6 +41,11 @@ const soundStamps = {
 	marimba_c2_soft: [42.357, 44.356],
 	base_staccato_c2: [44.357, 46.354],
 	ripple: [46.356, 50.354],
+	glass_crack_1: [50.356, 50.760],
+	glass_crack_2: [50.760, 51.848],
+	glass_crack_3: [51.848, 52.621],
+	glass_crack_4: [52.621, 53.222],
+	glass_crack_5: [53.222, 53.627],
 } as const;
 
 type SoundName = keyof typeof soundStamps;
@@ -180,9 +185,9 @@ function getSoundTimeSnippet(soundName: SoundName): { startTime: number, duratio
  * @param options Optional parameters like volume, delay, and offset.
  * @returns A SoundObject if the sound is played, otherwise undefined.
  */
-function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbWetLevel?: number, reverbDuration?: number, playbackRate?: number } = {}): SoundObject | undefined {
+function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbWetLevel?: number, reverbDuration?: number, playbackRate?: number, bypassDownsampler?: boolean } = {}): SoundObject | undefined {
 	let { startTime, duration } = getSoundTimeSnippet(soundName);
-	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate } = options;
+	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate, bypassDownsampler } = options;
 
 	// If offset is specified, adjust the start time and duration accordingly
 	if (offset) {
@@ -197,7 +202,7 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 	const effects: EffectConfig[] = [];
 	if (reverbWetLevel && reverbDuration) effects.push({ type: 'reverb', durationSecs: reverbDuration, dryLevel: 1, wetLevel: reverbWetLevel });
 
-	return AudioManager.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects });
+	return AudioManager.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects, bypassDownsampler });
 }
 
 /**
@@ -319,6 +324,19 @@ function playBase(): SoundObject | undefined {
 	return playSoundEffect('base_staccato_c2', { volume: 0.8 });
 }
 
+function playGlassCrack(): SoundObject | undefined {
+	const rand = Math.random();
+	const soundName: SoundName = rand < 0.2 ? 'glass_crack_1'
+		: rand < 0.4 ? 'glass_crack_2'
+		: rand < 0.6 ? 'glass_crack_3'
+		: rand < 0.8 ? 'glass_crack_4'
+		: 'glass_crack_5';
+	const PLAYRATE_BASE_OFFSET = -0.2;
+	const PLAYRATE_VARIATION = 0.07;
+	const playrate = 1 + (Math.random() * 2 - 1) * PLAYRATE_VARIATION + PLAYRATE_BASE_OFFSET;
+	return playSoundEffect(soundName, { volume: 0.04, playbackRate: playrate, reverbWetLevel: 4.0, reverbDuration: 0.8, bypassDownsampler: true });
+}
+
 
 // Exports ------------------------------------------------------------------------------
 
@@ -336,5 +354,6 @@ export default {
 	playViola_c3,
 	playViolin_c4,
 	playMarimba,
-	playBase
+	playBase,
+	playGlassCrack,
 };

@@ -3,6 +3,7 @@
 
 import PerlinNoise from "../../../../util/PerlinNoise";
 import AudioManager from "../../../../audio/AudioManager";
+import gamesound from "../../../misc/gamesound";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
@@ -116,6 +117,7 @@ export class EchoRiftZone implements Zone {
 		if (Date.now() > this.nextCrackTime) {
 			this.voronoiDistortionPass.time = performance.now() / 10;
 			this.nextCrackTime = Date.now() + this.baseMillisBetweenCracks + Math.random() * this.maxMillisBetweenCracks;
+			gamesound.playGlassCrack();
 		}
 
 		// Randomize the brightness

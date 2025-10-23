@@ -63,6 +63,8 @@ interface PlaySoundOptions {
 	playbackRate?: number
 	/** Whether the sound should loop indefinitely. Default: false */
 	loop?: boolean,
+    /** If true, the sound will bypass the global downsampler effect. Default: false */
+    bypassDownsampler?: boolean,
 }
 
 
@@ -201,7 +203,7 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 		return;
 	}
 
-	const { startTime, duration, volume = 1, delay = 0, playbackRate = 1, loop = false, effects = [] } = playOptions;
+	const { startTime, duration, volume = 1, delay = 0, playbackRate = 1, loop = false, effects = [], bypassDownsampler = false } = playOptions;
 
 	// Calculate the desired start time by adding the delay
 	const startAt = audioContext.currentTime + delay;
@@ -216,7 +218,7 @@ function playAudio(buffer: AudioBuffer | undefined, playOptions: PlaySoundOption
 	const effectNodes = effects.map(effectConfig => createEffectNode(audioContext, effectConfig));
 
 	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Effects Bus -> Master Gain -> Limiter -> Destination
-	connectNodeChain(mainSource.gainNode, effectNodes);
+	connectNodeChain(mainSource.gainNode, effectNodes, bypassDownsampler);
 
 	// The SoundObject is now much simpler!
 	const soundObject: SoundObject = {
@@ -314,9 +316,12 @@ function generateGainNode(audioContext: AudioContext, volume: number): GainNode 
 
 /**
  * Connects a starting node through a list of effect wrappers, ending at
- * the global effects bus (which is connected to the master gain, limiter, and destination).
+ * either the global effects bus or directly at the master gain.
+ * @param startNode - The first node in the chain (usually a source's gain node).
+ * @param wrapperList - The list of effects to connect in series.
+ * @param bypassDownsampler - If true, the chain will connect to masterGain, otherwise effectsBus.
  */
-function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void {
+function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[], bypassDownsampler: boolean): void {
 	let currentNode: AudioNode = startNode;
 
 	for (const effectWrapper of wrapperList) {
@@ -324,8 +329,9 @@ function connectNodeChain(startNode: AudioNode, wrapperList: NodeChain[]): void 
 		currentNode = effectWrapper.output; // The output of this effect is the input to the next one.
 	}
 
-	// Connect the very last node in the chain to the global effects bus.
-	currentNode.connect(effectsBus);
+	// Connect the very last node in the chain to either the effects bus or directly to master gain.
+	const destinationNode = bypassDownsampler ? masterGain : effectsBus;
+	currentNode.connect(destinationNode);
 }
 
 /**
