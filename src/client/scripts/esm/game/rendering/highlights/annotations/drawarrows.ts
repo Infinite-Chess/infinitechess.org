@@ -226,29 +226,27 @@ function getDataArrow(
 	const entityWidthWorld: number = snapping.getEntityWidthWorld();
 	// How many squares wide highlights are at this zoom distance.
 	const entityWidthSquares: BigDecimal = boardpos.areZoomedOut() ? space.convertWorldSpaceToGrid(entityWidthWorld) : ONE;
+	
+	// The size of entities at this zoom level.
+	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
-	// How many squares the arrow base is offset from the start coordinate.
+	// How much the arrow base is offset from the start coordinate.
+	const arrowBaseOffsetWorld: number = entityWidthWorld * ARROW.BASE_OFFSET * size;
 	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(entityWidthSquares, bd.FromNumber(ARROW.BASE_OFFSET));
 
 	// If the arrow length <= base offset, don't draw it (it would have negative length).
 	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
 
-	const startCoordsBD = bd.FromCoords(arrow.start);
-	const arrowBaseOffsetVector: BDCoords = [
-		bd.multiply_floating(arrowBaseOffsetSquares, bd.FromNumber(arrow.xRatio)),
-		bd.multiply_floating(arrowBaseOffsetSquares, bd.FromNumber(arrow.yRatio))
-	];
-	// Where the actual BASE of the arrow starts rendering at
-	const trueStartCoords = coordutil.addBDCoords(startCoordsBD, arrowBaseOffsetVector);
-
 	// Calculate the base and tip world space coordinates
-	const startWorld = space.convertCoordToWorldSpace(trueStartCoords);
+	const startWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.start));
 	const endWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.end));
+	// Apply the base offset to the start world coordinates
+	// so the arrow base doesn't start exactly at the center of the square.
+	startWorld[0] += arrow.xRatio * arrowBaseOffsetWorld;
+	startWorld[1] += arrow.yRatio * arrowBaseOffsetWorld;
 
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
-
-	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
 	const bodyWidthArg = ARROW.BODY_WIDTH * size;
 	const tipWidthArg = ARROW.TIP_WIDTH * size;
@@ -261,7 +259,7 @@ function getDataArrow(
 
 	const dx = ex - sx;
 	const dy = ey - sy;
-	const length = vectors.euclideanDistanceDoubles(startWorld, endWorld);
+	const length = vectors.euclideanDistanceDoubles(startWorld, endWorld); // World space length from base to tip
 
 	// Helpers
 	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void => {

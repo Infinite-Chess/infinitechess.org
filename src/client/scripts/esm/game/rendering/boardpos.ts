@@ -159,6 +159,7 @@ function boardHasMomentum(): boolean {
  * If so, the game has very different behavior, such as:
  * * Legal moves highlights and Ray annotations rendering as highlight lines.
  * * Pieces rendering as mini-images.
+ * * Annotations rendered at a fixed size on screen.
  */
 function areZoomedOut(): boolean {
 	return bd.compare(boardScale, camera.getScaleWhenZoomedOut()) < 0;
