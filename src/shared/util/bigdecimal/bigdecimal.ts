@@ -1196,7 +1196,7 @@ function coordsToDoubles(coords: BDCoords): DoubleCoords {
  */
 function toNumber(bd: BigDecimal): number {
 	if (bd.divex >= 0) {
-		if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
+		if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) return 0; // Exponent is so high that the resulting number cast to that power of two will be close to zero.
 		const mantissaAsNumber = Number(bd.bigint);
 		// I think we should allow the cast to become Infinity?
 		// if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
@@ -1205,7 +1205,8 @@ function toNumber(bd: BigDecimal): number {
 		const exp = -bd.divex;
 		const mantissaAsNumber = Number(bd.bigint);
 		// I think we should allow the cast to become Infinity?
-		// if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the bigint/mantissa is over Number.MAX_VALUE!");
+		if (!isFinite(mantissaAsNumber)) return mantissaAsNumber; // Already Infinity or -Infinity
+		if (exp > MAX_DIVEX_BEFORE_INFINITY) return mantissaAsNumber >= 0 ? Infinity : -Infinity; // Exponent is so high that the resulting number cast to that power of two will be infinite.
 		return mantissaAsNumber * powersOfTwoList[exp]!;
 	}
 }
