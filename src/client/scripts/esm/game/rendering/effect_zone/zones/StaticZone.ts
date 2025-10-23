@@ -46,7 +46,7 @@ export class StaticZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.019,
+			masterVolume: 0.016,
 			layers: [
 				{
 					volume: {
