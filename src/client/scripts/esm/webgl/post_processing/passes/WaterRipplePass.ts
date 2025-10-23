@@ -25,7 +25,7 @@ export class WaterRipplePass implements PostProcessPass {
 	public masterStrength: number = 1.0;
 
 	/** The overall strength and visibility of the distortion. */
-	public strength: number = 0.03;
+	public strength: number = 0.04; // Default: 0.03
 	/** How fast the ripple's leading edge expands outwards, in UV units per second. */
 	public propagationSpeed: number = 2.0;
 	/** How fast the internal waves oscillate or "bob" up and down. */
