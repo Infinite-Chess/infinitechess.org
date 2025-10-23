@@ -86,6 +86,7 @@ const BELL_CONFIG = {
 	volume: 0.6,
 } as const;
 
+/** Config for the water droplet ripple effect for EXTREMELY large moves. */
 const RIPPLE_CONFIG = {
 	/**
 	 * The minimum distance a piece needs to move for the water droplet ripple effect to trigger.
