@@ -149,12 +149,14 @@ function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false):
  * Ignorant of debug mode.
  */
 function getRespectiveScreenBox(): DoubleBoundingBox {
-	if (perspective.getEnabled()) {
-		const dist = perspective.distToRenderBoard;
-		return { left: -dist, right: dist, bottom: -dist, top: dist };
-	} else {
-		return getScreenBoundingBox(false, true);
-	}
+	if (perspective.getEnabled()) return getPerspecticeScreenBox();
+	else return getScreenBoundingBox(false, true);
+}
+
+/** Returns the world bounding box of the visible range when in perspective mode. */
+function getPerspecticeScreenBox(): DoubleBoundingBox {
+	const dist = perspective.distToRenderBoard;
+	return { left: -dist, right: dist, bottom: -dist, top: dist };
 }
 
 /**
@@ -365,6 +367,7 @@ export default {
 	getDebug,
 	getScreenBoundingBox,
 	getRespectiveScreenBox,
+	getPerspecticeScreenBox,
 	getScreenHeightWorld,
 	getViewMatrix,
 	setViewMatrix,
