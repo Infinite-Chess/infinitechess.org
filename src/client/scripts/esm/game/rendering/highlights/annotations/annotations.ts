@@ -46,7 +46,9 @@ interface Arrow {
 	start: Coords;
 	end: Coords;
 
-	/** The precalculated difference going from start to the end. */
+	/** The bigint vector pointing from the start coords to the end coords. NOT normalized. */
+	vector: Coords;
+	/** The precalculated difference going from start to the end. Same as the vector, but as a BigDecimal. */
 	difference: BDCoords;
 	/** The precalculated ratio of the x difference to the distance (hypotenuse, total length). Doesn't need extreme precision. */
 	xRatio: number;

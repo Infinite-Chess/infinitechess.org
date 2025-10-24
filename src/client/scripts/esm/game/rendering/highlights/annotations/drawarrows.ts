@@ -11,7 +11,9 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../../../../shared/util/math/vectors.js";
+import geometry from "../../../../../../../shared/util/math/geometry.js";
 import boardpos from "../../boardpos.js";
+import boardtiles from "../../boardtiles.js";
 import { createRenderable } from "../../../../webgl/Renderable.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
@@ -20,6 +22,7 @@ import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigd
 
 import type { Arrow } from "./annotations.js";
 import type { Color } from "../../../../../../../shared/util/math/math.js";
+import type { BoundingBoxBD } from "../../../../../../../shared/util/math/bounds.js";
 
 
 // Constants -----------------------------------------------------------------
@@ -46,7 +49,9 @@ const ARROW = {
 	BASE_OFFSET: 0.35,
 };
 
-const ONE = bd.FromBigInt(1n); // Used to convert board space to world space when zoomed out
+const ZERO = bd.FromBigInt(0n);
+const ONE = bd.FromBigInt(1n);
+const THREE = bd.FromBigInt(3n);
 
 
 
@@ -162,7 +167,8 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 
 	// Precalculate other arrow properties
 
-	const difference: BDCoords = bd.FromCoords(coordutil.subtractCoords(drag_end, drag_start!));
+	const vector: Coords = coordutil.subtractCoords(drag_end, drag_start!);
+	const difference: BDCoords = bd.FromCoords(vector);
 	// Since the difference can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
 	const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
@@ -172,7 +178,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 	arrows.push({
 		start: drag_start!,
 		end: drag_end,
-
+		vector,
 		difference,
 		xRatio: normalizedVector[0] / normalizedVectorHypot,
 		yRatio: normalizedVector[1] / normalizedVectorHypot,
@@ -238,12 +244,61 @@ function getDataArrow(
 	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
 
 	// Calculate the base and tip world space coordinates
-	const startWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.start));
-	const endWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.end));
+	let startWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.start));
+	let endWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.end));
 	// Apply the base offset to the start world coordinates
 	// so the arrow base doesn't start exactly at the center of the square.
 	startWorld[0] += arrow.xRatio * arrowBaseOffsetWorld;
 	startWorld[1] += arrow.yRatio * arrowBaseOffsetWorld;
+
+	// -----------------------------------------------------------------------------------------
+	// Make sure the start and end world points don't overflow to Infinity.
+	// To resolve this, we are going to cap the start and end world points to the view distance.
+
+	const viewBox: BoundingBoxBD = boardtiles.gboundingBoxFloat();
+	// Add a constant padding on all sides so the arrow tip isn't visible,
+	// making it look like the arrow points to the edge of the screen.
+	const VIEWBOX_PADDING = bd.divide_floating(THREE, boardpos.getBoardScale()); // Scales with zoom level
+	viewBox.left = bd.subtract(viewBox.left, VIEWBOX_PADDING);
+	viewBox.right = bd.add(viewBox.right, VIEWBOX_PADDING);
+	viewBox.bottom = bd.subtract(viewBox.bottom, VIEWBOX_PADDING);
+	viewBox.top = bd.add(viewBox.top, VIEWBOX_PADDING);
+
+	// Now take the arrow's vector, and calculate its intersections with this box.
+	const intersections = geometry.findLineBoxIntersectionsBD(bd.FromCoords(arrow.start), arrow.vector, viewBox);
+
+	if (intersections.length < 2) return []; // Arrow not visible on screen
+
+	// Make sure the arrow body passes through the screen.
+	if (!intersections[1]!.positiveDotProduct) return []; // start point lies beyond screen
+	// Also check if the first intersection dot product of the vector pointing from the END coords is positive.
+	const dotProductEndToFirstIntersection = vectors.dotProductBD(
+		coordutil.subtractBDCoords(intersections[0]!.coords!, bd.FromCoords(arrow.end)),
+		vectors.negateBDVector(arrow.difference)
+	);
+	if (bd.compare(dotProductEndToFirstIntersection, ZERO) < 0) return []; // end point lies before screen
+
+	// startWorld: Make sure it doesn't come before the first intersection.
+	// If it does, set it to the first intersection.
+	// To do this, we're going to have to compare dot products.
+	const firstIntersectionWorld = space.convertCoordToWorldSpace(intersections[0]!.coords!);
+	const startToFirstIntersection: DoubleCoords = coordutil.subtractDoubleCoords(firstIntersectionWorld, startWorld);
+	const startToEnd: DoubleCoords = coordutil.subtractDoubleCoords(endWorld, startWorld);
+	const dotProductStart = vectors.dotProductDoubles(startToFirstIntersection, startToEnd);
+	if (dotProductStart > 0) startWorld = firstIntersectionWorld; // startWorld lies before the first intersection, clamp it to the first intersection.
+
+	// endWorld: Make sure it doesn't go past the last intersection.
+	// If it does, set it to the last intersection.
+	const lastIntersectionWorld = space.convertCoordToWorldSpace(intersections[1]!.coords!);
+	const endToLastIntersection: DoubleCoords = coordutil.subtractDoubleCoords(lastIntersectionWorld, endWorld);
+	const endToStart: DoubleCoords = vectors.negateDoubleVector(startToEnd);
+	const dotProductEnd = vectors.dotProductDoubles(endToLastIntersection, endToStart);
+	if (dotProductEnd > 0) endWorld = lastIntersectionWorld; // endWorld lies past the last intersection, clamp it to the last intersection.
+
+	// -----------------------------------------------------------------------------------------
+
+	// Great! Arrow is visible on screen, and start/end world coords are clamped properly.
+	// Now we can generate the arrow vertex data.
 
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];

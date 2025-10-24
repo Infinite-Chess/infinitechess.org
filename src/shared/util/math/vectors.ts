@@ -254,6 +254,14 @@ function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
 }
 
 /**
+ * Computes the dot product of two 2D vectors represented as doubles.
+ * WILL BE POSITIVE if they roughly point in the same direction.
+ */
+function dotProductDoubles(v1: DoubleCoords, v2: DoubleCoords): number {
+	return v1[0] * v2[0] + v1[1] * v2[1];
+}
+
+/**
  * Negates the provided length-2 vector so it points in the opposite direction
  * 
  * Non-mutating. Returns a new vector.
@@ -269,6 +277,15 @@ function negateVector(vec2: Vec2): Vec2 {
  */
 function negateBDVector(vec2: BDCoords): BDCoords {
 	return [bd.negate(vec2[0]), bd.negate(vec2[1])];
+}
+
+/**
+ * Negates the provided length-2 double vector so it points in the opposite direction
+ * 
+ * Non-mutating. Returns a new vector.
+ */
+function negateDoubleVector(vec2: DoubleCoords): DoubleCoords {
+	return [-vec2[0], -vec2[1]];
 }
 
 /**
@@ -446,8 +463,10 @@ export default {
 	getXYComponents_FromAngle,
 	dotProduct,
 	dotProductBD,
+	dotProductDoubles,
 	negateVector,
 	negateBDVector,
+	negateDoubleVector,
 	absVector,
 	normalizeVector,
 	normalizeVectorBD,
