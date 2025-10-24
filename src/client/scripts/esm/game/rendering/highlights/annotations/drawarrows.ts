@@ -237,7 +237,7 @@ function getDataArrow(
 	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
 	// How much the arrow base is offset from the start coordinate.
-	const arrowBaseOffsetWorld: number = entityWidthWorld * ARROW.BASE_OFFSET * size;
+	const arrowBaseOffsetWorld: number = ARROW.BASE_OFFSET * size;
 	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(entityWidthSquares, bd.FromNumber(ARROW.BASE_OFFSET));
 
 	// If the arrow length <= base offset, don't draw it (it would have negative length).
