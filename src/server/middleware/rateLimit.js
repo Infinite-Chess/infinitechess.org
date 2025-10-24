@@ -61,8 +61,14 @@ const recentRequests = []; // List of times of recent connections
 /**
  * The maximum size of an incoming websocket message, in bytes.
  * Above this will be rejected, and an error sent to the client.
+ * 
+ * DIRECTLY CONTROLS THE maximum distance players can move in online games!
+ * 500 KB allows moves up to 1e100000 squares away, with some padding.
+ * On mobile it would take 6 hours of zooming out at
+ * MAXIMUM speed to reach that distance, without rest.
+ * It would take WAYYYY longer on desktop!
  */
-const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
+const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
 
 
 
