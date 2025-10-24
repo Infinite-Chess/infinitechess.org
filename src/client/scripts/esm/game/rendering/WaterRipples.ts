@@ -14,7 +14,9 @@ import boardpos from "./boardpos";
 import drawrays from "./highlights/annotations/drawrays";
 import bounds from "../../../../../shared/util/math/bounds";
 import perspective from "./perspective";
+import gameloader from "../chess/gameloader";
 import coordutil, { Coords } from "../../../../../shared/chess/util/coordutil";
+import { players as p } from "../../../../../shared/chess/util/typeutil";
 import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass";
 
 
@@ -122,8 +124,14 @@ function addRipple(sourceCoords: Coords): void {
 	const screenHeightWorld = screenBox.top - screenBox.bottom;
 
 	// Convert world coordinates to UV coordinates [0-1]
-	const u = (rippleX - screenBox.left) / screenWidthWorld;
-	const v = (rippleY - screenBox.bottom) / screenHeightWorld;
+	let u = (rippleX - screenBox.left) / screenWidthWorld;
+	let v = (rippleY - screenBox.bottom) / screenHeightWorld;
+
+	// If we're playing black, negate the UV coordinates
+	if (!gameloader.areInLocalGame() && gameloader.getOurColor() === p.BLACK) {
+		u = 1 - u;
+		v = 1 - v;
+	}
 
 	// Create a new droplet
 	activeDroplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
