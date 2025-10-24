@@ -243,7 +243,7 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 		const rippleVolume = volume * RIPPLE_CONFIG.volume;
 		// Calculate playback rate based on distance moved
 		const eDifference = bd.log10(distanceMoved) - bd.log10(RIPPLE_CONFIG.minDist);
-		const ripplePlayrate = Math.max(RIPPLE_CONFIG.maxPlaybackRate - (eDifference * RIPPLE_CONFIG.playbackRateReductionPerE), RIPPLE_CONFIG.minPlaybackRate);
+		const ripplePlayrate = playbackRate * Math.max(RIPPLE_CONFIG.maxPlaybackRate - (eDifference * RIPPLE_CONFIG.playbackRateReductionPerE), RIPPLE_CONFIG.minPlaybackRate);
 		// console.log("Ripple playrate:", ripplePlayrate);
 
 		playSoundEffect('ripple', { volume: rippleVolume, delay: delaySecs, playbackRate: ripplePlayrate });
