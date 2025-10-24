@@ -8,7 +8,6 @@ uniform sampler2D u_colorTexture;
 uniform sampler2D u_maskTexture; // This texture has white pixels where light tiles are and black pixels where dark tiles are.
 uniform sampler2D u_perlinNoiseTexture;
 uniform sampler2D u_whiteNoiseTexture;
-uniform float u_time;
 uniform vec2 u_resolution; // Canvas dimensions, used for aspect correction
 uniform float u_pixelDensity; // How many device pixels per virtual pixel
 

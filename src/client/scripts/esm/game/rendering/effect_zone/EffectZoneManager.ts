@@ -273,7 +273,6 @@ export class EffectZoneManager {
 
 		const uniforms: Record<string, any> = {
 			// Global uniforms
-			// u_time: performance.now() / 1000, // <-- REENABLE ONCE WE HAVE OTHER ZONES THAT NEED IT!!!!!!!!!!!!!!
 			u_transitionProgress: this.transitionProgress,
 			u_resolution: [this.gl.canvas.width, this.gl.canvas.height],
 			u_pixelDensity: window.devicePixelRatio,

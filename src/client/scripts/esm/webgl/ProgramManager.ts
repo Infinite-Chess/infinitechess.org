@@ -66,8 +66,7 @@ type Uniforms_Starfield = 'u_transformmatrix';
 type Attributes_BoardUberShader = 'a_position' | 'a_texturecoord' | 'a_color';
 type Uniforms_BoardUberShader =
     // Global Uniforms
-    'u_colorTexture' | 'u_maskTexture' | 'u_perlinNoiseTexture' | 'u_whiteNoiseTexture' |
-    'u_time' | 'u_resolution' | 'u_pixelDensity' |
+    'u_colorTexture' | 'u_maskTexture' | 'u_perlinNoiseTexture' | 'u_whiteNoiseTexture' | 'u_resolution' | 'u_pixelDensity' |
     // Uber-Shader Logic
     'u_effectTypeA' | 'u_effectTypeB' | 'u_transitionProgress' |
     // "Spectral Edge" Uniforms (Effect Type 4)
