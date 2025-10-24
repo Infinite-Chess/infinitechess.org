@@ -273,6 +273,7 @@ function setLingeringAnnotationsMode(value: boolean): void {
 	document.dispatchEvent(new CustomEvent('lingering-annotations-toggle', { detail: value }));
 }
 
+/** Whether the user has enabled "Advanced Effects" in the settings. */
 function getAdvancedEffectsMode(): boolean {
 	return preferences.advanced_effects_enabled ?? default_advanced_effects_enabled;
 }
@@ -297,6 +298,7 @@ function setMasterVolume(master_volume: number): void {
 	document.dispatchEvent(new CustomEvent('master-volume-change', { detail: master_volume }));
 }
 
+/** Whether the user has enabled "Ambience" in the settings. */
 function getAmbienceEnabled(): boolean {
 	return preferences.ambience_enabled ?? default_ambience_enabled;
 }
