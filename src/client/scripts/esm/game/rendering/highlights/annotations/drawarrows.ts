@@ -13,7 +13,7 @@ import mouse from "../../../../util/mouse.js";
 import vectors from "../../../../../../../shared/util/math/vectors.js";
 import geometry from "../../../../../../../shared/util/math/geometry.js";
 import boardpos from "../../boardpos.js";
-import boardtiles from "../../boardtiles.js";
+import camera from "../../camera.js";
 import { createRenderable } from "../../../../webgl/Renderable.js";
 import { Mouse } from "../../../input.js";
 import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
@@ -22,7 +22,7 @@ import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigd
 
 import type { Arrow } from "./annotations.js";
 import type { Color } from "../../../../../../../shared/util/math/math.js";
-import type { BoundingBoxBD } from "../../../../../../../shared/util/math/bounds.js";
+import type { BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds.js";
 
 
 // Constants -----------------------------------------------------------------
@@ -255,17 +255,20 @@ function getDataArrow(
 	// Make sure the start and end world points don't overflow to Infinity.
 	// To resolve this, we are going to cap the start and end world points to the view distance.
 
-	const viewBox: BoundingBoxBD = boardtiles.gboundingBoxFloat();
-	// Add a constant padding on all sides so the arrow tip isn't visible,
-	// making it look like the arrow points to the edge of the screen.
-	const VIEWBOX_PADDING = bd.divide_floating(THREE, boardpos.getBoardScale()); // Scales with zoom level
-	viewBox.left = bd.subtract(viewBox.left, VIEWBOX_PADDING);
-	viewBox.right = bd.add(viewBox.right, VIEWBOX_PADDING);
-	viewBox.bottom = bd.subtract(viewBox.bottom, VIEWBOX_PADDING);
-	viewBox.top = bd.add(viewBox.top, VIEWBOX_PADDING);
+	const viewBox: DoubleBoundingBox = camera.getPerspecticeScreenBox(); // World space view box
+	// Convert to squares
+	const boardPos: BDCoords = boardpos.getBoardPos();
+	const boardScale: BigDecimal = boardpos.getBoardScale();
+	const viewBoxTiles: BoundingBoxBD = {
+		left: space.convertWorldSpaceToCoords_Axis(viewBox.left, boardScale, boardPos[0]),
+		right: space.convertWorldSpaceToCoords_Axis(viewBox.right, boardScale, boardPos[0]),
+		bottom: space.convertWorldSpaceToCoords_Axis(viewBox.bottom, boardScale, boardPos[1]),
+		top: space.convertWorldSpaceToCoords_Axis(viewBox.top, boardScale, boardPos[1]),
+	};
+
 
 	// Now take the arrow's vector, and calculate its intersections with this box.
-	const intersections = geometry.findLineBoxIntersectionsBD(bd.FromCoords(arrow.start), arrow.vector, viewBox);
+	const intersections = geometry.findLineBoxIntersectionsBD(bd.FromCoords(arrow.start), arrow.vector, viewBoxTiles);
 
 	if (intersections.length < 2) return []; // Arrow not visible on screen
 

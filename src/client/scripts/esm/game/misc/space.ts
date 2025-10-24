@@ -32,16 +32,16 @@ const HALF: BigDecimal = bd.FromNumber(0.5);
 function convertWorldSpaceToCoords(worldCoords: DoubleCoords): BDCoords {
 	const boardPos: BDCoords = boardpos.getBoardPos();
 	const boardScale: BigDecimal = boardpos.getBoardScale();
-
-	function getAxis(worldCoords: number, boardPos: BigDecimal): BigDecimal {
-		const positionBD = bd.FromNumber(worldCoords);
-		return bd.add(bd.divide_floating(positionBD, boardScale), boardPos);
-	}
-
 	return [
-		getAxis(worldCoords[0], boardPos[0]),
-		getAxis(worldCoords[1], boardPos[1])
+		convertWorldSpaceToCoords_Axis(worldCoords[0], boardScale, boardPos[0]),
+		convertWorldSpaceToCoords_Axis(worldCoords[1], boardScale, boardPos[1])
 	];
+}
+
+/** Converts a single axis' coordinates from world space to squares. */
+function convertWorldSpaceToCoords_Axis(worldCoords: number, boardScale: BigDecimal, boardPos: BigDecimal): BigDecimal {
+	const positionBD = bd.FromNumber(worldCoords);
+	return bd.add(bd.divide_floating(positionBD, boardScale), boardPos);
 }
 
 /** Returns the integer square coordinate that includes the floating point square coords inside its area. */
@@ -115,6 +115,7 @@ function convertWorldSpaceToGrid(value: number): BigDecimal {
 
 export default {
 	convertWorldSpaceToCoords,
+	convertWorldSpaceToCoords_Axis,
 	convertWorldSpaceToCoords_Rounded,
 	roundCoord,
 	roundCoords,
