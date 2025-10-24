@@ -13,6 +13,7 @@ import bigdecimal from "../../../../../shared/util/bigdecimal/bigdecimal";
 import boardpos from "./boardpos";
 import drawrays from "./highlights/annotations/drawrays";
 import bounds from "../../../../../shared/util/math/bounds";
+import perspective from "./perspective";
 import coordutil, { Coords } from "../../../../../shared/chess/util/coordutil";
 import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass";
 
@@ -140,8 +141,12 @@ function update(): void {
 		}
 	}
 
+	// Don't render ripple effect in perspective mode, as it is a pure
+	// 2D post processing effect, not an effect on the rendered board.
+	const framesActiveDrops = perspective.getEnabled() ? [] : activeDroplets;
+
 	// FEED the active list to the pass
-	waterRipplePass.updateDroplets(activeDroplets);
+	waterRipplePass.updateDroplets(framesActiveDrops);
 
 	// Only call for an animation frame if there are active droplets
 	if (activeDroplets.length > 0) frametracker.onVisualChange();
