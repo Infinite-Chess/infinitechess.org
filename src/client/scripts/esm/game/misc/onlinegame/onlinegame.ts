@@ -373,7 +373,7 @@ function requestRemovalFromPlayersInActiveGames(): void {
 	if (!areInOnlineGame()) return;
 	if (!websocket.areSubbedToSub('game')) {
 		// THE SERVER has deleted the game. Already removed from players in active games list!
-		console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
+		// console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
 		return;
 	}; 
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
