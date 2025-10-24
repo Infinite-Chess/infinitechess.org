@@ -52,7 +52,7 @@ export class EchoRiftZone implements Zone {
 
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 0;
-		this.colorGradePass.contrast = 0.2;
+		this.colorGradePass.contrast = 0.3;
 
 		this.noiseGenerator = PerlinNoise.create1DNoiseGenerator(30);
 
