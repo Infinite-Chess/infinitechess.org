@@ -28,6 +28,7 @@ import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManage
 import emailValidator from 'node-email-verifier';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { isEmailBanned } from '../middleware/banned.js';
+import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
 
 // Variables -------------------------------------------------------------------------
 
@@ -73,28 +74,15 @@ const reservedUsernames: string[] = [
 	'usa', 'america',
 	'donaldtrump', 'joebiden'
 ];
-/** Any username cannot contain these words */
-const profainWords: string[] = [
-	'fuck',
-	'fuk',
-	'shit',
-	'piss',
-	// 'ass', // Can't enable because "pass" wouldn't be allowed.
-	'penis',
-	'bitch',
-	'bastard',
-	'cunt',
-	'penis',
-	'vagina',
-	'boob',
-	'nigger',
-	'niger',
-	'pussy',
-	'buthole',
-	'butthole',
-	'ohmygod',
-	'poop'
-];
+
+/**
+ * Initialize the obscenity profanity matcher.
+ * Uses the English dataset with recommended transformers.
+ */
+const profanityMatcher = new RegExpMatcher({
+	...englishDataset.build(),
+	...englishRecommendedTransformers,
+});
 
 
 // Functions -------------------------------------------------------------------------
@@ -262,12 +250,12 @@ function onlyLettersAndNumbers(string: string): boolean {
 	return /^[a-zA-Z0-9]+$/.test(string);
 };
 
-// Returns true if bad word is found
+/**
+ * Returns true if profanity/offensive language is found in the string.
+ * Uses the obscenity package with English dataset and recommended transformers.
+ */
 function checkProfanity(string: string): boolean {
-	for (const profanity of profainWords) {
-		if (string.includes(profanity)) return true;
-	}
-	return false;
+	return profanityMatcher.hasMatch(string);
 };
 
 /** Returns true if the email passes all the checks required for account generation. */
