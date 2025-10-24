@@ -11,9 +11,7 @@ This project is open source! If you have a feature idea you want to try implemen
 In case you want to help us with translating the website to other languages, please read the [Translation Guide](./docs/TRANSLATIONS.md).
 
 We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
-- Truly infinite move distance
 - Board Editor
-- Premoving
 - Engine play
 - Games with infinitely many pieces
 - 4 Player
