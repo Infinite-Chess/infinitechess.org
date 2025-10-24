@@ -84,7 +84,7 @@ function update(): void {
 		const thisHoveredArrow = hoveredArrowsLegalMoves[i]!;
 		// Is this arrow still being hovered over?
 		if (!hoveredArrows.some(arrow => {
-			if (!arrow.piece.floating) return false;
+			if (arrow.piece.floating) return false;
 			const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
 			return coordutil.areCoordsEqual(integerCoords, thisHoveredArrow.piece.coords);
 		})) hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over. Delete its legal moves.
