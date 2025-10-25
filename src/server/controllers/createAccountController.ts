@@ -338,4 +338,5 @@ export {
 	generateAccount,
 	doPasswordFormatChecks,
 	PASSWORD_SALT_ROUNDS,
+	profanityMatcher,
 };
