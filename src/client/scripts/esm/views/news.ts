@@ -91,19 +91,31 @@ function addNewBadge(postElement: HTMLElement): void {
 		display: inline-block;
 		background-color: #ff4444;
 		color: white;
-		padding: 4px 12px;
-		border-radius: 4px;
-		font-size: 12px;
+		padding: 2px 6px;
+		border-radius: 3px;
+		font-size: 10px;
 		font-weight: bold;
-		margin-left: 10px;
 		vertical-align: middle;
-		box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 	`;
 
-	// Add it after the date span
+	// Find the date span and wrap both date and badge in a flex container
 	const dateSpan = postElement.querySelector('.news-post-date');
-	if (dateSpan) {
-		dateSpan.parentElement?.insertBefore(badge, dateSpan.nextSibling);
+	if (dateSpan && dateSpan.parentNode) {
+		// Create a wrapper div with flexbox
+		const wrapper = document.createElement('div');
+		wrapper.style.cssText = `
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 100%;
+			margin-bottom: 10px;
+		`;
+		
+		// Replace the date span with the wrapper
+		dateSpan.parentNode.insertBefore(wrapper, dateSpan);
+		wrapper.appendChild(dateSpan);
+		wrapper.appendChild(badge);
 	} else {
 		// If no date span, add it at the top of the post
 		postElement.insertBefore(badge, postElement.firstChild);

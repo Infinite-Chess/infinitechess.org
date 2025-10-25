@@ -17,35 +17,45 @@ import { getLanguageToServe } from '../utility/translate.js';
  * Returns { count: number } or { count: 0 } if not logged in.
  */
 function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
+	console.log('[NewsAPI] getUnreadNewsCount called');
+	console.log('[NewsAPI] req.memberInfo:', req.memberInfo);
+	
 	// Check if user is authenticated
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		// Not logged in - return 0 unread
+		console.log('[NewsAPI] User not logged in, returning 0');
 		res.json({ count: 0 });
 		return;
 	}
 
 	const userId = req.memberInfo.user_id;
+	console.log('[NewsAPI] User ID:', userId);
 
 	try {
 		// Get user's last read news date
 		const memberData = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+		console.log('[NewsAPI] Member data:', memberData);
 		
 		if (!memberData) {
+			console.log('[NewsAPI] No member data found, returning 0');
 			res.json({ count: 0 });
 			return;
 		}
 
 		const lastReadDate = (memberData as any).last_read_news_date as string | null;
+		console.log('[NewsAPI] Last read date:', lastReadDate);
 		
 		// Get the user's language preference
 		const language = getLanguageToServe(req);
+		console.log('[NewsAPI] Language:', language);
 		
 		// Count unread news posts
 		const unreadCount = countUnreadNews(lastReadDate, language);
+		console.log('[NewsAPI] Unread count:', unreadCount);
 		
 		res.json({ count: unreadCount });
 	} catch (error) {
-		console.error('Error getting unread news count:', error);
+		console.error('[NewsAPI] Error getting unread news count:', error);
 		res.status(500).json({ count: 0 });
 	}
 }
@@ -92,25 +102,37 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
  * This should be called when the user visits the news page.
  */
 function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
+	console.log('[NewsAPI] markNewsAsRead called');
+	console.log('[NewsAPI] req.memberInfo:', req.memberInfo);
+	
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		// Not logged in - nothing to update
+		console.log('[NewsAPI] User not logged in, skipping update');
 		res.status(200).json({ success: true });
 		return;
 	}
 
 	const userId = req.memberInfo.user_id;
+	console.log('[NewsAPI] User ID:', userId);
 
 	try {
 		const language = getLanguageToServe(req);
+		console.log('[NewsAPI] Language:', language);
+		
 		const latestNewsDate = getLatestNewsDate(language);
+		console.log('[NewsAPI] Latest news date:', latestNewsDate);
 		
 		if (latestNewsDate) {
+			console.log('[NewsAPI] Updating last_read_news_date to:', latestNewsDate);
 			updateLastReadNewsDate(userId, latestNewsDate);
+			console.log('[NewsAPI] Successfully updated last_read_news_date');
+		} else {
+			console.log('[NewsAPI] No latest news date found, skipping update');
 		}
 		
 		res.status(200).json({ success: true });
 	} catch (error) {
-		console.error('Error marking news as read:', error);
+		console.error('[NewsAPI] Error marking news as read:', error);
 		res.status(500).json({ success: false, error: 'Internal server error' });
 	}
 }

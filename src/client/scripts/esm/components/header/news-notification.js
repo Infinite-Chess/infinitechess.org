@@ -23,19 +23,13 @@ function createNotificationBadge() {
 	badge.className = 'news-notification-badge';
 	badge.style.cssText = `
 		position: absolute;
-		top: -5px;
-		right: -10px;
+		top: 2px;
+		right: 2px;
 		background-color: #ff4444;
-		color: white;
 		border-radius: 50%;
-		min-width: 20px;
-		height: 20px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 12px;
-		font-weight: bold;
-		padding: 2px;
+		width: 8px;
+		height: 8px;
+		display: block;
 		box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 		pointer-events: none;
 	`;
@@ -108,10 +102,8 @@ function showNotificationBadge(count) {
 		newsLink.appendChild(notificationBadge);
 	}
 	
-	// Update the count text
-	const countText = count > 9 ? '9+' : count.toString();
-	notificationBadge.textContent = countText;
-	console.log('Badge shown with count:', countText);
+	// Badge is just a dot, no text content needed
+	console.log('Badge shown (dot indicator)');
 }
 
 /**

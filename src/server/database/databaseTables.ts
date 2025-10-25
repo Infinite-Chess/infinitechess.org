@@ -303,13 +303,19 @@ function deleteTable(tableName: string): void {
 
 /**
  * Adds the last_read_news_date column to the members table if it doesn't exist.
- * This migration sets the default value to null for existing users.
+ * This migration sets the default value to current date for existing users so they don't see all old news as unread.
  */
 function migrateAddLastReadNewsDate(): void {
 	if (!db.columnExists('members', 'last_read_news_date')) {
 		console.log('Adding last_read_news_date column to members table...');
 		db.run('ALTER TABLE members ADD COLUMN last_read_news_date TEXT');
-		console.log('Successfully added last_read_news_date column.');
+		
+		// Set default value to current date for existing users
+		const currentDate = new Date().toISOString();
+		console.log(`Setting last_read_news_date to ${currentDate} for existing users...`);
+		db.run('UPDATE members SET last_read_news_date = ? WHERE last_read_news_date IS NULL', [currentDate]);
+		
+		console.log('Successfully added and initialized last_read_news_date column.');
 	}
 }
 
