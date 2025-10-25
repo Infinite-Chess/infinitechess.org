@@ -125,7 +125,7 @@ describe('Profanity Filter', () => {
 	describe('Case insensitivity (username convention)', () => {
 		it('should detect profanity after converting to lowercase', () => {
 			// This mimics what happens in the actual code
-			const testUsername = (username: string) => {
+			const testUsername = (username: string): boolean => {
 				const usernameLowercase = username.toLowerCase();
 				return checkProfanity(usernameLowercase);
 			};
