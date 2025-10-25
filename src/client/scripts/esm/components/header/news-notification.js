@@ -78,9 +78,10 @@ async function updateNotificationBadge() {
 
 /**
  * Shows the notification badge with the given count
- * @param {number} count - The number of unread news posts
+ * @param {number} _count - The number of unread news posts (unused, badge is just a dot)
  */
-function showNotificationBadge(count) {
+// eslint-disable-next-line no-unused-vars
+function showNotificationBadge(_count) {
 	if (!newsLink) {
 		return;
 	}
