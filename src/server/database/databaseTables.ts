@@ -37,6 +37,7 @@ const allMemberColumns: string[] = [
 	'is_verified',
 	'verification_code',
 	'is_verification_notified',
+	'last_read_news_date',
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
@@ -118,7 +119,8 @@ function generateTables(): void {
 			is_verification_notified INTEGER NOT NULL DEFAULT 0,
 			preferences TEXT,
 			username_history TEXT,
-			checkmates_beaten TEXT NOT NULL DEFAULT ''
+			checkmates_beaten TEXT NOT NULL DEFAULT '',
+			last_read_news_date TEXT
 		);
 	`);
 
@@ -299,9 +301,22 @@ function deleteTable(tableName: string): void {
 }
 // deleteTable('test');
 
+/**
+ * Adds the last_read_news_date column to the members table if it doesn't exist.
+ * This migration sets the default value to null for existing users.
+ */
+function migrateAddLastReadNewsDate(): void {
+	if (!db.columnExists('members', 'last_read_news_date')) {
+		console.log('Adding last_read_news_date column to members table...');
+		db.run('ALTER TABLE members ADD COLUMN last_read_news_date TEXT');
+		console.log('Successfully added last_read_news_date column.');
+	}
+}
+
 
 function initDatabase(): void {
 	generateTables();
+	migrateAddLastReadNewsDate(); // Add news tracking column
 	performFullVerificationMigration(); // DELETE AFTER NEXT UPDATE!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();

@@ -1,4 +1,8 @@
 {
+	"72": {
+		"note": "Added test news post 2025-10-24.md for unread notification feature testing.",
+		"changes": []
+	},
 	"71": {
 		"note": "Added coords-exceeded line 384.",
 		"changes": []

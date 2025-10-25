@@ -45,6 +45,7 @@ import { processCommand } from "../api/AdminPanel.js";
 import { getContributors } from '../api/GitHub.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
+import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -214,6 +215,11 @@ function configureMiddleware(app) {
 
 	// Leaderboard router
 	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
+
+	// News routes
+	app.get('/api/news/unread-count', getUnreadNewsCount);
+	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
+	app.post('/api/news/mark-read', markNewsAsRead);
 
 	app.post('/forgot-password', handleForgotPasswordRequest);
 	app.post('/reset-password', handleResetPassword);
