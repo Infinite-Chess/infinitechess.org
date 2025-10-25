@@ -13,19 +13,32 @@ let notificationBadge = null;
 
 /**
  * Creates and returns the notification badge element
+ * @param {number} count - The number of unread news posts
  */
-function createNotificationBadge() {
+function createNotificationBadge(count) {
 	const badge = document.createElement('span');
 	badge.className = 'news-notification-badge';
+	
+	// Display count as "9+" for 10 or more, otherwise show the number
+	const displayText = count >= 10 ? '9+' : count.toString();
+	badge.textContent = displayText;
+	
 	badge.style.cssText = `
 		position: absolute;
 		top: 2px;
-		right: 2px;
+		right: 4px;
 		background-color: #ff4444;
-		border-radius: 50%;
-		width: 8px;
-		height: 8px;
-		display: block;
+		color: white;
+		border-radius: 10px;
+		min-width: 16px;
+		height: 16px;
+		padding: 0 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 10px;
+		font-weight: bold;
+		line-height: 1;
 		box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 		pointer-events: none;
 	`;
@@ -78,25 +91,27 @@ async function updateNotificationBadge() {
 
 /**
  * Shows the notification badge with the given count
- * @param {number} _count - The number of unread news posts (unused, badge is just a dot)
+ * @param {number} count - The number of unread news posts
  */
-// eslint-disable-next-line no-unused-vars
-function showNotificationBadge(_count) {
+function showNotificationBadge(count) {
 	if (!newsLink) {
 		return;
 	}
 	
-	// Make sure the news link has position relative for absolute positioning
+	// Make sure the news link has position relative for absolute positioning and overflow visible
 	if (getComputedStyle(newsLink).position === 'static') {
 		newsLink.style.position = 'relative';
 	}
+	newsLink.style.overflow = 'visible';
 	
 	if (!notificationBadge) {
-		notificationBadge = createNotificationBadge();
+		notificationBadge = createNotificationBadge(count);
 		newsLink.appendChild(notificationBadge);
+	} else {
+		// Update existing badge text
+		const displayText = count >= 10 ? '9+' : count.toString();
+		notificationBadge.textContent = displayText;
 	}
-	
-	// Badge is just a dot, no text content needed
 }
 
 /**
