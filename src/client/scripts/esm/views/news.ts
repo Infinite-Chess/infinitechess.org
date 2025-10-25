@@ -89,9 +89,8 @@ function addNewBadge(postElement: HTMLElement): void {
 		color: white;
 		padding: 2px 6px;
 		border-radius: 3px;
-		font-size: 10px;
+		font-size: 0.75em;
 		font-weight: bold;
-		vertical-align: middle;
 		box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 	`;
 
@@ -101,12 +100,15 @@ function addNewBadge(postElement: HTMLElement): void {
 		// Create a wrapper div with flexbox
 		const wrapper = document.createElement('div');
 		wrapper.style.cssText = `
-			display: flex;
-			justify-content: space-between;
+			display: inline-flex;
+			justify-content: flex-start;
 			align-items: center;
-			width: 100%;
-			margin-bottom: 10px;
+			gap: 8px;
+			margin-top: 1em;
 		`;
+		
+		// Remove margin-top from date span since wrapper now has it
+		(dateSpan as HTMLElement).style.marginTop = '0';
 		
 		// Replace the date span with the wrapper
 		dateSpan.parentNode.insertBefore(wrapper, dateSpan);
