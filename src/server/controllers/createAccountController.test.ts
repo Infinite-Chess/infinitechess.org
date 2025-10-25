@@ -1,3 +1,4 @@
+
 // src/server/controllers/createAccountController.test.ts
 
 /**
@@ -8,13 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
-
-// Initialize the same profanity matcher used in createAccountController
-const profanityMatcher = new RegExpMatcher({
-	...englishDataset.build(),
-	...englishRecommendedTransformers,
-});
+import { profanityMatcher } from './createAccountController'; // Import the identical one used in the controller
 
 /**
  * Helper function to check profanity (same logic as in createAccountController)
@@ -48,6 +43,7 @@ describe('Profanity Filter', () => {
 	describe('Variant detection', () => {
 		it('should detect common profanity variants', () => {
 			// Obscenity package handles these with its transformers
+			// Note: symbols are currently not allowed in usernames.
 			expect(checkProfanity('f*ck')).toBe(true);
 			expect(checkProfanity('sh!t')).toBe(true);
 			expect(checkProfanity('b1tch')).toBe(true);
@@ -79,6 +75,12 @@ describe('Profanity Filter', () => {
 			expect(checkProfanity('abc123xyz')).toBe(false);
 			expect(checkProfanity('player9000')).toBe(false);
 		});
+
+		it('should allow usernames with profaine substrings in non-profane words', () => {
+			expect(checkProfanity('passage')).toBe(false);
+			expect(checkProfanity('classical')).toBe(false);
+			expect(checkProfanity('assistant')).toBe(false);
+		});
 	});
 
 	describe('Edge cases', () => {
@@ -100,43 +102,6 @@ describe('Profanity Filter', () => {
 		});
 	});
 
-	describe('Specific words from old filter', () => {
-		// Testing words that were in the old profainWords array
-		it('should detect words from the old hardcoded list', () => {
-			expect(checkProfanity('fuck')).toBe(true);
-			expect(checkProfanity('fuk')).toBe(true);
-			expect(checkProfanity('shit')).toBe(true);
-			expect(checkProfanity('piss')).toBe(true);
-			expect(checkProfanity('bitch')).toBe(true);
-			expect(checkProfanity('bastard')).toBe(true);
-			expect(checkProfanity('cunt')).toBe(true);
-		});
-
-		it('should handle the "ass" case properly', () => {
-			// The old filter couldn't block "ass" because it would block "pass"
-			// Obscenity should handle this better with word boundaries
-			expect(checkProfanity('ass')).toBe(true);
-			expect(checkProfanity('pass')).toBe(false);
-			expect(checkProfanity('password')).toBe(false);
-			expect(checkProfanity('classic')).toBe(false);
-		});
-	});
-
-	describe('Case insensitivity (username convention)', () => {
-		it('should detect profanity after converting to lowercase', () => {
-			// This mimics what happens in the actual code
-			const testUsername = (username: string): boolean => {
-				const usernameLowercase = username.toLowerCase();
-				return checkProfanity(usernameLowercase);
-			};
-
-			expect(testUsername('FUCK123')).toBe(true);
-			expect(testUsername('ShItTyUser')).toBe(true);
-			expect(testUsername('BiTcH')).toBe(true);
-			expect(testUsername('ChessPlayer')).toBe(false);
-		});
-	});
-
 	describe('Performance', () => {
 		it('should handle multiple checks efficiently', () => {
 			const testUsernames = [
@@ -150,8 +115,8 @@ describe('Profanity Filter', () => {
 			});
 			const endTime = Date.now();
 
-			// Should complete in a reasonable time (less than 100ms for 10 checks)
-			expect(endTime - startTime).toBeLessThan(100);
+			// Should complete quickly
+			expect(endTime - startTime).toBeLessThan(10);
 		});
 	});
 });

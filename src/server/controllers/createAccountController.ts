@@ -14,21 +14,19 @@
 import crypto from 'crypto';
 import { Request, Response } from 'express';
 
-// @ts-ignore
 import bcrypt from 'bcrypt';
+import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
-// @ts-ignore
-import { sendEmailConfirmation } from './sendMail.js';
 // @ts-ignore
 import { handleLogin } from './loginController.js';
 // @ts-ignore
 import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManager.js';
 // @ts-ignore
 import emailValidator from 'node-email-verifier';
+import { sendEmailConfirmation } from './sendMail.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { isEmailBanned } from '../middleware/banned.js';
-import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
 
 // Variables -------------------------------------------------------------------------
 
@@ -338,4 +336,5 @@ export {
 	generateAccount,
 	doPasswordFormatChecks,
 	PASSWORD_SALT_ROUNDS,
+	profanityMatcher,
 };
