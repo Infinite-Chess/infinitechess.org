@@ -52,7 +52,9 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
-const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
+const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
+	ignore: ['**/*.test.ts', '**/*.test.js']
+});
 
 const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin('✅ Client Build successful.', '❌ Client Build failed.');
 const esbuildServerRebuildPlugin = getESBuildLogRebuildPlugin('✅ Server Build successful.', '❌ Server Build failed.');
