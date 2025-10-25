@@ -47,22 +47,16 @@ function getLatestNewsDate(language: string = 'en-US'): string | null {
  */
 function getAllNewsDates(language: string = 'en-US'): string[] {
 	const newsPath = path.join(__dirname, '../../../translation/news', language);
-	console.log('[newsUtil] getAllNewsDates - news path:', newsPath);
 	
 	if (!fs.existsSync(newsPath)) {
-		console.log('[newsUtil] getAllNewsDates - path does not exist');
 		return [];
 	}
 
 	const files = fs.readdirSync(newsPath);
-	console.log('[newsUtil] getAllNewsDates - all files:', files);
-	
 	const newsFiles = files.filter(file => file.endsWith('.md'));
-	console.log('[newsUtil] getAllNewsDates - markdown files:', newsFiles);
 	
 	// Extract dates and sort
 	const dates = newsFiles.map(file => file.replace('.md', '')).sort();
-	console.log('[newsUtil] getAllNewsDates - sorted dates:', dates);
 	return dates;
 }
 
@@ -73,32 +67,20 @@ function getAllNewsDates(language: string = 'en-US'): string[] {
  * @returns The number of unread news posts
  */
 function countUnreadNews(lastReadDate: string | null, language: string = 'en-US'): number {
-	console.log('[newsUtil] countUnreadNews called with:', { lastReadDate, language });
-	
 	const allDates = getAllNewsDates(language);
-	console.log('[newsUtil] All news dates:', allDates);
 	
 	if (allDates.length === 0) {
-		console.log('[newsUtil] No news posts found');
 		return 0;
 	}
 
 	// If user has never read news, all posts are unread
 	if (!lastReadDate) {
-		console.log('[newsUtil] No last read date, all posts unread:', allDates.length);
 		return allDates.length;
 	}
 
 	// Count posts newer than the last read date
-	const unreadDates = allDates.filter(date => {
-		const isUnread = date > lastReadDate;
-		console.log('[newsUtil] Comparing:', date, '>', lastReadDate, '=', isUnread);
-		return isUnread;
-	});
-	
-	console.log('[newsUtil] Unread dates:', unreadDates);
-	console.log('[newsUtil] Final unread count:', unreadDates.length);
-	return unreadDates.length;
+	const unreadCount = allDates.filter(date => date > lastReadDate).length;
+	return unreadCount;
 }
 
 /**

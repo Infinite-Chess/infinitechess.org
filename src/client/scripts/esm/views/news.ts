@@ -13,11 +13,9 @@ import validatorama from '../util/validatorama.js';
 async function markNewsAsRead(): Promise<void> {
 	// Only mark as read if user is logged in
 	const username = validatorama.getOurUsername();
-	console.log('markNewsAsRead called, username:', username);
 	if (!username) return;
 
 	try {
-		console.log('Calling /api/news/mark-read...');
 		const response = await fetch('/api/news/mark-read', {
 			method: 'POST',
 			headers: {
@@ -26,10 +24,8 @@ async function markNewsAsRead(): Promise<void> {
 			}
 		});
 
-		console.log('Mark-read response status:', response.status, response.ok);
 		if (response.ok) {
 			// Dispatch event to update header badge
-			console.log('Dispatching news-marked-read event');
 			document.dispatchEvent(new CustomEvent('news-marked-read'));
 		}
 	} catch (error) {
@@ -126,14 +122,11 @@ function addNewBadge(postElement: HTMLElement): void {
  * Initializes the news page functionality
  */
 async function init(): Promise<void> {
-	console.log('News page script initialized');
 	const username = validatorama.getOurUsername();
-	console.log('Current username:', username);
 	
 	if (username) {
 		// Fetch unread news dates first
 		const unreadDates = await fetchUnreadNewsDates();
-		console.log('Unread news dates:', unreadDates);
 		
 		// Add NEW badges to unread posts
 		if (unreadDates.length > 0) {
@@ -141,7 +134,6 @@ async function init(): Promise<void> {
 		}
 		
 		// Mark news as read after a short delay to ensure user sees the page
-		console.log('Setting timeout to mark news as read in 1 second...');
 		setTimeout(() => {
 			markNewsAsRead();
 		}, 1000);

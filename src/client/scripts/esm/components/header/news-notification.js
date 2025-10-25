@@ -8,12 +8,8 @@
 
 import validatorama from '../../util/validatorama.js';
 
-console.log('News notification script loaded');
-
 const newsLink = document.querySelector('a[href*="/news"]');
 let notificationBadge = null;
-
-console.log('News link found:', newsLink);
 
 /**
  * Creates and returns the notification badge element
@@ -66,14 +62,12 @@ async function fetchUnreadNewsCount() {
 async function updateNotificationBadge() {
 	// Only show badge if user is logged in
 	const username = validatorama.getOurUsername();
-	console.log('Updating badge, username:', username);
 	if (!username) {
 		removeNotificationBadge();
 		return;
 	}
 
 	const count = await fetchUnreadNewsCount();
-	console.log('Unread news count:', count);
 	
 	if (count > 0) {
 		showNotificationBadge(count);
@@ -88,7 +82,6 @@ async function updateNotificationBadge() {
  */
 function showNotificationBadge(count) {
 	if (!newsLink) {
-		console.warn('News link not found, cannot show notification badge');
 		return;
 	}
 	
@@ -103,7 +96,6 @@ function showNotificationBadge(count) {
 	}
 	
 	// Badge is just a dot, no text content needed
-	console.log('Badge shown (dot indicator)');
 }
 
 /**
@@ -134,7 +126,6 @@ function init() {
 	
 	// Listen for custom event when news is marked as read
 	document.addEventListener('news-marked-read', () => {
-		console.log('news-marked-read event received, updating badge');
 		updateNotificationBadge();
 	});
 }

@@ -457,8 +457,6 @@ function updateLastSeen(userId) {
  * @param {string} newsDate - The date of the latest news post they read (format: 'YYYY-MM-DD').
  */
 function updateLastReadNewsDate(userId, newsDate) {
-	console.log('[memberManager] updateLastReadNewsDate called with:', { userId, newsDate });
-	
 	// SQL query to update the last_read_news_date field
 	const query = `
 		UPDATE members
@@ -469,17 +467,13 @@ function updateLastReadNewsDate(userId, newsDate) {
 	try {
 		// Execute the query with the provided userId and newsDate
 		const result = db.run(query, [newsDate, userId]);
-		console.log('[memberManager] Update result:', result);
 
 		// Log if no changes were made
 		if (result.changes === 0) {
 			logEventsAndPrint(`No changes made when updating last_read_news_date for member of id "${userId}"!`, 'errLog.txt');
-		} else {
-			console.log('[memberManager] Successfully updated last_read_news_date, changes:', result.changes);
 		}
 	} catch (error) {
 		// Log the error for debugging purposes
-		console.error('[memberManager] Error updating last_read_news_date:', error);
 		logEventsAndPrint(`Error updating last_read_news_date for member of id "${userId}": ${error.message}`, 'errLog.txt');
 	}
 }
