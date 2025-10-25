@@ -48,6 +48,7 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate','UTCTime'];
  * This callback is called when the "Paste Game" button is pressed.
  * @param event - The event fired from the event listener
  */
+// eslint-disable-next-line no-unused-vars
 async function callbackPaste(event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.

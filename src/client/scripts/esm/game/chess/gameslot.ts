@@ -283,6 +283,7 @@ function removeCopyPasteGameListeners(): void {
 	document.removeEventListener('paste', pastegame.callbackPaste);
 }
 
+// eslint-disable-next-line no-unused-vars
 function callbackCopy(event: Event): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	copygame.copyGame(false);

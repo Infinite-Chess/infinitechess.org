@@ -1,8 +1,6 @@
 
 'use strict';
 
-/* global main sound */
-
 /**
  * The server injects this script directly into the html document
  * before serving that.
@@ -24,6 +22,7 @@ const htmlscript = (function() {
 	let loadingErrorOcurred = false;
 	let lostNetwork = false;
 
+	// eslint-disable-next-line no-unused-vars
 	function callback_LoadingError(event) {
 		// const type = event.type; // Event type: "error"/"abort"
 		// const target = event.target; // Element that triggered the event

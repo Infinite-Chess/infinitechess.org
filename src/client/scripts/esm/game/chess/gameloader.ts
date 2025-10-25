@@ -147,6 +147,7 @@ async function startLocalGame(options: {
 		// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
 		// additional: { worldBorder: BigInt(15) }
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
@@ -277,6 +278,7 @@ async function startEngineGame(options: {
 	 * OR rejects immediately when one of them rejects!
 	 */
 	Promise.all([graphicalPromise, enginePromise])
+		// eslint-disable-next-line no-unused-vars
 		.then((results: any[]) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
@@ -314,6 +316,7 @@ async function startBoardEditor(): Promise<void> {
 		 */
 		additional: { editor: true }
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
@@ -356,6 +359,7 @@ async function pasteGame(options: {
 		presetAnnotes: options.presetAnnotes,
 		additional: additionalToUse,
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 	
