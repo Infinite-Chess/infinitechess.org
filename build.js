@@ -47,6 +47,7 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/member.ts',
 	'src/client/scripts/esm/views/leaderboard.ts',
 	'src/client/scripts/esm/views/login.ts',
+	'src/client/scripts/esm/views/news.ts',
 	'src/client/scripts/esm/views/createaccount.js',
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
