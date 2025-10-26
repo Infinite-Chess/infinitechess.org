@@ -26,9 +26,9 @@ import guinavigation from '../gui/guinavigation.js';
 import organizedpieces from '../../../../../shared/chess/logic/organizedpieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import gameformulator from '../chess/gameformulator.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import pastegame from '../chess/pastegame.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -372,16 +372,7 @@ async function load(): Promise<void> {
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 	
-	// Get relevant position and specialRights information from longformat
-	let position: Map<CoordsKey, number>;
-	let specialRights: Set<CoordsKey>;
-	if (longformOut.position) {
-		position = longformOut.position;
-		specialRights = longformOut.state_global.specialRights!;
-	} else {
-		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
-		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
-	}
+	let { position, specialRights } = pastegame.getPositionAndSpecialRightsFromLongFormat(longformOut);
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
 	// If it contains no moves, then we skip all that, thus saving time

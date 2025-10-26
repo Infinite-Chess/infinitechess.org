@@ -148,15 +148,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 	delete longformOut.metadata.Result;
 	delete longformOut.metadata.Termination;
 
-	let position: Map<CoordsKey, number>;
-	let specialRights: Set<CoordsKey>;
-	if (longformOut.position) {
-		position = longformOut.position;
-		specialRights = longformOut.state_global.specialRights!;
-	} else {
-		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
-		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
-	}
+	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(longformOut);
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
@@ -226,7 +218,25 @@ function pasteGame(longformOut: LongFormatOut): void {
 }
 
 
+/**
+ * Utility for extracting position and specialRights from a LongFormatOut.
+ */
+function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey>; } {
+	// Get relevant position and specialRights information from longformat
+	if (longFormat.position && longFormat.state_global.specialRights) {
+		return {
+			position: longFormat.position,
+			specialRights: longFormat.state_global.specialRights,
+		};
+	} else {
+		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
+		return variant.getStartingPositionOfVariant(longFormat.metadata);
+	}
+}
+
+
 
 export default {
-	callbackPaste
+	callbackPaste,
+	getPositionAndSpecialRightsFromLongFormat,
 };
