@@ -204,6 +204,11 @@ function configureMiddleware(app) {
 
 	app.post('/api/update-checkmatelist', postCheckmateBeaten);
 
+	// News routes
+	app.get('/api/news/unread-count', getUnreadNewsCount);
+	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
+	app.post('/api/news/mark-read', markNewsAsRead);
+
 	app.get("/logout", handleLogout);
 
 	app.get("/command/:command", processCommand);
@@ -215,11 +220,6 @@ function configureMiddleware(app) {
 
 	// Leaderboard router
 	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
-
-	// News routes
-	app.get('/api/news/unread-count', getUnreadNewsCount);
-	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
-	app.post('/api/news/mark-read', markNewsAsRead);
 
 	app.post('/forgot-password', handleForgotPasswordRequest);
 	app.post('/reset-password', handleResetPassword);
