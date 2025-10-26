@@ -50,6 +50,7 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/news.ts',
 	'src/client/scripts/esm/views/createaccount.js',
 	'src/client/scripts/esm/views/resetpassword.ts',
+	'src/client/scripts/esm/views/guide.js',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}']);
