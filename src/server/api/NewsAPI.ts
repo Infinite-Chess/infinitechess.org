@@ -38,11 +38,8 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 		return;
 	}
 	
-	// Get the user's language preference
-	const language = getLanguageToServe(req);
-	
 	// Count unread news posts
-	const unreadCount = countUnreadNews(lastReadDate, language);
+	const unreadCount = countUnreadNews(lastReadDate);
 	
 	res.json({ count: unreadCount });
 }
@@ -52,9 +49,6 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
  * Returns { dates: string[] } with dates in YYYY-MM-DD format.
  */
 function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void {
-	// Get the user's language preference
-	const language = getLanguageToServe(req);
-	
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		// Not logged in - no unread news
 		res.json({ dates: [] });
@@ -75,7 +69,7 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 	}
 	
 	// Get unread news dates
-	const unreadDates = getUnreadNewsDates(lastReadDate, language);
+	const unreadDates = getUnreadNewsDates(lastReadDate);
 	
 	res.json({ dates: unreadDates });
 }
@@ -93,8 +87,7 @@ function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	const language = getLanguageToServe(req);
-	const latestNewsDate = getLatestNewsDate(language);
+	const latestNewsDate = getLatestNewsDate();
 	
 	if (latestNewsDate) {
 		updateLastReadNewsDate(userId, latestNewsDate);
