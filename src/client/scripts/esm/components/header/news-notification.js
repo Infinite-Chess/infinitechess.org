@@ -140,12 +140,7 @@ function init() {
 	});
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', init);
-} else {
-	init();
-}
+init();
 
 export default {
 	updateNotificationBadge,
