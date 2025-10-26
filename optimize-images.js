@@ -5,7 +5,7 @@
  * Steps:
  *
  * 1. Place new or updated images in `dev-utils/image-sources/`.
- *    The the same subdirectory structure will be maintained.
+ *    The same subdirectory structure will be maintained.
  *
  * 2. Run the command:
  *    npm run optimize-images
