@@ -173,4 +173,9 @@ function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves:
 
 export default {
 	compressGamefile,
+	GameToPosition,
+};
+
+export type {
+	SimplifiedGameState,
 };

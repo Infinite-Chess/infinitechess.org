@@ -27,6 +27,8 @@ import organizedpieces from '../../../../../shared/chess/logic/organizedpieces.j
 import arrows from '../rendering/arrows/arrows.js';
 import gameformulator from '../chess/gameformulator.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
+import gamecompressor from '../chess/gamecompressor.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -37,8 +39,11 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { _Move_Compact, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { Additional, Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { _Move_Compact, _Move_Out, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { SimplifiedGameState } from '../chess/gamecompressor.js';
+import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -372,27 +377,55 @@ async function load(): Promise<void> {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
 	}
 
-	const gamefile = gameslot.getGamefile()!;
+	// If the pasted game has moves, we constrcut a FullGame object and fast forward to the final position to paste in that
+	if (longformOut.moves && longformOut.moves.length !== 0) {
+		const state_global = {...longformOut.state_global, specialRights};
+		const variantOptions: VariantOptions = {
+			position,
+			state_global,
+			fullMove: longformOut.fullMove,
+			gameRules: longformOut.gameRules
+		};
+		const additional: Additional = { 
+			variantOptions,
+			moves: longformOut.moves.map( (m: _Move_Out) => {
+				const move: ServerGameMoveMessage = { compact: m.compact };
+				return move;
+			} ) 
+		};
+		const loadedGamefile = gamefile.initFullGame(longformOut.metadata, additional);
+		const gamestate: SimplifiedGameState = {
+			position,
+			state_global,
+			fullMove: longformOut.fullMove,
+			turnOrder: longformOut.gameRules.turnOrder
+		};
+		const new_gamestate = gamecompressor.GameToPosition(gamestate, loadedGamefile.boardsim.moves, loadedGamefile.boardsim.moves.length);
+		position = new_gamestate.position;
+		specialRights = new_gamestate.state_global.specialRights!;
+	}
+	
+	const thisGamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
-	const pieces = gamefile.boardsim.pieces;
+	const pieces = thisGamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 	// Remove all current pieces
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
-		queueRemovePiece(gamefile, edit, pieceToDelete);
+		queueRemovePiece(thisGamefile, edit, pieceToDelete);
 	};
 	// Add all new pieces as dictated by the pasted position
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
-		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRights(gamefile, edit, undefined, coords, pieceType);
-		else queueAddPiece(gamefile, edit, undefined, coords, pieceType);
+		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRights(thisGamefile, edit, undefined, coords, pieceType);
+		else queueAddPiece(thisGamefile, edit, undefined, coords, pieceType);
 	};
 
-	runEdit(gamefile, mesh, edit, true);
+	runEdit(thisGamefile, mesh, edit, true);
 	addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 
-	console.log(translations['copypaste'].loaded_from_clipboard);
+	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
 }
 
 
