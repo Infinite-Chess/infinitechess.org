@@ -322,11 +322,6 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 			if (coord.path!.length < newCoord.path.length) individualMoves[i] = coord; // First path shorter
 			else if (coord.path!.length > newCoord.path.length) individualMoves[i] = newCoord; // Second path shorter
 			else if (coord.path!.length === newCoord.path.length) { // Path are equal length
-				if (!boardsim.startSnapshot) {
-					// Center of play hasn't been calculated, choose a random one instead of curving towards the center.
-					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
-					return;
-				}
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
 				const coordsBD = bd.FromCoords(coords);
