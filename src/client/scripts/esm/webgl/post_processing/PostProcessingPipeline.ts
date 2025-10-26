@@ -33,17 +33,19 @@ export interface PostProcessPass {
 export class PostProcessingPipeline {
 	private gl: WebGL2RenderingContext;
 	private passes: PostProcessPass[] = [];
+	private maxSamples: number; // For MSAA
 
-	// --- Ping-Pong Framebuffers ---
+	// --- Multisampled FBO for the main scene render ---
+	private sceneFBO: WebGLFramebuffer;
+	private sceneColorBuffer: WebGLRenderbuffer;
+	private sceneDepthStencilBuffer: WebGLRenderbuffer;
+
+	// --- Ping-Pong Framebuffers for post-processing ---
 	// We use two FBOs to read from one while writing to the other.
 	private readFBO: WebGLFramebuffer;
 	private writeFBO: WebGLFramebuffer;
 	private readTexture: WebGLTexture;
 	private writeTexture: WebGLTexture;
-
-	// --- Depth/Stencil Buffer ---
-	// This is only needed for the initial 3D scene render.
-	private sceneDepthStencilBuffer: WebGLRenderbuffer;
 
 	// This will hold the default shader for the "zero effects" case.
 	private passThroughPass: PassThroughPass;
@@ -54,11 +56,14 @@ export class PostProcessingPipeline {
 		
 		// Get the pass-through shader from your manager.
 		this.passThroughPass = new PassThroughPass(programManager);
+		
+		// Get the max MSAA samples supported by the hardware.
+		this.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
 
 		const initialWidth = gl.canvas.width;
 		const initialHeight = gl.canvas.height;
 
-		// --- Create Framebuffers and Textures ---
+		// --- Create Framebuffers and Textures for Post-Processing ---
 		const { fbo: fboA, texture: textureA } = this.createFBO(initialWidth, initialHeight);
 		const { fbo: fboB, texture: textureB } = this.createFBO(initialWidth, initialHeight);
 		this.readFBO = fboA;
@@ -66,7 +71,9 @@ export class PostProcessingPipeline {
 		this.writeFBO = fboB;
 		this.writeTexture = textureB;
 
-		// --- Create Depth/Stencil Renderbuffer ---
+		// --- Create Multisampled FBO and Renderbuffers for Scene ---
+		this.sceneFBO = gl.createFramebuffer()!;
+		this.sceneColorBuffer = gl.createRenderbuffer()!;
 		this.sceneDepthStencilBuffer = gl.createRenderbuffer()!;
 		
 		// --- Initial sizing ---
@@ -75,6 +82,7 @@ export class PostProcessingPipeline {
 
 	/**
 	 * Creates a single Framebuffer Object and its corresponding color texture.
+	 * This is for the single-sampled post-processing passes.
 	 */
 	private createFBO(width: number, height: number): { fbo: WebGLFramebuffer, texture: WebGLTexture } {
 		const gl = this.gl;
@@ -122,16 +130,13 @@ export class PostProcessingPipeline {
 	public begin(): void {
 		const gl = this.gl;
 
-		// Bind the FBO we will write the 3D scene into.
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.writeFBO);
-
-		// **IMPORTANT**: Attach the depth/stencil buffer for the scene render.
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.sceneDepthStencilBuffer);
+		// Bind the MULTISAMPLED FBO we will write the 3D scene into.
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneFBO);
 
 		// Check if the framebuffer is complete.
 		const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 		if (status !== gl.FRAMEBUFFER_COMPLETE) {
-			console.error(`FBO is not complete: ${status}`);
+			console.error(`Scene FBO is not complete: ${status}`);
 		}
 
 		// Set the viewport to the FBO size and clear it.
@@ -151,15 +156,23 @@ export class PostProcessingPipeline {
 	public end(): void {
 		const gl = this.gl;
 
-		// **IMPORTANT**: Detach the depth/stencil buffer.
-		// Subsequent 2D quad passes do not need it and it can cause FBO-incomplete errors.
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
-		// We don't need depth testing or complex blending for drawing full-screen quads.
+		// --- RESOLVE MSAA ---
+		// Copy (blit) the anti-aliased scene from the multisampled FBO
+		// to the first single-sampled FBO in our ping-pong chain.
+		gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.sceneFBO);
+		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.readFBO);
+		gl.blitFramebuffer(
+			0, 0, gl.canvas.width, gl.canvas.height, // source rect
+			0, 0, gl.canvas.width, gl.canvas.height, // destination rect
+			gl.COLOR_BUFFER_BIT, // buffer to copy
+			gl.NEAREST           // filter (must be NEAREST for MSAA resolve)
+		);
+		// The anti-aliased scene is now in `readTexture`.
+
+		// Unbind framebuffers and prepare for 2D post-processing passes.
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.BLEND);
-
-		// Swap so the scene we just rendered is now in the 'read' FBO.
-		this.swapFBOs();
 
 		// If we have no added no passes, we'll use our pass-through shader.
 		// This creates a unified code path for all scenarios.
@@ -211,7 +224,7 @@ export class PostProcessingPipeline {
 	public resize(width: number, height: number): void {
 		const gl = this.gl;
 		
-		// Resize the color textures
+		// Resize the single-sampled color textures for post-processing
 		const textures = [this.readTexture, this.writeTexture];
 		for (const texture of textures) {
 			gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -219,12 +232,23 @@ export class PostProcessingPipeline {
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 		}
 		
-		// Resize the depth/stencil renderbuffer
+		// --- Resize the MULTISAMPLED renderbuffers for the main scene ---
+		// Color buffer
+		gl.bindRenderbuffer(gl.RENDERBUFFER, this.sceneColorBuffer);
+		gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.maxSamples, gl.RGBA8, width, height);
+
+		// Depth/stencil renderbuffer
 		gl.bindRenderbuffer(gl.RENDERBUFFER, this.sceneDepthStencilBuffer);
-		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, width, height);
+		gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.maxSamples, gl.DEPTH24_STENCIL8, width, height);
 		
+		// Attach the multisampled renderbuffers to the scene FBO
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneFBO);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this.sceneColorBuffer);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.sceneDepthStencilBuffer);
+
 		// Unbind to be clean
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
 }
