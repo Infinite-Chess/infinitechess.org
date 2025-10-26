@@ -265,14 +265,13 @@ function queueAddPiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | und
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
 
-function queueAddPieceWithSpecialRights(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number): void {
-	const coordsKey = coordutil.getKeyFromCoords(coords);
-	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
-	if (pieceHovered?.type === type && current) return; // do not do anything if new piece would be equal to old piece, and old piece already has special rights
+function queueAddPieceWithSpecialRightsForced(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number): void {
+	if (pieceHovered?.type === type) return; // do not do anything if new piece would be equal to old piece
 	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
-	state.createSpecialRightsState(edit, coordsKey, current, true);
+	const coordsKey = coordutil.getKeyFromCoords(coords);
+	state.createSpecialRightsState(edit, coordsKey, false, true);
 }
 
 function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
@@ -417,7 +416,7 @@ async function load(): Promise<void> {
 	// Add all new pieces as dictated by the pasted position
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
-		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRights(thisGamefile, edit, undefined, coords, pieceType);
+		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRightsForced(thisGamefile, edit, undefined, coords, pieceType);
 		else queueAddPiece(thisGamefile, edit, undefined, coords, pieceType);
 	};
 
