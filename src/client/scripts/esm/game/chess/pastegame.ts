@@ -51,14 +51,15 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate','UTCTime'];
 // eslint-disable-next-line no-unused-vars
 async function callbackPaste(event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
+
+	// Can't paste a game when the current gamefile isn't finished loading all the way.
+	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
+
 	// If we are in the board editor, let the board editor script handle this instead
 	if (boardeditor.areInBoardEditor()) {
 		boardeditor.load();
 		return;
 	}
-
-	// Can't paste a game when the current gamefile isn't finished loading all the way.
-	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame()) {
