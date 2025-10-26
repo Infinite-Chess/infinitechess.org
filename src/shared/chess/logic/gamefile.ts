@@ -97,7 +97,7 @@ type Board = {
 	editor: boolean
 
 	/**
-	 * Information about the beginning snaposhot of the game
+	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
 	*/
 	startSnapshot: Snapshot
 }
