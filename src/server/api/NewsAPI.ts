@@ -4,13 +4,14 @@
  * API endpoints for news-related functionality.
  */
 
-import { IdentifiedRequest } from '../types.js';
-import { Response } from 'express';
-// @ts-ignore - No type definitions available
+import type { IdentifiedRequest } from '../types.js';
+import type { Response } from 'express';
+
+// @ts-ignore
 import { getMemberDataByCriteria, updateLastReadNewsDate } from '../database/memberManager.js';
-import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
-// @ts-ignore - No type definitions available
+// @ts-ignore
 import { getLanguageToServe } from '../utility/translate.js';
+import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
 /**
  * API endpoint to get the count of unread news posts for the current user.
