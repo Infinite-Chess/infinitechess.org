@@ -8,7 +8,7 @@ import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
 // @ts-ignore
-import { getMemberDataByCriteria, updateLastReadNewsDate } from '../database/memberManager.js';
+import { getMemberDataByCriteria, MemberRecord, updateLastReadNewsDate } from '../database/memberManager.js';
 // @ts-ignore
 import { getLanguageToServe } from '../utility/translate.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
@@ -29,14 +29,15 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Get user's last read news date
-		const memberData = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+		const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+
+		const lastReadDate = memberData.last_read_news_date;
 		
-		if (!memberData) {
+		if (!lastReadDate) {
+			// For some reason the cell was null or undefined
 			res.json({ count: 0 });
 			return;
 		}
-
-		const lastReadDate = (memberData as any).last_read_news_date as string | null;
 		
 		// Get the user's language preference
 		const language = getLanguageToServe(req);
