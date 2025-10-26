@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="x-ua-compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title><%=t('play.guide.title')%></title>
+        <link rel='stylesheet' href='/css/header.css'>
+        <link rel='stylesheet' href='/css/guide.css'>
+        <link rel='stylesheet' href='/css/footer.css'>
+        <link rel="icon" href="/img/favicon/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script defer src="/scripts/esm/views/guide.js" type="module"></script>
+    </head>
+    <body>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
+        <main>
+            <div class="content">
+                <h1 class="center"><%=t('play.guide.title')%></h1>
+
+                <h2><%=t('play.guide.rules')%></h2>
+                <hr class="line-break">
+                <p><%=t('play.guide.rules_paragraphs.0')%></p>
+                <picture>
+                    <source srcset="/img/game/guide/promotionlines.avif" type="image/avif" />
+                    <source srcset="/img/game/guide/promotionlines.webp" type="image/webp" />
+                    <img loading="lazy" src="/img/game/guide/promotionlines.png" class="img-promotionlines">
+                </picture>
+                <ul>
+                    <li><%=t('play.guide.rules_paragraphs.1')%></li>
+                    <li><%=t('play.guide.rules_paragraphs.2.0')%><em><%=t('play.guide.rules_paragraphs.2.1')%></em><%=t('play.guide.rules_paragraphs.2.2')%></li>
+                </ul>
+                <p><%=t('play.guide.rules_paragraphs.3')%></p>
+                <p><%=t('play.guide.rules_paragraphs.4')%></p>
+                <div class="clear-float"></div>
+                
+                <h2><%=t('play.guide.careful_heading')%></h2>
+                <hr class="line-break">
+                <picture>
+                    <source srcset="/img/game/guide/kingrookfork.avif" type="image/avif" />
+                    <source srcset="/img/game/guide/kingrookfork.webp" type="image/webp" />
+                    <img loading="lazy" src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
+                </picture>
+                <p><%=t('play.guide.careful_paragraphs.0')%></p>
+                <p><%=t('play.guide.careful_paragraphs.1')%></p>
+                <div class="clear-float"></div>
+
+                <h2><%=t('play.guide.controls_heading')%></h2>
+                <hr class="line-break">
+                <p><%=t('play.guide.controls_paragraph')%></p>
+                <ul>
+                    <li><strong>WASD</strong><%=t('play.guide.keybinds.0')%></li>
+                    <li><strong><%=t('play.guide.keybinds.1.0')%></strong><%=t('play.guide.keybinds.1.1')%><strong><%=t('play.guide.keybinds.1.2')%></strong><%=t('play.guide.keybinds.1.3')%></li>
+                    <li><strong><%=t('play.guide.keybinds.2.0')%></strong><%=t('play.guide.keybinds.2.1')%></li>
+                    <picture>
+                        <source srcset="/img/game/guide/arrowindicators.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/arrowindicators.webp" type="image/webp" />
+                        <img loading="lazy" src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
+                    </picture>
+                    <li><strong><%=t('play.guide.keybinds.3.0')%></strong><%=t('play.guide.keybinds.3.1')%><strong><%=t('play.guide.keybinds.3.2')%></strong><%=t('play.guide.keybinds.3.3')%></li>
+                    <li><strong><%=t('play.guide.keybinds.4.0')%></strong><%=t('play.guide.keybinds.4.1')%></li>
+                    <li><strong>1</strong><%=t('play.guide.keybinds.5')%></li>
+                </ul>
+                <p><%=t('play.guide.controls_paragraph2')%></p>
+                <ul>
+                    <li><strong>R</strong><%=t('play.guide.keybinds_extra.0')%></li>
+                    <li><strong>N</strong><%=t('play.guide.keybinds_extra.1')%></li>
+                    <li><strong>M</strong><%=t('play.guide.keybinds_extra.2')%></li>
+                    <li><strong>P</strong><%=t('play.guide.keybinds_extra.3')%><strong>P</strong>.</li>
+                    <li><strong>`</strong><%=t('play.guide.keybinds_extra.4.0')%><strong>~</strong><%=t('play.guide.keybinds_extra.4.1')%></li>
+                </ul>
+                <div class="clear-float"></div>
+
+                <h2><%=t('play.guide.fairy_heading')%></h2>
+                <hr class="line-break">
+                <p><%=t('play.guide.fairy_paragraph')%></p>
+                <div id="fairy-pieces" class="fairy-pieces">
+                    <picture id="ch-img" class="img-fairymoveset">
+                        <source srcset="/img/game/guide/fairy/chancellor.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/chancellor.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/chancellor.png">
+                    </picture>
+                    <picture id="ar-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/archbishop.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/archbishop.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/archbishop.png">
+                    </picture>
+                    <picture id="am-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/amazon.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/amazon.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/amazon.png">
+                    </picture>
+                    <picture id="gu-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/guard.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/guard.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/guard.png">
+                    </picture>
+                    <picture id="ha-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/hawk.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/hawk.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/hawk.png">
+                    </picture>
+                    <picture id="ce-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/centaur.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/centaur.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/centaur.png">
+                    </picture>
+                    <picture id="nr-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/knightrider.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/knightrider.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/knightrider.png">
+                    </picture>
+                    <picture id="hu-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/huygen.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/huygen.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/huygen.png">
+                    </picture>
+                    <picture id="ob-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/obstacle.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/obstacle.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/obstacle.png">
+                    </picture>
+                    <picture id="vo-img" class="img-fairymoveset hidden">
+                        <source srcset="/img/game/guide/fairy/void.avif" type="image/avif" />
+                        <source srcset="/img/game/guide/fairy/void.webp" type="image/webp" />
+                        <img src="/img/game/guide/fairy/void.png">
+                    </picture>
+                    <div class="fairy-card-container">
+                        <div id="fairy-back" class="left-arrow opacity-0_25 unselectable">
+                            <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="46.08"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#000000"></path></g></svg>
+                        </div>
+                        <div id="fairy-card" class="fairy-card">
+                            <div class="space-1"></div>
+                            <div id="ch-desc" class="fairy-card-desc">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.chancellor.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.chancellor.description')%></p>
+                            </div>
+                            <div id="ar-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.archbishop.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.archbishop.description')%></p>
+                            </div>
+                            <div id="am-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.amazon.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.amazon.description')%></p>
+                            </div>
+                            <div id="gu-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.guard.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.guard.description')%></p>
+                            </div>
+                            <div id="ha-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.hawk.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.hawk.description')%></p>
+                            </div>
+                            <div id="ce-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.centaur.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.centaur.description')%></p>
+                            </div>
+                            <div id="nr-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.knightrider.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.knightrider.description')%></p>
+                            </div>
+                            <div id="hu-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.huygen.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.huygen.description')%></p>
+                            </div>
+                            <div id="ob-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.obstacle.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.obstacle.description')%></p>
+                            </div>
+                            <div id="vo-desc" class="fairy-card-desc hidden">
+                                <p class="fairy-card-title"><%=t('play.guide.pieces.void.name')%></p>
+                                <p class="fairy-card-description"><%=t('play.guide.pieces.void.description')%></p>
+                            </div>
+                            <div class="space-2"></div>
+                        </div>
+                        <div id="fairy-forward"  class="right-arrow unselectable">
+                            <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="46.08"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g transform="scale(-1, 1) translate(-1035,0)"><path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#000000"></path></g></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <h2><%=t('play.guide.editing_heading')%></h2>
+                <hr class="line-break">
+                <p><%=t('play.guide.editing_paragraphs.0.0')%><a href="https://docs.google.com/spreadsheets/d/1Eo1SIo2esUijZ3LQzGy8QLKTOVh77DdDQuqEBILec9I/edit?usp=sharing" target="_blank"><%=t('play.guide.editing_paragraphs.0.1')%></a><%=t('play.guide.editing_paragraphs.0.2')%></p>
+                <p><%=t('play.guide.editing_paragraphs.1')%></p>
+                <p><%=t('play.guide.editing_paragraphs.2')%></p>
+            </div>
+        </main>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+    </body>
+</html>
