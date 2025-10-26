@@ -55,7 +55,6 @@ import screenshake from "../rendering/screenshake.js";
 import { players } from "../../../../../shared/chess/util/typeutil.js";
 import { animateMove } from "./graphicalchanges.js";
 import { gl } from "../rendering/webgl.js";
-import boardeditor from "../misc/boardeditor.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 
@@ -287,8 +286,7 @@ function removeCopyPasteGameListeners(): void {
 // eslint-disable-next-line no-unused-vars
 function callbackCopy(event: Event): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
-	if (boardeditor.areInBoardEditor()) boardeditor.save(); // If we are in the board editor, let the board editor script handle this instead
-	else copygame.copyGame(false);
+	copygame.copyGame(false);
 }
 
 /**
