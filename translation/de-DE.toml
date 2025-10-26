@@ -1,7 +1,7 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "71"
-maintainer = "estetique_bs, tsevasa"
+version = "72"
+maintainer = "estetique_bs,tsevasa"
 
 [header]
 home = "Unendliches Schach"
@@ -239,6 +239,7 @@ hawk = {name="Falke", description="Springt genau 2 oder 3 Felder in jede Richtun
 centaur = {name="Zentaur", description="Zieht wie ein Springer und eine Wache zusammen."}
 knightrider = {name="Rösselsprinter", description="Springt wie ein Springer unendlich weit in eine Richtung, bis er blockiert wird."}
 huygen = {name="Huygen", description="Springt unendlich weit in eine der vier Kardinalrichtungen, wobei er nur Felder mit primzahligem Abstand vom Startfeld besucht, bis er blockiert wird."}
+rose = {name="Rose", description="Zirkulärer Rösselsprinter. Die Rose bewegt sich auf kreisförmigen Bahnen im Uhrzeigersinn oder gegen den Gegenuhrzeigersinn, indem sie wie ein Springer hüpft und sich nach jedem Hüpfen um 45 Grad dreht. Die Rose kann von anderen Figuren blockiert werden – deshalb ist das rote Feld im Bild für die Rose unerreichbar."}
 obstacle = {name="Hindernis", description="Eine neutrale Figur (von keinem Spieler kontrolliert), die die Bewegung blockiert, aber geschlagen werden kann."}
 void = {name="Leere", description="Eine neutrale Figur (nicht von einem Spieler kontrolliert), die die Abwesenheit eines Feldes darstellt. Figuren dürfen sich nicht durch oder auf sie bewegen."}
 
