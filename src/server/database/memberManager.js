@@ -50,12 +50,16 @@ function addUser(username, email, hashedPassword, is_verified, verification_code
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
 
-		// Step 2: Insert into the members table.
+		// Step 2: Set initial last_read_news_date to current date so new users don't see all news as unread
+		const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
+
+		// Step 3: Insert into the members table.
 		const membersQuery = `
 			INSERT INTO members (
 				user_id, username, email, hashed_password, 
-				is_verified, verification_code, is_verification_notified
-			) VALUES (?, ?, ?, ?, ?, ?, ?)
+				is_verified, verification_code, is_verification_notified,
+				last_read_news_date
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 		const params = [
 			userId,
@@ -64,11 +68,12 @@ function addUser(username, email, hashedPassword, is_verified, verification_code
 			userData.hashedPassword,
 			userData.is_verified,
 			userData.verification_code,
-			userData.is_verification_notified
+			userData.is_verification_notified,
+			currentDate
 		];
 		db.run(membersQuery, params);
 
-		// Step 3: Insert into the 'player_stats' table.
+		// Step 4: Insert into the 'player_stats' table.
 		const statsQuery = `INSERT INTO player_stats (user_id) VALUES (?)`;
 		db.run(statsQuery, [userId]);
 		
@@ -446,6 +451,32 @@ function updateLastSeen(userId) {
 	}
 }
 
+/**
+ * Updates the last_read_news_date column for a member based on their user ID.
+ * @param {number} userId - The user ID of the member.
+ * @param {string} newsDate - The date of the latest news post they read (format: 'YYYY-MM-DD').
+ */
+function updateLastReadNewsDate(userId, newsDate) {
+	// SQL query to update the last_read_news_date field
+	const query = `
+		UPDATE members
+		SET last_read_news_date = ?
+		WHERE user_id = ?
+	`;
+
+	try {
+		// Execute the query with the provided userId and newsDate
+		const result = db.run(query, [newsDate, userId]);
+
+		// Log if no changes were made
+		if (result.changes === 0) {
+			logEventsAndPrint(`No changes made when updating last_read_news_date for member of id "${userId}"!`, 'errLog.txt');
+		}
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEventsAndPrint(`Error updating last_read_news_date for member of id "${userId}": ${error.message}`, 'errLog.txt');
+	}
+}
 
 
 // Utility -----------------------------------------------------------------------------------
@@ -574,6 +605,7 @@ export {
 	updateMemberColumns,
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
+	updateLastReadNewsDate,
 	doesMemberOfIDExist,
 	getUserIdByUsername,
 	doesMemberOfUsernameExist,

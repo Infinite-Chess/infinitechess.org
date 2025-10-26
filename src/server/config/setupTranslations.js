@@ -274,12 +274,13 @@ function loadTranslationsFolder(folder) {
 					const parsedHTML = marked.parse((fs.existsSync(fullPath)
                         ? fs.readFileSync(fullPath)
                         : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-					const date = format(parseISO(filePath.replace('.md','')), 'PP', { // Change the number of P's to change how the date is phrased
+					const dateISO = filePath.replace('.md',''); // Store the ISO date (YYYY-MM-DD)
+					const date = format(parseISO(dateISO), 'PP', { // Change the number of P's to change how the date is phrased
 						timeZone: 'UTC-6', 
 						locale: localeMap[languageCode] 
 					});
 
-					return `<div class='news-post'>
+					return `<div class='news-post' data-date='${dateISO}'>
                                 <span class='news-post-date'>${date}</span>
                                 <div class='news-post-markdown'>${parsedHTML}</div>
                             </div>`;
