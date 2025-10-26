@@ -55,35 +55,16 @@ function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?:
 	// console.log("Basegame:", jsutil.deepCopyObject(basegame));
 	// console.log("Boardsim:", jsutil.deepCopyObject(boardsim));
 
-	let position: Map<CoordsKey, number>;
-	let state_global: GlobalGameState;
-	let fullMove: number;
-
-	if (boardsim.startSnapshot) {
-		position = jsutil.deepCopyObject(boardsim.startSnapshot.position);
-		state_global = jsutil.deepCopyObject(boardsim.startSnapshot.state_global);
-		fullMove = boardsim.startSnapshot.fullMove!;
-	} else { // editor game,   also copySinglePosition is false
-		if (!boardsim.editor) throw Error("startSnapshot missing in non-editor mode");
-		if (boardsim.moves.length > 0) throw Error("Should not be moves present in editor mode");
-		if (copySinglePosition) throw Error('copySinglePosition has no effect in editor mode');
-
-		position = organizedpieces.generatePositionFromPieces(boardsim.pieces);
-		// Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
-		state_global = jsutil.deepCopyObject(boardsim.state.global);
-		fullMove = 1;
-	}
-
 	/*
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
 	const gameRulesCopy = jsutil.deepCopyObject(basegame.gameRules);
 	let gamestate: SimplifiedGameState = {
-		position,
+		position: jsutil.deepCopyObject(boardsim.startSnapshot.position),
 		turnOrder: gameRulesCopy.turnOrder,
-		fullMove,
-		state_global,
+		fullMove: boardsim.startSnapshot.fullMove,
+		state_global: jsutil.deepCopyObject(boardsim.startSnapshot.state_global),
 	};
 
 	// Modify the state if we're applying moves to match a single position
@@ -173,4 +154,9 @@ function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves:
 
 export default {
 	compressGamefile,
+	GameToPosition,
+};
+
+export type {
+	SimplifiedGameState,
 };

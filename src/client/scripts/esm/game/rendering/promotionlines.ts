@@ -10,7 +10,6 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import boardtiles from './boardtiles.js';
 import gameslot from '../chess/gameslot.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import boardpos from './boardpos.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -48,9 +47,8 @@ function render(): void {
 		// In editor mode, the promotion lines extend to the edges of the screen
 		({ left, right } = camera.getRespectiveScreenBox());
 	} else {
-		const startPositionBox = gamefileutility.getStartingAreaBox(gamefile.boardsim); // Integer box
-		// Round the box away to encapsulate the entirity of all squares
-		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(startPositionBox);
+		// Round the start position box away to encapsulate the entirity of all squares
+		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(gamefile.boardsim.startSnapshot.box);
 		left = (bd.toNumber(bd.subtract(floatingBox.left, position[0])) - EXTRA_LENGTH) * scale;
 		right = (bd.toNumber(bd.subtract(floatingBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}

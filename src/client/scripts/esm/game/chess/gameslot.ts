@@ -260,8 +260,7 @@ function unloadGame(): void {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition(): void {
-	const startingAreaBox = gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim);
-	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startingAreaBox);
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(loadedGamefile!.boardsim.startSnapshot.box);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
 	const amount = bd.FromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x

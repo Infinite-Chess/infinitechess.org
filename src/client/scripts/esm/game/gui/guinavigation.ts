@@ -440,8 +440,7 @@ function callback_Expand(): void {
 }
 
 function recenter(): void {
-	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
-	Transition.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
+	Transition.zoomToCoordsBox(gameslot.getGamefile()!.boardsim.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================
