@@ -25,7 +25,7 @@ import icnconverter, { _Move_Out, LongFormatOut } from '../../../../../shared/ch
 import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
-
+import boardeditor from '../misc/boardeditor.js';
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
@@ -51,6 +51,12 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate','UTCTime'];
 // eslint-disable-next-line no-unused-vars
 async function callbackPaste(event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
+	// If we are in the board editor, let the board editor script handle this instead
+	if (boardeditor.areInBoardEditor()) {
+		boardeditor.load();
+		return;
+	}
+
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	

@@ -386,7 +386,6 @@ async function load(): Promise<void> {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRights(gamefile, edit, undefined, coords, pieceType);
 		else queueAddPiece(gamefile, edit, undefined, coords, pieceType);
-		
 	};
 
 	runEdit(gamefile, mesh, edit, true);
