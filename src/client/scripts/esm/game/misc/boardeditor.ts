@@ -366,7 +366,7 @@ async function load(): Promise<void> {
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 	
-	// Get relevant information from longformat
+	// Get relevant position and specialRights information from longformat
 	let position: Map<CoordsKey, number>;
 	let specialRights: Set<CoordsKey>;
 	if (longformOut.position) {
@@ -377,7 +377,7 @@ async function load(): Promise<void> {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
 	}
 
-	// If the pasted game has moves, we constrcut a FullGame object and fast forward to the final position to paste in that
+	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
 	if (longformOut.moves && longformOut.moves.length !== 0) {
 		const state_global = {...longformOut.state_global, specialRights};
 		const variantOptions: VariantOptions = {
