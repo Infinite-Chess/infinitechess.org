@@ -313,7 +313,7 @@ function migrateAddLastReadNewsDate(): void {
 		db.run('ALTER TABLE members ADD COLUMN last_read_news_date TEXT');
 		
 		// Set default value to current date for existing users
-		const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
+		const currentDate = new Date().toISOString().split('T')[0]!; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
 		console.log(`Setting last_read_news_date to ${currentDate} for existing users...`);
 		db.run('UPDATE members SET last_read_news_date = ? WHERE last_read_news_date IS NULL', [currentDate]);
 		
