@@ -341,6 +341,11 @@ function save(): void {
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 
+/**
+ * pastegame loads in a new position by creating a new gamefile and loading it
+ * which doesn't work for the board editor.
+ * This function simply applies an edit to the position of the pieces on the board.
+ */
 async function load(): Promise<void> {
 	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
 
@@ -378,6 +383,7 @@ async function load(): Promise<void> {
 	}
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
+	// If it contains no moves, then we skip all that, thus saving time
 	if (longformOut.moves && longformOut.moves.length !== 0) {
 		const state_global = {...longformOut.state_global, specialRights};
 		const variantOptions: VariantOptions = {
@@ -410,30 +416,31 @@ async function load(): Promise<void> {
 	const pieces = thisGamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
-	// Remove all current pieces
+	// Remove all current pieces from position
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
 		queueRemovePiece(thisGamefile, edit, pieceToDelete);
 	};
 
 	// Keep track of all squares where special rights got removed
-	const specialRightsRemoved : { [key: string]: number } = edit.state.global.reduce((acc, item, index) => {
+	const specialRightsRemoved = edit.state.global.reduce<{ [key: string]: number }>((acc, item, index) => {
 		if (item.type === 'specialrights' && !item.future) acc[item.coordsKey] = index;
 		return acc;
 	}, {});
+	// This set will keep track of the problematic indices in edit.state.global where special rights got unnecessarily removed
 	const unnecessaryGlobalStateChangeIndices = new Set<number>();
 
 	// Add all new pieces as dictated by the pasted position
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		if (specialRights.has(coordKey)) {
-			if (coordKey in specialRightsRemoved) unnecessaryGlobalStateChangeIndices.add(specialRightsRemoved[coordKey]);
+			if (coordKey in specialRightsRemoved) unnecessaryGlobalStateChangeIndices.add(specialRightsRemoved[coordKey]!);
 			queueAddPieceWithSpecialRights(thisGamefile, edit, undefined, coords, pieceType);
 		}
 		else queueAddPiece(thisGamefile, edit, undefined, coords, pieceType);
 	};
 
-	// Filter out all unnecessary special rights removals from first step
+	// Filter out all unnecessary special rights removals from the edit from the first step
 	for (let i = Math.max(...unnecessaryGlobalStateChangeIndices); i >= 0; i--) {
 		if (unnecessaryGlobalStateChangeIndices.has(i)) {
 			edit.state.global.splice(i, 1);
