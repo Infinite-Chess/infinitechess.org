@@ -265,13 +265,14 @@ function queueAddPiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | und
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
 
-function queueAddPieceWithSpecialRightsForced(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number): void {
-	if (pieceHovered?.type === type) return; // do not do anything if new piece would be equal to old piece
+function queueAddPieceWithSpecialRights(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number): void {
+	const coordsKey = coordutil.getKeyFromCoords(coords);
+	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	if (pieceHovered?.type === type && current) return; // do not do anything if new piece would be equal to old piece, and old piece already has special rights
 	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
-	const coordsKey = coordutil.getKeyFromCoords(coords);
-	state.createSpecialRightsState(edit, coordsKey, false, true);
+	state.createSpecialRightsState(edit, coordsKey, current, true);
 }
 
 function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
@@ -408,17 +409,36 @@ async function load(): Promise<void> {
 	const mesh = gameslot.getMesh()!;
 	const pieces = thisGamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
 	// Remove all current pieces
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
 		queueRemovePiece(thisGamefile, edit, pieceToDelete);
 	};
+
+	// Keep track of all squares where special rights got removed
+	const specialRightsRemoved : { [key: string]: number } = edit.state.global.reduce((acc, item, index) => {
+		if (item.type === 'specialrights' && !item.future) acc[item.coordsKey] = index;
+		return acc;
+	}, {});
+	const unnecessaryGlobalStateChangeIndices = new Set<number>();
+
 	// Add all new pieces as dictated by the pasted position
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
-		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRightsForced(thisGamefile, edit, undefined, coords, pieceType);
+		if (specialRights.has(coordKey)) {
+			if (coordKey in specialRightsRemoved) unnecessaryGlobalStateChangeIndices.add(specialRightsRemoved[coordKey]);
+			queueAddPieceWithSpecialRights(thisGamefile, edit, undefined, coords, pieceType);
+		}
 		else queueAddPiece(thisGamefile, edit, undefined, coords, pieceType);
 	};
+
+	// Filter out all unnecessary special rights removals from first step
+	for (let i = Math.max(...unnecessaryGlobalStateChangeIndices); i >= 0; i--) {
+		if (unnecessaryGlobalStateChangeIndices.has(i)) {
+			edit.state.global.splice(i, 1);
+		}
+	}
 
 	runEdit(thisGamefile, mesh, edit, true);
 	addEditToHistory(edit);
