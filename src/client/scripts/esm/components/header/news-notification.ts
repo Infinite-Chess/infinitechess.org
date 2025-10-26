@@ -1,4 +1,4 @@
-// src/client/scripts/esm/components/header/news-notification.js
+// src/client/scripts/esm/components/header/news-notification.ts
 
 /**
  * This script handles the unread news notification badge in the header.
@@ -8,14 +8,14 @@
 
 import validatorama from '../../util/validatorama.js';
 
-const newsLink = document.querySelector('a[href*="/news"]');
-let notificationBadge = null;
+const newsLink = document.querySelector<HTMLAnchorElement>('a[href*="/news"]');
+let notificationBadge: HTMLSpanElement | null = null;
 
 /**
  * Creates and returns the notification badge element
- * @param {number} count - The number of unread news posts
+ * @param count - The number of unread news posts
  */
-function createNotificationBadge(count) {
+function createNotificationBadge(count: number): HTMLSpanElement {
 	const badge = document.createElement('span');
 	badge.className = 'news-notification-badge';
 	
@@ -48,7 +48,7 @@ function createNotificationBadge(count) {
 /**
  * Fetches the unread news count from the server
  */
-async function fetchUnreadNewsCount() {
+async function fetchUnreadNewsCount(): Promise<number> {
 	try {
 		const response = await fetch('/api/news/unread-count', {
 			headers: {
@@ -61,7 +61,7 @@ async function fetchUnreadNewsCount() {
 			return 0;
 		}
 		
-		const data = await response.json();
+		const data = await response.json() as { count: number };
 		return data.count || 0;
 	} catch (error) {
 		console.error('Error fetching unread news count:', error);
@@ -72,7 +72,7 @@ async function fetchUnreadNewsCount() {
 /**
  * Updates the notification badge display
  */
-async function updateNotificationBadge() {
+async function updateNotificationBadge(): Promise<void> {
 	// Only show badge if user is logged in
 	const username = validatorama.getOurUsername();
 	if (!username) {
@@ -91,9 +91,9 @@ async function updateNotificationBadge() {
 
 /**
  * Shows the notification badge with the given count
- * @param {number} count - The number of unread news posts
+ * @param count - The number of unread news posts
  */
-function showNotificationBadge(count) {
+function showNotificationBadge(count: number): void {
 	if (!newsLink) {
 		return;
 	}
@@ -111,7 +111,7 @@ function showNotificationBadge(count) {
 /**
  * Removes the notification badge
  */
-function removeNotificationBadge() {
+function removeNotificationBadge(): void {
 	if (notificationBadge && notificationBadge.parentNode) {
 		notificationBadge.remove();
 		notificationBadge = null;
@@ -121,7 +121,7 @@ function removeNotificationBadge() {
 /**
  * Initializes the news notification feature
  */
-function init() {
+function init(): void {
 	if (!newsLink) {
 		console.warn('News link not found in header');
 		return;
