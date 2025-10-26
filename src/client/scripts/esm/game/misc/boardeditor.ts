@@ -98,6 +98,7 @@ function initBoardEditor(): void {
 
 function closeBoardEditor(): void {
 	inBoardEditor = false;
+	specialrighthighlights.disable();
 	drawing = false;
 	addingSpecialRights = undefined;
 	thisEdit = undefined;
