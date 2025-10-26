@@ -155,6 +155,7 @@ nav a {
     padding: 0 calc(var(--header-link-max-padding)) 0;
 	white-space: nowrap; /* Prevent text from wrapping */
 	overflow: clip; /* Hide overflow if needed. FIREFOX NEEDS THIS TO BE "CLIP" */
+	position: relative; /* Required for correct absolute positioning of news notification badge */
 }
 
 nav span {

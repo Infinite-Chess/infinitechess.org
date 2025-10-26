@@ -98,12 +98,6 @@ function showNotificationBadge(count) {
 		return;
 	}
 	
-	// Make sure the news link has position relative for absolute positioning and overflow visible
-	if (getComputedStyle(newsLink).position === 'static') {
-		newsLink.style.position = 'relative';
-	}
-	newsLink.style.overflow = 'visible';
-	
 	if (!notificationBadge) {
 		notificationBadge = createNotificationBadge(count);
 		newsLink.appendChild(notificationBadge);
