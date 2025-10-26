@@ -27,29 +27,24 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	try {
-		// Get user's last read news date
-		const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+	// Get user's last read news date
+	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-		const lastReadDate = memberData.last_read_news_date;
-		
-		if (!lastReadDate) {
-			// For some reason the cell was null or undefined
-			res.json({ count: 0 });
-			return;
-		}
-		
-		// Get the user's language preference
-		const language = getLanguageToServe(req);
-		
-		// Count unread news posts
-		const unreadCount = countUnreadNews(lastReadDate, language);
-		
-		res.json({ count: unreadCount });
-	} catch (error) {
-		console.error('Error getting unread news count:', error);
-		res.status(500).json({ count: 0 });
+	const lastReadDate = memberData.last_read_news_date;
+
+	if (!lastReadDate) {
+		// For some reason the cell was null or undefined
+		res.json({ count: 0 });
+		return;
 	}
+	
+	// Get the user's language preference
+	const language = getLanguageToServe(req);
+	
+	// Count unread news posts
+	const unreadCount = countUnreadNews(lastReadDate, language);
+	
+	res.json({ count: unreadCount });
 }
 
 /**
@@ -68,25 +63,20 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 
 	const userId = req.memberInfo.user_id;
 
-	try {
-		// Get user's last read news date
-		const memberData = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
-		
-		if (!memberData) {
-			res.json({ dates: [] });
-			return;
-		}
-
-		const lastReadDate = (memberData as any).last_read_news_date as string | null;
-		
-		// Get unread news dates
-		const unreadDates = getUnreadNewsDates(lastReadDate, language);
-		
-		res.json({ dates: unreadDates });
-	} catch (error) {
-		console.error('Error getting unread news dates:', error);
-		res.status(500).json({ dates: [] });
+	// Get user's last read news date
+	const memberData = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+	
+	if (!memberData) {
+		res.json({ dates: [] });
+		return;
 	}
+
+	const lastReadDate = (memberData as any).last_read_news_date as string | null;
+	
+	// Get unread news dates
+	const unreadDates = getUnreadNewsDates(lastReadDate, language);
+	
+	res.json({ dates: unreadDates });
 }
 
 /**
@@ -102,19 +92,14 @@ function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	try {
-		const language = getLanguageToServe(req);
-		const latestNewsDate = getLatestNewsDate(language);
-		
-		if (latestNewsDate) {
-			updateLastReadNewsDate(userId, latestNewsDate);
-		}
-		
-		res.status(200).json({ success: true });
-	} catch (error) {
-		console.error('Error marking news as read:', error);
-		res.status(500).json({ success: false, error: 'Internal server error' });
+	const language = getLanguageToServe(req);
+	const latestNewsDate = getLatestNewsDate(language);
+	
+	if (latestNewsDate) {
+		updateLastReadNewsDate(userId, latestNewsDate);
 	}
+	
+	res.status(200).json({ success: true });
 }
 
 export {
