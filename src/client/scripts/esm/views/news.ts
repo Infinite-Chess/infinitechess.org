@@ -135,10 +135,7 @@ async function init(): Promise<void> {
 			addNewBadgesToUnreadPosts(unreadDates);
 		}
 		
-		// Mark news as read after a short delay to ensure user sees the page
-		setTimeout(() => {
-			markNewsAsRead();
-		}, 1000);
+		markNewsAsRead();
 	}
 }
 
