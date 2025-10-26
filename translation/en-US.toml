@@ -239,6 +239,7 @@ hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction.
 centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
 knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
 huygen = {name="Huygen", description="Hops infinitely in one of the four cardinal directions, visiting only squares with a prime numbered distance from its start square, until obstructed."}
+rose = {name="Rose", description="Circular knightrider. It moves along circular trajectories by hopping like a knight and turning in the same direction after every move. It can be blocked by other pieces, which is why the red square in the image is unreachable for the rose."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
