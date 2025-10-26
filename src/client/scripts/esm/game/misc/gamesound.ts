@@ -276,7 +276,7 @@ function calculateReverb(distanceMoved: BigDecimal): { reverbWetLevel: number, r
 }
 
 function playGamestart(): SoundObject | undefined {
-	return playSoundEffect('gamestart', { volume: 0.4 });
+	return playSoundEffect('gamestart', { volume: 0.4, bypassDownsampler: true });
 }
 
 function playWin(delay?: number): SoundObject | undefined {
