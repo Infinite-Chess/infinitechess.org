@@ -64,14 +64,15 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
-	
-	if (!memberData) {
+	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+
+	const lastReadDate = memberData.last_read_news_date;
+
+	if (!lastReadDate) {
+		// For some reason the cell was null or undefined
 		res.json({ dates: [] });
 		return;
 	}
-
-	const lastReadDate = (memberData as any).last_read_news_date as string | null;
 	
 	// Get unread news dates
 	const unreadDates = getUnreadNewsDates(lastReadDate, language);
