@@ -9,7 +9,7 @@
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import icnconverter, { _Move_Compact } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 import state from '../../../../../shared/chess/logic/state.js';
@@ -25,17 +25,20 @@ import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import guinavigation from '../gui/guinavigation.js';
 import organizedpieces from '../../../../../shared/chess/logic/organizedpieces.js';
 import arrows from '../rendering/arrows/arrows.js';
+import gameformulator from '../chess/gameformulator.js';
+import variant from '../../../../../shared/chess/variants/variant.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { _Move_Compact, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -44,7 +47,7 @@ type Tool = (typeof validTools)[number];
 // Variables --------------------------------------------------------------------
 
 /** All tools that can be used in the board editor. */
-const validTools = ["normal", "placer", "eraser", "selector", "gamerules", "specialrights"] as const;
+const validTools = ["normal", "placer", "eraser", "gamerules", "specialrights"] as const;
 /** All tools that support drawing. */
 const drawingTools: Tool[] = ["placer", "eraser", "specialrights"];
 
@@ -257,6 +260,16 @@ function queueAddPiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | und
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
 
+function queueAddPieceWithSpecialRights(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number): void {
+	const coordsKey = coordutil.getKeyFromCoords(coords);
+	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	if (pieceHovered?.type === type && current) return; // do not do anything if new piece would be equal to old piece, and old piece already has special rights
+	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
+	const piece: Piece = { type, coords, index:-1 };
+	boardchanges.queueAddPiece(edit.changes, piece);
+	state.createSpecialRightsState(edit, coordsKey, current, true);
+}
+
 function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
 	if (!pieceHovered) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
@@ -314,6 +327,7 @@ function redo(): void {
  * This function uses the position of pieces on the board.
  */
 function save(): void {
+	if (!inBoardEditor) throw Error("Cannot save position when we're not using the board editor.");
 	const gamefile = gameslot.getGamefile()!;
 	const pieceIterator = organizedpieces.getPieceIterable(gamefile.boardsim.pieces);
 	const positionString = icnconverter.getShortFormPosition(pieceIterator, gamefile.boardsim.state.global.specialRights);
@@ -322,9 +336,64 @@ function save(): void {
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 
-function load(): void {
-	// Need to implement position loading and also fix pasting logic
-	statustext.showStatus("Loading not yet implemented", true);
+async function load(): Promise<void> {
+	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
+
+	// Do we have clipboard permission?
+	let clipboard: string;
+	try {
+		clipboard = await navigator.clipboard.readText();
+	} catch (error) {
+		const message: string = translations['copypaste'].clipboard_denied;
+		return statustext.showStatus((message + "\n" + error), true);
+	}
+
+	// Convert clipboard text to object
+	let longformOut: LongFormatOut;
+	try {
+		longformOut = icnconverter.ShortToLong_Format(clipboard);
+	} catch (e) {
+		console.error(e);
+		statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
+		return;
+	}
+
+	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
+	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
+	
+	// Get relevant information from longformat
+	let position: Map<CoordsKey, number>;
+	let specialRights: Set<CoordsKey>;
+	if (longformOut.position) {
+		position = longformOut.position;
+		specialRights = longformOut.state_global.specialRights!;
+	} else {
+		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
+		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
+	}
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const pieces = gamefile.boardsim.pieces;
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	// Remove all current pieces
+	for (const idx of pieces.coords.values()) {
+		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
+		queueRemovePiece(gamefile, edit, pieceToDelete);
+	};
+	// Add all new pieces as dictated by the pasted position
+	for (const [coordKey, pieceType] of position.entries()) {
+		const coords = coordutil.getCoordsFromKey(coordKey);
+		if (specialRights.has(coordKey)) queueAddPieceWithSpecialRights(gamefile, edit, undefined, coords, pieceType);
+		else queueAddPiece(gamefile, edit, undefined, coords, pieceType);
+		
+	};
+
+	runEdit(gamefile, mesh, edit, true);
+	addEditToHistory(edit);
+	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+
+	console.log(translations['copypaste'].loaded_from_clipboard);
 }
 
 
