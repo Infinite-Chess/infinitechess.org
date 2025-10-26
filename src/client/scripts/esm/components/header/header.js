@@ -13,7 +13,7 @@ import spacing from './spacing.js';
 import currpage_greyer from './currpage-greyer.js';
 import settings from './settings.js';
 import tooltips from '../../util/tooltips.js'; // This should be imported on EVERY page!
-import newsNotification from './news-notification.ts'; // Handles unread news badge
+import newsNotification from './news-notification.js'; // Handles unread news badge
 /* eslint-enable no-unused-vars */
 
 
