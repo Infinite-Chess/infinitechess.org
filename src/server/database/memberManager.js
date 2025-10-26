@@ -51,7 +51,7 @@ function addUser(username, email, hashedPassword, is_verified, verification_code
 		const userId = genUniqueUserID();
 
 		// Step 2: Set initial last_read_news_date to current date so new users don't see all news as unread
-		const currentDate = new Date().toISOString();
+		const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
 
 		// Step 3: Insert into the members table.
 		const membersQuery = `
