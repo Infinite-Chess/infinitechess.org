@@ -29,10 +29,10 @@ function createNotificationBadge(count) {
 		right: 4px;
 		background-color: #ff4444;
 		color: white;
-		border-radius: 10px;
-		min-width: 16px;
+		border-radius: 50%;
+		width: 16px;
 		height: 16px;
-		padding: 0 4px;
+		padding: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
