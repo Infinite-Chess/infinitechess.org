@@ -288,6 +288,7 @@ function clearAll(): void {
 
 function undo(): void {
 	if (!inBoardEditor) throw Error("Cannot undo edit when we're not using the board editor.");
+	if (thisEdit !== undefined) return; // do not allow undoing or redoing while currently making an edit
 	if (indexOfThisEdit! <= 0) return;
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
@@ -298,6 +299,7 @@ function undo(): void {
 
 function redo(): void {
 	if (!inBoardEditor) throw Error("Cannot redo edit when we're not using the board editor.");
+	if (thisEdit !== undefined) return; // do not allow undoing or redoing while currently making an edit
 	if (indexOfThisEdit! >= edits!.length) return;
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
