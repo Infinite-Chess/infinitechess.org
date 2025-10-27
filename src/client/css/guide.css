@@ -100,9 +100,12 @@ main {
     margin: 0.5em 0 1em;
 }
 
+.content {
+	line-height: 1.2;
+}
+
 .content p {
     margin: 1.5em 0;
-    line-height: 1.6;
 }
 
 .content li {
