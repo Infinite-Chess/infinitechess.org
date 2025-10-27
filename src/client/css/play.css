@@ -1531,25 +1531,20 @@ svg.collapse {
     cursor: pointer;
 }
 
-.win-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
+.win-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* space between items */
 }
 
-.win-table th,
-.win-table td {
-    border-bottom: 1px solid #ddd;
-    padding: 6px 4px;
+.win-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* space between checkbox and label */
 }
 
-.win-table th {
-    background-color: #f2f2f2;
-    font-weight: 600;
-}
-
-.win-table input[type="checkbox"] {
-    transform: scale(1.1);
+.win-item input[type="checkbox"] {
+    transform: scale(1.1); /* slightly larger checkbox */
     cursor: pointer;
 }
 

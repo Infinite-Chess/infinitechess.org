@@ -40,23 +40,17 @@ const element_gamerulesMoveruleMax = document.getElementById("rules-moverule-max
 const element_gamerulesPromotionranksWhite = document.getElementById("rules-promotionranks-white")! as HTMLInputElement;
 const element_gamerulesPromotionranksBlack = document.getElementById("rules-promotionranks-black")! as HTMLInputElement;
 const element_gamerulesPromotionpieces = document.getElementById("rules-promotionpieces")! as HTMLInputElement;
-const element_gamerulesCheckmateWhite = document.getElementById("rules-checkmate-white")! as HTMLInputElement;
-const element_gamerulesCheckmateBlack = document.getElementById("rules-checkmate-black")! as HTMLInputElement;
-const element_gamerulesRoyalcaptureWhite = document.getElementById("rules-royalcapture-white")! as HTMLInputElement;
-const element_gamerulesRoyalcaptureBlack = document.getElementById("rules-royalcapture-black")! as HTMLInputElement;
-const element_gamerulesAllroyalscapturedWhite = document.getElementById("rules-allroyalscaptured-white")! as HTMLInputElement;
-const element_gamerulesAllroyalscapturedBlack = document.getElementById("rules-allroyalscaptured-black")! as HTMLInputElement;
-const element_gamerulesAllpiecescapturedWhite = document.getElementById("rules-allpiecescaptured-white")! as HTMLInputElement;
-const element_gamerulesAllpiecescapturedBlack = document.getElementById("rules-allpiecescaptured-black")! as HTMLInputElement;
+const element_gamerulesCheckmate = document.getElementById("rules-checkmate")! as HTMLInputElement;
+const element_gamerulesRoyalcapture = document.getElementById("rules-royalcapture")! as HTMLInputElement;
+const element_gamerulesAllroyalscaptured = document.getElementById("rules-allroyalscaptured")! as HTMLInputElement;
+const element_gamerulesAllpiecescaptured = document.getElementById("rules-allpiecescaptured")! as HTMLInputElement;
 
 const elements_gamerulesSelectionList : HTMLInputElement[] = [
 	element_gamerulesWhite, element_gamerulesBlack, element_gamerulesEnPassantX, element_gamerulesEnPassantY,
 	element_gamerulesMoveruleCurrent, element_gamerulesMoveruleMax,
 	element_gamerulesPromotionranksWhite, element_gamerulesPromotionranksBlack, element_gamerulesPromotionpieces,
-	element_gamerulesCheckmateWhite, element_gamerulesCheckmateBlack,
-	element_gamerulesRoyalcaptureWhite, element_gamerulesRoyalcaptureBlack,
-	element_gamerulesAllroyalscapturedWhite, element_gamerulesAllroyalscapturedBlack,
-	element_gamerulesAllpiecescapturedWhite, element_gamerulesAllpiecescapturedBlack
+	element_gamerulesCheckmate, element_gamerulesRoyalcapture,
+	element_gamerulesAllroyalscaptured, element_gamerulesAllpiecescaptured
 ];
 
 const element_playerContainers: Map<Player, Element> = new Map();
@@ -333,19 +327,12 @@ function readGameRules() : GameRulesGUIinfo {
 	}
 
 	// win conditions
-	const winConditionsWhite : string[] = [];
-	if (element_gamerulesCheckmateWhite.checked) winConditionsWhite.push("checkmate");
-	if (element_gamerulesRoyalcaptureWhite.checked) winConditionsWhite.push("royalcapture");
-	if (element_gamerulesAllroyalscapturedWhite.checked) winConditionsWhite.push("allroyalscaptured");
-	if (element_gamerulesAllpiecescapturedWhite.checked) winConditionsWhite.push("allpiecescaptured");
-
-	const winConditionsBlack : string[] = [];
-	if (element_gamerulesCheckmateBlack.checked) winConditionsBlack.push("checkmate");
-	if (element_gamerulesRoyalcaptureBlack.checked) winConditionsBlack.push("royalcapture");
-	if (element_gamerulesAllroyalscapturedBlack.checked) winConditionsBlack.push("allroyalscaptured");
-	if (element_gamerulesAllpiecescapturedBlack.checked) winConditionsBlack.push("allpiecescaptured");
-
-	const winConditions = {white: winConditionsWhite, black: winConditionsBlack};
+	const winConditions : string[] = [];
+	if (element_gamerulesCheckmate.checked) winConditions.push("checkmate");
+	if (element_gamerulesRoyalcapture.checked) winConditions.push("royalcapture");
+	if (element_gamerulesAllroyalscaptured.checked) winConditions.push("allroyalscaptured");
+	if (element_gamerulesAllpiecescaptured.checked) winConditions.push("allpiecescaptured");
+	if (winConditions.length === 0) winConditions.push("checkmate");
 
 	const gameRules : GameRulesGUIinfo = {
 		playerToMove,
@@ -393,14 +380,10 @@ function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
 		element_gamerulesPromotionpieces.value = gamerulesGUIinfo.promotionsAllowed.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
 	}
 
-	element_gamerulesCheckmateWhite.checked = gamerulesGUIinfo.winConditions.white.includes("checkmate");
-	element_gamerulesRoyalcaptureWhite.checked = gamerulesGUIinfo.winConditions.white.includes("royalcapture");
-	element_gamerulesAllroyalscapturedWhite.checked = gamerulesGUIinfo.winConditions.white.includes("allroyalscaptured");
-	element_gamerulesAllpiecescapturedWhite.checked = gamerulesGUIinfo.winConditions.white.includes("allpiecescaptured");
-	element_gamerulesCheckmateBlack.checked = gamerulesGUIinfo.winConditions.black.includes("checkmate");
-	element_gamerulesRoyalcaptureBlack.checked = gamerulesGUIinfo.winConditions.black.includes("royalcapture");
-	element_gamerulesAllroyalscapturedBlack.checked = gamerulesGUIinfo.winConditions.black.includes("allroyalscaptured");
-	element_gamerulesAllpiecescapturedBlack.checked = gamerulesGUIinfo.winConditions.black.includes("allpiecescaptured");
+	element_gamerulesCheckmate.checked = gamerulesGUIinfo.winConditions.includes("checkmate");
+	element_gamerulesRoyalcapture.checked = gamerulesGUIinfo.winConditions.includes("royalcapture");
+	element_gamerulesAllroyalscaptured.checked = gamerulesGUIinfo.winConditions.includes("allroyalscaptured");
+	element_gamerulesAllpiecescaptured.checked = gamerulesGUIinfo.winConditions.includes("allpiecescaptured");
 }
 
 /** Deselects the input boxes when pressing Enter */

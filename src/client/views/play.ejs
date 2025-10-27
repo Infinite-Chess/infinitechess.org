@@ -664,37 +664,24 @@
 
                         <div class="rules-section">
                             <label class="unselectable">Win conditions:</label>
-                            <table class="win-table">
-                                <thead>
-                                    <tr>
-                                        <th class="unselectable">Condition</th>
-                                        <th class="unselectable">White</th>
-                                        <th class="unselectable">Black</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="unselectable">Checkmate</td>
-                                        <td><input type="checkbox" id="rules-checkmate-white" checked></td>
-                                        <td><input type="checkbox" id="rules-checkmate-black" checked></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="unselectable">Royal capture</td>
-                                        <td><input type="checkbox" id="rules-royalcapture-white"></td>
-                                        <td><input type="checkbox" id="rules-royalcapture-black"></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="unselectable">All royals captured</td>
-                                        <td><input type="checkbox" id="rules-allroyalscaptured-white"></td>
-                                        <td><input type="checkbox" id="rules-allroyalscaptured-black"></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="unselectable">All pieces captured</td>
-                                        <td><input type="checkbox" id="rules-allpiecescaptured-white"></td>
-                                        <td><input type="checkbox" id="rules-allpiecescaptured-black"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="win-list">
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-checkmate" checked>
+                                    <label for="rules-checkmate" class="unselectable">Checkmate</label>
+                                </div>
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-royalcapture">
+                                    <label for="rules-royalcapture" class="unselectable">Royal capture</label>
+                                </div>
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-allroyalscaptured">
+                                    <label for="rules-allroyalscaptured" class="unselectable">All royals captured</label>
+                                </div>
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-allpiecescaptured">
+                                    <label for="rules-allpiecescaptured" class="unselectable">All pieces captured</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -86,10 +86,7 @@ let addingSpecialRights: boolean | undefined;
 /** Virtual game rules object for the position */
 const gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
-	winConditions: {
-		white: ["checkmate"],
-		black: ["checkmate"]
-	}
+	winConditions: ["checkmate"]
 };
 
 interface GameRulesGUIinfo {
@@ -108,10 +105,7 @@ interface GameRulesGUIinfo {
 		black?: bigint[];
 	};
 	promotionsAllowed?: RawType[];
-	winConditions: {
-		white: string[];
-		black: string[];
-	}
+	winConditions: string[];
 }
 
 // Functions ------------------------------------------------------------------------
@@ -522,10 +516,10 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
 	}
 
-	gamerulesGUIinfo.winConditions = {
-		white: (gameRules.winConditions[players.WHITE] !== undefined ? gameRules.winConditions[players.WHITE]! : ["checkmate"]),
-		black: (gameRules.winConditions[players.BLACK] !== undefined ? gameRules.winConditions[players.BLACK]! : ["checkmate"])
-	};
+	gamerulesGUIinfo.winConditions = [...new Set([
+		...(gameRules.winConditions[players.WHITE] !== undefined ? gameRules.winConditions[players.WHITE]! : ["checkmate"]),
+		...(gameRules.winConditions[players.BLACK] !== undefined ? gameRules.winConditions[players.BLACK]! : ["checkmate"])
+	])];
 
 	guiboardeditor.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
