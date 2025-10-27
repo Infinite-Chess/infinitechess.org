@@ -277,7 +277,7 @@ function readGameRules() : GameRulesGUIinfo {
 		element_gamerulesEnPassantY.classList.add('invalid-input');
 	}
 
-	const enPassant = (validEnPassantCoords === 2 ? {x : Number(enPassantX), y: Number(enPassantY)} : undefined);
+	const enPassant = (validEnPassantCoords === 2 ? {x : BigInt(enPassantX), y: BigInt(enPassantY)} : undefined);
 
 	// moveRule
 	let validMoveRuleInputs = 0;

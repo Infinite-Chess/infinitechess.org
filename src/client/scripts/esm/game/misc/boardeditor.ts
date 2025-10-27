@@ -88,8 +88,8 @@ interface GameRulesGUIinfo {
 	/** Type encoding information for the game rules object of the editor position */
     playerToMove: 'white' | 'black';
 	enPassant?: {
-		x: number;
-		y: number;
+		x: bigint;
+		y: bigint;
 	};
 	moveRule?: {
 		current: number;
