@@ -92,7 +92,7 @@ const RIPPLE_CONFIG = {
 	 * The minimum distance a piece needs to move for the water droplet ripple effect to trigger.
 	 * At current settings, this starts at the Spectral Edge beginning.
 	 */
-	minDist: bd.FromBigInt(10n ** 120n), // 10^100 squares
+	minDist: bd.FromBigInt(10n ** 120n), // 10^120 squares
 	// minDist: bd.FromBigInt(20n), // FOR TESTING
 	maxPlaybackRate: 1.18,
 	minPlaybackRate: 1.0,
