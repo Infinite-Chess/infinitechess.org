@@ -110,7 +110,6 @@ main {
 
 .content li {
     margin: 0.75em 0 0.5em 0.5em;
-    line-height: 1.6;
 }
 
 .clear-float {
@@ -242,7 +241,7 @@ main {
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
     .content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+        max-width: calc(870px - 60px); /* 60px less than 810 to account for padding */
         padding: 40px 30px;
         min-height: 800px;
     }
