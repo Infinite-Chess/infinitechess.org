@@ -9,7 +9,6 @@
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
-import { performFullVerificationMigration } from './migrateVerification.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -325,7 +324,6 @@ function migrateAddLastReadNewsDate(): void {
 function initDatabase(): void {
 	generateTables();
 	migrateAddLastReadNewsDate(); // Add news tracking column. DELETE AFTER PROD DB MIGRATES!
-	performFullVerificationMigration(); // DELETE AFTER NEXT UPDATE!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }
