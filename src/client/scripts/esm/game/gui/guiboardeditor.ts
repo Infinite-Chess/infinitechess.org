@@ -343,9 +343,12 @@ function readGameRules() : void {
 		winConditions
 	};
 
-	// Set en passant state
+	// Set en passant state for rendering purposes
 	if (enPassant !== undefined) boardeditor.setEnpassantState([enPassant.x, enPassant.y]);
 	else boardeditor.setEnpassantState(undefined);
+
+	// Update the promotionlines in the gamefile for rendering purposes
+	boardeditor.updatePromotionLines(gameRules.promotionRanks);
 
 	// Upate boardeditor.gamerulesGUIinfo
 	boardeditor.updateGamerulesGUIinfo(gameRules);

@@ -332,6 +332,16 @@ function setEnpassantState(coord: Coords | undefined) : void {
 	runEdit(gamefile, mesh, edit, true);
 }
 
+function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined ) : void {
+	const gamefile = gameslot.getGamefile()!;
+	if (promotionRanks === undefined) gamefile.basegame.gameRules.promotionRanks = undefined;
+	else {
+		gamefile.basegame.gameRules.promotionRanks = {};
+		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = (promotionRanks.white !== undefined ? promotionRanks.white : []);
+		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = (promotionRanks.black !== undefined ? promotionRanks.black : []);
+	}
+}
+
 function clearAll(): void {
 	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.");
 	const gamefile = gameslot.getGamefile()!;
@@ -380,8 +390,8 @@ function save(): void {
 	// Construct gameRules
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : [players.BLACK, players.WHITE];
 	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
-	const promotionRanks = gamerulesGUIinfo.promotionRanks !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionRanks.white, [players.BLACK]: gamerulesGUIinfo.promotionRanks.black } : undefined;
 	const promotionsAllowed = gamerulesGUIinfo.promotionsAllowed !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionsAllowed, [players.BLACK]: gamerulesGUIinfo.promotionsAllowed } : undefined;
+	const promotionRanks = gamerulesGUIinfo.promotionsAllowed !== undefined && gamerulesGUIinfo.promotionRanks !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionRanks.white, [players.BLACK]: gamerulesGUIinfo.promotionRanks.black } : undefined;
 	const winConditions = { [players.WHITE]: gamerulesGUIinfo.winConditions, [players.BLACK]: gamerulesGUIinfo.winConditions };
 	const gameRules : GameRules = {
 		turnOrder,
@@ -398,7 +408,7 @@ function save(): void {
 	// Construct state_global
 	const specialRights = gamefile.boardsim.state.global.specialRights;
 	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
-	const enpassantcoords = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
+	const enpassantcoords = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] as Coords : undefined;
 	const enpassant =  enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } as EnPassant : undefined; // dummy enpassant object
 	const state_global : Partial<GlobalGameState> = {
 		specialRights,
@@ -551,10 +561,6 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 		};
 	}
 
-	// Set en passant state
-	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
-	else setEnpassantState(undefined);
-
 	if (gameRules.moveRule !== undefined) {
 		gamerulesGUIinfo.moveRule = {
 			current: (state_global.moveRuleState !== undefined ? state_global.moveRuleState : 0),
@@ -581,6 +587,13 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 		...(gameRules.winConditions[players.WHITE] !== undefined ? gameRules.winConditions[players.WHITE]! : ["checkmate"]),
 		...(gameRules.winConditions[players.BLACK] !== undefined ? gameRules.winConditions[players.BLACK]! : ["checkmate"])
 	])];
+
+	// Set en passant state for rendering purposes
+	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
+	else setEnpassantState(undefined);
+
+	// Update the promotionlines in the gamefile for rendering purposes
+	updatePromotionLines(gamerulesGUIinfo.promotionRanks);
 
 	guiboardeditor.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -658,6 +671,7 @@ export default {
 	clearAll,
 	makeMoveEdit,
 	setEnpassantState,
+	updatePromotionLines,
 	updateGamerulesGUIinfo,
 };
 
