@@ -103,7 +103,6 @@ function isOpen(): boolean {
 
 async function open(): Promise<void> {
 	boardEditorOpen = true;
-	gameRulesSavedPos = undefined;
 	element_menu.classList.remove("hidden");
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	await gameloader.startBoardEditor();
@@ -113,6 +112,9 @@ async function open(): Promise<void> {
 function close(): void {
 	if (!boardEditorOpen) return;
 	closeGameRules();
+	element_gamerulesWindow.style.left = "";
+	element_gamerulesWindow.style.top = "";
+	gameRulesSavedPos = undefined;
 	element_menu.classList.add("hidden");
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
@@ -408,7 +410,7 @@ function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
 	element_gamerulesAllroyalscaptured.checked = gamerulesGUIinfo.winConditions.includes("allroyalscaptured");
 	element_gamerulesAllpiecescaptured.checked = gamerulesGUIinfo.winConditions.includes("allpiecescaptured");
 
-	// Since we manually set all inputs, they are all valid
+	// Since we manually set all inputs in this function, they are all valid
 	element_gamerulesEnPassantX.classList.remove('invalid-input');
 	element_gamerulesEnPassantY.classList.remove('invalid-input');
 	element_gamerulesMoveruleCurrent.classList.remove('invalid-input');

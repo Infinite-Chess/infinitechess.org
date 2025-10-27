@@ -322,6 +322,7 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | 
 	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current, false);
 }
 
+/** Updates the en passant square in the current gamefile, needed for display purposes */
 function setEnpassantState(coord: Coords | undefined) : void {
 	const enpassant = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } as EnPassant : undefined; // dummy enpassant object
 	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
@@ -332,6 +333,7 @@ function setEnpassantState(coord: Coords | undefined) : void {
 	runEdit(gamefile, mesh, edit, true);
 }
 
+/** Updates the promotion lines in the current gamefile, needed for display purposes */
 function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined ) : void {
 	const gamefile = gameslot.getGamefile()!;
 	if (promotionRanks === undefined) gamefile.basegame.gameRules.promotionRanks = undefined;
