@@ -107,10 +107,7 @@ interface GameRulesGUIinfo {
 		white?: bigint[];
 		black?: bigint[];
 	};
-	promotionsAllowed?: {
-		white?: RawType[];
-		black?: RawType[];
-	};
+	promotionsAllowed?: RawType[];
 	winConditions: {
 		white: string[];
 		black: string[];
@@ -518,10 +515,11 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	}
 
 	if (gameRules.promotionsAllowed !== undefined) {
-		gamerulesGUIinfo.promotionsAllowed = {
-			white: (gameRules.promotionsAllowed[players.WHITE] !== undefined ? gameRules.promotionsAllowed[players.WHITE] : undefined),
-			black: (gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK] : undefined)
-		};
+		gamerulesGUIinfo.promotionsAllowed = [...new Set([
+			...(gameRules.promotionsAllowed[players.WHITE] !== undefined ? gameRules.promotionsAllowed[players.WHITE]! : []),
+			...(gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK]! : [])
+		])];
+		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
 	}
 
 	gamerulesGUIinfo.winConditions = {

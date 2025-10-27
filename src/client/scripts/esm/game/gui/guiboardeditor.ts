@@ -38,9 +38,8 @@ const element_gamerulesEnPassantY = document.getElementById("rules-enpassant-y")
 const element_gamerulesMoveruleCurrent = document.getElementById("rules-moverule-current")! as HTMLInputElement;
 const element_gamerulesMoveruleMax = document.getElementById("rules-moverule-max")! as HTMLInputElement;
 const element_gamerulesPromotionranksWhite = document.getElementById("rules-promotionranks-white")! as HTMLInputElement;
-const element_gamerulesPromotionpiecesWhite = document.getElementById("rules-promotionpieces-white")! as HTMLInputElement;
 const element_gamerulesPromotionranksBlack = document.getElementById("rules-promotionranks-black")! as HTMLInputElement;
-const element_gamerulesPromotionpiecesBlack = document.getElementById("rules-promotionpieces-black")! as HTMLInputElement;
+const element_gamerulesPromotionpieces = document.getElementById("rules-promotionpieces")! as HTMLInputElement;
 const element_gamerulesCheckmateWhite = document.getElementById("rules-checkmate-white")! as HTMLInputElement;
 const element_gamerulesCheckmateBlack = document.getElementById("rules-checkmate-black")! as HTMLInputElement;
 const element_gamerulesRoyalcaptureWhite = document.getElementById("rules-royalcapture-white")! as HTMLInputElement;
@@ -53,8 +52,7 @@ const element_gamerulesAllpiecescapturedBlack = document.getElementById("rules-a
 const elements_gamerulesSelectionList : HTMLInputElement[] = [
 	element_gamerulesWhite, element_gamerulesBlack, element_gamerulesEnPassantX, element_gamerulesEnPassantY,
 	element_gamerulesMoveruleCurrent, element_gamerulesMoveruleMax,
-	element_gamerulesPromotionranksWhite, element_gamerulesPromotionpiecesWhite,
-	element_gamerulesPromotionranksBlack, element_gamerulesPromotionpiecesBlack,
+	element_gamerulesPromotionranksWhite, element_gamerulesPromotionranksBlack, element_gamerulesPromotionpieces,
 	element_gamerulesCheckmateWhite, element_gamerulesCheckmateBlack,
 	element_gamerulesRoyalcaptureWhite, element_gamerulesRoyalcaptureBlack,
 	element_gamerulesAllroyalscapturedWhite, element_gamerulesAllroyalscapturedBlack,
@@ -323,25 +321,15 @@ function readGameRules() : GameRulesGUIinfo {
 	}
 
 	// promotionsAllowed
-	const promotionsAllowed: {white?: RawType[], black?: RawType[]} = {};
-	const promotionsAllowedWhite = element_gamerulesPromotionpiecesWhite.value;
-	if (promotionsAllowedRegex.test(promotionsAllowedWhite)) {
-		element_gamerulesPromotionpiecesWhite.classList.remove('invalid-input');
-		promotionsAllowed.white = promotionsAllowedWhite ? [...new Set(promotionsAllowedWhite.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-	} else if (promotionsAllowedWhite === "") {
-		element_gamerulesPromotionpiecesWhite.classList.remove('invalid-input');
+	let promotionsAllowed: RawType[] | undefined = undefined;
+	const promotionsAllowedRaw = element_gamerulesPromotionpieces.value;
+	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
+		element_gamerulesPromotionpieces.classList.remove('invalid-input');
+		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+	} else if (promotionsAllowedRaw === "") {
+		element_gamerulesPromotionpieces.classList.remove('invalid-input');
 	} else {
-		element_gamerulesPromotionpiecesWhite.classList.add('invalid-input');
-	}
-
-	const promotionsAllowedBlack = element_gamerulesPromotionpiecesBlack.value;
-	if (promotionsAllowedRegex.test(promotionsAllowedBlack)) {
-		element_gamerulesPromotionpiecesBlack.classList.remove('invalid-input');
-		promotionsAllowed.black = promotionsAllowedBlack ? [...new Set(promotionsAllowedBlack.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-	} else if (promotionsAllowedBlack === "") {
-		element_gamerulesPromotionpiecesBlack.classList.remove('invalid-input');
-	} else {
-		element_gamerulesPromotionpiecesBlack.classList.add('invalid-input');
+		element_gamerulesPromotionpieces.classList.add('invalid-input');
 	}
 
 	// win conditions
@@ -402,12 +390,7 @@ function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
 	}
 
 	if (gamerulesGUIinfo.promotionsAllowed !== undefined) {
-		if (gamerulesGUIinfo.promotionsAllowed.white !== undefined) {
-			element_gamerulesPromotionpiecesWhite.value = gamerulesGUIinfo.promotionsAllowed.white.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
-		}
-		if (gamerulesGUIinfo.promotionsAllowed.black !== undefined) {
-			element_gamerulesPromotionpiecesBlack.value = gamerulesGUIinfo.promotionsAllowed.black.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
-		}
+		element_gamerulesPromotionpieces.value = gamerulesGUIinfo.promotionsAllowed.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
 	}
 
 	element_gamerulesCheckmateWhite.checked = gamerulesGUIinfo.winConditions.white.includes("checkmate");
