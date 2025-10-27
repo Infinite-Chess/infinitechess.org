@@ -247,13 +247,6 @@ function nextColor(): void {
 
 // Game Rules Utilities ---------------------------------------------------------------
 
-/** Deselects the input boxes when pressing Enter */
-function blurOnEnter(e: KeyboardEvent) : void {
-	if (e.key === 'Enter') {
-		(e.target as HTMLInputElement).blur();
-	}
-}
-
 /** Reads the game rules inserted into the input boxes */
 function readGameRules() : GameRulesGUIinfo {
 	// playerToMove
@@ -362,6 +355,20 @@ function readGameRules() : GameRulesGUIinfo {
 	return gameRules;
 }
 
+/** Deselects the input boxes when pressing Enter */
+function blurOnEnter(e: KeyboardEvent) : void {
+	if (e.key === 'Enter') {
+		(e.target as HTMLInputElement).blur();
+	}
+}
+
+/** Deselects the input boxes when clicking somewhere outside the game rules UI */
+function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent) : void {
+	if (!element_gamerulesWindow.contains(e.target as Node)) {
+		const activeEl = document.activeElement as HTMLInputElement;
+		if (activeEl && elements_gamerulesSelectionList.includes(activeEl) && activeEl.tagName === 'INPUT') activeEl.blur();
+	}
+}
 
 /** Helper: clamp value between min and max */
 function clamp(value: number, min: number, max: number): number {
@@ -467,6 +474,8 @@ function initGameRulesListeners(): void {
 			el.addEventListener('change', readGameRules);
 		}
 	});
+	document.addEventListener('click', blurOnClickorTouchOutside);
+	document.addEventListener('touchstart', blurOnClickorTouchOutside);
 }
 
 function closeGameRulesListeners(): void {
@@ -488,6 +497,8 @@ function closeGameRulesListeners(): void {
 			el.removeEventListener('change', readGameRules);
 		}
 	});
+	document.removeEventListener('click', blurOnClickorTouchOutside);
+	document.removeEventListener('touchstart', blurOnClickorTouchOutside);
 }
 
 function openGameRules(): void {
