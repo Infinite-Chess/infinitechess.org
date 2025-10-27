@@ -323,7 +323,7 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | 
 }
 
 function setEnpassantState(coord: Coords | undefined) : void {
-	const enpassant = (coord !== undefined) ? { square: coord, pawn: coord } : undefined; // dummy enpassant object
+	const enpassant = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } as EnPassant : undefined; // dummy enpassant object
 	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
 
 	const gamefile = gameslot.getGamefile()!;
@@ -399,7 +399,7 @@ function save(): void {
 	const specialRights = gamefile.boardsim.state.global.specialRights;
 	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
 	const enpassantcoords = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
-	const enpassant =  enpassantcoords !== undefined ? { square: enpassantcoords, pawn: enpassantcoords } as EnPassant : undefined;
+	const enpassant =  enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } as EnPassant : undefined; // dummy enpassant object
 	const state_global : Partial<GlobalGameState> = {
 		specialRights,
 		moveRuleState,
