@@ -355,6 +355,55 @@ function readGameRules() : GameRulesGUIinfo {
 	return gameRules;
 }
 
+/** Sets the game rules in the game rules GUI */
+function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
+	if (gamerulesGUIinfo.playerToMove === "white") {
+		element_gamerulesWhite.checked = true;
+		element_gamerulesBlack.checked = false;
+	}
+	else {
+		element_gamerulesWhite.checked = false;
+		element_gamerulesBlack.checked = true;
+	}
+
+	if (gamerulesGUIinfo.enPassant !== undefined) {
+		element_gamerulesEnPassantX.value = String(gamerulesGUIinfo.enPassant.x);
+		element_gamerulesEnPassantY.value = String(gamerulesGUIinfo.enPassant.y);
+	}
+
+	if (gamerulesGUIinfo.moveRule !== undefined) {
+		element_gamerulesMoveruleCurrent.value = String(gamerulesGUIinfo.moveRule.current);
+		element_gamerulesMoveruleMax.value = String(gamerulesGUIinfo.moveRule.max);
+	}
+
+	if (gamerulesGUIinfo.promotionRanks !== undefined) {
+		if (gamerulesGUIinfo.promotionRanks.white !== undefined) {
+			element_gamerulesPromotionranksWhite.value = gamerulesGUIinfo.promotionRanks.white.map(bigint => String(bigint)).join(",");
+		}
+		if (gamerulesGUIinfo.promotionRanks.black !== undefined) {
+			element_gamerulesPromotionranksBlack.value = gamerulesGUIinfo.promotionRanks.black.map(bigint => String(bigint)).join(",");
+		}
+	}
+
+	if (gamerulesGUIinfo.promotionsAllowed !== undefined) {
+		if (gamerulesGUIinfo.promotionsAllowed.white !== undefined) {
+			element_gamerulesPromotionpiecesWhite.value = gamerulesGUIinfo.promotionsAllowed.white.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
+		}
+		if (gamerulesGUIinfo.promotionsAllowed.black !== undefined) {
+			element_gamerulesPromotionpiecesBlack.value = gamerulesGUIinfo.promotionsAllowed.black.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
+		}
+	}
+
+	element_gamerulesCheckmateWhite.checked = gamerulesGUIinfo.winConditions.white.includes("checkmate");
+	element_gamerulesRoyalcaptureWhite.checked = gamerulesGUIinfo.winConditions.white.includes("royalcapture");
+	element_gamerulesAllroyalscapturedWhite.checked = gamerulesGUIinfo.winConditions.white.includes("allroyalscaptured");
+	element_gamerulesAllpiecescapturedWhite.checked = gamerulesGUIinfo.winConditions.white.includes("allpiecescaptured");
+	element_gamerulesCheckmateBlack.checked = gamerulesGUIinfo.winConditions.black.includes("checkmate");
+	element_gamerulesRoyalcaptureBlack.checked = gamerulesGUIinfo.winConditions.black.includes("royalcapture");
+	element_gamerulesAllroyalscapturedBlack.checked = gamerulesGUIinfo.winConditions.black.includes("allroyalscaptured");
+	element_gamerulesAllpiecescapturedBlack.checked = gamerulesGUIinfo.winConditions.black.includes("allpiecescaptured");
+}
+
 /** Deselects the input boxes when pressing Enter */
 function blurOnEnter(e: KeyboardEvent) : void {
 	if (e.key === 'Enter') {
@@ -586,5 +635,6 @@ export default {
 	markTool,
 	markPiece,
 	updatePieceColors,
-	readGameRules
+	readGameRules,
+	setGameRules
 };

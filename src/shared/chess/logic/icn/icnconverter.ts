@@ -1483,6 +1483,7 @@ export default {
 	promotionRanksSource,
 	promotionsAllowedSource,
 	default_promotions,
+	piece_codes_raw,
 	piece_codes_raw_inverted,
 };
 

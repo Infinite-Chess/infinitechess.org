@@ -29,6 +29,7 @@ import gameformulator from '../chess/gameformulator.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import pastegame from '../chess/pastegame.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -45,6 +46,7 @@ import type { SimplifiedGameState } from '../chess/gamecompressor.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
+import type { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -82,7 +84,13 @@ let addingSpecialRights: boolean | undefined;
 
 
 /** Virtual game rules object for the position */
-let gamerulesGUIinfo: GameRulesGUIinfo | undefined;
+const gamerulesGUIinfo: GameRulesGUIinfo = {
+	playerToMove: 'white',
+	winConditions: {
+		white: ["checkmate"],
+		black: ["checkmate"]
+	}
+};
 
 interface GameRulesGUIinfo {
 	/** Type encoding information for the game rules object of the editor position */
@@ -124,8 +132,11 @@ function initBoardEditor(): void {
 	guiboardeditor.updatePieceColors(currentColor);
 	guiboardeditor.markPiece(currentPieceType);
 
-	const gamefile = gameslot.getGamefile()!;
-	console.log(gamefile.basegame.gameRules);
+	// Set gamerulesGUIinfo object according to pasted game
+	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
+	gamefile.basegame.gameRules.winConditions[players.WHITE] = ["checkmate"];
+	gamefile.basegame.gameRules.winConditions[players.BLACK] = ["checkmate"];
+	setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
 }
 
 function closeBoardEditor(): void {
@@ -475,7 +486,50 @@ async function load(): Promise<void> {
 	addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 
+	setGamerulesGUIinfo(longformOut.gameRules, longformOut.state_global); // Set gamerules object according to pasted game
+
 	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
+}
+
+/** Update the game rules object keeping track of all current game rules */
+function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>) : void {
+	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
+	else gamerulesGUIinfo.playerToMove = "black";
+
+	if (state_global.enpassant !== undefined && state_global.enpassant.square !== undefined) {
+		gamerulesGUIinfo.enPassant = {
+			x : state_global.enpassant.square[0],
+			y : state_global.enpassant.square[1],
+		};
+	}
+
+	if (gameRules.moveRule !== undefined) {
+		gamerulesGUIinfo.moveRule = {
+			current: (state_global.moveRuleState !== undefined ? state_global.moveRuleState : 0),
+			max: gameRules.moveRule
+		};
+	}
+
+	if (gameRules.promotionRanks !== undefined) {
+		gamerulesGUIinfo.promotionRanks = {
+			white: (gameRules.promotionRanks[players.WHITE] !== undefined ? gameRules.promotionRanks[players.WHITE] : undefined),
+			black: (gameRules.promotionRanks[players.BLACK] !== undefined ? gameRules.promotionRanks[players.BLACK] : undefined)
+		};
+	}
+
+	if (gameRules.promotionsAllowed !== undefined) {
+		gamerulesGUIinfo.promotionsAllowed = {
+			white: (gameRules.promotionsAllowed[players.WHITE] !== undefined ? gameRules.promotionsAllowed[players.WHITE] : undefined),
+			black: (gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK] : undefined)
+		};
+	}
+
+	gamerulesGUIinfo.winConditions = {
+		white: (gameRules.winConditions[players.WHITE] !== undefined ? gameRules.winConditions[players.WHITE]! : ["checkmate"]),
+		black: (gameRules.winConditions[players.BLACK] !== undefined ? gameRules.winConditions[players.BLACK]! : ["checkmate"])
+	};
+
+	guiboardeditor.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
 
