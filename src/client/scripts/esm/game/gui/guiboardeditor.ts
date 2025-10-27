@@ -12,6 +12,7 @@ import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/ty
 import gameslot from "../chess/gameslot.js";
 
 import type { Player } from "../../../../../shared/chess/util/typeutil.js";
+import type { GameRules } from "../../../../../shared/chess/variants/gamerules.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -27,6 +28,36 @@ const element_boardUI = document.getElementById("boardUI")!;
 const element_gamerulesWindow = document.getElementById("game-rules")!;
 const element_gamerulesHeader = document.getElementById("game-rules-header")!;
 const element_gamerulesCloseButton = document.getElementById("close-rules")!;
+
+const element_gamerulesWhite = document.getElementById("rules-white")! as HTMLInputElement;
+const element_gamerulesBlack = document.getElementById("rules-black")! as HTMLInputElement;
+const element_gamerulesEnPassantX = document.getElementById("rules-enpassant-x")! as HTMLInputElement;
+const element_gamerulesEnPassantY = document.getElementById("rules-enpassant-y")! as HTMLInputElement;
+const element_gamerulesMoveruleCurrent = document.getElementById("rules-moverule-current")! as HTMLInputElement;
+const element_gamerulesMoveruleMax = document.getElementById("rules-moverule-max")! as HTMLInputElement;
+const element_gamerulesPromotionranksWhite = document.getElementById("rules-promotionranks-white")! as HTMLInputElement;
+const element_gamerulesPromotionpiecesWhite = document.getElementById("rules-promotionpieces-white")! as HTMLInputElement;
+const element_gamerulesPromotionranksBlack = document.getElementById("rules-promotionranks-black")! as HTMLInputElement;
+const element_gamerulesPromotionpiecesBlack = document.getElementById("rules-promotionpieces-black")! as HTMLInputElement;
+const element_gamerulesCheckmateWhite = document.getElementById("rules-checkmate-white")! as HTMLInputElement;
+const element_gamerulesCheckmateBlack = document.getElementById("rules-checkmate-black")! as HTMLInputElement;
+const element_gamerulesRoyalcaptureWhite = document.getElementById("rules-royalcapture-white")! as HTMLInputElement;
+const element_gamerulesRoyalcaptureBlack = document.getElementById("rules-royalcapture-black")! as HTMLInputElement;
+const element_gamerulesAllroyalscapturedWhite = document.getElementById("rules-allroyalscaptured-white")! as HTMLInputElement;
+const element_gamerulesAllroyalscapturedBlack = document.getElementById("rules-allroyalscaptured-black")! as HTMLInputElement;
+const element_gamerulesAllpiecescapturedWhite = document.getElementById("rules-allpiecescaptured-white")! as HTMLInputElement;
+const element_gamerulesAllpiecescapturedBlack = document.getElementById("rules-allpiecescaptured-black")! as HTMLInputElement;
+
+const elements_gamerulesSelectionList : HTMLInputElement[] = [
+	element_gamerulesWhite, element_gamerulesBlack, element_gamerulesEnPassantX, element_gamerulesEnPassantY,
+	element_gamerulesMoveruleCurrent, element_gamerulesMoveruleMax,
+	element_gamerulesPromotionranksWhite, element_gamerulesPromotionpiecesWhite,
+	element_gamerulesPromotionranksBlack, element_gamerulesPromotionpiecesBlack,
+	element_gamerulesCheckmateWhite, element_gamerulesCheckmateBlack,
+	element_gamerulesRoyalcaptureWhite, element_gamerulesRoyalcaptureBlack,
+	element_gamerulesAllroyalscapturedWhite, element_gamerulesAllroyalscapturedBlack,
+	element_gamerulesAllpiecescapturedWhite, element_gamerulesAllpiecescapturedBlack
+];
 
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
@@ -208,6 +239,56 @@ function nextColor(): void {
 
 // Game Rules Utilities ---------------------------------------------------------------
 
+function blurOnEnter(e: KeyboardEvent) : void {
+	if (e.key === 'Enter') {
+		(e.target as HTMLInputElement).blur();
+	}
+}
+
+function readGameRules() : void {
+	const gameRules = {
+		player: element_gamerulesWhite.checked ? 'white' : 'black',
+		enPassant: {
+			x: element_gamerulesEnPassantX.value,
+			y: element_gamerulesEnPassantY.value
+		},
+		moveRule: {
+			current: element_gamerulesMoveruleCurrent.value,
+			max: element_gamerulesMoveruleMax.value
+		},
+		promotion: {
+			white: {
+				ranks: element_gamerulesPromotionranksWhite.value,
+				pieces: element_gamerulesPromotionpiecesWhite.value
+			},
+			black: {
+				ranks: element_gamerulesPromotionranksBlack.value,
+				pieces: element_gamerulesPromotionpiecesBlack.value
+			}
+		},
+		winConditions: {
+			checkmate: {
+				white: element_gamerulesCheckmateWhite.checked,
+				black: element_gamerulesCheckmateBlack.checked
+			},
+			royalCapture: {
+				white: element_gamerulesRoyalcaptureWhite.checked,
+				black: element_gamerulesRoyalcaptureBlack.checked
+			},
+			allRoyalsCaptured: {
+				white: element_gamerulesAllroyalscapturedWhite.checked,
+				black: element_gamerulesAllroyalscapturedBlack.checked
+			},
+			allPiecesCaptured: {
+				white: element_gamerulesAllpiecescapturedWhite.checked,
+				black: element_gamerulesAllpiecescapturedBlack.checked
+			}
+		}
+	};
+
+	console.log(gameRules);
+}
+
 
 /** Helper: clamp value between min and max */
 function clamp(value: number, min: number, max: number): number {
@@ -277,6 +358,15 @@ function initGameRulesListeners(): void {
 	document.addEventListener("mouseup", stopGameRulesDrag);
 	window.addEventListener("resize", clampGameRulesToBoardUIBounds);
 	element_gamerulesCloseButton.addEventListener("click", closeGameRules);
+
+	elements_gamerulesSelectionList.forEach(el => {
+		if (el.type === 'text') {
+			el.addEventListener('keydown', blurOnEnter);
+			el.addEventListener('blur', readGameRules);
+		} else if (el.type === 'radio' || el.type === 'checkbox') {
+			el.addEventListener('change', readGameRules);
+		}
+	});
 }
 
 function closeGameRulesListeners(): void {
@@ -285,6 +375,15 @@ function closeGameRulesListeners(): void {
 	document.removeEventListener("mouseup", stopGameRulesDrag);
 	window.removeEventListener("resize", clampGameRulesToBoardUIBounds);
 	element_gamerulesCloseButton.removeEventListener("click", closeGameRules);
+
+	elements_gamerulesSelectionList.forEach(el => {
+		if (el.type === 'text') {
+			el.removeEventListener('keydown', blurOnEnter);
+			el.removeEventListener('blur', readGameRules);
+		} else if (el.type === 'radio' || el.type === 'checkbox') {
+			el.removeEventListener('change', readGameRules);
+		}
+	});
 }
 
 function openGameRules(): void {

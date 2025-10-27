@@ -1428,10 +1428,9 @@ svg.collapse {
 
 /* Game Rules UI */
 #game-rules {
-    min-width: 280px;
-    max-width: 400px;
-    max-height: 80vh;      /* limits height relative to viewport */
-    overflow: auto;        /* enable both vertical and horizontal scrolling */
+    max-width: 250px;
+    max-height: 80vh;
+    overflow: auto;        /* enable vertical scrolling */
     padding: 0 18px 16px 18px;
     border-radius: 12px;
     position: absolute;
