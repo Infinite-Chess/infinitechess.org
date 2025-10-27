@@ -12,6 +12,23 @@ This project is open source! If you skills in html, css, javascript, typescript,
 
 In case you want to help with translating the website to other languages, please read the [Translation Guide](./docs/TRANSLATIONS.md).
 
+## Testing
+
+This project uses [Vitest](https://vitest.dev/) for unit testing. Tests help ensure code reliability and catch bugs early.
+
+### Running Tests
+
+```bash
+npm test
+```
+
+### Writing Tests
+
+Test files should be placed alongside the code they test with a `.test.ts` or `.test.js` extension. For example:
+- `src/server/controllers/myController.ts` → `src/server/controllers/myController.test.ts`
+
+## Roadmap
+
 There are still MANY more items I have planned for this project. Just a few of them are:
 
 - Board Editor
