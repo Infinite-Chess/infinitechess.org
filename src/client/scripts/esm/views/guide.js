@@ -1,14 +1,6 @@
-
-// Import Start
-import guititle from './guititle.js';
-// Import End
-
 /**
- * This script handles the Guide
+ * This script handles the Guide page fairy piece carousel
  */
-
-const element_Guide = document.getElementById('guide');
-const element_Back = document.getElementById('guide-back');
 
 // The element that holds all fairy images and their descriptions.
 const element_FairyImg = document.getElementById('fairy-pieces');
@@ -20,39 +12,9 @@ const element_FairyForward = document.getElementById('fairy-forward');
 let fairyIndex = 0;
 const maxFairyIndex = element_FairyImg.querySelectorAll('picture').length - 1;
 
-function open() {
-	element_Guide.classList.remove('hidden');
-	initListeners();
-	loadAllImages();
-}
-
-function close() {
-	element_Guide.classList.add('hidden');
-	closeListeners();
-}
-
 function initListeners() {
-	element_Back.addEventListener('click', callback_Back);
 	element_FairyBack.addEventListener('click', callback_FairyBack);
 	element_FairyForward.addEventListener('click', callback_FairyForward);
-}
-
-function closeListeners() {
-	element_Back.removeEventListener('click', callback_Back);
-	element_FairyBack.removeEventListener('click', callback_FairyBack);
-	element_FairyForward.removeEventListener('click', callback_FairyForward);
-}
-
-function loadAllImages() {
-	const images = element_Guide.querySelectorAll('picture > img[loading]');
-	images.forEach(img => {
-		img.removeAttribute('loading'); // Remove the "loading: lazy" attribute from these images. They have now been loaded.
-	});
-}
-
-function callback_Back() {
-	close();
-	guititle.open();
 }
 
 function callback_FairyBack(event) {
@@ -99,7 +61,5 @@ function updateArrowTransparency() {
 	else                              element_FairyForward.classList.remove('opacity-0_25');
 }
 
-export default {
-	open,
-	close
-};
+// Initialize on page load
+initListeners();

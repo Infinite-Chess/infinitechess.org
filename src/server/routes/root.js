@@ -34,6 +34,7 @@ const serveFile = (filePath, localized = true) => (req, res) => {
 router.get("^/$|/index(.html)?", serveFile("index.html"));
 router.get("/credits(.html)?", serveFile("credits.html"));
 router.get("/play(.html)?", serveFile("play.html"));
+router.get("/guide(.html)?", serveFile("guide.html"));
 router.get("/news(.html)?", serveFile("news.html"));
 router.get("/leaderboard(.html)?", serveFile("leaderboard.html"));
 router.get("/login(.html)?", serveFile("login.html"));

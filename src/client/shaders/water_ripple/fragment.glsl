@@ -39,7 +39,7 @@ void main() {
 		float time = u_times[i];
 
         // Calculate aspect-corrected distance from the droplet's center.
-		// Patches ripples not being circular when canvas is not square.
+		// This makes ripples circular on non-square screens.
 		vec2 diff = v_uv - center;
 		diff.x *= u_resolution.x / u_resolution.y;
 		float dist = length(diff);
@@ -57,10 +57,19 @@ void main() {
         float distanceBehind = max(0.0, maxRadius - dist);
 		float trailingFade = 1.0 / (1.0 + u_falloff * distanceBehind * distanceBehind);
 
-        // Combine factors and accumulate the final offset.
+        // Combine factors to get the magnitude of the ripple.
 		float rippleMagnitude = wave * waveMask * trailingFade;
-		vec2 direction = normalize(v_uv - center);
-		totalOffset += direction * rippleMagnitude * u_strength;
+
+        // Calculate the offset in the aspect-corrected space.
+        // `normalize(diff)` gives a direction in the circular space.
+		vec2 offset = normalize(diff) * rippleMagnitude * u_strength;
+		
+        // Transform the offset vector back from the aspect-corrected space to the original UV space.
+        // We only transformed the x-component, so we only need to reverse that.
+        offset.x /= (u_resolution.x / u_resolution.y);
+
+		// The accumulated final offset.
+		totalOffset += offset;
 
 		// Calculate the glint for this droplet
         // Isolate the crest of the wave (the positive part).

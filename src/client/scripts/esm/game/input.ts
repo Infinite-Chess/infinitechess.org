@@ -369,6 +369,11 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// console.log("Mouse down: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
+
+		// This makes it so the coordinate input fields are unfocused when clicking the canvas.
+		const prev = document.activeElement;
+		if (element instanceof HTMLElement && prev !== element && prev instanceof HTMLElement) prev.blur();
+
 		// Generate a unique logical ID for the action.
 		const logicalId = getLogicalPointerId(e, targetButton);
 		const physicalId = getPhysicalPointerId(e);

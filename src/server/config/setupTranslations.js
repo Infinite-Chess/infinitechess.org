@@ -69,6 +69,7 @@ const translationsFolder = "./translation";
 const staticTranslatedTemplates = [
 	"createaccount",
 	"credits",
+	"guide",
 	"index",
 	"login",
 	"member",
