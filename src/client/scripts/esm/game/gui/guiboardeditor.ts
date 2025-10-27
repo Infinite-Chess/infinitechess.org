@@ -239,12 +239,14 @@ function nextColor(): void {
 
 // Game Rules Utilities ---------------------------------------------------------------
 
+/** Deselects the input boxes when pressing Enter */
 function blurOnEnter(e: KeyboardEvent) : void {
 	if (e.key === 'Enter') {
 		(e.target as HTMLInputElement).blur();
 	}
 }
 
+/** Reads the game rules inserted into the input boxes */
 function readGameRules() : void {
 	const gameRules = {
 		player: element_gamerulesWhite.checked ? 'white' : 'black',
@@ -285,6 +287,9 @@ function readGameRules() : void {
 			}
 		}
 	};
+
+	if (!/^-?[0-9]*$/.test(element_gamerulesEnPassantX.value)) element_gamerulesEnPassantX.classList.add('invalid-input');
+	else element_gamerulesEnPassantX.classList.remove('invalid-input');
 
 	console.log(gameRules);
 }

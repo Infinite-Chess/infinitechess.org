@@ -44,6 +44,7 @@ import type { _Move_Compact, _Move_Out, LongFormatOut } from '../../../../../sha
 import type { SimplifiedGameState } from '../chess/gamecompressor.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -78,6 +79,9 @@ let drawing = false;
 let previousSquare: Coords | undefined;
 /** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
 let addingSpecialRights: boolean | undefined;
+
+/** Virtual game rules object for the position */
+let gamerules: GameRules | undefined;
 
 
 // Functions ------------------------------------------------------------------------

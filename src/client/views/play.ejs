@@ -613,24 +613,24 @@
                     <!-- Game Rules UI -->
                     <div id="game-rules" class="center hidden">
                         <div id="game-rules-header">
-                            <span>Game Rules</span>
+                            <span class="unselectable">Game Rules</span>
                             <button id="close-rules">&times;</button>
                         </div>
 
                         <hr class="divider">
 
                         <div class="rules-section">
-                            <label>Player to move:</label>
+                            <label class="unselectable">Player to move:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="rules-white" name="player" value="white" checked>
-                                <label for="white">White</label>
+                                <label for="rules-white">White</label>
                                 <input type="radio" id="rules-black" name="player" value="black">
-                                <label for="black">Black</label>
+                                <label for="rules-black">Black</label>
                             </div>
                         </div>
 
                         <div class="rules-section">
-                            <label>En passant square:</label>
+                            <label class="unselectable">En passant square:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-enpassant-x" placeholder="x">
                                 <span>,</span>
@@ -639,7 +639,7 @@
                         </div>
 
                         <div class="rules-section">
-                            <label>Move rule state:</label>
+                            <label class="unselectable">Move rule state:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-moverule-current" placeholder="e.g. 0">
                                 <span>/</span>
@@ -648,53 +648,53 @@
                         </div>
 
                         <div class="rules-section">
-                            <label>Promotion ranks (White):</label>
+                            <label class="unselectable">Promotion ranks (White):</label>
                             <input type="text" id="rules-promotionranks-white" placeholder="e.g. 8,12">
                         </div>
 
                         <div class="rules-section">
-                            <label>Promotion pieces (White):</label>
+                            <label class="unselectable">Promotion pieces (White):</label>
                             <input type="text" id="rules-promotionpieces-white" placeholder="e.g. Q,R,B,N">
                         </div>
 
                         <div class="rules-section">
-                            <label>Promotion ranks (Black):</label>
+                            <label class="unselectable">Promotion ranks (Black):</label>
                             <input type="text" id="rules-promotionranks-black" placeholder="e.g. 1,-10">
                         </div>
 
                         <div class="rules-section">
-                            <label>Promotion pieces (Black):</label>
+                            <label class="unselectable">Promotion pieces (Black):</label>
                             <input type="text" id="rules-promotionpieces-black" placeholder="e.g. Q,R,B,N">
                         </div>
 
                         <div class="rules-section">
-                            <label>Win conditions:</label>
+                            <label class="unselectable">Win conditions:</label>
                             <table class="win-table">
                                 <thead>
                                     <tr>
-                                        <th>Condition</th>
-                                        <th>White</th>
-                                        <th>Black</th>
+                                        <th class="unselectable">Condition</th>
+                                        <th class="unselectable">White</th>
+                                        <th class="unselectable">Black</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Checkmate</td>
+                                        <td class="unselectable">Checkmate</td>
                                         <td><input type="checkbox" id="rules-checkmate-white" checked></td>
                                         <td><input type="checkbox" id="rules-checkmate-black" checked></td>
                                     </tr>
                                     <tr>
-                                        <td>Royal capture</td>
+                                        <td class="unselectable">Royal capture</td>
                                         <td><input type="checkbox" id="rules-royalcapture-white"></td>
                                         <td><input type="checkbox" id="rules-royalcapture-black"></td>
                                     </tr>
                                     <tr>
-                                        <td>All royals captured</td>
+                                        <td class="unselectable">All royals captured</td>
                                         <td><input type="checkbox" id="rules-allroyalscaptured-white"></td>
                                         <td><input type="checkbox" id="rules-allroyalscaptured-black"></td>
                                     </tr>
                                     <tr>
-                                        <td>All pieces captured</td>
+                                        <td class="unselectable">All pieces captured</td>
                                         <td><input type="checkbox" id="rules-allpiecescaptured-white"></td>
                                         <td><input type="checkbox" id="rules-allpiecescaptured-black"></td>
                                     </tr>
