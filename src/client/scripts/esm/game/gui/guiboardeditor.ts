@@ -328,6 +328,7 @@ function readGameRules() : void {
 	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
 		element_gamerulesPromotionpieces.classList.remove('invalid-input');
 		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+		if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
 	} else if (promotionsAllowedRaw === "") {
 		element_gamerulesPromotionpieces.classList.remove('invalid-input');
 	} else {
