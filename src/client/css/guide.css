@@ -225,17 +225,6 @@ main {
     flex-grow: 2;
 }
 
-.hidden {
-    display: none !important;
-}
-
-.unselectable {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
 /* Responsive styles */
 
 /* Cap content width size, revealing image on the sides */
