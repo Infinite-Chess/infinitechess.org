@@ -313,15 +313,26 @@ function clampGameRulesToBoardUIBounds(): void {
 }
 
 /** Start dragging */
-function startGameRulesDrag(e: MouseEvent): void {
+function startGameRulesDrag(coordx: number, coordy: number): void {
 	gameRulesIsDragging = true;
-	gameRulesOffsetX = e.clientX - element_gamerulesWindow.offsetLeft;
-	gameRulesOffsetY = e.clientY - element_gamerulesWindow.offsetTop;
+	gameRulesOffsetX = coordx - element_gamerulesWindow.offsetLeft;
+	gameRulesOffsetY = coordy - element_gamerulesWindow.offsetTop;
 	document.body.style.userSelect = "none";
 }
 
+function startGameRulesMouseDrag(e: MouseEvent): void {
+	startGameRulesDrag(e.clientX, e.clientY);
+}
+
+function startGameRulesTouchDrag(e: TouchEvent): void {
+	if (e.touches.length === 1) {
+		const touch = e.touches[0]!;
+		startGameRulesDrag(touch.clientX, touch.clientY);
+	}
+}
+
 /** During drag */
-function duringGameRulesDrag(e: MouseEvent): void {
+function duringGameRulesDrag(coordx: number, coordy: number): void {
 	if (!gameRulesIsDragging) return;
 
 	const parentRect = element_boardUI.getBoundingClientRect();
@@ -329,8 +340,8 @@ function duringGameRulesDrag(e: MouseEvent): void {
 	const elHeight = element_gamerulesWindow.offsetHeight;
 
 	// Compute desired new position
-	const newLeft = e.clientX - gameRulesOffsetX;
-	const newTop = e.clientY - gameRulesOffsetY;
+	const newLeft = coordx - gameRulesOffsetX;
+	const newTop = coordy - gameRulesOffsetY;
 
 	// Clamp within parent container
 	const clampedLeft = clamp(newLeft, 0, parentRect.width - elWidth);
@@ -343,6 +354,18 @@ function duringGameRulesDrag(e: MouseEvent): void {
 	gameRulesSavedPos = { left: clampedLeft, top: clampedTop };
 }
 
+function duringGameRulesMouseDrag(e: MouseEvent): void {
+	duringGameRulesDrag(e.clientX, e.clientY);
+}
+
+function duringGameRulesTouchDrag(e: TouchEvent): void {
+	if (e.touches.length === 1) {
+		e.preventDefault(); // prevent scrolling
+		const touch = e.touches[0]!;
+		duringGameRulesDrag(touch.clientX, touch.clientY);
+	}
+}
+
 /** Stop dragging */
 function stopGameRulesDrag(): void {
 	if (gameRulesIsDragging) {
@@ -353,9 +376,13 @@ function stopGameRulesDrag(): void {
 }
 
 function initGameRulesListeners(): void {
-	element_gamerulesHeader.addEventListener("mousedown", startGameRulesDrag);
-	document.addEventListener("mousemove", duringGameRulesDrag);
+	element_gamerulesHeader.addEventListener("mousedown", startGameRulesMouseDrag);
+	document.addEventListener("mousemove", duringGameRulesMouseDrag);
 	document.addEventListener("mouseup", stopGameRulesDrag);
+	element_gamerulesHeader.addEventListener("touchstart", startGameRulesTouchDrag, { passive: false });
+	document.addEventListener("touchmove", duringGameRulesTouchDrag, { passive: false });
+	document.addEventListener("touchend", stopGameRulesDrag, { passive: false });
+
 	window.addEventListener("resize", clampGameRulesToBoardUIBounds);
 	element_gamerulesCloseButton.addEventListener("click", closeGameRules);
 
@@ -370,9 +397,13 @@ function initGameRulesListeners(): void {
 }
 
 function closeGameRulesListeners(): void {
-	element_gamerulesHeader.removeEventListener("mousedown", startGameRulesDrag);
-	document.removeEventListener("mousemove", duringGameRulesDrag);
+	element_gamerulesHeader.removeEventListener("mousedown", startGameRulesMouseDrag);
+	document.removeEventListener("mousemove", duringGameRulesMouseDrag);
 	document.removeEventListener("mouseup", stopGameRulesDrag);
+	element_gamerulesHeader.removeEventListener("touchstart", startGameRulesTouchDrag);
+	document.removeEventListener("touchmove", duringGameRulesTouchDrag);
+	document.removeEventListener("touchend", stopGameRulesDrag);
+
 	window.removeEventListener("resize", clampGameRulesToBoardUIBounds);
 	element_gamerulesCloseButton.removeEventListener("click", closeGameRules);
 

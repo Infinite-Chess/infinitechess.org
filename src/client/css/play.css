@@ -1441,7 +1441,6 @@ svg.collapse {
     font-family: "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
     color: #222;
-    z-index: 999;
 }
 
 /* Header (draggable area + close button) */
