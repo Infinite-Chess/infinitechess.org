@@ -1,4 +1,8 @@
 {
+	"72": {
+		"note": "Added play.guide.pieces.rose on line 242.",
+		"changes": []
+	},
 	"71": {
 		"note": "Added coords-exceeded line 384.",
 		"changes": []

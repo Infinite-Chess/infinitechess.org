@@ -1,7 +1,7 @@
 
 'use strict';
 
-/* global main sound */
+/* global main */
 
 /**
  * The server injects this script directly into the html document

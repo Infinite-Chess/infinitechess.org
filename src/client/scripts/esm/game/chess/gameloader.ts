@@ -147,6 +147,7 @@ async function startLocalGame(options: {
 		// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
 		// additional: { worldBorder: BigInt(15) }
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
@@ -277,6 +278,7 @@ async function startEngineGame(options: {
 	 * OR rejects immediately when one of them rejects!
 	 */
 	Promise.all([graphicalPromise, enginePromise])
+		// eslint-disable-next-line no-unused-vars
 		.then((results: any[]) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
@@ -314,6 +316,7 @@ async function startBoardEditor(): Promise<void> {
 		 */
 		additional: { editor: true }
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
@@ -322,7 +325,7 @@ async function startBoardEditor(): Promise<void> {
 }
 
 /**
- * Reloads the current local, online, or editor game from the provided metadata, existing moves, and variant options.
+ * Reloads the current local or online game from the provided metadata, existing moves, and variant options.
  */
 async function pasteGame(options: {
 	metadata: MetaData,
@@ -333,8 +336,7 @@ async function pasteGame(options: {
 	},
 	presetAnnotes?: PresetAnnotes
 }): Promise<void> {
-	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
-	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
+	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online') throw Error("Can't paste a game when we're not in a local or online game.");
 
 	gameLoading = true;
 
@@ -342,10 +344,6 @@ async function pasteGame(options: {
 	await loadingscreen.open();
 
 	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
-	const additionalToUse: Additional = {
-		...options.additional,
-		editor: gameslot.getGamefile()!.boardsim.editor, // Retain the same option as the current loaded game.
-	};
 
 	gameslot.unloadGame();
 
@@ -354,8 +352,9 @@ async function pasteGame(options: {
 		viewWhitePerspective,
 		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
 		presetAnnotes: options.presetAnnotes,
-		additional: additionalToUse,
+		additional: options.additional,
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 	

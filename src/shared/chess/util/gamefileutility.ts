@@ -93,16 +93,6 @@ function doGameOverChecks(gamefile: FullGame): void {
 }
 
 /**
- * Gets the bounding box of the game's starting position
- */
-function getStartingAreaBox(boardsim: Board): BoundingBox {
-	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
-	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
-	if (coordsList.length === 0) coordsList.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
-	return bounds.getBoxFromCoordsList(coordsList);
-}
-
-/**
  * Tests if the provided gamefile has colinear organized lines present in the game.
  * This can occur if there are sliders that can move in the same exact direction as others.
  * For example, [2,0] and [3,0]. We typically like to know this information because
@@ -165,7 +155,6 @@ export default {
 	eraseTerminationMetadata,
 	isOpponentUsingWinCondition,
 	doGameOverChecks,
-	getStartingAreaBox,
 	getPlayerCount,
 	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,

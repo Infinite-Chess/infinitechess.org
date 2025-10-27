@@ -92,19 +92,14 @@ type Board = {
 	 * All pieces must be within this box.
 	 */
 	playableRegion?: BoundingBox
-} & EditorDependent
 
-/** Some information should be left out when the editor is being used as it will slow processing down */
-type EditorDependent = {
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor: false
+	editor: boolean
+
 	/**
-	 * Information about the beginning of the game (position, positionString, specialRights, turn)
-	*/
+	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
+	 */
 	startSnapshot: Snapshot
-} | {
-	editor: true
-	startSnapshot: undefined
 }
 
 /**
@@ -213,16 +208,6 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	const colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(pieceMovesets, pieces.slides);
 
-	// Have to assign it this weird way to make typescript happy.
-	// We don't have to cast to EditorDependent this way.
-	const editorDependentVars: EditorDependent = editor ? {
-		editor: true,
-		startSnapshot: undefined
-	} : {
-		editor: false,
-		startSnapshot
-	};
-
 	return {
 		pieces,
 		existingTypes,
@@ -235,7 +220,8 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		pieceMovesets,
 		specialMoves,
 		playableRegion,
-		...editorDependentVars
+		editor,
+		startSnapshot,
 	};
 }
 

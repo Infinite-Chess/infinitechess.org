@@ -1,4 +1,5 @@
 
+import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 // @ts-ignore
 import guipause from './guipause.js';
@@ -12,7 +13,6 @@ import movesequence from '../chess/movesequence.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
@@ -21,11 +21,11 @@ import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import premoves from '../chess/premoves.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import Transition from '../rendering/transitions/Transition.js';
 import space from '../misc/space.js';
 import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
+import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 
 /**
@@ -305,8 +305,8 @@ function initListeners_Navigation(): void {
 	element_Collapse.addEventListener('click', callback__Collapse);
 	element_pause.addEventListener('click', callback_Pause);
 
-	element_CoordsX.addEventListener('change', callback_CoordsChange);
-	element_CoordsY.addEventListener('change', callback_CoordsChange);
+	element_CoordsX.addEventListener('change', callback_CoordsXChange);
+	element_CoordsY.addEventListener('change', callback_CoordsYChange);
 
 	if (!guiboardeditor.isOpen()) {
 		element_moveRewind.addEventListener('click', callback_MoveRewind);
@@ -354,8 +354,8 @@ function closeListeners_Navigation(): void {
 	element_Collapse.removeEventListener('click', callback__Collapse);
 	element_Back.removeEventListener('click', callback_Pause);
 
-	element_CoordsX.removeEventListener('change', callback_CoordsChange);
-	element_CoordsY.removeEventListener('change', callback_CoordsChange);
+	element_CoordsX.removeEventListener('change', callback_CoordsXChange);
+	element_CoordsY.removeEventListener('change', callback_CoordsYChange);
 
 	if (!guiboardeditor.isOpen()) {
 		element_moveRewind.removeEventListener('click', callback_MoveRewind);
@@ -394,30 +394,43 @@ function closeListeners_Navigation(): void {
 	}
 }
 
-/** Is called when we hit enter after changing one of the coordinate fields */
-function callback_CoordsChange(): void {
+/** Called when the field is FINISHED being edited, not on every keystroke. */
+function callback_CoordsXChange(): void {
+	element_CoordsX.blur();
+	callback_CoordsChange(0);
+}
 
-	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
-	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
+/** Called when the field is FINISHED being edited, not on every keystroke. */
+function callback_CoordsYChange(): void {
+	element_CoordsY.blur();
+	callback_CoordsChange(1);
+}
 
-	let proposedX: bigint;
-	let proposedY: bigint;
+function callback_CoordsChange(index: 0 | 1): void {
+	const target: HTMLInputElement = index === 0 ? element_CoordsX : element_CoordsY;
+
+	const boardPos = boardpos.getBoardPos();
+	let teleportX: BigDecimal = boardPos[0];
+	let teleportY: BigDecimal = boardPos[1];
+
+	let proposed: bigint;
 	try {
-		proposedX = parseStringToBigInt(element_CoordsX.value);
-		proposedY = parseStringToBigInt(element_CoordsY.value);
+		proposed = parseStringToBigInt(target.value);
 	} catch (e) {
-		console.log(`Entered: [${element_CoordsX.value}, ${element_CoordsY.value}]`);
+		console.log(`Entered: ${target.value}`);
 		statustext.showStatus(translations['coords-invalid'], true);
 		return;
 	}
 
-	const largestCoord = bimath.max(bimath.abs(proposedX), bimath.abs(proposedY));
-	if (largestCoord > TELEPORT_LIMIT) {
+	if (bimath.abs(proposed) > TELEPORT_LIMIT) {
 		statustext.showStatus(translations['coords-exceeded'], true);
 		return;
 	}
 
-	const newPos = bd.FromCoords([proposedX, proposedY]);
+	if (index === 0) teleportX = bd.FromBigInt(proposed);
+	else teleportY = bd.FromBigInt(proposed);
+
+	const newPos: BDCoords = [teleportX, teleportY];
 	boardpos.setBoardPos(newPos);
 }
 
@@ -440,8 +453,7 @@ function callback_Expand(): void {
 }
 
 function recenter(): void {
-	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
-	Transition.zoomToCoordsBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
+	Transition.zoomToCoordsBox(gameslot.getGamefile()!.boardsim.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================

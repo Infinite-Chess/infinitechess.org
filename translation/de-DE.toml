@@ -1,7 +1,7 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "64"
-maintainer = "estetique_bs"
+version = "72"
+maintainer = "estetique_bs,tsevasa"
 
 [header]
 home = "Unendliches Schach"
@@ -15,7 +15,10 @@ leaderboard = "Bestenliste"
 
 [header.settings]
 language = "Sprache"
-board = "Brett" # Board color/theme
+appearance = "Erscheinungsbild" # Board color/theme and visual effects
+appearance-theme = "Brett"
+appearance-starfield = "Sternenfeld" # The Starfield space animation underneath void
+appearance-advanced-effects = "Grafik-Effekte" # Post processing and board tile effects at extreme distances
 legalmoves = "Legale Züge" # Legal moves shape
 legalmoves-squares = "Quadrate"
 legalmoves-dots = "Punkte" # Dots and 4 corner triangles
@@ -27,6 +30,9 @@ selection-lingering_annotations = "Verbleibende Anmerkungen"
 perspective = "Perspektive" # Perspective-mode
 perspective-mouse-sensitivity = "Mausempfindlichkeit"
 perspective-fov = "Sichtfeld"
+sound = "Ton"
+sound-master-volume = "Gesamtlautstärke"
+sound-ambience = "Umgebungsklang"
 ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
 reset-to-default = "Auf Standard zurücksetzen"
 
@@ -233,6 +239,7 @@ hawk = {name="Falke", description="Springt genau 2 oder 3 Felder in jede Richtun
 centaur = {name="Zentaur", description="Zieht wie ein Springer und eine Wache zusammen."}
 knightrider = {name="Rösselsprinter", description="Springt wie ein Springer unendlich weit in eine Richtung, bis er blockiert wird."}
 huygen = {name="Huygen", description="Springt unendlich weit in eine der vier Kardinalrichtungen, wobei er nur Felder mit primzahligem Abstand vom Startfeld besucht, bis er blockiert wird."}
+rose = {name="Rose", description="Zirkulärer Rösselsprinter. Die Rose bewegt sich auf kreisförmigen Bahnen im oder gegen den Uhrzeigersinn, indem sie wie ein Springer hüpft und sich nach jedem Hüpfen um 45 Grad dreht. Die Rose kann von anderen Figuren blockiert werden, weshalb das rote Feld im Bild für die Rose unerreichbar ist."}
 obstacle = {name="Hindernis", description="Eine neutrale Figur (von keinem Spieler kontrolliert), die die Bewegung blockiert, aber geschlagen werden kann."}
 void = {name="Leere", description="Eine neutrale Figur (nicht von einem Spieler kontrolliert), die die Abwesenheit eines Feldes darstellt. Figuren dürfen sich nicht durch oder auf sie bewegen."}
 
@@ -361,8 +368,6 @@ lost_connection = "Verbindung verloren."
 please_wait = "Bitte warten Sie einen Moment, um diese Aufgabe auszuführen."
 webgl_unsupported = "Bitte aktualisieren Sie Ihren Browser! Er unterstützt WebGL2 nicht."
 bigints_unsupported = "BigInts werden nicht unterstützt. Bitte aktualisieren Sie Ihren Browser.\nBigInts werden benötigt, um das Brett unendlich zu machen."
-shaders_failed = "Shader-Programm konnte nicht initialisiert werden:"
-failed_compiling_shaders = "Beim Kompilieren der Shader ist ein Fehler aufgetreten:"
 # Checkmate Practice
 versus = "gegen"
 easy = "Leicht"
@@ -376,6 +381,8 @@ checkmate_gold = "Schachmatt-Meister: 100% aller Übungs-Schachmattes lösen."
 checkmate_bronze_unearned = "Lösen Sie 50% aller Übungs-Schachmattes, um dieses Abzeichen zu verdienen."
 checkmate_silver_unearned = "Lösen Sie 75% aller Übungs-Schachmattes, um dieses Abzeichen zu verdienen."
 checkmate_gold_unearned = "Lösen Sie 100% aller Übungs-Schachmattes, um dieses Abzeichen zu verdienen."
+coords-invalid = "Ungültiges Koordinatenformat. Bitte ganze Zahlen oder e-Notation eingeben (z. B. 1.23e4)."
+coords-exceeded = "So weit darf man nicht teleportieren! Das wäre ja zu einfach ;)"
 
 [play.javascript.copypaste]
 copied_game = "Spiel in Zwischenablage kopiert!"
@@ -386,15 +393,13 @@ cannot_paste_after_moves = "Spiel kann nicht eingefügt werden, nachdem gezogen 
 clipboard_denied = "Zwischenablage-Berechtigung verweigert. Dies könnte Ihr Browser sein."
 clipboard_invalid = "Zwischenablage nicht in gültiger ICN-Notation."
 game_needs_to_specify = "Spiel muss entweder die Metadaten 'Variante' oder die Eigenschaft 'Position' angeben."
-invalid_wincon_white = "Weiß hat eine ungültige Gewinnbedingung"
-invalid_wincon_black = "Schwarz hat eine ungültige Gewinnbedingung"
+invalid_wincon = "Spieler hat eine ungültige Gewinnbedingung"
 pasting_game = "Spiel wird eingefügt..."
 pasting_in_private = "Das Einfügen eines Spiels in einem privaten Match führt zu einer Desynchronisation, wenn Ihr Gegner nicht dasselbe tut!"
 piece_count = "Figurenanzahl"
 exceeded = "überschritten"
 changed_wincon = "Schachmatt-Gewinnbedingungen wurden auf Königsfang geändert und die Icon-Darstellung deaktiviert. Drücken Sie 'P' zum Reaktivieren (nicht empfohlen)."
 loaded_from_clipboard = "Spiel aus Zwischenablage geladen!"
-slidelimit_not_number = "Die Gamerule 'slideLimit' muss eine Zahl sein. Empfangen wurde"
 
 [play.javascript.rendering]
 on = "An"

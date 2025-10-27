@@ -28,6 +28,7 @@ interface MemberRecord {
 	preferences?: string | null;
 	username_history?: string | null;
 	checkmates_beaten?: string;
+	last_read_news_date?: string | null;
 }
 
 // --- Module Setup ---

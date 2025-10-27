@@ -25,7 +25,7 @@ import icnconverter, { _Move_Out, LongFormatOut } from '../../../../../shared/ch
 import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
-
+import boardeditor from '../misc/boardeditor.js';
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
@@ -48,10 +48,18 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate','UTCTime'];
  * This callback is called when the "Paste Game" button is pressed.
  * @param event - The event fired from the event listener
  */
+// eslint-disable-next-line no-unused-vars
 async function callbackPaste(event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
+
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
+
+	// If we are in the board editor, let the board editor script handle this instead
+	if (boardeditor.areInBoardEditor()) {
+		boardeditor.load();
+		return;
+	}
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame()) {
@@ -140,15 +148,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 	delete longformOut.metadata.Result;
 	delete longformOut.metadata.Termination;
 
-	let position: Map<CoordsKey, number>;
-	let specialRights: Set<CoordsKey>;
-	if (longformOut.position) {
-		position = longformOut.position;
-		specialRights = longformOut.state_global.specialRights!;
-	} else {
-		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
-		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
-	}
+	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(longformOut);
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
@@ -218,7 +218,25 @@ function pasteGame(longformOut: LongFormatOut): void {
 }
 
 
+/**
+ * Utility for extracting position and specialRights from a LongFormatOut.
+ */
+function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey>; } {
+	// Get relevant position and specialRights information from longformat
+	if (longFormat.position && longFormat.state_global.specialRights) {
+		return {
+			position: longFormat.position,
+			specialRights: longFormat.state_global.specialRights,
+		};
+	} else {
+		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
+		return variant.getStartingPositionOfVariant(longFormat.metadata);
+	}
+}
+
+
 
 export default {
-	callbackPaste
+	callbackPaste,
+	getPositionAndSpecialRightsFromLongFormat,
 };

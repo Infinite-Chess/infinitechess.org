@@ -35,11 +35,10 @@
                     <div data-tool="load">Load</div>
                     <div data-tool="save">Save</div>
                     <div data-tool="normal" class="active">Normal</div>
-                    <div data-tool="placer">Placer</div>
                     <div data-tool="eraser">Eraser</div>
-                    <div data-tool="selector">Selector</div>
-                    <div data-tool="gamerules">Game Rules</div>
+                    <!-- <div data-tool="selector">Selector</div> -->
                     <div data-tool="specialrights">Special Rights</div>
+                    <div data-tool="gamerules">Game Rules</div>
                     <div data-tool="color" id="editor-dot" class="dot"></div>
                 </div>
                 <div id="editor-pieceTypes"></div>
@@ -203,6 +202,11 @@
                                     <source srcset="/img/game/guide/fairy/huygen.webp" type="image/webp" />
                                     <img loading="lazy" src="/img/game/guide/fairy/huygen.png">
                                 </picture>
+                                <picture id="ro-img" class="img-fairymoveset hidden">
+                                    <source srcset="/img/game/guide/fairy/rose.avif" type="image/avif" />
+                                    <source srcset="/img/game/guide/fairy/rose.webp" type="image/webp" />
+                                    <img loading="lazy" src="/img/game/guide/fairy/rose.png">
+                                </picture>
                                 <picture id="ob-img" class="img-fairymoveset hidden">
                                     <source srcset="/img/game/guide/fairy/obstacle.avif" type="image/avif" />
                                     <source srcset="/img/game/guide/fairy/obstacle.webp" type="image/webp" />
@@ -250,6 +254,10 @@
                                         <div id="hu-desc" class="fairy-card-desc hidden">
                                             <p class="fairy-card-title"><%=t('play.guide.pieces.huygen.name')%></p>
                                             <p class="fairy-card-description"><%=t('play.guide.pieces.huygen.description')%></p>
+                                        </div>
+                                        <div id="ro-desc" class="fairy-card-desc hidden">
+                                            <p class="fairy-card-title"><%=t('play.guide.pieces.rose.name')%></p>
+                                            <p class="fairy-card-description"><%=t('play.guide.pieces.rose.description')%></p>
                                         </div>
                                         <div id="ob-desc" class="fairy-card-desc hidden">
                                             <p class="fairy-card-title"><%=t('play.guide.pieces.obstacle.name')%></p>

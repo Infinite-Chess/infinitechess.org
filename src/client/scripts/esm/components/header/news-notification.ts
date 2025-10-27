@@ -1,4 +1,4 @@
-// src/client/scripts/esm/components/header/news-notification.js
+// src/client/scripts/esm/components/header/news-notification.ts
 
 /**
  * This script handles the unread news notification badge in the header.
@@ -8,24 +8,37 @@
 
 import validatorama from '../../util/validatorama.js';
 
-const newsLink = document.querySelector('a[href*="/news"]');
-let notificationBadge = null;
+const newsLink = document.querySelector<HTMLAnchorElement>('a[href*="/news"]');
+let notificationBadge: HTMLSpanElement | null = null;
 
 /**
  * Creates and returns the notification badge element
+ * @param count - The number of unread news posts
  */
-function createNotificationBadge() {
+function createNotificationBadge(count: number): HTMLSpanElement {
 	const badge = document.createElement('span');
 	badge.className = 'news-notification-badge';
+	
+	// Display count as "9+" for 10 or more, otherwise show the number
+	const displayText = count >= 10 ? '9+' : count.toString();
+	badge.textContent = displayText;
+	
 	badge.style.cssText = `
 		position: absolute;
 		top: 2px;
-		right: 2px;
+		right: 4px;
 		background-color: #ff4444;
+		color: white;
 		border-radius: 50%;
-		width: 8px;
-		height: 8px;
-		display: block;
+		width: 16px;
+		height: 16px;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 10px;
+		font-weight: bold;
+		line-height: 1;
 		box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 		pointer-events: none;
 	`;
@@ -35,7 +48,7 @@ function createNotificationBadge() {
 /**
  * Fetches the unread news count from the server
  */
-async function fetchUnreadNewsCount() {
+async function fetchUnreadNewsCount(): Promise<number> {
 	try {
 		const response = await fetch('/api/news/unread-count', {
 			headers: {
@@ -48,7 +61,7 @@ async function fetchUnreadNewsCount() {
 			return 0;
 		}
 		
-		const data = await response.json();
+		const data = await response.json() as { count: number };
 		return data.count || 0;
 	} catch (error) {
 		console.error('Error fetching unread news count:', error);
@@ -59,7 +72,7 @@ async function fetchUnreadNewsCount() {
 /**
  * Updates the notification badge display
  */
-async function updateNotificationBadge() {
+async function updateNotificationBadge(): Promise<void> {
 	// Only show badge if user is logged in
 	const username = validatorama.getOurUsername();
 	if (!username) {
@@ -78,31 +91,27 @@ async function updateNotificationBadge() {
 
 /**
  * Shows the notification badge with the given count
- * @param {number} _count - The number of unread news posts (unused, badge is just a dot)
+ * @param count - The number of unread news posts
  */
-// eslint-disable-next-line no-unused-vars
-function showNotificationBadge(_count) {
+function showNotificationBadge(count: number): void {
 	if (!newsLink) {
 		return;
 	}
 	
-	// Make sure the news link has position relative for absolute positioning
-	if (getComputedStyle(newsLink).position === 'static') {
-		newsLink.style.position = 'relative';
-	}
-	
 	if (!notificationBadge) {
-		notificationBadge = createNotificationBadge();
+		notificationBadge = createNotificationBadge(count);
 		newsLink.appendChild(notificationBadge);
+	} else {
+		// Update existing badge text
+		const displayText = count >= 10 ? '9+' : count.toString();
+		notificationBadge.textContent = displayText;
 	}
-	
-	// Badge is just a dot, no text content needed
 }
 
 /**
  * Removes the notification badge
  */
-function removeNotificationBadge() {
+function removeNotificationBadge(): void {
 	if (notificationBadge && notificationBadge.parentNode) {
 		notificationBadge.remove();
 		notificationBadge = null;
@@ -112,7 +121,7 @@ function removeNotificationBadge() {
 /**
  * Initializes the news notification feature
  */
-function init() {
+function init(): void {
 	if (!newsLink) {
 		console.warn('News link not found in header');
 		return;
@@ -131,12 +140,7 @@ function init() {
 	});
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', init);
-} else {
-	init();
-}
+init();
 
 export default {
 	updateNotificationBadge,
