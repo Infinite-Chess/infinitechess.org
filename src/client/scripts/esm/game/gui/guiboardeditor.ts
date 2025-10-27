@@ -293,26 +293,32 @@ function readGameRules() : void {
 	const moveRule = (validMoveRuleInputs === 2 ? {current : Number(moveRuleCurrent), max: Number(moveRuleMax)} : undefined);
 
 	// promotionRanks
-	const promotionRanks: {white?: bigint[], black?: bigint[]} = {};
-	const promotionRanksWhite = element_gamerulesPromotionranksWhite.value;
-	if (promotionRanksRegex.test(promotionRanksWhite)) {
+	let promotionRanksWhite : bigint[] = [];
+	const promotionRanksWhiteInput = element_gamerulesPromotionranksWhite.value;
+	if (promotionRanksRegex.test(promotionRanksWhiteInput)) {
 		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
-		promotionRanks.white = [...new Set(promotionRanksWhite.split(',').map(BigInt))];
-	} else if (promotionRanksWhite === "") {
+		promotionRanksWhite = [...new Set(promotionRanksWhiteInput.split(',').map(BigInt))];
+	} else if (promotionRanksWhiteInput === "") {
 		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
 	} else {
 		element_gamerulesPromotionranksWhite.classList.add('invalid-input');
 	}
 
-	const promotionRanksBlack = element_gamerulesPromotionranksBlack.value;
-	if (promotionRanksRegex.test(promotionRanksBlack)) {
+	let promotionRanksBlack : bigint[] = [];
+	const promotionRanksBlackInput = element_gamerulesPromotionranksBlack.value;
+	if (promotionRanksRegex.test(promotionRanksBlackInput)) {
 		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
-		promotionRanks.black = [...new Set(promotionRanksBlack.split(',').map(BigInt))];
-	} else if (promotionRanksBlack === "") {
+		promotionRanksBlack = [...new Set(promotionRanksBlackInput.split(',').map(BigInt))];
+	} else if (promotionRanksBlackInput === "") {
 		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
 	} else {
 		element_gamerulesPromotionranksBlack.classList.add('invalid-input');
 	}
+
+	const promotionRanks = (promotionRanksWhite.length === 0 && promotionRanksBlack.length === 0) ? undefined : {
+		white: promotionRanksWhite.length === 0 ? undefined : promotionRanksWhite,
+		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
+	};
 
 	// promotionsAllowed
 	let promotionsAllowed: RawType[] | undefined = undefined;
@@ -368,30 +374,48 @@ function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
 	if (gamerulesGUIinfo.enPassant !== undefined) {
 		element_gamerulesEnPassantX.value = String(gamerulesGUIinfo.enPassant.x);
 		element_gamerulesEnPassantY.value = String(gamerulesGUIinfo.enPassant.y);
+	} else {
+		element_gamerulesEnPassantX.value = "";
+		element_gamerulesEnPassantY.value = "";
 	}
 
 	if (gamerulesGUIinfo.moveRule !== undefined) {
 		element_gamerulesMoveruleCurrent.value = String(gamerulesGUIinfo.moveRule.current);
 		element_gamerulesMoveruleMax.value = String(gamerulesGUIinfo.moveRule.max);
+	} else {
+		element_gamerulesMoveruleCurrent.value = "";
+		element_gamerulesMoveruleMax.value = "";
 	}
 
 	if (gamerulesGUIinfo.promotionRanks !== undefined) {
 		if (gamerulesGUIinfo.promotionRanks.white !== undefined) {
 			element_gamerulesPromotionranksWhite.value = gamerulesGUIinfo.promotionRanks.white.map(bigint => String(bigint)).join(",");
-		}
+		} else element_gamerulesPromotionranksWhite.value = "";
 		if (gamerulesGUIinfo.promotionRanks.black !== undefined) {
 			element_gamerulesPromotionranksBlack.value = gamerulesGUIinfo.promotionRanks.black.map(bigint => String(bigint)).join(",");
-		}
+		} else element_gamerulesPromotionranksBlack.value = "";
+	} else {
+		element_gamerulesPromotionranksWhite.value = "";
+		element_gamerulesPromotionranksBlack.value = "";
 	}
 
 	if (gamerulesGUIinfo.promotionsAllowed !== undefined) {
 		element_gamerulesPromotionpieces.value = gamerulesGUIinfo.promotionsAllowed.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
-	}
+	} else element_gamerulesPromotionpieces.value = "";
 
 	element_gamerulesCheckmate.checked = gamerulesGUIinfo.winConditions.includes("checkmate");
 	element_gamerulesRoyalcapture.checked = gamerulesGUIinfo.winConditions.includes("royalcapture");
 	element_gamerulesAllroyalscaptured.checked = gamerulesGUIinfo.winConditions.includes("allroyalscaptured");
 	element_gamerulesAllpiecescaptured.checked = gamerulesGUIinfo.winConditions.includes("allpiecescaptured");
+
+	// Since we manually set all inputs, they are all valid
+	element_gamerulesEnPassantX.classList.remove('invalid-input');
+	element_gamerulesEnPassantY.classList.remove('invalid-input');
+	element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
+	element_gamerulesMoveruleMax.classList.remove('invalid-input');
+	element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
+	element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
+	element_gamerulesPromotionpieces.classList.remove('invalid-input');
 }
 
 /** Deselects the input boxes when pressing Enter */

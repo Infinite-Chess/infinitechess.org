@@ -40,7 +40,7 @@ import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { Additional, Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { _Move_Compact, _Move_Out, LongFormatIn, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { SimplifiedGameState } from '../chess/gamecompressor.js';
@@ -390,9 +390,22 @@ function save(): void {
 	// Construct gameRules
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : [players.BLACK, players.WHITE];
 	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
-	const promotionsAllowed = gamerulesGUIinfo.promotionsAllowed !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionsAllowed, [players.BLACK]: gamerulesGUIinfo.promotionsAllowed } : undefined;
-	const promotionRanks = gamerulesGUIinfo.promotionsAllowed !== undefined && gamerulesGUIinfo.promotionRanks !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionRanks.white, [players.BLACK]: gamerulesGUIinfo.promotionRanks.black } : undefined;
 	const winConditions = { [players.WHITE]: gamerulesGUIinfo.winConditions, [players.BLACK]: gamerulesGUIinfo.winConditions };
+	let promotionRanks : PlayerGroup<bigint[]> | undefined = undefined;
+	let promotionsAllowed : PlayerGroup<RawType[]> | undefined = undefined;
+	if (gamerulesGUIinfo.promotionsAllowed !== undefined && gamerulesGUIinfo.promotionRanks !== undefined) {
+		promotionsAllowed = {};
+		promotionRanks = {};
+		if (gamerulesGUIinfo.promotionRanks.white !== undefined) {
+			promotionRanks[players.WHITE] = gamerulesGUIinfo.promotionRanks.white;
+			promotionsAllowed[players.WHITE] = gamerulesGUIinfo.promotionsAllowed;
+		}
+
+		if (gamerulesGUIinfo.promotionRanks.black !== undefined) {
+			promotionRanks[players.BLACK] = gamerulesGUIinfo.promotionRanks.black;
+			promotionsAllowed[players.BLACK] = gamerulesGUIinfo.promotionsAllowed;
+		}
+	}
 	const gameRules : GameRules = {
 		turnOrder,
 		moveRule,
@@ -559,6 +572,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 			x : state_global.enpassant.square[0],
 			y : state_global.enpassant.square[1],
 		};
+	} else {
+		gamerulesGUIinfo.enPassant = undefined;
 	}
 
 	if (gameRules.moveRule !== undefined) {
@@ -566,6 +581,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 			current: (state_global.moveRuleState !== undefined ? state_global.moveRuleState : 0),
 			max: gameRules.moveRule
 		};
+	} else {
+		gamerulesGUIinfo.moveRule = undefined;
 	}
 
 	if (gameRules.promotionRanks !== undefined) {
@@ -573,6 +590,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 			white: (gameRules.promotionRanks[players.WHITE] !== undefined ? gameRules.promotionRanks[players.WHITE] : undefined),
 			black: (gameRules.promotionRanks[players.BLACK] !== undefined ? gameRules.promotionRanks[players.BLACK] : undefined)
 		};
+	} else {
+		gamerulesGUIinfo.promotionRanks = undefined;
 	}
 
 	if (gameRules.promotionsAllowed !== undefined) {
@@ -581,6 +600,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 			...(gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK]! : [])
 		])];
 		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
+	} else {
+		gamerulesGUIinfo.promotionsAllowed = undefined;
 	}
 
 	gamerulesGUIinfo.winConditions = [...new Set([
