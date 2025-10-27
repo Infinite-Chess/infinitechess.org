@@ -273,7 +273,7 @@ function readGameRules() : void {
 	// moveRule
 	let validMoveRuleInputs = 0;
 	const moveRuleCurrent = element_gamerulesMoveruleCurrent.value;
-	if (integerRegex.test(moveRuleCurrent)) {
+	if (integerRegex.test(moveRuleCurrent) && Number(moveRuleCurrent) >= 0) {
 		element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
 		validMoveRuleInputs++;
 	} else if (moveRuleCurrent === "") {
@@ -283,9 +283,13 @@ function readGameRules() : void {
 	}
 
 	const moveRuleMax = element_gamerulesMoveruleMax.value;
-	if (integerRegex.test(moveRuleMax)) {
-		element_gamerulesMoveruleMax.classList.remove('invalid-input');
-		validMoveRuleInputs++;
+	if (integerRegex.test(moveRuleMax) && Number(moveRuleMax) > 0) {
+		if (validMoveRuleInputs === 1 && Number(moveRuleCurrent) > Number(moveRuleMax)) {
+			element_gamerulesMoveruleMax.classList.add('invalid-input');
+		} else {
+			element_gamerulesMoveruleMax.classList.remove('invalid-input');
+			validMoveRuleInputs++;
+		}
 	} else if (moveRuleMax === "") {
 		element_gamerulesMoveruleMax.classList.remove('invalid-input');
 	} else {
