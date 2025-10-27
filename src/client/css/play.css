@@ -1430,13 +1430,121 @@ svg.collapse {
 #game-rules {
     min-width: 280px;
     max-width: 400px;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 0 18px 16px 18px;
+    border-radius: 12px;
     position: absolute;
     left: 1%;
     top: 11%;
-    background-color: rgba(255, 255, 255, 0.949);
-    box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.918);
+    background-color: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.75);
+    font-family: "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    color: #222;
+    z-index: 999;
+}
+
+/* Header (draggable area + close button) */
+#game-rules-header {
+    cursor: move;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#close-rules {
+    background: none;
+    border: none;
+    color: #444;
+    font-size: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+#close-rules:hover {
+    color: #e53935;
+}
+
+.divider {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    margin: 0 0 12px 0;
+}
+
+.rules-section {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.rules-section label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.input-pair {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.input-pair input {
+    width: 50px;
+    padding: 4px;
+    text-align: center;
+}
+
+.rules-section input[type="text"],
+.rules-section input[type="number"] {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 5px 8px;
+    transition: border 0.2s;
+}
+
+.rules-section input:focus {
+    border-color: #4285f4;
+    outline: none;
+}
+
+.toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-group label {
+    cursor: pointer;
+}
+
+.win-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.win-table th,
+.win-table td {
+    border-bottom: 1px solid #ddd;
+    padding: 6px 4px;
+}
+
+.win-table th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+}
+
+.win-table input[type="checkbox"] {
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+#game-rules input::placeholder {
+    color: #999;
 }
 
 

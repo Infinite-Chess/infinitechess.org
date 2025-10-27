@@ -612,16 +612,92 @@
 
                     <!-- Game Rules UI -->
                     <div id="game-rules" class="center hidden">
-                        <div>Game Rules</div> <!-- Make this a heading with a line below it -->
-                        <div>Player to move:</div> <!-- Toggle for choosing White or Black -->
-                        <div>En passant square:</div> <!-- Two input fields, one for choosing x-coordinate, one for choosing y-coordinate, seperated by a "," -->
-                        <div>Move rule state: </div> <!-- Two input fields, seperated by a "/" -->
-                        <div>Promotion ranks White: </div> <!-- One input field -->
-                        <div>Promotion pieces White: </div> <!-- One input field -->
-                        <div>Promotion ranks Black: </div> <!-- One input field -->
-                        <div>Promotion pieces Black: </div> <!-- One input field -->
-                        <div>Win conditions: </div> <!-- Table with three columns, with headers White and Black, and checkboxes in each row below allowing one to toggle win conditions like "checkmate" and "allpiecescaptured "for each player -->
+                        <div id="game-rules-header">
+                            <span>Game Rules</span>
+                            <button id="close-rules">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="rules-section">
+                            <label>Player to move:</label>
+                            <div class="toggle-group">
+                                <input type="radio" id="white" name="player" value="white" checked>
+                                <label for="white">White</label>
+                                <input type="radio" id="black" name="player" value="black">
+                                <label for="black">Black</label>
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
+                            <label>En passant square:</label>
+                            <div class="input-pair">
+                                <input type="number" placeholder="x">
+                                <span>,</span>
+                                <input type="number" placeholder="y">
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
+                            <label>Move rule state:</label>
+                            <div class="input-pair">
+                                <input type="text" placeholder="a">
+                                <span>/</span>
+                                <input type="text" placeholder="b">
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
+                            <label>Promotion ranks (White):</label>
+                            <input type="text" placeholder="e.g. 8">
+                        </div>
+
+                        <div class="rules-section">
+                            <label>Promotion pieces (White):</label>
+                            <input type="text" placeholder="e.g. Q,R,B,N">
+                        </div>
+
+                        <div class="rules-section">
+                            <label>Promotion ranks (Black):</label>
+                            <input type="text" placeholder="e.g. 1">
+                        </div>
+
+                        <div class="rules-section">
+                            <label>Promotion pieces (Black):</label>
+                            <input type="text" placeholder="e.g. Q,R,B,N">
+                        </div>
+
+                        <div class="rules-section">
+                            <label>Win conditions:</label>
+                            <table class="win-table">
+                                <thead>
+                                    <tr>
+                                        <th>Condition</th>
+                                        <th>White</th>
+                                        <th>Black</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Checkmate</td>
+                                        <td><input type="checkbox" checked></td>
+                                        <td><input type="checkbox" checked></td>
+                                    </tr>
+                                    <tr>
+                                        <td>All pieces captured</td>
+                                        <td><input type="checkbox"></td>
+                                        <td><input type="checkbox"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Stalemate</td>
+                                        <td><input type="checkbox"></td>
+                                        <td><input type="checkbox"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
 
                     <!-- Pause UI -->
                     <div id="pauseUI" class="pauseUI hidden">

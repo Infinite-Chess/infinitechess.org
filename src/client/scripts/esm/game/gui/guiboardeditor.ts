@@ -22,7 +22,11 @@ const element_tools = document.getElementById("editor-tools")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
 const element_dot = document.getElementById("editor-dot")!;
+
+const element_boardUI = document.getElementById("boardUI")!;
 const element_gamerulesWindow = document.getElementById("game-rules")!;
+const element_gamerulesHeader = document.getElementById("game-rules-header")!;
+const element_gamerulesCloseButton = document.getElementById("close-rules")!;
 
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
@@ -54,6 +58,17 @@ const neutralTypes = [ rawTypes.OBSTACLE ];
 let initialized = false;
 let boardEditorOpen = false;
 
+let gameRulesOffsetX = 0;
+let gameRulesOffsetY = 0;
+let gameRulesIsDragging = false;
+
+interface GameRulesPosition {
+  left: number;
+  top: number;
+}
+let gameRulesSavedPos : GameRulesPosition | undefined;
+
+
 // Functions ---------------------------------------------------------------
 
 function isOpen(): boolean {
@@ -62,6 +77,7 @@ function isOpen(): boolean {
 
 async function open(): Promise<void> {
 	boardEditorOpen = true;
+	gameRulesSavedPos = undefined;
 	element_menu.classList.remove("hidden");
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	await gameloader.startBoardEditor();
@@ -193,14 +209,110 @@ function nextColor(): void {
 	updatePieceColors(nextColor);
 }
 
-/**
- * Toggles the visibility of the game rules window
- * @param forceOff - optional paramater. If true, it will hide the game rules window, no matter its previous visibility
- */
-function toggleGameRules(forceOff: boolean = false): void {
-	if (forceOff || !element_gamerulesWindow.classList.contains("hidden")) element_gamerulesWindow.classList.add("hidden");
-	else element_gamerulesWindow.classList.remove("hidden");
+
+// Game Rules Utilities ---------------------------------------------------------------
+
+
+/** Helper: clamp value between min and max */
+function clamp(value: number, min: number, max: number): number {
+	return Math.max(min, Math.min(value, max));
 }
+
+/** Helper: keep the UI box within boardUI bounds */
+function clampGameRulesToBoardUIBounds(): void {
+	const parentRect = element_boardUI.getBoundingClientRect();
+	const elWidth = element_gamerulesWindow.offsetWidth;
+	const elHeight = element_gamerulesWindow.offsetHeight;
+
+	// Compute clamped position
+	const newLeft = clamp(element_gamerulesWindow.offsetLeft, 0, parentRect.width - elWidth);
+	const newTop = clamp(element_gamerulesWindow.offsetTop, 0, parentRect.height - elHeight);
+
+	element_gamerulesWindow.style.left = `${newLeft}px`;
+	element_gamerulesWindow.style.top = `${newTop}px`;
+
+	// Save new position
+	gameRulesSavedPos = { left: newLeft, top: newTop };
+}
+
+/** Start dragging */
+function startGameRulesDrag(e: MouseEvent): void {
+	gameRulesIsDragging = true;
+	gameRulesOffsetX = e.clientX - element_gamerulesWindow.offsetLeft;
+	gameRulesOffsetY = e.clientY - element_gamerulesWindow.offsetTop;
+	document.body.style.userSelect = "none";
+}
+
+/** During drag */
+function duringGameRulesDrag(e: MouseEvent): void {
+	if (!gameRulesIsDragging) return;
+
+	const parentRect = element_boardUI.getBoundingClientRect();
+	const elWidth = element_gamerulesWindow.offsetWidth;
+	const elHeight = element_gamerulesWindow.offsetHeight;
+
+	// Compute desired new position
+	const newLeft = e.clientX - gameRulesOffsetX;
+	const newTop = e.clientY - gameRulesOffsetY;
+
+	// Clamp within parent container
+	const clampedLeft = clamp(newLeft, 0, parentRect.width - elWidth);
+	const clampedTop = clamp(newTop, 0, parentRect.height - elHeight);
+
+	element_gamerulesWindow.style.left = `${clampedLeft}px`;
+	element_gamerulesWindow.style.top = `${clampedTop}px`;
+
+	// Save new position
+	gameRulesSavedPos = { left: clampedLeft, top: clampedTop };
+}
+
+/** Stop dragging */
+function stopGameRulesDrag(): void {
+	if (gameRulesIsDragging) {
+		clampGameRulesToBoardUIBounds();
+	}
+	gameRulesIsDragging = false;
+	document.body.style.userSelect = "auto";
+}
+
+function initGameRulesListeners(): void {
+	element_gamerulesHeader.addEventListener("mousedown", startGameRulesDrag);
+	document.addEventListener("mousemove", duringGameRulesDrag);
+	document.addEventListener("mouseup", stopGameRulesDrag);
+	window.addEventListener("resize", clampGameRulesToBoardUIBounds);
+	element_gamerulesCloseButton.addEventListener("click", closeGameRules);
+}
+
+function closeGameRulesListeners(): void {
+	element_gamerulesHeader.removeEventListener("mousedown", startGameRulesDrag);
+	document.removeEventListener("mousemove", duringGameRulesDrag);
+	document.removeEventListener("mouseup", stopGameRulesDrag);
+	window.removeEventListener("resize", clampGameRulesToBoardUIBounds);
+	element_gamerulesCloseButton.removeEventListener("click", closeGameRules);
+}
+
+function openGameRules(): void {
+	if (gameRulesSavedPos !== undefined) {
+		element_gamerulesWindow.style.left = `${gameRulesSavedPos.left}px`;
+		element_gamerulesWindow.style.top = `${gameRulesSavedPos.top}px`;
+	}
+	element_gamerulesWindow.classList.remove("hidden");
+	clampGameRulesToBoardUIBounds();
+	initGameRulesListeners();
+}
+
+function closeGameRules(): void {
+	element_gamerulesWindow.classList.add("hidden");
+	closeGameRulesListeners();
+}
+
+function toggleGameRules(): void {
+	if (element_gamerulesWindow.classList.contains("hidden")) openGameRules();
+	else closeGameRules();
+}
+
+// Helper Functions ---------------------------------------------------------
+
 
 /** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
 function _getActivePieceElements(): Element[] {
@@ -215,7 +327,9 @@ function _getPlayersInOrder(): Player[] {
 	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
 }
 
+
 // Callbacks ---------------------------------------------------------------
+
 
 function callback_ChangeTool(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
