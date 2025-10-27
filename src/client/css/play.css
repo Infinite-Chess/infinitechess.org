@@ -1430,6 +1430,8 @@ svg.collapse {
 #game-rules {
     min-width: 280px;
     max-width: 400px;
+    max-height: 80vh;      /* limits height relative to viewport */
+    overflow: auto;        /* enable both vertical and horizontal scrolling */
     padding: 0 18px 16px 18px;
     border-radius: 12px;
     position: absolute;
@@ -1490,12 +1492,17 @@ svg.collapse {
     display: flex;
     align-items: center;
     gap: 6px;
+    width: 100%; /* make the container take full width */
 }
 
 .input-pair input {
-    width: 50px;
-    padding: 4px;
-    text-align: center;
+    flex: 1;              /* allow inputs to expand equally */
+    min-width: 0;         /* ensures proper shrinking in flex layouts */
+    padding: 4px 8px;     /* adjust padding as needed */
+    text-align: center;   /* keep numbers/letters centered */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border 0.2s;
 }
 
 .rules-section input[type="text"],

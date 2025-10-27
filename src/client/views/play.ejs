@@ -632,24 +632,24 @@
                         <div class="rules-section">
                             <label>En passant square:</label>
                             <div class="input-pair">
-                                <input type="number" placeholder="x">
+                                <input type="text" placeholder="x">
                                 <span>,</span>
-                                <input type="number" placeholder="y">
+                                <input type="text" placeholder="y">
                             </div>
                         </div>
 
                         <div class="rules-section">
                             <label>Move rule state:</label>
                             <div class="input-pair">
-                                <input type="text" placeholder="a">
+                                <input type="text" placeholder="e.g. 0">
                                 <span>/</span>
-                                <input type="text" placeholder="b">
+                                <input type="text" placeholder="e.g. 100">
                             </div>
                         </div>
 
                         <div class="rules-section">
                             <label>Promotion ranks (White):</label>
-                            <input type="text" placeholder="e.g. 8">
+                            <input type="text" placeholder="e.g. 8,12">
                         </div>
 
                         <div class="rules-section">
@@ -659,7 +659,7 @@
 
                         <div class="rules-section">
                             <label>Promotion ranks (Black):</label>
-                            <input type="text" placeholder="e.g. 1">
+                            <input type="text" placeholder="e.g. 1,-10">
                         </div>
 
                         <div class="rules-section">
@@ -684,12 +684,17 @@
                                         <td><input type="checkbox" checked></td>
                                     </tr>
                                     <tr>
-                                        <td>All pieces captured</td>
+                                        <td>Royal capture</td>
                                         <td><input type="checkbox"></td>
                                         <td><input type="checkbox"></td>
                                     </tr>
                                     <tr>
-                                        <td>Stalemate</td>
+                                        <td>All royals captured</td>
+                                        <td><input type="checkbox"></td>
+                                        <td><input type="checkbox"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>All pieces captured</td>
                                         <td><input type="checkbox"></td>
                                         <td><input type="checkbox"></td>
                                     </tr>

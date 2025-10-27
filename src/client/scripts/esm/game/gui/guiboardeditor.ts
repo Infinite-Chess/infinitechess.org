@@ -61,12 +61,7 @@ let boardEditorOpen = false;
 let gameRulesOffsetX = 0;
 let gameRulesOffsetY = 0;
 let gameRulesIsDragging = false;
-
-interface GameRulesPosition {
-  left: number;
-  top: number;
-}
-let gameRulesSavedPos : GameRulesPosition | undefined;
+let gameRulesSavedPos : { left: number, top: number } | undefined;
 
 
 // Functions ---------------------------------------------------------------
@@ -86,6 +81,7 @@ async function open(): Promise<void> {
 
 function close(): void {
 	if (!boardEditorOpen) return;
+	closeGameRules();
 	element_menu.classList.add("hidden");
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
