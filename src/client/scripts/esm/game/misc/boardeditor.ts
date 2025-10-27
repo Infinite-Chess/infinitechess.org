@@ -398,12 +398,12 @@ function save(): void {
 	if (gamerulesGUIinfo.promotionsAllowed !== undefined && gamerulesGUIinfo.promotionRanks !== undefined) {
 		promotionsAllowed = {};
 		promotionRanks = {};
-		if (gamerulesGUIinfo.promotionRanks.white !== undefined) {
+		if (gamerulesGUIinfo.promotionRanks.white !== undefined && gamerulesGUIinfo.promotionRanks.white.length !== 0) {
 			promotionRanks[players.WHITE] = gamerulesGUIinfo.promotionRanks.white;
 			promotionsAllowed[players.WHITE] = gamerulesGUIinfo.promotionsAllowed;
 		}
 
-		if (gamerulesGUIinfo.promotionRanks.black !== undefined) {
+		if (gamerulesGUIinfo.promotionRanks.black !== undefined && gamerulesGUIinfo.promotionRanks.black.length !== 0) {
 			promotionRanks[players.BLACK] = gamerulesGUIinfo.promotionRanks.black;
 			promotionsAllowed[players.BLACK] = gamerulesGUIinfo.promotionsAllowed;
 		}

@@ -327,12 +327,17 @@ function readGameRules() : void {
 	};
 
 	// promotionsAllowed
-	let promotionsAllowed: RawType[] | undefined = undefined;
+	let promotionsAllowed: Number[] | undefined = undefined;
 	const promotionsAllowedRaw = element_gamerulesPromotionpieces.value;
 	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
-		element_gamerulesPromotionpieces.classList.remove('invalid-input');
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
+		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as Number))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+		if (promotionsAllowed.includes(NaN)) {
+			element_gamerulesPromotionpieces.classList.add('invalid-input');
+			promotionsAllowed = undefined;
+		} else {
+			element_gamerulesPromotionpieces.classList.remove('invalid-input');
+			if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
+		}
 	} else if (promotionsAllowedRaw === "") {
 		element_gamerulesPromotionpieces.classList.remove('invalid-input');
 	} else {
@@ -352,7 +357,7 @@ function readGameRules() : void {
 		enPassant,
 		moveRule,
 		promotionRanks,
-		promotionsAllowed,
+		promotionsAllowed: promotionsAllowed as RawType[],
 		winConditions
 	};
 
