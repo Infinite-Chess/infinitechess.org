@@ -343,6 +343,10 @@ function readGameRules() : GameRulesGUIinfo {
 		winConditions
 	};
 
+	// Set en passant state
+	if (enPassant !== undefined) boardeditor.setEnpassantState([enPassant.x, enPassant.y]);
+	else boardeditor.setEnpassantState(undefined);
+
 	return gameRules;
 }
 

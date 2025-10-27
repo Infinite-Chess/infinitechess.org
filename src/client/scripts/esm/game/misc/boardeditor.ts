@@ -318,10 +318,16 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | 
 	// Remove its special right
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current, false);
-	// If the pawn has been removed, the en passant square must be too.
-	if (gamefile.boardsim.state.global.enpassant?.square !== undefined && coordutil.areCoordsEqual(pieceHovered.coords, gamefile.boardsim.state.global.enpassant.square)) {
-		state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, undefined);
-	}
+}
+
+function setEnpassantState(coord: Coords | undefined) : void {
+	const enpassant = (coord !== undefined) ? { square: coord, pawn: coord } : undefined; // dummy enpassant object
+	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, enpassant);
+	runEdit(gamefile, mesh, edit, true);
 }
 
 function clearAll(): void {
@@ -407,6 +413,7 @@ async function load(): Promise<void> {
 	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 	
 	let { position, specialRights } = pastegame.getPositionAndSpecialRightsFromLongFormat(longformOut);
+	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
 	// If it contains no moves, then we skip all that, thus saving time
@@ -435,6 +442,7 @@ async function load(): Promise<void> {
 		const new_gamestate = gamecompressor.GameToPosition(gamestate, loadedGamefile.boardsim.moves, loadedGamefile.boardsim.moves.length);
 		position = new_gamestate.position;
 		specialRights = new_gamestate.state_global.specialRights!;
+		stateGlobal = new_gamestate.state_global;
 	}
 	
 	const thisGamefile = gameslot.getGamefile()!;
@@ -477,7 +485,7 @@ async function load(): Promise<void> {
 	addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 
-	setGamerulesGUIinfo(longformOut.gameRules, longformOut.state_global); // Set gamerules object according to pasted game
+	setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
 
 	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
 }
@@ -493,6 +501,10 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 			y : state_global.enpassant.square[1],
 		};
 	}
+
+	// Set en passant state
+	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
+	else setEnpassantState(undefined);
 
 	if (gameRules.moveRule !== undefined) {
 		gamerulesGUIinfo.moveRule = {
@@ -592,6 +604,7 @@ export default {
 	load,
 	clearAll,
 	makeMoveEdit,
+	setEnpassantState,
 };
 
 export type {
