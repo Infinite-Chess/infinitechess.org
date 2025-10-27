@@ -5,9 +5,6 @@
 
 import guipractice from './guipractice.js';
 import guiboardeditor from './guiboardeditor.js';
-import gui from './gui.js';
-// @ts-ignore
-import guiguide from './guiguide.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
 
@@ -71,8 +68,8 @@ function callback_Practice(event: Event): void {
 }
 
 function callback_Guide(event: Event): void {
-	close();
-	guiguide.open();
+	// Navigate to the guide page
+	window.location.href = '/guide';
 }
 
 function callback_BoardEditor(event: Event): void {
