@@ -86,7 +86,7 @@ let addingSpecialRights: boolean | undefined;
 
 
 /** Virtual game rules object for the position */
-const gamerulesGUIinfo: GameRulesGUIinfo = {
+let gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
 	winConditions: ["checkmate"]
 };
@@ -539,7 +539,7 @@ async function load(): Promise<void> {
 	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
 }
 
-/** Update the game rules object keeping track of all current game rules */
+/** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
 function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>) : void {
 	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
 	else gamerulesGUIinfo.playerToMove = "black";
@@ -585,6 +585,10 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	guiboardeditor.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
+/** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
+function updateGamerulesGUIinfo(new_gamerulesGUIinfo : GameRulesGUIinfo) : void {
+	gamerulesGUIinfo = new_gamerulesGUIinfo;
+}
 
 /**
  * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
@@ -654,6 +658,7 @@ export default {
 	clearAll,
 	makeMoveEdit,
 	setEnpassantState,
+	updateGamerulesGUIinfo,
 };
 
 export type {

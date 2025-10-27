@@ -240,7 +240,7 @@ function nextColor(): void {
 // Game Rules Utilities ---------------------------------------------------------------
 
 /** Reads the game rules inserted into the input boxes */
-function readGameRules() : GameRulesGUIinfo {
+function readGameRules() : void {
 	// playerToMove
 	const playerToMove = element_gamerulesWhite.checked ? 'white' : 'black';
 
@@ -347,7 +347,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (enPassant !== undefined) boardeditor.setEnpassantState([enPassant.x, enPassant.y]);
 	else boardeditor.setEnpassantState(undefined);
 
-	return gameRules;
+	// Upate boardeditor.gamerulesGUIinfo
+	boardeditor.updateGamerulesGUIinfo(gameRules);
 }
 
 /** Sets the game rules in the game rules GUI */
