@@ -258,6 +258,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (integerRegex.test(enPassantX)) {
 		element_gamerulesEnPassantX.classList.remove('invalid-input');
 		validEnPassantCoords++;
+	} else if (enPassantX === "") {
+		element_gamerulesEnPassantX.classList.remove('invalid-input');
 	} else {
 		element_gamerulesEnPassantX.classList.add('invalid-input');
 	}
@@ -266,6 +268,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (integerRegex.test(enPassantY)) {
 		element_gamerulesEnPassantY.classList.remove('invalid-input');
 		validEnPassantCoords++;
+	} else if (enPassantY === "") {
+		element_gamerulesEnPassantY.classList.remove('invalid-input');
 	} else {
 		element_gamerulesEnPassantY.classList.add('invalid-input');
 	}
@@ -278,6 +282,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (integerRegex.test(moveRuleCurrent)) {
 		element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
 		validMoveRuleInputs++;
+	} else if (moveRuleCurrent === "") {
+		element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
 	} else {
 		element_gamerulesMoveruleCurrent.classList.add('invalid-input');
 	}
@@ -286,6 +292,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (integerRegex.test(moveRuleMax)) {
 		element_gamerulesMoveruleMax.classList.remove('invalid-input');
 		validMoveRuleInputs++;
+	} else if (moveRuleMax === "") {
+		element_gamerulesMoveruleMax.classList.remove('invalid-input');
 	} else {
 		element_gamerulesMoveruleMax.classList.add('invalid-input');
 	}
@@ -298,6 +306,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (promotionRanksRegex.test(promotionRanksWhite)) {
 		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
 		promotionRanks.white = [...new Set(promotionRanksWhite.split(',').map(BigInt))];
+	} else if (promotionRanksWhite === "") {
+		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
 	} else {
 		element_gamerulesPromotionranksWhite.classList.add('invalid-input');
 	}
@@ -306,6 +316,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (promotionRanksRegex.test(promotionRanksBlack)) {
 		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
 		promotionRanks.black = [...new Set(promotionRanksBlack.split(',').map(BigInt))];
+	} else if (promotionRanksBlack === "") {
+		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
 	} else {
 		element_gamerulesPromotionranksBlack.classList.add('invalid-input');
 	}
@@ -316,6 +328,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (promotionsAllowedRegex.test(promotionsAllowedWhite)) {
 		element_gamerulesPromotionpiecesWhite.classList.remove('invalid-input');
 		promotionsAllowed.white = promotionsAllowedWhite ? [...new Set(promotionsAllowedWhite.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+	} else if (promotionsAllowedWhite === "") {
+		element_gamerulesPromotionpiecesWhite.classList.remove('invalid-input');
 	} else {
 		element_gamerulesPromotionpiecesWhite.classList.add('invalid-input');
 	}
@@ -324,6 +338,8 @@ function readGameRules() : GameRulesGUIinfo {
 	if (promotionsAllowedRegex.test(promotionsAllowedBlack)) {
 		element_gamerulesPromotionpiecesBlack.classList.remove('invalid-input');
 		promotionsAllowed.black = promotionsAllowedBlack ? [...new Set(promotionsAllowedBlack.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+	} else if (promotionsAllowedBlack === "") {
+		element_gamerulesPromotionpiecesBlack.classList.remove('invalid-input');
 	} else {
 		element_gamerulesPromotionpiecesBlack.classList.add('invalid-input');
 	}
