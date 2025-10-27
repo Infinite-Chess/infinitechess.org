@@ -31,6 +31,7 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import pastegame from '../chess/pastegame.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -598,8 +599,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 
 	if (gameRules.promotionsAllowed !== undefined) {
 		gamerulesGUIinfo.promotionsAllowed = [...new Set([
-			...(gameRules.promotionsAllowed[players.WHITE] !== undefined ? gameRules.promotionsAllowed[players.WHITE]! : []),
-			...(gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK]! : [])
+			...(gameRules.promotionsAllowed[players.WHITE] !== undefined ? gameRules.promotionsAllowed[players.WHITE]!.filter(x => !Number.isNaN(x)) : []),
+			...(gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK]!.filter(x => !Number.isNaN(x)) : [])
 		])];
 		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
 	} else {
@@ -609,7 +610,7 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	gamerulesGUIinfo.winConditions = [...new Set([
 		...(gameRules.winConditions[players.WHITE] !== undefined ? gameRules.winConditions[players.WHITE]! : ["checkmate"]),
 		...(gameRules.winConditions[players.BLACK] !== undefined ? gameRules.winConditions[players.BLACK]! : ["checkmate"])
-	])];
+	])].filter(wincon => winconutil.isWinConditionValid(wincon));
 
 	// Set en passant state for rendering purposes
 	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
