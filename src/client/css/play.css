@@ -1426,6 +1426,19 @@ svg.collapse {
 }
 
 
+/* Game Rules UI */
+#game-rules {
+    min-width: 280px;
+    max-width: 400px;
+    padding: 10px;
+    border-radius: 10px;
+    position: absolute;
+    left: 1%;
+    top: 11%;
+    background-color: rgba(255, 255, 255, 0.949);
+    box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.918);
+}
+
 
 /* Pause UI */
 

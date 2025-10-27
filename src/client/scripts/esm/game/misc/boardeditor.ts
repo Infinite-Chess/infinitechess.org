@@ -34,7 +34,7 @@ import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
-import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';

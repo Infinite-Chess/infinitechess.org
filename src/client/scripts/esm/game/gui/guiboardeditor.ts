@@ -22,6 +22,7 @@ const element_tools = document.getElementById("editor-tools")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
 const element_dot = document.getElementById("editor-dot")!;
+const element_gamerulesWindow = document.getElementById("game-rules")!;
 
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
@@ -192,6 +193,15 @@ function nextColor(): void {
 	updatePieceColors(nextColor);
 }
 
+/**
+ * Toggles the visibility of the game rules window
+ * @param forceOff - optional paramater. If true, it will hide the game rules window, no matter its previous visibility
+ */
+function toggleGameRules(forceOff: boolean = false): void {
+	if (forceOff || !element_gamerulesWindow.classList.contains("hidden")) element_gamerulesWindow.classList.add("hidden");
+	else element_gamerulesWindow.classList.remove("hidden");
+}
+
 /** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
 function _getActivePieceElements(): Element[] {
 	const playerElements = element_playerTypes.get(boardeditor.getColor()) ?? [];
@@ -222,6 +232,9 @@ function callback_ChangeTool(e: Event): void {
 			return;
 		case "color":
 			nextColor();
+			return;
+		case "gamerules":
+			toggleGameRules();
 			return;
 		default:
 			if (tool !== null) boardeditor.setTool(tool);

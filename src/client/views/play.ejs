@@ -36,9 +36,9 @@
                     <div data-tool="save">Save</div>
                     <div data-tool="normal" class="active">Normal</div>
                     <div data-tool="eraser">Eraser</div>
-                    <!-- <div data-tool="selector">Selector</div> -->
                     <div data-tool="specialrights">Special Rights</div>
                     <div data-tool="gamerules">Game Rules</div>
+                    <!-- <div data-tool="selector">Selector</div> -->
                     <div data-tool="color" id="editor-dot" class="dot"></div>
                 </div>
                 <div id="editor-pieceTypes"></div>
@@ -608,6 +608,19 @@
                         <div id="promoteblack" class="promotecolor hidden">
                             <!-- <svg id="knightsB" class="promotepiececontainer"></svg> -->
                         </div>
+                    </div>
+
+                    <!-- Game Rules UI -->
+                    <div id="game-rules" class="center hidden">
+                        <div>Game Rules</div> <!-- Make this a heading with a line below it -->
+                        <div>Player to move:</div> <!-- Toggle for choosing White or Black -->
+                        <div>En passant square:</div> <!-- Two input fields, one for choosing x-coordinate, one for choosing y-coordinate, seperated by a "," -->
+                        <div>Move rule state: </div> <!-- Two input fields, seperated by a "/" -->
+                        <div>Promotion ranks White: </div> <!-- One input field -->
+                        <div>Promotion pieces White: </div> <!-- One input field -->
+                        <div>Promotion ranks Black: </div> <!-- One input field -->
+                        <div>Promotion pieces Black: </div> <!-- One input field -->
+                        <div>Win conditions: </div> <!-- Table with three columns, with headers White and Black, and checkboxes in each row below allowing one to toggle win conditions like "checkmate" and "allpiecescaptured "for each player -->
                     </div>
 
                     <!-- Pause UI -->
