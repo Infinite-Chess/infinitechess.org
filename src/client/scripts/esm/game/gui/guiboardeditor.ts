@@ -239,7 +239,7 @@ function nextColor(): void {
 
 // Game Rules Utilities ---------------------------------------------------------------
 
-/** Reads the game rules inserted into the input boxes */
+/** Reads the game rules inserted into the input boxes and updates boardeditor.gameRulesGUIinfo */
 function readGameRules() : void {
 	// playerToMove
 	const playerToMove = element_gamerulesWhite.checked ? 'white' : 'black';
@@ -351,7 +351,7 @@ function readGameRules() : void {
 	boardeditor.updateGamerulesGUIinfo(gameRules);
 }
 
-/** Sets the game rules in the game rules GUI */
+/** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
 function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
 	if (gamerulesGUIinfo.playerToMove === "white") {
 		element_gamerulesWhite.checked = true;
@@ -622,6 +622,5 @@ export default {
 	markTool,
 	markPiece,
 	updatePieceColors,
-	readGameRules,
 	setGameRules
 };
