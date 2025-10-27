@@ -16,7 +16,13 @@
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
             <div class="content">
-                <h1 class="center"><%=t('play.guide.title')%></h1>
+                <div class="guide-header">
+                    <a href="/play" class="back-arrow" title="Back to Play">
+                        <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="46.08"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#000000"></path></g></svg>
+                    </a>
+                    <h1 class="center"><%=t('play.guide.title')%></h1>
+                    <div class="back-arrow-spacer"></div>
+                </div>
 
                 <h2><%=t('play.guide.rules')%></h2>
                 <hr class="line-break">
