@@ -30,6 +30,7 @@ import gamecompressor from '../chess/gamecompressor.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import pastegame from '../chess/pastegame.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -41,12 +42,13 @@ import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { Additional, Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { _Move_Compact, _Move_Out, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { _Move_Compact, _Move_Out, LongFormatIn, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { SimplifiedGameState } from '../chess/gamecompressor.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
-import type { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
+import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -374,11 +376,58 @@ function redo(): void {
  */
 function save(): void {
 	if (!inBoardEditor) throw Error("Cannot save position when we're not using the board editor.");
-	const gamefile = gameslot.getGamefile()!;
-	const pieceIterator = organizedpieces.getPieceIterable(gamefile.boardsim.pieces);
-	const positionString = icnconverter.getShortFormPosition(pieceIterator, gamefile.boardsim.state.global.specialRights);
 
-	docutil.copyToClipboard(positionString);
+	// Construct gameRules
+	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : [players.BLACK, players.WHITE];
+	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
+	const promotionRanks = gamerulesGUIinfo.promotionRanks !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionRanks.white, [players.BLACK]: gamerulesGUIinfo.promotionRanks.black } : undefined;
+	const promotionsAllowed = gamerulesGUIinfo.promotionsAllowed !== undefined ? { [players.WHITE]: gamerulesGUIinfo.promotionsAllowed, [players.BLACK]: gamerulesGUIinfo.promotionsAllowed } : undefined;
+	const winConditions = { [players.WHITE]: gamerulesGUIinfo.winConditions, [players.BLACK]: gamerulesGUIinfo.winConditions };
+	const gameRules : GameRules = {
+		turnOrder,
+		moveRule,
+		promotionRanks,
+		promotionsAllowed,
+		winConditions
+	};
+
+	// Construct position
+	const gamefile = gameslot.getGamefile()!;
+	const position = organizedpieces.generatePositionFromPieces(gamefile.boardsim.pieces);
+
+	// Construct state_global
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
+	const enpassantcoords = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
+	const enpassant =  enpassantcoords !== undefined ? { square: enpassantcoords, pawn: enpassantcoords } as EnPassant : undefined;
+	const state_global : Partial<GlobalGameState> = {
+		specialRights,
+		moveRuleState,
+		enpassant
+	};
+
+	// Construct metadata
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata : MetaData = {
+		Event: "Board editor infinite chess position",
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime
+	};
+
+	// Construct LongFormatIn
+	const LongFormatIn: LongFormatIn = {
+		metadata,
+		fullMove : 1,
+		gameRules,
+		state_global,
+		position
+	};
+
+	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, {skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false});
+	docutil.copyToClipboard(shortFormatOut);
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 
