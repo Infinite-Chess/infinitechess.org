@@ -38,7 +38,7 @@ import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { Additional, Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { _Move_Compact, _Move_Out, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { SimplifiedGameState } from '../chess/gamecompressor.js';
@@ -80,9 +80,34 @@ let previousSquare: Coords | undefined;
 /** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
 let addingSpecialRights: boolean | undefined;
 
-/** Virtual game rules object for the position */
-let gamerules: GameRules | undefined;
 
+/** Virtual game rules object for the position */
+let gamerulesGUIinfo: GameRulesGUIinfo | undefined;
+
+interface GameRulesGUIinfo {
+	/** Type encoding information for the game rules object of the editor position */
+    playerToMove: 'white' | 'black';
+	enPassant?: {
+		x: number;
+		y: number;
+	};
+	moveRule?: {
+		current: number;
+		max: number;
+	};
+	promotionRanks?: {
+		white?: bigint[];
+		black?: bigint[];
+	};
+	promotionsAllowed?: {
+		white?: RawType[];
+		black?: RawType[];
+	};
+	winConditions: {
+		white: string[];
+		black: string[];
+	}
+}
 
 // Functions ------------------------------------------------------------------------
 
@@ -98,6 +123,9 @@ function initBoardEditor(): void {
 	guiboardeditor.markTool(currentTool);
 	guiboardeditor.updatePieceColors(currentColor);
 	guiboardeditor.markPiece(currentPieceType);
+
+	const gamefile = gameslot.getGamefile()!;
+	console.log(gamefile.basegame.gameRules);
 }
 
 function closeBoardEditor(): void {
@@ -518,4 +546,8 @@ export default {
 	load,
 	clearAll,
 	makeMoveEdit,
+};
+
+export type {
+	GameRulesGUIinfo,
 };

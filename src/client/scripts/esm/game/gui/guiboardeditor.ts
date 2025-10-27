@@ -10,9 +10,11 @@ import boardeditor from "../misc/boardeditor.js";
 import svgcache from "../../chess/rendering/svgcache.js";
 import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../chess/gameslot.js";
+import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
+import jsutil from "../../../../../shared/util/jsutil.js";
 
-import type { Player } from "../../../../../shared/chess/util/typeutil.js";
-import type { GameRules } from "../../../../../shared/chess/variants/gamerules.js";
+import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
+import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -86,13 +88,19 @@ const coloredTypes = [
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
 const neutralTypes = [ rawTypes.OBSTACLE ];
 
-let initialized = false;
-let boardEditorOpen = false;
-
+/** Variables for controlling the game rules GUI dragging */
 let gameRulesOffsetX = 0;
 let gameRulesOffsetY = 0;
 let gameRulesIsDragging = false;
 let gameRulesSavedPos : { left: number, top: number } | undefined;
+
+/** Regexes for validating game rules input fields */
+const integerRegex = new RegExp(String.raw`^${icnconverter.integerSource}$`);
+const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
+const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsAllowedSource}$`);
+
+let initialized = false;
+let boardEditorOpen = false;
 
 
 // Functions ---------------------------------------------------------------
@@ -247,51 +255,111 @@ function blurOnEnter(e: KeyboardEvent) : void {
 }
 
 /** Reads the game rules inserted into the input boxes */
-function readGameRules() : void {
-	const gameRules = {
-		player: element_gamerulesWhite.checked ? 'white' : 'black',
-		enPassant: {
-			x: element_gamerulesEnPassantX.value,
-			y: element_gamerulesEnPassantY.value
-		},
-		moveRule: {
-			current: element_gamerulesMoveruleCurrent.value,
-			max: element_gamerulesMoveruleMax.value
-		},
-		promotion: {
-			white: {
-				ranks: element_gamerulesPromotionranksWhite.value,
-				pieces: element_gamerulesPromotionpiecesWhite.value
-			},
-			black: {
-				ranks: element_gamerulesPromotionranksBlack.value,
-				pieces: element_gamerulesPromotionpiecesBlack.value
-			}
-		},
-		winConditions: {
-			checkmate: {
-				white: element_gamerulesCheckmateWhite.checked,
-				black: element_gamerulesCheckmateBlack.checked
-			},
-			royalCapture: {
-				white: element_gamerulesRoyalcaptureWhite.checked,
-				black: element_gamerulesRoyalcaptureBlack.checked
-			},
-			allRoyalsCaptured: {
-				white: element_gamerulesAllroyalscapturedWhite.checked,
-				black: element_gamerulesAllroyalscapturedBlack.checked
-			},
-			allPiecesCaptured: {
-				white: element_gamerulesAllpiecescapturedWhite.checked,
-				black: element_gamerulesAllpiecescapturedBlack.checked
-			}
-		}
+function readGameRules() : GameRulesGUIinfo {
+	// playerToMove
+	const playerToMove = element_gamerulesWhite.checked ? 'white' : 'black';
+
+	// enPassant
+	let validEnPassantCoords = 0;
+	const enPassantX = element_gamerulesEnPassantX.value;
+	if (integerRegex.test(enPassantX)) {
+		element_gamerulesEnPassantX.classList.remove('invalid-input');
+		validEnPassantCoords++;
+	} else {
+		element_gamerulesEnPassantX.classList.add('invalid-input');
+	}
+
+	const enPassantY = element_gamerulesEnPassantY.value;
+	if (integerRegex.test(enPassantY)) {
+		element_gamerulesEnPassantY.classList.remove('invalid-input');
+		validEnPassantCoords++;
+	} else {
+		element_gamerulesEnPassantY.classList.add('invalid-input');
+	}
+
+	const enPassant = (validEnPassantCoords === 2 ? {x : Number(enPassantX), y: Number(enPassantY)} : undefined);
+
+	// moveRule
+	let validMoveRuleInputs = 0;
+	const moveRuleCurrent = element_gamerulesMoveruleCurrent.value;
+	if (integerRegex.test(moveRuleCurrent)) {
+		element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
+		validMoveRuleInputs++;
+	} else {
+		element_gamerulesMoveruleCurrent.classList.add('invalid-input');
+	}
+
+	const moveRuleMax = element_gamerulesMoveruleMax.value;
+	if (integerRegex.test(moveRuleMax)) {
+		element_gamerulesMoveruleMax.classList.remove('invalid-input');
+		validMoveRuleInputs++;
+	} else {
+		element_gamerulesMoveruleMax.classList.add('invalid-input');
+	}
+
+	const moveRule = (validMoveRuleInputs === 2 ? {current : Number(moveRuleCurrent), max: Number(moveRuleMax)} : undefined);
+
+	// promotionRanks
+	const promotionRanks: {white?: bigint[], black?: bigint[]} = {};
+	const promotionRanksWhite = element_gamerulesPromotionranksWhite.value;
+	if (promotionRanksRegex.test(promotionRanksWhite)) {
+		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
+		promotionRanks.white = [...new Set(promotionRanksWhite.split(',').map(BigInt))];
+	} else {
+		element_gamerulesPromotionranksWhite.classList.add('invalid-input');
+	}
+
+	const promotionRanksBlack = element_gamerulesPromotionranksBlack.value;
+	if (promotionRanksRegex.test(promotionRanksBlack)) {
+		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
+		promotionRanks.black = [...new Set(promotionRanksBlack.split(',').map(BigInt))];
+	} else {
+		element_gamerulesPromotionranksBlack.classList.add('invalid-input');
+	}
+
+	// promotionsAllowed
+	const promotionsAllowed: {white?: RawType[], black?: RawType[]} = {};
+	const promotionsAllowedWhite = element_gamerulesPromotionpiecesWhite.value;
+	if (promotionsAllowedRegex.test(promotionsAllowedWhite)) {
+		element_gamerulesPromotionpiecesWhite.classList.remove('invalid-input');
+		promotionsAllowed.white = promotionsAllowedWhite ? [...new Set(promotionsAllowedWhite.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+	} else {
+		element_gamerulesPromotionpiecesWhite.classList.add('invalid-input');
+	}
+
+	const promotionsAllowedBlack = element_gamerulesPromotionpiecesBlack.value;
+	if (promotionsAllowedRegex.test(promotionsAllowedBlack)) {
+		element_gamerulesPromotionpiecesBlack.classList.remove('invalid-input');
+		promotionsAllowed.black = promotionsAllowedBlack ? [...new Set(promotionsAllowedBlack.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as RawType).filter(x => !Number.isNaN(x)))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+	} else {
+		element_gamerulesPromotionpiecesBlack.classList.add('invalid-input');
+	}
+
+	// win conditions
+	const winConditionsWhite : string[] = [];
+	if (element_gamerulesCheckmateWhite.checked) winConditionsWhite.push("checkmate");
+	if (element_gamerulesRoyalcaptureWhite.checked) winConditionsWhite.push("royalcapture");
+	if (element_gamerulesAllroyalscapturedWhite.checked) winConditionsWhite.push("allroyalscaptured");
+	if (element_gamerulesAllpiecescapturedWhite.checked) winConditionsWhite.push("allpiecescaptured");
+
+	const winConditionsBlack : string[] = [];
+	if (element_gamerulesCheckmateBlack.checked) winConditionsBlack.push("checkmate");
+	if (element_gamerulesRoyalcaptureBlack.checked) winConditionsBlack.push("royalcapture");
+	if (element_gamerulesAllroyalscapturedBlack.checked) winConditionsBlack.push("allroyalscaptured");
+	if (element_gamerulesAllpiecescapturedBlack.checked) winConditionsBlack.push("allpiecescaptured");
+
+	const winConditions = {white: winConditionsWhite, black: winConditionsBlack};
+
+	const gameRules : GameRulesGUIinfo = {
+		playerToMove,
+		enPassant,
+		moveRule,
+		promotionRanks,
+		promotionsAllowed,
+		winConditions
 	};
 
-	if (!/^-?[0-9]*$/.test(element_gamerulesEnPassantX.value)) element_gamerulesEnPassantX.classList.add('invalid-input');
-	else element_gamerulesEnPassantX.classList.remove('invalid-input');
-
-	console.log(gameRules);
+	return gameRules;
 }
 
 
@@ -506,5 +574,6 @@ export default {
 	initUI,
 	markTool,
 	markPiece,
-	updatePieceColors
+	updatePieceColors,
+	readGameRules
 };

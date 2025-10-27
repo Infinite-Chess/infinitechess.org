@@ -1478,6 +1478,12 @@ export default {
 
 	parsePresetSquares,
 	parsePresetRays,
+
+	integerSource,
+	promotionRanksSource,
+	promotionsAllowedSource,
+	default_promotions,
+	piece_codes_raw_inverted,
 };
 
 export type {
