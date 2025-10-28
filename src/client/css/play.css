@@ -124,6 +124,7 @@ button {
     border-radius: 100%;
     margin: 12px;
     flex-shrink: 0;
+    z-index: 1;
 }
 
 /* Entire board UI, including loading screen, canvas and overlay */
