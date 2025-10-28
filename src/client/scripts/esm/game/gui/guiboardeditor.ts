@@ -73,11 +73,14 @@ const coloredTypes = [
 	rawTypes.ARCHBISHOP,
 	rawTypes.AMAZON,
 	rawTypes.GUARD,
-	rawTypes.HAWK,
 	rawTypes.CENTAUR,
+	rawTypes.HAWK,
 	rawTypes.KNIGHTRIDER,
 	rawTypes.HUYGEN,
 	rawTypes.ROSE,
+	rawTypes.CAMEL,
+	rawTypes.GIRAFFE,
+	rawTypes.ZEBRA,
 	rawTypes.ROYALQUEEN,
 ];
 
