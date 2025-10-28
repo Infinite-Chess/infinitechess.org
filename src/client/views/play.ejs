@@ -36,30 +36,30 @@
                     <div data-tool="clearall" id="clearall"><%=t('play.editor.clear')%></div>
                     <div data-tool="reset" id="reset"><%=t('play.editor.reset')%></div>
                     <div data-tool="gamerules" id="gamerules"><%=t('play.editor.gamerules')%></div>
-                    <div data-tool="load" id="load" class="tooltip-dr" data-tooltip="Load position">
+                    <div data-tool="load" id="load" class="tooltip-dr" data-tooltip="<%=t('play.editor.load_position')%>">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -80 652 642"><g fill-rule="evenodd"><path fill="#808080" d="m220.7502 85.3337 43.5108 34.405-30.377 30.377-27.967-22.1154H85.3336v210.7734l39.3542-125.44h259.3124l-.0003-.001h42.667l53.3333.001-64.75 213.3333H42.667V85.3337h178.0832Zm201.7082 170.6666H156.021l-40.1666 128h267.7707l38.8333-128Z"/><path fill-rule="nonzero" fill="#808080" d="M426.667 42.667v149.3333h-42.6667l-.0005-76.4973-76.496 76.4968-60.34.0005L353.8298 85.333l-76.4961.0007V42.667H426.667Z"/></g></svg>
                     </div>
-                    <div data-tool="save" id="save" class="tooltip-d" data-tooltip="Save position">
+                    <div data-tool="save" id="save" class="tooltip-d" data-tooltip="<%=t('play.editor.save_position')%>">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="-4.5 -4.5 33 33"><path fill="#808080" fill-rule="evenodd" d="M18.1716 1a2 2 0 0 1 1.4142.5858l2.8284 2.8284A2 2 0 0 1 23 5.8284V20c0 1.6569-1.3431 3-3 3H4c-1.6568 0-3-1.3431-3-3V4c0-1.6568 1.3432-3 3-3h14.1716ZM4 3c-.5523 0-1 .4477-1 1v16c0 .5523.4477 1 1 1h1v-6c0-1.6569 1.3431-3 3-3h8c1.6569 0 3 1.3431 3 3v6h1c.5523 0 1-.4477 1-1V6.8284a2 2 0 0 0-.5858-1.4142l-1.8284-1.8284A2 2 0 0 0 17.1716 3H17v2c0 1.6569-1.3431 3-3 3h-4C8.3431 8 7 6.6569 7 5V3H4Zm13 18v-6c0-.5523-.4477-1-1-1H8c-.5523 0-1 .4477-1 1v6h10ZM9 3h6v2c0 .5523-.4477 1-1 1h-4c-.5523 0-1-.4477-1-1V3Z" clip-rule="evenodd"/></svg>
                     </div>
                 </div>
                 <hr class="editor-separator">
                 <div class="editor-header"><%=t('play.editor.tools')%></div>
                 <div class="editor-tools">
-                    <div data-tool="normal" id="normal" class="active tooltip-dr" data-tooltip="Normal">
+                    <div data-tool="normal" id="normal" class="active tooltip-dr" data-tooltip="<%=t('play.editor.normal')%>">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 1 30 30"><path fill="#808080" d="M6.56 25.48c-.32 0-.64-.2-.76-.52L4 20.68 1.16 21.8c-.24.12-.56.08-.8-.08s-.36-.4-.36-.68V7.36c0-.32.2-.64.52-.76s.68-.04.92.2l9.68 9.68c.2.2.28.48.24.76s-.24.52-.48.6l-2.8 1.2 1.76 4.28c.16.44-.04.92-.44 1.08l-2.48 1.04c-.16.04-.24.04-.36.04zm-2.08-6.72c.32 0 .64.2.76.52L7 23.56l.92-.4-1.76-4.28c-.16-.44.04-.92.44-1.08l2.44-1.04L1.68 9.4v10.44l2.48-1c.08-.04.2-.08.32-.08z"/></svg>
                     </div>
-                    <div data-tool="eraser" id="eraser" class="tooltip-d" data-tooltip="Eraser">
+                    <div data-tool="eraser" id="eraser" class="tooltip-d" data-tooltip="<%=t('play.editor.eraser')%>">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="-3 -3 30 30"><path fill="#808080" d="m5.505 11.4096.5304.5303-.5303-.5303ZM3 14.9522h-.75H3Zm9.5904 3.5427-.5303-.5303.5303.5303ZM9.0478 21v.75V21Zm2.3618-15.495-.5304-.5303.5304.5304Zm1.8314 12.3394a.75.75 0 0 0 1.0607-1.0607l-1.0607 1.0607Zm-6.0247-8.146a.75.75 0 1 0-1.0607 1.0606l1.0607-1.0607Zm8.8567 6.3746a.75.75 0 0 0 0-1.0606.75.75 0 0 0-1.0606 0l1.0606 1.0606Zm2.3946-4.5171a.75.75 0 0 0 .0042 1.0606.75.75 0 0 0 1.0606-.0041l-1.0648-1.0565Zm-12.4322.384 5.9045-5.9045-1.0607-1.0607-5.9045 5.9045 1.0607 1.0607Zm0 6.0247c-.85-.85-1.433-1.4353-1.8129-1.9331-.3666-.4805-.4725-.7904-.4725-1.0793h-1.5c0 .7488.3116 1.3752.78 1.9892.4552.5966 1.1247 1.2638 1.9447 2.0839l1.0607-1.0607Zm-1.0607-7.0854c-.82.8201-1.4895 1.4873-1.9447 2.0839-.4684.6139-.78 1.2404-.78 1.9891h1.5c0-.2889.106-.5987.4725-1.0792.3799-.4978.9629-1.0831 1.8129-1.9331l-1.0607-1.0607Zm7.0854 7.0854c-.85.85-1.4353 1.4331-1.9331 1.8129-.4805.3666-.7904.4725-1.0792.4725v1.5c.7487 0 1.3752-.3116 1.9891-.78.5966-.4552 1.2639-1.1247 2.0839-1.9447l-1.0607-1.0607Zm-7.0854 1.0607c.82.82 1.4873 1.4895 2.084 1.9447.6139.4684 1.2403.78 1.989.78v-1.5c-.2888 0-.5987-.1059-1.0792-.4725-.4978-.3798-1.083-.9629-1.9331-1.8129l-1.0607 1.0607Zm12.9899-12.99c.85.8501 1.4331 1.4354 1.8129 1.9332.3666.4805.4725.7904.4725 1.0793h1.5c0-.7488-.3116-1.3752-.78-1.9892-.4552-.5966-1.1247-1.2638-1.9447-2.0839l-1.0607 1.0607Zm1.0607-1.0606c-.8201-.82-1.4873-1.4895-2.0839-1.9447-.614-.4684-1.2404-.78-1.9892-.78v1.5c.2889 0 .5988.106 1.0793.4725.4978.3799 1.0831.9629 1.9331 1.8129l1.0607-1.0607Zm-7.0854 1.0607c.85-.85 1.4353-1.433 1.9331-1.8129.4805-.3666.7903-.4725 1.0792-.4725v-1.5c-.7487 0-1.3752.3116-1.9891.78-.5966.4552-1.2638 1.1247-2.0839 1.9447l1.0607 1.0607Zm2.3618 10.7483L7.2163 9.6983 6.1556 10.759l7.0854 7.0854 1.0607-1.0607Zm.7107-1.7713-2.9523 2.9522 1.0607 1.0607 2.9522-2.9523-1.0606-1.0606Zm4.52-2.4c.6608-.666 1.206-1.2365 1.5816-1.772.3883-.5535.636-1.1253.636-1.7926h-1.5c0 .2598-.0856.5343-.364.9312-.2911.415-.7459.8991-1.4184 1.5769l1.0648 1.0565Z"/><path stroke="#808080" stroke-linecap="round" stroke-width="1.5" d="M9 21h12"/></svg>
                     </div>
-                    <div data-tool="specialrights" id="specialrights" class="tooltip-d" data-tooltip="Special rights toggle">
+                    <div data-tool="specialrights" id="specialrights" class="tooltip-d" data-tooltip="<%=t('play.editor.special_right_toggle')%>">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="-4 -4 24 24"><path fill="#808080" d="M10 1H6v5H1v4h5v5h4v-5h5V6h-5V1Z"/></svg>
                     </div>
                 </div>
                 <hr class="editor-separator">
                 <div class="editor-header"><%=t('play.editor.pieces')%></div>
                 <div class="editor-tools">
-                    <div data-tool="color" id="editor-dot" class="dot tooltip-dr" data-tooltip="Piece color toggle"></div>
+                    <div data-tool="color" id="editor-dot" class="dot tooltip-dr" data-tooltip="<%=t('play.editor.piece_color_toggle')%>"></div>
                 </div>
                 <div id="editor-pieceTypes"></div>
                 <div id="editor-neutralTypes" class="editor-types"></div>
