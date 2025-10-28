@@ -52,6 +52,20 @@ button {
     z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
 }
 
+.editor-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1rem;
+    margin: 0.3em 0;
+    color: #333;
+}
+
+.editor-separator {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 0em 0em;
+}
+
 .editor-tools {
     display: grid;
     grid-template-columns: repeat(3, 4em);

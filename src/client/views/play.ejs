@@ -30,16 +30,25 @@
 
             <!-- Left vertical bar of Board Editor -->
             <div id="editor-menu" class="editor-menu unselectable hidden">
+                <div class="editor-header">File</div>
                 <div class="editor-tools">
                     <div data-tool="clearall" id="clearall">Clear all</div>
                     <div data-tool="reset" id="reset">Reset</div>
                     <div data-tool="gamerules" id="gamerules">Game Rules</div>
                     <div data-tool="load" id="load">Load</div>
                     <div data-tool="save" id="save">Save</div>
+                </div>
+                <hr class="editor-separator">
+                <div class="editor-header">Tools</div>
+                <div class="editor-tools">
                     <div data-tool="normal" id="normal" class="active">Normal</div>
                     <div data-tool="eraser" id="eraser">Eraser</div>
                     <div data-tool="specialrights" id="specialrights">Special Rights</div>
-                    <div data-tool="editor-dot" id="editor-dot" class="dot"></div>
+                </div>
+                <hr class="editor-separator">
+                <div class="editor-header">Pieces</div>
+                <div class="editor-tools">
+                    <div data-tool="color" id="editor-dot" class="dot"></div>
                 </div>
                 <div id="editor-pieceTypes"></div>
                 <div id="editor-neutralTypes" class="editor-types"></div>

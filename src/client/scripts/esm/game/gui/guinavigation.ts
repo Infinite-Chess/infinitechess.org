@@ -863,6 +863,7 @@ export default {
 	update_MoveButtons,
 	update_EditButtons,
 	callback_Pause,
+	callback_Expand,
 	lockRewind,
 	update,
 	isCoordinateActive,

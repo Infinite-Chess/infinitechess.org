@@ -587,6 +587,8 @@ async function load(longformat?: LongFormatOut): Promise<void> {
 
 	setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
 
+	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
+
 	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
 }
 
