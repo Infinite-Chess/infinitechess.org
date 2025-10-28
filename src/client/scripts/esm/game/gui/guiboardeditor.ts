@@ -154,7 +154,7 @@ async function initUI(): Promise<void> {
 			const svg = svgs[i]!;
 			svg.classList.add("piece");
 			const pieceContainer = document.createElement("div");
-			
+
 			pieceContainer.classList.add("tooltip-dr");
 			const localized_piece_name = translations['piecenames'][typeutil.strtypes[coloredTypes[i]!]!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
@@ -176,13 +176,29 @@ async function initUI(): Promise<void> {
 	element_void.classList.add("piece");
 	element_void.classList.add("void");
 	element_void.id = "0";
+
+	element_void.classList.add("tooltip-dr");
+	const localized_void_name = translations['piecenames'][typeutil.strtypes[rawTypes.VOID]!];
+	const void_abbreviation = icnconverter.piece_codes_raw[rawTypes.VOID];
+	element_void.setAttribute("data-tooltip", `${localized_void_name} (${void_abbreviation})`);
+
 	element_neutralTypes.push(element_void);
 	neutralPieces.appendChild(element_void);
 
-	for (const neutral_svg of neutral_svgs) {
+	for (let i = 0; i < neutral_svgs.length; i++) {
+		const neutral_svg = neutral_svgs[i]!;
 		neutral_svg.classList.add("piece");
+		const pieceContainer = document.createElement("div");
+		
+		pieceContainer.classList.add("tooltip-dr");
+		const localized_piece_name = translations['piecenames'][typeutil.strtypes[neutralTypes[i]!]!];
+		const piece_abbreviation = icnconverter.piece_codes_raw[neutralTypes[i]!];
+		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();
+		pieceContainer.setAttribute("data-tooltip", `${localized_piece_name} (${modified_piece_abbreviation})`);
+		
+		pieceContainer.appendChild(neutral_svg);
 		element_neutralTypes.push(neutral_svg);
-		neutralPieces.appendChild(neutral_svg);
+		neutralPieces.appendChild(pieceContainer);
 	}
 	element_neutralTypesContainer.appendChild(neutralPieces);
 
