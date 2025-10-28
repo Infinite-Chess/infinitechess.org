@@ -293,15 +293,14 @@ async function startBoardEditor(): Promise<void> {
 
 	await loadingscreen.open();
 
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata : MetaData = {
 		Variant: "Classical",
+		TimeControl: '-',
 		Event: `Position created using ingame board editor`,
 		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
 		Round: '-',
-		UTCDate,
-		UTCTime
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime()
 	};
 
 	gameslot.loadGamefile({
