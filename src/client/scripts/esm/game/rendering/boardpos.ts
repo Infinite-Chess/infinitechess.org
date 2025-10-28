@@ -217,7 +217,8 @@ function recalcScale(): void {
 	const scaleVelBD: BigDecimal = bd.FromNumber(scaleVel);
 	const deltaTimeBD: BigDecimal = bd.FromNumber(loadbalancer.getDeltaTime());
 
-	const product = bd.multiply_fixed(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
+	let product = bd.multiply_fixed(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
+	product = bd.clamp(product, bd.FromNumber(-0.5), bd.FromNumber(0.5)); // Prevent extreme zoom changes from low lps
 	const factor2 = bd.add(product, ONE); // scaleVel * deltaTime + 1
 
 	const newScale = bd.multiply_floating(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
