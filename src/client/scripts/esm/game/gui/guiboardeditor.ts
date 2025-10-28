@@ -150,9 +150,14 @@ async function initUI(): Promise<void> {
 		element_playerTypes.set(player, svgs);
 		playerPieces.classList.add("editor-types");
 		if (player !== boardeditor.getColor()) playerPieces.classList.add("hidden");
-		for (const svg of svgs) {
+		for (let i = 0; i < svgs.length; i++) {
+			const svg = svgs[i]!;
 			svg.classList.add("piece");
-			playerPieces.appendChild(svg);
+			const pieceContainer = document.createElement("div");
+			pieceContainer.classList.add("tooltip-dr");
+			pieceContainer.setAttribute("data-tooltip", `${icnconverter.piece_codes_raw[coloredTypes[i]!]}`);
+			pieceContainer.appendChild(svg);
+			playerPieces.appendChild(pieceContainer);
 		}
 		element_typesContainer.appendChild(playerPieces);
 	}
