@@ -222,12 +222,6 @@ keybinds_extra = [
 ]
 fairy_heading = "Märchenschachfiguren"
 fairy_paragraph = "Sie wissen bereits alles Nötige, um die Standardvariante „Klassisch“ zu spielen. Märchenschachfiguren werden im konventionellen Schach nicht verwendet, sind aber in andere Varianten integriert! Wenn Sie sich in einer Variante mit Ihnen unbekannten Figuren wiederfinden, erfahren Sie hier, wie sie funktionieren!"
-editing_heading = "Brettbearbeitung"
-editing_paragraphs = [
-["Es ist derzeit ein externer ", "Brett-Editor", " auf einem öffentlichen Google Sheet verfügbar! Dieses enthält Anweisungen zur Verwendung und erfordert grundlegende Google Sheets-Kenntnisse. Nach der Einrichtung können Sie benutzerdefinierte Positionen über die Schaltfläche „Spiel einfügen“ im Optionsmenü erstellen und in das Spiel importieren!"],
-"Um eine benutzerdefinierte Position mit einem Freund zu spielen, lassen Sie ihn eine private Einladung annehmen, dann können Sie beide den Spielcode einfügen, um zu spielen!",
-"Ein In-Game-Bretteditor ist noch geplant.",
-]
 back = "Zurück"
 
 [play.guide.pieces]

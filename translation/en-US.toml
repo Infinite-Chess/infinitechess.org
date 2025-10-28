@@ -222,12 +222,6 @@ keybinds_extra = [
 ]
 fairy_heading = "Fairy Pieces"
 fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, learn how they work here!"
-editing_heading = "Board Editing"
-editing_paragraphs = [
-["There is an external ", "board editor", " currently available on a public Google Sheet! It includes instructions on how to use it. This requires some basic Google Sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
-"To play a custom position with a friend, have them join a private invite, then both of you can paste the game code to start playing!",
-"An in-game board editor is still planned.",
-]
 back = "Back"
 
 [play.guide.pieces]
