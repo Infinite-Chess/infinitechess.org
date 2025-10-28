@@ -92,8 +92,8 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 	winConditions: ["checkmate"]
 };
 
+/** Type encoding information for the game rules object of the editor position */
 interface GameRulesGUIinfo {
-	/** Type encoding information for the game rules object of the editor position */
     playerToMove: 'white' | 'black';
 	enPassant?: {
 		x: bigint;
@@ -113,6 +113,10 @@ interface GameRulesGUIinfo {
 
 // Functions ------------------------------------------------------------------------
 
+/** 
+ * Initializes the board editor.
+ * Should be called AFTER loading the game logically.
+ */
 function initBoardEditor(): void {
 	inBoardEditor = true;
 	edits = [];
@@ -325,7 +329,7 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | 
 
 /** Updates the en passant square in the current gamefile, needed for display purposes */
 function setEnpassantState(coord: Coords | undefined) : void {
-	const enpassant = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } as EnPassant : undefined; // dummy enpassant object
+	const enpassant: EnPassant | undefined = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } : undefined; // dummy enpassant object
 	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
 
 	const gamefile = gameslot.getGamefile()!;
@@ -391,7 +395,7 @@ function save(): void {
 	if (!inBoardEditor) throw Error("Cannot save position when we're not using the board editor.");
 
 	// Construct gameRules
-	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : [players.BLACK, players.WHITE];
+	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
 	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
 	const winConditions = { [players.WHITE]: gamerulesGUIinfo.winConditions, [players.BLACK]: gamerulesGUIinfo.winConditions };
 	let promotionRanks : PlayerGroup<bigint[]> | undefined = undefined;
@@ -403,13 +407,12 @@ function save(): void {
 			promotionRanks[players.WHITE] = gamerulesGUIinfo.promotionRanks.white;
 			promotionsAllowed[players.WHITE] = gamerulesGUIinfo.promotionsAllowed;
 		}
-
 		if (gamerulesGUIinfo.promotionRanks.black !== undefined && gamerulesGUIinfo.promotionRanks.black.length !== 0) {
 			promotionRanks[players.BLACK] = gamerulesGUIinfo.promotionRanks.black;
 			promotionsAllowed[players.BLACK] = gamerulesGUIinfo.promotionsAllowed;
 		}
 	}
-	const gameRules : GameRules = {
+	const gameRules: GameRules = {
 		turnOrder,
 		moveRule,
 		promotionRanks,
@@ -424,8 +427,8 @@ function save(): void {
 	// Construct state_global
 	const specialRights = gamefile.boardsim.state.global.specialRights;
 	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
-	const enpassantcoords = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] as Coords : undefined;
-	const enpassant =  enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } as EnPassant : undefined; // dummy enpassant object
+	const enpassantcoords: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
+	const enpassant: EnPassant | undefined = enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } : undefined; // dummy enpassant object
 	const state_global : Partial<GlobalGameState> = {
 		specialRights,
 		moveRuleState,
@@ -452,7 +455,7 @@ function save(): void {
 		position
 	};
 
-	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, {skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false});
+	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, { skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
 	docutil.copyToClipboard(shortFormatOut);
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
@@ -570,7 +573,7 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
 	else gamerulesGUIinfo.playerToMove = "black";
 
-	if (state_global.enpassant !== undefined && state_global.enpassant.square !== undefined) {
+	if (state_global.enpassant !== undefined) {
 		gamerulesGUIinfo.enPassant = {
 			x : state_global.enpassant.square[0],
 			y : state_global.enpassant.square[1],
@@ -581,7 +584,7 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 
 	if (gameRules.moveRule !== undefined) {
 		gamerulesGUIinfo.moveRule = {
-			current: (state_global.moveRuleState !== undefined ? state_global.moveRuleState : 0),
+			current: state_global.moveRuleState || 0,
 			max: gameRules.moveRule
 		};
 	} else {
@@ -590,8 +593,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 
 	if (gameRules.promotionRanks !== undefined) {
 		gamerulesGUIinfo.promotionRanks = {
-			white: (gameRules.promotionRanks[players.WHITE] !== undefined ? gameRules.promotionRanks[players.WHITE] : undefined),
-			black: (gameRules.promotionRanks[players.BLACK] !== undefined ? gameRules.promotionRanks[players.BLACK] : undefined)
+			white: gameRules.promotionRanks[players.WHITE],
+			black: gameRules.promotionRanks[players.BLACK]
 		};
 	} else {
 		gamerulesGUIinfo.promotionRanks = undefined;
@@ -599,8 +602,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 
 	if (gameRules.promotionsAllowed !== undefined) {
 		gamerulesGUIinfo.promotionsAllowed = [...new Set([
-			...(gameRules.promotionsAllowed[players.WHITE] !== undefined ? gameRules.promotionsAllowed[players.WHITE]!.filter(x => !Number.isNaN(x)) : []),
-			...(gameRules.promotionsAllowed[players.BLACK] !== undefined ? gameRules.promotionsAllowed[players.BLACK]!.filter(x => !Number.isNaN(x)) : [])
+			...gameRules.promotionsAllowed[players.WHITE] || [],
+			...gameRules.promotionsAllowed[players.BLACK] || []
 		])];
 		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
 	} else {
@@ -608,8 +611,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	}
 
 	gamerulesGUIinfo.winConditions = [...new Set([
-		...(gameRules.winConditions[players.WHITE] !== undefined ? gameRules.winConditions[players.WHITE]! : ["checkmate"]),
-		...(gameRules.winConditions[players.BLACK] !== undefined ? gameRules.winConditions[players.BLACK]! : ["checkmate"])
+		...gameRules.winConditions[players.WHITE] || ["checkmate"],
+		...gameRules.winConditions[players.BLACK] || ["checkmate"]
 	])].filter(wincon => winconutil.isWinConditionValid(wincon));
 
 	// Set en passant state for rendering purposes

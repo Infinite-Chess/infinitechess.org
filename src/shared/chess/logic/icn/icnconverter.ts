@@ -1488,6 +1488,7 @@ export default {
 	promotionRanksSource,
 	promotionsAllowedSource,
 	default_promotions,
+	default_win_condition,
 	piece_codes_raw,
 	piece_codes_raw_inverted,
 };

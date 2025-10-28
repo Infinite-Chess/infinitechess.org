@@ -12,6 +12,7 @@ import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/ty
 import gameslot from "../chess/gameslot.js";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
+import math from "../../../../../shared/util/math/math.js";
 
 import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
 import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
@@ -27,6 +28,8 @@ const element_neutralTypesContainer = document.getElementById("editor-neutralTyp
 const element_dot = document.getElementById("editor-dot")!;
 
 const element_boardUI = document.getElementById("boardUI")!;
+
+// Game Rules UI elements---------------------------------------------------------------
 const element_gamerulesWindow = document.getElementById("game-rules")!;
 const element_gamerulesHeader = document.getElementById("game-rules-header")!;
 const element_gamerulesCloseButton = document.getElementById("close-rules")!;
@@ -52,6 +55,7 @@ const elements_gamerulesSelectionList : HTMLInputElement[] = [
 	element_gamerulesCheckmate, element_gamerulesRoyalcapture,
 	element_gamerulesAllroyalscaptured, element_gamerulesAllpiecescaptured
 ];
+// -------------------------------------------------------------------------------------
 
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
@@ -332,6 +336,7 @@ function readGameRules() : void {
 	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
 		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as Number))] : jsutil.deepCopyObject(icnconverter.default_promotions);
 		if (promotionsAllowed.includes(NaN)) {
+			// One or more piece abbreviations were invalid
 			element_gamerulesPromotionpieces.classList.add('invalid-input');
 			promotionsAllowed = undefined;
 		} else {
@@ -350,7 +355,7 @@ function readGameRules() : void {
 	if (element_gamerulesRoyalcapture.checked) winConditions.push("royalcapture");
 	if (element_gamerulesAllroyalscaptured.checked) winConditions.push("allroyalscaptured");
 	if (element_gamerulesAllpiecescaptured.checked) winConditions.push("allpiecescaptured");
-	if (winConditions.length === 0) winConditions.push("checkmate");
+	if (winConditions.length === 0) winConditions.push(icnconverter.default_win_condition);
 
 	const gameRules : GameRulesGUIinfo = {
 		playerToMove,
@@ -445,11 +450,6 @@ function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent) : void {
 	}
 }
 
-/** Helper: clamp value between min and max */
-function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(value, max));
-}
-
 /** Helper: keep the UI box within boardUI bounds */
 function clampGameRulesToBoardUIBounds(): void {
 	const parentRect = element_boardUI.getBoundingClientRect();
@@ -457,8 +457,8 @@ function clampGameRulesToBoardUIBounds(): void {
 	const elHeight = element_gamerulesWindow.offsetHeight;
 
 	// Compute clamped position
-	const newLeft = clamp(element_gamerulesWindow.offsetLeft, 0, parentRect.width - elWidth);
-	const newTop = clamp(element_gamerulesWindow.offsetTop, 0, parentRect.height - elHeight);
+	const newLeft = math.clamp(element_gamerulesWindow.offsetLeft, 0, parentRect.width - elWidth);
+	const newTop = math.clamp(element_gamerulesWindow.offsetTop, 0, parentRect.height - elHeight);
 
 	element_gamerulesWindow.style.left = `${newLeft}px`;
 	element_gamerulesWindow.style.top = `${newTop}px`;
@@ -499,8 +499,8 @@ function duringGameRulesDrag(coordx: number, coordy: number): void {
 	const newTop = coordy - gameRulesOffsetY;
 
 	// Clamp within parent container
-	const clampedLeft = clamp(newLeft, 0, parentRect.width - elWidth);
-	const clampedTop = clamp(newTop, 0, parentRect.height - elHeight);
+	const clampedLeft = math.clamp(newLeft, 0, parentRect.width - elWidth);
+	const clampedTop = math.clamp(newTop, 0, parentRect.height - elHeight);
 
 	element_gamerulesWindow.style.left = `${clampedLeft}px`;
 	element_gamerulesWindow.style.top = `${clampedTop}px`;
@@ -661,5 +661,5 @@ export default {
 	markTool,
 	markPiece,
 	updatePieceColors,
-	setGameRules
+	setGameRules,
 };
