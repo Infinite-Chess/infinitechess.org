@@ -26,7 +26,7 @@ html {
     --editor-type-width: clamp(30px, calc(var(--vw-capped) / 20), 45px);
 
     /* Dynamic font size for editor buttons/tools */
-    --editor-font-size: clamp(0.7rem, calc(var(--vw-capped) / 55), 1rem);
+    --editor-font-size: clamp(0.6rem, calc(var(--vw-capped) / 65), 0.9rem);
 
     /* Game rule window max width */
     --editor-game-rule-width: clamp(170px, calc(var(--vw-capped) / 5), 230px);
