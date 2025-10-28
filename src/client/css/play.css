@@ -1269,7 +1269,7 @@ svg.collapse {
     margin-bottom: 4px;
 }
 
-.invalid-input {
+#game-rules .invalid-input { /* Higher specificity to override default border-color */
     background-color: #f8d7da; /* light red */
     border-color: #f5c2c7;    /* optional border */
 }
@@ -1291,8 +1291,7 @@ svg.collapse {
     transition: border 0.2s;
 }
 
-.rules-section input[type="text"],
-.rules-section input[type="number"] {
+.rules-section input[type="text"] {
     border: 1px solid #ccc;
     border-radius: 6px;
     padding: 5px 8px;
