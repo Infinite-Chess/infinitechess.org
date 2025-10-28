@@ -63,7 +63,7 @@ button {
 .editor-separator {
     border: none;
     border-top: 1px solid #ccc;
-    margin: 0em 0em;
+    margin: 0.2em 0.2em;
 }
 
 .editor-tools {
@@ -83,25 +83,39 @@ button {
     aspect-ratio: 1/1;
 }
 
+.editor-types .piece, .editor-tools div:not(.dot) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5em;
+    margin: 0.1em;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
 .editor-types .piece:hover, .editor-tools div:hover {
-    outline-style: solid;
-    outline-width: 0.25em;
-    outline-offset: -0.15em;
+    background-color: #e0f0ff;     /* Slight highlight on hover */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Lift effect */
+    transform: translateY(-2px);   /* Slight pop up */
 }
 
 .active {
-    background-color: green;
+    background-color: #d1e8fd;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    outline-style: solid;
+    outline-width: 0.2em;
+    outline-offset: -0.1em;
 }
 
 .void {
-    background-color: black;
+    background-color: black !important;
     margin: 5px;
 }
 
 .void.active {
     margin: 5px;
     outline-style: solid;
-    outline-color: green;
+    outline-color: #d1e8fd;
     outline-width: 5px;
 }
 
