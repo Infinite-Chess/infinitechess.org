@@ -29,7 +29,7 @@ html {
     --editor-font-size: clamp(0.6rem, calc(var(--vw-capped) / 65), 0.9rem);
 
     /* Game rule window max width */
-    --editor-game-rule-width: clamp(170px, calc(var(--vw-capped) / 5), 230px);
+    --editor-game-rule-width: clamp(160px, calc(var(--vw-capped) / 5), 230px);
 }
 
 
