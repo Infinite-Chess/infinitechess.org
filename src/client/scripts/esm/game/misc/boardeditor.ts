@@ -364,6 +364,24 @@ function clearAll(): void {
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 }
 
+function reset(): void {
+	if (!inBoardEditor) throw Error("Cannot reset board when we're not using the board editor.");
+
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata : MetaData = {
+		Variant: "Classical",
+		Event: "Position created using ingame board editor",
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime
+	};
+	const classicalGamefile = gamefile.initFullGame(metadata);
+	const longformat = gamecompressor.compressGamefile(classicalGamefile) as LongFormatOut;
+	load(longformat);
+}
+
 function undo(): void {
 	if (!inBoardEditor) throw Error("Cannot undo edit when we're not using the board editor.");
 	if (thisEdit !== undefined) return; // do not allow undoing or redoing while currently making an edit
@@ -438,7 +456,7 @@ function save(): void {
 	// Construct metadata
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata : MetaData = {
-		Event: "Board editor infinite chess position",
+		Event: "Position created using ingame board editor",
 		Site: 'https://www.infinitechess.org/',
 		TimeControl: '-',
 		Round: '-',
@@ -464,27 +482,31 @@ function save(): void {
  * pastegame loads in a new position by creating a new gamefile and loading it
  * which doesn't work for the board editor.
  * This function simply applies an edit to the position of the pieces on the board.
+ * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
  */
-async function load(): Promise<void> {
+async function load(longformat?: LongFormatOut): Promise<void> {
 	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
 
-	// Do we have clipboard permission?
-	let clipboard: string;
-	try {
-		clipboard = await navigator.clipboard.readText();
-	} catch (error) {
-		const message: string = translations['copypaste'].clipboard_denied;
-		return statustext.showStatus((message + "\n" + error), true);
-	}
-
-	// Convert clipboard text to object
 	let longformOut: LongFormatOut;
-	try {
-		longformOut = icnconverter.ShortToLong_Format(clipboard);
-	} catch (e) {
-		console.error(e);
-		statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
-		return;
+	if (longformat !== undefined) longformOut = longformat;
+	else {
+		// Do we have clipboard permission?
+		let clipboard: string;
+		try {
+			clipboard = await navigator.clipboard.readText();
+		} catch (error) {
+			const message: string = translations['copypaste'].clipboard_denied;
+			return statustext.showStatus((message + "\n" + error), true);
+		}
+
+		// Convert clipboard text to object
+		try {
+			longformOut = icnconverter.ShortToLong_Format(clipboard);
+		} catch (e) {
+			console.error(e);
+			statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
+			return;
+		}
 	}
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
@@ -696,6 +718,7 @@ export default {
 	save,
 	load,
 	clearAll,
+	reset,
 	makeMoveEdit,
 	setEnpassantState,
 	updatePromotionLines,

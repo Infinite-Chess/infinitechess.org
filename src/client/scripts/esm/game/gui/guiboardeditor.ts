@@ -629,6 +629,9 @@ function callback_ChangeTool(e: Event): void {
 		case "clearall":
 			boardeditor.clearAll();
 			return;
+		case "reset":
+			boardeditor.reset();
+			return;
 		case "color":
 			nextColor();
 			return;
