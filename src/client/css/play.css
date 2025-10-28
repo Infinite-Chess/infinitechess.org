@@ -88,9 +88,16 @@ button {
     align-items: center;
     justify-content: center;
     border-radius: 0.5em;
-    margin: 0.1em;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.editor-types .piece {
+    margin: 0.1em;
+}
+
+.editor-tools div:not(.dot) {
+    margin: 0.25em;
 }
 
 .editor-types .piece:hover, .editor-tools div:hover {
@@ -122,7 +129,7 @@ button {
 .dot {
     border: 1px solid black;
     border-radius: 100%;
-    margin: 12px;
+    margin: 6px;
     flex-shrink: 0;
     z-index: 1;
 }
