@@ -4,7 +4,8 @@
         <script>
             const translations = <%-JSON.stringify({
                 ...t('play.javascript', {returnObjects: true}),
-                ...t('play.play-menu', {returnObjects: true})
+                ...t('play.play-menu', {returnObjects: true}),
+                ...t('play.editor', {returnObjects: true})
             })%>;
         </script>
         <!-- Do not modify the next line under any circumstances!! It is used by build.js as a reference point of where to inject js -->
@@ -30,11 +31,11 @@
 
             <!-- Left vertical bar of Board Editor -->
             <div id="editor-menu" class="editor-menu unselectable hidden">
-                <div class="editor-header">File</div>
+                <div class="editor-header"><%=t('play.editor.file')%></div>
                 <div class="editor-tools">
-                    <div data-tool="clearall" id="clearall">Clear</div>
-                    <div data-tool="reset" id="reset">Reset</div>
-                    <div data-tool="gamerules" id="gamerules">Game Rules</div>
+                    <div data-tool="clearall" id="clearall"><%=t('play.editor.clear')%></div>
+                    <div data-tool="reset" id="reset"><%=t('play.editor.reset')%></div>
+                    <div data-tool="gamerules" id="gamerules"><%=t('play.editor.gamerules')%></div>
                     <div data-tool="load" id="load" class="tooltip-dr" data-tooltip="Load position">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -80 652 642"><g fill-rule="evenodd"><path fill="#808080" d="m220.7502 85.3337 43.5108 34.405-30.377 30.377-27.967-22.1154H85.3336v210.7734l39.3542-125.44h259.3124l-.0003-.001h42.667l53.3333.001-64.75 213.3333H42.667V85.3337h178.0832Zm201.7082 170.6666H156.021l-40.1666 128h267.7707l38.8333-128Z"/><path fill-rule="nonzero" fill="#808080" d="M426.667 42.667v149.3333h-42.6667l-.0005-76.4973-76.496 76.4968-60.34.0005L353.8298 85.333l-76.4961.0007V42.667H426.667Z"/></g></svg>
                     </div>
@@ -43,7 +44,7 @@
                     </div>
                 </div>
                 <hr class="editor-separator">
-                <div class="editor-header">Tools</div>
+                <div class="editor-header"><%=t('play.editor.tools')%></div>
                 <div class="editor-tools">
                     <div data-tool="normal" id="normal" class="active tooltip-dr" data-tooltip="Normal">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 1 30 30"><path fill="#808080" d="M6.56 25.48c-.32 0-.64-.2-.76-.52L4 20.68 1.16 21.8c-.24.12-.56.08-.8-.08s-.36-.4-.36-.68V7.36c0-.32.2-.64.52-.76s.68-.04.92.2l9.68 9.68c.2.2.28.48.24.76s-.24.52-.48.6l-2.8 1.2 1.76 4.28c.16.44-.04.92-.44 1.08l-2.48 1.04c-.16.04-.24.04-.36.04zm-2.08-6.72c.32 0 .64.2.76.52L7 23.56l.92-.4-1.76-4.28c-.16-.44.04-.92.44-1.08l2.44-1.04L1.68 9.4v10.44l2.48-1c.08-.04.2-.08.32-.08z"/></svg>
@@ -56,7 +57,7 @@
                     </div>
                 </div>
                 <hr class="editor-separator">
-                <div class="editor-header">Pieces</div>
+                <div class="editor-header"><%=t('play.editor.pieces')%></div>
                 <div class="editor-tools">
                     <div data-tool="color" id="editor-dot" class="dot tooltip-dr" data-tooltip="Piece color toggle"></div>
                 </div>
@@ -448,24 +449,24 @@
                     <!-- Game Rules UI for Board Editor -->
                     <div id="game-rules" class="center hidden">
                         <div id="game-rules-header">
-                            <span class="unselectable">Game Rules</span>
+                            <span class="unselectable"><%=t('play.editor.gamerules')%></span>
                             <button id="close-rules">&times;</button>
                         </div>
 
                         <hr class="divider">
 
                         <div class="rules-section">
-                            <label class="unselectable">Player to move:</label>
+                            <label class="unselectable"><%=t('play.editor.player_to_move')%>:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="rules-white" name="player" value="white" checked>
-                                <label for="rules-white">White</label>
+                                <label for="rules-white"><%=t('play.editor.white')%></label>
                                 <input type="radio" id="rules-black" name="player" value="black">
-                                <label for="rules-black">Black</label>
+                                <label for="rules-black"><%=t('play.editor.black')%></label>
                             </div>
                         </div>
 
                         <div class="rules-section">
-                            <label class="unselectable">En passant square:</label>
+                            <label class="unselectable"><%=t('play.editor.en_passant_square')%>:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-enpassant-x" placeholder="x">
                                 <span>,</span>
@@ -474,7 +475,7 @@
                         </div>
 
                         <div class="rules-section">
-                            <label class="unselectable">Move rule state:</label>
+                            <label class="unselectable"><%=t('play.editor.move_rule_state')%>:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-moverule-current" placeholder="e.g. 0">
                                 <span>/</span>
@@ -483,38 +484,38 @@
                         </div>
 
                         <div class="rules-section">
-                            <label class="unselectable">Promotion ranks (White):</label>
+                            <label class="unselectable"><%=t('play.editor.promotion_ranks')%> (<%=t('play.editor.white')%>):</label>
                             <input type="text" id="rules-promotionranks-white" placeholder="e.g. 8,12">
                         </div>
 
                         <div class="rules-section">
-                            <label class="unselectable">Promotion ranks (Black):</label>
+                            <label class="unselectable"><%=t('play.editor.promotion_ranks')%> (<%=t('play.editor.black')%>):</label>
                             <input type="text" id="rules-promotionranks-black" placeholder="e.g. 1,-10">
                         </div>
 
                         <div class="rules-section">
-                            <label class="unselectable">Promotion pieces:</label>
+                            <label class="unselectable"><%=t('play.editor.promotion_pieces')%>:</label>
                             <input type="text" id="rules-promotionpieces" placeholder="e.g. Q,R,B,N">
                         </div>
 
                         <div class="rules-section">
-                            <label class="unselectable">Win conditions:</label>
+                            <label class="unselectable"><%=t('play.editor.win_conditions')%>:</label>
                             <div class="win-list">
                                 <div class="win-item">
                                     <input type="checkbox" id="rules-checkmate" checked>
-                                    <label for="rules-checkmate" class="unselectable">Checkmate</label>
+                                    <label for="rules-checkmate" class="unselectable"><%=t('play.editor.checkmate')%></label>
                                 </div>
                                 <div class="win-item">
                                     <input type="checkbox" id="rules-royalcapture">
-                                    <label for="rules-royalcapture" class="unselectable">Royal capture</label>
+                                    <label for="rules-royalcapture" class="unselectable"><%=t('play.editor.royalcapture')%></label>
                                 </div>
                                 <div class="win-item">
                                     <input type="checkbox" id="rules-allroyalscaptured">
-                                    <label for="rules-allroyalscaptured" class="unselectable">All royals captured</label>
+                                    <label for="rules-allroyalscaptured" class="unselectable"><%=t('play.editor.allroyalscaptured')%></label>
                                 </div>
                                 <div class="win-item">
                                     <input type="checkbox" id="rules-allpiecescaptured">
-                                    <label for="rules-allpiecescaptured" class="unselectable">All pieces captured</label>
+                                    <label for="rules-allpiecescaptured" class="unselectable"><%=t('play.editor.allpiecescaptured')%></label>
                                 </div>
                             </div>
                         </div>

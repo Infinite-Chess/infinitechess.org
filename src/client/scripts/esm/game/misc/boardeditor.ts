@@ -589,7 +589,7 @@ async function load(longformat?: LongFormatOut): Promise<void> {
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 
-	if (longformat !== undefined) statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
+	if (longformat === undefined) statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
 }
 
 /** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */

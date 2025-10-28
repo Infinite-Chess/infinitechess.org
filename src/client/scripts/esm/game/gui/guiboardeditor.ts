@@ -154,8 +154,13 @@ async function initUI(): Promise<void> {
 			const svg = svgs[i]!;
 			svg.classList.add("piece");
 			const pieceContainer = document.createElement("div");
+			
 			pieceContainer.classList.add("tooltip-dr");
-			pieceContainer.setAttribute("data-tooltip", `${icnconverter.piece_codes_raw[coloredTypes[i]!]}`);
+			const localized_piece_name = translations['piecenames'][typeutil.strtypes[coloredTypes[i]!]!];
+			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
+			const modified_piece_abbreviation = (player === players.WHITE ? piece_abbreviation.toUpperCase() : piece_abbreviation.toLowerCase());
+			pieceContainer.setAttribute("data-tooltip", `${localized_piece_name} (${modified_piece_abbreviation})`);
+			
 			pieceContainer.appendChild(svg);
 			playerPieces.appendChild(pieceContainer);
 		}

@@ -1,4 +1,8 @@
 {
+	"73": {
+		"note": "Added section play.editor on lines 337-355. Added section play.javascript.piecenames on lines 407-429.",
+		"changes": []
+	},
 	"72": {
 		"note": "Added play.guide.pieces.rose on line 242.",
 		"changes": []

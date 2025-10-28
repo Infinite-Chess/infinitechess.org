@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "72"
+version = "73"
 maintainer = "Naviary"
 
 [header]
@@ -334,6 +334,26 @@ main_menu = "Main Menu"
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
 question = "Accept draw offer?"
 
+[play.editor]
+file = "File"
+clear = "Clear"
+reset = "Reset"
+gamerules = "Game Rules"
+tools = "Tools"
+pieces = "Pieces"
+player_to_move = "Player to move"
+white = "White"
+black = "Black"
+en_passant_square = "En passant square"
+move_rule_state = "Move rule state"
+promotion_ranks = "Promotion ranks"
+promotion_pieces = "Promotion pieces"
+win_conditions = "Win conditions"
+checkmate = "Checkmate"
+royalcapture = "Royal capture"
+allroyalscaptured = "All royals captured"
+allpiecescaptured = "All pieces captured"
+
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
@@ -383,6 +403,30 @@ checkmate_silver_unearned = "Complete 75% of all practice checkmates to earn thi
 checkmate_gold_unearned = "Complete 100% of all practice checkmates to earn this badge."
 coords-invalid = "Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4)."
 coords-exceeded = "You can't teleport that far! That would be too easy ;)"
+
+[play.javascript.piecenames] # The string representations of each raw piece type, as found in typeutil.strtypes
+void = "Void"
+obstacle = "Obstacle"
+king = "King"
+giraffe = "Giraffe"
+camel = "Camel"
+zebra = "Zebra"
+knightrider = "Knightrider"
+amazon = "Amazon"
+queen = "Queen"
+royalQueen = "Royal queen"
+hawk = "Hawk"
+chancellor = "Chancellor"
+archbishop = "Archbishop"
+centaur = "Centaur"
+royalCentaur = "Royal centaur"
+rose = "Rose"
+knight = "Knight"
+guard = "Guard"
+huygen = "Huygen"
+rook = "Rook"
+bishop = "Bishop"
+pawn = "Pawn"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
