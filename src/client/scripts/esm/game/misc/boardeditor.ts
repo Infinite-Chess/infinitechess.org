@@ -89,7 +89,7 @@ let addingSpecialRights: boolean | undefined;
 /** Virtual game rules object for the position */
 let gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
-	winConditions: ["checkmate"]
+	winConditions: [icnconverter.default_win_condition]
 };
 
 /** Type encoding information for the game rules object of the editor position */
@@ -132,8 +132,8 @@ function initBoardEditor(): void {
 
 	// Set gamerulesGUIinfo object according to pasted game
 	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
-	gamefile.basegame.gameRules.winConditions[players.WHITE] = ["checkmate"];
-	gamefile.basegame.gameRules.winConditions[players.BLACK] = ["checkmate"];
+	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
+	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
 	setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
 }
 
@@ -611,8 +611,8 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	}
 
 	gamerulesGUIinfo.winConditions = [...new Set([
-		...gameRules.winConditions[players.WHITE] || ["checkmate"],
-		...gameRules.winConditions[players.BLACK] || ["checkmate"]
+		...gameRules.winConditions[players.WHITE] || [icnconverter.default_win_condition],
+		...gameRules.winConditions[players.BLACK] || [icnconverter.default_win_condition]
 	])].filter(wincon => winconutil.isWinConditionValid(wincon));
 
 	// Set en passant state for rendering purposes
