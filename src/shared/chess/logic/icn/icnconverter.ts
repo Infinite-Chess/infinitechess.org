@@ -118,7 +118,7 @@ type PresetAnnotes = {
 
 /**
  * 1-2 letter codes for each player number.
- * This is used for the specifying turn order in ICN.
+ * This is used for specifying the turn order in ICN.
  */
 const player_codes = {
 	[p.NEUTRAL]: "n", // I dont think we need this, good to have in case
