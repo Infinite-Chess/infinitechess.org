@@ -22,10 +22,20 @@ import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
 
 
 const element_menu = document.getElementById("editor-menu")!;
-const element_tools = document.getElementById("editor-tools")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
 const element_dot = document.getElementById("editor-dot")!;
+const elements_tools = [
+	document.getElementById("clearall")!,
+	document.getElementById("reset")!,
+	document.getElementById("gamerules")!,
+	document.getElementById("load")!,
+	document.getElementById("save")!,
+	document.getElementById("normal")!,
+	document.getElementById("eraser")!,
+	document.getElementById("specialrights")!,
+	document.getElementById("editor-dot")!
+];
 
 const element_boardUI = document.getElementById("boardUI")!;
 
@@ -170,7 +180,7 @@ async function initUI(): Promise<void> {
 }
 
 function initListeners(): void {
-	Array.from(element_tools.children).forEach((element) => {
+	elements_tools.forEach((element) => {
 		element.addEventListener("click", callback_ChangeTool);
 	});
 	_getActivePieceElements().forEach((element) => {
@@ -179,7 +189,7 @@ function initListeners(): void {
 }
 
 function closeListeners(): void {
-	Array.from(element_tools.children).forEach((element) => {
+	elements_tools.forEach((element) => {
 		element.removeEventListener("click", callback_ChangeTool);
 	});
 	_getActivePieceElements().forEach((element) => {
@@ -189,7 +199,7 @@ function closeListeners(): void {
 
 
 function markTool(tool: string): void {
-	Array.from(element_tools.children).forEach((element) => {
+	elements_tools.forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
 		if (element_tool === tool) element.classList.add("active");
 		else element.classList.remove("active");
