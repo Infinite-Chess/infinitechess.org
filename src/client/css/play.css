@@ -21,15 +21,14 @@ html {
     /* The minimum between the viewport width and height */
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
 
-    /* Base editor button widths, scale with viewport but stay within reasonable min/max */
-    --editor-tool-width: clamp(40px, calc(var(--vw-capped) / 15), 60px);
-    --editor-type-width: clamp(30px, calc(var(--vw-capped) / 20), 45px);
+    /* Base editor piece button widths, scale with viewport but stay within reasonable min/max */
+    --editor-piecebutton-width: clamp(30px, calc(var(--vw-capped) / 20), 45px);
 
     /* Dynamic font size for editor buttons/tools */
     --editor-font-size: clamp(0.6rem, calc(var(--vw-capped) / 65), 0.9rem);
 
     /* Game rule window max width */
-    --editor-game-rule-width: clamp(160px, calc(var(--vw-capped) / 5), 230px);
+    --editor-game-rule-width: clamp(160px, calc(var(--vw-capped) / 5), 220px);
 }
 
 
@@ -67,7 +66,7 @@ button {
 .editor-header {
     text-align: center;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: calc(1.12 * var(--editor-font-size));
     margin: 0.3em 0;
     color: #333;
 }
@@ -81,14 +80,14 @@ button {
 .editor-tools {
     font-size: var(--editor-font-size);
     display: grid;
-    grid-template-columns: repeat(3, var(--editor-tool-width));
+    grid-template-columns: repeat(3, calc(var(--editor-piecebutton-width) * 4 / 3));
     text-align: center;
     text-justify: center;
 }
 
 .editor-types {
     display: grid;
-    grid-template-columns: repeat(4, var(--editor-type-width));
+    grid-template-columns: repeat(4, var(--editor-piecebutton-width));
 }
 
 .editor-types .piece, .editor-tools div {
