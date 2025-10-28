@@ -863,7 +863,11 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			if (playerPromotions === '') continue; // Player has no promotions. Maybe promotions were "(8|)"
 			const [ranks, allowed] = playerPromotions.split(';'); // The allowed section is optional
 			promotionRanks[player] = ranks!.split(',').map(BigInt);
-			promotionsAllowed[player] = allowed ? allowed.split(',').map(raw => Number(piece_codes_raw_inverted[raw.toLowerCase()]) as RawType) : jsutil.deepCopyObject(default_promotions);
+			promotionsAllowed[player] = allowed ? allowed.split(',').map(raw => {
+				const rawPieceCode = piece_codes_raw_inverted[raw.toLowerCase()];
+				if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotions allowed!`);
+				return Number(rawPieceCode) as RawType;
+			}) : jsutil.deepCopyObject(default_promotions);
 		}
 
 		lastIndex = promotionsRegex.lastIndex; // Update the ICN index being observed
@@ -1479,6 +1483,7 @@ export default {
 	parsePresetSquares,
 	parsePresetRays,
 
+	// Regex sources & objects
 	integerSource,
 	promotionRanksSource,
 	promotionsAllowedSource,
