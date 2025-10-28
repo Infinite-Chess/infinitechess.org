@@ -1,6 +1,6 @@
 {
 	"73": {
-		"note": "Removed editing_heading and editing_paragraphs from lines 225-230. Added section play.editor on lines 331-357. Added section play.javascript.piecenames on lines 409-431.",
+		"note": "Added section play.editor on lines 337-363. Added section play.javascript.piecenames on lines 415-437.",
 		"changes": []
 	},
 	"72": {
