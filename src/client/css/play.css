@@ -20,6 +20,13 @@ html {
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
     /* The minimum between the viewport width and height */
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
+
+    /* Base editor button widths, scale with viewport but stay within reasonable min/max */
+    --editor-tool-width: clamp(2em, calc(var(--vw-capped) / 15), 4em);
+    --editor-type-width: clamp(1.5em, calc(var(--vw-capped) / 20), 3em);
+
+    /* Dynamic font size for editor buttons/tools */
+    --editor-font-size: clamp(0.5rem, calc(var(--vw-capped) / 55), 1rem);
 }
 
 
@@ -69,15 +76,16 @@ button {
 }
 
 .editor-tools {
+    font-size: var(--editor-font-size);
     display: grid;
-    grid-template-columns: repeat(3, 4em);
+    grid-template-columns: repeat(3, var(--editor-tool-width));
     text-align: center;
     text-justify: center;
 }
 
 .editor-types {
     display: grid;
-    grid-template-columns: repeat(4, 3em);
+    grid-template-columns: repeat(4, var(--editor-type-width));
 }
 
 .editor-types .piece, .editor-tools div {
