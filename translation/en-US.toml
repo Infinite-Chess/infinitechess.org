@@ -452,6 +452,10 @@ piece_count = "Piece count"
 exceeded = "exceeded"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Loaded game from clipboard!"
+copied_position = "Copied position to clipboard!"
+loaded_position_from_clipboard = "Loaded position from clipboard!"
+reset_position = "Position was reset!"
+clear_position = "Position was cleared!"
 
 [play.javascript.rendering]
 on = "On"

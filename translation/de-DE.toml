@@ -452,6 +452,10 @@ piece_count = "Figurenanzahl"
 exceeded = "überschritten"
 changed_wincon = "Schachmatt-Gewinnbedingungen wurden auf Königsfang geändert und die Icon-Darstellung deaktiviert. Drücken Sie 'P' zum Reaktivieren (nicht empfohlen)."
 loaded_from_clipboard = "Spiel aus Zwischenablage geladen!"
+copied_position = "Position in Zwischenablage kopiert!"
+loaded_position_from_clipboard = "Position aus Zwischenablage geladen!"
+reset_position = "Position wurde zurückgesetzt!"
+clear_position = "Position wurde geleert!"
 
 [play.javascript.rendering]
 on = "An"

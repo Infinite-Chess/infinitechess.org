@@ -1,6 +1,6 @@
 {
 	"73": {
-		"note": "Added section play.editor on lines 337-363. Added section play.javascript.piecenames on lines 415-437.",
+		"note": "Added section play.editor on lines 337-363. Added section play.javascript.piecenames on lines 415-437. Added copied_position, loaded_position_from_clipboard, reset_position, clear_position on lines 455-458.",
 		"changes": []
 	},
 	"72": {

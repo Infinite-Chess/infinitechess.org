@@ -362,6 +362,8 @@ function clearAll(): void {
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+
+	statustext.showStatus(translations['copypaste'].clear_position);
 }
 
 function reset(): void {
@@ -475,7 +477,7 @@ function save(): void {
 
 	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, { skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
 	docutil.copyToClipboard(shortFormatOut);
-	statustext.showStatus(translations['copypaste']['copied_game']);
+	statustext.showStatus(translations['copypaste']['copied_position']);
 }
 
 /**
@@ -589,7 +591,8 @@ async function load(longformat?: LongFormatOut): Promise<void> {
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 
-	if (longformat === undefined) statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
+	if (longformat === undefined) statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
+	else statustext.showStatus(translations['copypaste'].reset_position);
 }
 
 /** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
