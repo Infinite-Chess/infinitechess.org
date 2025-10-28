@@ -323,7 +323,7 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
  * a separator of ">" or "x", check/mate flags "+" or "#", symbols !?, ?!, !!, and a comment.
  * "P1,7 x 2,8 =Q + !! {Promotion!!!}"
  * 
- * It captures the start coords, end coords, promotion abbrev, and the comment, all into named groups.
+ * It optionally captures the start coords, end coords, promotion abbrev, and the comment, all into named groups.
  */
 function getMoveRegexSource(capturing: boolean): string {
 	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
@@ -863,11 +863,11 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			if (playerPromotions === '') continue; // Player has no promotions. Maybe promotions were "(8|)"
 			const [ranks, allowed] = playerPromotions.split(';'); // The allowed section is optional
 			promotionRanks[player] = ranks!.split(',').map(BigInt);
-			promotionsAllowed[player] = allowed ? allowed.split(',').map(raw => {
+			promotionsAllowed[player] = allowed ? [...new Set(allowed.split(',').map(raw => {
 				const rawPieceCode = piece_codes_raw_inverted[raw.toLowerCase()];
 				if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotions allowed!`);
 				return Number(rawPieceCode) as RawType;
-			}) : jsutil.deepCopyObject(default_promotions);
+			}))] : jsutil.deepCopyObject(default_promotions);
 		}
 
 		lastIndex = promotionsRegex.lastIndex; // Update the ICN index being observed
