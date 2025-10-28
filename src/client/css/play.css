@@ -1209,6 +1209,132 @@ svg.collapse {
 }
 
 
+/* Game Rules UI */
+#game-rules {
+    max-width: 250px;
+    max-height: 80vh;
+    overflow: auto;        /* enable vertical scrolling */
+    padding: 0 18px 16px 18px;
+    border-radius: 12px;
+    position: absolute;
+    left: 1%;
+    top: 11%;
+    background-color: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.75);
+    font-family: "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    color: #222;
+}
+
+/* Header (draggable area + close button) */
+#game-rules-header {
+    cursor: move;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#close-rules {
+    background: none;
+    border: none;
+    color: #444;
+    font-size: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+#close-rules:hover {
+    color: #e53935;
+}
+
+.divider {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    margin: 0 0 12px 0;
+}
+
+.rules-section {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.rules-section label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.invalid-input {
+    background-color: #f8d7da; /* light red */
+    border-color: #f5c2c7;    /* optional border */
+}
+
+.input-pair {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%; /* make the container take full width */
+}
+
+.input-pair input {
+    flex: 1;              /* allow inputs to expand equally */
+    min-width: 0;         /* ensures proper shrinking in flex layouts */
+    padding: 4px 8px;     /* adjust padding as needed */
+    text-align: center;   /* keep numbers/letters centered */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border 0.2s;
+}
+
+.rules-section input[type="text"],
+.rules-section input[type="number"] {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 5px 8px;
+    transition: border 0.2s;
+}
+
+.rules-section input:focus {
+    border-color: #4285f4;
+    outline: none;
+}
+
+.toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-group label {
+    cursor: pointer;
+}
+
+.win-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* space between items */
+}
+
+.win-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* space between checkbox and label */
+}
+
+.win-item input[type="checkbox"] {
+    transform: scale(1.1); /* slightly larger checkbox */
+    cursor: pointer;
+}
+
+#game-rules input::placeholder {
+    color: #999;
+}
+
 
 /* Pause UI */
 

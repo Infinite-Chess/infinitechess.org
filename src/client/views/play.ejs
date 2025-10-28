@@ -36,9 +36,9 @@
                     <div data-tool="save">Save</div>
                     <div data-tool="normal" class="active">Normal</div>
                     <div data-tool="eraser">Eraser</div>
-                    <!-- <div data-tool="selector">Selector</div> -->
                     <div data-tool="specialrights">Special Rights</div>
                     <div data-tool="gamerules">Game Rules</div>
+                    <!-- <div data-tool="selector">Selector</div> -->
                     <div data-tool="color" id="editor-dot" class="dot"></div>
                 </div>
                 <div id="editor-pieceTypes"></div>
@@ -425,6 +425,82 @@
                             <!-- <svg id="knightsB" class="promotepiececontainer"></svg> -->
                         </div>
                     </div>
+
+                    <!-- Game Rules UI for Board Editor -->
+                    <div id="game-rules" class="center hidden">
+                        <div id="game-rules-header">
+                            <span class="unselectable">Game Rules</span>
+                            <button id="close-rules">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="rules-section">
+                            <label class="unselectable">Player to move:</label>
+                            <div class="toggle-group">
+                                <input type="radio" id="rules-white" name="player" value="white" checked>
+                                <label for="rules-white">White</label>
+                                <input type="radio" id="rules-black" name="player" value="black">
+                                <label for="rules-black">Black</label>
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
+                            <label class="unselectable">En passant square:</label>
+                            <div class="input-pair">
+                                <input type="text" id="rules-enpassant-x" placeholder="x">
+                                <span>,</span>
+                                <input type="text" id="rules-enpassant-y" placeholder="y">
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
+                            <label class="unselectable">Move rule state:</label>
+                            <div class="input-pair">
+                                <input type="text" id="rules-moverule-current" placeholder="e.g. 0">
+                                <span>/</span>
+                                <input type="text" id="rules-moverule-max" placeholder="e.g. 100">
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
+                            <label class="unselectable">Promotion ranks (White):</label>
+                            <input type="text" id="rules-promotionranks-white" placeholder="e.g. 8,12">
+                        </div>
+
+                        <div class="rules-section">
+                            <label class="unselectable">Promotion ranks (Black):</label>
+                            <input type="text" id="rules-promotionranks-black" placeholder="e.g. 1,-10">
+                        </div>
+
+                        <div class="rules-section">
+                            <label class="unselectable">Promotion pieces:</label>
+                            <input type="text" id="rules-promotionpieces" placeholder="e.g. Q,R,B,N">
+                        </div>
+
+                        <div class="rules-section">
+                            <label class="unselectable">Win conditions:</label>
+                            <div class="win-list">
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-checkmate" checked>
+                                    <label for="rules-checkmate" class="unselectable">Checkmate</label>
+                                </div>
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-royalcapture">
+                                    <label for="rules-royalcapture" class="unselectable">Royal capture</label>
+                                </div>
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-allroyalscaptured">
+                                    <label for="rules-allroyalscaptured" class="unselectable">All royals captured</label>
+                                </div>
+                                <div class="win-item">
+                                    <input type="checkbox" id="rules-allpiecescaptured">
+                                    <label for="rules-allpiecescaptured" class="unselectable">All pieces captured</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- Pause UI -->
                     <div id="pauseUI" class="pauseUI hidden">

@@ -29,21 +29,27 @@ import gameformulator from '../chess/gameformulator.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import pastegame from '../chess/pastegame.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
-import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { Additional, Board, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { _Move_Compact, _Move_Out, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { _Move_Compact, _Move_Out, LongFormatIn, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { SimplifiedGameState } from '../chess/gamecompressor.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
+import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -80,8 +86,37 @@ let previousSquare: Coords | undefined;
 let addingSpecialRights: boolean | undefined;
 
 
+/** Virtual game rules object for the position */
+let gamerulesGUIinfo: GameRulesGUIinfo = {
+	playerToMove: 'white',
+	winConditions: ["checkmate"]
+};
+
+/** Type encoding information for the game rules object of the editor position */
+interface GameRulesGUIinfo {
+    playerToMove: 'white' | 'black';
+	enPassant?: {
+		x: bigint;
+		y: bigint;
+	};
+	moveRule?: {
+		current: number;
+		max: number;
+	};
+	promotionRanks?: {
+		white?: bigint[];
+		black?: bigint[];
+	};
+	promotionsAllowed?: RawType[];
+	winConditions: string[];
+}
+
 // Functions ------------------------------------------------------------------------
 
+/** 
+ * Initializes the board editor.
+ * Should be called AFTER loading the game logically.
+ */
 function initBoardEditor(): void {
 	inBoardEditor = true;
 	edits = [];
@@ -94,6 +129,12 @@ function initBoardEditor(): void {
 	guiboardeditor.markTool(currentTool);
 	guiboardeditor.updatePieceColors(currentColor);
 	guiboardeditor.markPiece(currentPieceType);
+
+	// Set gamerulesGUIinfo object according to pasted game
+	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
+	gamefile.basegame.gameRules.winConditions[players.WHITE] = ["checkmate"];
+	gamefile.basegame.gameRules.winConditions[players.BLACK] = ["checkmate"];
+	setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
 }
 
 function closeBoardEditor(): void {
@@ -284,9 +325,27 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | 
 	// Remove its special right
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current, false);
-	// If the pawn has been removed, the en passant square must be too.
-	if (gamefile.boardsim.state.global.enpassant?.square !== undefined && coordutil.areCoordsEqual(pieceHovered.coords, gamefile.boardsim.state.global.enpassant.square)) {
-		state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, undefined);
+}
+
+/** Updates the en passant square in the current gamefile, needed for display purposes */
+function setEnpassantState(coord: Coords | undefined) : void {
+	const enpassant: EnPassant | undefined = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } : undefined; // dummy enpassant object
+	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, enpassant);
+	runEdit(gamefile, mesh, edit, true);
+}
+
+/** Updates the promotion lines in the current gamefile, needed for display purposes */
+function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined ) : void {
+	const gamefile = gameslot.getGamefile()!;
+	if (promotionRanks === undefined) gamefile.basegame.gameRules.promotionRanks = undefined;
+	else {
+		gamefile.basegame.gameRules.promotionRanks = {};
+		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = (promotionRanks.white !== undefined ? promotionRanks.white : []);
+		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = (promotionRanks.black !== undefined ? promotionRanks.black : []);
 	}
 }
 
@@ -334,11 +393,70 @@ function redo(): void {
  */
 function save(): void {
 	if (!inBoardEditor) throw Error("Cannot save position when we're not using the board editor.");
-	const gamefile = gameslot.getGamefile()!;
-	const pieceIterator = organizedpieces.getPieceIterable(gamefile.boardsim.pieces);
-	const positionString = icnconverter.getShortFormPosition(pieceIterator, gamefile.boardsim.state.global.specialRights);
 
-	docutil.copyToClipboard(positionString);
+	// Construct gameRules
+	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
+	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
+	const winConditions = { [players.WHITE]: gamerulesGUIinfo.winConditions, [players.BLACK]: gamerulesGUIinfo.winConditions };
+	let promotionRanks : PlayerGroup<bigint[]> | undefined = undefined;
+	let promotionsAllowed : PlayerGroup<RawType[]> | undefined = undefined;
+	if (gamerulesGUIinfo.promotionsAllowed !== undefined && gamerulesGUIinfo.promotionRanks !== undefined) {
+		promotionsAllowed = {};
+		promotionRanks = {};
+		if (gamerulesGUIinfo.promotionRanks.white !== undefined && gamerulesGUIinfo.promotionRanks.white.length !== 0) {
+			promotionRanks[players.WHITE] = gamerulesGUIinfo.promotionRanks.white;
+			promotionsAllowed[players.WHITE] = gamerulesGUIinfo.promotionsAllowed;
+		}
+		if (gamerulesGUIinfo.promotionRanks.black !== undefined && gamerulesGUIinfo.promotionRanks.black.length !== 0) {
+			promotionRanks[players.BLACK] = gamerulesGUIinfo.promotionRanks.black;
+			promotionsAllowed[players.BLACK] = gamerulesGUIinfo.promotionsAllowed;
+		}
+	}
+	const gameRules: GameRules = {
+		turnOrder,
+		moveRule,
+		promotionRanks,
+		promotionsAllowed,
+		winConditions
+	};
+
+	// Construct position
+	const gamefile = gameslot.getGamefile()!;
+	const position = organizedpieces.generatePositionFromPieces(gamefile.boardsim.pieces);
+
+	// Construct state_global
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
+	const enpassantcoords: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
+	const enpassant: EnPassant | undefined = enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } : undefined; // dummy enpassant object
+	const state_global : Partial<GlobalGameState> = {
+		specialRights,
+		moveRuleState,
+		enpassant
+	};
+
+	// Construct metadata
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata : MetaData = {
+		Event: "Board editor infinite chess position",
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime
+	};
+
+	// Construct LongFormatIn
+	const LongFormatIn: LongFormatIn = {
+		metadata,
+		fullMove : 1,
+		gameRules,
+		state_global,
+		position
+	};
+
+	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, { skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
+	docutil.copyToClipboard(shortFormatOut);
 	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 
@@ -373,6 +491,7 @@ async function load(): Promise<void> {
 	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 	
 	let { position, specialRights } = pastegame.getPositionAndSpecialRightsFromLongFormat(longformOut);
+	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
 	// If it contains no moves, then we skip all that, thus saving time
@@ -401,6 +520,7 @@ async function load(): Promise<void> {
 		const new_gamestate = gamecompressor.GameToPosition(gamestate, loadedGamefile.boardsim.moves, loadedGamefile.boardsim.moves.length);
 		position = new_gamestate.position;
 		specialRights = new_gamestate.state_global.specialRights!;
+		stateGlobal = new_gamestate.state_global;
 	}
 	
 	const thisGamefile = gameslot.getGamefile()!;
@@ -443,9 +563,72 @@ async function load(): Promise<void> {
 	addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 
+	setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
+
 	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
 }
 
+/** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
+function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>) : void {
+	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
+	else gamerulesGUIinfo.playerToMove = "black";
+
+	if (state_global.enpassant !== undefined) {
+		gamerulesGUIinfo.enPassant = {
+			x : state_global.enpassant.square[0],
+			y : state_global.enpassant.square[1],
+		};
+	} else {
+		gamerulesGUIinfo.enPassant = undefined;
+	}
+
+	if (gameRules.moveRule !== undefined) {
+		gamerulesGUIinfo.moveRule = {
+			current: state_global.moveRuleState || 0,
+			max: gameRules.moveRule
+		};
+	} else {
+		gamerulesGUIinfo.moveRule = undefined;
+	}
+
+	if (gameRules.promotionRanks !== undefined) {
+		gamerulesGUIinfo.promotionRanks = {
+			white: gameRules.promotionRanks[players.WHITE],
+			black: gameRules.promotionRanks[players.BLACK]
+		};
+	} else {
+		gamerulesGUIinfo.promotionRanks = undefined;
+	}
+
+	if (gameRules.promotionsAllowed !== undefined) {
+		gamerulesGUIinfo.promotionsAllowed = [...new Set([
+			...gameRules.promotionsAllowed[players.WHITE] || [],
+			...gameRules.promotionsAllowed[players.BLACK] || []
+		])];
+		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
+	} else {
+		gamerulesGUIinfo.promotionsAllowed = undefined;
+	}
+
+	gamerulesGUIinfo.winConditions = [...new Set([
+		...gameRules.winConditions[players.WHITE] || ["checkmate"],
+		...gameRules.winConditions[players.BLACK] || ["checkmate"]
+	])].filter(wincon => winconutil.isWinConditionValid(wincon));
+
+	// Set en passant state for rendering purposes
+	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
+	else setEnpassantState(undefined);
+
+	// Update the promotionlines in the gamefile for rendering purposes
+	updatePromotionLines(gamerulesGUIinfo.promotionRanks);
+
+	guiboardeditor.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+/** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
+function updateGamerulesGUIinfo(new_gamerulesGUIinfo : GameRulesGUIinfo) : void {
+	gamerulesGUIinfo = new_gamerulesGUIinfo;
+}
 
 /**
  * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
@@ -514,4 +697,11 @@ export default {
 	load,
 	clearAll,
 	makeMoveEdit,
+	setEnpassantState,
+	updatePromotionLines,
+	updateGamerulesGUIinfo,
+};
+
+export type {
+	GameRulesGUIinfo,
 };
