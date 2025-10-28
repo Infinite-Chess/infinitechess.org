@@ -27,6 +27,9 @@ html {
 
     /* Dynamic font size for editor buttons/tools */
     --editor-font-size: clamp(0.5rem, calc(var(--vw-capped) / 55), 1rem);
+
+    /* Game rule window max width */
+    --editor-game-rule-width: clamp(150px, calc(var(--vw-capped) / 6), 230px);
 }
 
 
@@ -1257,7 +1260,7 @@ svg.collapse {
 
 /* Game Rules UI */
 #game-rules {
-    max-width: 230px;
+    max-width: var(--editor-game-rule-width);
     max-height: 80vh;
     overflow: auto;        /* enable vertical scrolling */
     padding: 0 18px 16px 18px;
