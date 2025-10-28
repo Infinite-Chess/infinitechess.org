@@ -22,14 +22,14 @@ html {
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
 
     /* Base editor button widths, scale with viewport but stay within reasonable min/max */
-    --editor-tool-width: clamp(2em, calc(var(--vw-capped) / 15), 4em);
-    --editor-type-width: clamp(1.5em, calc(var(--vw-capped) / 20), 3em);
+    --editor-tool-width: clamp(40px, calc(var(--vw-capped) / 15), 60px);
+    --editor-type-width: clamp(30px, calc(var(--vw-capped) / 20), 45px);
 
     /* Dynamic font size for editor buttons/tools */
-    --editor-font-size: clamp(0.5rem, calc(var(--vw-capped) / 55), 1rem);
+    --editor-font-size: clamp(0.7rem, calc(var(--vw-capped) / 55), 1rem);
 
     /* Game rule window max width */
-    --editor-game-rule-width: clamp(150px, calc(var(--vw-capped) / 6), 230px);
+    --editor-game-rule-width: clamp(170px, calc(var(--vw-capped) / 6), 230px);
 }
 
 
