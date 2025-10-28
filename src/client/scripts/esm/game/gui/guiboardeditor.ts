@@ -155,7 +155,9 @@ async function initUI(): Promise<void> {
 			svg.classList.add("piece");
 			const pieceContainer = document.createElement("div");
 
-			pieceContainer.classList.add("tooltip-dr");
+			if (i % 4 === 0) pieceContainer.classList.add("tooltip-dr");
+			else if (i % 4 === 3) pieceContainer.classList.add("tooltip-dl");
+			else pieceContainer.classList.add("tooltip-d");
 			const localized_piece_name = translations['piecenames'][typeutil.strtypes[coloredTypes[i]!]!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
 			const modified_piece_abbreviation = (player === players.WHITE ? piece_abbreviation.toUpperCase() : piece_abbreviation.toLowerCase());
@@ -190,7 +192,9 @@ async function initUI(): Promise<void> {
 		neutral_svg.classList.add("piece");
 		const pieceContainer = document.createElement("div");
 		
-		pieceContainer.classList.add("tooltip-dr");
+		if (i % 4 === 3) pieceContainer.classList.add("tooltip-dr");
+		else if (i % 4 === 2) pieceContainer.classList.add("tooltip-dl");
+		else pieceContainer.classList.add("tooltip-d");
 		const localized_piece_name = translations['piecenames'][typeutil.strtypes[neutralTypes[i]!]!];
 		const piece_abbreviation = icnconverter.piece_codes_raw[neutralTypes[i]!];
 		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();

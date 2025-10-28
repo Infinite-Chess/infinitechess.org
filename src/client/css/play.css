@@ -45,6 +45,8 @@ button {
 
 .editor-menu {
     position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
     height: 100%;
     width: fit-content;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
