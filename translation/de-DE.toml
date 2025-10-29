@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "72"
+version = "73"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -384,6 +384,30 @@ checkmate_gold_unearned = "Lösen Sie 100% aller Übungs-Schachmattes, um dieses
 coords-invalid = "Ungültiges Koordinatenformat. Bitte ganze Zahlen oder e-Notation eingeben (z. B. 1.23e4)."
 coords-exceeded = "So weit darf man nicht teleportieren! Das wäre ja zu einfach ;)"
 
+[play.javascript.piecenames] # The string representations of each raw piece type, as found in typeutil.strtypes
+void = "Leere"
+obstacle = "Hindernis"
+king = "König"
+giraffe = "Giraffe"
+camel = "Kamel"
+zebra = "Zebra"
+knightrider = "Rösselsprinter"
+amazon = "Amazone"
+queen = "Dame"
+royalQueen = "Royale Dame"
+hawk = "Falke"
+chancellor = "Kanzler"
+archbishop = "Erzbischof"
+centaur = "Zentaur"
+royalCentaur = "Royaler Zentaur"
+rose = "Rose"
+knight = "Springer"
+guard = "Wache"
+huygen = "Huygen"
+rook = "Turm"
+bishop = "Läufer"
+pawn = "Bauer"
+
 [play.javascript.copypaste]
 copied_game = "Spiel in Zwischenablage kopiert!"
 cannot_paste_in_public = "Spiel kann nicht in einem öffentlichen Match eingefügt werden!"
@@ -400,6 +424,10 @@ piece_count = "Figurenanzahl"
 exceeded = "überschritten"
 changed_wincon = "Schachmatt-Gewinnbedingungen wurden auf Königsfang geändert und die Icon-Darstellung deaktiviert. Drücken Sie 'P' zum Reaktivieren (nicht empfohlen)."
 loaded_from_clipboard = "Spiel aus Zwischenablage geladen!"
+copied_position = "Position in Zwischenablage kopiert!"
+loaded_position_from_clipboard = "Position aus Zwischenablage geladen!"
+reset_position = "Position wurde zurückgesetzt!"
+clear_position = "Position wurde geleert!"
 
 [play.javascript.rendering]
 on = "An"
@@ -457,7 +485,7 @@ stalemate = "Patt"
 repetition = "Dreifache Stellungswiederholung"
 moverule = ["", "-Züge-Regel"]  # The game inserts a number inbetween these two strings
 insuffmat = "Unzureichendes Material"
-royalcapture = "Königsschlagen"
+royalcapture = "Königsfang"
 allroyalscaptured = "Alle Könige geschlagen"
 allpiecescaptured = "Alle Figuren geschlagen"
 koth = "König des Hügels"

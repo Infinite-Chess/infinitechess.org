@@ -362,6 +362,27 @@ function clearAll(): void {
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+
+	statustext.showStatus(translations['copypaste'].clear_position);
+}
+
+function reset(): void {
+	if (!inBoardEditor) throw Error("Cannot reset board when we're not using the board editor.");
+
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata : MetaData = {
+		Variant: "Classical",
+		Event: "Position created using ingame board editor",
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime
+	};
+	const classicalGamefile = gamefile.initFullGame(metadata);
+	const longformat = gamecompressor.compressGamefile(classicalGamefile) as LongFormatOut;
+	loadFromLongformat(longformat);
+	statustext.showStatus(translations['copypaste'].reset_position);
 }
 
 function undo(): void {
@@ -435,20 +456,9 @@ function save(): void {
 		enpassant
 	};
 
-	// Construct metadata
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata : MetaData = {
-		Event: "Board editor infinite chess position",
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime
-	};
-
 	// Construct LongFormatIn
 	const LongFormatIn: LongFormatIn = {
-		metadata,
+		metadata: {} as MetaData, // No metadata for just getting the notation (easier to share?)
 		fullMove : 1,
 		gameRules,
 		state_global,
@@ -457,16 +467,14 @@ function save(): void {
 
 	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, { skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
 	docutil.copyToClipboard(shortFormatOut);
-	statustext.showStatus(translations['copypaste']['copied_game']);
+	statustext.showStatus(translations['copypaste']['copied_position']);
 }
 
-/**
- * pastegame loads in a new position by creating a new gamefile and loading it
- * which doesn't work for the board editor.
- * This function simply applies an edit to the position of the pieces on the board.
- */
-async function load(): Promise<void> {
+/** Loads the position from the clipboard. */
+async function load(): Promise<LongFormatOut | undefined> {
 	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
+
+	let longformOut: LongFormatOut;
 
 	// Do we have clipboard permission?
 	let clipboard: string;
@@ -474,11 +482,11 @@ async function load(): Promise<void> {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
 		const message: string = translations['copypaste'].clipboard_denied;
-		return statustext.showStatus((message + "\n" + error), true);
+		statustext.showStatus((message + "\n" + error), true);
+		return;
 	}
 
-	// Convert clipboard text to object
-	let longformOut: LongFormatOut;
+	// Convert clipboard text to longformat
 	try {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
@@ -487,6 +495,17 @@ async function load(): Promise<void> {
 		return;
 	}
 
+	loadFromLongformat(longformOut);
+	statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
+}
+
+/**
+ * pastegame loads in a new position by creating a new gamefile and loading it
+ * which doesn't work for the board editor.
+ * This function simply applies an edit to the position of the pieces on the board.
+ * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
+ */
+async function loadFromLongformat(longformOut: LongFormatOut): Promise<void> {
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 	
@@ -565,7 +584,7 @@ async function load(): Promise<void> {
 
 	setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
 
-	statustext.showStatus(translations['copypaste'].loaded_from_clipboard);
+	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }
 
 /** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
@@ -696,6 +715,7 @@ export default {
 	save,
 	load,
 	clearAll,
+	reset,
 	makeMoveEdit,
 	setEnpassantState,
 	updatePromotionLines,

@@ -13,19 +13,40 @@ import gameslot from "../chess/gameslot.js";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
 import math from "../../../../../shared/util/math/math.js";
+// @ts-ignore
+import statustext from "./statustext.js";
 
 import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
 import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
+import tooltips from "../../util/tooltips.js";
 
 
 // Variables ---------------------------------------------------------------
 
 
 const element_menu = document.getElementById("editor-menu")!;
-const element_tools = document.getElementById("editor-tools")!;
+const element_gamerules = document.getElementById("gamerules")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
-const element_dot = document.getElementById("editor-dot")!;
+const element_colorSelect = document.getElementById("editor-color-select")!;
+const elements_tools = [
+	// Position
+	document.getElementById("reset")!,
+	document.getElementById("clearall")!,
+	document.getElementById("saved-positions")!,
+	document.getElementById("copy-notation")!,
+	document.getElementById("paste-notation")!,
+	document.getElementById("gamerules")!,
+	document.getElementById("start-game")!,
+	// Tools
+	document.getElementById("normal")!,
+	document.getElementById("eraser")!,
+	document.getElementById("specialrights")!,
+	// Selection
+	// (none)
+	// Palette
+	document.getElementById("editor-color-select")!
+];
 
 const element_boardUI = document.getElementById("boardUI")!;
 
@@ -73,11 +94,15 @@ const coloredTypes = [
 	rawTypes.ARCHBISHOP,
 	rawTypes.AMAZON,
 	rawTypes.GUARD,
-	rawTypes.HAWK,
 	rawTypes.CENTAUR,
+	rawTypes.HAWK,
 	rawTypes.KNIGHTRIDER,
 	rawTypes.HUYGEN,
 	rawTypes.ROSE,
+	rawTypes.CAMEL,
+	rawTypes.GIRAFFE,
+	rawTypes.ZEBRA,
+	rawTypes.ROYALCENTAUR,
 	rawTypes.ROYALQUEEN,
 ];
 
@@ -137,9 +162,23 @@ async function initUI(): Promise<void> {
 		element_playerTypes.set(player, svgs);
 		playerPieces.classList.add("editor-types");
 		if (player !== boardeditor.getColor()) playerPieces.classList.add("hidden");
-		for (const svg of svgs) {
+
+		// Tooltips (i.e. "Amazon (AM)")
+		for (let i = 0; i < svgs.length; i++) {
+			const svg = svgs[i]!;
 			svg.classList.add("piece");
-			playerPieces.appendChild(svg);
+			const pieceContainer = document.createElement("div");
+
+			if (i % 4 === 0) pieceContainer.classList.add("tooltip-dr");
+			else if (i % 4 === 3) pieceContainer.classList.add("tooltip-d");
+			else pieceContainer.classList.add("tooltip-d");
+			const localized_piece_name = translations['piecenames'][typeutil.getRawTypeStr(coloredTypes[i]!)!];
+			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
+			const modified_piece_abbreviation = (player === players.WHITE ? piece_abbreviation.toUpperCase() : piece_abbreviation.toLowerCase());
+			pieceContainer.setAttribute("data-tooltip", `${localized_piece_name} (${modified_piece_abbreviation})`);
+			
+			pieceContainer.appendChild(svg);
+			playerPieces.appendChild(pieceContainer);
 		}
 		element_typesContainer.appendChild(playerPieces);
 	}
@@ -153,21 +192,44 @@ async function initUI(): Promise<void> {
 	element_void.classList.add("piece");
 	element_void.classList.add("void");
 	element_void.id = "0";
+
+	// Void tooltip
+	element_void.classList.add("tooltip-dr");
+	const localized_void_name = translations['piecenames'][typeutil.getRawTypeStr(rawTypes.VOID)!];
+	const void_abbreviation = icnconverter.piece_codes_raw[rawTypes.VOID];
+	element_void.setAttribute("data-tooltip", `${localized_void_name} (${void_abbreviation})`);
+
 	element_neutralTypes.push(element_void);
 	neutralPieces.appendChild(element_void);
 
-	for (const neutral_svg of neutral_svgs) {
+	for (let i = 0; i < neutral_svgs.length; i++) {
+		const neutral_svg = neutral_svgs[i]!;
 		neutral_svg.classList.add("piece");
+		const pieceContainer = document.createElement("div");
+		
+		// Neutral piece tooltips
+		if (i % 4 === 3) pieceContainer.classList.add("tooltip-dr");
+		else if (i % 4 === 2) pieceContainer.classList.add("tooltip-dl");
+		else pieceContainer.classList.add("tooltip-d");
+		const localized_piece_name = translations['piecenames'][typeutil.getRawTypeStr(neutralTypes[i]!)!];
+		const piece_abbreviation = icnconverter.piece_codes_raw[neutralTypes[i]!];
+		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();
+		pieceContainer.setAttribute("data-tooltip", `${localized_piece_name} (${modified_piece_abbreviation})`);
+		
+		pieceContainer.appendChild(neutral_svg);
 		element_neutralTypes.push(neutral_svg);
-		neutralPieces.appendChild(neutral_svg);
+		neutralPieces.appendChild(pieceContainer);
 	}
 	element_neutralTypesContainer.appendChild(neutralPieces);
+
+	// Re-init tooltip listeners after pushing elements to the document with additional tooltips.
+	tooltips.initTooltips();
 
 	initialized = true;
 }
 
 function initListeners(): void {
-	Array.from(element_tools.children).forEach((element) => {
+	elements_tools.forEach((element) => {
 		element.addEventListener("click", callback_ChangeTool);
 	});
 	_getActivePieceElements().forEach((element) => {
@@ -176,7 +238,7 @@ function initListeners(): void {
 }
 
 function closeListeners(): void {
-	Array.from(element_tools.children).forEach((element) => {
+	elements_tools.forEach((element) => {
 		element.removeEventListener("click", callback_ChangeTool);
 	});
 	_getActivePieceElements().forEach((element) => {
@@ -186,7 +248,7 @@ function closeListeners(): void {
 
 
 function markTool(tool: string): void {
-	Array.from(element_tools.children).forEach((element) => {
+	elements_tools.forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
 		if (element_tool === tool) element.classList.add("active");
 		else element.classList.remove("active");
@@ -224,7 +286,7 @@ function updatePieceColors(newColor: Player): void {
 	}
 
 	// Update dot color and internal state
-	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
+	element_colorSelect.style.backgroundColor = typeutil.strcolors[newColor];
 	boardeditor.setColor(newColor);
 	
 	// Update currentPieceType, if necessary
@@ -582,12 +644,14 @@ function openGameRules(): void {
 		element_gamerulesWindow.style.top = `${gameRulesSavedPos.top}px`;
 	}
 	element_gamerulesWindow.classList.remove("hidden");
+	element_gamerules.classList.add("active");
 	clampGameRulesToBoardUIBounds();
 	initGameRulesListeners();
 }
 
 function closeGameRules(): void {
 	element_gamerulesWindow.classList.add("hidden");
+	element_gamerules.classList.remove("active");
 	closeGameRulesListeners();
 }
 
@@ -620,20 +684,29 @@ function callback_ChangeTool(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
-		case "save":
-			boardeditor.save();
-			return;
-		case "load":
-			boardeditor.load();
+		case "reset":
+			boardeditor.reset();
 			return;
 		case "clearall":
 			boardeditor.clearAll();
 			return;
-		case "color":
-			nextColor();
+		case "saved-positions":
+			statustext.showStatus("Not implemented yet.");
+			return;
+		case "copy-notation":
+			boardeditor.save();
+			return;
+		case "paste-notation":
+			boardeditor.load();
 			return;
 		case "gamerules":
 			toggleGameRules();
+			return;
+		case "start-game":
+			statustext.showStatus("Not implemented yet.");
+			return;
+		case "color":
+			nextColor();
 			return;
 		default:
 			if (tool !== null) boardeditor.setTool(tool);

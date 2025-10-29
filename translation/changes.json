@@ -1,4 +1,8 @@
 {
+	"73": {
+		"note": "Added section play.javascript.piecenames on lines 387-409. Added copied_position, loaded_position_from_clipboard, reset_position, clear_position on lines 427-430.",
+		"changes": []
+	},
 	"72": {
 		"note": "Added play.guide.pieces.rose on line 242.",
 		"changes": []

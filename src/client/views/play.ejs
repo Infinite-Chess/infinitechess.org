@@ -29,20 +29,71 @@
         <main>
 
             <!-- Left vertical bar of Board Editor -->
-            <div id="editor-menu" class="editor-menu unselectable hidden">
-                <div id="editor-tools" class="editor-tools">
-                    <div data-tool="clearall">Clear all</div>
-                    <div data-tool="load">Load</div>
-                    <div data-tool="save">Save</div>
-                    <div data-tool="normal" class="active">Normal</div>
-                    <div data-tool="eraser">Eraser</div>
-                    <div data-tool="specialrights">Special Rights</div>
-                    <div data-tool="gamerules">Game Rules</div>
-                    <!-- <div data-tool="selector">Selector</div> -->
-                    <div data-tool="color" id="editor-dot" class="dot"></div>
-                </div>
-                <div id="editor-pieceTypes"></div>
-                <div id="editor-neutralTypes" class="editor-types"></div>
+        	<div id="editor-menu" class="editor-menu unselectable hidden">
+				<!-- Section: Position -->
+				<div>
+					<div class="editor-header">Position</div>
+					<div class="position-actions">
+						<div data-tool="reset" id="reset" class="instant tooltip-dr" data-tooltip="Reset position">
+							<svg class="svg-reset" fill="none" viewBox="-200 0 1900 1900">
+								<path d="M910 1473c147-169 90-414-136-388 9 56 18 110 20 130 9 47-30 54-30 54l-438-310 423-378s43 0 35 64l-16 128C1142 724 1372 1230 940 1490l-30-17Z" fill="#333" fill-rule="evenodd" clip-rule="evenodd"/>
+							</svg>
+						</div>
+						<div data-tool="clearall" id="clearall" class="instant tooltip-d" data-tooltip="Clear position">
+							<svg class="svg-clearall" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><g fill="#333"><path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>
+						</div>
+						<div data-tool="saved-positions" id="saved-positions" class="tooltip-d" data-tooltip="Saved positions">
+							<svg class="svg-saved-positions" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 2400 2400"><g fill="#333" stroke="none"><path d="M1475 575h250v487l-70-40h-1l-16-8a93 93 0 00-76 0l-16 8-71 40V575Z"/><path d="M2200 1155v220c0 377 0 566-117 683s-306 117-683 117h-400c-377 0-566 0-683-117S200 1752 200 1375V670c0-88 0-132 7-170a400 400 0 01 319-318c37-7 80-7 169-7 39 0 58 0 77 2a400 400 0 01 218 90c14 12 28 26 55 53l55 55a855 855 0 00 171 150 400 400 0 00 54 24v571c0 14 0 30 2 45a100 100 0 00 40 70c35 23 70 14 86 8 14-5 28-13 39-20h2l106-60 106 60h2c10 7 25 15 39 20 16 6 51 15 86-10a98 98 0 00 40-70c2-12 2-30 2-43V580c105 7 174 25 226 72l24 22c77 86 77 218 77 480Z"/></g></svg>
+						</div>
+						<div data-tool="copy-notation" id="copy-notation" class="instant tooltip-d" data-tooltip="Copy notation">
+							<svg class="svg-copy-notation" xmlns="http://www.w3.org/2000/svg" fill="#000" transform="rotate(1 80 0)" viewBox="-38.4-38.4 396.8 396.8"><g fill="none" fill-rule="evenodd"><path d="M0 0h320v320H0"/><path d="M80 80v113.3c0 25 19.7 45.5 44.5 46.7H240v40a40 40 0 01-40 40H40a40 40 0 01-40-40V120a40 40 0 01 40-40zm210-80a30 30 0 01 30 30v160a30 30 0 01-30 30H130a30 30 0 01-30-30V30a30 30 0 01 30-30" fill="#333"/></g></svg>
+						</div>
+						<div data-tool="paste-notation" id="paste-notation" class="instant tooltip-d" data-tooltip="Paste notation">
+							<svg class="svg-paste-notation" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><g fill="#333"><path d="M1600 425c0 124-100 225-225 225h-350A224 224 0 01 800 425C800 301 900 200 1025 200h350A224 224 0 01 1600 425Z"/><path d="M1883 503a260 260 0 00-77-45c-29-11-58 12-64 42a374 374 0 01-367 300h-350a372 372 0 01-367-300c-6-30-36-53-65-41C477 506 400 612 400 825V1800c0 300 179 400 400 400h800c221 0 400-100 400-400V825c0-163-45-263-117-322ZM800 1225h400c41 0 75 34 75 75 0 40-34 75-75 75H800a76 76 0 01-75-75c0-41 34-75 75-75Zm800 550H800a76 76 0 01-75-75c0-41 34-75 75-75h800c41 0 75 34 75 75 0 40-34 75-75 75Z"/></g></svg>
+						</div>
+						<div data-tool="gamerules" id="gamerules" class="tooltip-dr" data-tooltip="Game rules">
+							<svg class="svg-gamerules" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" version="1.1" viewBox="0 0 51200 51200"><path d="M50818 24352a1514 1514 0 00-2140-132l-4467 3955L31596 39340a4300 4300 0 01-2849 1080c-303 0-606-30-910-94l-7213-1598-8710-1922-6105-1352-874-195a2644 2644 0 01-1548-1332 2670 2670 0 01 225-2805 2575 2575 0 01 953-810 2602 2602 0 01 1216-294c70 0 142 6 214 6l6295 1360 14600 3157a5790 5790 0 00 5082-1322l8976-7907 9166-8074a2907 2907 0 00 890-2920 2903 2903 0 00-2206-2117l-1142-246-8326-1800-10550-2277a5788 5788 0 00-5080 1324L9615 21577l-4236 3722-3686 3237a3966 3966 0 00-397 534c-65 80-123 152-181 240A5778 5778 0 00 0 32706a5764 5764 0 00 1100 3384 5613 5613 0 00 1280 1286 5530 5530 0 00 1668 840l66 20 6425 1410 6086 1330 10567 2313a7354 7354 0 00 6410-1663l362-317 12547-11110 4178-3700a1522 1522 0 00 130-2146" fill="#333"/></svg>
+						</div>
+						<div data-tool="start-game" id="start-game" class="instant tooltip-d" data-tooltip="Start local game from position">
+							<svg class="svg-start-game" viewBox="0 0 45 45">
+								<path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1" fill="#333"/>
+							</svg>
+						</div>
+					</div>
+				</div>
+				<hr class="editor-separator">
+				<!-- Section: Tools -->
+				<div>
+					<div class="editor-header">Tools</div>
+					<div class="editor-tools">
+						<div data-tool="normal" id="normal" class="active tooltip-dr" data-tooltip="Normal">
+							<svg class="svg-normal" xmlns="http://www.w3.org/2000/svg" fill="#333" stroke="#333" viewBox="-96 0 512 512"><path d="M302.19 329.13H196.1l55.84 135.99c3.88 9.43-.56 20-9.45 24l-49.16 21.42c-9.17 4-19.45-.57-23.34-9.7L116.95 371.7 30.3 460.83C18.72 472.71 0 463.55 0 447.98V18.3C0 1.9 19.92-6.1 30.28 5.44l284.4 292.54c11.48 11.18 3.02 31.15-12.5 31.15z"/></svg>
+						</div>
+						<div data-tool="eraser" id="eraser" class="tooltip-d" data-tooltip="Eraser">
+							<svg class="svg-eraser" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 240 240"><g fill="#333" stroke="none"><path d="M114 55C131 38 140 30 150 30s18 8 35 25S210 80 210 90s-8 20-25 36l-42 42-70-71 41-42Z"/><path d="m62 108 70 70-6 7-10 10H210a8 8 0 01 0 15H90c-10 0-19-9-35-25C38 168 30 160 30 150s8-20 25-36l7-6Z"/></g></svg>
+						</div>
+						<div data-tool="specialrights" id="specialrights" class="tooltip-d" data-tooltip="Special rights toggle">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="-4 -4 24 24"><path fill="#333" d="M10 1H6v5H1v4h5v5h4v-5h5V6h-5V1Z"/></svg>
+						</div>
+					</div>
+				</div>
+				<hr class="editor-separator">
+				<!-- Section: Selection -->
+				<div>
+					<div class="selection-actions">
+						<div class="editor-header">Selection</div>
+					</div>
+				</div>
+        		<hr class="editor-separator">
+				<!-- Section: Palette -->
+				<div>
+					<div class="editor-header">Palette</div>
+					<div data-tool="color" id="editor-color-select" class="color-select">
+						<span class="opposite-color-text">Color</span>
+					</div>
+					<div id="editor-pieceTypes"></div>
+					<div id="editor-neutralTypes"></div>
+				</div>
             </div>
 
             <!-- Entire board UI, including loading screen, canvas and overlay -->

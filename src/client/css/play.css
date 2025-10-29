@@ -46,37 +46,141 @@ button {
 .editor-menu {
     position: relative;
     height: 100%;
-    width: fit-content;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
-    background: white;
+    background-color: #ffffff;
     z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
+	/* Controls the size of all its children. */
+	font-size: min(16px, 2.2vw);
+	width: 15em;
+}
+
+.editor-header {
+    text-align: center;
+    font-weight: bold;
+    margin: 0.5em 0;
+    color: #333;
+}
+
+.editor-separator {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 0.2em 0.2em;
+}
+
+/* SVG resizings */
+
+.svg-reset {
+    transform: scale(1.2) translate(-2%, -3%);
+}
+
+.svg-clearall {
+	transform: scale(0.8);
+}
+
+.svg-saved-positions {
+	transform: scale(0.75);
+}
+
+.svg-copy-notation {
+	transform: scale(-0.75);
+}
+
+.svg-paste-notation {
+	transform: scale(0.75);
+}
+
+.svg-gamerules {
+	transform: scale(0.75);
+}
+
+.svg-normal {
+    transform: scale(0.65) translate(3%, 0%);
+}
+
+.svg-eraser {
+	transform: scale(0.85);
+}
+
+.svg-start-game {
+	transform: scale(0.9);
+}
+
+/* Specific section stylings... */
+
+.position-actions {
+    display: grid;
+	grid-template-columns: repeat(5, 1fr);
+}
+
+/* Buttons that can't receive the .active class (only 1 state): Give them an active state */
+.position-actions .instant:active {
+	background-color: var(--background-theme-color);
+}
+
+.position-actions div, .editor-tools div, .editor-types .piece {
+    cursor: pointer;
 }
 
 .editor-tools {
     display: grid;
-    grid-template-columns: repeat(3, 4em);
-    text-align: center;
-    text-justify: center;
+    grid-template-columns: repeat(4, 1fr);
 }
 
+/* Palette */
+
+.color-select {
+    border: 0.2em solid black;
+    border-radius: 1.5em;
+    margin: 0.5em;
+    height: 2.8em;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.color-select:hover {
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
+	cursor: pointer;
+}
+
+/* Text with this class takes the opposite color of the background beneath. */
+.opposite-color-text {
+	color: white; /* base color to difference from */
+	mix-blend-mode: difference;
+}
+
+/* The grid of piece types in the Palette section */
 .editor-types {
     display: grid;
-    grid-template-columns: repeat(4, 3em);
+    grid-template-columns: repeat(4, 1fr);
 }
 
-.editor-types .piece, .editor-tools div {
-    cursor: pointer;
-    aspect-ratio: 1/1;
+.editor-types .piece, .editor-tools div, .position-actions div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.2em;
 }
 
-.editor-types .piece:hover, .editor-tools div:hover {
-    outline-style: solid;
-    outline-width: 0.25em;
-    outline-offset: -0.15em;
+.editor-types .piece {
+    margin: 0.1em;
+}
+
+.editor-tools div, .position-actions div {
+    margin: 0.2em;
+}
+
+.editor-types .piece:hover, .editor-tools div:hover, .position-actions div:hover {
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
 }
 
 .active {
-    background-color: green;
+    outline-offset: -0.125em;
+    outline: 0.25em solid black;
+	background-color: var(--background-theme-color);
 }
 
 .void {
@@ -84,19 +188,15 @@ button {
     margin: 5px;
 }
 
-.void.active {
-    margin: 5px;
-    outline-style: solid;
-    outline-color: green;
-    outline-width: 5px;
+.editor-types .void:hover {
+    outline: 0.25em solid #757575;
 }
 
-.dot {
-    border: 1px solid black;
-    border-radius: 100%;
-    margin: 12px;
-    flex-shrink: 0;
+.editor-types .void.active {
+    outline: 0.25em solid #6d6d6d;
 }
+
+
 
 /* Entire board UI, including loading screen, canvas and overlay */
 

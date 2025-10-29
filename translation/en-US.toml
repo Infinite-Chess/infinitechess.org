@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "72"
+version = "73"
 maintainer = "Naviary"
 
 [header]
@@ -384,6 +384,30 @@ checkmate_gold_unearned = "Complete 100% of all practice checkmates to earn this
 coords-invalid = "Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4)."
 coords-exceeded = "You can't teleport that far! That would be too easy ;)"
 
+[play.javascript.piecenames] # The string representations of each raw piece type, as found in typeutil.strtypes
+void = "Void"
+obstacle = "Obstacle"
+king = "King"
+giraffe = "Giraffe"
+camel = "Camel"
+zebra = "Zebra"
+knightrider = "Knightrider"
+amazon = "Amazon"
+queen = "Queen"
+royalQueen = "Royal queen"
+hawk = "Hawk"
+chancellor = "Chancellor"
+archbishop = "Archbishop"
+centaur = "Centaur"
+royalCentaur = "Royal centaur"
+rose = "Rose"
+knight = "Knight"
+guard = "Guard"
+huygen = "Huygen"
+rook = "Rook"
+bishop = "Bishop"
+pawn = "Pawn"
+
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
 cannot_paste_in_public = "Cannot paste game in a public match!"
@@ -400,6 +424,10 @@ piece_count = "Piece count"
 exceeded = "exceeded"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Loaded game from clipboard!"
+copied_position = "Copied position to clipboard!"
+loaded_position_from_clipboard = "Loaded position from clipboard!"
+reset_position = "Position was reset!"
+clear_position = "Position was cleared!"
 
 [play.javascript.rendering]
 on = "On"
