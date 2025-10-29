@@ -455,20 +455,9 @@ function save(): void {
 		enpassant
 	};
 
-	// Construct metadata
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata : MetaData = {
-		Event: "Position created using ingame board editor",
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime
-	};
-
 	// Construct LongFormatIn
 	const LongFormatIn: LongFormatIn = {
-		metadata,
+		metadata: {} as MetaData, // No metadata for just getting the notation
 		fullMove : 1,
 		gameRules,
 		state_global,
