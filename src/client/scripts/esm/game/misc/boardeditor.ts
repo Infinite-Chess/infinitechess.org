@@ -381,7 +381,8 @@ function reset(): void {
 	};
 	const classicalGamefile = gamefile.initFullGame(metadata);
 	const longformat = gamecompressor.compressGamefile(classicalGamefile) as LongFormatOut;
-	load(longformat);
+	loadFromLongformat(longformat);
+	statustext.showStatus(translations['copypaste'].reset_position);
 }
 
 function undo(): void {
@@ -457,7 +458,7 @@ function save(): void {
 
 	// Construct LongFormatIn
 	const LongFormatIn: LongFormatIn = {
-		metadata: {} as MetaData, // No metadata for just getting the notation
+		metadata: {} as MetaData, // No metadata for just getting the notation (easier to share?)
 		fullMove : 1,
 		gameRules,
 		state_global,
@@ -469,37 +470,42 @@ function save(): void {
 	statustext.showStatus(translations['copypaste']['copied_position']);
 }
 
+/** Loads the position from the clipboard. */
+async function load(): Promise<LongFormatOut | undefined> {
+	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
+
+	let longformOut: LongFormatOut;
+
+	// Do we have clipboard permission?
+	let clipboard: string;
+	try {
+		clipboard = await navigator.clipboard.readText();
+	} catch (error) {
+		const message: string = translations['copypaste'].clipboard_denied;
+		statustext.showStatus((message + "\n" + error), true);
+		return;
+	}
+
+	// Convert clipboard text to longformat
+	try {
+		longformOut = icnconverter.ShortToLong_Format(clipboard);
+	} catch (e) {
+		console.error(e);
+		statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
+		return;
+	}
+
+	loadFromLongformat(longformOut);
+	statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
+}
+
 /**
  * pastegame loads in a new position by creating a new gamefile and loading it
  * which doesn't work for the board editor.
  * This function simply applies an edit to the position of the pieces on the board.
  * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
  */
-async function load(longformat?: LongFormatOut): Promise<void> {
-	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
-
-	let longformOut: LongFormatOut;
-	if (longformat !== undefined) longformOut = longformat;
-	else {
-		// Do we have clipboard permission?
-		let clipboard: string;
-		try {
-			clipboard = await navigator.clipboard.readText();
-		} catch (error) {
-			const message: string = translations['copypaste'].clipboard_denied;
-			return statustext.showStatus((message + "\n" + error), true);
-		}
-
-		// Convert clipboard text to object
-		try {
-			longformOut = icnconverter.ShortToLong_Format(clipboard);
-		} catch (e) {
-			console.error(e);
-			statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
-			return;
-		}
-	}
-
+async function loadFromLongformat(longformOut: LongFormatOut): Promise<void> {
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 	
@@ -579,9 +585,6 @@ async function load(longformat?: LongFormatOut): Promise<void> {
 	setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
-
-	if (longformat === undefined) statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
-	else statustext.showStatus(translations['copypaste'].reset_position);
 }
 
 /** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
