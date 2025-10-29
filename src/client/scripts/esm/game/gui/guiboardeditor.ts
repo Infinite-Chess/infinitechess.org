@@ -211,6 +211,9 @@ async function initUI(): Promise<void> {
 	}
 	element_neutralTypesContainer.appendChild(neutralPieces);
 
+	// Re-init tooltip listeners after pushing elements to the document with tooltips.
+	tooltips.initTooltips();
+
 	initialized = true;
 }
 

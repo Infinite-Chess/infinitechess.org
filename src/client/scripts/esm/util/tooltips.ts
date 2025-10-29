@@ -15,8 +15,6 @@ import docutil from "./docutil.js";
 const tooltipClasses: string[] = ['tooltip-dl', 'tooltip-d', 'tooltip-dr','tooltip-u', 'tooltip-ul'];
 const tooltipClasses_Dotted = tooltipClasses.map(classname => '.' + classname );
 
-const tooltips = document.querySelectorAll(tooltipClasses_Dotted.join(', '));
-
 /** The time, in the css, it takes for a tooltip to appear. KEEP THE SAME AS IN PLAY.CSS */
 const tooltipDelayMillis: number = 500;
 /** The time, after the tooltip class is deleted (clicked button),
@@ -37,7 +35,7 @@ const fastTransitionCooldownMillis: number = 750;
 
 
 /** Enables fast transition mode for tooltips. */
-function enableFastTransition(): void {
+function enableFastTransition(tooltips: NodeListOf<Element>): void {
 	if (fastTransitionMode) return; // Already on!
 
 	// console.log("Enabled fast transition");
@@ -53,7 +51,7 @@ function cancelFastTransitionExpiryTimer(): void {
 }
 
 /** Disables fast transition mode for tooltips.  */
-function disableFastTransition(): void {
+function disableFastTransition(tooltips: NodeListOf<Element>): void {
 	if (!fastTransitionMode) return;
 
 	// console.log("Disabled fast transition");
@@ -70,99 +68,112 @@ function getTooltipClass(element: Element): string | null {
 	return tooltipClasses.find(cls => element.classList.contains(cls)) ?? null;
 }
 
-/** Add event listeners for entering fast transition mode in desktop mode (tooltips appear immediately) */
-if (docutil.isMouseSupported()) tooltips.forEach(tooltip => {
-	const tooltipThisHas = getTooltipClass(tooltip)!; // What kind of tooltip class?
+/** Adds event listeners for entering fast transition mode in desktop mode (tooltips appear immediately) */
+function addFastTransitionListeners(): void {
+	if (!docutil.isMouseSupported()) return;
+	
+	const tooltips = document.querySelectorAll(tooltipClasses_Dotted.join(', '));
 
-	let isHovering: boolean = false;
-	let isHolding: boolean = false;
-	let tooltipVisible: boolean = false;
+	tooltips.forEach(tooltip => {
+		const tooltipThisHas = getTooltipClass(tooltip)!; // What kind of tooltip class?
 
-	/** The timeout of the timer at the end of which the tooltip will be visible. */
-	let hoveringTimer: ReturnType<typeof setTimeout> | undefined;
-	/** True if we have temporarily removed the tooltip class (element clicked) */
-	let removedClass: boolean = false;
-	let addBackClassTimeoutID: ReturnType<typeof setTimeout> | undefined;
+		let isHovering: boolean = false;
+		let isHolding: boolean = false;
+		let tooltipVisible: boolean = false;
 
-	function onTooltipVisible(): void {
-		tooltipVisible = true;
-	}
+		/** The timeout of the timer at the end of which the tooltip will be visible. */
+		let hoveringTimer: ReturnType<typeof setTimeout> | undefined;
+		/** True if we have temporarily removed the tooltip class (element clicked) */
+		let removedClass: boolean = false;
+		let addBackClassTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
-	function cancelHoveringTimer(): void {
-		clearTimeout(hoveringTimer);
-		hoveringTimer = undefined;
-	}
-
-	function removeClass(): void {
-		if (removedClass) return;
-
-		// console.log("Removed tooltip class");
-		tooltip.classList.remove(tooltipThisHas);
-		removedClass = true;
-		tooltipVisible = false;
-		disableFastTransition();
-		cancelHoveringTimer();
-	}
-
-	function cancelTimerToAddClass(): void {
-		clearTimeout(addBackClassTimeoutID);
-		addBackClassTimeoutID = undefined;
-	}
-
-	function resetTimerToAddClass(): void {
-		cancelTimerToAddClass();
-		addBackClassTimeoutID = setTimeout(addBackClass, timeToReAddTooltipClassAfterDeletionMillis);
-	}
-
-	function addBackClass(): void {
-		if (!removedClass || isHolding) return;
-
-		// console.log("Added tooltip class");
-		cancelTimerToAddClass();
-		tooltip.classList.add(tooltipThisHas);
-		removedClass = false;
-		if (isHovering) onTooltipVisible();
-	}
-
-	tooltip.addEventListener('mouseenter', () => {
-		isHovering = true;
-		cancelFastTransitionExpiryTimer();
-
-		if (fastTransitionMode) onTooltipVisible();
-		else hoveringTimer = setTimeout(onTooltipVisible, tooltipDelayMillis);
-	});
-
-	tooltip.addEventListener('mouseleave', () => {
-		isHovering = false;
-		isHolding = false;
-		cancelHoveringTimer();
-		addBackClass();
-
-		if (tooltipVisible) {
-			enableFastTransition();
-			fastTransitionTimeoutID = setTimeout(disableFastTransition, fastTransitionCooldownMillis);
+		function onTooltipVisible(): void {
+			tooltipVisible = true;
 		}
 
-		tooltipVisible = false;
-	});
+		function cancelHoveringTimer(): void {
+			clearTimeout(hoveringTimer);
+			hoveringTimer = undefined;
+		}
 
-	tooltip.addEventListener('mousedown', () => {
-		isHolding = true;
-		removeClass();
-		resetTimerToAddClass();
-	});
+		function removeClass(): void {
+			if (removedClass) return;
 
-	tooltip.addEventListener('mouseup', () => {
-		isHolding = false;
-		removeClass();
-		resetTimerToAddClass();
+			// console.log("Removed tooltip class");
+			tooltip.classList.remove(tooltipThisHas);
+			removedClass = true;
+			tooltipVisible = false;
+			disableFastTransition(tooltips);
+			cancelHoveringTimer();
+		}
+
+		function cancelTimerToAddClass(): void {
+			clearTimeout(addBackClassTimeoutID);
+			addBackClassTimeoutID = undefined;
+		}
+
+		function resetTimerToAddClass(): void {
+			cancelTimerToAddClass();
+			addBackClassTimeoutID = setTimeout(addBackClass, timeToReAddTooltipClassAfterDeletionMillis);
+		}
+
+		function addBackClass(): void {
+			if (!removedClass || isHolding) return;
+
+			// console.log("Added tooltip class");
+			cancelTimerToAddClass();
+			tooltip.classList.add(tooltipThisHas);
+			removedClass = false;
+			if (isHovering) onTooltipVisible();
+		}
+
+		tooltip.addEventListener('mouseenter', () => {
+			isHovering = true;
+			cancelFastTransitionExpiryTimer();
+
+			if (fastTransitionMode) onTooltipVisible();
+			else hoveringTimer = setTimeout(onTooltipVisible, tooltipDelayMillis);
+		});
+
+		tooltip.addEventListener('mouseleave', () => {
+			isHovering = false;
+			isHolding = false;
+			cancelHoveringTimer();
+			addBackClass();
+
+			if (tooltipVisible) {
+				enableFastTransition(tooltips);
+				fastTransitionTimeoutID = setTimeout(() => disableFastTransition(tooltips), fastTransitionCooldownMillis);
+			}
+
+			tooltipVisible = false;
+		});
+
+		tooltip.addEventListener('mousedown', () => {
+			isHolding = true;
+			removeClass();
+			resetTimerToAddClass();
+		});
+
+		tooltip.addEventListener('mouseup', () => {
+			isHolding = false;
+			removeClass();
+			resetTimerToAddClass();
+		});
 	});
-});
+}
+
+function initTooltips(): void {
+	addFastTransitionListeners();
+}
+
+initTooltips();
 
 
 // -------------------------------------------------------------------------------------------
 
 
-// The ONLY reason we export is so that tooltips can be tied into the dependancy tree of our game,
-// otherwise esbuild won't include it.
-export default null;
+// Export so that it can be imported on every page. Otherwise esbuild won't include it.
+export default {
+	initTooltips,
+};
