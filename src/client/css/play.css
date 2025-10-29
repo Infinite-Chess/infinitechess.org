@@ -20,12 +20,6 @@ html {
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
     /* The minimum between the viewport width and height */
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
-
-    /* Base editor piece button widths, scale with viewport but stay within reasonable min/max */
-    --editor-piecebutton-width: clamp(30px, calc(var(--vw-capped) / 20), 45px);
-
-    /* Game rule window max width */
-    --editor-game-rule-width: clamp(160px, calc(var(--vw-capped) / 5), 220px);
 }
 
 
@@ -54,17 +48,18 @@ button {
     overflow-x: hidden;
     overflow-y: auto;
     height: 100%;
-    width: fit-content;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
-    background: white;
+    background-color: #ffffff;
     z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
+	/* Controls the size of all its children. */
+	font-size: 16px;
+	width: 15em;
 }
 
 .editor-header {
     text-align: center;
     font-weight: bold;
-    font-size: calc(0.37 * var(--editor-piecebutton-width));
-    margin: 0.3em 0;
+    margin: 0.5em 0;
     color: #333;
 }
 
@@ -75,16 +70,16 @@ button {
 }
 
 .editor-tools {
-    font-size: calc(0.32 * var(--editor-piecebutton-width));
+    font-size: 1em;
     display: grid;
-    grid-template-columns: repeat(3, calc(var(--editor-piecebutton-width) * 4 / 3));
+    grid-template-columns: repeat(3, 1fr);
     text-align: center;
     text-justify: center;
 }
 
 .editor-types {
     display: grid;
-    grid-template-columns: repeat(4, var(--editor-piecebutton-width));
+    grid-template-columns: repeat(4, 1fr);
 }
 
 .editor-types .piece, .editor-tools div {
@@ -96,9 +91,7 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.5em;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    border-radius: 0.2em;
 }
 
 .editor-types .piece {
@@ -110,17 +103,14 @@ button {
 }
 
 .editor-types .piece:hover, .editor-tools div:hover {
-    background-color: #e0f0ff;     /* Slight highlight on hover */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Lift effect */
-    transform: translateY(-2px);   /* Slight pop up */
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
 }
 
 .active {
-    background-color: #d1e8fd;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-    outline-style: solid;
-    outline-width: 0.2em;
-    outline-offset: -0.1em;
+    outline-offset: -0.125em;
+    outline: 0.25em solid black;
+	background-color: var(--background-theme-color);
 }
 
 .void {
@@ -136,11 +126,29 @@ button {
 }
 
 .dot {
-    border: 1px solid black;
-    border-radius: 100%;
-    margin: 6px;
+    border: 0.2em solid black;
+    border-radius: 1.5em;
+    margin: 0.5em;
     flex-shrink: 0;
-    z-index: 1;
+    /* z-index: 1; */
+    /* width: min-content; */
+    height: 2.8em;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dot:hover {
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
+	cursor: pointer;
+}
+
+/* Text with this class takes the opposite color of the background beneath. */
+.opposite-color-text {
+	color: white; /* base color to difference from */
+	mix-blend-mode: difference;
 }
 
 /* Entire board UI, including loading screen, canvas and overlay */
@@ -1256,7 +1264,7 @@ svg.collapse {
 
 /* Game Rules UI */
 #game-rules {
-    max-width: var(--editor-game-rule-width);
+    max-width: 220px;
     max-height: 80vh;
     overflow: auto;        /* enable vertical scrolling */
     padding: 0 18px 16px 18px;

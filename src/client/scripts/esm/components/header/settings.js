@@ -151,9 +151,27 @@ function updateSwitchColor() {
 	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
 	const AvgB = (lightTiles[2] + darkTiles[2]) / 2;
 	
-	const css = `rgb(${AvgR * 255}, ${AvgG * 255}, ${AvgB * 255})`;
+	const switchR = AvgR * 255;
+	const switchG = AvgG * 255;
+	const switchB = AvgB * 255;
+
+	const cssSwitch = `rgb(${switchR}, ${switchG}, ${switchB})`;
+
+	// Also set the --background-theme-color property, which is just a slightly brightened version!
+	// The board editor uses this for the background of selected tools.
+
+	// Brighten factor (e.g., 15% brighter)
+	const factor = 1.13;
+	const brighten = (v) => Math.min(255, v * factor);
+	const backgroundR = brighten(switchR);
+	const backgroundG = brighten(switchG);
+	const backgroundB = brighten(switchB);
+
+	const cssBackground = `rgb(${backgroundR}, ${backgroundG}, ${backgroundB})`;
+
 	const root = document.documentElement;
-	root.style.setProperty('--switch-on-color', css);
+	root.style.setProperty('--switch-on-color', cssSwitch);
+	root.style.setProperty('--background-theme-color', cssBackground);
 }
 
 
