@@ -15,6 +15,9 @@ import docutil from "./docutil.js";
 const tooltipClasses: string[] = ['tooltip-dl', 'tooltip-d', 'tooltip-dr','tooltip-u', 'tooltip-ul'];
 const tooltipClasses_Dotted = tooltipClasses.map(classname => '.' + classname );
 
+/** A list (set) of all tooltip elements that have had fast-transition listeners attached already. */
+const initializedTooltips: Set<HTMLElement> = new Set();
+
 /** The time, in the css, it takes for a tooltip to appear. KEEP THE SAME AS IN PLAY.CSS */
 const tooltipDelayMillis: number = 500;
 /** The time, after the tooltip class is deleted (clicked button),
@@ -35,12 +38,12 @@ const fastTransitionCooldownMillis: number = 750;
 
 
 /** Enables fast transition mode for tooltips. */
-function enableFastTransition(tooltips: NodeListOf<Element>): void {
+function enableFastTransition(): void {
 	if (fastTransitionMode) return; // Already on!
 
 	// console.log("Enabled fast transition");
 	fastTransitionMode = true;
-	tooltips.forEach(tooltip => tooltip.classList.add('fast-transition') );
+	initializedTooltips.forEach(tooltip => tooltip.classList.add('fast-transition') );
 }
 
 /** Cancels the timer to exit fast transition mode. */
@@ -50,14 +53,14 @@ function cancelFastTransitionExpiryTimer(): void {
 	fastTransitionTimeoutID = undefined;
 }
 
-/** Disables fast transition mode for tooltips.  */
-function disableFastTransition(tooltips: NodeListOf<Element>): void {
+/** Disables fast transition mode for tooltips. */
+function disableFastTransition(): void {
 	if (!fastTransitionMode) return;
 
 	// console.log("Disabled fast transition");
 	fastTransitionTimeoutID = undefined;
 	fastTransitionMode = false;
-	tooltips.forEach(tooltip => tooltip.classList.remove('fast-transition') );
+	initializedTooltips.forEach(tooltip => tooltip.classList.remove('fast-transition'));
 }
 
 /**
@@ -68,13 +71,17 @@ function getTooltipClass(element: Element): string | null {
 	return tooltipClasses.find(cls => element.classList.contains(cls)) ?? null;
 }
 
-/** Adds event listeners for entering fast transition mode in desktop mode (tooltips appear immediately) */
+/** Discovers new tooltip elements, attaches fast-transition listeners, and adds them to the tooltips list. */
 function addFastTransitionListeners(): void {
 	if (!docutil.isMouseSupported()) return;
 	
-	const tooltips = document.querySelectorAll(tooltipClasses_Dotted.join(', '));
+	const allTooltipsOnPage = document.querySelectorAll<HTMLElement>(tooltipClasses_Dotted.join(', '));
 
-	tooltips.forEach(tooltip => {
+	allTooltipsOnPage.forEach(tooltip => {
+		if (tooltip.dataset['tooltip_initialized'] === 'true') return; // If already initialized, skip this element.
+		tooltip.dataset['tooltip_initialized'] = 'true'; // Mark THIS element as initialized.
+		initializedTooltips.add(tooltip); // Add to the list
+
 		const tooltipThisHas = getTooltipClass(tooltip)!; // What kind of tooltip class?
 
 		let isHovering: boolean = false;
@@ -103,7 +110,7 @@ function addFastTransitionListeners(): void {
 			tooltip.classList.remove(tooltipThisHas);
 			removedClass = true;
 			tooltipVisible = false;
-			disableFastTransition(tooltips);
+			disableFastTransition();
 			cancelHoveringTimer();
 		}
 
@@ -142,8 +149,8 @@ function addFastTransitionListeners(): void {
 			addBackClass();
 
 			if (tooltipVisible) {
-				enableFastTransition(tooltips);
-				fastTransitionTimeoutID = setTimeout(() => disableFastTransition(tooltips), fastTransitionCooldownMillis);
+				enableFastTransition();
+				fastTransitionTimeoutID = setTimeout(() => disableFastTransition(), fastTransitionCooldownMillis);
 			}
 
 			tooltipVisible = false;
@@ -163,6 +170,7 @@ function addFastTransitionListeners(): void {
 	});
 }
 
+/** Initializes listeners for all un-initialized tooltip elements on the page. */
 function initTooltips(): void {
 	addFastTransitionListeners();
 }
