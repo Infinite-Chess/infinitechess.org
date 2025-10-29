@@ -50,7 +50,7 @@ button {
     background-color: #ffffff;
     z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
 	/* Controls the size of all its children. */
-	font-size: 16px;
+	font-size: min(16px, 2.2vw);
 	width: 15em;
 }
 
