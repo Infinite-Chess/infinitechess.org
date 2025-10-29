@@ -95,6 +95,7 @@ const coloredTypes = [
 	rawTypes.CAMEL,
 	rawTypes.GIRAFFE,
 	rawTypes.ZEBRA,
+	rawTypes.ROYALCENTAUR,
 	rawTypes.ROYALQUEEN,
 ];
 
