@@ -334,34 +334,6 @@ main_menu = "Hauptmenü"
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
 question = "Remis akzeptieren?"
 
-[play.editor]
-file = "Datei"
-clear = "Leeren"
-reset = "Zurück-setzen"
-gamerules_button = "Spiel-Regeln" # This is on a small button, so it has very little space to fit
-gamerules_title = "Spielregeln" # This has more than enough space
-tools = "Werkzeuge"
-pieces = "Figuren"
-load_position = "Position laden"
-save_position = "Position speichern"
-normal = "Normal"
-eraser = "Radierer"
-special_right_toggle = "Sonderrechte umschalten"
-piece_color_toggle = "Figurenfarbe wechseln"
-player_to_move = "Spieler am Zug"
-white = "Weiß"
-black = "Schwarz"
-en_passant_square = "En-passant-Feld"
-move_rule_state = "Zugregel-Status"
-promotion_ranks = "Beförderungsreihen"
-promotion_pieces = "Beförderungsfiguren"
-e_g = "z.B." # abbreviation for "for example"
-win_conditions = "Siegbedingungen"
-checkmate = "Schachmatt"
-royalcapture = "Königsfang"
-allroyalscaptured = "Alle Könige geschlagen"
-allpiecescaptured = "Alle Figuren geschlagen"
-
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Gast)"
 you_indicator = "(Sie)"

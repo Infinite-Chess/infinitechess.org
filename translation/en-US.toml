@@ -334,34 +334,6 @@ main_menu = "Main Menu"
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
 question = "Accept draw offer?"
 
-[play.editor]
-file = "File"
-clear = "Clear"
-reset = "Reset"
-gamerules_button = "Game Rules" # This is on a small button, so it has very little space to fit
-gamerules_title = "Game Rules" # This has more than enough space
-tools = "Tools"
-pieces = "Pieces"
-load_position = "Load position"
-save_position = "Save position"
-normal = "Normal"
-eraser = "Eraser"
-special_right_toggle = "Special rights toggle"
-piece_color_toggle = "Piece color toggle"
-player_to_move = "Player to move"
-white = "White"
-black = "Black"
-en_passant_square = "En passant square"
-move_rule_state = "Move rule state"
-promotion_ranks = "Promotion ranks"
-promotion_pieces = "Promotion pieces"
-e_g = "e.g." # abbreviation for "for example"
-win_conditions = "Win conditions"
-checkmate = "Checkmate"
-royalcapture = "Royal capture"
-allroyalscaptured = "All royals captured"
-allpiecescaptured = "All pieces captured"
-
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
