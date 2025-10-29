@@ -67,21 +67,6 @@ button {
     margin: 0.2em 0.2em;
 }
 
-.position-actions {
-    display: grid;
-	grid-template-columns: repeat(5, 1fr);
-}
-
-/* Buttons that can't receive the .active class (only 1 state): Give them an active state */
-.position-actions div.instant:active {
-	background-color: var(--background-theme-color);
-}
-
-.editor-tools {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-}
-
 /* SVG resizings */
 
 .svg-reset {
@@ -120,13 +105,33 @@ button {
 	transform: scale(0.9);
 }
 
+/* Specific section stylings... */
+
+.position-actions {
+    display: grid;
+	grid-template-columns: repeat(5, 1fr);
+}
+
+/* Buttons that can't receive the .active class (only 1 state): Give them an active state */
+.position-actions .instant:active {
+	background-color: var(--background-theme-color);
+}
+
+.position-actions div, .editor-tools div, .editor-types .piece {
+    cursor: pointer;
+}
+
+.editor-tools {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
 /* Palette */
 
 .color-select {
     border: 0.2em solid black;
     border-radius: 1.5em;
     margin: 0.5em;
-    flex-shrink: 0;
     height: 2.8em;
     box-sizing: border-box;
     display: flex;
@@ -146,17 +151,13 @@ button {
 	mix-blend-mode: difference;
 }
 
+/* The grid of piece types in the Palette section */
 .editor-types {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
 }
 
 .editor-types .piece, .editor-tools div, .position-actions div {
-    cursor: pointer;
-    aspect-ratio: 1/1;
-}
-
-.editor-types .piece, .editor-tools div:not(.color-select), .position-actions div:not(.color-select) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -167,7 +168,7 @@ button {
     margin: 0.1em;
 }
 
-.editor-tools div:not(.color-select), .position-actions div:not(.color-select) {
+.editor-tools div, .position-actions div {
     margin: 0.2em;
 }
 
