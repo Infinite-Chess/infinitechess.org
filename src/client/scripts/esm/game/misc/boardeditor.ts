@@ -471,7 +471,7 @@ function save(): void {
 }
 
 /** Loads the position from the clipboard. */
-async function load(): Promise<LongFormatOut | undefined> {
+async function load(): Promise<undefined> {
 	if (!inBoardEditor) throw Error("Cannot load position when we're not using the board editor.");
 
 	let longformOut: LongFormatOut;
