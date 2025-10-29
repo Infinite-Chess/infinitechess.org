@@ -251,7 +251,7 @@ function markTool(tool: string): void {
 	elements_tools.forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
 		if (element_tool === tool) element.classList.add("active");
-		else element.classList.remove("active");
+		else if (element_tool !== 'gamerules') element.classList.remove("active");
 	});
 }
 
