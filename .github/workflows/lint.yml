@@ -14,4 +14,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: "Checking linter rules"
-        run: npx eslint --ignore-pattern "./dev-utils/**/*"
+        run: npx eslint "src/" "build.js"
