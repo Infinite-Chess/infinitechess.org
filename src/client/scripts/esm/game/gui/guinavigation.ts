@@ -465,6 +465,11 @@ function callback_Annotations(): void {
 	element_Annotations.classList.toggle('enabled');
 }
 
+/** Returns whether the annotations button on the navigation bar on mobile devices is enabled (glowing RED) */
+function isAnnotationsButtonEnabled(): boolean {
+	return annotationsEnabled;
+}
+
 function callback__Collapse(): void {
 	annotations.Collapse();
 }
@@ -870,6 +875,7 @@ export default {
 	isCoordinateActive,
 	recenter,
 	toggle,
+	isAnnotationsButtonEnabled,
 	areCoordsAllowedToBeEdited,
 	getHeightOfNavBar,
 };

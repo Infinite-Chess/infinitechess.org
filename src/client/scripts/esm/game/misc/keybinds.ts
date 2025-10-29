@@ -6,14 +6,16 @@
  * But in the future we can expand this with perhaps an option menu.
  */
 
-import { Mouse, MouseButton } from "../input.js";
+import guinavigation from "../gui/guinavigation.js";
 import boardeditor from "./boardeditor.js";
+import { Mouse, MouseButton } from "../input.js";
 
 
 /** Returns the mouse button currently assigned to board dragging. */
 function getBoardDragMouseButton(): MouseButton {
-	// Exception: Board editor is using a drawing tool: Right mouse drags board
-	if (boardeditor.areUsingDrawingtool()) return Mouse.RIGHT;
+	// Exception: Board editor is using a drawing tool,
+	// AND the mobile annotations button is off: Right mouse drags board
+	if (boardeditor.areUsingDrawingtool() && !guinavigation.isAnnotationsButtonEnabled()) return Mouse.RIGHT;
 
 	// Default: Left mouse drags board
 	return Mouse.LEFT;
@@ -21,8 +23,9 @@ function getBoardDragMouseButton(): MouseButton {
 
 /** Returns the mouse button currently assigned to drawing annotations. */
 function getAnnotationMouseButton(): MouseButton | undefined {
-	// Exception: Board editor is using a drawing tool: NO BUTTON draws annotations
-	if (boardeditor.areUsingDrawingtool()) return undefined;
+	// Exception: Board editor is using a drawing tool,
+	// AND the mobile annotations button is off: NO BUTTON draws annotations
+	if (boardeditor.areUsingDrawingtool() && !guinavigation.isAnnotationsButtonEnabled()) return undefined;
 
 	// Default: Right mouse draws annotations
 	return Mouse.RIGHT;
