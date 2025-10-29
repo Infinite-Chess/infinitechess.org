@@ -77,6 +77,34 @@ button {
     text-justify: center;
 }
 
+/* Palette */
+
+.color-select {
+    border: 0.2em solid black;
+    border-radius: 1.5em;
+    margin: 0.5em;
+    flex-shrink: 0;
+    /* z-index: 1; */
+    /* width: min-content; */
+    height: 2.8em;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.color-select:hover {
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
+	cursor: pointer;
+}
+
+/* Text with this class takes the opposite color of the background beneath. */
+.opposite-color-text {
+	color: white; /* base color to difference from */
+	mix-blend-mode: difference;
+}
+
 .editor-types {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -87,7 +115,7 @@ button {
     aspect-ratio: 1/1;
 }
 
-.editor-types .piece, .editor-tools div:not(.dot) {
+.editor-types .piece, .editor-tools div:not(.color-select) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -98,7 +126,7 @@ button {
     margin: 0.1em;
 }
 
-.editor-tools div:not(.dot) {
+.editor-tools div:not(.color-select) {
     margin: 0.25em;
 }
 
@@ -123,32 +151,6 @@ button {
     outline-style: solid;
     outline-color: #d1e8fd;
     outline-width: 5px;
-}
-
-.dot {
-    border: 0.2em solid black;
-    border-radius: 1.5em;
-    margin: 0.5em;
-    flex-shrink: 0;
-    /* z-index: 1; */
-    /* width: min-content; */
-    height: 2.8em;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.dot:hover {
-	outline: 0.25em solid black;
-	outline-offset: -0.125em;
-	cursor: pointer;
-}
-
-/* Text with this class takes the opposite color of the background beneath. */
-.opposite-color-text {
-	color: white; /* base color to difference from */
-	mix-blend-mode: difference;
 }
 
 /* Entire board UI, including loading screen, canvas and overlay */

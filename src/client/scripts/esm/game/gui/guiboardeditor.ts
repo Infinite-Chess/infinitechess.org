@@ -24,7 +24,7 @@ import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
 const element_menu = document.getElementById("editor-menu")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
-const element_dot = document.getElementById("editor-dot")!;
+const element_dot = document.getElementById("editor-color-select")!;
 const elements_tools = [
 	document.getElementById("clearall")!,
 	document.getElementById("reset")!,
@@ -34,7 +34,7 @@ const elements_tools = [
 	document.getElementById("normal")!,
 	document.getElementById("eraser")!,
 	document.getElementById("specialrights")!,
-	document.getElementById("editor-dot")!
+	document.getElementById("editor-color-select")!
 ];
 
 const element_boardUI = document.getElementById("boardUI")!;
