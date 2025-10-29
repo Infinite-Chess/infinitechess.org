@@ -70,11 +70,14 @@ button {
 }
 
 .editor-tools {
-    font-size: 1em;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     text-align: center;
     text-justify: center;
+}
+
+.svg-gamerules {
+	transform: scale(0.75);
 }
 
 /* Palette */
@@ -127,7 +130,7 @@ button {
 }
 
 .editor-tools div:not(.color-select) {
-    margin: 0.25em;
+    margin: 0.1em;
 }
 
 .editor-types .piece:hover, .editor-tools div:hover {

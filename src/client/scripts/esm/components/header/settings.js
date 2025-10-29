@@ -161,7 +161,7 @@ function updateSwitchColor() {
 	// The board editor uses this for the background of selected tools.
 
 	// Brighten factor (e.g., 15% brighter)
-	const factor = 1.13;
+	const factor = 1.14;
 	const brighten = (v) => Math.min(255, v * factor);
 	const backgroundR = brighten(switchR);
 	const backgroundG = brighten(switchG);

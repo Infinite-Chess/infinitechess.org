@@ -22,9 +22,10 @@ import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
 
 
 const element_menu = document.getElementById("editor-menu")!;
+const element_gamerules = document.getElementById("gamerules")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
-const element_dot = document.getElementById("editor-color-select")!;
+const element_colorSelect = document.getElementById("editor-color-select")!;
 const elements_tools = [
 	document.getElementById("clearall")!,
 	document.getElementById("reset")!,
@@ -267,7 +268,7 @@ function updatePieceColors(newColor: Player): void {
 	}
 
 	// Update dot color and internal state
-	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
+	element_colorSelect.style.backgroundColor = typeutil.strcolors[newColor];
 	boardeditor.setColor(newColor);
 	
 	// Update currentPieceType, if necessary
@@ -625,12 +626,14 @@ function openGameRules(): void {
 		element_gamerulesWindow.style.top = `${gameRulesSavedPos.top}px`;
 	}
 	element_gamerulesWindow.classList.remove("hidden");
+	element_gamerules.classList.add("active");
 	clampGameRulesToBoardUIBounds();
 	initGameRulesListeners();
 }
 
 function closeGameRules(): void {
 	element_gamerulesWindow.classList.add("hidden");
+	element_gamerules.classList.remove("active");
 	closeGameRulesListeners();
 }
 
