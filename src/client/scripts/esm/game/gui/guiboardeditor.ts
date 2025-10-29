@@ -13,10 +13,12 @@ import gameslot from "../chess/gameslot.js";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
 import math from "../../../../../shared/util/math/math.js";
+// @ts-ignore
 import statustext from "./statustext.js";
 
 import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
 import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
+import tooltips from "../../util/tooltips.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -28,16 +30,21 @@ const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
 const element_colorSelect = document.getElementById("editor-color-select")!;
 const elements_tools = [
-	document.getElementById("clearall")!,
+	// Position
 	document.getElementById("reset")!,
-	document.getElementById("gamerules")!,
+	document.getElementById("clearall")!,
 	document.getElementById("saved-positions")!,
 	document.getElementById("copy-notation")!,
 	document.getElementById("paste-notation")!,
+	document.getElementById("gamerules")!,
 	document.getElementById("start-game")!,
+	// Tools
 	document.getElementById("normal")!,
 	document.getElementById("eraser")!,
 	document.getElementById("specialrights")!,
+	// Selection
+	// (none)
+	// Palette
 	document.getElementById("editor-color-select")!
 ];
 
@@ -155,6 +162,8 @@ async function initUI(): Promise<void> {
 		element_playerTypes.set(player, svgs);
 		playerPieces.classList.add("editor-types");
 		if (player !== boardeditor.getColor()) playerPieces.classList.add("hidden");
+
+		// Tooltips (i.e. "Amazon (AM)")
 		for (let i = 0; i < svgs.length; i++) {
 			const svg = svgs[i]!;
 			svg.classList.add("piece");
@@ -184,6 +193,7 @@ async function initUI(): Promise<void> {
 	element_void.classList.add("void");
 	element_void.id = "0";
 
+	// Void tooltip
 	element_void.classList.add("tooltip-dr");
 	const localized_void_name = translations['piecenames'][typeutil.getRawTypeStr(rawTypes.VOID)!];
 	const void_abbreviation = icnconverter.piece_codes_raw[rawTypes.VOID];
@@ -197,6 +207,7 @@ async function initUI(): Promise<void> {
 		neutral_svg.classList.add("piece");
 		const pieceContainer = document.createElement("div");
 		
+		// Neutral piece tooltips
 		if (i % 4 === 3) pieceContainer.classList.add("tooltip-dr");
 		else if (i % 4 === 2) pieceContainer.classList.add("tooltip-dl");
 		else pieceContainer.classList.add("tooltip-d");
@@ -211,7 +222,7 @@ async function initUI(): Promise<void> {
 	}
 	element_neutralTypesContainer.appendChild(neutralPieces);
 
-	// Re-init tooltip listeners after pushing elements to the document with tooltips.
+	// Re-init tooltip listeners after pushing elements to the document with additional tooltips.
 	tooltips.initTooltips();
 
 	initialized = true;
