@@ -161,6 +161,7 @@ async function establishSocket() {
  */
 async function openSocket() {
 	onSocketUpgradeReqLeave();
+	// eslint-disable-next-line no-unused-vars
 	return new Promise((resolve, reject) => {
 		let url = `wss://${window.location.hostname}`;
 		if (window.location.port !== '443') url += `:${window.location.port}`; // Enables localhost to work during development
@@ -170,6 +171,7 @@ async function openSocket() {
 			socket = ws;
 			resolve(true);
 		}; // Resolve the promise with the WebSocket object
+		// eslint-disable-next-line no-unused-vars
 		ws.onerror = (event) => {
 			onReqBack();
 			resolve(false);
@@ -639,11 +641,11 @@ function zeroSubs() {
 	return true;
 }
 
-/** Unsubscribes us from all, client-side. Call when you close the socket.
- * The server will auto-unsub us from everything. */
-function unsubAll() {
-	for (const sub of validSubs) subs[sub] = false;
-}
+// /** Unsubscribes us from all, client-side. Call when you close the socket.
+//  * The server will auto-unsub us from everything. */
+// function unsubAll() {
+// 	for (const sub of validSubs) subs[sub] = false;
+// }
 
 /**
  * Called when the socket unexpectedly closes. This attempts to reopen

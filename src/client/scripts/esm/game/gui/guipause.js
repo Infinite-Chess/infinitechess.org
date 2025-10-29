@@ -193,6 +193,7 @@ function closeListeners() {
 	element_perspective.removeEventListener('click', callback_Perspective);
 }
 
+// eslint-disable-next-line no-unused-vars
 function callback_CopyGame(event) {
 	copygame.copyGame(false);
 }

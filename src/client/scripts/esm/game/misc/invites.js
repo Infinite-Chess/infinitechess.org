@@ -40,9 +40,6 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 const invitesContainer = document.getElementById('invites');
 const ourInviteContainer = document.getElementById('our-invite');
 
-/** The invites list. @type {Invite[]} */
-let activeInvites; // Invites list
-
 let weHaveInvite = false;
 let ourInviteID;
 
@@ -153,7 +150,6 @@ function generateTagForInvite(inviteOptions) {
 function updateInviteList(list) { // { invitesList, currentGameCount }
 	if (!list) return;
     
-	activeInvites = list;
 	const alreadySeenOurInvite = weHaveInvite;
 	let alreadyPlayedSound = false;
 
@@ -278,7 +274,6 @@ function clear({ recentUsersInLastList = false } = {}) {
 	guiplay.closeListeners_Invites();
 	ourInviteContainer.innerHTML = ''; // Deletes all contained invite elements
 	invitesContainer.innerHTML = ''; // Deletes all contained invite elements
-	activeInvites = undefined;
 	weHaveInvite = false;
 	ourInviteID = undefined;
 	element_inviteCodeCode.textContent = '';

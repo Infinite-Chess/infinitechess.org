@@ -40,6 +40,7 @@ function handlePingUpdate(event: CustomEvent<number>): void {
  * Resets the current ping value without clearing the ping history.
  * @param {CustomEvent} event - The 'socket-closed' event.
  */
+// eslint-disable-next-line no-unused-vars
 function handleSocketClosed(event: CustomEvent): void {
 	currentPing = 0;
 }

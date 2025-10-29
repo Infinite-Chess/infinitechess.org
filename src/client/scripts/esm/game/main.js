@@ -39,6 +39,7 @@ function start() {
 }
 
 function initListeners() {
+	// eslint-disable-next-line no-unused-vars
 	window.addEventListener('beforeunload', (event) => {
 		// console.log('Detecting unload');
 

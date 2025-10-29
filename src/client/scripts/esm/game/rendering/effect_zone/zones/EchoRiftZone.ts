@@ -27,6 +27,7 @@ export class EchoRiftZone implements Zone {
 	private ambience: SoundscapePlayer;
 
 	/** A 1D Perlin noise generator for randomizing color grade properties. */
+	// eslint-disable-next-line no-unused-vars
 	private noiseGenerator: (t: number) => number;
 	/** How "zoomed in" the Perlin noise is. Higher values = smoother/slower noise. */
 	private noiseZoom: number = 3000;

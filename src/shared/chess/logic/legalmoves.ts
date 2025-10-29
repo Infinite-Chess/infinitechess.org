@@ -522,7 +522,6 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 
 	const inCheckB4Forwarding = jsutil.deepCopyObject(boardsim.state.local.inCheck);
-	const attackersB4Forwarding = jsutil.deepCopyObject(boardsim.state.local.attackers);
 
 	const originalMoveIndex = boardsim.state.local.moveIndex; // Used to return to this move after we're done simulating
 	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)

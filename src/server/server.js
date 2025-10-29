@@ -44,6 +44,7 @@ socketServer.start(httpsServer);
 let cleanupDone = false;
 process.on('SIGUSR2', async() => { await handleCleanup('SIGUSR2'); }); // A file was saved (nodemon auto restarts)
 process.on('SIGINT', async() => { await handleCleanup('SIGINT'); }); // Ctrl>C was pressed (force terminates nodemon)
+// eslint-disable-next-line no-unused-vars
 async function handleCleanup(signal) {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;

@@ -17,7 +17,6 @@ import boardchanges from "../../../../../shared/chess/logic/boardchanges.js";
 import { animateMove, meshChanges } from "./graphicalchanges.js";
 import moveutil from "../../../../../shared/chess/util/moveutil.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
-import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import piecemodels from "../rendering/piecemodels.js";
 import { Mesh } from "../rendering/piecemodels.js";
 import gamefileutility from "../../../../../shared/chess/util/gamefileutility.js";

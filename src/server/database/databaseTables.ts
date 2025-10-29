@@ -282,22 +282,22 @@ function generateTables(): void {
 	// db.run(createTableSQLQuery);
 }
 
-/**
- * Deletes a table from the database by its name.
- * @param tableName - The name of the table to delete.
- */
-function deleteTable(tableName: string): void {
-	try {
-		// Prepare the SQL query to drop the table
-		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
+// /**
+//  * Deletes a table from the database by its name.
+//  * @param tableName - The name of the table to delete.
+//  */
+// function deleteTable(tableName: string): void {
+// 	try {
+// 		// Prepare the SQL query to drop the table
+// 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
 
-		// Run the query
-		db.run(deleteTableSQL);
-		console.log(`Table ${tableName} deleted successfully.`);
-	} catch (error) {
-		console.error(`Error deleting table ${tableName}:`, error);
-	}
-}
+// 		// Run the query
+// 		db.run(deleteTableSQL);
+// 		console.log(`Table ${tableName} deleted successfully.`);
+// 	} catch (error) {
+// 		console.error(`Error deleting table ${tableName}:`, error);
+// 	}
+// }
 // deleteTable('test');
 
 /**

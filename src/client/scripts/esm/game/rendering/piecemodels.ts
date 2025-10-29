@@ -17,7 +17,6 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
 import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
-import preferences from '../../components/header/preferences.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import geometry from '../../../../../shared/util/math/geometry.js';

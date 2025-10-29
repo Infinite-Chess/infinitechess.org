@@ -133,6 +133,7 @@ const xss_options = {
 		sub: [],
 		sup: [],
 	},
+	// eslint-disable-next-line no-unused-vars
 	onTagAttr: function(tag, name, value, isWhiteAttr) {
 		/*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
 	  console.warn(
@@ -140,6 +141,7 @@ const xss_options = {
 	  );
 	}*/
 	},
+	// eslint-disable-next-line no-unused-vars
 	safeAttrValue: function(tag, name, value) {
 		/*if (
 	  tag === "a" &&

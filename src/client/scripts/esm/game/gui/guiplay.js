@@ -244,9 +244,9 @@ function callback_local() {
 	changePlayMode('local');
 }
 
-function callback_computer() {
-	changePlayMode('computer');
-}
+// function callback_computer() {
+// 	changePlayMode('computer');
+// }
 
 // Also starts local games
 function callback_createInvite() {

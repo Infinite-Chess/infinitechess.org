@@ -7,8 +7,6 @@
 
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
-import bounds from "../../../../../../shared/util/math/bounds.js";
-import gamefileutility from "../../../../../../shared/chess/util/gamefileutility.js";
 import Transition from "../transitions/Transition.js";
 import perspective from "../perspective.js";
 import miniimage from "../miniimage.js";
