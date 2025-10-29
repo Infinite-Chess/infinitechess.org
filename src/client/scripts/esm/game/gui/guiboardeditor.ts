@@ -13,6 +13,7 @@ import gameslot from "../chess/gameslot.js";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
 import math from "../../../../../shared/util/math/math.js";
+import statustext from "./statustext.js";
 
 import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
 import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
@@ -30,8 +31,10 @@ const elements_tools = [
 	document.getElementById("clearall")!,
 	document.getElementById("reset")!,
 	document.getElementById("gamerules")!,
-	document.getElementById("load")!,
-	document.getElementById("save")!,
+	document.getElementById("saved-positions")!,
+	document.getElementById("copy-notation")!,
+	document.getElementById("paste-notation")!,
+	document.getElementById("start-game")!,
 	document.getElementById("normal")!,
 	document.getElementById("eraser")!,
 	document.getElementById("specialrights")!,
@@ -157,7 +160,7 @@ async function initUI(): Promise<void> {
 			const pieceContainer = document.createElement("div");
 
 			if (i % 4 === 0) pieceContainer.classList.add("tooltip-dr");
-			else if (i % 4 === 3) pieceContainer.classList.add("tooltip-dl");
+			else if (i % 4 === 3) pieceContainer.classList.add("tooltip-d");
 			else pieceContainer.classList.add("tooltip-d");
 			const localized_piece_name = translations['piecenames'][typeutil.getRawTypeStr(coloredTypes[i]!)!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
@@ -666,23 +669,29 @@ function callback_ChangeTool(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
-		case "save":
-			boardeditor.save();
-			return;
-		case "load":
-			boardeditor.load();
+		case "reset":
+			boardeditor.reset();
 			return;
 		case "clearall":
 			boardeditor.clearAll();
 			return;
-		case "reset":
-			boardeditor.reset();
+		case "saved-positions":
+			statustext.showStatus("Not implemented yet.");
 			return;
-		case "color":
-			nextColor();
+		case "copy-notation":
+			boardeditor.save();
+			return;
+		case "paste-notation":
+			boardeditor.load();
 			return;
 		case "gamerules":
 			toggleGameRules();
+			return;
+		case "start-game":
+			statustext.showStatus("Not implemented yet.");
+			return;
+		case "color":
+			nextColor();
 			return;
 		default:
 			if (tool !== null) boardeditor.setTool(tool);
