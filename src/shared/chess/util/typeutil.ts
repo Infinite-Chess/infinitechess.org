@@ -217,7 +217,6 @@ export default {
 	royals,
 	SVGLESS_TYPES,
 	strcolors,
-	strtypes,
 
 	getRawType,
 	getColorFromType,
