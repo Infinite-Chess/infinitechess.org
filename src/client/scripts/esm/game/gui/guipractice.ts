@@ -22,7 +22,6 @@ import style from './style.js';
 const element_menuExternalLinks: HTMLElement = document.getElementById('menu-external-links')!;
 
 const element_practiceSelection: HTMLElement = document.getElementById('practice-selection')!;
-const element_practiceName: HTMLElement = document.getElementById('practice-name')!;
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
 const element_progress: HTMLElement = document.querySelector('.checkmate-progress')!;
@@ -395,6 +394,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 	});
 }
 
+// eslint-disable-next-line no-unused-vars
 function callback_practiceBack(event: Event): void {
 	close();
 	guititle.open();

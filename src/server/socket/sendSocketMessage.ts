@@ -11,7 +11,7 @@ import socketUtility from "./socketUtility.js";
 import uuid from "../../shared/util/uuid.js";
 import jsutil from "../../shared/util/jsutil.js";
 // @ts-ignore
-import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
+import { printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore
 import { logEventsAndPrint, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
@@ -131,14 +131,6 @@ function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, cus
  */
 function sendNotifyError(ws: CustomWebSocket, translationCode: string): void {
 	sendSocketMessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
-}
-
-/**
- * Tell them to hard-refresh the page, there's a new update.
- */
-function informSocketToHardRefresh(ws: CustomWebSocket): void {
-	console.log(`Informing socket to hard refresh! ${socketUtility.stringifySocketMetadata(ws)}`);
-	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
 

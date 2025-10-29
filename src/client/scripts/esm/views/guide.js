@@ -17,6 +17,7 @@ function initListeners() {
 	element_FairyForward.addEventListener('click', callback_FairyForward);
 }
 
+// eslint-disable-next-line no-unused-vars
 function callback_FairyBack(event) {
 	if (fairyIndex === 0) return;
 	hideCurrentFairy();
@@ -25,6 +26,7 @@ function callback_FairyBack(event) {
 	updateArrowTransparency();
 }
 
+// eslint-disable-next-line no-unused-vars
 function callback_FairyForward(event) {
 	if (fairyIndex === maxFairyIndex) return;
 	hideCurrentFairy();

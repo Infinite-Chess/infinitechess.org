@@ -4,8 +4,6 @@ import { doesMemberOfUsernameExist, updateMemberColumns } from '../database/memb
 import { generateAccount } from '../controllers/createAccountController.js';
 import { giveRole } from '../controllers/roles.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
-import { addUserToLeaderboard, updatePlayerLeaderboardRating } from '../database/leaderboardsManager.js';
-import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return; // Production
@@ -44,7 +42,7 @@ async function createDevelopmentAccounts() {
 		giveRole(user_id, "patron");
 	}
 	if (!doesMemberOfUsernameExist("member")) {
-		const user_id = (await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true })).user_id;
+		await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
 
 	// for (let i = 0; i < 230; i++) {

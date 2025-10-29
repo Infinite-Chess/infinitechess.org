@@ -9,13 +9,11 @@ import type { PieceMoveset } from '../logic/movesets.js';
 import type { Game, Board, FullGame } from '../logic/gamefile.js';
 import type { Vec2 } from '../../util/math/vectors.js';
 
-import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import winconutil from './winconutil.js';
-import bounds, { BoundingBox } from '../../util/math/bounds.js';
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 import wincondition from '../logic/wincondition.js';

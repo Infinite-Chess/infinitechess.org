@@ -51,7 +51,6 @@ const ARROW = {
 
 const ZERO = bd.FromBigInt(0n);
 const ONE = bd.FromBigInt(1n);
-const THREE = bd.FromBigInt(3n);
 
 
 

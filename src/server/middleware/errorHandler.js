@@ -2,6 +2,7 @@
 import { getTranslationForReq } from '../utility/translate.js';
 import { logEventsAndPrint } from './logEvents.js';
 
+// eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
 	const errMessage = `${err.stack}`;
 	logEventsAndPrint(errMessage, 'errLog.txt');

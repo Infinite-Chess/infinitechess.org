@@ -41,11 +41,8 @@ const element_verifyErrorElement = document.getElementById('verifyerror')!;
 const element_verifyConfirmElement = document.getElementById('verifyconfirm')!;
 const element_sendEmail = document.getElementById('sendemail') as HTMLAnchorElement;
 
-const element_member = document.getElementsByClassName('member')[0] as HTMLElement;
 const element_memberName = document.getElementById('membername')!;
 
-const element_badgeList = document.getElementById('badgelist')!;
-const elements_badges = document.querySelectorAll<HTMLImageElement>('#badgelist img');
 const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze') as HTMLImageElement;
 const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver') as HTMLImageElement;
 const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold') as HTMLImageElement;

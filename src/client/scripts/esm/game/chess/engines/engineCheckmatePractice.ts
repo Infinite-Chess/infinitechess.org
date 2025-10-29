@@ -27,8 +27,6 @@ import type { Coords, CoordsKey, DoubleCoords } from "../../../../../../shared/c
 
 
 
-/* eslint-disable max-depth */
-
 /**
  * Let the main thread know that the Worker has finished fetching and
  * its code is now executing! We may now hide the spinny pawn loading animation.

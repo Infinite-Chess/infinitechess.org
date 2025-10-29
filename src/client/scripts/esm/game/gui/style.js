@@ -14,22 +14,6 @@ const element_style = document.getElementById('style'); // The in-html-doc style
 // * The navigation bar, when the theme changes.
 let navigationStyle;
 
-// Add and remove classes
-
-function addClass(element, className) {
-	element.classList.add(className);
-}
-
-function removeClass(element, className) {
-	element.classList.remove(className);
-}
-
-// Removes the class, THEN adds it back! This starts over animations
-function reinstateClass(element, className) {
-	removeClass(element, className);
-	addClass(element, className);
-}
-
 
 // Other operations
 

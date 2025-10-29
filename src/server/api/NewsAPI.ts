@@ -9,8 +9,6 @@ import type { Response } from 'express';
 
 // @ts-ignore
 import { getMemberDataByCriteria, MemberRecord, updateLastReadNewsDate } from '../database/memberManager.js';
-// @ts-ignore
-import { getLanguageToServe } from '../utility/translate.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
 /**

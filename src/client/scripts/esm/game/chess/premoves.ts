@@ -67,6 +67,7 @@ let applied: boolean = true;
 
 
 /** Event listener for when we change the Premoves toggle */
+// eslint-disable-next-line no-unused-vars
 document.addEventListener('premoves-toggle', (e: CustomEvent) => {
 	// const enabled: boolean = e.detail;
 

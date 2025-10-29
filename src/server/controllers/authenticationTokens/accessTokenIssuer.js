@@ -3,7 +3,6 @@
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!
 
-import { logEventsAndPrint } from "../../middleware/logEvents.js";
 import { signAccessToken } from "./tokenSigner.js";
 
 

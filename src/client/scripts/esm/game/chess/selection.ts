@@ -9,7 +9,7 @@ import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
-import type { Game, FullGame, Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -30,7 +30,6 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
-import boarddrag from '../rendering/boarddrag.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';

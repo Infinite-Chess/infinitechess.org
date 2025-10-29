@@ -5,7 +5,6 @@
 
 // Loading Animation Before Page Load
 const element_loadingAnimation = document.getElementById('loading-animation')!;
-const element_loadingText = document.getElementById('loading-text')!;
 
 /** THIS SHOULD MATCH THE transition time declared in the css stylesheet!! */
 const durationOfFadeOutMillis = 400;

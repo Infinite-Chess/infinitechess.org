@@ -40,18 +40,18 @@ function giveRole(userId, role) {
 	else logEventsAndPrint(`Failed to add role "${role}" to member with user ID "${userId}".`, 'errLog.txt');
 }
 
-/**
- * Deletes all roles for a member and sets the roles column to null in the database.
- * @param {number} userId - The user ID of the member whose roles are to be deleted.
- */
-function removeAllRoles(userId) {
-	if (userId === undefined) return logEventsAndPrint(`Cannot remove roles from an undefined user ID!`, 'errLog.txt');
+// /**
+//  * Deletes all roles for a member and sets the roles column to null in the database.
+//  * @param {number} userId - The user ID of the member whose roles are to be deleted.
+//  */
+// function removeAllRoles(userId) {
+// 	if (userId === undefined) return logEventsAndPrint(`Cannot remove roles from an undefined user ID!`, 'errLog.txt');
 
-	// Set roles to null (no roles left)
-	updateMemberColumns(userId, { roles: null });
+// 	// Set roles to null (no roles left)
+// 	updateMemberColumns(userId, { roles: null });
 
-	logEventsAndPrint(`Deleted all roles of member with user ID "${userId}".`, 'loginAttempts.txt');
-}
+// 	logEventsAndPrint(`Deleted all roles of member with user ID "${userId}".`, 'loginAttempts.txt');
+// }
 // removeAllRoles(11784992);
 
 /**

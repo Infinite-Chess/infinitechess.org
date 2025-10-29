@@ -1,7 +1,6 @@
 
 // This module stores our themes. Straight forward :P
 
-import { players } from "../../chess/util/typeutil.js";
 import jsutil from "../../util/jsutil.js";
 
 import type { Color } from "../../util/math/math.js";
