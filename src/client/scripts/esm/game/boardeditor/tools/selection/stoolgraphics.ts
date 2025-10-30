@@ -75,8 +75,8 @@ function renderSelectionBox(startPoint: Coords, endPoint: Coords): void {
 	const worldBox: DoubleBoundingBox = meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
 
 	// Construct the wireframe data and render it
-	const color: Color = [0, 0, 0, 1]; // Black
-	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, color);
+	const outlineColor: Color = [0, 0, 0, 1]; // Black
+	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, outlineColor);
 	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 
 	// Also construct the semi-transparent fill data and render it
