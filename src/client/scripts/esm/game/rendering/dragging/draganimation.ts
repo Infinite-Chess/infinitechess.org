@@ -272,6 +272,7 @@ function genPieceModel(): Renderable | undefined {
 function genOutlineModel(): Renderable {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
+	// The coordinates of the edges of the square
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;

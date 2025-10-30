@@ -32,6 +32,7 @@ import pastegame from '../chess/pastegame.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
+import selectiontool from './tools/selection/selectiontool.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -60,7 +61,7 @@ type Tool = (typeof validTools)[number];
 /** All tools that can be used in the board editor. */
 const validTools = ["normal", "placer", "eraser", "gamerules", "specialrights", "selection-tool"] as const;
 /** All tools that support drawing. */
-const drawingTools: Tool[] = ["placer", "eraser", "specialrights", "selection-tool"];
+const drawingTools: Tool[] = ["placer", "eraser", "specialrights"];
 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
@@ -278,6 +279,12 @@ function update(): void {
 		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
 	}
 
+	// Update selection tool, if that is active
+	if (currentTool === "selection-tool") {
+		selectiontool.update();
+		return;
+	}
+
 	// If not drawing, or if the current tool doesn't support drawing, there's nothing more to do
 	if (!drawing || !drawingTools.includes(currentTool)) return;
 
@@ -302,7 +309,7 @@ function update(): void {
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
 			break;
 		default:
-			break;
+			throw Error("Tried to draw with a non-drawing tool.");
 	}
 
 	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
@@ -722,6 +729,14 @@ function stealPointer(pointerIdToSteal: string): void {
 	cancelEdit();
 }
 
+/** Renders any graphics of the active tool, if we are in the board editor. */
+function render(): void {
+	if (!inBoardEditor) return;
+
+	// Render selection-tool graphics, if that is active
+	if (currentTool === "selection-tool") selectiontool.render();
+}
+
 export type {
 	Edit
 };
@@ -751,6 +766,7 @@ export default {
 	updatePromotionLines,
 	updateGamerulesGUIinfo,
 	stealPointer,
+	render,
 };
 
 export type {
