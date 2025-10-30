@@ -70,8 +70,6 @@ function endSelection(): void {
 	// Set the end point
 	endPoint = endTile;
 
-	console.log("Selection made from ", startPoint, " to ", endPoint, "!");
-
 	selecting = false;
 	pointerId = undefined;
 }
