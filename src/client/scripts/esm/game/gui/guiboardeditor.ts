@@ -305,6 +305,14 @@ function nextColor(): void {
 	updatePieceColors(nextColor);
 }
 
+/** Called when users click the "Start local game from position" button. */
+function handleStartLocalGame(): void {
+	// Show a dialog box to confirm they want to leave the editor
+	const result = confirm("Do you want to leave the board editor and start a local game from this position? Changes will be saved."); // PLANNED to save changes
+	// Start the local game as requested
+	if (result) boardeditor.startLocalGame();
+}
+
 
 // Game Rules Utilities ---------------------------------------------------------------
 
@@ -704,7 +712,7 @@ function callback_ChangeTool(e: Event): void {
 			toggleGameRules();
 			return;
 		case "start-game":
-			statustext.showStatus("Not implemented yet.");
+			handleStartLocalGame();
 			return;
 		case "color":
 			nextColor();
