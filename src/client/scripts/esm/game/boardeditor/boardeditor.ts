@@ -444,6 +444,7 @@ function redo(): void {
 	guinavigation.update_EditButtons();
 }
 
+/** Starts a local game from the current board editor position, to test play. */
 function startLocalGame() : void {
 	if (!inBoardEditor) throw Error("Cannot start local game from board editor when we're not using the board editor.");
 
@@ -482,7 +483,7 @@ function save(): void {
 /**
  * Reconstructs the current VariantOptions object (including position, gameRules and state_global) from the current board editor position
  */
-function getCurrentPositionInformation() : VariantOptions {
+function getCurrentPositionInformation(): VariantOptions {
 	// Construct gameRules
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
 	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
@@ -518,7 +519,7 @@ function getCurrentPositionInformation() : VariantOptions {
 	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
 	const enpassantcoords: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 	const enpassant: EnPassant | undefined = enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } : undefined; // dummy enpassant object
-	const state_global : GlobalGameState = {
+	const state_global: GlobalGameState = {
 		specialRights,
 		moveRuleState,
 		enpassant
