@@ -87,6 +87,7 @@ function resetState(): void {
 	endPoint = undefined;
 }
 
+/** If the given pointer is currently being for making a selection, this stops using it. */
 function stealPointer(pointerIdToSteal: string): void {
 	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
 	cancelSelection();
