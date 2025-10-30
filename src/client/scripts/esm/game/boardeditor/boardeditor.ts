@@ -196,8 +196,9 @@ function getTool(): typeof currentTool {
 	return currentTool;
 }
 
-function areUsingDrawingtool(): boolean {
-	return inBoardEditor && drawingTools.includes(currentTool);
+/** Whether any of the editor tools are actively using the left mouse button. */
+function isLeftMouseReserved(): boolean {
+	return inBoardEditor && drawingTools.includes(currentTool) || currentTool === "selection-tool";
 }
 
 function canUndo(): boolean {
@@ -751,7 +752,7 @@ export default {
 	getColor,
 	setTool,
 	getTool,
-	areUsingDrawingtool,
+	isLeftMouseReserved,
 	update,
 	canUndo,
 	canRedo,
