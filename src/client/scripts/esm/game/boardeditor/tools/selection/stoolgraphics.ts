@@ -8,15 +8,15 @@
  * of the Selection Tool in the Board Editor
  */
 
-import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
-import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
+import type { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
+import type { DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import type { Color } from "../../../../../../../shared/util/math/math";
 
 import mouse from "../../../../util/mouse";
 import camera from "../../../rendering/camera";
 import meshes from "../../../rendering/meshes";
 import primitives from "../../../rendering/primitives";
-import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
+import space from "../../../misc/space";
 import { createRenderable } from "../../../../webgl/Renderable";
 
 
@@ -58,23 +58,9 @@ function outlineRankAndFile(): void {
 
 /**
  * Renders a wireframe box around the selection
- * @param startPoint - First corner of the selection
- * @param endPoint - Opposite corner of the selection
+ * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
-function renderSelectionBox(startPoint: Coords, endPoint: Coords): void {
-	const intBox: BoundingBox = {
-		left: bimath.min(startPoint[0], endPoint[0]),
-		right: bimath.max(startPoint[0], endPoint[0]),
-		bottom: bimath.min(startPoint[1], endPoint[1]),
-		top: bimath.max(startPoint[1], endPoint[1])
-	};
-
-	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
-	const roundedAwayBox: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
-
-	// Convert it to a world-space box
-	const worldBox: DoubleBoundingBox = meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
-
+function renderSelectionBox(worldBox: DoubleBoundingBox): void {
 	// Construct the wireframe data and render it
 	const outlineColor: Color = [0, 0, 0, 1]; // Black
 	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, outlineColor);
@@ -86,8 +72,33 @@ function renderSelectionBox(startPoint: Coords, endPoint: Coords): void {
 	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
 }
 
+/**
+ * Renders the small square in the corner of the selection box.
+ * @param worldBox - Contains the world space edge coordinates of the selection box.
+ */
+function renderCornerSquare(worldBox: DoubleBoundingBox): void {
+	const widthVirtualPixels = 10;
+	// Convert to world space
+	const widthWorld = space.convertPixelsToWorldSpace_Virtual(widthVirtualPixels);
+
+	// Bottom right corner world space
+	const corner: DoubleCoords = [worldBox.right, worldBox.bottom];
+
+	// Calculate vertex data
+	const left = corner[0] - widthWorld / 2;
+	const right = corner[0] + widthWorld / 2;
+	const bottom = corner[1] - widthWorld / 2;
+	const top = corner[1] + widthWorld / 2;
+
+	const color: Color = [0, 0, 0, 1]; // Black
+	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, color);
+	// Render the square
+	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
+}
+
 
 export default {
 	outlineRankAndFile,
 	renderSelectionBox,
+	renderCornerSquare,
 };

@@ -15,6 +15,9 @@ import stoolgraphics from "./stoolgraphics";
 import space from "../../../misc/space";
 import { Mouse } from "../../../input";
 import { listener_overlay } from "../../../chess/game";
+import { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
+import meshes from "../../../rendering/meshes";
+import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 
 
 // State ----------------------------------------------
@@ -110,16 +113,41 @@ function isACurrentSelection(): boolean {
 
 
 function render(): void {
-	// When there's no selection, outline the rank and file of the square hovered over
-	if (!selecting && !endPoint) {
+	if (!selecting && !endPoint) { // No selection, and not currently making one
 		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
+		// Outline the rank and file of the square hovered over
 		stoolgraphics.outlineRankAndFile(); 
 	} else { // There either is a selection, or we are currently making one
-		// Render the selection box...
-		const currentTile: Coords | undefined = endPoint || lastPointerCoords;
-		if (!startPoint || !currentTile) return;
-		stoolgraphics.renderSelectionBox(startPoint, currentTile);
+
+		const selectionWorldBox = getSelectionWorldBox()!;
+
+		// Render the selection box
+		stoolgraphics.renderSelectionBox(selectionWorldBox);
+
+		if (isACurrentSelection()) {
+			// Render the small square in the corner
+			stoolgraphics.renderCornerSquare(selectionWorldBox);
+		}
 	}
+}
+
+/** Calculates the world space edge coordinates of the current selection box. */
+function getSelectionWorldBox(): DoubleBoundingBox | undefined {
+	const currentTile: Coords | undefined = endPoint || lastPointerCoords;
+	if (!startPoint || !currentTile) return;
+
+	const intBox: BoundingBox = {
+		left: bimath.min(startPoint[0], currentTile[0]),
+		right: bimath.max(startPoint[0], currentTile[0]),
+		bottom: bimath.min(startPoint[1], currentTile[1]),
+		top: bimath.max(startPoint[1], currentTile[1])
+	};
+
+	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
+	const roundedAwayBox: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
+
+	// Convert it to a world-space box
+	return meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
 }
 
 
