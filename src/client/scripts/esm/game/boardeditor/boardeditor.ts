@@ -33,6 +33,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import selectiontool from './tools/selection/selectiontool.js';
+import gameloader from '../chess/gameloader.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -144,6 +145,7 @@ function initBoardEditor(): void {
 
 function closeBoardEditor(): void {
 	inBoardEditor = false;
+	currentTool = "normal";
 	specialrighthighlights.disable();
 	drawing = false;
 	addingSpecialRights = undefined;
@@ -202,7 +204,8 @@ function getTool(): typeof currentTool {
 
 /** Whether any of the editor tools are actively using the left mouse button. */
 function isLeftMouseReserved(): boolean {
-	return inBoardEditor && drawingTools.includes(currentTool) || currentTool === "selection-tool";
+	if (!inBoardEditor) return false;
+	return drawingTools.includes(currentTool) || currentTool === "selection-tool";
 }
 
 function canUndo(): boolean {
@@ -443,6 +446,36 @@ function redo(): void {
 	guinavigation.update_EditButtons();
 }
 
+/** Starts a local game from the current board editor position, to test play. */
+function startLocalGame() : void {
+	if (!inBoardEditor) throw Error("Cannot start local game from board editor when we're not using the board editor.");
+
+	const variantOptions = getCurrentPositionInformation();
+	if (variantOptions.position.size === 0) {
+		statustext.showStatus("Cannot start local game from empty position!", true);
+		return;
+	}
+
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata : MetaData = {
+		Event: "Position created using ingame board editor",
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime
+	};
+
+	gameloader.unloadGame();
+
+	gameloader.startCustomLocalGame({
+		metadata,
+		additional: {
+			variantOptions
+		}
+	});
+}
+
 /**
  * copygame uses the move list instead of the position
  * which doesn't work for the board editor.
@@ -451,6 +484,20 @@ function redo(): void {
 function save(): void {
 	if (!inBoardEditor) throw Error("Cannot save position when we're not using the board editor.");
 
+	const variantOptions = getCurrentPositionInformation();
+	const LongFormatIn : LongFormatIn = {
+		metadata: {} as MetaData, /** Empty metadata, in order to make copied codes easier to share */
+		...variantOptions
+	};
+	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, { skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
+	docutil.copyToClipboard(shortFormatOut);
+	statustext.showStatus(translations['copypaste']['copied_position']);
+}
+
+/**
+ * Reconstructs the current VariantOptions object (including position, gameRules and state_global) from the current board editor position
+ */
+function getCurrentPositionInformation(): VariantOptions {
 	// Construct gameRules
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
 	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
@@ -486,24 +533,21 @@ function save(): void {
 	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
 	const enpassantcoords: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 	const enpassant: EnPassant | undefined = enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } : undefined; // dummy enpassant object
-	const state_global : Partial<GlobalGameState> = {
+	const state_global: GlobalGameState = {
 		specialRights,
 		moveRuleState,
 		enpassant
 	};
 
-	// Construct LongFormatIn
-	const LongFormatIn: LongFormatIn = {
-		metadata: {} as MetaData, // No metadata for just getting the notation (easier to share?)
+	// Construct VariantOptions
+	const variantOptions: VariantOptions = {
 		fullMove : 1,
 		gameRules,
 		state_global,
 		position
 	};
 
-	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, { skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
-	docutil.copyToClipboard(shortFormatOut);
-	statustext.showStatus(translations['copypaste']['copied_position']);
+	return variantOptions;
 }
 
 /** Loads the position from the clipboard. */
@@ -730,12 +774,9 @@ function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 
 /** If the given pointer is currently being used by a drawing tool for an edit, this stops using it. */
 function stealPointer(pointerIdToSteal: string): void {
-	if (currentTool === 'selection-tool') {
-		selectiontool.stealPointer(pointerIdToSteal); // Let selection tool also try to steal the pointer
-	} else {
-		if (drawingToolPointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
-		cancelEdit();
-	}
+	if (currentTool === 'selection-tool') return; // Don't steal (selection tool isn't capable of reverting to previous selection before starting a new one)
+	else if (drawingToolPointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
+	cancelEdit();
 }
 
 /** Renders any graphics of the active tool, if we are in the board editor. */
@@ -766,6 +807,7 @@ export default {
 	canRedo,
 	undo,
 	redo,
+	startLocalGame,
 	save,
 	load,
 	clearAll,

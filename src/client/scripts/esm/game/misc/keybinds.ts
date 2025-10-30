@@ -14,7 +14,8 @@ import { Mouse, MouseButton } from "../input.js";
 
 /** Returns the mouse button currently assigned to board dragging. */
 function getBoardDragMouseButton(): MouseButton | undefined {
-	if (guinavigation.isAnnotationsButtonEnabled() || perspective.getEnabled()) return undefined;
+	if (perspective.getEnabled()) return undefined;
+	if (guinavigation.isAnnotationsButtonEnabled()) return Mouse.LEFT; // Allows a second pointer to pinch zoom the board even when drawing annote with first pointer.
 	if (boardeditor.isLeftMouseReserved()) return Mouse.RIGHT;
 	// Default: Left mouse drags board
 	return Mouse.LEFT;

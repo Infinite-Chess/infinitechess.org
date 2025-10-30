@@ -324,6 +324,36 @@ async function startBoardEditor(): Promise<void> {
 	boardeditor.initBoardEditor();
 }
 
+/** Initializes a local game from a custom position. */
+async function startCustomLocalGame(options: {
+	metadata: MetaData,
+	additional: {
+		moves?: ServerGameMoveMessage[],
+		variantOptions: VariantOptions,
+	},
+	presetAnnotes?: PresetAnnotes
+}): Promise<void> {
+	typeOfGameWeAreIn = 'local';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	gameslot.loadGamefile({
+		...options,
+		viewWhitePerspective: true,
+		allowEditCoords: true
+	})
+		// eslint-disable-next-line no-unused-vars
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+}
+
 /**
  * Reloads the current local or online game from the provided metadata, existing moves, and variant options.
  */
@@ -435,6 +465,7 @@ export default {
 	startOnlineGame,
 	startEngineGame,
 	startBoardEditor,
+	startCustomLocalGame,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
