@@ -14,6 +14,7 @@ import arrows from "../../../rendering/arrows/arrows";
 import stoolgraphics from "./stoolgraphics";
 import space from "../../../misc/space";
 import { Mouse } from "../../../input";
+import { listener_overlay } from "../../../chess/game";
 
 
 // State ----------------------------------------------
@@ -110,13 +111,15 @@ function isACurrentSelection(): boolean {
 
 function render(): void {
 	// When there's no selection, outline the rank and file of the square hovered over
-	if (!selecting && !endPoint) stoolgraphics.outlineRankAndFile();
-
-	// Render the selection box
-	const currentTile: Coords | undefined = endPoint || lastPointerCoords;
-	if (!startPoint || !currentTile) return;
-
-	stoolgraphics.renderSelectionBox(startPoint, currentTile);
+	if (!selecting && !endPoint) {
+		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
+		stoolgraphics.outlineRankAndFile(); 
+	} else { // There either is a selection, or we are currently making one
+		// Render the selection box...
+		const currentTile: Coords | undefined = endPoint || lastPointerCoords;
+		if (!startPoint || !currentTile) return;
+		stoolgraphics.renderSelectionBox(startPoint, currentTile);
+	}
 }
 
 
