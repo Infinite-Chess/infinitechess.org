@@ -449,13 +449,25 @@ function startLocalGame() : void {
 	if (!inBoardEditor) throw Error("Cannot start local game from board editor when we're not using the board editor.");
 
 	const variantOptions = getCurrentPositionInformation();
-
 	if (variantOptions.position.size === 0) {
 		statustext.showStatus("Cannot start local game from empty position!", true);
 		return;
 	}
 
-	gameloader.startLocalGameFromBoardEditor({
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata : MetaData = {
+		Event: "Position created using ingame board editor",
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime
+	};
+
+	gameloader.unloadGame();
+
+	gameloader.startCustomLocalGame({
+		metadata,
 		additional: {
 			variantOptions
 		}

@@ -324,38 +324,24 @@ async function startBoardEditor(): Promise<void> {
 	boardeditor.initBoardEditor();
 }
 
-/** Initializes a custom local game from the board editor. */
-async function startLocalGameFromBoardEditor(options: {
+/** Initializes a local game from a custom position. */
+async function startCustomLocalGame(options: {
+	metadata: MetaData,
 	additional: {
+		moves?: ServerGameMoveMessage[],
 		variantOptions: VariantOptions,
-	}
+	},
+	presetAnnotes?: PresetAnnotes
 }): Promise<void> {
-	if (typeOfGameWeAreIn !== 'editor') throw Error("Can't start a local game from a custom position when we are not in the board editor.");
-
-	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the board editor
-
-	unloadGame();
-
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
 
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata : MetaData = {
-		Event: "Position created using ingame board editor",
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime
-	};
-
 	gameslot.loadGamefile({
 		...options,
-		metadata,
-		viewWhitePerspective,
+		viewWhitePerspective: true,
 		allowEditCoords: true
 	})
 		// eslint-disable-next-line no-unused-vars
@@ -365,7 +351,7 @@ async function startLocalGameFromBoardEditor(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, false);
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }
 
 /**
@@ -479,7 +465,7 @@ export default {
 	startOnlineGame,
 	startEngineGame,
 	startBoardEditor,
-	startLocalGameFromBoardEditor,
+	startCustomLocalGame,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
