@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "73"
+version = "74"
 maintainer = "Naviary"
 
 [header]
@@ -88,7 +88,6 @@ variants_credits = [
 "Pawndard by SexyLexi.",
 "Classical+ by SexyLexi.",
 "Knightline by Inaccessible Cardinal.",
-"Knighted Chess by cycy98.",
 "designed by Cory Evans and Joel Hamkins.",
 "designed by Andreas Tsevas.",
 "designed by Cory Evans and Joel Hamkins.",
@@ -262,6 +261,7 @@ Classical_Plus = "Classical+"
 CoaIP = "Chess on an Infinite Plane"
 Pawndard = "Pawndard"
 Knighted_Chess = "Knighted Chess"
+Palace = "Palace"
 Knightline = "Knightline"
 Core = "Core"
 Standarch = "Standarch"
@@ -278,6 +278,8 @@ Chess = "Chess"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
 CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
+CoaIP_RO = "Chess on an Infinite Plane - Roses Option"
+CoaIP_NO = "Chess on an Infinite Plane - Knightriders Option"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"

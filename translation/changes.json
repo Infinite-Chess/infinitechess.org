@@ -1,4 +1,8 @@
 {
+	"74": {
+		"note": "Deleted Knighted Chess credit on line 91. Added Palace line 264. Added CoaIP_RO & CoaIP_NO on lines 281-282.",
+		"changes": []
+	},
 	"73": {
 		"note": "Added section play.javascript.piecenames on lines 387-409. Added copied_position, loaded_position_from_clipboard, reset_position, clear_position on lines 427-430.",
 		"changes": []
