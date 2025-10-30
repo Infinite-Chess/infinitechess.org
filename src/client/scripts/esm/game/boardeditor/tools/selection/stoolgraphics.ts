@@ -16,6 +16,7 @@ import mouse from "../../../../util/mouse";
 import camera from "../../../rendering/camera";
 import meshes from "../../../rendering/meshes";
 import primitives from "../../../rendering/primitives";
+import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import { createRenderable } from "../../../../webgl/Renderable";
 
 
@@ -62,10 +63,10 @@ function outlineRankAndFile(): void {
  */
 function renderSelectionBox(startPoint: Coords, endPoint: Coords): void {
 	const intBox: BoundingBox = {
-		left: startPoint[0] < endPoint[0] ? startPoint[0] : endPoint[0],
-		right: startPoint[0] > endPoint[0] ? startPoint[0] : endPoint[0],
-		bottom: startPoint[1] < endPoint[1] ? startPoint[1] : endPoint[1],
-		top: startPoint[1] > endPoint[1] ? startPoint[1] : endPoint[1],
+		left: bimath.min(startPoint[0], endPoint[0]),
+		right: bimath.max(startPoint[0], endPoint[0]),
+		bottom: bimath.min(startPoint[1], endPoint[1]),
+		top: bimath.max(startPoint[1], endPoint[1])
 	};
 
 	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
