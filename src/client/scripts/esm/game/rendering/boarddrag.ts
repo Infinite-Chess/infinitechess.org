@@ -86,6 +86,7 @@ function isBoardDragging(): boolean {
  */
 function getBoardDraggablePointersDown(): string[] {
 	const mouseKeybind = keybinds.getBoardDragMouseButton();
+	if (mouseKeybind === undefined) return [];
 	// Prevent duplicates by using a Set
 	return [...new Set([
 		...listener_overlay.getPointersDown(mouseKeybind),
@@ -100,6 +101,7 @@ function getBoardDraggablePointersDown(): string[] {
  */
 function getBoardDraggablePointers(): string[] {
 	const mouseKeybind = keybinds.getBoardDragMouseButton();
+	if (mouseKeybind === undefined) return [];
 	// Prevent duplicates by using a Set
 	return [...new Set([
 		...listener_overlay.getAllPointers(mouseKeybind),

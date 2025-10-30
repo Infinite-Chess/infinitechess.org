@@ -8,34 +8,29 @@
 
 import guinavigation from "../gui/guinavigation.js";
 import boardeditor from "./boardeditor.js";
+import perspective from "../rendering/perspective.js";
 import { Mouse, MouseButton } from "../input.js";
 
 
 /** Returns the mouse button currently assigned to board dragging. */
-function getBoardDragMouseButton(): MouseButton {
-	// Exception: Board editor is using a drawing tool,
-	// AND the mobile annotations button is off: Right mouse drags board
-	if (boardeditor.areUsingDrawingtool() && !guinavigation.isAnnotationsButtonEnabled()) return Mouse.RIGHT;
-
+function getBoardDragMouseButton(): MouseButton | undefined {
+	if (guinavigation.isAnnotationsButtonEnabled() || perspective.getEnabled()) return undefined;
+	if (boardeditor.areUsingDrawingtool()) return Mouse.RIGHT;
 	// Default: Left mouse drags board
 	return Mouse.LEFT;
 }
 
 /** Returns the mouse button currently assigned to drawing annotations. */
 function getAnnotationMouseButton(): MouseButton | undefined {
-	// Exception: Board editor is using a drawing tool,
-	// AND the mobile annotations button is off: NO BUTTON draws annotations
-	if (boardeditor.areUsingDrawingtool() && !guinavigation.isAnnotationsButtonEnabled()) return undefined;
-
+	if (guinavigation.isAnnotationsButtonEnabled() || perspective.getEnabled()) return Mouse.RIGHT;
+	if (boardeditor.areUsingDrawingtool()) return undefined; // NO BUTTON draws annotations (right click reserved for dragging)
 	// Default: Right mouse draws annotations
 	return Mouse.RIGHT;
 }
 
 /** Returns the mouse button currently assigned to collapsing annotations, or cancelling premoves. */
 function getCollapseMouseButton(): MouseButton | undefined {
-	// Exception: Board editor is using a drawing tool: NO BUTTON
-	if (boardeditor.areUsingDrawingtool()) return undefined;
-
+	if (boardeditor.areUsingDrawingtool()) return undefined; // Left click reserved for drawing tool
 	// Default: Right mouse
 	return Mouse.LEFT;
 }
