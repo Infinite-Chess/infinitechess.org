@@ -101,12 +101,12 @@ button {
     transform: scale(0.65) translate(3%, 0%);
 }
 
-.svg-eraser {
-	transform: scale(0.85);
-}
-
 .svg-selection-tool {
     transform: scale(0.9) translate(-1%, -1%);
+}
+
+.svg-eraser {
+	transform: scale(0.85);
 }
 
 /* Specific section stylings... */
