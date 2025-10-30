@@ -15,15 +15,13 @@
  * * Delete
  * * Flip horizontally
  * * Flip vertically
+ * * Rotate left
+ * * Rotate right
  * * Invert color
  * * Copy
  * * Cut
  * * Paste (in whole multiples)
  * * Repeat (allows partial multiples)
- * 
- * MAYBE:
- * * Rotate left
- * * Rotate right
  */
 
 
