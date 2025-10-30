@@ -229,13 +229,9 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		positionString: 'k5,8+|n3,8|n4,8|n6,8|n7,8|p-5,7+|p-4,7+|p-3,7+|p-2,7+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,7+|p12,7+|p13,7+|p14,7+|p15,7+|K5,1+|N3,1|N4,1|N6,1|N7,1|P-5,2+|P-4,2+|P-3,2+|P-2,2+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,2+|P12,2+|P13,2+|P14,2+|P15,2+',
 		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.KNIGHT, r.QUEEN]) }
 	},
-	Knighted_Chess: {
-		positionString: {
-			// UTC Aug 1, 2024, 12:00AM
-			1722470400000: 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|NR2,1|NR7,1|nr2,8|nr7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+',
-			0: 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+'
-		},
-		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.CHANCELLOR, r.KNIGHTRIDER, r.ARCHBISHOP, r.AMAZON]) }
+	Palace: {
+		positionString: "K4,1|Q5,1|P6,2+|P5,2+|P4,2+|P3,2+|P2,2+|P1,2+|p1,4+|p2,4+|p3,4+|p4,4+|p5,4+|p6,4+|N6,1|AM3,1|Q2,1|N1,1|n1,5|n6,5|k4,5|q5,5|q2,5|am3,5|P6,-1+|P7,-1+|P8,-1+|P9,-1+|P1,-1+|P0,-1+|P-1,-1+|P-2,-1+|P2,-2+|P-3,-2+|P5,-2+|P10,-2+|p7,7+|p6,7+|p8,7+|p9,7+|p1,7+|p0,7+|p-1,7+|p-2,7+|p-3,8+|p2,8+|p5,8+|p10,8+|r-1,8|r-2,8|r8,8|r9,8|R8,-2|R9,-2|R-1,-2|R-2,-2|B0,-2|B1,-2|B7,-2|B6,-2|b0,8|b1,8|b7,8|b6,8",
+		gameruleModifications: { promotionRanks: { [p.WHITE]: [4n], [p.BLACK]: [2n] }, promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.AMAZON]) }
 	},
 	Omega: {
 		positionString: {
@@ -277,16 +273,24 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
 		gameruleModifications: { winConditions: royalCaptureWinConditions, ...gameruleModificationsOfOmegaShowcasings },
 	},
-	// Chess on an Infinite Plane - Huygens Options
-	CoaIP_HO: {
-		positionString: 'p-4,14+|ha-2,14|p0,14+|p9,14+|ha11,14|p13,14+|p-3,13+|p-1,13+|p10,13+|p12,13+|p-2,12+|p11,12+|gu-1,9|hu0,9|ch1,9|ch8,9|hu9,9|gu10,9|p-1,8+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p10,8+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P-1,1+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P10,1+|GU-1,0|HU0,0|CH1,0|CH8,0|HU9,0|GU10,0|P-2,-3+|P11,-3+|P-3,-4+|P-1,-4+|P10,-4+|P12,-4+|P-4,-5+|HA-2,-5|P0,-5+|P9,-5+|HA11,-5|P13,-5+',
-		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions, r.HUYGEN]) }
-	},
 	// DISABLED BECAUSE IT has a smothered mate in 2 if one side allows it.
 	// Trappist_1: { // Also has the huygen featured in it!
 	// 	positionString: 'p-6,16+|ha-4,16|p-2,16+|p11,16+|ha13,16|p15,16+|p-5,15+|p-3,15+|p12,15+|p14,15+|p-4,14+|p13,14+|p-3,9+|hu-2,9|n3,9|b4,9|b5,9|n6,9|hu11,9|p12,9+|p-2,8+|r-1,8+|ch0,8|gu1,8|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|gu8,8|ch9,8|r10,8+|p11,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P-2,1+|R-1,1+|CH0,1|GU1,1|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|GU8,1|CH9,1|R10,1+|P11,1+|P-3,0+|HU-2,0|N3,0|B4,0|B5,0|N6,0|HU11,0|P12,0+|P-4,-5+|P13,-5+|P-5,-6+|P-3,-6+|P12,-6+|P14,-6+|P-6,-7+|HA-4,-7|P-2,-7+|P11,-7+|HA13,-7|P15,-7+',
 	// 	gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions, r.HUYGEN]) }
 	// },
+	// Chess on an Infinite Plane - Huygens Options
+	CoaIP_HO: {
+		positionString: 'p-4,14+|ha-2,14|p0,14+|p9,14+|ha11,14|p13,14+|p-3,13+|p-1,13+|p10,13+|p12,13+|p-2,12+|p11,12+|gu-1,9|hu0,9|ch1,9|ch8,9|hu9,9|gu10,9|p-1,8+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p10,8+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P-1,1+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P10,1+|GU-1,0|HU0,0|CH1,0|CH8,0|HU9,0|GU10,0|P-2,-3+|P11,-3+|P-3,-4+|P-1,-4+|P10,-4+|P12,-4+|P-4,-5+|HA-2,-5|P0,-5+|P9,-5+|HA11,-5|P13,-5+',
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions, r.HUYGEN]) }
+	},
+	CoaIP_RO: {
+		positionString: "P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+|RO-2,-6|RO11,-6|ro-2,15|ro11,15",
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.GUARD, r.CHANCELLOR, r.ROSE]) }
+	},
+	CoaIP_NO: {
+		positionString: "P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+|nr-2,15|nr11,15|NR-2,-6|NR11,-6",
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.GUARD, r.CHANCELLOR, r.KNIGHTRIDER]) }
+	},
 	'4x4x4x4_Chess': {
 		generator: {
 			algorithm: (): Map<CoordsKey, number> => { return fourdimensionalgenerator.gen4DPosition(4n, 4n, 5n, {
@@ -326,7 +330,16 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			[r.KING]: fourdimensionalgenerator.getKingVicinity(9n, true)
 		},
 		worldBorder: 0n,
-	}
+	},
+	// DELETED (but still in here to support pasting old game notation)
+	Knighted_Chess: {
+		positionString: {
+			// UTC Aug 1, 2024, 12:00AM
+			1722470400000: 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|NR2,1|NR7,1|nr2,8|nr7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+',
+			0: 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+'
+		},
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.CHANCELLOR, r.KNIGHTRIDER, r.ARCHBISHOP, r.AMAZON]) }
+	},
 };
 
 
