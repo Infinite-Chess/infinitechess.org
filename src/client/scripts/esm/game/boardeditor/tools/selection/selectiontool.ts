@@ -93,6 +93,12 @@ function stealPointer(pointerIdToSteal: string): void {
 }
 
 
+/** Whether there is a current selection, NOT whether we are currently MAKING a selection. */
+function isACurrentSelection(): boolean {
+	return !!startPoint && !!endPoint;
+}
+
+
 
 function render(): void {
 	// When there's no selection, outline the rank and file of the square hovered over
