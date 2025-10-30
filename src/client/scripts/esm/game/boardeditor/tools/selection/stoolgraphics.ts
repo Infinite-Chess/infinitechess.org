@@ -20,6 +20,23 @@ import space from "../../../misc/space";
 import { createRenderable } from "../../../../webgl/Renderable";
 
 
+
+// Constants ---------------------------------------------------
+
+
+/**
+ * The color for the wireframe of the selection box, including the small square in the corner,
+ * and the outline of the currently hovered square's rank & file, when there is no selection.
+ */
+const OUTLINE_COLOR: Color = [0,0,0, 1]; // Black
+/** The fill color of the selection box. */
+const FILL_COLOR: Color = [0,0,0, 0.08]; // Transparent Black
+
+
+// Methods -----------------------------------------------------
+
+
+
 /**
  * Outlines the current rank and file of the square
  * the mouse is currently hovering over, for a total of 4 lines.
@@ -34,23 +51,21 @@ function outlineRankAndFile(): void {
 
 	const data: number[] = [];
 
-	const color = [0, 0, 0, 1]; // Black
-
 	const screenBox = camera.getRespectiveScreenBox();
 
 	data.push(
 		// Horizontal: Lower
-		screenBox.left, bottom,   ...color,
-		screenBox.right, bottom,  ...color,
+		screenBox.left, bottom,   ...OUTLINE_COLOR,
+		screenBox.right, bottom,  ...OUTLINE_COLOR,
 		// Horizontal: Upper
-		screenBox.left, top,      ...color,
-		screenBox.right, top,     ...color,
+		screenBox.left, top,      ...OUTLINE_COLOR,
+		screenBox.right, top,     ...OUTLINE_COLOR,
 		// Vertical: Lefter
-		left, screenBox.bottom,   ...color,
-		left, screenBox.top,      ...color,
+		left, screenBox.bottom,   ...OUTLINE_COLOR,
+		left, screenBox.top,      ...OUTLINE_COLOR,
 		// Vertical: Righter
-		right, screenBox.bottom,  ...color,
-		right, screenBox.top,     ...color,
+		right, screenBox.bottom,  ...OUTLINE_COLOR,
+		right, screenBox.top,     ...OUTLINE_COLOR,
 	);
 
 	createRenderable(data, 2, "LINES", 'color', true).render();
@@ -62,13 +77,11 @@ function outlineRankAndFile(): void {
  */
 function renderSelectionBox(worldBox: DoubleBoundingBox): void {
 	// Construct the wireframe data and render it
-	const outlineColor: Color = [0, 0, 0, 1]; // Black
-	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, outlineColor);
+	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, OUTLINE_COLOR);
 	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 
 	// Also construct the semi-transparent fill data and render it
-	const fillColor: Color = [0, 0, 0, 0.08]; // Transparent Black
-	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, fillColor);
+	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, FILL_COLOR);
 	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
 }
 
@@ -90,8 +103,7 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	const bottom = corner[1] - widthWorld / 2;
 	const top = corner[1] + widthWorld / 2;
 
-	const color: Color = [0, 0, 0, 1]; // Black
-	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, color);
+	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
 	// Render the square
 	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
 }
