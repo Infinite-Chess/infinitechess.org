@@ -530,21 +530,35 @@
                         </div>
 
                         <div class="rules-section">
+                            <label class="unselectable">Global special rights:</label>
+                            <div class="rules-list">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="rules-doublepush">
+                                    <label for="rules-doublepush" class="unselectable">Pawn double push</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="rules-castling">
+                                    <label for="rules-castling" class="unselectable">Castling with rooks</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rules-section">
                             <label class="unselectable">Win conditions:</label>
-                            <div class="win-list">
-                                <div class="win-item">
+                            <div class="rules-list">
+                                <div class="checkbox-item">
                                     <input type="checkbox" id="rules-checkmate" checked>
                                     <label for="rules-checkmate" class="unselectable">Checkmate</label>
                                 </div>
-                                <div class="win-item">
+                                <div class="checkbox-item">
                                     <input type="checkbox" id="rules-royalcapture">
                                     <label for="rules-royalcapture" class="unselectable">Royal capture</label>
                                 </div>
-                                <div class="win-item">
+                                <div class="checkbox-item">
                                     <input type="checkbox" id="rules-allroyalscaptured">
                                     <label for="rules-allroyalscaptured" class="unselectable">All royals captured</label>
                                 </div>
-                                <div class="win-item">
+                                <div class="checkbox-item">
                                     <input type="checkbox" id="rules-allpiecescaptured">
                                     <label for="rules-allpiecescaptured" class="unselectable">All pieces captured</label>
                                 </div>

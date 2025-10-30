@@ -69,13 +69,16 @@ const element_gamerulesCheckmate = document.getElementById("rules-checkmate")! a
 const element_gamerulesRoyalcapture = document.getElementById("rules-royalcapture")! as HTMLInputElement;
 const element_gamerulesAllroyalscaptured = document.getElementById("rules-allroyalscaptured")! as HTMLInputElement;
 const element_gamerulesAllpiecescaptured = document.getElementById("rules-allpiecescaptured")! as HTMLInputElement;
+const element_gamerulesPawnDoublePush = document.getElementById('rules-doublepush')! as HTMLInputElement;
+const element_gamerulesCastlingWithRooks = document.getElementById('rules-castling')! as HTMLInputElement;
 
 const elements_gamerulesSelectionList : HTMLInputElement[] = [
 	element_gamerulesWhite, element_gamerulesBlack, element_gamerulesEnPassantX, element_gamerulesEnPassantY,
 	element_gamerulesMoveruleCurrent, element_gamerulesMoveruleMax,
 	element_gamerulesPromotionranksWhite, element_gamerulesPromotionranksBlack, element_gamerulesPromotionpieces,
 	element_gamerulesCheckmate, element_gamerulesRoyalcapture,
-	element_gamerulesAllroyalscaptured, element_gamerulesAllpiecescaptured
+	element_gamerulesAllroyalscaptured, element_gamerulesAllpiecescaptured,
+	element_gamerulesPawnDoublePush, element_gamerulesCastlingWithRooks
 ];
 // -------------------------------------------------------------------------------------
 
