@@ -109,6 +109,9 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 }
 
 
+// Exports ----------------------------------------------------------
+
+
 export default {
 	outlineRankAndFile,
 	renderSelectionBox,

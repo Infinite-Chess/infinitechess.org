@@ -18,6 +18,7 @@ import { listener_overlay } from "../../../chess/game";
 import { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import meshes from "../../../rendering/meshes";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
+import sdrag from "./sdrag";
 
 
 // State ----------------------------------------------
@@ -47,10 +48,14 @@ function update(): void {
 	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
 		// Test if a new selection is beginning
 		if (mouse.isMouseDown(Mouse.LEFT) && !selecting && !arrows.areHoveringAtleastOneArrow()) {
+			// Start new selection
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
 			pointerId = mouse.getMouseId(Mouse.LEFT)!;
 			beginSelection();
+		} else if (isACurrentSelection()) {
+			// Update selection box drag handler
+			sdrag.update();
 		}
 	} else { // Selection in progress
 		const respectiveListener = mouse.getRelevantListener();
@@ -76,6 +81,7 @@ function beginSelection(): void {
 	startPoint = undefined;
 	endPoint = undefined;
 	selecting = true;
+	sdrag.resetState();
 
 	// Set the start point
 	startPoint = getPointerCoords();
@@ -102,6 +108,7 @@ function resetState(): void {
 	lastPointerCoords = undefined;
 	startPoint = undefined;
 	endPoint = undefined;
+	sdrag.resetState();
 }
 
 
@@ -156,4 +163,5 @@ export default {
 	update,
 	resetState,
 	render,
+	getSelectionWorldBox,
 };
