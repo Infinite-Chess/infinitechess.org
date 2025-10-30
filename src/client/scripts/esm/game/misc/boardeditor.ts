@@ -58,9 +58,9 @@ type Tool = (typeof validTools)[number];
 // Variables --------------------------------------------------------------------
 
 /** All tools that can be used in the board editor. */
-const validTools = ["normal", "placer", "eraser", "gamerules", "specialrights"] as const;
+const validTools = ["normal", "placer", "eraser", "gamerules", "specialrights", "selection-tool"] as const;
 /** All tools that support drawing. */
-const drawingTools: Tool[] = ["placer", "eraser", "specialrights"];
+const drawingTools: Tool[] = ["placer", "eraser", "specialrights", "selection-tool"];
 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;

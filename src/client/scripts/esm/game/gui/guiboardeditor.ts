@@ -42,6 +42,7 @@ const elements_tools = [
 	document.getElementById("normal")!,
 	document.getElementById("eraser")!,
 	document.getElementById("specialrights")!,
+	document.getElementById("selection-tool")!,
 	// Selection
 	// (none)
 	// Palette

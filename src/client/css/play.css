@@ -93,6 +93,10 @@ button {
 	transform: scale(0.75);
 }
 
+.svg-start-game {
+	transform: scale(0.9);
+}
+
 .svg-normal {
     transform: scale(0.65) translate(3%, 0%);
 }
@@ -101,8 +105,8 @@ button {
 	transform: scale(0.85);
 }
 
-.svg-start-game {
-	transform: scale(0.9);
+.svg-selection-tool {
+    transform: scale(0.9) translate(-1%, -1%);
 }
 
 /* Specific section stylings... */
