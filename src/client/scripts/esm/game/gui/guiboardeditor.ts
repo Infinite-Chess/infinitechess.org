@@ -6,7 +6,7 @@
  */
 
 import gameloader from "../chess/gameloader.js";
-import boardeditor from "../misc/boardeditor.js";
+import boardeditor from "../boardeditor/boardeditor.js";
 import svgcache from "../../chess/rendering/svgcache.js";
 import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../chess/gameslot.js";
@@ -17,7 +17,7 @@ import math from "../../../../../shared/util/math/math.js";
 import statustext from "./statustext.js";
 
 import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
-import type { GameRulesGUIinfo } from "../misc/boardeditor.js";
+import type { GameRulesGUIinfo } from "../boardeditor/boardeditor.js";
 import tooltips from "../../util/tooltips.js";
 
 

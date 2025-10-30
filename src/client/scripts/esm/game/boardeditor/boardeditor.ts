@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/misc/boardeditor.ts
+// src/client/scripts/esm/game/boardeditor/boardeditor.ts
 
 /*
  * This script handles the Board Editor logic

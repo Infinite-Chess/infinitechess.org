@@ -18,7 +18,7 @@ import drawarrows from "./highlights/annotations/drawarrows.js";
 import drawrays from "./highlights/annotations/drawrays.js";
 import selection from "../chess/selection.js";
 import keybinds from "../misc/keybinds.js";
-import boardeditor from "../misc/boardeditor.js";
+import boardeditor from "../boardeditor/boardeditor.js";
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../chess/game.js";
 

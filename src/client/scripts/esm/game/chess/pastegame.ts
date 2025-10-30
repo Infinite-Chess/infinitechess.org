@@ -25,7 +25,7 @@ import icnconverter, { _Move_Out, LongFormatOut } from '../../../../../shared/ch
 import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
-import boardeditor from '../misc/boardeditor.js';
+import boardeditor from '../boardeditor/boardeditor.js';
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';

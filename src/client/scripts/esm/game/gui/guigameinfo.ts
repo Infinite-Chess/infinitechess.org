@@ -20,7 +20,7 @@ import enginegame from '../misc/enginegame.js';
 import { PlayerGroup, players } from '../../../../../shared/chess/util/typeutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
-import boardeditor from '../misc/boardeditor.js';
+import boardeditor from '../boardeditor/boardeditor.js';
 
 
 

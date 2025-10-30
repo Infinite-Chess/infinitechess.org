@@ -31,7 +31,7 @@ import piecemodels from "../rendering/piecemodels.js";
 import guinavigation from "../gui/guinavigation.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
-import boardeditor from "./boardeditor.js";
+import boardeditor from "../boardeditor/boardeditor.js";
 import vectors from "../../../../../shared/util/math/vectors.js";
 import Transition from "../rendering/transitions/Transition.js";
 import { listener_document } from "../chess/game.js";

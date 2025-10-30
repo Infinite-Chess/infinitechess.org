@@ -36,7 +36,7 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 import boardpos from "../rendering/boardpos.js";
 import guiclock from "../gui/guiclock.js";
-import boardeditor from "../misc/boardeditor.js";
+import boardeditor from "../boardeditor/boardeditor.js";
 import guiboardeditor from "../gui/guiboardeditor.js";
 
 

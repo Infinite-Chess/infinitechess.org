@@ -36,7 +36,7 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import guiclock from '../gui/guiclock.js';
-import boardeditor from '../misc/boardeditor.js';
+import boardeditor from '../boardeditor/boardeditor.js';
 import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
 import boardtiles from '../rendering/boardtiles.js';

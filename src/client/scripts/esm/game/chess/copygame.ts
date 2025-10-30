@@ -14,7 +14,7 @@ import gamecompressor from './gamecompressor.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import boardeditor from '../misc/boardeditor.js';
+import boardeditor from '../boardeditor/boardeditor.js';
 
 
 const variantsTooBigToCopyPositionToICN: string[] = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'];

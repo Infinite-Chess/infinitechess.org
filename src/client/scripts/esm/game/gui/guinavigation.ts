@@ -18,7 +18,7 @@ import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
-import boardeditor from '../misc/boardeditor.js';
+import boardeditor from '../boardeditor/boardeditor.js';
 import guiboardeditor from './guiboardeditor.js';
 import premoves from '../chess/premoves.js';
 import Transition from '../rendering/transitions/Transition.js';

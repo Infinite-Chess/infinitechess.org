@@ -7,7 +7,7 @@
  */
 
 import guinavigation from "../gui/guinavigation.js";
-import boardeditor from "./boardeditor.js";
+import boardeditor from "../boardeditor/boardeditor.js";
 import perspective from "../rendering/perspective.js";
 import { Mouse, MouseButton } from "../input.js";
 
