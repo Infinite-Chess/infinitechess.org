@@ -732,12 +732,9 @@ function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 
 /** If the given pointer is currently being used by a drawing tool for an edit, this stops using it. */
 function stealPointer(pointerIdToSteal: string): void {
-	if (currentTool === 'selection-tool') {
-		selectiontool.stealPointer(pointerIdToSteal); // Let selection tool also try to steal the pointer
-	} else {
-		if (drawingToolPointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
-		cancelEdit();
-	}
+	if (currentTool === 'selection-tool') return; // Don't steal (selection tool isn't capable of reverting to previous selection before starting a new one)
+	else if (drawingToolPointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
+	cancelEdit();
 }
 
 /** Renders any graphics of the active tool, if we are in the board editor. */
