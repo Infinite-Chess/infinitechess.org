@@ -80,8 +80,8 @@ let thisEdit: Edit | undefined;
 /** The list of all edits the user has made. */
 let edits: Array<Edit> | undefined;
 let indexOfThisEdit: number | undefined = 0;
-/** The ID of the pointer currently being used for drawing an edit. */
-let pointerId: string | undefined;
+/** The ID of the pointer currently being used for drawing an edit with a DRAWING tool (excludes Selection tool) */
+let drawingToolPointerId: string | undefined;
 
 /** Whether a drawing stroke is currently ongoing. */
 let drawing = false;
@@ -151,7 +151,8 @@ function closeBoardEditor(): void {
 	edits = undefined;
 	indexOfThisEdit = undefined;
 	previousSquare = undefined;
-	pointerId = undefined;
+	drawingToolPointerId = undefined;
+	selectiontool.resetState();
 }
 
 function areInBoardEditor(): boolean {
@@ -190,6 +191,9 @@ function setTool(tool: string): void {
 	guiboardeditor.markTool(tool);
 	if (tool !== "placer") guiboardeditor.markPiece(null);
 	else guiboardeditor.markPiece(currentPieceType);
+
+	// Reset selection tool state when switching to another tool
+	selectiontool.resetState();
 }
 
 function getTool(): typeof currentTool {
@@ -222,7 +226,7 @@ function endEdit(): void {
 	drawing = false;
 	addingSpecialRights = undefined;
 	previousSquare = undefined;
-	pointerId = undefined;
+	drawingToolPointerId = undefined;
 	if (thisEdit !== undefined) addEditToHistory(thisEdit);
 	thisEdit = undefined;
 }
@@ -240,7 +244,7 @@ function cancelEdit(): void {
 	drawing = false;
 	addingSpecialRights = undefined;
 	previousSquare = undefined;
-	pointerId = undefined;
+	drawingToolPointerId = undefined;
 	thisEdit = undefined;
 }
 
@@ -274,7 +278,7 @@ function update(): void {
 		if (mouse.isMouseDown(Mouse.LEFT) && !drawing && !arrows.areHoveringAtleastOneArrow()) {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-			pointerId = mouse.getMouseId(Mouse.LEFT)!;
+			drawingToolPointerId = mouse.getMouseId(Mouse.LEFT)!;
 			beginEdit();
 		}
 		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
@@ -726,8 +730,12 @@ function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 
 /** If the given pointer is currently being used by a drawing tool for an edit, this stops using it. */
 function stealPointer(pointerIdToSteal: string): void {
-	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
-	cancelEdit();
+	if (currentTool === 'selection-tool') {
+		selectiontool.stealPointer(pointerIdToSteal); // Let selection tool also try to steal the pointer
+	} else {
+		if (drawingToolPointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
+		cancelEdit();
+	}
 }
 
 /** Renders any graphics of the active tool, if we are in the board editor. */

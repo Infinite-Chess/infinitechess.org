@@ -9,10 +9,13 @@
  */
 
 import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
+import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
+import type { Color } from "../../../../../../../shared/util/math/math";
 
 import mouse from "../../../../util/mouse";
 import camera from "../../../rendering/camera";
 import meshes from "../../../rendering/meshes";
+import primitives from "../../../rendering/primitives";
 import { createRenderable } from "../../../../webgl/Renderable";
 
 
@@ -30,9 +33,7 @@ function outlineRankAndFile(): void {
 
 	const data: number[] = [];
 
-	// Deep brown/maroon color
-	// const color = [0.36, 0.2, 0.09, 1];
-	const color = [0, 0, 0, 1];
+	const color = [0, 0, 0, 1]; // Black
 
 	const screenBox = camera.getRespectiveScreenBox();
 
@@ -54,7 +55,38 @@ function outlineRankAndFile(): void {
 	createRenderable(data, 2, "LINES", 'color', true).render();
 }
 
+/**
+ * Renders a wireframe box around the selection
+ * @param startPoint - First corner of the selection
+ * @param endPoint - Opposite corner of the selection
+ */
+function renderSelectionBox(startPoint: Coords, endPoint: Coords): void {
+	const intBox: BoundingBox = {
+		left: startPoint[0] < endPoint[0] ? startPoint[0] : endPoint[0],
+		right: startPoint[0] > endPoint[0] ? startPoint[0] : endPoint[0],
+		bottom: startPoint[1] < endPoint[1] ? startPoint[1] : endPoint[1],
+		top: startPoint[1] > endPoint[1] ? startPoint[1] : endPoint[1],
+	};
+
+	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
+	const roundedAwayBox: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
+
+	// Convert it to a world-space box
+	const worldBox: DoubleBoundingBox = meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
+
+	// Construct the wireframe data and render it
+	const color: Color = [0, 0, 0, 1]; // Black
+	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, color);
+	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
+
+	// Also construct the semi-transparent fill data and render it
+	const fillColor: Color = [0, 0, 0, 0.08]; // Transparent Black
+	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, fillColor);
+	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
+}
+
 
 export default {
 	outlineRankAndFile,
+	renderSelectionBox,
 };
