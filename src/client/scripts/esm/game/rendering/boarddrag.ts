@@ -18,6 +18,7 @@ import drawarrows from "./highlights/annotations/drawarrows.js";
 import drawrays from "./highlights/annotations/drawrays.js";
 import selection from "../chess/selection.js";
 import keybinds from "../misc/keybinds.js";
+import boardeditor from "../misc/boardeditor.js";
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import { listener_overlay } from "../chess/game.js";
 
@@ -175,6 +176,7 @@ function stealPointer(pointerId: string): void {
 	selection.stealPointer(pointerId);
 	drawarrows.stealPointer(pointerId);
 	drawrays.stealPointer(pointerId);
+	boardeditor.stealPointer(pointerId);
 }
 
 /** Grabs board with the given pointer. */

@@ -79,8 +79,12 @@ let thisEdit: Edit | undefined;
 /** The list of all edits the user has made. */
 let edits: Array<Edit> | undefined;
 let indexOfThisEdit: number | undefined = 0;
+/** The ID of the pointer currently being used for drawing an edit. */
+let pointerId: string | undefined;
 
+/** Whether a drawing stroke is currently ongoing. */
 let drawing = false;
+/** The last coordinate the stroke is over. */
 let previousSquare: Coords | undefined;
 /** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
 let addingSpecialRights: boolean | undefined;
@@ -146,6 +150,7 @@ function closeBoardEditor(): void {
 	edits = undefined;
 	indexOfThisEdit = undefined;
 	previousSquare = undefined;
+	pointerId = undefined;
 }
 
 function areInBoardEditor(): boolean {
@@ -215,7 +220,25 @@ function endEdit(): void {
 	drawing = false;
 	addingSpecialRights = undefined;
 	previousSquare = undefined;
+	pointerId = undefined;
 	if (thisEdit !== undefined) addEditToHistory(thisEdit);
+	thisEdit = undefined;
+}
+
+/** Cancels the current edit, undoing any changes made during the stroke. */
+function cancelEdit(): void {
+	if (!inBoardEditor || !drawing || thisEdit === undefined) return;
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	// Undo the changes made during this edit
+	runEdit(gamefile, mesh, thisEdit, false);
+
+	// Update state
+	drawing = false;
+	addingSpecialRights = undefined;
+	previousSquare = undefined;
+	pointerId = undefined;
 	thisEdit = undefined;
 }
 
@@ -249,6 +272,7 @@ function update(): void {
 		if (mouse.isMouseDown(Mouse.LEFT) && !drawing && !arrows.areHoveringAtleastOneArrow()) {
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
+			pointerId = mouse.getMouseId(Mouse.LEFT)!;
 			beginEdit();
 		}
 		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
@@ -692,6 +716,12 @@ function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 	return edit;
 }
 
+/** If the given pointer is currently being used by a drawing tool for an edit, this stops using it. */
+function stealPointer(pointerIdToSteal: string): void {
+	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
+	cancelEdit();
+}
+
 export type {
 	Edit
 };
@@ -720,6 +750,7 @@ export default {
 	setEnpassantState,
 	updatePromotionLines,
 	updateGamerulesGUIinfo,
+	stealPointer,
 };
 
 export type {
