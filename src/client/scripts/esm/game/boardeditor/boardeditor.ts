@@ -144,6 +144,7 @@ function initBoardEditor(): void {
 
 function closeBoardEditor(): void {
 	inBoardEditor = false;
+	currentTool = "normal";
 	specialrighthighlights.disable();
 	drawing = false;
 	addingSpecialRights = undefined;
@@ -202,7 +203,8 @@ function getTool(): typeof currentTool {
 
 /** Whether any of the editor tools are actively using the left mouse button. */
 function isLeftMouseReserved(): boolean {
-	return inBoardEditor && drawingTools.includes(currentTool) || currentTool === "selection-tool";
+	if (!inBoardEditor) return false;
+	return drawingTools.includes(currentTool) || currentTool === "selection-tool";
 }
 
 function canUndo(): boolean {
