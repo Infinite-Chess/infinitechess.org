@@ -41,6 +41,7 @@ import Transition from '../rendering/transitions/Transition.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';
+import keybinds from '../misc/keybinds.js';
 import { animateMove } from './graphicalchanges.js';
 import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
@@ -210,10 +211,14 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
 function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
+
+	const mouseKeybind = keybinds.getPieceSelectionMouseButton();
+	if (mouseKeybind === undefined) return; // Nothing assigned to selecting pieces currently
+
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
-	if (dragEnabled && !mouse.isMouseDown(Mouse.LEFT) && !mouse.isMouseClicked(Mouse.LEFT)) return; // If dragging is enabled, all we need is pointer down event.
-	else if (!dragEnabled && !mouse.isMouseClicked(Mouse.LEFT)) return; // When dragging is off, we actually need a pointer click.
+	if (dragEnabled && !mouse.isMouseDown(mouseKeybind) && !mouse.isMouseClicked(mouseKeybind)) return; // If dragging is enabled, all we need is pointer down event.
+	else if (!dragEnabled && !mouse.isMouseClicked(mouseKeybind)) return; // When dragging is off, we actually need a pointer click.
 
 	if (boardpos.boardHasMomentum()) return; // Don't select a piece if the boardsim is moving
 
@@ -226,23 +231,23 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined): void {
 	const selectionLevel = canSelectPieceType(gamefile.basegame, pieceClicked?.type);
 	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
-	else if (selectionLevel >= 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
+	else if (selectionLevel >= 1 && mouse.isMouseClicked(mouseKeybind)) { // CAN select this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
-		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
+		mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, mesh, pieceClicked!, false); // Select, but don't start dragging
-	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
+	} else if (selectionLevel === 2 && mouse.isMouseDown(mouseKeybind)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
-		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
-		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
+		mouse.claimMouseDown(mouseKeybind); // Claim the mouse down so board dragging doesn't use it
+		mouse.cancelMouseClick(mouseKeybind); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, mesh, pieceClicked!, true); // Select, AND start dragging if that's enabled.
 	}
@@ -274,12 +279,16 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return;
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
-	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
+
+	const mouseKeybind = keybinds.getPieceSelectionMouseButton();
+	if (mouseKeybind === undefined) return; // Nothing assigned to moving pieces currently
+
+	if (!mouse.isMouseClicked(mouseKeybind)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
 	moveGamefilePiece(gamefile, mesh, hoverSquare!);
 	
-	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
+	mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
@@ -511,7 +520,10 @@ function stealPointer(pointerIdToSteal: string): void {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece(): void {
-	if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
+	const mouseKeybind = keybinds.getPieceSelectionMouseButton();
+	if (mouseKeybind === undefined) return; // Nothing assigned to selecting pieces currently, can't move piece => shouldn't render ghost piece.
+
+	if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(mouseKeybind) || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (typeutil.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 

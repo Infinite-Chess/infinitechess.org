@@ -700,6 +700,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		atleastOneInput: (): boolean => atleastOneInputThisFrame,
 		isMouseDown: (button: MouseButton): boolean => clickInfo[button].isDown ?? false,
 		claimMouseDown: (button: MouseButton): void => {
+			// console.error("Claiming mouse down: ", MouseNames[button]);
 			clickInfo[button].isDown = false;
 			// Also remove the pointer from the list of pointers down this frame.
 			const pointerId = clickInfo[button].pointerId;
@@ -708,6 +709,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (index !== -1) pointersDown.splice(index, 1);
 		},
 		claimPointerDown: (pointerId: string): void => {
+			// console.error("Claiming pointer down: ", pointerId);
 			const index = pointersDown.indexOf(pointerId);
 			if (index === -1) throw Error("Can't claim pointer down. Already claimed, or is not down.");
 			// console.error("Claiming pointer down2: ", pointerId);
@@ -718,6 +720,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			});
 		},
 		claimMouseClick: (button: MouseButton): void => {
+			// console.error("Claiming mouse click: ", MouseNames[button]);
 			clickInfo[button].clicked = false;
 			// console.error("Claiming mouse click: ", MouseNames[button]);
 		},

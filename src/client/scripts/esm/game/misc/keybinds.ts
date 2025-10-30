@@ -35,9 +35,17 @@ function getCollapseMouseButton(): MouseButton | undefined {
 	return Mouse.LEFT;
 }
 
+/** Returns the mouse button currently assigned to piece selection. */
+function getPieceSelectionMouseButton(): MouseButton | undefined {
+	if (boardeditor.areUsingDrawingtool()) return undefined; // Left click reserved for drawing tool
+	// Default: Left mouse
+	return Mouse.LEFT;
+}
+
 
 export default {
 	getBoardDragMouseButton,
 	getAnnotationMouseButton,
 	getCollapseMouseButton,
+	getPieceSelectionMouseButton,
 };
