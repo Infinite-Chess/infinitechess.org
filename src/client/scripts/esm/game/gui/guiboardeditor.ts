@@ -306,7 +306,7 @@ function nextColor(): void {
 }
 
 function showStartLocalGameDialog(): void {
-	const result = confirm("Do you want to leave the board editor and start a local game from this position?");
+	const result = confirm("Do you want to leave the board editor and start a local game from this position? Changes will be saved."); // PLANNED to save changes
 	if (result) boardeditor.startLocalGame();
 }
 
