@@ -18,6 +18,7 @@ import arrows from "../../../rendering/arrows/arrows";
 import camera from "../../../rendering/camera";
 import selectiontool from "./selectiontool";
 import stoolgraphics from "./stoolgraphics";
+import stransformations from "./stransformations";
 
 
 // Constants -----------------------------------------
@@ -142,7 +143,7 @@ function dropSelection(): void {
 
 	console.log('Selection transformed by: ', translation);
 
-	
+	stransformations.translate(translation);
 
 	// Shift the selection area itself
 
