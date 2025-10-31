@@ -79,7 +79,6 @@ function outlineRankAndFile(): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
-	// Construct the wireframe data and render it
 	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, OUTLINE_COLOR);
 	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
 }
@@ -89,7 +88,6 @@ function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
-	// Also construct the semi-transparent fill data and render it
 	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, FILL_COLOR);
 	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
 }
@@ -112,7 +110,6 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	const top = corner[1] + widthWorld / 2;
 
 	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
-	// Render the square
 	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
 }
 
