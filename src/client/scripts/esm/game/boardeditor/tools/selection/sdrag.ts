@@ -12,10 +12,10 @@ import coordutil, { Coords, DoubleCoords } from "../../../../../../../shared/che
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import mouse from "../../../../util/mouse";
+import game from "../../../chess/game";
 import { Mouse } from "../../../input";
 import space from "../../../misc/space";
 import arrows from "../../../rendering/arrows/arrows";
-import camera from "../../../rendering/camera";
 import selectiontool from "./selectiontool";
 import stoolgraphics from "./stoolgraphics";
 import stransformations from "./stransformations";
@@ -25,7 +25,7 @@ import stransformations from "./stransformations";
 
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
-const GRABBABLE_DIST = 16;
+const GRABBABLE_DIST = 7;
 
 
 // State ---------------------------------------------
@@ -52,7 +52,6 @@ let anchorCoords: Coords | undefined = undefined;
  * ONLY CALL if there's an existing selection area, and we are not currently making a new selection!
  */
 function update(): void {
-
 	if (areDragging) {
 		// Determine if the selection has been dropped
 
@@ -64,24 +63,10 @@ function update(): void {
 	} else {
 		// Determine if the board needs to be picked up,
 		// or if the canvas cursor style should change.
-		const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
-
-		// Determine the mouse world coords
-		const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
-		if (!mouseWorld) return;
-
-		const distToLeftEdge = Math.abs(selectionWorldBox.left - mouseWorld[0]);
-		const distToRightEdge = Math.abs(selectionWorldBox.right - mouseWorld[0]);
-		const distToBottomEdge = Math.abs(selectionWorldBox.bottom - mouseWorld[1]);
-		const distToTopEdge = Math.abs(selectionWorldBox.top - mouseWorld[1]);
-
-		if (
-			(distToLeftEdge <= GRABBABLE_DIST || distToRightEdge <= GRABBABLE_DIST) && 
-			(distToBottomEdge <= GRABBABLE_DIST || distToTopEdge <= GRABBABLE_DIST)
-		) { // Within grab distance
+		if (isMouseHoveringOverSelectionEdge()) { // Within grab distance
 			if (!withinGrabDist) {
 				withinGrabDist = true;
-				camera.canvas.style.cursor = 'grab';
+				game.getOverlay().style.cursor = 'grab';
 			}
 
 			// Determine if we picked up the selection
@@ -95,15 +80,45 @@ function update(): void {
 		} else { // NOT within grab distance
 			if (withinGrabDist) {
 				withinGrabDist = false;
-				camera.canvas.style.cursor = 'default';
+				game.getOverlay().style.cursor = 'default';
 			}
 		}
 	}
 }
 
+/** Calculates whether the mouse is currently hovering within grab distance of the selection edge. */
+function isMouseHoveringOverSelectionEdge(): boolean {
+	const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
+
+	// Determine the mouse world coords
+	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+	if (!mouseWorld) return false;
+
+	// Convert grab distance to world space
+	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(GRABBABLE_DIST);
+
+	// Determine if the mouse is within the grabbable edge area.
+	// This is true if the mouse is inside the selection box expanded by the grab distance,
+	// but not inside the selection box shrunk by the grab distance.
+	const mouseIsInOuterBox = (
+		mouseWorld[0] >= selectionWorldBox.left - grabbableDist &&
+		mouseWorld[0] <= selectionWorldBox.right + grabbableDist &&
+		mouseWorld[1] >= selectionWorldBox.bottom - grabbableDist &&
+		mouseWorld[1] <= selectionWorldBox.top + grabbableDist
+	);
+	const mouseIsInInnerBox = (
+		mouseWorld[0] > selectionWorldBox.left + grabbableDist &&
+		mouseWorld[0] < selectionWorldBox.right - grabbableDist &&
+		mouseWorld[1] > selectionWorldBox.bottom + grabbableDist &&
+		mouseWorld[1] < selectionWorldBox.top - grabbableDist
+	);
+
+	return mouseIsInOuterBox && !mouseIsInInnerBox;
+}
+
 function resetState(): void {
 	withinGrabDist = false;
-	camera.canvas.style.cursor = 'default';
+	game.getOverlay().style.cursor = 'default';
 	areDragging = false;
 	pointerId = undefined;
 	lastPointerCoords = undefined;
@@ -113,7 +128,7 @@ function resetState(): void {
 /** Grabs the selection box. */
 function pickUpSelection(): void {
 	areDragging = true;
-	camera.canvas.style.cursor = 'grabbing';
+	game.getOverlay().style.cursor = 'grabbing';
 
 	// Determine the nearest coordinate of the selection the mouse picked up.
 	// This will be the anchor
@@ -163,21 +178,21 @@ function getIntCoordOfPointer(): Coords {
 	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 }
 
-/**
- * Whether we are currently dragging the selection, AND
- * we have dragged it atleast 1 square away from the anchor.
- */
-function isDragTranslationPositive(): boolean {
-	if (!areDragging || !anchorCoords) return false;
+// /**
+//  * Whether we are currently dragging the selection, AND
+//  * we have dragged it atleast 1 square away from the anchor.
+//  */
+// function isDragTranslationPositive(): boolean {
+// 	if (!areDragging || !anchorCoords) return false;
 
-	// Determine the current int coord of the pointer
-	const pointerCoordRounded: Coords = getIntCoordOfPointer();
-	// Determine by how many tiles the pointer has dragged from the anchor
-	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords!);
+// 	// Determine the current int coord of the pointer
+// 	const pointerCoordRounded: Coords = getIntCoordOfPointer();
+// 	// Determine by how many tiles the pointer has dragged from the anchor
+// 	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords!);
 
-	// Return whether that's absolutely positive
-	return translation[0] !== 0n || translation[1] === 0n;
-}
+// 	// Return whether that's absolutely positive
+// 	return translation[0] !== 0n || translation[1] !== 0n;
+// }
 
 
 // Rendering ---------------------------------------------
@@ -203,7 +218,7 @@ function render(): void {
 	const translatedWorldBox: DoubleBoundingBox = selectiontool.convertIntBoxToWorldBox(translatedIntBox);
 
 	stoolgraphics.renderSelectionBoxWireframe(translatedWorldBox);
-	stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
+	// stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
 }
 
 
@@ -213,6 +228,5 @@ function render(): void {
 export default {
 	update,
 	resetState,
-	isDragTranslationPositive,
 	render,
 };

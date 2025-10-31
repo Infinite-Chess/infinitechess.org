@@ -32,6 +32,9 @@ const OUTLINE_COLOR: Color = [0,0,0, 1]; // Black
 /** The fill color of the selection box. */
 const FILL_COLOR: Color = [0,0,0, 0.08]; // Transparent Black
 
+/** How many virtual screen pixels wide the corner square is. */
+const CORNER_DOT_WIDTH = 6;
+
 
 // Methods -----------------------------------------------------
 
@@ -96,9 +99,8 @@ function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderCornerSquare(worldBox: DoubleBoundingBox): void {
-	const widthVirtualPixels = 10;
-	// Convert to world space
-	const widthWorld = space.convertPixelsToWorldSpace_Virtual(widthVirtualPixels);
+	// Convert width to world space
+	const widthWorld = space.convertPixelsToWorldSpace_Virtual(CORNER_DOT_WIDTH);
 
 	// Bottom right corner world space
 	const corner: DoubleCoords = [worldBox.right, worldBox.bottom];

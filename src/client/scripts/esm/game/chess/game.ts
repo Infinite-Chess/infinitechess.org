@@ -344,12 +344,17 @@ function getFurthestTileVisible(): bigint {
 	return furthest;
 }
 
+function getOverlay(): HTMLElement {
+	return element_overlay;
+}
+
 
 
 export default {
 	init,
 	update,
 	render,
+	getOverlay,
 };
 
 export {

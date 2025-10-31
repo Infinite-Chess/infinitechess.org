@@ -46,6 +46,11 @@ let endPoint: Coords | undefined;
 
 function update(): void {
 	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
+		// Update grabbing the selection box first
+		if (isACurrentSelection()) {
+			// Update selection box drag handler
+			sdrag.update();
+		}
 		// Test if a new selection is beginning
 		if (mouse.isMouseDown(Mouse.LEFT) && !selecting && !arrows.areHoveringAtleastOneArrow()) {
 			// Start new selection
@@ -53,9 +58,6 @@ function update(): void {
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
 			pointerId = mouse.getMouseId(Mouse.LEFT)!;
 			beginSelection();
-		} else if (isACurrentSelection()) {
-			// Update selection box drag handler
-			sdrag.update();
 		}
 	} else { // Selection in progress
 		const respectiveListener = mouse.getRelevantListener();
@@ -130,9 +132,7 @@ function render(): void {
 
 		// Render the selection box
 		stoolgraphics.renderSelectionBoxWireframe(selectionWorldBox);
-		// Only render fill if we're not currently dragging the selection
-		// (that script renders its own copy of the selection, but translated)
-		if (!sdrag.isDragTranslationPositive()) stoolgraphics.renderSelectionBoxFill(selectionWorldBox);
+		stoolgraphics.renderSelectionBoxFill(selectionWorldBox);
 
 		if (isACurrentSelection()) {
 			// Render the small square in the corner
