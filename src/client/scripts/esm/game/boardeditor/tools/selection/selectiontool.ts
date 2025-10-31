@@ -129,39 +129,60 @@ function render(): void {
 		const selectionWorldBox = getSelectionWorldBox()!;
 
 		// Render the selection box
-		stoolgraphics.renderSelectionBox(selectionWorldBox);
+		stoolgraphics.renderSelectionBoxWireframe(selectionWorldBox);
+		// Only render fill if we're not currently dragging the selection
+		// (that script renders its own copy of the selection, but translated)
+		if (!sdrag.isDragTranslationPositive()) stoolgraphics.renderSelectionBoxFill(selectionWorldBox);
 
 		if (isACurrentSelection()) {
 			// Render the small square in the corner
 			stoolgraphics.renderCornerSquare(selectionWorldBox);
+			sdrag.render();
 		}
 	}
 }
 
-/** Calculates the world space edge coordinates of the current selection box. */
-function getSelectionWorldBox(): DoubleBoundingBox | undefined {
+/** Returns the integer coordinate bounding box of our selection area. */
+function getSelectionIntBox(): BoundingBox | undefined {
 	const currentTile: Coords | undefined = endPoint || lastPointerCoords;
 	if (!startPoint || !currentTile) return;
 
-	const intBox: BoundingBox = {
+	return {
 		left: bimath.min(startPoint[0], currentTile[0]),
 		right: bimath.max(startPoint[0], currentTile[0]),
 		bottom: bimath.min(startPoint[1], currentTile[1]),
 		top: bimath.max(startPoint[1], currentTile[1])
 	};
+}
 
+/** Calculates the world space edge coordinates of the current selection box. */
+function getSelectionWorldBox(): DoubleBoundingBox | undefined {
+	const intBox = getSelectionIntBox();
+	if (!intBox) return;
+
+	return convertIntBoxToWorldBox(intBox);
+}
+
+/**
+ * Converts an int selection box to a world-space box, rounding away
+ * its edges outward to encapsulate the entirity of the squares.
+ */
+function convertIntBoxToWorldBox(intBox: BoundingBox): DoubleBoundingBox {
 	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
 	const roundedAwayBox: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
-
 	// Convert it to a world-space box
 	return meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
 }
 
+
+// Exports ------------------------------------------------------
 
 
 export default {
 	update,
 	resetState,
 	render,
+	getSelectionIntBox,
 	getSelectionWorldBox,
+	convertIntBoxToWorldBox,
 };
