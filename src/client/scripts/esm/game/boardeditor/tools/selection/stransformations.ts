@@ -54,7 +54,7 @@ function translate(translation: Coords): void {
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	// First, delete any pieces in the translated selection area.
-	// BUT ONLY IF their coordinates aren't also in the original selection area!
+	// BUT ONLY IF their coordinates aren't also in the original selection area! (which is deleted next)
 	for (const piece of piecesInTranslatedSelection) {
 		if (bounds.boxContainsSquare(selectionIntBox, piece.coords)) continue; // Piece is also in the original selection box, skip it
 		boardeditor.queueRemovePiece(gamefile, edit, piece);
@@ -70,11 +70,10 @@ function translate(translation: Coords): void {
 		const translatedCoords = coordutil.addCoords(piece.coords, translation);
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = gamefile.boardsim.state.global.specialRights.has(coordutil.getKeyFromCoords(piece.coords));
-		if (hasSpecialRights) boardeditor.queueAddPieceWithSpecialRights(gamefile, edit, undefined, translatedCoords, piece.type);
-		else boardeditor.queueAddPiece(gamefile, edit, undefined, translatedCoords, piece.type);
+		boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, hasSpecialRights);
 	}
     
-	// Apply the collective edit and add it to the history for undo/redo
+	// Apply the collective edit and add it to the history
 	if (edit.changes.length > 0 || edit.state.global.length > 0) {
 		boardeditor.runEdit(gamefile, mesh, edit, true);
 		boardeditor.addEditToHistory(edit);
@@ -102,7 +101,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	const slideKey = vectors.getKeyFromVec2(step);
 	const lines: Map<LineKey, number[]> = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
 
-	/** Running list of all pieces within the selection area. */
+	/** Running list of all pieces within the box. */
 	const piecesInSelection: Piece[] = [];
 
 	// The start and end keys of those lines
@@ -122,14 +121,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 			// The piece is in the selection area if it's axis coord is within bounds
 			const thisCoord: bigint = coordPositions[idx]!;
 			if (thisCoord >= rangeStart && thisCoord <= rangeEnd) {
-				// Custom piece construction instead of built in boardutil.ts
-				// method which does unnecesary verification the piece isn't an undefined placeholder.
-				const piece: Piece = {
-					type: o.types[idx]!,
-					coords: boardutil.getCoordsFromIdx(o, idx),
-					index: boardutil.getRelativeIdx(o, idx)
-				};
-				piecesInSelection.push(piece);
+				piecesInSelection.push(boardutil.getDefinedPieceFromIdx(o, idx));
 			}
 		}
 	}

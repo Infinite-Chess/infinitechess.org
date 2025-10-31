@@ -131,10 +131,13 @@ function update(currentTool: Tool): void {
 
 	switch (currentTool) {
 		case "placer":
-			boardeditor.queueAddPiece(gamefile, edit, pieceHovered, mouseCoords, currentPieceType);
+			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
+			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
+			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
+			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, false);
 			break;
 		case "eraser":
-			boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
+			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
 		case "specialrights":
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
@@ -150,6 +153,7 @@ function update(currentTool: Tool): void {
 	thisEdit.state.global.push(...edit.state.global);
 }
 
+/** Queues a specialrights state addition/deletion on the specified */
 function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
