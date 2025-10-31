@@ -176,8 +176,8 @@ function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigin
 	if (promotionRanks === undefined) gamefile.basegame.gameRules.promotionRanks = undefined;
 	else {
 		gamefile.basegame.gameRules.promotionRanks = {};
-		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = (promotionRanks.white !== undefined ? promotionRanks.white : []);
-		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = (promotionRanks.black !== undefined ? promotionRanks.black : []);
+		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = promotionRanks.white || [];
+		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = promotionRanks.black || [];
 	}
 }
 
