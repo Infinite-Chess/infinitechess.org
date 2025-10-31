@@ -16,7 +16,7 @@ import { Player, players, rawTypes } from "../../../../../../shared/chess/util/t
 import mouse from "../../../util/mouse";
 import gameslot from "../../chess/gameslot";
 import selection from "../../chess/selection";
-import guiboardeditor from "../../gui/guiboardeditor";
+import guiboardeditor from "../../gui/boardeditor/guiboardeditor";
 import { Mouse } from "../../input";
 import arrows from "../../rendering/arrows/arrows";
 import specialrighthighlights from "../../rendering/highlights/specialrighthighlights";

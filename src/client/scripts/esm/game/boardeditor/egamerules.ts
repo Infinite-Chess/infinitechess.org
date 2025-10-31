@@ -16,7 +16,7 @@ import boardeditor, { Edit } from "./boardeditor";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
 import winconutil from "../../../../../shared/chess/util/winconutil";
 import gameslot from "../chess/gameslot";
-import guiboardeditor from "../gui/guiboardeditor";
+import guiboardeditor from "../gui/boardeditor/guiboardeditor";
 
 
 // Type Definitions --------------------------------------------------------------

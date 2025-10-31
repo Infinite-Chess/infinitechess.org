@@ -21,7 +21,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import selection from '../chess/selection.js';
 import state from '../../../../../shared/chess/logic/state.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import guiboardeditor from '../gui/guiboardeditor.js';
+import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import movesequence from '../chess/movesequence.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import guinavigation from '../gui/guinavigation.js';

@@ -5,23 +5,23 @@
  * This script handles the Board Editor GUI
  */
 
-import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
-import type { Tool } from "../boardeditor/boardeditor.js";
+import type { Player, RawType } from "../../../../../../shared/chess/util/typeutil.js";
+import type { Tool } from "../../boardeditor/boardeditor.js";
 
 // @ts-ignore
-import statustext from "./statustext.js";
-import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/typeutil.js";
-import egamerules, { GameRulesGUIinfo } from "../boardeditor/egamerules.js";
-import gameloader from "../chess/gameloader.js";
-import boardeditor from "../boardeditor/boardeditor.js";
-import svgcache from "../../chess/rendering/svgcache.js";
-import gameslot from "../chess/gameslot.js";
-import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
-import jsutil from "../../../../../shared/util/jsutil.js";
-import math from "../../../../../shared/util/math/math.js";
-import tooltips from "../../util/tooltips.js";
-import eactions from "../boardeditor/eactions.js";
-import drawingtool from "../boardeditor/tools/drawingtool.js";
+import statustext from "../statustext.js";
+import typeutil, { rawTypes, players } from "../../../../../../shared/chess/util/typeutil.js";
+import egamerules, { GameRulesGUIinfo } from "../../boardeditor/egamerules.js";
+import gameloader from "../../chess/gameloader.js";
+import boardeditor from "../../boardeditor/boardeditor.js";
+import svgcache from "../../../chess/rendering/svgcache.js";
+import gameslot from "../../chess/gameslot.js";
+import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter.js";
+import jsutil from "../../../../../../shared/util/jsutil.js";
+import math from "../../../../../../shared/util/math/math.js";
+import tooltips from "../../../util/tooltips.js";
+import eactions from "../../boardeditor/eactions.js";
+import drawingtool from "../../boardeditor/tools/drawingtool.js";
 
 
 // Variables ---------------------------------------------------------------
