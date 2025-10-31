@@ -92,7 +92,7 @@ function getPiecesInSelection(gamefile: FullGame): Piece[] {
 	console.log("axis chosen: ", axis);
 	const coordPositions: bigint[] = axis === 0 ? o.XPositions : o.YPositions;
 	const slideKey = axis === 0 ? '1,0' : '0,1';
-	const lines: Map<LineKey, number[]> = o.lines[slideKey]; // All lines of pieces going in one vector direction
+	const lines: Map<LineKey, number[]> = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
 
 	/** Running list of all pieces within the selection area. */
 	const piecesInSelection: Piece[] = getPiecesInSelection(gamefile);
@@ -107,11 +107,12 @@ function getPiecesInSelection(gamefile: FullGame): Piece[] {
 
 	for (let i = linesStart; i <= linesEnd; i++) {
 		const lineKey: LineKey = `${i}|0`;
-		const thisLine: number[] = lines[lineKey];
+		const thisLine: number[] | undefined = lines.get(lineKey);
+		if (!thisLine) continue; // Empty line
 		for (let a = 0; a < thisLine.length; a++) {
 			const idx = thisLine[a]!;
 			// The piece is in the selection area if it's axis coord is within bounds
-			const thisCoord: bigint = coordPositions[idx];
+			const thisCoord: bigint = coordPositions[idx]!;
 			if (thisCoord >= rangeStart && thisCoord <= rangeEnd) {
 				// Custom piece construction instead of built in boardutil.ts
 				// method which does unnecesary verification the piece isn't an undefined placeholder.
