@@ -94,11 +94,13 @@ function convertCoordToWorldSpace_IgnoreSquareCenter(coords: BDCoords, position 
 	];
 }
 
+/** Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height. */
 function convertPixelsToWorldSpace_Virtual(value: number): number {
 	const screenHeight = camera.getScreenHeightWorld(false);
 	return (value / camera.getCanvasHeightVirtualPixels()) * screenHeight;
 }
 
+/** Converts a measurement of world space units to virtual screen pixels. Dependant on the current screen height. */
 function convertWorldSpaceToPixels_Virtual(value: number): number {
 	const screenHeight = camera.getScreenHeightWorld(false);
 	return (value / screenHeight) * camera.getCanvasHeightVirtualPixels();

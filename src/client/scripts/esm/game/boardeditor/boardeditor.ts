@@ -818,6 +818,12 @@ export default {
 	updateGamerulesGUIinfo,
 	stealPointer,
 	render,
+
+	runEdit,
+	addEditToHistory,
+	queueAddPiece,
+	queueAddPieceWithSpecialRights,
+	queueRemovePiece,
 };
 
 export type {
