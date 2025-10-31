@@ -48,7 +48,6 @@ function enable(): void {
 
 function disable(): void {
 	enabled = false;
-	regenModel();
 	frametracker.onVisualChange();
 }
 

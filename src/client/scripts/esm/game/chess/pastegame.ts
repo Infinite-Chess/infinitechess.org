@@ -26,6 +26,7 @@ import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import eactions from '../boardeditor/eactions.js';
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
@@ -57,7 +58,7 @@ async function callbackPaste(event: Event): Promise<void> {
 
 	// If we are in the board editor, let the board editor script handle this instead
 	if (boardeditor.areInBoardEditor()) {
-		boardeditor.load();
+		eactions.load();
 		return;
 	}
 	

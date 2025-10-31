@@ -5,20 +5,23 @@
  * This script handles the Board Editor GUI
  */
 
+import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
+import type { Tool } from "../boardeditor/boardeditor.js";
+
+// @ts-ignore
+import statustext from "./statustext.js";
+import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/typeutil.js";
+import egamerules, { GameRulesGUIinfo } from "../boardeditor/egamerules.js";
 import gameloader from "../chess/gameloader.js";
 import boardeditor from "../boardeditor/boardeditor.js";
 import svgcache from "../../chess/rendering/svgcache.js";
-import typeutil, { rawTypes, players } from "../../../../../shared/chess/util/typeutil.js";
 import gameslot from "../chess/gameslot.js";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter.js";
 import jsutil from "../../../../../shared/util/jsutil.js";
 import math from "../../../../../shared/util/math/math.js";
-// @ts-ignore
-import statustext from "./statustext.js";
-
-import type { Player, RawType } from "../../../../../shared/chess/util/typeutil.js";
-import type { GameRulesGUIinfo } from "../boardeditor/boardeditor.js";
 import tooltips from "../../util/tooltips.js";
+import eactions from "../boardeditor/eactions.js";
+import drawingtool from "../boardeditor/tools/drawingtool.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -30,6 +33,12 @@ const element_typesContainer = document.getElementById("editor-pieceTypes")!;
 const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
 const element_colorSelect = document.getElementById("editor-color-select")!;
 const elements_tools = [
+	document.getElementById("normal")!,
+	document.getElementById("eraser")!,
+	document.getElementById("specialrights")!,
+	document.getElementById("selection-tool")!,
+];
+const elements_actions = [
 	// Position
 	document.getElementById("reset")!,
 	document.getElementById("clearall")!,
@@ -38,11 +47,6 @@ const elements_tools = [
 	document.getElementById("paste-notation")!,
 	document.getElementById("gamerules")!,
 	document.getElementById("start-game")!,
-	// Tools
-	document.getElementById("normal")!,
-	document.getElementById("eraser")!,
-	document.getElementById("specialrights")!,
-	document.getElementById("selection-tool")!,
 	// Selection
 	// (none)
 	// Palette
@@ -162,7 +166,7 @@ async function initUI(): Promise<void> {
 		element_playerContainers.set(player, playerPieces);
 		element_playerTypes.set(player, svgs);
 		playerPieces.classList.add("editor-types");
-		if (player !== boardeditor.getColor()) playerPieces.classList.add("hidden");
+		if (player !== drawingtool.getColor()) playerPieces.classList.add("hidden");
 
 		// Tooltips (i.e. "Amazon (AM)")
 		for (let i = 0; i < svgs.length; i++) {
@@ -233,6 +237,9 @@ function initListeners(): void {
 	elements_tools.forEach((element) => {
 		element.addEventListener("click", callback_ChangeTool);
 	});
+	elements_actions.forEach((element) => {
+		element.addEventListener("click", callback_Action);
+	});
 	_getActivePieceElements().forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
@@ -248,7 +255,7 @@ function closeListeners(): void {
 }
 
 
-function markTool(tool: string): void {
+function markTool(tool: Tool): void {
 	elements_tools.forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
 		if (element_tool === tool) element.classList.add("active");
@@ -288,19 +295,19 @@ function updatePieceColors(newColor: Player): void {
 
 	// Update dot color and internal state
 	element_colorSelect.style.backgroundColor = typeutil.strcolors[newColor];
-	boardeditor.setColor(newColor);
+	drawingtool.setColor(newColor);
 	
 	// Update currentPieceType, if necessary
-	if (typeutil.getColorFromType(boardeditor.getPiece()) !== players.NEUTRAL) {
-		const currentPieceType = typeutil.buildType(typeutil.getRawType(boardeditor.getPiece()), newColor);
-		boardeditor.setPiece(currentPieceType);
+	if (typeutil.getColorFromType(drawingtool.getPiece()) !== players.NEUTRAL) {
+		const currentPieceType = typeutil.buildType(typeutil.getRawType(drawingtool.getPiece()), newColor);
+		drawingtool.setPiece(currentPieceType);
 	}
-	markPiece(boardeditor.getPiece());
+	markPiece(drawingtool.getPiece());
 }
 
 function nextColor(): void {
 	const playersArray = _getPlayersInOrder();
-	const currentIndex = playersArray.indexOf(boardeditor.getColor());
+	const currentIndex = playersArray.indexOf(drawingtool.getColor());
 	const nextColor = playersArray[(currentIndex + 1) % playersArray.length]!;
 	updatePieceColors(nextColor);
 }
@@ -310,7 +317,7 @@ function handleStartLocalGame(): void {
 	// Show a dialog box to confirm they want to leave the editor
 	const result = confirm("Do you want to leave the board editor and start a local game from this position? Changes will be saved."); // PLANNED to save changes
 	// Start the local game as requested
-	if (result) boardeditor.startLocalGame();
+	if (result) eactions.startLocalGame();
 }
 
 
@@ -438,14 +445,14 @@ function readGameRules() : void {
 	};
 
 	// Set en passant state for rendering purposes
-	if (enPassant !== undefined) boardeditor.setEnpassantState([enPassant.x, enPassant.y]);
-	else boardeditor.setEnpassantState(undefined);
+	if (enPassant !== undefined) egamerules.setEnpassantState([enPassant.x, enPassant.y]);
+	else egamerules.setEnpassantState(undefined);
 
 	// Update the promotionlines in the gamefile for rendering purposes
-	boardeditor.updatePromotionLines(gameRules.promotionRanks);
+	egamerules.updatePromotionLines(gameRules.promotionRanks);
 
 	// Upate boardeditor.gamerulesGUIinfo
-	boardeditor.updateGamerulesGUIinfo(gameRules);
+	egamerules.updateGamerulesGUIinfo(gameRules);
 }
 
 /** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
@@ -674,7 +681,7 @@ function toggleGameRules(): void {
 
 /** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
 function _getActivePieceElements(): Element[] {
-	const playerElements = element_playerTypes.get(boardeditor.getColor()) ?? [];
+	const playerElements = element_playerTypes.get(drawingtool.getColor()) ?? [];
 	return [...playerElements, ...element_neutralTypes];
 }
 
@@ -692,34 +699,40 @@ function _getPlayersInOrder(): Player[] {
 function callback_ChangeTool(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
-	switch (tool) {
+	if (tool === null) throw new Error("Tool attribute is null");
+	boardeditor.setTool(tool);
+}
+
+function callback_Action(e: Event): void {
+	const target = (e.currentTarget as HTMLElement);
+	const action = target.getAttribute("data-action");
+	switch (action) {
 		case "reset":
-			boardeditor.reset();
-			return;
+			eactions.reset();
+			break;
 		case "clearall":
-			boardeditor.clearAll();
-			return;
+			eactions.clearAll();
+			break;
 		case "saved-positions":
 			statustext.showStatus("Not implemented yet.");
-			return;
+			break;
 		case "copy-notation":
-			boardeditor.save();
-			return;
+			eactions.save();
+			break;
 		case "paste-notation":
-			boardeditor.load();
-			return;
+			eactions.load();
+			break;
 		case "gamerules":
 			toggleGameRules();
-			return;
+			break;
 		case "start-game":
 			handleStartLocalGame();
-			return;
+			break;
 		case "color":
 			nextColor();
-			return;
+			break;
 		default:
-			if (tool !== null) boardeditor.setTool(tool);
-			return;
+			console.error(`Unknown action: ${action}`);
 	}
 }
 
@@ -727,10 +740,11 @@ function callback_ChangePieceType(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const currentPieceType = Number.parseInt(target.id);
 	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
-	boardeditor.setPiece(currentPieceType);
+	drawingtool.setPiece(currentPieceType);
 	boardeditor.setTool("placer");
 	markPiece(currentPieceType);
 }
+
 
 // Exports ----------------------------------------------------------------
 
