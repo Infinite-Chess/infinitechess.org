@@ -60,18 +60,18 @@ function update(): void {
 	} else { // Selection in progress
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = getPointerCoords();
+		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = getPointerCoords(pointerId!);
 		// Test if pointer released (finalize new selection)
 		if (!respectiveListener.isPointerHeld(pointerId!)) endSelection();
 	}
 }
 
 /**
- * Gets the pointer's current coordinates being hovered over.
+ * Gets the given pointer's current coordinates being hovered over, rounded to the integer square.
  * ONLY CALL if you know the pointer exists!
  */
-function getPointerCoords(): Coords {
-	const pointerWorld = mouse.getPointerWorld(pointerId!)!;
+function getPointerCoords(pointerId: string): Coords {
+	const pointerWorld = mouse.getPointerWorld(pointerId)!;
 	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 }
 
@@ -84,7 +84,7 @@ function beginSelection(): void {
 	sdrag.resetState();
 
 	// Set the start point
-	startPoint = getPointerCoords();
+	startPoint = getPointerCoords(pointerId!);
 	lastPointerCoords = startPoint;
 }
 
@@ -174,15 +174,43 @@ function convertIntBoxToWorldBox(intBox: BoundingBox): DoubleBoundingBox {
 	return meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
 }
 
+/**
+ * Returns the corners of the current selection.
+ * ONLY CALL if you know a selection exists!
+ */
+function getSelectionCorners(): [Coords, Coords] {
+	if (!startPoint || !endPoint) throw new Error("No current selection. Can't get selection corners.");
+
+	return [
+		startPoint,
+		endPoint,
+	];
+}
+
+/**
+ * Sets the current selected area.
+ * ONLY CALL if this is an overwriting of the existing
+ * selection, NOT to set it when it does not have a value!
+ */
+function setSelection(corner1: Coords, corner2: Coords): void {
+	if (!startPoint || !endPoint) throw new Error("No current selection. Can't set selection.");
+
+	startPoint = corner1;
+	endPoint = corner2;
+}
+
 
 // Exports ------------------------------------------------------
 
 
 export default {
 	update,
+	getPointerCoords,
 	resetState,
 	render,
 	getSelectionIntBox,
 	getSelectionWorldBox,
 	convertIntBoxToWorldBox,
+	getSelectionCorners,
+	setSelection,
 };

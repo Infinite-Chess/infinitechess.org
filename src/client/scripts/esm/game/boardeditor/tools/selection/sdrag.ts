@@ -37,6 +37,8 @@ let withinGrabDist = false;
 let areDragging = false;
 /** The ID of the pointer currently being used drag the selection. */
 let pointerId: string | undefined = undefined;
+/** The last known square the pointer was hovering over. */
+let lastPointerCoords: Coords | undefined;
 /** The integer coordinate the mouse has grabbed, if we're dragging the selection. */
 let anchorCoords: Coords | undefined = undefined;
 
@@ -49,47 +51,68 @@ let anchorCoords: Coords | undefined = undefined;
  * ONLY CALL if there's an existing selection area, and we are not currently making a new selection!
  */
 function update(): void {
-	const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
 
-	// Determine the mouse world coords
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
-	if (!mouseWorld) return;
+	if (areDragging) {
+		// Determine if the selection has been dropped
 
-	const distToLeftEdge = Math.abs(selectionWorldBox.left - mouseWorld[0]);
-	const distToRightEdge = Math.abs(selectionWorldBox.right - mouseWorld[0]);
-	const distToBottomEdge = Math.abs(selectionWorldBox.bottom - mouseWorld[1]);
-	const distToTopEdge = Math.abs(selectionWorldBox.top - mouseWorld[1]);
+		const respectiveListener = mouse.getRelevantListener();
+		// Update its last known position if available
+		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = selectiontool.getPointerCoords(pointerId!);
+		// Test if pointer released (execute selection translation)
+		if (!respectiveListener.isPointerHeld(pointerId!)) dropSelection();
+	} else {
+		// Determine if the board needs to be picked up,
+		// or if the canvas cursor style should change.
+		const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
 
-	if (
-		(distToLeftEdge <= GRABBABLE_DIST || distToRightEdge <= GRABBABLE_DIST) && 
-		(distToBottomEdge <= GRABBABLE_DIST || distToTopEdge <= GRABBABLE_DIST)
-	) { // Within grab distance
-		if (!withinGrabDist) {
-			withinGrabDist = true;
-			camera.canvas.style.cursor = 'grab';
+		// Determine the mouse world coords
+		const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+		if (!mouseWorld) return;
+
+		const distToLeftEdge = Math.abs(selectionWorldBox.left - mouseWorld[0]);
+		const distToRightEdge = Math.abs(selectionWorldBox.right - mouseWorld[0]);
+		const distToBottomEdge = Math.abs(selectionWorldBox.bottom - mouseWorld[1]);
+		const distToTopEdge = Math.abs(selectionWorldBox.top - mouseWorld[1]);
+
+		if (
+			(distToLeftEdge <= GRABBABLE_DIST || distToRightEdge <= GRABBABLE_DIST) && 
+			(distToBottomEdge <= GRABBABLE_DIST || distToTopEdge <= GRABBABLE_DIST)
+		) { // Within grab distance
+			if (!withinGrabDist) {
+				withinGrabDist = true;
+				camera.canvas.style.cursor = 'grab';
+			}
+
+			// Determine if we picked up the selection
+			if (mouse.isMouseDown(Mouse.LEFT) && !arrows.areHoveringAtleastOneArrow()) {
+				// Start dragging
+				mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
+				mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
+				pointerId = mouse.getMouseId(Mouse.LEFT)!;
+				pickUpSelection();
+			}
+		} else { // NOT within grab distance
+			if (withinGrabDist) {
+				withinGrabDist = false;
+				camera.canvas.style.cursor = 'default';
+			}
 		}
-
-		// Determine if we picked up the selection
-		if (mouse.isMouseDown(Mouse.LEFT) && !arrows.areHoveringAtleastOneArrow()) {
-			// Start dragging
-			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-			pointerId = mouse.getMouseId(Mouse.LEFT)!;
-			pickUpSelection();
-		}
-	} else { // NOT within grab distance
-		if (withinGrabDist) resetState();
 	}
 }
 
 function resetState(): void {
 	withinGrabDist = false;
 	camera.canvas.style.cursor = 'default';
+	areDragging = false;
+	pointerId = undefined;
+	lastPointerCoords = undefined;
+	anchorCoords = undefined;
 }
 
 /** Grabs the selection box. */
 function pickUpSelection(): void {
 	areDragging = true;
+	camera.canvas.style.cursor = 'grabbing';
 
 	// Determine the nearest coordinate of the selection the mouse picked up.
 	// This will be the anchor
@@ -102,6 +125,32 @@ function pickUpSelection(): void {
 		bimath.clamp(pointerCoordRounded[0], selectionIntBox.left, selectionIntBox.right),
 		bimath.clamp(pointerCoordRounded[1], selectionIntBox.bottom, selectionIntBox.top),
 	];
+	lastPointerCoords = anchorCoords;
+}
+
+function dropSelection(): void {
+	// Determine the final distance to translate the selection.
+	
+	// Determine by how many tiles the pointer has dragged from the anchor
+	const translation: Coords = coordutil.subtractCoords(lastPointerCoords!, anchorCoords!);
+
+	// Reset state AFTER getting total translation
+	resetState();
+
+	// If the translation is zero, skip the transformation
+	if (translation[0] === 0n && translation[1] === 0n) return;
+
+	console.log('Selection transformed by: ', translation);
+
+	
+
+	// Shift the selection area itself
+
+	const [ corner1, corner2 ] = selectiontool.getSelectionCorners();
+	const translatedCorner1: Coords = coordutil.addCoords(corner1, translation);
+	const translatedCorner2: Coords = coordutil.addCoords(corner2, translation);
+
+	selectiontool.setSelection(translatedCorner1, translatedCorner2);
 }
 
 /**
@@ -123,7 +172,8 @@ function isDragTranslationPositive(): boolean {
 	// Determine the current int coord of the pointer
 	const pointerCoordRounded: Coords = getIntCoordOfPointer();
 	// Determine by how many tiles the pointer has dragged from the anchor
-	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords);
+	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords!);
+
 	// Return whether that's absolutely positive
 	return translation[0] !== 0n || translation[1] === 0n;
 }
