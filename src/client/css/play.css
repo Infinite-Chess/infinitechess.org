@@ -149,7 +149,7 @@ button {
 }
 
 /* Buttons that can't receive the .active class (only 1 state): Give them an active state */
-.position-actions .instant:active, .selection-actions .instant:active {
+.position-actions .instant:active, .selection-actions div:active {
 	background-color: var(--background-theme-color);
 }
 
