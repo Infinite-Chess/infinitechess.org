@@ -206,56 +206,33 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 
 /** Flips the selection box horizontally. */
 function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {	
-	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
-
-	// Calculate the reflection line X
-	// 1 precision is enough to perfectly represent a line between two bigint coordinates
-	const leftBD: BigDecimal = bigdecimal.FromBigInt(box.left, 1);
-	const rightBD: BigDecimal = bigdecimal.FromBigInt(box.right, 1);
-	const sum: BigDecimal = bigdecimal.add(leftBD, rightBD);
-	const reflectionX: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
-	// console.log("Reflection X:", bigdecimal.toExactString(reflectionX));
-
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-
-	// Delete all pieces in the original selection area
-	removeAllPieces(gamefile, edit, piecesInSelection);
-
-	// Cache frequently-used references for slightly better performance
-	const specialRights = gamefile.boardsim.state.global.specialRights;
-	const getKey = coordutil.getKeyFromCoords;
-
-	// Now, add all pieces in the original selection area, but reflected across the vertical center line
-	for (const piece of piecesInSelection) {
-		// Reflect the piece's X coordinate
-		const pieceXBD: BigDecimal = bigdecimal.FromBigInt(piece.coords[0], 1);
-		const distanceFromLine: BigDecimal = bigdecimal.subtract(pieceXBD, reflectionX);
-		const reflectedXBD: BigDecimal = bigdecimal.subtract(reflectionX, distanceFromLine);
-		// We already know it's a perfect integer so this doesn't lose precision
-		const reflectedX: bigint = bigdecimal.toBigInt(reflectedXBD);
-
-		const reflectedCoords: Coords = [reflectedX, piece.coords[1]];
-		// Queue the addition of the piece at its new location
-		const hasSpecialRights = specialRights.has(getKey(piece.coords));
-		boardeditor.queueAddPiece(gamefile, edit, reflectedCoords, piece.type, hasSpecialRights);
-	}
-
-	// Apply the collective edit and add it to the history
-	applyEdit(gamefile, mesh, edit);
+	ReflectAxis(gamefile, mesh, box, 0); // Reflect across the X-axis
 }
 
 
 /** Flips the selection box vertically. */
 function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	ReflectAxis(gamefile, mesh, box, 1); // Reflect across the Y-axis
+}
+
+/**
+ * Reflects the pieces in the selection box across a given axis.
+ * @param axis The axis to reflect across (0 for X, 1 for Y).
+ */
+function ReflectAxis(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
 
-	// Calculate the reflection line Y
-	// 1 precision is enough to perfectly represent a line between two bigint coordinates
-	const bottomBD: BigDecimal = bigdecimal.FromBigInt(box.bottom, 1);
-	const topBD: BigDecimal = bigdecimal.FromBigInt(box.top, 1);
-	const sum: BigDecimal = bigdecimal.add(bottomBD, topBD);
-	const reflectionY: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
-	// console.log("Reflection Y:", bigdecimal.toExactString(reflectionY));
+	// Determine the bounds for calculating the reflection line based on the axis
+	const bound1 = axis === 0 ? box.left : box.bottom;
+	const bound2 = axis === 0 ? box.right : box.top;
+
+	// Calculate the reflection line with BigDecimals, for decimal precision.
+	// 1 precision is enough to perfectly represent 1/2 increments, which is the finest we need.
+	const bound1BD: BigDecimal = bigdecimal.FromBigInt(bound1, 1);
+	const bound2BD: BigDecimal = bigdecimal.FromBigInt(bound2, 1);
+	const sum: BigDecimal = bigdecimal.add(bound1BD, bound2BD);
+	const reflectionLine: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
+	console.log("Reflection line:", bigdecimal.toExactString(reflectionLine));
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
@@ -266,16 +243,20 @@ function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	const specialRights = gamefile.boardsim.state.global.specialRights;
 	const getKey = coordutil.getKeyFromCoords;
 
-	// Now, add all pieces in the original selection area, but reflected across the horizontal center line
+	// Now, add all pieces in the original selection area, but reflected across the line
 	for (const piece of piecesInSelection) {
-		// Reflect the piece's Y coordinate
-		const pieceYBD: BigDecimal = bigdecimal.FromBigInt(piece.coords[1], 1);
-		const distanceFromLine: BigDecimal = bigdecimal.subtract(pieceYBD, reflectionY);
-		const reflectedYBD: BigDecimal = bigdecimal.subtract(reflectionY, distanceFromLine);
+		// Reflect the piece's coordinate on the chosen axis
+		const coordToReflect = piece.coords[axis];
+		const coordBD: BigDecimal = bigdecimal.FromBigInt(coordToReflect, 1);
+		const distanceFromLine: BigDecimal = bigdecimal.subtract(coordBD, reflectionLine);
+		const reflectedCoordBD: BigDecimal = bigdecimal.subtract(reflectionLine, distanceFromLine);
 		// We already know it's a perfect integer so this doesn't lose precision
-		const reflectedY: bigint = bigdecimal.toBigInt(reflectedYBD);
+		const reflectedCoord: bigint = bigdecimal.toBigInt(reflectedCoordBD);
 
-		const reflectedCoords: Coords = [piece.coords[0], reflectedY];
+		// Create the new coordinates, modifying only the reflected axis
+		const reflectedCoords: Coords = [...piece.coords]; // Create a mutable copy
+		reflectedCoords[axis] = reflectedCoord;
+
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
 		boardeditor.queueAddPiece(gamefile, edit, reflectedCoords, piece.type, hasSpecialRights);
