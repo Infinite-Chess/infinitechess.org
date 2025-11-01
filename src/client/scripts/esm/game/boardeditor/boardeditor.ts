@@ -86,6 +86,7 @@ function closeBoardEditor(): void {
 	// Reset state
 	inBoardEditor = false;
 	currentTool = "normal";
+	guiboardeditor.markTool(currentTool); // Effectively resets classes state
 	edits = undefined;
 	indexOfThisEdit = undefined;
 	drawingtool.onCloseEditor();

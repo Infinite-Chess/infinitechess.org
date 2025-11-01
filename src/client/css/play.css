@@ -111,7 +111,7 @@ button {
 
 /* Specific section stylings... */
 
-.position-actions {
+.position-actions, .selection-actions {
     display: grid;
 	grid-template-columns: repeat(5, 1fr);
 }

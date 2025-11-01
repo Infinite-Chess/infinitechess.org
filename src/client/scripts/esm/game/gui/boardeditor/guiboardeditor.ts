@@ -48,10 +48,19 @@ const elements_actions = [
 	document.getElementById("gamerules")!,
 	document.getElementById("start-game")!,
 	// Selection
-	// (none)
+	document.getElementById("delete-selection")!,
+	document.getElementById("copy-selection")!,
+	document.getElementById("paste-selection")!,
+	document.getElementById("flip-horizontal")!,
+	document.getElementById("flip-vertical")!,
+	document.getElementById("rotate-left")!,
+	document.getElementById("rotate-right")!,
+	document.getElementById("invert-color")!,
 	// Palette
 	document.getElementById("editor-color-select")!
 ];
+/** The element containing all selection tool action buttons. */
+const element_selectionActions = document.getElementById('selection-actions')!;
 
 const element_boardUI = document.getElementById("boardUI")!;
 
@@ -255,12 +264,22 @@ function closeListeners(): void {
 }
 
 
+/** Adds/removes the 'active' class from the tools, changing their style. */
 function markTool(tool: Tool): void {
 	elements_tools.forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
 		if (element_tool === tool) element.classList.add("active");
 		else if (element_tool !== 'gamerules') element.classList.remove("active");
 	});
+
+	// Update greyed-out-ness of the Selection actions
+	if (tool === 'selection-tool') {
+		element_selectionActions.classList.remove('opacity-0_5');
+		element_selectionActions.classList.remove('set-cursor-to-not-allowed');
+	} else {
+		element_selectionActions.classList.add('opacity-0_5');
+		element_selectionActions.classList.add('set-cursor-to-not-allowed');
+	}
 }
 
 function markPiece(type: number | null): void {
@@ -707,6 +726,7 @@ function callback_Action(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const action = target.getAttribute("data-action");
 	switch (action) {
+		// Position
 		case "reset":
 			eactions.reset();
 			break;
@@ -728,6 +748,32 @@ function callback_Action(e: Event): void {
 		case "start-game":
 			handleStartLocalGame();
 			break;
+		// Selection
+		case "delete-selection":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "copy-selection":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "paste-selection":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "flip-horizontal":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "flip-vertical":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "rotate-left":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "rotate-right":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "invert-color":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		// Palette
 		case "color":
 			nextColor();
 			break;
