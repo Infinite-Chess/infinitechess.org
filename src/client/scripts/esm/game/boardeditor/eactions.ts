@@ -38,6 +38,7 @@ import pastegame from "../chess/pastegame";
 import guinavigation from "../gui/guinavigation";
 import annotations from "../rendering/highlights/annotations/annotations";
 import egamerules from "./egamerules";
+import selectiontool from "./tools/selection/selectiontool";
 
 
 // Actions ----------------------------------------------------------------------
@@ -60,6 +61,8 @@ function reset(): void {
 	const classicalGamefile = gamefile.initFullGame(metadata);
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
+	selectiontool.resetState(); // Clear current selection
+	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
 
@@ -75,6 +78,7 @@ function clearAll(): void {
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+	selectiontool.resetState(); // Clear current selection
 
 	statustext.showStatus(translations['copypaste'].clear_position);
 }
@@ -123,6 +127,7 @@ async function load(): Promise<undefined> {
 	}
 
 	loadFromLongformat(longformOut);
+	selectiontool.resetState(); // Clear current selection
 	statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
 }
 
