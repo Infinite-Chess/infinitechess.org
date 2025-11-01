@@ -353,10 +353,10 @@ function callback_Action(e: Event): void {
 			stransformations.Delete(gamefile, mesh, selectionBox);
 			break;
 		case "copy-selection":
-			statustext.showStatus("Not implemented yet.");
+			stransformations.Copy(gamefile, selectionBox);
 			break;
 		case "paste-selection":
-			statustext.showStatus("Not implemented yet.");
+			stransformations.Paste(gamefile, mesh, selectionBox);
 			break;
 		case "flip-horizontal":
 			statustext.showStatus("Not implemented yet.");

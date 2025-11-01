@@ -29,9 +29,11 @@ import type { Mesh } from "../../../rendering/piecemodels";
 import boardutil, { LineKey, Piece } from "../../../../../../../shared/chess/util/boardutil";
 import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
 import boardeditor, { Edit } from "../../boardeditor";
-import organizedpieces from "../../../../../../../shared/chess/logic/organizedpieces";
 import vectors, { Vec2 } from "../../../../../../../shared/util/math/vectors";
+import organizedpieces from "../../../../../../../shared/chess/logic/organizedpieces";
 import bounds from "../../../../../../../shared/util/math/bounds";
+import selectiontool from "./selectiontool";
+import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 
 
 // State ------------------------------------------------------------------------
@@ -40,7 +42,7 @@ import bounds from "../../../../../../../shared/util/math/bounds";
 /** Whatever's copied to the clipboard via the "Copy selection" action button. */
 let clipboard: Piece[] | undefined;
 /** The top-left corner tile of the clipboard selection. */
-let clipboardCoords: Coords | undefined;
+let clipboardBox: BoundingBox | undefined;
 
 
 // Selection Box Transformations ------------------------------------------------
@@ -75,6 +77,14 @@ function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, tr
     
 	// Apply the collective edit and add it to the history
 	applyEdit(gamefile, mesh, edit);
+
+	// Update the selection area
+
+	const [ corner1, corner2 ] = selectiontool.getSelectionCorners();
+	const translatedCorner1: Coords = coordutil.addCoords(corner1, translation);
+	const translatedCorner2: Coords = coordutil.addCoords(corner2, translation);
+
+	selectiontool.setSelection(translatedCorner1, translatedCorner2);
 }
 
 
@@ -92,21 +102,82 @@ function Delete(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	applyEdit(gamefile, mesh, edit);
 }
 
-
-// Copy...
-
-/**
- * 
- * A Copy transformation is identical to the first part of a translation.
- */
+/** Copies the given selection box. */
+function Copy(gamefile: FullGame, box: BoundingBox): void {
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
+	clipboard = piecesInSelection;
+	clipboardBox = box;
+}
 
 
 // Paste (in whole multiples)....
 
 /**
- * 
+ * Pastes the copied region 
  * A Paste transformation is identical to the last half of a translation.
  */
+function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
+	if (!clipboard || !clipboardBox) return; // Nothing to paste
+
+	// Determine the dimensions of the clipboard box
+	const clipboardWidth: bigint = clipboardBox.right - clipboardBox.left + 1n;
+	const clipboardHeight: bigint = clipboardBox.top - clipboardBox.bottom + 1n;
+	// Dimensions of the target box (current selection area to paste in)
+	const targetBoxWidth: bigint = targetBox.right - targetBox.left + 1n;
+	const targetBoxHeight: bigint = targetBox.top - targetBox.bottom + 1n;
+
+	// Determine how many whole copies fit in the target box, in both dimensions, with a minimum of 1.
+	const copiesX: bigint = bimath.max(targetBoxWidth / clipboardWidth, 1n);
+	const copiesY: bigint = bimath.max(targetBoxHeight / clipboardHeight, 1n);
+
+	// The actual paste box dimensions is the minimum box that fits all whole copies
+	const actualPasteBoxWidth: bigint = clipboardWidth * copiesX;
+	const actualPasteBoxHeight: bigint = clipboardHeight * copiesY;
+	const actualPasteBox: BoundingBox = {
+		left: targetBox.left,
+		right: targetBox.left + actualPasteBoxWidth - 1n,
+		bottom: targetBox.top - actualPasteBoxHeight + 1n,
+		top: targetBox.top,
+	};
+
+	// Determine the translation vector from top-left of clipboard to top-left of target box
+	const clipboardCoords: Coords = [clipboardBox.left, clipboardBox.top];
+	const targetBoxCoords: Coords = [targetBox.left, targetBox.top];
+	const translation: Coords = coordutil.subtractCoords(targetBoxCoords, clipboardCoords);
+
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// First, delete all pieces in the actual paste box.
+	const piecesInPasteBox: Piece[] = getPiecesInBox(gamefile, actualPasteBox);
+	removeAllPieces(gamefile, edit, piecesInPasteBox);
+
+	// Iterate over each copy position
+	for (let x = 0n; x < copiesX; x++) {
+		for (let y = 0n; y < copiesY; y++) {
+			// Determine translation for this copy
+			const thisTranslation: Coords = [
+				translation[0] + (clipboardWidth * x),
+				translation[1] + (clipboardHeight * -y),
+			];
+
+			// Now, add all pieces from the clipboard, translated to this copy's position
+			for (const piece of clipboard) {
+				const translatedCoords = coordutil.addCoords(piece.coords, thisTranslation);
+				// Queue the addition of the piece at its new location
+				boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, false);
+			}
+		}
+	}
+
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
+
+	// Update the selection area to the actual paste box
+
+	const fullPasteBoxCorner1: Coords = [actualPasteBox.left, actualPasteBox.bottom];
+	const fullPasteBoxCorner2: Coords = [actualPasteBox.right, actualPasteBox.top];
+	selectiontool.setSelection(fullPasteBoxCorner1, fullPasteBoxCorner2);
+}
 
 
 // Flip horizontally...
@@ -194,7 +265,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 
 function resetState(): void {
 	clipboard = undefined;
-	clipboardCoords = undefined;
+	clipboardBox = undefined;
 }
 
 
@@ -207,6 +278,7 @@ export default {
 	// Action Button Transformations
 	Delete,
 	Copy,
+	Paste,
 	// API
 	resetState,
 };

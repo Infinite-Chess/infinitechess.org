@@ -26,7 +26,7 @@ import stransformations from "./stransformations";
 
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
-const GRABBABLE_DIST = 7;
+const GRABBABLE_DIST = 6;
 
 
 // State ---------------------------------------------
@@ -161,14 +161,6 @@ function dropSelection(): void {
 	const mesh = gameslot.getMesh()!;
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
 	stransformations.Translate(gamefile, mesh, selectionBox, translation);
-
-	// Shift the selection area itself
-
-	const [ corner1, corner2 ] = selectiontool.getSelectionCorners();
-	const translatedCorner1: Coords = coordutil.addCoords(corner1, translation);
-	const translatedCorner2: Coords = coordutil.addCoords(corner2, translation);
-
-	selectiontool.setSelection(translatedCorner1, translatedCorner2);
 }
 
 /**
