@@ -213,8 +213,7 @@ function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void 
 	const rightBD: BigDecimal = bigdecimal.FromBigInt(box.right, 1);
 	const sum: BigDecimal = bigdecimal.add(leftBD, rightBD);
 	const reflectionX: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
-
-	console.log("Reflection X:", bigdecimal.toExactString(reflectionX));
+	// console.log("Reflection X:", bigdecimal.toExactString(reflectionX));
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
@@ -245,7 +244,45 @@ function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void 
 }
 
 
-// Flip vertically...
+/** Flips the selection box vertically. */
+function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
+
+	// Calculate the reflection line Y
+	// 1 precision is enough to perfectly represent a line between two bigint coordinates
+	const bottomBD: BigDecimal = bigdecimal.FromBigInt(box.bottom, 1);
+	const topBD: BigDecimal = bigdecimal.FromBigInt(box.top, 1);
+	const sum: BigDecimal = bigdecimal.add(bottomBD, topBD);
+	const reflectionY: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
+	// console.log("Reflection Y:", bigdecimal.toExactString(reflectionY));
+
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// Delete all pieces in the original selection area
+	removeAllPieces(gamefile, edit, piecesInSelection);
+
+	// Cache frequently-used references for slightly better performance
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const getKey = coordutil.getKeyFromCoords;
+
+	// Now, add all pieces in the original selection area, but reflected across the horizontal center line
+	for (const piece of piecesInSelection) {
+		// Reflect the piece's Y coordinate
+		const pieceYBD: BigDecimal = bigdecimal.FromBigInt(piece.coords[1], 1);
+		const distanceFromLine: BigDecimal = bigdecimal.subtract(pieceYBD, reflectionY);
+		const reflectedYBD: BigDecimal = bigdecimal.subtract(reflectionY, distanceFromLine);
+		// We already know it's a perfect integer so this doesn't lose precision
+		const reflectedY: bigint = bigdecimal.toBigInt(reflectedYBD);
+
+		const reflectedCoords: Coords = [piece.coords[0], reflectedY];
+		// Queue the addition of the piece at its new location
+		const hasSpecialRights = specialRights.has(getKey(piece.coords));
+		boardeditor.queueAddPiece(gamefile, edit, reflectedCoords, piece.type, hasSpecialRights);
+	}
+
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
+}
 
 
 // Rotate left...
@@ -342,6 +379,7 @@ export default {
 	Copy,
 	Paste,
 	FlipHorizontal,
+	FlipVertical,
 	// API
 	resetState,
 };
