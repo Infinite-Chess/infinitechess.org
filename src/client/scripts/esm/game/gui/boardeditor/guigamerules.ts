@@ -38,6 +38,8 @@ const element_checkmate = document.getElementById("rules-checkmate")! as HTMLInp
 const element_royalcapture = document.getElementById("rules-royalcapture")! as HTMLInputElement;
 const element_allroyalscaptured = document.getElementById("rules-allroyalscaptured")! as HTMLInputElement;
 const element_allpiecescaptured = document.getElementById("rules-allpiecescaptured")! as HTMLInputElement;
+const element_gamerulesPawnDoublePush = document.getElementById('rules-doublepush')! as HTMLInputElement;
+const element_gamerulesCastlingWithRooks = document.getElementById('rules-castling')! as HTMLInputElement;
 
 const elements_selectionList: HTMLInputElement[] = [
 	element_white,
@@ -52,7 +54,9 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_checkmate,
 	element_royalcapture,
 	element_allroyalscaptured,
-	element_allpiecescaptured
+	element_allpiecescaptured,
+	element_gamerulesPawnDoublePush,
+	element_gamerulesCastlingWithRooks
 ];
 
 
