@@ -232,7 +232,7 @@ function ReflectAxis(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 |
 	const bound2BD: BigDecimal = bigdecimal.FromBigInt(bound2, 1);
 	const sum: BigDecimal = bigdecimal.add(bound1BD, bound2BD);
 	const reflectionLine: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
-	console.log("Reflection line:", bigdecimal.toExactString(reflectionLine));
+	// console.log("Reflection line:", bigdecimal.toExactString(reflectionLine));
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
