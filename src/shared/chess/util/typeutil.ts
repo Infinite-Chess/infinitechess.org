@@ -162,9 +162,10 @@ function invertType(type: number): number {
 }
 
 function invertPlayer(player: Player): Player {
-	return player === players.WHITE ? players.BLACK :
-		   player === players.BLACK ? players.WHITE
-		   : ((): never => { throw Error(`Cannot invert player ${player}!`); })(); // No downsides to adding this, only more protection.
+	return player === players.NEUTRAL ? players.NEUTRAL :
+		player === players.WHITE ? players.BLACK :
+		player === players.BLACK ? players.WHITE :
+		((): never => { throw Error(`Cannot invert player ${player}!`); })(); // No downsides to adding this, only more protection.
 }
 
 function getRawTypeStr(type: RawType): string {

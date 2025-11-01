@@ -344,12 +344,18 @@ function getFurthestTileVisible(): bigint {
 	return furthest;
 }
 
+/** Returns the overlay element covering the entire canvas. */
+function getOverlay(): HTMLElement {
+	return element_overlay;
+}
+
 
 
 export default {
 	init,
 	update,
 	render,
+	getOverlay,
 };
 
 export {

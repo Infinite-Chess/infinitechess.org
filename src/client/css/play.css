@@ -101,33 +101,70 @@ button {
     transform: scale(0.65) translate(3%, 0%);
 }
 
-.svg-selection-tool {
-    transform: scale(0.9) translate(-1%, -1%);
-}
-
 .svg-eraser {
 	transform: scale(0.85);
 }
 
+.svg-selection-tool {
+    transform: scale(0.9) translate(-1%, -1%);
+}
+
+.svg-delete-selection {
+	transform: scale(1.0);
+}
+
+.svg-copy-selection {
+	transform: scale(0.8);
+}
+
+.svg-paste-selection {
+	transform: scale(0.75);
+}
+
+.svg-flip-selection-horizontally {
+	transform: scale(0.8);
+}
+
+.svg-flip-selection-vertically {
+	transform: scale(0.8);
+}
+
+.svg-rotate-selection-left {
+	transform: scale(0.85);
+}
+
+.svg-rotate-selection-right {
+	transform: scale(-0.85, 0.85);
+}
+
+.svg-invert-selection-color {
+	transform: scale(0.8);
+}
+
 /* Specific section stylings... */
 
-.position-actions {
+.position-actions, .selection-actions {
     display: grid;
 	grid-template-columns: repeat(5, 1fr);
 }
 
 /* Buttons that can't receive the .active class (only 1 state): Give them an active state */
-.position-actions .instant:active {
+.position-actions .instant:active, .selection-actions div:active {
 	background-color: var(--background-theme-color);
 }
 
-.position-actions div, .editor-tools div, .editor-types .piece {
+.position-actions div, .editor-tools div, .selection-actions, .editor-types .piece {
     cursor: pointer;
 }
 
 .editor-tools {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
+}
+
+.selection-actions.disabled {
+	opacity: 0.4;
+	pointer-events: none;
 }
 
 /* Palette */
@@ -161,7 +198,7 @@ button {
     grid-template-columns: repeat(4, 1fr);
 }
 
-.editor-types .piece, .editor-tools div, .position-actions div {
+.editor-types .piece, .editor-tools div, .position-actions div, .selection-actions div {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -172,11 +209,11 @@ button {
     margin: 0.1em;
 }
 
-.editor-tools div, .position-actions div {
+.editor-tools div, .position-actions div, .selection-actions div {
     margin: 0.2em;
 }
 
-.editor-types .piece:hover, .editor-tools div:hover, .position-actions div:hover {
+.editor-types .piece:hover, .editor-tools div:hover, .position-actions div:hover, .selection-actions div:hover {
 	outline: 0.25em solid black;
 	outline-offset: -0.125em;
 }

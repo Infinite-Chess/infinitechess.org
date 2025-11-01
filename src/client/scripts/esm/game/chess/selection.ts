@@ -42,6 +42,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';
 import keybinds from '../misc/keybinds.js';
+import normaltool from '../boardeditor/tools/normaltool.js';
 import { animateMove } from './graphicalchanges.js';
 import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
@@ -465,7 +466,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 
 	
 	const changes = boardeditor.areInBoardEditor() ?
-		boardeditor.makeMoveEdit(gamefile, mesh, moveDraft).changes : isPremove ?
+		normaltool.makeMoveEdit(gamefile, mesh, moveDraft).changes : isPremove ?
 		premoves.addPremove(gamefile, mesh, moveDraft).changes :
 		movesequence.makeMove(gamefile, mesh, moveDraft).changes;
 	

@@ -8,16 +8,36 @@
  * of the Selection Tool in the Board Editor
  */
 
-import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
-import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
+import type { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
+import type { DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import type { Color } from "../../../../../../../shared/util/math/math";
 
 import mouse from "../../../../util/mouse";
 import camera from "../../../rendering/camera";
 import meshes from "../../../rendering/meshes";
 import primitives from "../../../rendering/primitives";
-import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
+import space from "../../../misc/space";
 import { createRenderable } from "../../../../webgl/Renderable";
+
+
+
+// Constants ---------------------------------------------------
+
+
+/**
+ * The color for the wireframe of the selection box, including the small square in the corner,
+ * and the outline of the currently hovered square's rank & file, when there is no selection.
+ */
+const OUTLINE_COLOR: Color = [0,0,0, 1]; // Black
+/** The fill color of the selection box. */
+const FILL_COLOR: Color = [0,0,0, 0.08]; // Transparent Black
+
+/** How many virtual screen pixels wide the corner square is. */
+const CORNER_DOT_WIDTH = 6;
+
+
+// Methods -----------------------------------------------------
+
 
 
 /**
@@ -34,60 +54,72 @@ function outlineRankAndFile(): void {
 
 	const data: number[] = [];
 
-	const color = [0, 0, 0, 1]; // Black
-
 	const screenBox = camera.getRespectiveScreenBox();
 
 	data.push(
 		// Horizontal: Lower
-		screenBox.left, bottom,   ...color,
-		screenBox.right, bottom,  ...color,
+		screenBox.left, bottom,   ...OUTLINE_COLOR,
+		screenBox.right, bottom,  ...OUTLINE_COLOR,
 		// Horizontal: Upper
-		screenBox.left, top,      ...color,
-		screenBox.right, top,     ...color,
+		screenBox.left, top,      ...OUTLINE_COLOR,
+		screenBox.right, top,     ...OUTLINE_COLOR,
 		// Vertical: Lefter
-		left, screenBox.bottom,   ...color,
-		left, screenBox.top,      ...color,
+		left, screenBox.bottom,   ...OUTLINE_COLOR,
+		left, screenBox.top,      ...OUTLINE_COLOR,
 		// Vertical: Righter
-		right, screenBox.bottom,  ...color,
-		right, screenBox.top,     ...color,
+		right, screenBox.bottom,  ...OUTLINE_COLOR,
+		right, screenBox.top,     ...OUTLINE_COLOR,
 	);
 
 	createRenderable(data, 2, "LINES", 'color', true).render();
 }
 
 /**
- * Renders a wireframe box around the selection
- * @param startPoint - First corner of the selection
- * @param endPoint - Opposite corner of the selection
+ * Renders a wireframe box around the selection.
+ * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
-function renderSelectionBox(startPoint: Coords, endPoint: Coords): void {
-	const intBox: BoundingBox = {
-		left: bimath.min(startPoint[0], endPoint[0]),
-		right: bimath.max(startPoint[0], endPoint[0]),
-		bottom: bimath.min(startPoint[1], endPoint[1]),
-		top: bimath.max(startPoint[1], endPoint[1])
-	};
-
-	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
-	const roundedAwayBox: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
-
-	// Convert it to a world-space box
-	const worldBox: DoubleBoundingBox = meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
-
-	// Construct the wireframe data and render it
-	const outlineColor: Color = [0, 0, 0, 1]; // Black
-	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, outlineColor);
+function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
+	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, OUTLINE_COLOR);
 	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
+}
 
-	// Also construct the semi-transparent fill data and render it
-	const fillColor: Color = [0, 0, 0, 0.08]; // Transparent Black
-	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, fillColor);
+/**
+ * Renders a filled transparent box inside the selection.
+ * @param worldBox - Contains the world space edge coordinates of the selection box.
+ */
+function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
+	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, FILL_COLOR);
+	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
+}
+
+/**
+ * Renders the small square in the corner of the selection box.
+ * @param worldBox - Contains the world space edge coordinates of the selection box.
+ */
+function renderCornerSquare(worldBox: DoubleBoundingBox): void {
+	// Convert width to world space
+	const widthWorld = space.convertPixelsToWorldSpace_Virtual(CORNER_DOT_WIDTH);
+
+	// Bottom right corner world space
+	const corner: DoubleCoords = [worldBox.right, worldBox.bottom];
+
+	// Calculate vertex data
+	const left = corner[0] - widthWorld / 2;
+	const right = corner[0] + widthWorld / 2;
+	const bottom = corner[1] - widthWorld / 2;
+	const top = corner[1] + widthWorld / 2;
+
+	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
 	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
 }
 
 
+// Exports ----------------------------------------------------------
+
+
 export default {
 	outlineRankAndFile,
-	renderSelectionBox,
+	renderSelectionBoxWireframe,
+	renderSelectionBoxFill,
+	renderCornerSquare,
 };

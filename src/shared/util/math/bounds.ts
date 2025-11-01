@@ -139,6 +139,19 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
 	};
 }
 
+/**
+ * Translates a bounding box by the given coordinates.
+ * Non-mutating.
+ */
+function translateBoundingBox(box: BoundingBox, translation: Coords): BoundingBox {
+	return {
+		left: box.left + translation[0],
+		right: box.right + translation[0],
+		bottom: box.bottom + translation[1],
+		top: box.top + translation[1],
+	};
+}
+
 
 // Operations -----------------------------------------------------------------------
 
@@ -252,6 +265,7 @@ export default {
 	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
+	translateBoundingBox,
 
 	// Operations
 	boxContainsBox,
