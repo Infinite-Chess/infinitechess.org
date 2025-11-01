@@ -27,6 +27,7 @@ import type { FullGame } from "../../../../../../../shared/chess/logic/gamefile"
 import type { Mesh } from "../../../rendering/piecemodels";
 
 import boardutil, { LineKey, Piece } from "../../../../../../../shared/chess/util/boardutil";
+import bigdecimal, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal";
 import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
 import boardeditor, { Edit } from "../../boardeditor";
 import vectors, { Vec2 } from "../../../../../../../shared/util/math/vectors";
@@ -43,6 +44,12 @@ import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 interface StatePiece extends Piece {
 	specialrights: boolean;
 }
+
+
+// Constants ------------------------------------------------------------------
+
+
+const TWO = bigdecimal.FromBigInt(2n);
 
 
 // State ------------------------------------------------------------------------
@@ -132,13 +139,7 @@ function Copy(gamefile: FullGame, box: BoundingBox): void {
 	clipboardBox = box;
 }
 
-
-// Paste (in whole multiples)....
-
-/**
- * Pastes the copied region 
- * A Paste transformation is identical to the last half of a translation.
- */
+/** Pastes the copied region in whole multiples to fill the target box, but not exceed it. */
 function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 	if (!clipboard || !clipboardBox) return; // Nothing to paste
 
@@ -202,8 +203,46 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 	selectiontool.setSelection(fullPasteBoxCorner1, fullPasteBoxCorner2);
 }
 
+/** Flips the selection box horizontally. */
+function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {	
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
 
-// Flip horizontally...
+	// Calculate the reflection line X
+	// 1 precision is enough to perfectly represent a line between two bigint coordinates
+	const leftBD: BigDecimal = bigdecimal.FromBigInt(box.left, 1);
+	const rightBD: BigDecimal = bigdecimal.FromBigInt(box.right, 1);
+	const sum: BigDecimal = bigdecimal.add(leftBD, rightBD);
+	const reflectionX: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
+
+	console.log("Reflection X:", bigdecimal.toExactString(reflectionX));
+
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// Delete all pieces in the original selection area
+	removeAllPieces(gamefile, edit, piecesInSelection);
+
+	// Cache frequently-used references for slightly better performance
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const getKey = coordutil.getKeyFromCoords;
+
+	// Now, add all pieces in the original selection area, but reflected across the vertical center line
+	for (const piece of piecesInSelection) {
+		// Reflect the piece's X coordinate
+		const pieceXBD: BigDecimal = bigdecimal.FromBigInt(piece.coords[0], 1);
+		const distanceFromLine: BigDecimal = bigdecimal.subtract(pieceXBD, reflectionX);
+		const reflectedXBD: BigDecimal = bigdecimal.subtract(reflectionX, distanceFromLine);
+		// We already know it's a perfect integer so this doesn't lose precision
+		const reflectedX: bigint = bigdecimal.toBigInt(reflectedXBD);
+
+		const reflectedCoords: Coords = [reflectedX, piece.coords[1]];
+		// Queue the addition of the piece at its new location
+		const hasSpecialRights = specialRights.has(getKey(piece.coords));
+		boardeditor.queueAddPiece(gamefile, edit, reflectedCoords, piece.type, hasSpecialRights);
+	}
+
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
+}
 
 
 // Flip vertically...
@@ -302,6 +341,7 @@ export default {
 	Delete,
 	Copy,
 	Paste,
+	FlipHorizontal,
 	// API
 	resetState,
 };
