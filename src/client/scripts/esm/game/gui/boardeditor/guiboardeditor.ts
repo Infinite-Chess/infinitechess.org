@@ -37,7 +37,7 @@ const elements_tools = [
 ];
 
 /** The element containing all selection tool action buttons. */
-const element_selectionActions = document.getElementById('selection-actions')!;
+const element_selectionActions = document.getElementsByClassName('selection-actions')[0]!;
 const elements_actions = [
 	// Position
 	document.getElementById("reset")!,
