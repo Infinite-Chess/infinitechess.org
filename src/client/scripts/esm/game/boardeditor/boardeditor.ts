@@ -183,22 +183,21 @@ function redo(): void {
 /** Queues the deletion of a piece, including its special rights, if present, to the edit changes. */
 function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
 	boardchanges.queueDeletePiece(edit.changes, false, piece);
-	// Remove its special right
-	const coordsKey = coordutil.getKeyFromCoords(piece.coords);
-	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
-	state.createSpecialRightsState(edit, coordsKey, current, false);
+	queueSpecialRights(gamefile, edit, piece.coords, false);
 }
 
 /** Queues the addition of a piece, including its special rights, if specified, to the edit changes. */
 function queueAddPiece(gamefile: FullGame, edit: Edit, coords: Coords, type: number, specialright: boolean): void {
 	const piece: Piece = { type, coords, index: -1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
-	// Special right
-	if (specialright) {
-		const coordsKey = coordutil.getKeyFromCoords(coords);
-		const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
-		state.createSpecialRightsState(edit, coordsKey, current, true);
-	}
+	if (specialright) queueSpecialRights(gamefile, edit, coords, true);
+}
+
+/** Queues the addition/removal of a specialright at the specified coordinates. */
+function queueSpecialRights(gamefile: FullGame, edit: Edit, coords: Coords, add: boolean): void {
+	const coordsKey = coordutil.getKeyFromCoords(coords);
+	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	state.createSpecialRightsState(edit, coordsKey, current, add);
 }
 
 
