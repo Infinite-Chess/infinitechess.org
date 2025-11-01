@@ -197,8 +197,8 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 
 	// Update the selection area to the actual paste box
 
-	const fullPasteBoxCorner1: Coords = [actualPasteBox.left, actualPasteBox.bottom];
-	const fullPasteBoxCorner2: Coords = [actualPasteBox.right, actualPasteBox.top];
+	const fullPasteBoxCorner1: Coords = [actualPasteBox.left, actualPasteBox.top];
+	const fullPasteBoxCorner2: Coords = [actualPasteBox.right, actualPasteBox.bottom];
 	selectiontool.setSelection(fullPasteBoxCorner1, fullPasteBoxCorner2);
 }
 
