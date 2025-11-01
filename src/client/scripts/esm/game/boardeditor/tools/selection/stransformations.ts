@@ -50,7 +50,7 @@ interface StatePiece extends Piece {
 // Constants ------------------------------------------------------------------
 
 
-const TWO = bigdecimal.FromBigInt(2n);
+const TWO = bigdecimal.FromBigInt(2n, 1);
 
 
 // State ------------------------------------------------------------------------
