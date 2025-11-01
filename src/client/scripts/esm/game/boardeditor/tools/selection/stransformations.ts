@@ -36,11 +36,20 @@ import selectiontool from "./selectiontool";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 
 
+// Type Definitions ----------------------------------------------------------
+
+
+/** A Piece object that also remembers its specialrights state. */
+interface StatePiece extends Piece {
+	specialrights: boolean;
+}
+
+
 // State ------------------------------------------------------------------------
 
 
 /** Whatever's copied to the clipboard via the "Copy selection" action button. */
-let clipboard: Piece[] | undefined;
+let clipboard: StatePiece[] | undefined;
 /** The top-left corner tile of the clipboard selection. */
 let clipboardBox: BoundingBox | undefined;
 
@@ -105,7 +114,21 @@ function Delete(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 /** Copies the given selection box. */
 function Copy(gamefile: FullGame, box: BoundingBox): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
-	clipboard = piecesInSelection;
+
+	// Modify the pieces to include specialrights state
+
+	// Cache frequently-used references for slightly better performance
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const getKey = coordutil.getKeyFromCoords;
+
+	// Modify the existing array in place to avoid performance hit of a new array.
+	// Reverse loop that avoids re-evaluating length each iteration
+	for (let i = piecesInSelection.length - 1; i >= 0; i--) {
+		const p = piecesInSelection[i] as StatePiece;
+		p.specialrights = specialRights.has(getKey(p.coords));
+	}
+
+	clipboard = piecesInSelection as StatePiece[];
 	clipboardBox = box;
 }
 
@@ -164,7 +187,7 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 			for (const piece of clipboard) {
 				const translatedCoords = coordutil.addCoords(piece.coords, thisTranslation);
 				// Queue the addition of the piece at its new location
-				boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, false);
+				boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, piece.specialrights);
 			}
 		}
 	}
