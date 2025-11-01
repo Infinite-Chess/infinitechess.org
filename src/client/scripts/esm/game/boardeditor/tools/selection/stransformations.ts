@@ -27,7 +27,7 @@ import type { FullGame } from "../../../../../../../shared/chess/logic/gamefile"
 import type { Mesh } from "../../../rendering/piecemodels";
 
 import boardutil, { LineKey, Piece } from "../../../../../../../shared/chess/util/boardutil";
-import bigdecimal, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal";
+import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal";
 import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
 import boardeditor, { Edit } from "../../boardeditor";
 import vectors, { Vec2 } from "../../../../../../../shared/util/math/vectors";
@@ -50,7 +50,7 @@ interface StatePiece extends Piece {
 // Constants ------------------------------------------------------------------
 
 
-const TWO = bigdecimal.FromBigInt(2n, 1);
+const TWO = bd.FromBigInt(2n, 1);
 
 
 // State ------------------------------------------------------------------------
@@ -228,10 +228,10 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 
 	// Calculate the reflection line with BigDecimals, for decimal precision.
 	// 1 precision is enough to perfectly represent 1/2 increments, which is the finest we need.
-	const bound1BD: BigDecimal = bigdecimal.FromBigInt(bound1, 1);
-	const bound2BD: BigDecimal = bigdecimal.FromBigInt(bound2, 1);
-	const sum: BigDecimal = bigdecimal.add(bound1BD, bound2BD);
-	const reflectionLine: BigDecimal = bigdecimal.divide_fixed(sum, TWO, 0);
+	const bound1BD: BigDecimal = bd.FromBigInt(bound1, 1);
+	const bound2BD: BigDecimal = bd.FromBigInt(bound2, 1);
+	const sum: BigDecimal = bd.add(bound1BD, bound2BD);
+	const reflectionLine: BigDecimal = bd.divide_fixed(sum, TWO, 0);
 	// console.log("Reflection line:", bigdecimal.toExactString(reflectionLine));
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
@@ -247,11 +247,11 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 	for (const piece of piecesInSelection) {
 		// Reflect the piece's coordinate on the chosen axis
 		const coordToReflect = piece.coords[axis];
-		const coordBD: BigDecimal = bigdecimal.FromBigInt(coordToReflect, 1);
-		const distanceFromLine: BigDecimal = bigdecimal.subtract(coordBD, reflectionLine);
-		const reflectedCoordBD: BigDecimal = bigdecimal.subtract(reflectionLine, distanceFromLine);
+		const coordBD: BigDecimal = bd.FromBigInt(coordToReflect, 1);
+		const distanceFromLine: BigDecimal = bd.subtract(coordBD, reflectionLine);
+		const reflectedCoordBD: BigDecimal = bd.subtract(reflectionLine, distanceFromLine);
 		// We already know it's a perfect integer so this doesn't lose precision
-		const reflectedCoord: bigint = bigdecimal.toBigInt(reflectedCoordBD);
+		const reflectedCoord: bigint = bd.toBigInt(reflectedCoordBD);
 
 		// Create the new coordinates, modifying only the reflected axis
 		const reflectedCoords: Coords = [...piece.coords]; // Create a mutable copy
