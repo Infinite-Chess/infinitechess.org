@@ -19,6 +19,7 @@ import { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../..
 import meshes from "../../../rendering/meshes";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import sdrag from "./sdrag";
+import guiboardeditor from "../../../gui/boardeditor/guiboardeditor";
 
 
 // State ----------------------------------------------
@@ -95,6 +96,7 @@ function endSelection(): void {
 
 	// Set the end point
 	endPoint = lastPointerCoords;
+	guiboardeditor.onNewSelection();
 
 	selecting = false;
 	pointerId = undefined;
@@ -111,6 +113,7 @@ function resetState(): void {
 	startPoint = undefined;
 	endPoint = undefined;
 	sdrag.resetState();
+	guiboardeditor.onClearSelection();
 }
 
 

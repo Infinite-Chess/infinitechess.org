@@ -16,7 +16,7 @@ import boardeditor, { Edit } from "./boardeditor";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
 import winconutil from "../../../../../shared/chess/util/winconutil";
 import gameslot from "../chess/gameslot";
-import guiboardeditor from "../gui/boardeditor/guiboardeditor";
+import guigamerules from "../gui/boardeditor/guigamerules";
 
 
 // Type Definitions --------------------------------------------------------------
@@ -147,7 +147,7 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	// Update the promotionlines in the gamefile for rendering purposes
 	updatePromotionLines(gamerulesGUIinfo.promotionRanks);
 
-	guiboardeditor.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
 /** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */

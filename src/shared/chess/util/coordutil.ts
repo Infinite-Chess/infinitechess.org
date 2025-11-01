@@ -43,8 +43,6 @@ type CoordsKey = `${bigint},${bigint}`;
 
 /** Returns the key string of the coordinates: [x,y] => 'x,y' */
 function getKeyFromCoords(coords: Coords): CoordsKey {
-	// Casting to BigInt and back to a string avoids scientific notation.
-	// toFixed(0) doesn't work for numbers above 10^21
 	return `${coords[0]},${coords[1]}`;
 }
 

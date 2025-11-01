@@ -22,11 +22,11 @@ import type { VariantOptions } from "../../../../../shared/chess/logic/initvaria
 
 // @ts-ignore
 import statustext from "../gui/statustext";
-import gamefile, { Additional } from "../../../../../shared/chess/logic/gamefile";
+import gamefile, { Additional, FullGame } from "../../../../../shared/chess/logic/gamefile";
 import icnconverter, { _Move_Out, LongFormatIn, LongFormatOut } from "../../../../../shared/chess/logic/icn/icnconverter";
 import boardeditor, { Edit } from "./boardeditor";
-import organizedpieces from "../../../../../shared/chess/logic/organizedpieces";
-import boardutil from "../../../../../shared/chess/util/boardutil";
+import organizedpieces, { OrganizedPieces } from "../../../../../shared/chess/logic/organizedpieces";
+import boardutil, { Piece } from "../../../../../shared/chess/util/boardutil";
 import coordutil from "../../../../../shared/chess/util/coordutil";
 import timeutil from "../../../../../shared/util/timeutil";
 import docutil from "../../util/docutil";
@@ -38,6 +38,7 @@ import pastegame from "../chess/pastegame";
 import guinavigation from "../gui/guinavigation";
 import annotations from "../rendering/highlights/annotations/annotations";
 import egamerules from "./egamerules";
+import selectiontool from "./tools/selection/selectiontool";
 
 
 // Actions ----------------------------------------------------------------------
@@ -60,6 +61,8 @@ function reset(): void {
 	const classicalGamefile = gamefile.initFullGame(metadata);
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
+	selectiontool.resetState(); // Clear current selection
+	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
 
@@ -71,13 +74,11 @@ function clearAll(): void {
 	const mesh = gameslot.getMesh()!;
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	for (const idx of pieces.coords.values()) {
-		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
-		boardeditor.queueRemovePiece(gamefile, edit, pieceToDelete);
-	};
+	queueRemovalOfAllPieces(gamefile, edit, pieces);
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+	selectiontool.resetState(); // Clear current selection
 
 	statustext.showStatus(translations['copypaste'].clear_position);
 }
@@ -126,6 +127,7 @@ async function load(): Promise<undefined> {
 	}
 
 	loadFromLongformat(longformOut);
+	selectiontool.resetState(); // Clear current selection
 	statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
 }
 
@@ -161,6 +163,14 @@ function startLocalGame() : void {
 
 // Helpers ----------------------------------------------------------------
 
+
+/** Queues the removal of all pieces from the position. */
+function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
+	for (const idx of pieces.coords.values()) {
+		const pieceToDelete: Piece = boardutil.getPieceFromIdx(pieces, idx)!;
+		boardeditor.queueRemovePiece(gamefile, edit, pieceToDelete);
+	};
+}
 
 /**
  * Reconstructs the current VariantOptions object (including position, gameRules and state_global) from the current board editor position
@@ -243,10 +253,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	// Remove all current pieces from position
-	for (const idx of pieces.coords.values()) {
-		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
-		boardeditor.queueRemovePiece(thisGamefile, edit, pieceToDelete);
-	};
+	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
 
 	// Keep track of all squares where special rights got removed
 	const specialRightsRemoved = edit.state.global.reduce<{ [key: string]: number }>((acc, item, index) => {
@@ -259,11 +266,11 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Add all new pieces as dictated by the pasted position
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
-		if (specialRights.has(coordKey)) {
-			if (coordKey in specialRightsRemoved) unnecessaryGlobalStateChangeIndices.add(specialRightsRemoved[coordKey]!);
-			boardeditor.queueAddPieceWithSpecialRights(thisGamefile, edit, undefined, coords, pieceType);
+		const hasSpecialRights = specialRights.has(coordKey);
+		if (hasSpecialRights && coordKey in specialRightsRemoved) {
+			unnecessaryGlobalStateChangeIndices.add(specialRightsRemoved[coordKey]!);
 		}
-		else boardeditor.queueAddPiece(thisGamefile, edit, undefined, coords, pieceType);
+		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 	};
 
 	// Filter out all unnecessary special rights removals from the edit from the first step

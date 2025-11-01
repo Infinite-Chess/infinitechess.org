@@ -8,84 +8,142 @@
  * selection from the Selection Tool in the Board Editor
  */
 
-
 /**
  * Implement TODO:
  * 
- * * Delete
+ * * Copy
+ * * Paste (in whole multiples)
  * * Flip horizontally
  * * Flip vertically
  * * Rotate left
  * * Rotate right
  * * Invert color
- * * Copy
- * * Cut
- * * Paste (in whole multiples)
- * * Repeat (allows partial multiples)
+ * 
+ * * Fill (allows partial multiples)
  */
 
 import type { BoundingBox } from "../../../../../../../shared/util/math/bounds";
 import type { FullGame } from "../../../../../../../shared/chess/logic/gamefile";
+import type { Mesh } from "../../../rendering/piecemodels";
 
 import boardutil, { LineKey, Piece } from "../../../../../../../shared/chess/util/boardutil";
 import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
-import gameslot from "../../../chess/gameslot";
 import boardeditor, { Edit } from "../../boardeditor";
-import selectiontool from "./selectiontool";
 import organizedpieces from "../../../../../../../shared/chess/logic/organizedpieces";
 import vectors, { Vec2 } from "../../../../../../../shared/util/math/vectors";
 import bounds from "../../../../../../../shared/util/math/bounds";
 
 
-// Transformations ---------------------------------------------------------
+// State ------------------------------------------------------------------------
+
+
+/** Whatever's copied to the clipboard via the "Copy selection" action button. */
+let clipboard: Piece[] | undefined;
+/** The top-left corner tile of the clipboard selection. */
+let clipboardCoords: Coords | undefined;
+
+
+// Selection Box Transformations ------------------------------------------------
 
 
 /** Translates the selection by a given vector. */
-function translate(translation: Coords): void {
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
+function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, translation: Coords): void {
+	const translatedBox: BoundingBox = bounds.translateBoundingBox(selectionBox, translation);
 
-	const selectionIntBox: BoundingBox = selectiontool.getSelectionIntBox()!;
-	const translatedIntBox: BoundingBox = bounds.translateBoundingBox(selectionIntBox, translation);
-
-	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, selectionIntBox);
-	const piecesInTranslatedSelection: Piece[] = getPiecesInBox(gamefile, translatedIntBox);
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, selectionBox);
+	const piecesInTranslatedSelection: Piece[] = getPiecesInBox(gamefile, translatedBox);
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	// First, delete any pieces in the translated selection area.
-	// BUT ONLY IF their coordinates aren't also in the original selection area!
+	// BUT ONLY IF their coordinates aren't also in the original selection area! (which is deleted next)
 	for (const piece of piecesInTranslatedSelection) {
-		if (bounds.boxContainsSquare(selectionIntBox, piece.coords)) continue; // Piece is also in the original selection box, skip it
+		if (bounds.boxContainsSquare(selectionBox, piece.coords)) continue; // Piece is also in the original selection box, skip it
 		boardeditor.queueRemovePiece(gamefile, edit, piece);
 	}
 
 	// Now, delete all pieces in the original selection area
-	for (const piece of piecesInSelection) {
-		boardeditor.queueRemovePiece(gamefile, edit, piece);
-	}
+	removeAllPieces(gamefile, edit, piecesInSelection);
 
 	// Now, add all pieces in the original selection area, but translated
 	for (const piece of piecesInSelection) {
 		const translatedCoords = coordutil.addCoords(piece.coords, translation);
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = gamefile.boardsim.state.global.specialRights.has(coordutil.getKeyFromCoords(piece.coords));
-		if (hasSpecialRights) boardeditor.queueAddPieceWithSpecialRights(gamefile, edit, undefined, translatedCoords, piece.type);
-		else boardeditor.queueAddPiece(gamefile, edit, undefined, translatedCoords, piece.type);
+		boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, hasSpecialRights);
 	}
     
-	// Apply the collective edit and add it to the history for undo/redo
-	if (edit.changes.length > 0 || edit.state.global.length > 0) {
-		boardeditor.runEdit(gamefile, mesh, edit, true);
-		boardeditor.addEditToHistory(edit);
-	}
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
 }
+
+
+// Fill...
+
+
+// Action Button Transformations ------------------------------------------------
+
+
+/** Deletes the given selection box. */
+function Delete(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	removeAllPieces(gamefile, edit, piecesInSelection);
+	applyEdit(gamefile, mesh, edit);
+}
+
+
+// Copy...
+
+/**
+ * 
+ * A Copy transformation is identical to the first part of a translation.
+ */
+
+
+// Paste (in whole multiples)....
+
+/**
+ * 
+ * A Paste transformation is identical to the last half of a translation.
+ */
+
+
+// Flip horizontally...
+
+
+// Flip vertically...
+
+
+// Rotate left...
+
+
+// Rotate right...
+
+
+// Invert color...
 
 
 // Utility ------------------------------------------------------------
 
 
-/** Calculates all pieces within the selection area. */
+/** Queues all the pieces in the list to be removed in this Edit. */
+function removeAllPieces(gamefile: FullGame, edit: Edit, pieces: Piece[]): void {
+	for (const piece of pieces) {
+		boardeditor.queueRemovePiece(gamefile, edit, piece);
+	}
+}
+
+/** Applies the provided edit and adds it to the history. */
+function applyEdit(gamefile: FullGame, mesh: Mesh, edit: Edit): void {
+	if (edit.changes.length === 0 && edit.state.global.length === 0) return; // No changes made => don't need to apply
+
+	// Apply the collective edit and add it to the history
+	boardeditor.runEdit(gamefile, mesh, edit, true);
+	boardeditor.addEditToHistory(edit);
+}
+
+/** Calculates all pieces within the given box area. */
 function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	const o = gamefile.boardsim.pieces; // Organized pieces
 
@@ -102,7 +160,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	const slideKey = vectors.getKeyFromVec2(step);
 	const lines: Map<LineKey, number[]> = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
 
-	/** Running list of all pieces within the selection area. */
+	/** Running list of all pieces within the box. */
 	const piecesInSelection: Piece[] = [];
 
 	// The start and end keys of those lines
@@ -122,14 +180,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 			// The piece is in the selection area if it's axis coord is within bounds
 			const thisCoord: bigint = coordPositions[idx]!;
 			if (thisCoord >= rangeStart && thisCoord <= rangeEnd) {
-				// Custom piece construction instead of built in boardutil.ts
-				// method which does unnecesary verification the piece isn't an undefined placeholder.
-				const piece: Piece = {
-					type: o.types[idx]!,
-					coords: boardutil.getCoordsFromIdx(o, idx),
-					index: boardutil.getRelativeIdx(o, idx)
-				};
-				piecesInSelection.push(piece);
+				piecesInSelection.push(boardutil.getDefinedPieceFromIdx(o, idx));
 			}
 		}
 	}
@@ -142,5 +193,8 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 
 
 export default {
-	translate,
+	// Selection Box Transformations
+	Translate,
+	// Action Button Transformations
+	Delete,
 };

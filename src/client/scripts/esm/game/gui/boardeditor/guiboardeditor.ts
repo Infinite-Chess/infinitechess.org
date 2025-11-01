@@ -1,43 +1,43 @@
 
-// src/client/scripts/esm/game/gui/guiboardeditor.ts
+// src/client/scripts/esm/game/gui/boardeditor/guiboardeditor.ts
 
 /*
- * This script handles the Board Editor GUI
+ * Handles the Board Editor GUI
  */
 
-import type { Player, RawType } from "../../../../../../shared/chess/util/typeutil.js";
+import type { Player } from "../../../../../../shared/chess/util/typeutil.js";
 import type { Tool } from "../../boardeditor/boardeditor.js";
 
 // @ts-ignore
 import statustext from "../statustext.js";
 import typeutil, { rawTypes, players } from "../../../../../../shared/chess/util/typeutil.js";
-import egamerules, { GameRulesGUIinfo } from "../../boardeditor/egamerules.js";
 import gameloader from "../../chess/gameloader.js";
 import boardeditor from "../../boardeditor/boardeditor.js";
 import svgcache from "../../../chess/rendering/svgcache.js";
 import gameslot from "../../chess/gameslot.js";
 import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter.js";
-import jsutil from "../../../../../../shared/util/jsutil.js";
-import math from "../../../../../../shared/util/math/math.js";
 import tooltips from "../../../util/tooltips.js";
 import eactions from "../../boardeditor/eactions.js";
 import drawingtool from "../../boardeditor/tools/drawingtool.js";
+import guigamerules from "./guigamerules.js";
+import selectiontool from "../../boardeditor/tools/selection/selectiontool.js";
+import stransformations from "../../boardeditor/tools/selection/stransformations.js";
 
 
-// Variables ---------------------------------------------------------------
+// Elements ---------------------------------------------------------------
 
 
 const element_menu = document.getElementById("editor-menu")!;
-const element_gamerules = document.getElementById("gamerules")!;
-const element_typesContainer = document.getElementById("editor-pieceTypes")!;
-const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
-const element_colorSelect = document.getElementById("editor-color-select")!;
+
 const elements_tools = [
 	document.getElementById("normal")!,
 	document.getElementById("eraser")!,
 	document.getElementById("specialrights")!,
 	document.getElementById("selection-tool")!,
 ];
+
+/** The element containing all selection tool action buttons. */
+const element_selectionActions = document.getElementsByClassName('selection-actions')[0]! as HTMLElement;
 const elements_actions = [
 	// Position
 	document.getElementById("reset")!,
@@ -48,44 +48,29 @@ const elements_actions = [
 	document.getElementById("gamerules")!,
 	document.getElementById("start-game")!,
 	// Selection
-	// (none)
+	document.getElementById("delete-selection")!,
+	document.getElementById("copy-selection")!,
+	document.getElementById("paste-selection")!,
+	document.getElementById("flip-horizontal")!,
+	document.getElementById("flip-vertical")!,
+	document.getElementById("rotate-left")!,
+	document.getElementById("rotate-right")!,
+	document.getElementById("invert-color")!,
 	// Palette
 	document.getElementById("editor-color-select")!
 ];
 
-const element_boardUI = document.getElementById("boardUI")!;
-
-// Game Rules UI elements---------------------------------------------------------------
-const element_gamerulesWindow = document.getElementById("game-rules")!;
-const element_gamerulesHeader = document.getElementById("game-rules-header")!;
-const element_gamerulesCloseButton = document.getElementById("close-rules")!;
-
-const element_gamerulesWhite = document.getElementById("rules-white")! as HTMLInputElement;
-const element_gamerulesBlack = document.getElementById("rules-black")! as HTMLInputElement;
-const element_gamerulesEnPassantX = document.getElementById("rules-enpassant-x")! as HTMLInputElement;
-const element_gamerulesEnPassantY = document.getElementById("rules-enpassant-y")! as HTMLInputElement;
-const element_gamerulesMoveruleCurrent = document.getElementById("rules-moverule-current")! as HTMLInputElement;
-const element_gamerulesMoveruleMax = document.getElementById("rules-moverule-max")! as HTMLInputElement;
-const element_gamerulesPromotionranksWhite = document.getElementById("rules-promotionranks-white")! as HTMLInputElement;
-const element_gamerulesPromotionranksBlack = document.getElementById("rules-promotionranks-black")! as HTMLInputElement;
-const element_gamerulesPromotionpieces = document.getElementById("rules-promotionpieces")! as HTMLInputElement;
-const element_gamerulesCheckmate = document.getElementById("rules-checkmate")! as HTMLInputElement;
-const element_gamerulesRoyalcapture = document.getElementById("rules-royalcapture")! as HTMLInputElement;
-const element_gamerulesAllroyalscaptured = document.getElementById("rules-allroyalscaptured")! as HTMLInputElement;
-const element_gamerulesAllpiecescaptured = document.getElementById("rules-allpiecescaptured")! as HTMLInputElement;
-
-const elements_gamerulesSelectionList : HTMLInputElement[] = [
-	element_gamerulesWhite, element_gamerulesBlack, element_gamerulesEnPassantX, element_gamerulesEnPassantY,
-	element_gamerulesMoveruleCurrent, element_gamerulesMoveruleMax,
-	element_gamerulesPromotionranksWhite, element_gamerulesPromotionranksBlack, element_gamerulesPromotionpieces,
-	element_gamerulesCheckmate, element_gamerulesRoyalcapture,
-	element_gamerulesAllroyalscaptured, element_gamerulesAllpiecescaptured
-];
-// -------------------------------------------------------------------------------------
-
+const element_typesContainer = document.getElementById("editor-pieceTypes")!;
+const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
+const element_colorSelect = document.getElementById("editor-color-select")!;
+/** A map of each player's element container containing their colored pieces in the Palette. */
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
 const element_neutralTypes: Array<Element> = [];
+
+
+// Constants -----------------------------------------------------------
+
 
 /** Player pieces in the order they will appear */
 const coloredTypes = [
@@ -114,26 +99,25 @@ const coloredTypes = [
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
 const neutralTypes = [ rawTypes.OBSTACLE ];
 
-/** Variables for controlling the game rules GUI dragging */
-let gameRulesOffsetX = 0;
-let gameRulesOffsetY = 0;
-let gameRulesIsDragging = false;
-let gameRulesSavedPos : { left: number, top: number } | undefined;
 
-/** Regexes for validating game rules input fields */
-const integerRegex = new RegExp(String.raw`^${icnconverter.integerSource}$`);
-const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
-const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsAllowedSource}$`);
+// State -------------------------------------------------------------------
 
+
+/**
+ * Whether the UI has been initialized and all piece svgs appended to the editor menu.
+ * Only needs to be done once.
+ */
 let initialized = false;
+/** Whether the board editor UI is open. */
 let boardEditorOpen = false;
 
 
 // Functions ---------------------------------------------------------------
 
-function isOpen(): boolean {
-	return boardEditorOpen;
-}
+
+
+// Initialization ---------------------------------------------------------
+
 
 async function open(): Promise<void> {
 	boardEditorOpen = true;
@@ -143,16 +127,43 @@ async function open(): Promise<void> {
 	initListeners();
 }
 
+/** Whether the board editor UI is open. */
+function isOpen(): boolean {
+	return boardEditorOpen;
+}
+
 function close(): void {
 	if (!boardEditorOpen) return;
-	closeGameRules();
-	element_gamerulesWindow.style.left = "";
-	element_gamerulesWindow.style.top = "";
-	gameRulesSavedPos = undefined;
+	guigamerules.closeGameRules();
+	guigamerules.resetPositioning();
 	element_menu.classList.add("hidden");
-	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
+	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
 	boardEditorOpen = false;
+}
+
+function initListeners(): void {
+	elements_tools.forEach((element) => {
+		element.addEventListener("click", callback_ChangeTool);
+	});
+	elements_actions.forEach((element) => {
+		element.addEventListener("click", callback_Action);
+	});
+	_getActivePieceElements().forEach((element) => {
+		element.addEventListener("click", callback_ChangePieceType);
+	});
+}
+
+function closeListeners(): void {
+	elements_tools.forEach((element) => {
+		element.removeEventListener("click", callback_ChangeTool);
+	});
+	elements_actions.forEach((element) => {
+		element.removeEventListener("click", callback_Action);
+	});
+	_getActivePieceElements().forEach((element) => {
+		element.removeEventListener("click", callback_ChangePieceType);
+	});
 }
 
 async function initUI(): Promise<void> {
@@ -233,28 +244,11 @@ async function initUI(): Promise<void> {
 	initialized = true;
 }
 
-function initListeners(): void {
-	elements_tools.forEach((element) => {
-		element.addEventListener("click", callback_ChangeTool);
-	});
-	elements_actions.forEach((element) => {
-		element.addEventListener("click", callback_Action);
-	});
-	_getActivePieceElements().forEach((element) => {
-		element.addEventListener("click", callback_ChangePieceType);
-	});
-}
 
-function closeListeners(): void {
-	elements_tools.forEach((element) => {
-		element.removeEventListener("click", callback_ChangeTool);
-	});
-	_getActivePieceElements().forEach((element) => {
-		element.removeEventListener("click", callback_ChangePieceType);
-	});
-}
+// Marking Active Tools & Buttons ------------------------------------------------
 
 
+/** Adds/removes the 'active' class from the tools, changing their style. */
 function markTool(tool: Tool): void {
 	elements_tools.forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
@@ -263,6 +257,7 @@ function markTool(tool: Tool): void {
 	});
 }
 
+/** Adds/removes the 'active' class from the piece svgs in the Palette, changing their style. */
 function markPiece(type: number | null): void {
 	const placerToolActive = boardeditor.getTool() === "placer";
 
@@ -273,6 +268,143 @@ function markPiece(type: number | null): void {
 	});
 }
 
+function onNewSelection(): void {
+	// Un-greys selection action buttons
+	element_selectionActions.classList.remove('disabled');
+}
+
+function onClearSelection(): void {
+	// Greys out selection action buttons
+	element_selectionActions.classList.add('disabled');
+}
+
+
+// Helper Functions ---------------------------------------------------------
+
+
+/** Helper Function: Returns an array of players based on the current gamefile's turn order. */
+function _getPlayersInOrder(): Player[] {
+	const gamefile = gameslot.getGamefile()!;
+	// Using a Set removes duplicates before converting to an array
+	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
+}
+
+/** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
+function _getActivePieceElements(): Element[] {
+	const playerElements = element_playerTypes.get(drawingtool.getColor()) ?? [];
+	return [...playerElements, ...element_neutralTypes];
+}
+
+
+// Callbacks ---------------------------------------------------------------
+
+
+function callback_ChangeTool(e: Event): void {
+	const target = (e.currentTarget as HTMLElement);
+	const tool = target.getAttribute("data-tool");
+	if (tool === null) throw new Error("Tool attribute is null");
+	boardeditor.setTool(tool);
+}
+
+function callback_Action(e: Event): void {
+	const target = (e.currentTarget as HTMLElement);
+	const action = target.getAttribute("data-action");
+
+	// Position/Palette actions...
+
+	switch (action) {
+		// Position ---------------------
+		case "reset":
+			eactions.reset();
+			break;
+		case "clearall":
+			eactions.clearAll();
+			break;
+		case "saved-positions":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "copy-notation":
+			eactions.save();
+			break;
+		case "paste-notation":
+			eactions.load();
+			break;
+		case "gamerules":
+			guigamerules.toggleGameRules();
+			break;
+		case "start-game":
+			handleStartLocalGame();
+			break;
+		// Palette ---------------------
+		case "color":
+			nextColor();
+			break;
+	}
+
+	// Selection actions...
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const selectionBox = selectiontool.getSelectionIntBox();
+	if (!selectionBox) return; // Might have clicked action button when there was no selection.
+
+	switch (action) {
+		case "delete-selection":
+			stransformations.Delete(gamefile, mesh, selectionBox);
+			break;
+		case "copy-selection":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "paste-selection":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "flip-horizontal":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "flip-vertical":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "rotate-left":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "rotate-right":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		case "invert-color":
+			statustext.showStatus("Not implemented yet.");
+			break;
+		default:
+			console.error(`Unknown action: ${action}`);
+	}
+}
+
+function callback_ChangePieceType(e: Event): void {
+	const target = (e.currentTarget as HTMLElement);
+	const currentPieceType = Number.parseInt(target.id);
+	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
+	drawingtool.setPiece(currentPieceType);
+	boardeditor.setTool("placer");
+	markPiece(currentPieceType);
+}
+
+
+/** Called when users click the "Start local game from position" button. */
+function handleStartLocalGame(): void {
+	// Show a dialog box to confirm they want to leave the editor
+	const result = confirm("Do you want to leave the board editor and start a local game from this position? Changes will be saved."); // PLANNED to save changes
+	// Start the local game as requested
+	if (result) eactions.startLocalGame();
+}
+
+/** Swaps the color of pieces being drawn. */
+function nextColor(): void {
+	const playersArray = _getPlayersInOrder();
+	const currentIndex = playersArray.indexOf(drawingtool.getColor());
+	const nextColor = playersArray[(currentIndex + 1) % playersArray.length]!;
+	updatePieceColors(nextColor);
+}
+
+/** Updates which players element container of their colored piece svgs are visible in the Palette. */
 function updatePieceColors(newColor: Player): void {
 	if (!initialized) return;
 
@@ -305,457 +437,18 @@ function updatePieceColors(newColor: Player): void {
 	markPiece(drawingtool.getPiece());
 }
 
-function nextColor(): void {
-	const playersArray = _getPlayersInOrder();
-	const currentIndex = playersArray.indexOf(drawingtool.getColor());
-	const nextColor = playersArray[(currentIndex + 1) % playersArray.length]!;
-	updatePieceColors(nextColor);
-}
-
-/** Called when users click the "Start local game from position" button. */
-function handleStartLocalGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm("Do you want to leave the board editor and start a local game from this position? Changes will be saved."); // PLANNED to save changes
-	// Start the local game as requested
-	if (result) eactions.startLocalGame();
-}
-
-
-// Game Rules Utilities ---------------------------------------------------------------
-
-/** Reads the game rules inserted into the input boxes and updates boardeditor.gameRulesGUIinfo */
-function readGameRules() : void {
-	// playerToMove
-	const playerToMove = element_gamerulesWhite.checked ? 'white' : 'black';
-
-	// enPassant
-	let validEnPassantCoords = 0;
-	const enPassantX = element_gamerulesEnPassantX.value;
-	if (integerRegex.test(enPassantX)) {
-		element_gamerulesEnPassantX.classList.remove('invalid-input');
-		validEnPassantCoords++;
-	} else if (enPassantX === "") {
-		element_gamerulesEnPassantX.classList.remove('invalid-input');
-	} else {
-		element_gamerulesEnPassantX.classList.add('invalid-input');
-	}
-
-	const enPassantY = element_gamerulesEnPassantY.value;
-	if (integerRegex.test(enPassantY)) {
-		element_gamerulesEnPassantY.classList.remove('invalid-input');
-		validEnPassantCoords++;
-	} else if (enPassantY === "") {
-		element_gamerulesEnPassantY.classList.remove('invalid-input');
-	} else {
-		element_gamerulesEnPassantY.classList.add('invalid-input');
-	}
-
-	const enPassant = (validEnPassantCoords === 2 ? {x : BigInt(enPassantX), y: BigInt(enPassantY)} : undefined);
-
-	// moveRule
-	let validMoveRuleInputs = 0;
-	const moveRuleCurrent = element_gamerulesMoveruleCurrent.value;
-	if (integerRegex.test(moveRuleCurrent) && Number(moveRuleCurrent) >= 0) {
-		element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
-		validMoveRuleInputs++;
-	} else if (moveRuleCurrent === "") {
-		element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
-	} else {
-		element_gamerulesMoveruleCurrent.classList.add('invalid-input');
-	}
-
-	const moveRuleMax = element_gamerulesMoveruleMax.value;
-	if (integerRegex.test(moveRuleMax) && Number(moveRuleMax) > 0) {
-		if (validMoveRuleInputs === 1 && Number(moveRuleCurrent) > Number(moveRuleMax)) {
-			element_gamerulesMoveruleMax.classList.add('invalid-input');
-		} else {
-			element_gamerulesMoveruleMax.classList.remove('invalid-input');
-			validMoveRuleInputs++;
-		}
-	} else if (moveRuleMax === "") {
-		element_gamerulesMoveruleMax.classList.remove('invalid-input');
-	} else {
-		element_gamerulesMoveruleMax.classList.add('invalid-input');
-	}
-
-	const moveRule = (validMoveRuleInputs === 2 ? {current : Number(moveRuleCurrent), max: Number(moveRuleMax)} : undefined);
-
-	// promotionRanks
-	let promotionRanksWhite : bigint[] = [];
-	const promotionRanksWhiteInput = element_gamerulesPromotionranksWhite.value;
-	if (promotionRanksRegex.test(promotionRanksWhiteInput)) {
-		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
-		promotionRanksWhite = [...new Set(promotionRanksWhiteInput.split(',').map(BigInt))];
-	} else if (promotionRanksWhiteInput === "") {
-		element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
-	} else {
-		element_gamerulesPromotionranksWhite.classList.add('invalid-input');
-	}
-
-	let promotionRanksBlack : bigint[] = [];
-	const promotionRanksBlackInput = element_gamerulesPromotionranksBlack.value;
-	if (promotionRanksRegex.test(promotionRanksBlackInput)) {
-		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
-		promotionRanksBlack = [...new Set(promotionRanksBlackInput.split(',').map(BigInt))];
-	} else if (promotionRanksBlackInput === "") {
-		element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
-	} else {
-		element_gamerulesPromotionranksBlack.classList.add('invalid-input');
-	}
-
-	const promotionRanks = (promotionRanksWhite.length === 0 && promotionRanksBlack.length === 0) ? undefined : {
-		white: promotionRanksWhite.length === 0 ? undefined : promotionRanksWhite,
-		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
-	};
-
-	// promotionsAllowed
-	let promotionsAllowed: Number[] | undefined = undefined;
-	const promotionsAllowedRaw = element_gamerulesPromotionpieces.value;
-	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as Number))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		if (promotionsAllowed.includes(NaN)) {
-			// One or more piece abbreviations were invalid
-			element_gamerulesPromotionpieces.classList.add('invalid-input');
-			promotionsAllowed = undefined;
-		} else {
-			element_gamerulesPromotionpieces.classList.remove('invalid-input');
-			if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
-		}
-	} else if (promotionsAllowedRaw === "") {
-		element_gamerulesPromotionpieces.classList.remove('invalid-input');
-	} else {
-		element_gamerulesPromotionpieces.classList.add('invalid-input');
-	}
-
-	// win conditions
-	const winConditions : string[] = [];
-	if (element_gamerulesCheckmate.checked) winConditions.push("checkmate");
-	if (element_gamerulesRoyalcapture.checked) winConditions.push("royalcapture");
-	if (element_gamerulesAllroyalscaptured.checked) winConditions.push("allroyalscaptured");
-	if (element_gamerulesAllpiecescaptured.checked) winConditions.push("allpiecescaptured");
-	if (winConditions.length === 0) winConditions.push(icnconverter.default_win_condition);
-
-	const gameRules : GameRulesGUIinfo = {
-		playerToMove,
-		enPassant,
-		moveRule,
-		promotionRanks,
-		promotionsAllowed: promotionsAllowed as RawType[],
-		winConditions
-	};
-
-	// Set en passant state for rendering purposes
-	if (enPassant !== undefined) egamerules.setEnpassantState([enPassant.x, enPassant.y]);
-	else egamerules.setEnpassantState(undefined);
-
-	// Update the promotionlines in the gamefile for rendering purposes
-	egamerules.updatePromotionLines(gameRules.promotionRanks);
-
-	// Upate boardeditor.gamerulesGUIinfo
-	egamerules.updateGamerulesGUIinfo(gameRules);
-}
-
-/** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
-function setGameRules(gamerulesGUIinfo : GameRulesGUIinfo) : void {
-	if (gamerulesGUIinfo.playerToMove === "white") {
-		element_gamerulesWhite.checked = true;
-		element_gamerulesBlack.checked = false;
-	}
-	else {
-		element_gamerulesWhite.checked = false;
-		element_gamerulesBlack.checked = true;
-	}
-
-	if (gamerulesGUIinfo.enPassant !== undefined) {
-		element_gamerulesEnPassantX.value = String(gamerulesGUIinfo.enPassant.x);
-		element_gamerulesEnPassantY.value = String(gamerulesGUIinfo.enPassant.y);
-	} else {
-		element_gamerulesEnPassantX.value = "";
-		element_gamerulesEnPassantY.value = "";
-	}
-
-	if (gamerulesGUIinfo.moveRule !== undefined) {
-		element_gamerulesMoveruleCurrent.value = String(gamerulesGUIinfo.moveRule.current);
-		element_gamerulesMoveruleMax.value = String(gamerulesGUIinfo.moveRule.max);
-	} else {
-		element_gamerulesMoveruleCurrent.value = "";
-		element_gamerulesMoveruleMax.value = "";
-	}
-
-	if (gamerulesGUIinfo.promotionRanks !== undefined) {
-		if (gamerulesGUIinfo.promotionRanks.white !== undefined) {
-			element_gamerulesPromotionranksWhite.value = gamerulesGUIinfo.promotionRanks.white.map(bigint => String(bigint)).join(",");
-		} else element_gamerulesPromotionranksWhite.value = "";
-		if (gamerulesGUIinfo.promotionRanks.black !== undefined) {
-			element_gamerulesPromotionranksBlack.value = gamerulesGUIinfo.promotionRanks.black.map(bigint => String(bigint)).join(",");
-		} else element_gamerulesPromotionranksBlack.value = "";
-	} else {
-		element_gamerulesPromotionranksWhite.value = "";
-		element_gamerulesPromotionranksBlack.value = "";
-	}
-
-	if (gamerulesGUIinfo.promotionsAllowed !== undefined) {
-		element_gamerulesPromotionpieces.value = gamerulesGUIinfo.promotionsAllowed.map(type => icnconverter.piece_codes_raw[type]).join(",").toUpperCase();
-	} else element_gamerulesPromotionpieces.value = "";
-
-	element_gamerulesCheckmate.checked = gamerulesGUIinfo.winConditions.includes("checkmate");
-	element_gamerulesRoyalcapture.checked = gamerulesGUIinfo.winConditions.includes("royalcapture");
-	element_gamerulesAllroyalscaptured.checked = gamerulesGUIinfo.winConditions.includes("allroyalscaptured");
-	element_gamerulesAllpiecescaptured.checked = gamerulesGUIinfo.winConditions.includes("allpiecescaptured");
-
-	// Since we manually set all inputs in this function, they are all valid
-	element_gamerulesEnPassantX.classList.remove('invalid-input');
-	element_gamerulesEnPassantY.classList.remove('invalid-input');
-	element_gamerulesMoveruleCurrent.classList.remove('invalid-input');
-	element_gamerulesMoveruleMax.classList.remove('invalid-input');
-	element_gamerulesPromotionranksWhite.classList.remove('invalid-input');
-	element_gamerulesPromotionranksBlack.classList.remove('invalid-input');
-	element_gamerulesPromotionpieces.classList.remove('invalid-input');
-}
-
-/** Deselects the input boxes when pressing Enter */
-function blurOnEnter(e: KeyboardEvent) : void {
-	if (e.key === 'Enter') {
-		(e.target as HTMLInputElement).blur();
-	}
-}
-
-/** Deselects the input boxes when clicking somewhere outside the game rules UI */
-function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent) : void {
-	if (!element_gamerulesWindow.contains(e.target as Node)) {
-		const activeEl = document.activeElement as HTMLInputElement;
-		if (activeEl && elements_gamerulesSelectionList.includes(activeEl) && activeEl.tagName === 'INPUT') activeEl.blur();
-	}
-}
-
-/** Helper: keep the UI box within boardUI bounds */
-function clampGameRulesToBoardUIBounds(): void {
-	const parentRect = element_boardUI.getBoundingClientRect();
-	const elWidth = element_gamerulesWindow.offsetWidth;
-	const elHeight = element_gamerulesWindow.offsetHeight;
-
-	// Compute clamped position
-	const newLeft = math.clamp(element_gamerulesWindow.offsetLeft, 0, parentRect.width - elWidth);
-	const newTop = math.clamp(element_gamerulesWindow.offsetTop, 0, parentRect.height - elHeight);
-
-	element_gamerulesWindow.style.left = `${newLeft}px`;
-	element_gamerulesWindow.style.top = `${newTop}px`;
-
-	// Save new position
-	gameRulesSavedPos = { left: newLeft, top: newTop };
-}
-
-/** Start dragging */
-function startGameRulesDrag(coordx: number, coordy: number): void {
-	gameRulesIsDragging = true;
-	gameRulesOffsetX = coordx - element_gamerulesWindow.offsetLeft;
-	gameRulesOffsetY = coordy - element_gamerulesWindow.offsetTop;
-	document.body.style.userSelect = "none";
-}
-
-function startGameRulesMouseDrag(e: MouseEvent): void {
-	startGameRulesDrag(e.clientX, e.clientY);
-}
-
-function startGameRulesTouchDrag(e: TouchEvent): void {
-	if (e.touches.length === 1) {
-		const touch = e.touches[0]!;
-		startGameRulesDrag(touch.clientX, touch.clientY);
-	}
-}
-
-/** During drag */
-function duringGameRulesDrag(coordx: number, coordy: number): void {
-	if (!gameRulesIsDragging) return;
-
-	const parentRect = element_boardUI.getBoundingClientRect();
-	const elWidth = element_gamerulesWindow.offsetWidth;
-	const elHeight = element_gamerulesWindow.offsetHeight;
-
-	// Compute desired new position
-	const newLeft = coordx - gameRulesOffsetX;
-	const newTop = coordy - gameRulesOffsetY;
-
-	// Clamp within parent container
-	const clampedLeft = math.clamp(newLeft, 0, parentRect.width - elWidth);
-	const clampedTop = math.clamp(newTop, 0, parentRect.height - elHeight);
-
-	element_gamerulesWindow.style.left = `${clampedLeft}px`;
-	element_gamerulesWindow.style.top = `${clampedTop}px`;
-
-	// Save new position
-	gameRulesSavedPos = { left: clampedLeft, top: clampedTop };
-}
-
-function duringGameRulesMouseDrag(e: MouseEvent): void {
-	duringGameRulesDrag(e.clientX, e.clientY);
-}
-
-function duringGameRulesTouchDrag(e: TouchEvent): void {
-	if (e.touches.length === 1) {
-		e.preventDefault(); // prevent scrolling
-		const touch = e.touches[0]!;
-		duringGameRulesDrag(touch.clientX, touch.clientY);
-	}
-}
-
-/** Stop dragging */
-function stopGameRulesDrag(): void {
-	if (gameRulesIsDragging) {
-		clampGameRulesToBoardUIBounds();
-	}
-	gameRulesIsDragging = false;
-	document.body.style.userSelect = "auto";
-}
-
-function initGameRulesListeners(): void {
-	element_gamerulesHeader.addEventListener("mousedown", startGameRulesMouseDrag);
-	document.addEventListener("mousemove", duringGameRulesMouseDrag);
-	document.addEventListener("mouseup", stopGameRulesDrag);
-	element_gamerulesHeader.addEventListener("touchstart", startGameRulesTouchDrag, { passive: false });
-	document.addEventListener("touchmove", duringGameRulesTouchDrag, { passive: false });
-	document.addEventListener("touchend", stopGameRulesDrag, { passive: false });
-
-	window.addEventListener("resize", clampGameRulesToBoardUIBounds);
-	element_gamerulesCloseButton.addEventListener("click", closeGameRules);
-
-	elements_gamerulesSelectionList.forEach(el => {
-		if (el.type === 'text') {
-			el.addEventListener('keydown', blurOnEnter);
-			el.addEventListener('blur', readGameRules);
-		} else if (el.type === 'radio' || el.type === 'checkbox') {
-			el.addEventListener('change', readGameRules);
-		}
-	});
-	document.addEventListener('click', blurOnClickorTouchOutside);
-	document.addEventListener('touchstart', blurOnClickorTouchOutside);
-}
-
-function closeGameRulesListeners(): void {
-	element_gamerulesHeader.removeEventListener("mousedown", startGameRulesMouseDrag);
-	document.removeEventListener("mousemove", duringGameRulesMouseDrag);
-	document.removeEventListener("mouseup", stopGameRulesDrag);
-	element_gamerulesHeader.removeEventListener("touchstart", startGameRulesTouchDrag);
-	document.removeEventListener("touchmove", duringGameRulesTouchDrag);
-	document.removeEventListener("touchend", stopGameRulesDrag);
-
-	window.removeEventListener("resize", clampGameRulesToBoardUIBounds);
-	element_gamerulesCloseButton.removeEventListener("click", closeGameRules);
-
-	elements_gamerulesSelectionList.forEach(el => {
-		if (el.type === 'text') {
-			el.removeEventListener('keydown', blurOnEnter);
-			el.removeEventListener('blur', readGameRules);
-		} else if (el.type === 'radio' || el.type === 'checkbox') {
-			el.removeEventListener('change', readGameRules);
-		}
-	});
-	document.removeEventListener('click', blurOnClickorTouchOutside);
-	document.removeEventListener('touchstart', blurOnClickorTouchOutside);
-}
-
-function openGameRules(): void {
-	if (gameRulesSavedPos !== undefined) {
-		element_gamerulesWindow.style.left = `${gameRulesSavedPos.left}px`;
-		element_gamerulesWindow.style.top = `${gameRulesSavedPos.top}px`;
-	}
-	element_gamerulesWindow.classList.remove("hidden");
-	element_gamerules.classList.add("active");
-	clampGameRulesToBoardUIBounds();
-	initGameRulesListeners();
-}
-
-function closeGameRules(): void {
-	element_gamerulesWindow.classList.add("hidden");
-	element_gamerules.classList.remove("active");
-	closeGameRulesListeners();
-}
-
-function toggleGameRules(): void {
-	if (element_gamerulesWindow.classList.contains("hidden")) openGameRules();
-	else closeGameRules();
-}
-
-// Helper Functions ---------------------------------------------------------
-
-
-/** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
-function _getActivePieceElements(): Element[] {
-	const playerElements = element_playerTypes.get(drawingtool.getColor()) ?? [];
-	return [...playerElements, ...element_neutralTypes];
-}
-
-/** Helper Function: Returns an array of players based on the current gamefile's turn order. */
-function _getPlayersInOrder(): Player[] {
-	const gamefile = gameslot.getGamefile()!;
-	// Using a Set removes duplicates before converting to an array
-	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
-}
-
-
-// Callbacks ---------------------------------------------------------------
-
-
-function callback_ChangeTool(e: Event): void {
-	const target = (e.currentTarget as HTMLElement);
-	const tool = target.getAttribute("data-tool");
-	if (tool === null) throw new Error("Tool attribute is null");
-	boardeditor.setTool(tool);
-}
-
-function callback_Action(e: Event): void {
-	const target = (e.currentTarget as HTMLElement);
-	const action = target.getAttribute("data-action");
-	switch (action) {
-		case "reset":
-			eactions.reset();
-			break;
-		case "clearall":
-			eactions.clearAll();
-			break;
-		case "saved-positions":
-			statustext.showStatus("Not implemented yet.");
-			break;
-		case "copy-notation":
-			eactions.save();
-			break;
-		case "paste-notation":
-			eactions.load();
-			break;
-		case "gamerules":
-			toggleGameRules();
-			break;
-		case "start-game":
-			handleStartLocalGame();
-			break;
-		case "color":
-			nextColor();
-			break;
-		default:
-			console.error(`Unknown action: ${action}`);
-	}
-}
-
-function callback_ChangePieceType(e: Event): void {
-	const target = (e.currentTarget as HTMLElement);
-	const currentPieceType = Number.parseInt(target.id);
-	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
-	drawingtool.setPiece(currentPieceType);
-	boardeditor.setTool("placer");
-	markPiece(currentPieceType);
-}
-
 
 // Exports ----------------------------------------------------------------
 
 
 export default {
-	isOpen,
 	open,
+	isOpen,
 	close,
 	initUI,
 	markTool,
 	markPiece,
+	onNewSelection,
+	onClearSelection,
 	updatePieceColors,
-	setGameRules,
 };

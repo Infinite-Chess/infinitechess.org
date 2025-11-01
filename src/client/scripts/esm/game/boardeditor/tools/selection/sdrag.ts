@@ -8,12 +8,13 @@
  * and handles moving the selection.
  */
 
+import { Mouse } from "../../../input";
 import coordutil, { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import mouse from "../../../../util/mouse";
 import game from "../../../chess/game";
-import { Mouse } from "../../../input";
+import gameslot from "../../../chess/gameslot";
 import space from "../../../misc/space";
 import arrows from "../../../rendering/arrows/arrows";
 import selectiontool from "./selectiontool";
@@ -156,9 +157,10 @@ function dropSelection(): void {
 	// If the translation is zero, skip the transformation
 	if (translation[0] === 0n && translation[1] === 0n) return;
 
-	console.log('Selection transformed by: ', translation);
-
-	stransformations.translate(translation);
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
+	stransformations.Translate(gamefile, mesh, selectionBox, translation);
 
 	// Shift the selection area itself
 
