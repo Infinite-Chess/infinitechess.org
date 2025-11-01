@@ -37,7 +37,7 @@ const elements_tools = [
 ];
 
 /** The element containing all selection tool action buttons. */
-const element_selectionActions = document.getElementsByClassName('selection-actions')[0]!;
+const element_selectionActions = document.getElementsByClassName('selection-actions')[0]! as HTMLElement;
 const elements_actions = [
 	// Position
 	document.getElementById("reset")!,
@@ -255,15 +255,6 @@ function markTool(tool: Tool): void {
 		if (element_tool === tool) element.classList.add("active");
 		else if (element_tool !== 'gamerules') element.classList.remove("active");
 	});
-
-	// Update greyed-out-ness of the Selection actions
-	if (tool === 'selection-tool') {
-		element_selectionActions.classList.remove('opacity-0_5');
-		element_selectionActions.classList.remove('set-cursor-to-not-allowed');
-	} else {
-		element_selectionActions.classList.add('opacity-0_5');
-		element_selectionActions.classList.add('set-cursor-to-not-allowed');
-	}
 }
 
 /** Adds/removes the 'active' class from the piece svgs in the Palette, changing their style. */
@@ -275,6 +266,16 @@ function markPiece(type: number | null): void {
 		if (element_type === type && placerToolActive) element.classList.add("active");
 		else element.classList.remove("active");
 	});
+}
+
+function onNewSelection(): void {
+	// Un-greys selection action buttons
+	element_selectionActions.classList.remove('disabled');
+}
+
+function onClearSelection(): void {
+	// Greys out selection action buttons
+	element_selectionActions.classList.add('disabled');
 }
 
 
@@ -309,10 +310,7 @@ function callback_Action(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const action = target.getAttribute("data-action");
 
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
-	const selectionBox = selectiontool.getSelectionIntBox();
-	if (!selectionBox) return; // Might have clicked action button when there was no selection.
+	// Position/Palette actions...
 
 	switch (action) {
 		// Position ---------------------
@@ -337,7 +335,20 @@ function callback_Action(e: Event): void {
 		case "start-game":
 			handleStartLocalGame();
 			break;
-		// Selection ---------------------
+		// Palette ---------------------
+		case "color":
+			nextColor();
+			break;
+	}
+
+	// Selection actions...
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const selectionBox = selectiontool.getSelectionIntBox();
+	if (!selectionBox) return; // Might have clicked action button when there was no selection.
+
+	switch (action) {
 		case "delete-selection":
 			stransformations.Delete(gamefile, mesh, selectionBox);
 			break;
@@ -361,10 +372,6 @@ function callback_Action(e: Event): void {
 			break;
 		case "invert-color":
 			statustext.showStatus("Not implemented yet.");
-			break;
-		// Palette ---------------------
-		case "color":
-			nextColor();
 			break;
 		default:
 			console.error(`Unknown action: ${action}`);
@@ -441,5 +448,7 @@ export default {
 	initUI,
 	markTool,
 	markPiece,
+	onNewSelection,
+	onClearSelection,
 	updatePieceColors,
 };

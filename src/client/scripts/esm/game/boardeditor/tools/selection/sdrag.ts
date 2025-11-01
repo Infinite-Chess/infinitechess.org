@@ -157,8 +157,6 @@ function dropSelection(): void {
 	// If the translation is zero, skip the transformation
 	if (translation[0] === 0n && translation[1] === 0n) return;
 
-	console.log('Selection transformed by: ', translation);
-
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;

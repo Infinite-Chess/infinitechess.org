@@ -162,6 +162,11 @@ button {
     grid-template-columns: repeat(4, 1fr);
 }
 
+.selection-actions.disabled {
+	opacity: 0.4;
+	pointer-events: none;
+}
+
 /* Palette */
 
 .color-select {
