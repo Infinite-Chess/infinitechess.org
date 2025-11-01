@@ -20,6 +20,8 @@ import tooltips from "../../../util/tooltips.js";
 import eactions from "../../boardeditor/eactions.js";
 import drawingtool from "../../boardeditor/tools/drawingtool.js";
 import guigamerules from "./guigamerules.js";
+import selectiontool from "../../boardeditor/tools/selection/selectiontool.js";
+import stransformations from "../../boardeditor/tools/selection/stransformations.js";
 
 
 // Elements ---------------------------------------------------------------
@@ -306,6 +308,12 @@ function callback_ChangeTool(e: Event): void {
 function callback_Action(e: Event): void {
 	const target = (e.currentTarget as HTMLElement);
 	const action = target.getAttribute("data-action");
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const selectionBox = selectiontool.getSelectionIntBox();
+	if (!selectionBox) return; // Might have clicked action button when there was no selection.
+
 	switch (action) {
 		// Position ---------------------
 		case "reset":
@@ -331,7 +339,7 @@ function callback_Action(e: Event): void {
 			break;
 		// Selection ---------------------
 		case "delete-selection":
-			statustext.showStatus("Not implemented yet.");
+			stransformations.Delete(gamefile, mesh, selectionBox);
 			break;
 		case "copy-selection":
 			statustext.showStatus("Not implemented yet.");
