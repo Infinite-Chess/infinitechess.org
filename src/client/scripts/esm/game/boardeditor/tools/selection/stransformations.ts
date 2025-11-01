@@ -189,6 +189,15 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 }
 
 
+// API -------------------------------------------------------------------------
+
+
+function resetState(): void {
+	clipboard = undefined;
+	clipboardCoords = undefined;
+}
+
+
 // Exports --------------------------------------------------------------------
 
 
@@ -197,4 +206,7 @@ export default {
 	Translate,
 	// Action Button Transformations
 	Delete,
+	Copy,
+	// API
+	resetState,
 };

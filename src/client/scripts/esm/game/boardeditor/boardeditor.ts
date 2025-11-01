@@ -29,6 +29,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
+import stransformations from './tools/selection/stransformations.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -91,6 +92,7 @@ function closeBoardEditor(): void {
 	indexOfThisEdit = undefined;
 	drawingtool.onCloseEditor();
 	selectiontool.resetState();
+	stransformations.resetState(); // Drops reference to clipboard
 }
 
 function update(): void {
