@@ -206,20 +206,20 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 
 /** Flips the selection box horizontally. */
 function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {	
-	ReflectAxis(gamefile, mesh, box, 0); // Reflect across the X-axis
+	Reflect(gamefile, mesh, box, 0); // Reflect across the X-axis
 }
 
 
 /** Flips the selection box vertically. */
 function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
-	ReflectAxis(gamefile, mesh, box, 1); // Reflect across the Y-axis
+	Reflect(gamefile, mesh, box, 1); // Reflect across the Y-axis
 }
 
 /**
- * Reflects the pieces in the selection box across a given axis.
+ * Reflects the selection box across a given axis.
  * @param axis The axis to reflect across (0 for X, 1 for Y).
  */
-function ReflectAxis(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
+function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
 
 	// Determine the bounds for calculating the reflection line based on the axis
