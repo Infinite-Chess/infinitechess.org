@@ -371,7 +371,7 @@ function callback_Action(e: Event): void {
 			statustext.showStatus("Not implemented yet.");
 			break;
 		case "invert-color":
-			statustext.showStatus("Not implemented yet.");
+			stransformations.InvertColor(gamefile, mesh, selectionBox);
 			break;
 		default:
 			console.error(`Unknown action: ${action}`);

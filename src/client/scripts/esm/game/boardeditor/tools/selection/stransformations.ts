@@ -35,6 +35,7 @@ import organizedpieces from "../../../../../../../shared/chess/logic/organizedpi
 import bounds from "../../../../../../../shared/util/math/bounds";
 import selectiontool from "./selectiontool";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
+import typeutil from "../../../../../../../shared/chess/util/typeutil";
 
 
 // Type Definitions ----------------------------------------------------------
@@ -291,7 +292,28 @@ function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 // Rotate right...
 
 
-// Invert color...
+/** Inverts the color of the pieces in the selection box. */
+function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
+
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// For each piece in the selection, change its type to the inverted color type
+	for (const piece of piecesInSelection) {
+		const newType: number = typeutil.invertType(piece.type);
+
+		if (newType === piece.type) continue; // No change in type (neutral), skip
+
+		const coordsKey = coordutil.getKeyFromCoords(piece.coords);
+		const hasSpecialRights = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+
+		boardeditor.queueRemovePiece(gamefile, edit, piece);
+		boardeditor.queueAddPiece(gamefile, edit, piece.coords, newType, hasSpecialRights);
+	}
+
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
+}
 
 
 // Utility ------------------------------------------------------------
@@ -380,6 +402,9 @@ export default {
 	Paste,
 	FlipHorizontal,
 	FlipVertical,
+	// Rotate left,
+	// Rotate right,
+	InvertColor,
 	// API
 	resetState,
 };
