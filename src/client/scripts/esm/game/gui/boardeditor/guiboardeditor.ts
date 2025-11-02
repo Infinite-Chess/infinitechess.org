@@ -365,7 +365,7 @@ function callback_Action(e: Event): void {
 			stransformations.FlipVertical(gamefile, mesh, selectionBox);
 			break;
 		case "rotate-left":
-			statustext.showStatus("Not implemented yet.");
+			stransformations.RotateLeft(gamefile, mesh, selectionBox);
 			break;
 		case "rotate-right":
 			statustext.showStatus("Not implemented yet.");

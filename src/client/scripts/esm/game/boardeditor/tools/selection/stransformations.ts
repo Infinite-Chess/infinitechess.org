@@ -28,7 +28,7 @@ import type { Mesh } from "../../../rendering/piecemodels";
 
 import boardutil, { LineKey, Piece } from "../../../../../../../shared/chess/util/boardutil";
 import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal";
-import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
+import coordutil, { BDCoords, Coords } from "../../../../../../../shared/chess/util/coordutil";
 import boardeditor, { Edit } from "../../boardeditor";
 import vectors, { Vec2 } from "../../../../../../../shared/util/math/vectors";
 import organizedpieces from "../../../../../../../shared/chess/logic/organizedpieces";
@@ -50,6 +50,9 @@ interface StatePiece extends Piece {
 // Constants ------------------------------------------------------------------
 
 
+const NEGONE = bd.FromBigInt(-1n, 1);
+const HALF = bd.FromNumber(0.5, 1);
+const ONE = bd.FromBigInt(1n, 1);
 const TWO = bd.FromBigInt(2n, 1);
 
 
@@ -231,8 +234,8 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 	const bound1BD: BigDecimal = bd.FromBigInt(bound1, 1);
 	const bound2BD: BigDecimal = bd.FromBigInt(bound2, 1);
 	const sum: BigDecimal = bd.add(bound1BD, bound2BD);
-	const reflectionLine: BigDecimal = bd.divide_fixed(sum, TWO, 0);
-	// console.log("Reflection line:", bigdecimal.toExactString(reflectionLine));
+	const reflectionLine: BigDecimal = bd.divide_fixed(sum, TWO, 0); // 0 working precision is needed because the quotient is rational
+	// console.log("Reflection line:", bd.toExactString(reflectionLine));
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
@@ -267,10 +270,116 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 }
 
 
-// Rotate left...
+/**
+ * The parity of which vector the pivot point of rotations shifts
+ * so as the pieces don't land on floating point coords after rotation.
+ * This makes it so that 2 consecutive rotations return to the original position.
+ */
+let rotationParity: boolean = false;
 
+/** Rotates the selection 90 degrees to the left (counter-clockwise). */
+function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	// Calculate the pivot point for rotation.
+	const sumXEdgesBD = bd.FromBigInt(box.left + box.right, 1);
+	const sumYEdgesBD = bd.FromBigInt(box.bottom + box.top, 1);
 
-// Rotate right...
+	const pivot: BDCoords = [
+		bd.divide_fixed(sumXEdgesBD, TWO, 0), // Working precision isn't needed because the quotient is rational
+		bd.divide_fixed(sumYEdgesBD, TWO, 0)
+	];
+
+	// If that point is unstable, shift it by 0.5 to make it so.
+	// Stable = In them middle of a square, or at a corner between squares.
+	// Unstable = On an edge between squares, rotating the pieces would place them at floating point coords.
+
+	// These work because with a precision of 1, only .0 and .5 fractional parts are possible.
+	const selectionWidthXISEven = !bd.isInteger(pivot[0]);
+	const selectionHeightYISEven = !bd.isInteger(pivot[1]);
+
+	// If both dimensions are equal in evenness/oddness, then the pivot is stable (on a square or corner)
+	// Otherwise, the rotation around an unstable pivot point on an edge causes pieces coordinates to not be integers.
+	if (selectionWidthXISEven !== selectionHeightYISEven) {
+		// Shift the pivot left/right by 0.5 to make it stable, depending on parity.
+		// left/right is an arbitrary choice, down/up would work too.
+		const operation = rotationParity ? bd.add : bd.subtract;
+		pivot[0] = operation(pivot[0], HALF);
+		rotationParity = !rotationParity; // Flip parity so the next rotation would place the pieces in the original positions.
+	}
+
+	// Calculate the rotated selected box
+
+	const rotatedBoxCorner1: Coords = rotatePoint([box.left, box.top], pivot, false);
+	const rotatedBoxCorner2: Coords = rotatePoint([box.right, box.bottom], pivot, false);
+	const rotatedBox: BoundingBox = {
+		left: bimath.min(rotatedBoxCorner1[0], rotatedBoxCorner2[0]),
+		right: bimath.max(rotatedBoxCorner1[0], rotatedBoxCorner2[0]),
+		bottom: bimath.min(rotatedBoxCorner1[1], rotatedBoxCorner2[1]),
+		top: bimath.max(rotatedBoxCorner1[1], rotatedBoxCorner2[1]),
+	};
+
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
+	const piecesInTranslatedSelection: Piece[] = getPiecesInBox(gamefile, rotatedBox);
+
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// First, delete any pieces already existing in the rotated selection area.
+	// BUT ONLY IF their coordinates aren't also in the original selection area! (which is deleted next)
+	for (const piece of piecesInTranslatedSelection) {
+		if (bounds.boxContainsSquare(box, piece.coords)) continue; // Piece is also in the original selection box, skip it
+		boardeditor.queueRemovePiece(gamefile, edit, piece);
+	}
+
+	// Delete all pieces in the original selection area
+	removeAllPieces(gamefile, edit, piecesInSelection);
+
+	// Cache frequently-used references for slightly better performance
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const getKey = coordutil.getKeyFromCoords;
+
+	// For each piece, calculate its new rotated position and add it back
+	for (const piece of piecesInSelection) {
+		// Rotate the piece's coordinates around the pivot
+		const rotatedCoordsBD: Coords = rotatePoint(piece.coords, pivot, false);
+		// Queue the addition of the piece at its new location
+		const hasSpecialRights = specialRights.has(getKey(piece.coords));
+		boardeditor.queueAddPiece(gamefile, edit, rotatedCoordsBD, piece.type, hasSpecialRights);
+	}
+
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
+
+	// Update the selection area to the rotated box
+	selectiontool.setSelection(rotatedBoxCorner1, rotatedBoxCorner2);
+}
+
+/** Rotates a point around a pivot 90 degrees clockwise or counter-clockwise. */
+function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords {
+	// Represent coord as BDCoords for high precision
+	const pointBD = bd.FromCoords(point, 1);
+
+	// 1. Translate to origin to get relative coordinates
+	const relativeX = bd.subtract(pointBD[0], pivot[0]);
+	const relativeY = bd.subtract(pointBD[1], pivot[1]);
+
+	// 2. Apply the 90 degree rotation based on direction
+	// For CCW (+90): direction = 1, (x, y) -> (-y, x)
+	// For CW  (-90): direction = -1, (x, y) -> (y, -x)
+	const direction = clockwise ? NEGONE : ONE;
+
+	// rotatedRelativeX = -direction * relativeY
+	const rotatedRelativeX = bd.multiply_fixed(relativeY, bd.negate(direction));
+	// rotatedRelativeY = direction * relativeX
+	const rotatedRelativeY = bd.multiply_fixed(relativeX, direction);
+
+	// 3. Translate back from the origin
+	const finalX = bd.add(rotatedRelativeX, pivot[0]);
+	const finalY = bd.add(rotatedRelativeY, pivot[1]);
+
+	return [
+		bd.toBigInt(finalX),
+		bd.toBigInt(finalY),
+	];
+}
 
 
 /** Inverts the color of the pieces in the selection box. */
@@ -383,8 +492,8 @@ export default {
 	Paste,
 	FlipHorizontal,
 	FlipVertical,
-	// Rotate left,
-	// Rotate right,
+	RotateLeft,
+	// RotateRight,
 	InvertColor,
 	// API
 	resetState,
