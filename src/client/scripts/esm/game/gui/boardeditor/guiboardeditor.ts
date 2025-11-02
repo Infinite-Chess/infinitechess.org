@@ -368,7 +368,7 @@ function callback_Action(e: Event): void {
 			stransformations.RotateLeft(gamefile, mesh, selectionBox);
 			break;
 		case "rotate-right":
-			statustext.showStatus("Not implemented yet.");
+			stransformations.RotateRight(gamefile, mesh, selectionBox);
 			break;
 		case "invert-color":
 			stransformations.InvertColor(gamefile, mesh, selectionBox);

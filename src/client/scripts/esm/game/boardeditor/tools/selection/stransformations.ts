@@ -77,8 +77,7 @@ function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, tr
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
-	// First, delete any pieces in the translated selection area.
-	// BUT ONLY IF their coordinates aren't also in the original selection area! (which is deleted next)
+	// Clear the destination area of any pieces not part of the original selection
 	for (const piece of piecesInTranslatedSelection) {
 		if (bounds.boxContainsSquare(selectionBox, piece.coords)) continue; // Piece is also in the original selection box, skip it
 		boardeditor.queueRemovePiece(gamefile, edit, piece);
@@ -270,6 +269,16 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 }
 
 
+/** Rotates the selection 90 degrees to the left (counter-clockwise). */
+function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	Rotate(gamefile, mesh, box, false); // false for counter-clockwise
+}
+
+/** Rotates the selection 90 degrees to the right (clockwise). */
+function RotateRight(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	Rotate(gamefile, mesh, box, true); // true for clockwise
+}
+
 /**
  * The parity of which vector the pivot point of rotations shifts
  * so as the pieces don't land on floating point coords after rotation.
@@ -277,8 +286,9 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
  */
 let rotationParity: boolean = false;
 
-/** Rotates the selection 90 degrees to the left (counter-clockwise). */
-function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+/** Rotates the selection 90 degrees clockwise or counter-clockwise. */
+function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boolean): void {
+
 	// Calculate the pivot point for rotation.
 	const sumXEdgesBD = bd.FromBigInt(box.left + box.right, 1);
 	const sumYEdgesBD = bd.FromBigInt(box.bottom + box.top, 1);
@@ -299,17 +309,18 @@ function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	// If both dimensions are equal in evenness/oddness, then the pivot is stable (on a square or corner)
 	// Otherwise, the rotation around an unstable pivot point on an edge causes pieces coordinates to not be integers.
 	if (selectionWidthXISEven !== selectionHeightYISEven) {
-		// Shift the pivot left/right by 0.5 to make it stable, depending on parity.
-		// left/right is an arbitrary choice, down/up would work too.
-		const operation = rotationParity ? bd.add : bd.subtract;
-		pivot[0] = operation(pivot[0], HALF);
-		rotationParity = !rotationParity; // Flip parity so the next rotation would place the pieces in the original positions.
+		// This logic for parity, operation, and axis choice ensures that any sequence of
+		// left/right rotations doesn't result in bias towards one vector.
+		const thisParity = clockwise ? rotationParity : !rotationParity; // Use opposite parity for CCW
+		const thisAxis = clockwise ? 1 : 0; // Shift Y axis for CW, X axis for CCW
+		const operation = thisParity ? bd.add : bd.subtract;
+		pivot[thisAxis] = operation(pivot[thisAxis], HALF);
+		rotationParity = !rotationParity;
 	}
 
-	// Calculate the rotated selected box
-
-	const rotatedBoxCorner1: Coords = rotatePoint([box.left, box.top], pivot, false);
-	const rotatedBoxCorner2: Coords = rotatePoint([box.right, box.bottom], pivot, false);
+	// Calculate the rotated selection box
+	const rotatedBoxCorner1: Coords = rotatePoint([box.left, box.top], pivot, clockwise);
+	const rotatedBoxCorner2: Coords = rotatePoint([box.right, box.bottom], pivot, clockwise);
 	const rotatedBox: BoundingBox = {
 		left: bimath.min(rotatedBoxCorner1[0], rotatedBoxCorner2[0]),
 		right: bimath.max(rotatedBoxCorner1[0], rotatedBoxCorner2[0]),
@@ -322,8 +333,7 @@ function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
-	// First, delete any pieces already existing in the rotated selection area.
-	// BUT ONLY IF their coordinates aren't also in the original selection area! (which is deleted next)
+	// Clear the destination area of any pieces not part of the original selection
 	for (const piece of piecesInTranslatedSelection) {
 		if (bounds.boxContainsSquare(box, piece.coords)) continue; // Piece is also in the original selection box, skip it
 		boardeditor.queueRemovePiece(gamefile, edit, piece);
@@ -338,11 +348,11 @@ function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 
 	// For each piece, calculate its new rotated position and add it back
 	for (const piece of piecesInSelection) {
-		// Rotate the piece's coordinates around the pivot
-		const rotatedCoordsBD: Coords = rotatePoint(piece.coords, pivot, false);
+		// Rotate the piece's coordinates around the pivot point
+		const rotatedCoords: Coords = rotatePoint(piece.coords, pivot, clockwise);
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
-		boardeditor.queueAddPiece(gamefile, edit, rotatedCoordsBD, piece.type, hasSpecialRights);
+		boardeditor.queueAddPiece(gamefile, edit, rotatedCoords, piece.type, hasSpecialRights);
 	}
 
 	// Apply the collective edit and add it to the history
@@ -352,7 +362,13 @@ function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	selectiontool.setSelection(rotatedBoxCorner1, rotatedBoxCorner2);
 }
 
-/** Rotates a point around a pivot 90 degrees clockwise or counter-clockwise. */
+/**
+ * Rotates a point around a pivot 90 degrees clockwise or counter-clockwise.
+ * @param point The point to rotate.
+ * @param pivot The pivot point to rotate around. MUST BE IN THE middle of a square, or on a corner between squares, otherwise there will be precision loss when rounding the rotated point to integers.
+ * @param clockwise Whether to rotate clockwise (true) or counter-clockwise (false).
+ * @returns The rotated point.
+ */
 function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords {
 	// Represent coord as BDCoords for high precision
 	const pointBD = bd.FromCoords(point, 1);
@@ -493,7 +509,7 @@ export default {
 	FlipHorizontal,
 	FlipVertical,
 	RotateLeft,
-	// RotateRight,
+	RotateRight,
 	InvertColor,
 	// API
 	resetState,
