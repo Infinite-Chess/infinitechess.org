@@ -162,12 +162,8 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 /** Updates the en passant square in the current gamefile, needed for display purposes */
 function setEnpassantState(coord: Coords | undefined): void {
 	const enpassant: EnPassant | undefined = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } : undefined; // dummy enpassant object
-	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
-
 	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
-	state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, enpassant);
-	boardeditor.runEdit(gamefile, mesh, edit, true);
+	gamefile.boardsim.state.global.enpassant = enpassant;
 }
 
 /** Updates the promotion lines in the current gamefile, needed for display purposes */
