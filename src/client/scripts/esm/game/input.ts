@@ -674,9 +674,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
-			// Check if this key is already in keyDowns (to avoid duplicates)
-			const alreadyExists = keyDowns.some(keyInfo => keyInfo.keyCode === e.code);
-			if (!alreadyExists) {
+			if (!keyDowns.some(keyInfo => keyInfo.keyCode === e.code)) {
 				keyDowns.push({
 					keyCode: e.code,
 					metaKey: e.ctrlKey || e.metaKey
@@ -787,13 +785,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		},
 		getWheelDelta: (): number => wheelDelta,
 		isKeyDown: (keyCode: string, requireMetaKey?: boolean): boolean => {
-			if (!requireMetaKey) {
-				// Return true if the key is down, regardless of meta key state
-				return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode);
-			} else {
-				// Return true only if the key is down AND a meta key was held
-				return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode && keyInfo.metaKey);
-			}
+			return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode && (!requireMetaKey || keyInfo.metaKey));
 		},
 		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
 		removeEventListeners: (): void => {
@@ -846,5 +838,4 @@ export default {
 export type {
 	InputListener,
 	MouseButton,
-	KeyDownInfo,
 };
