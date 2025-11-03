@@ -28,6 +28,13 @@ const MouseNames = {
 
 type MouseButton = typeof Mouse[keyof typeof Mouse];
 
+/** Information about a key that was pressed down this frame. */
+interface KeyDownInfo {
+	/** The key code that was pressed. */
+	keyCode: string;
+	/** Whether a meta key (Ctrl or Cmd) was held when the key was pressed. */
+	metaKey: boolean;
+}
 
 interface InputListener {
 	/** Whether this input listener has experience atleast one input event the past frame. */
@@ -129,9 +136,13 @@ interface InputListener {
 	doesPointerBelongToPhysicalPointer(logicalPointerId: string, physicalPointerId: string): boolean;
 	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
-	/** Whether the provided keyboard key was pressed down this frame. */
+	/** 
+	 * Whether the provided keyboard key was pressed down this frame.
+	 * @param keyCode - The key code to check
+	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held. If false or undefined, returns true regardless of meta key state.
+	 */
     // eslint-disable-next-line no-unused-vars
-    isKeyDown(keyCode: string): boolean;
+    isKeyDown(keyCode: string, requireMetaKey?: boolean): boolean;
 	/** Whether the provided keyboard key is currently being held down. */
     // eslint-disable-next-line no-unused-vars
     isKeyHeld(keyCode: string): boolean;
@@ -262,7 +273,7 @@ interface ClickInfo {
  * @returns An object with methods to check the state of mouse and keyboard inputs.
  */
 function CreateInputListener(element: HTMLElement | typeof document, { keyboard = true, mouse = true }: { keyboard?: boolean, mouse?: boolean } = {}): InputListener {
-	const keyDowns: string[] = [];
+	const keyDowns: KeyDownInfo[] = [];
 	const keyHelds: string[] = [];
 	/** The amount the scroll wheel has scrolled this frame. */
 	let wheelDelta: number = 0;
@@ -663,7 +674,14 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
-			if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
+			// Check if this key is already in keyDowns (to avoid duplicates)
+			const alreadyExists = keyDowns.some(keyInfo => keyInfo.keyCode === e.code);
+			if (!alreadyExists) {
+				keyDowns.push({
+					keyCode: e.code,
+					metaKey: e.ctrlKey || e.metaKey
+				});
+			}
 			if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
 
 			if (e.key === 'Tab') e.preventDefault(); // Prevents the default tabbing behavior of cycling through elements on the page.
@@ -673,7 +691,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		addListener(element, 'keyup', ((e: KeyboardEvent): void => {
 			// console.log("Key up: ", e.code);
 			atleastOneInputThisFrame = true;
-			const downIndex = keyDowns.indexOf(e.code);
+			const downIndex = keyDowns.findIndex(keyInfo => keyInfo.keyCode === e.code);
 			if (downIndex !== -1) keyDowns.splice(downIndex, 1);
 			
 			const heldIndex = keyHelds.indexOf(e.code);
@@ -768,7 +786,15 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			return logicalPointer.physical === physicalPointers[physicalPointerId];
 		},
 		getWheelDelta: (): number => wheelDelta,
-		isKeyDown: (keyCode: string): boolean => keyDowns.includes(keyCode),
+		isKeyDown: (keyCode: string, requireMetaKey?: boolean): boolean => {
+			if (requireMetaKey === undefined || requireMetaKey === false) {
+				// Return true if the key is down, regardless of meta key state
+				return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode);
+			} else {
+				// Return true only if the key is down AND a meta key was held
+				return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode && keyInfo.metaKey);
+			}
+		},
 		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
 		removeEventListeners: (): void => {
 			Object.keys(eventHandlers).forEach((eventType) => {
@@ -820,4 +846,5 @@ export default {
 export type {
 	InputListener,
 	MouseButton,
+	KeyDownInfo,
 };
