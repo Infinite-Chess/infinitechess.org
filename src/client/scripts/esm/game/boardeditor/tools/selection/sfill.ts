@@ -124,23 +124,23 @@ function startFill(): void {
 }
 
 function executeFill(): void {
-	const fillState = calculateFillState();
+	const fillBox = calculateFillBox();
 
-	// Reset state AFTER calculating fill amount
+	// Reset state AFTER calculating fill box
 	resetState();
 
-	if (!fillState) return; // No fill to perform (let go within selection box)
+	if (!fillBox) return; // No fill to perform (let go within selection box)
 
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
-	stransformations.Fill(gamefile, mesh, selectionBox, fillState.axis!, fillState.fillDistance!);
+	stransformations.Fill(gamefile, mesh, selectionBox, fillBox);
 }
 
 /**
  * Determines the fill axis and distance based on the current pointer position.
  */
-function calculateFillState(): { axis: 0 | 1; fillDistance: bigint } | undefined {
+function calculateFillBox(): BoundingBox | undefined {
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
 
 	// If the pointer is contained within the selection box, skip
@@ -155,18 +155,38 @@ function calculateFillState(): { axis: 0 | 1; fillDistance: bigint } | undefined
 	const distYChoice = distYFromTop > 0n ? distYFromTop : distYFromBottom < 0n ? distYFromBottom : 0n;
 
 	// Determine which axis has the larger distance from the selection box
-	if (bimath.abs(distXChoice) >= bimath.abs(distYChoice)) {
-		// X axis
-		return {
-			axis: 0,
-			fillDistance: distXChoice,
-		};
-	} else {
-		// Y axis
-		return {
-			axis: 1,
-			fillDistance: distYChoice,
-		};
+	if (bimath.abs(distXChoice) >= bimath.abs(distYChoice)) { // X Axis
+		if (distXChoice > 0n) { // Filling to the right
+			return {
+				left: selectionBox.right + 1n,
+				right: lastPointerCoords![0],
+				bottom: selectionBox.bottom,
+				top: selectionBox.top,
+			};
+		} else { // Filling to the left
+			return {
+				left: lastPointerCoords![0],
+				right: selectionBox.left - 1n,
+				bottom: selectionBox.bottom,
+				top: selectionBox.top,
+			};
+		}
+	} else { // Y axis
+		if (distYChoice > 0n) { // Filling upwards
+			return {
+				left: selectionBox.left,
+				right: selectionBox.right,
+				bottom: selectionBox.top + 1n,
+				top: lastPointerCoords![1],
+			};
+		} else { // Filling downwards
+			return {
+				left: selectionBox.left,
+				right: selectionBox.right,
+				bottom: lastPointerCoords![1],
+				top: selectionBox.bottom - 1n,
+			};
+		}
 	}
 }
 
@@ -177,47 +197,9 @@ function calculateFillState(): { axis: 0 | 1; fillDistance: bigint } | undefined
 function render(): void {
 	if (!areFilling) return;
 	
-	const fillState = calculateFillState();
-	if (!fillState) return; // No fill to perform (let go within selection box)
-
-	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
-
 	// Determine the fill int box to render depending on the state
-	let fillBox: BoundingBox;
-	if (fillState.axis === 0) { // X axis
-
-		if (fillState.fillDistance > 0n) { // Filling to the right
-			fillBox = {
-				left: selectionBox.right + 1n,
-				right: selectionBox.right + fillState.fillDistance,
-				bottom: selectionBox.bottom,
-				top: selectionBox.top,
-			};
-		} else { // Filling to the left
-			fillBox = {
-				left: selectionBox.left + fillState.fillDistance,
-				right: selectionBox.left - 1n,
-				bottom: selectionBox.bottom,
-				top: selectionBox.top,
-			};
-		}
-	} else { // Y axis
-		if (fillState.fillDistance > 0n) { // Filling upwards
-			fillBox = {
-				left: selectionBox.left,
-				right: selectionBox.right,
-				bottom: selectionBox.top + 1n,
-				top: selectionBox.top + fillState.fillDistance,
-			};
-		} else { // Filling downwards
-			fillBox = {
-				left: selectionBox.left,
-				right: selectionBox.right,
-				bottom: selectionBox.bottom + fillState.fillDistance,
-				top: selectionBox.bottom - 1n,
-			};
-		}
-	}
+	const fillBox = calculateFillBox();
+	if (!fillBox) return; // No fill to perform (let go within selection box)
 
 	// Convert it to a world-space box, with edges rounded away to encapsulate the entirity of the squares.
 	const worldFillBox: DoubleBoundingBox = selectiontool.convertIntBoxToWorldBox(fillBox);
