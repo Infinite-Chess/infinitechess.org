@@ -375,6 +375,7 @@ function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boo
 		bd.divide_fixed(sumYEdgesBD, TWO, 0)
 	];
 
+	// Adjust pivot for unstable rotations.
 	// If that point is unstable, shift it by 0.5 to make it so.
 	// Stable = In them middle of a square, or at a corner between squares.
 	// Unstable = On an edge between squares, rotating the pieces would place them at floating point coords.
