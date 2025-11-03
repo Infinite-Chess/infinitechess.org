@@ -52,11 +52,11 @@ const elements_actions = [
 	document.getElementById("delete-selection")!,
 	document.getElementById("copy-selection")!,
 	document.getElementById("paste-selection")!,
-	document.getElementById("flip-horizontal")!,
-	document.getElementById("flip-vertical")!,
+	document.getElementById("invert-color")!,
 	document.getElementById("rotate-left")!,
 	document.getElementById("rotate-right")!,
-	document.getElementById("invert-color")!,
+	document.getElementById("flip-horizontal")!,
+	document.getElementById("flip-vertical")!,
 	// Palette
 	document.getElementById("editor-color-select")!
 ];
@@ -375,11 +375,8 @@ function callback_Action(e: Event): void {
 		case "paste-selection":
 			stransformations.Paste(gamefile, mesh, selectionBox);
 			break;
-		case "flip-horizontal":
-			stransformations.FlipHorizontal(gamefile, mesh, selectionBox);
-			break;
-		case "flip-vertical":
-			stransformations.FlipVertical(gamefile, mesh, selectionBox);
+		case "invert-color":
+			stransformations.InvertColor(gamefile, mesh, selectionBox);
 			break;
 		case "rotate-left":
 			stransformations.RotateLeft(gamefile, mesh, selectionBox);
@@ -387,8 +384,11 @@ function callback_Action(e: Event): void {
 		case "rotate-right":
 			stransformations.RotateRight(gamefile, mesh, selectionBox);
 			break;
-		case "invert-color":
-			stransformations.InvertColor(gamefile, mesh, selectionBox);
+		case "flip-horizontal":
+			stransformations.FlipHorizontal(gamefile, mesh, selectionBox);
+			break;
+		case "flip-vertical":
+			stransformations.FlipVertical(gamefile, mesh, selectionBox);
 			break;
 		default:
 			console.error(`Unknown action: ${action}`);
