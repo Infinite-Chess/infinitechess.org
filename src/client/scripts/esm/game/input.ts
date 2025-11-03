@@ -787,7 +787,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		},
 		getWheelDelta: (): number => wheelDelta,
 		isKeyDown: (keyCode: string, requireMetaKey?: boolean): boolean => {
-			if (requireMetaKey === undefined || requireMetaKey === false) {
+			if (!requireMetaKey) {
 				// Return true if the key is down, regardless of meta key state
 				return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode);
 			} else {
