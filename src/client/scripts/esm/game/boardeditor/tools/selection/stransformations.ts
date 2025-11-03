@@ -279,8 +279,9 @@ function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
  */
 function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
 	// Determine the bounds for calculating the reflection line based on the axis
-	const bound1 = axis === 0 ? box.left : box.bottom;
-	const bound2 = axis === 0 ? box.right : box.top;
+	const [bound1, bound2] = axis === 0
+		? [box.left, box.right]
+		: [box.bottom, box.top];
 
 	// Calculate the reflection line with BigDecimals, for decimal precision.
 	// 1 precision is enough to perfectly represent 1/2 increments, which is the finest we need.
