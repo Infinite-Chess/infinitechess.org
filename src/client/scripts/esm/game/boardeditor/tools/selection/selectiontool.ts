@@ -15,12 +15,17 @@ import stoolgraphics from "./stoolgraphics";
 import space from "../../../misc/space";
 import { Mouse } from "../../../input";
 import { listener_overlay } from "../../../chess/game";
-import { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
+import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import meshes from "../../../rendering/meshes";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import sfill from "./sfill";
 import sdrag from "./sdrag";
 import guiboardeditor from "../../../gui/boardeditor/guiboardeditor";
+import boardutil from "../../../../../../../shared/chess/util/boardutil";
+import gameslot from "../../../chess/gameslot";
+import boardeditor from "../../boardeditor";
+import Transition from "../../../rendering/transitions/Transition";
+import guinavigation from "../../../gui/guinavigation";
 
 
 // State ----------------------------------------------
@@ -206,6 +211,28 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 	endPoint = corner2;
 }
 
+/** Selects all pieces in the current position, and transitions to the selection. */
+function selectAll(): void {
+	boardeditor.setTool("selection-tool"); // Switch if we're not already using
+
+	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+
+	if (allCoords.length === 0) {
+		// No pieces, cancel selection
+		resetState();
+		guinavigation.recenter();
+		return;
+	}
+
+	const box: BoundingBox = bounds.getBoxFromCoordsList(allCoords);
+
+	startPoint = [box.left, box.top];
+	endPoint = [box.right, box.bottom];
+
+	guiboardeditor.onNewSelection();
+	Transition.zoomToCoordsBox(box);
+}
+
 
 // Exports ------------------------------------------------------
 
@@ -220,4 +247,5 @@ export default {
 	convertIntBoxToWorldBox,
 	getSelectionCorners,
 	setSelection,
+	selectAll,
 };

@@ -48,6 +48,7 @@ const elements_actions = [
 	document.getElementById("gamerules")!,
 	document.getElementById("start-game")!,
 	// Selection
+	document.getElementById("select-all")!,
 	document.getElementById("delete-selection")!,
 	document.getElementById("copy-selection")!,
 	document.getElementById("paste-selection")!,
@@ -58,6 +59,10 @@ const elements_actions = [
 	document.getElementById("invert-color")!,
 	// Palette
 	document.getElementById("editor-color-select")!
+];
+/** These selection action buttons are always enabled. */
+const alwaysActiveSelectionActions = [
+	document.getElementById("select-all")!,
 ];
 
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
@@ -268,14 +273,22 @@ function markPiece(type: number | null): void {
 	});
 }
 
+// Un-greys selection action buttons
 function onNewSelection(): void {
-	// Un-greys selection action buttons
-	element_selectionActions.classList.remove('disabled');
+	// Remove 'disabled' class to all children except those included in the alwaysActiveSelectionActions array
+	Array.from(element_selectionActions.children).forEach((child) => {
+		(child as HTMLElement).classList.remove('disabled');
+	});
 }
 
+// Greys out selection action buttons
 function onClearSelection(): void {
-	// Greys out selection action buttons
-	element_selectionActions.classList.add('disabled');
+	// Remove 'disabled' from all children except those included in the alwaysActiveSelectionActions array
+	Array.from(element_selectionActions.children).forEach((child) => {
+		if (!alwaysActiveSelectionActions.includes(child as HTMLElement)) {
+			(child as HTMLElement).classList.add('disabled');
+		}
+	});
 }
 
 
@@ -316,29 +329,33 @@ function callback_Action(e: Event): void {
 		// Position ---------------------
 		case "reset":
 			eactions.reset();
-			break;
+			return;
 		case "clearall":
 			eactions.clearAll();
-			break;
+			return;
 		case "saved-positions":
 			statustext.showStatus("Not implemented yet.");
-			break;
+			return;
 		case "copy-notation":
 			eactions.save();
-			break;
+			return;
 		case "paste-notation":
 			eactions.load();
-			break;
+			return;
 		case "gamerules":
 			guigamerules.toggleGameRules();
-			break;
+			return;
 		case "start-game":
 			handleStartLocalGame();
-			break;
+			return;
+		// Selection (buttons that are always active)
+		case "select-all":
+			selectiontool.selectAll();
+			return;
 		// Palette ---------------------
 		case "color":
 			nextColor();
-			break;
+			return;
 	}
 
 	// Selection actions...
