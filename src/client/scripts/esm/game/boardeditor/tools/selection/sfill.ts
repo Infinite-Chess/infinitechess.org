@@ -129,6 +129,8 @@ function executeFill(): void {
 	// Reset state AFTER calculating fill amount
 	resetState();
 
+	if (!fillState) return; // No fill to perform (let go within selection box)
+
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
