@@ -125,7 +125,6 @@ function startFill(): void {
 
 function executeFill(): void {
 	const fillState = calculateFillState();
-	if (!fillState) return; // No fill to perform (let go within selection box)
 
 	// Reset state AFTER calculating fill amount
 	resetState();
