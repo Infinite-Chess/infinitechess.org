@@ -680,7 +680,8 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 					metaKey: e.ctrlKey || e.metaKey
 				});
 			}
-			if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
+			// Only add to keyHelds if no meta key was held
+			if (!keyHelds.includes(e.code) && !(e.ctrlKey || e.metaKey)) keyHelds.push(e.code);
 
 			if (e.key === 'Tab') e.preventDefault(); // Prevents the default tabbing behavior of cycling through elements on the page.
 		}) as EventListener);
