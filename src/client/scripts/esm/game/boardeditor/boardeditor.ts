@@ -30,6 +30,7 @@ import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
+import { listener_document } from '../chess/game.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -98,10 +99,19 @@ function closeBoardEditor(): void {
 function update(): void {
 	if (!inBoardEditor) return;
 
+	testControls();
+
 	// Handle starting and ending the drawing state
 	if (drawingtool.isToolADrawingTool(currentTool)) drawingtool.update(currentTool);
 	// Update selection tool, if that is active
 	else if (currentTool === "selection-tool") selectiontool.update();
+}
+
+function testControls(): void {
+	// Check for Ctrl+A or Cmd+A to select all
+	if (listener_document.isKeyDown('KeyA', true)) {
+		selectiontool.selectAll();
+	}
 }
 
 
