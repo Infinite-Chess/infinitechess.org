@@ -107,11 +107,10 @@ function update(): void {
 	else if (currentTool === "selection-tool") selectiontool.update();
 }
 
+/** Tests for keyboard shortcuts in the board editor. */
 function testControls(): void {
 	// Check for Ctrl+A or Cmd+A to select all
-	if (listener_document.isKeyDown('KeyA', true)) {
-		selectiontool.selectAll();
-	}
+	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
 }
 
 
