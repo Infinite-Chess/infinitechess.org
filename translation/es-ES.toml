@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "63"
+version = "74"
 maintainer = "xa31"
 
 [header]
@@ -16,6 +16,9 @@ leaderboard = "Clasificaciónes"
 [header.settings]
 language = "Idioma"
 board = "Tablero" # Board color/theme
+appearance-theme = "Tema"
+appearance-starfield = "Campo de Estrellas" # The Starfield space animation underneath void
+appearance-advanced-effects = "Efectos Avanzados" # Post processing and board tile effects at extreme distances
 legalmoves = "Jugadas Legales" # Legal moves shape
 legalmoves-squares = "Casillas"
 legalmoves-dots = "Puntos" # Dots and 4 corner triangles
@@ -27,6 +30,9 @@ selection-lingering_annotations = "Anotaciones duraderas"
 perspective = "Perspectiva" # Perspective-mode
 perspective-mouse-sensitivity = "Sensibilidad del ratón"
 perspective-fov = "Campo de visión (FOV)"
+sound = "Sonido"
+sound-master-volume = "Volúmen General"
+sound-ambience = "Ambientación"
 ping = ["Latencia", "ms"] # A number is inserted between these 2 strings.
 reset-to-default = "Restablecer valores"
 
@@ -188,7 +194,7 @@ rules_paragraphs = [
 "Las reglas del ajedrez infinito son casi idénticas a las del ajedrez clásico, ¡Excepto que el tablero es infinito en todas las direcciones! Estas son las únicas notas y cambios que necesitas saber:",
 "Las piezas que tienen movimientos deslizantes, como las torres, alfiles y damas, ¡No tienen ningún límite a como de lejos se pueden mover en un turno! Mientras su camino no esté obstruido, ¡Pueden moverse millones de casillas!",
 ["En variante por defecto \"Clásica\", los peones blancos coronan en la fila 8, y los negras en la fila 1. En esta imagen, esto se indica con las finas lineas negras, son difíciles de ver, ¡Fíjate a ver si puedes encontrarlas! Los Peones solo necesitan llegar a la línea opuesta para coronar", "no", " cruzarla."],
-"La notación de las casillas ya no se describe por la letra y numero de fila, (i.e., a1), en cambio, cada casilla se identifica por una pareja de coordenadas x e y. La casilla a1 se convierte en (1,1), y la casilla h8 en (8,8). En dispositivos de escritorio, la coordenada que el puntero de tu ratón esté encima se muestra en la parte superior de la pantalla",
+"La notación de las casillas ya no se describe por la letra y numero de fila, (ej. a1), en cambio, cada casilla se identifica por una pareja de coordenadas x e y. La casilla a1 se convierte en (1,1), y la casilla h8 en (8,8). En dispositivos de escritorio, la coordenada que el puntero de tu ratón esté encima se muestra en la parte superior de la pantalla",
 "¡Todas las demás reglas son iguales que en el ajedrez clásico, como el jaque mate, tablas, triple repetición, la regla de los 50 movimientos, enroque, en passant, etc.!"
 ]
 careful_heading = "¡Ten cuidado!"
@@ -233,6 +239,7 @@ hawk = {name="Halcón", description="Salta exactamente 2 o 3 casillas en cualqui
 centaur = {name="Centauro", description="Se mueve como un caballo y un guardia combinados."}
 knightrider = {name="Jinete", description="Se mueve como un caballo infinitamente en una dirección, hasta que esté bloqueado."}
 huygen = {name="Huygen", description="Salta infinitamente en una de las direcciones cardinales, visitando solo los cuadrados primos desde la casilla de salida, hasta que se vea obstruido."}
+rose = {name="Rosa", description="Jinete circular. Se mueve en trayectorias circulares horarias y antihorarias, saltando como un caballo, pero girando 45 grados tras cada salto. Puede ser bloqueada por otras piezas, que es la razón por la que el cuadrado rojo en la imágen no es accesible para la rosa."}
 obstacle = {name="Obstáculo", description="Una pieza neutral (Que no es controlada por ningún jugador) que bloquea el movimiento, pero puede ser capturada."}
 void = {name="Vacío", description="Una pieza neutral (Que no es controlada por ningún jugador) que representa la ausencia de tablero. Las demás piezas no pueden moverse a través o encima de él."}
 
@@ -252,9 +259,10 @@ variant = "Variante"
 Classical = "Clásica"
 Confined_Classical = "Clásica confinada"
 Classical_Plus = "Clásica+"
-CoaIP = "Ajedrez en un plano infinito"
+CoaIP = "Ajedrez en un plano infinito (Aeupi)"
 Pawndard = "Pawndard"
 Knighted_Chess = "Knighted Chess"
+Palace = "Palacio"
 Knightline = "Knightline"
 Core = "Core"
 Standarch = "Standarch"
@@ -270,7 +278,9 @@ CoaIP_Limit_7 = "Aeupi - Límite 7"
 Chess = "Ajedrez"
 Classical_KOTH = "Experimental: Clásica - KOTH"
 CoaIP_KOTH = "Experimental: Aeupi - KOTH"
-CoaIP_HO = "Ajedrez en un plano infinito - Opciones Huygens"
+CoaIP_HO = "Ajedrez en un plano infinito - Huygens"
+CoaIP_RO = "Ajedrez en un plano infinito - Rosas"
+CoaIP_NO = "Ajedrez en un plano infinito - Jinetes"
 Omega = "Demostración: Omega"
 Omega_Squared = "Demostración: Omega^2"
 Omega_Cubed = "Demostración: Omega^3"
@@ -307,6 +317,8 @@ erase = "Borrar anotaciones"
 collapse = "Ocultar anotaciones"
 rewind_move = "Deshacer movimiento"
 forward_move = "Rehacer movimiento"
+undo_edit = "Deshacer" # Board editor
+redo_edit = "Rehacer" # Board editor
 pause = "Pausa"
 undo = "Deshacer movimiento" # Checkmate practice game
 restart = "Reiniciar posición" # Checkmate practice game
@@ -359,8 +371,6 @@ lost_connection = "Conexión perdida."
 please_wait = "Por favor espera un momento para realizar esta acción."
 webgl_unsupported = "¡Por favor, actualiza tu navegador! No es compatible con WebGL2."
 bigints_unsupported = "Las BigInts no tienen soporte. Por favor actualiza tu navegador.\nLas BigInts son necesarias para hacer que el tablero sea infinito."
-shaders_failed = "No ha sido posible inicializar el programa de sombreado"
-failed_compiling_shaders = "Ha ocurrido un error compilando los shaders:"
 # Checkmate Practice
 versus = "vs"
 easy = "Facil"
@@ -374,6 +384,32 @@ checkmate_gold = "Maestro del jaque mate: Completa el 100% de los mates de prác
 checkmate_bronze_unearned = "Completa el 50% de los mates de práctica."
 checkmate_silver_unearned = "Completa el 75% de los mates de práctica."
 checkmate_gold_unearned = "Completa el 100% de los mates de práctica."
+coords-invalid = "Formato de coordenadas no válido. Por favor introduze números enteros o notación 'e' (ej. 1.23e4)"
+coords-exceeded = "¡No puedes ir tan lejos! Eso sería muy facil ;)"
+
+[play.javascript.piecenames] # The string representations of each raw piece type, as found in typeutil.strtypes
+void = "Vacio"
+obstacle = "Obstáculo"
+king = "Rey"
+giraffe = "Girafa"
+camel = "Camello"
+zebra = "Zebra"
+knightrider = "Jinete"
+amazon = "Amazona"
+queen = "Dama"
+royalQueen = "Dama real"
+hawk = "Halcón"
+chancellor = "Canciller"
+archbishop = "Arzobispo"
+centaur = "Centauro"
+royalCentaur = "Centauro real"
+rose = "Rosa"
+knight = "Caballo"
+guard = "Guardia"
+huygen = "Huygen"
+rook = "Torre"
+bishop = "Alfil"
+pawn = "Peón"
 
 [play.javascript.copypaste]
 copied_game = "¡Posición copiada en el portapapeles!"
@@ -384,15 +420,17 @@ cannot_paste_after_moves = "¡No se pueden pegar posiciones si ya se han hecho m
 clipboard_denied = "Permiso de portapapeles denegado. Esto puede ser tu navegador."
 clipboard_invalid = "El portapapeles no está en notación ICN valida."
 game_needs_to_specify = "LA posición debe especificar el metadato 'Variant', o la propiedad 'position'."
-invalid_wincon_white = "Las blancas tienen una posición de victoria inválida"
-invalid_wincon_black = "Las negras tienen una posición de victoria inválida "
+invalid_wincon = "El jugador tiene una condición de victoria no válida"
 pasting_game = "Pegando posición..."
 pasting_in_private = "Pegar una posición en una partida privada ¡Causará una desicronización si tu oponente no hace lo mismo!"
 piece_count = "Numero de piezas"
 exceeded = "excedido"
 changed_wincon = "Cambiada la condición de victoria por jaque mate a captura real, y desactivado el renderizado de iconos. Pulsa 'P' para re-activarlo (no recomendado)."
 loaded_from_clipboard = "Partida cargada desde el portapapeles"
-slidelimit_not_number = "La gamerule slideLimit debe ser un número."
+copied_position = "¡Posición copiada al portapapeles!"
+loaded_position_from_clipboard = "¡Posición cargada desde el portapapeles!"
+reset_position = "¡Posición reiniciada!"
+clear_position = "¡Posición limpiada!"
 
 [play.javascript.rendering]
 on = "Activado"
@@ -575,7 +613,7 @@ confirm_password = "Confirma tu contraseña"
 submit_button = "Reiniciar contraseña"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
-400_message = "Parámetros inválidos recibidos"
+400_message = "Parámetros no válidos recibidos"
 409_message = ["Puede que haya un nombre de usuario o correo conflictivo. Por favor ", "recarga", " la página."]
 500_message = "Esto no debería pasar ¡Hay algo de debugging por hacer!"
 
