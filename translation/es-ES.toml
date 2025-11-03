@@ -15,7 +15,7 @@ leaderboard = "Clasificaciónes"
 
 [header.settings]
 language = "Idioma"
-appearance = "Tablero" # Board color/theme
+appearance = "Apariencia" # Board color/theme
 appearance-theme = "Tema"
 appearance-starfield = "Campo de Estrellas" # The Starfield space animation underneath void
 appearance-advanced-effects = "Efectos Avanzados" # Post processing and board tile effects at extreme distances
