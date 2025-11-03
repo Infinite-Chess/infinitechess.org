@@ -11,8 +11,7 @@ import type { Coords } from "../../../../../shared/chess/util/coordutil";
 import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
 
 import { PlayerGroup, players, RawType } from "../../../../../shared/chess/util/typeutil";
-import state, { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
-import boardeditor, { Edit } from "./boardeditor";
+import { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
 import winconutil from "../../../../../shared/chess/util/winconutil";
 import gameslot from "../chess/gameslot";
@@ -55,6 +54,10 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 // Getting & Setting -------------------------------------------------------------
 
 
+function getPlayerToMove(): 'white' | 'black' {
+	return gamerulesGUIinfo.playerToMove;
+}
+
 function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: number | undefined; enpassantcoords: Coords | undefined; } {
 	// Construct gameRules
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
@@ -95,6 +98,9 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 
 /** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
 function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>): void {
+	const firstPlayer = gameRules.turnOrder[0];
+	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
+
 	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
 	else gamerulesGUIinfo.playerToMove = "black";
 
@@ -160,9 +166,15 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 
 
 /** Updates the en passant square in the current gamefile, needed for display purposes */
-function setEnpassantState(coord: Coords | undefined): void {
-	const enpassant: EnPassant | undefined = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } : undefined; // dummy enpassant object
+function setEnpassantState(coords: Coords | undefined): void {
 	const gamefile = gameslot.getGamefile()!;
+	if (coords === undefined) {
+		gamefile.boardsim.state.global.enpassant = undefined;
+		return;
+	}
+
+	const pawn: Coords = gamerulesGUIinfo.playerToMove === 'white' ? [coords[0], coords[1] - 1n] : gamerulesGUIinfo.playerToMove === 'black' ? [coords[0], coords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	const enpassant: EnPassant | undefined = { square: coords, pawn };
 	gamefile.boardsim.state.global.enpassant = enpassant;
 }
 
@@ -187,6 +199,7 @@ export type {
 
 export default {
 	// Getting & Setting
+	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	updateGamerulesGUIinfo,
