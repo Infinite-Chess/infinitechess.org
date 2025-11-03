@@ -14,7 +14,6 @@ import { Mouse } from "../../../input";
 import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import mouse from "../../../../util/mouse";
-import game from "../../../chess/game";
 import gameslot from "../../../chess/gameslot";
 import space from "../../../misc/space";
 import arrows from "../../../rendering/arrows/arrows";
@@ -23,6 +22,7 @@ import stoolgraphics from "./stoolgraphics";
 import stransformations from "./stransformations";
 import vectors from "../../../../../../../shared/util/math/vectors";
 import sdrag from "./sdrag";
+import scursor from "./scursor";
 
 
 // State ---------------------------------------------
@@ -66,7 +66,7 @@ function update(): void {
 		if (isMouseHoveringOverFillHandle()) { // Within grab distance
 			if (!withinGrabDist) {
 				withinGrabDist = true;
-				game.getOverlay().style.cursor = 'crosshair';
+				scursor.addCursor('crosshair');
 			}
 
 			// Determine if we started dragging the fill handle
@@ -80,7 +80,7 @@ function update(): void {
 		} else { // NOT within grab distance
 			if (withinGrabDist) {
 				withinGrabDist = false;
-				game.getOverlay().style.cursor = 'default';
+				scursor.removeCursor('crosshair');
 			}
 		}
 	}
@@ -110,7 +110,7 @@ function isMouseHoveringOverFillHandle(): boolean {
 
 function resetState(): void {
 	withinGrabDist = false;
-	game.getOverlay().style.cursor = 'default';
+	scursor.removeCursor('crosshair');
 	areFilling = false;
 	pointerId = undefined;
 	lastPointerCoords = undefined;
@@ -119,7 +119,6 @@ function resetState(): void {
 /** Grabs the selection box. */
 function startFill(): void {
 	areFilling = true;
-	game.getOverlay().style.cursor = 'crosshair';
 
 	lastPointerCoords = selectiontool.getPointerCoords(pointerId!);
 }

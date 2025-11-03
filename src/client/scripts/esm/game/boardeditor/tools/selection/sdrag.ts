@@ -13,13 +13,13 @@ import coordutil, { Coords, DoubleCoords } from "../../../../../../../shared/che
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import mouse from "../../../../util/mouse";
-import game from "../../../chess/game";
 import gameslot from "../../../chess/gameslot";
 import space from "../../../misc/space";
 import arrows from "../../../rendering/arrows/arrows";
 import selectiontool from "./selectiontool";
 import stoolgraphics from "./stoolgraphics";
 import stransformations from "./stransformations";
+import scursor from "./scursor";
 
 
 // Constants -----------------------------------------
@@ -67,7 +67,7 @@ function update(): void {
 		if (isMouseHoveringOverSelectionEdge()) { // Within grab distance
 			if (!withinGrabDist) {
 				withinGrabDist = true;
-				game.getOverlay().style.cursor = 'grab';
+				scursor.addCursor('grab');
 			}
 
 			// Determine if we picked up the selection
@@ -81,7 +81,7 @@ function update(): void {
 		} else { // NOT within grab distance
 			if (withinGrabDist) {
 				withinGrabDist = false;
-				game.getOverlay().style.cursor = 'default';
+				scursor.removeCursor('grab');
 			}
 		}
 	}
@@ -119,7 +119,8 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 
 function resetState(): void {
 	withinGrabDist = false;
-	game.getOverlay().style.cursor = 'default';
+	scursor.removeCursor('grabbing');
+	scursor.removeCursor('grab');
 	areDragging = false;
 	pointerId = undefined;
 	lastPointerCoords = undefined;
@@ -129,7 +130,7 @@ function resetState(): void {
 /** Grabs the selection box. */
 function pickUpSelection(): void {
 	areDragging = true;
-	game.getOverlay().style.cursor = 'grabbing';
+	scursor.addCursor('grabbing');
 
 	// Determine the nearest coordinate of the selection the mouse picked up.
 	// This will be the anchor
