@@ -107,9 +107,85 @@ function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, tr
 }
 
 
-/** Extends the selection area along a given axis by a given distance. */
-function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, axis: 0 | 1, fillDistance: bigint): void {
-	console.log("TODO: Fill selection box along axis", axis, "by", fillDistance);
+/** Extends the selection area by repeating its contents into the given fill box. */
+function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox: BoundingBox): void {
+	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, selectionBox);
+	const piecesInPasteBox: Piece[] = getPiecesInBox(gamefile, fillBox);
+
+	// Determine the dimensions of the selection box
+	const selectionWidth: bigint = selectionBox.right - selectionBox.left + 1n;
+	const selectionHeight: bigint = selectionBox.top - selectionBox.bottom + 1n;
+	// Dimensions of the fill box
+	const fillBoxWidth: bigint = fillBox.right - fillBox.left + 1n;
+	const fillBoxHeight: bigint = fillBox.top - fillBox.bottom + 1n;
+
+	const isHorizontal = fillBox.left !== selectionBox.left;
+
+	/** How many whole copies fit in the fill box, floored. */
+	let wholeCopies: bigint;
+	/** +X/+Y or -X/-Y */
+	let isPositiveDirection: boolean;
+	/** How much each copy's coordinate is incremented by each iteration. May be negative. */
+	let axisIncrement: bigint;
+	/** The axis coordinate the fill box ends at. Also where we stop filling. */
+	let fillBoxAxisEnd: bigint;
+	/** The axis translation for the current iteration. */
+	let currentCopyStartAxis: bigint;
+	
+	if (isHorizontal) { // Horizontal fill
+		isPositiveDirection = fillBox.left > selectionBox.left;
+		axisIncrement = isPositiveDirection ? selectionWidth : -selectionWidth;
+		wholeCopies = fillBoxWidth / selectionWidth;
+		fillBoxAxisEnd = isPositiveDirection ? fillBox.right : fillBox.left;
+		currentCopyStartAxis = isPositiveDirection ? selectionBox.left : selectionBox.right;
+	} else { // Vertical fill
+		isPositiveDirection = fillBox.bottom > selectionBox.bottom;
+		axisIncrement = isPositiveDirection ? selectionHeight : -selectionHeight;
+		wholeCopies = fillBoxHeight / selectionHeight;
+		fillBoxAxisEnd = isPositiveDirection ? fillBox.top : fillBox.bottom;
+		currentCopyStartAxis = isPositiveDirection ? selectionBox.bottom : selectionBox.top;
+	}
+
+	/** A +1/-1 multiplier to allow us to use one comparison symbol, ">", for both positive and negative directions. */
+	const direction = isPositiveDirection ? 1n : -1n;
+
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// First, delete all pieces in the fill box.
+	removeAllPieces(gamefile, edit, piecesInPasteBox);
+
+	// Cache frequently-used references for slightly better performance
+	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const getKey = coordutil.getKeyFromCoords;
+
+	// Iterate over each whole copy, plus one additional for a partial if needed
+	for (let i = 1n; i <= wholeCopies + 1n; i++) {	
+		currentCopyStartAxis += axisIncrement;
+
+		const partial: boolean = i === wholeCopies + 1n;
+		if (partial && currentCopyStartAxis * direction > fillBoxAxisEnd * direction) break; // No more space to fill even a partial box
+
+		// Add all the pieces from the selection box, translated to this copy's position
+		for (const piece of piecesInSelection) {
+			// Determine the translated coordinates for this piece in this copy
+			const translatedCoords: Coords = isHorizontal ?
+				[piece.coords[0] + axisIncrement * i, piece.coords[1]] :
+				[piece.coords[0], piece.coords[1] + axisIncrement * i];
+			// Only add if within fill box (only might exceed it on the final partial copy)
+			if (partial && !bounds.boxContainsSquare(fillBox, translatedCoords)) continue;
+			// Queue the addition of the piece at its new location
+			const hasSpecialRights = specialRights.has(getKey(piece.coords));
+			boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, hasSpecialRights);
+		}
+	}
+
+	// Apply the collective edit and add it to the history
+	applyEdit(gamefile, mesh, edit);
+
+	// Update the selection area to be the box containing both the original selection and the filled area
+
+	const newBox: BoundingBox = bounds.mergeBoundingBoxDoubles(selectionBox, fillBox);
+	selectiontool.setSelection([newBox.left, newBox.top], [newBox.right, newBox.bottom]);
 }
 
 
@@ -204,9 +280,7 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 
 	// Update the selection area to the actual paste box
 
-	const fullPasteBoxCorner1: Coords = [actualPasteBox.left, actualPasteBox.top];
-	const fullPasteBoxCorner2: Coords = [actualPasteBox.right, actualPasteBox.bottom];
-	selectiontool.setSelection(fullPasteBoxCorner1, fullPasteBoxCorner2);
+	selectiontool.setSelection([actualPasteBox.left, actualPasteBox.top], [actualPasteBox.right, actualPasteBox.bottom]);
 }
 
 /** Flips the selection box horizontally. */
