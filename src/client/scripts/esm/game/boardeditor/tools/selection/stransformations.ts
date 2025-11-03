@@ -559,6 +559,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 // API -------------------------------------------------------------------------
 
 
+/** Drops the reference to the clipboard contents. */
 function resetState(): void {
 	clipboard = undefined;
 	clipboardBox = undefined;
