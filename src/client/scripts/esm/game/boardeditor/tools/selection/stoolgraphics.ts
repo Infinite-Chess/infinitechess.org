@@ -35,9 +35,13 @@ const FILL_COLOR: Color = [0,0,0, 0.08]; // Transparent Black
 /** How many virtual screen pixels wide the corner square is. */
 const CORNER_DOT_WIDTH = 6;
 
+/** How many virtual screen pixels wide the dashed outlines are. */
+const DASHED_WIDTH = 1;
+/** How many virtual screen pixels long the dashes are. */
+const DASHED_LENGTH = 6;
+
 
 // Methods -----------------------------------------------------
-
 
 
 /**
@@ -84,6 +88,19 @@ function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
 }
 
 /**
+ * Renders a dashed wireframe box around the selection.
+ * @param worldBox - Contains the world space edge coordinates of the selection box.
+ */
+function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
+	// Convert virtual pixel dimensions to world space
+	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
+	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
+
+	const data: number[] = primitives.DashedRect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, dashedWidth, dashedLength, dashedLength, OUTLINE_COLOR);
+	createRenderable(data, 2, "TRIANGLES", 'color', true).render();
+}
+
+/**
  * Renders a filled transparent box inside the selection.
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
@@ -120,6 +137,7 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 export default {
 	outlineRankAndFile,
 	renderSelectionBoxWireframe,
+	renderSelectionBoxWireframeDashed,
 	renderSelectionBoxFill,
 	renderCornerSquare,
 };

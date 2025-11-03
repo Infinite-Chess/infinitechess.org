@@ -220,11 +220,9 @@ function render(): void {
 	}
 
 	// Convert it to a world-space box, with edges rounded away to encapsulate the entirity of the squares.
-	const translatedWorldBox: DoubleBoundingBox = selectiontool.convertIntBoxToWorldBox(fillBox);
+	const worldFillBox: DoubleBoundingBox = selectiontool.convertIntBoxToWorldBox(fillBox);
 
-	// TODO: Make this a dashed outline box
-	stoolgraphics.renderSelectionBoxWireframe(translatedWorldBox);
-	// stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
+	stoolgraphics.renderSelectionBoxWireframeDashed(worldFillBox);
 }
 
 
