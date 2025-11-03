@@ -18,6 +18,7 @@ import { listener_overlay } from "../../../chess/game";
 import { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import meshes from "../../../rendering/meshes";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
+import sfill from "./sfill";
 import sdrag from "./sdrag";
 import guiboardeditor from "../../../gui/boardeditor/guiboardeditor";
 
@@ -49,8 +50,8 @@ function update(): void {
 	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
 		// Update grabbing the selection box first
 		if (isACurrentSelection()) {
-			// Update selection box drag handler
-			sdrag.update();
+			sfill.update(); // Update fill tool handler
+			sdrag.update(); // Update selection box drag handler
 		}
 		// Test if a new selection is beginning
 		if (mouse.isMouseDown(Mouse.LEFT) && !selecting && !arrows.areHoveringAtleastOneArrow()) {
@@ -84,6 +85,7 @@ function beginSelection(): void {
 	startPoint = undefined;
 	endPoint = undefined;
 	selecting = true;
+	sfill.resetState();
 	sdrag.resetState();
 
 	// Set the start point
@@ -112,6 +114,7 @@ function resetState(): void {
 	lastPointerCoords = undefined;
 	startPoint = undefined;
 	endPoint = undefined;
+	sfill.resetState();
 	sdrag.resetState();
 	guiboardeditor.onClearSelection();
 }
@@ -140,7 +143,8 @@ function render(): void {
 		if (isACurrentSelection()) {
 			// Render the small square in the corner
 			stoolgraphics.renderCornerSquare(selectionWorldBox);
-			sdrag.render();
+			sfill.render(); // Fill tool graphics
+			sdrag.render(); // Selection drag graphics
 		}
 	}
 }

@@ -107,7 +107,10 @@ function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, tr
 }
 
 
-// Fill...
+/** Extends the selection area along a given axis by a given distance. */
+function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, axis: 0 | 1, fillDistance: bigint): void {
+	console.log("TODO: Fill selection box along axis", axis, "by", fillDistance);
+}
 
 
 // Action Button Transformations ------------------------------------------------
@@ -502,6 +505,7 @@ function resetState(): void {
 export default {
 	// Selection Box Transformations
 	Translate,
+	Fill,
 	// Action Button Transformations
 	Delete,
 	Copy,

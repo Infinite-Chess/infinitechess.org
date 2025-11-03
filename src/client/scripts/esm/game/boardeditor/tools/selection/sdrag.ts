@@ -220,6 +220,7 @@ function render(): void {
 
 
 export default {
+	GRABBABLE_DIST,
 	update,
 	resetState,
 	render,
