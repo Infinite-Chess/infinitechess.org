@@ -76,10 +76,13 @@ function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, tr
 		[destinationBox.right, destinationBox.bottom]
 	];
 	// A function controlling how each piece is transformed
-	const transformer = (coords: Coords): Coords => coordutil.addCoords(coords, translation);
+	const transformer = (piece: Piece): { coords: Coords; type: number } => ({
+		coords: coordutil.addCoords(piece.coords, translation),
+		type: piece.type
+	});
 
 	// Execute the transformation
-	displacingTransform(gamefile, mesh, selectionBox, destinationBox, newSelectionCorners, transformer);
+	Transform(gamefile, mesh, selectionBox, destinationBox, newSelectionCorners, transformer);
 }
 
 
@@ -286,6 +289,9 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 	const sum: BigDecimal = bd.add(bound1BD, bound2BD);
 	const reflectionLine: BigDecimal = bd.divide_fixed(sum, TWO, 0); // Working precision isn't needed because the quotient is rational
 
+	// These haven't changed from the original selection box
+	const selectionCorners: [Coords, Coords] = [[box.left, box.top], [box.right, box.bottom]];
+
 	// A function for controlling each piece's new state
 	const transformer = (piece: Piece): { coords: Coords; type: number } => {
 		// Reflect the piece's coordinate on the chosen axis
@@ -304,7 +310,7 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 	};
 
 	// Execute the transformation
-	inPlaceTransform(gamefile, mesh, box, transformer);
+	Transform(gamefile, mesh, box, box, selectionCorners, transformer);
 }
 
 
@@ -370,10 +376,13 @@ function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boo
 	const newSelectionCorners: [Coords, Coords] = [rotatedBoxCorner1, rotatedBoxCorner2];
 
 	// A function controlling how each piece is transformed
-	const transformer = (coords: Coords): Coords => rotatePoint(coords, pivot, clockwise);
+	const transformer = (piece: Piece): { coords: Coords; type: number } => ({
+		coords: rotatePoint(piece.coords, pivot, clockwise),
+		type: piece.type
+	});
 
 	// Execute the transformation
-	displacingTransform(gamefile, mesh, box, rotatedBox, newSelectionCorners, transformer);
+	Transform(gamefile, mesh, box, rotatedBox, newSelectionCorners, transformer);
 }
 
 /**
@@ -414,6 +423,9 @@ function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords
 
 /** Inverts the color of the pieces in the selection box. */
 function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+	// These haven't changed from the original selection box
+	const selectionCorners: [Coords, Coords] = [[box.left, box.top], [box.right, box.bottom]];
+
 	// A function for controlling each piece's new state
 	const transformer = (piece: Piece): { coords: Coords; type: number } => {
 		const newType = typeutil.invertType(piece.type);
@@ -421,7 +433,7 @@ function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	};
 
 	// Execute the transformation
-	inPlaceTransform(gamefile, mesh, box, transformer);
+	Transform(gamefile, mesh, box, box, selectionCorners, transformer);
 }
 
 
@@ -429,19 +441,19 @@ function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 
 
 /**
- * Executes a displacing transformation, where the selection is moved to a new area.
- * Handles clearing the destination area, clearing the selection area, moving the
- * pieces, and updating the selection area.
+ * Executes a transformation, where pieces within the selection may be moved or modified.
+ * Handles clearing the destination area, clearing the selection area,
+ * moving the pieces, and updating the selection area.
  */
-function displacingTransform(
+function Transform(
 	gamefile: FullGame, 
 	mesh: Mesh, 
 	sourceBox: BoundingBox,
 	destinationBox: BoundingBox,
 	newSelectionCorners: [Coords, Coords],
-	/** A function to transform individual coordinates. */
+	/** A function to transform an individual piece's coordinates and type. */
 	// eslint-disable-next-line no-unused-vars
-	transformer: (coords: Coords) => Coords
+	transformer: (piece: Piece) => { coords: Coords, type: number }
 ): void {
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);
@@ -463,11 +475,11 @@ function displacingTransform(
 
 	// Add all pieces in the original selection area, but transformed
 	for (const piece of piecesInSource) {
-		// Determine the new coordinates for this piece
-		const newCoords = transformer(piece.coords);
+		// Determine the new state for this piece
+		const transformed = transformer(piece);
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
-		boardeditor.queueAddPiece(gamefile, edit, newCoords, piece.type, hasSpecialRights);
+		boardeditor.queueAddPiece(gamefile, edit, transformed.coords, transformed.type, hasSpecialRights);
 	}
     
 	// Apply the collective edit and add it to the history
@@ -475,40 +487,6 @@ function displacingTransform(
 
 	// Update the selection area
 	selectiontool.setSelection(newSelectionCorners[0], newSelectionCorners[1]);
-}
-
-/**
- * Executes an in-place transformation, where pieces within the selection
- * may be moved or modified, but the selection box itself does not move.
- */
-function inPlaceTransform(
-	gamefile: FullGame, 
-	mesh: Mesh, 
-	box: BoundingBox,
-	/** A function that takes a piece and returns its new state: { coords, type }. */
-	// eslint-disable-next-line no-unused-vars
-	transformer: (piece: Piece) => { coords: Coords, type: number }
-): void {
-	const piecesInSelection = getPiecesInBox(gamefile, box);
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-    
-	// First, remove all original pieces
-	removeAllPieces(gamefile, edit, piecesInSelection);
-
-	const specialRights = gamefile.boardsim.state.global.specialRights;
-	const getKey = coordutil.getKeyFromCoords;
-
-	// Then, add back the transformed versions
-	for (const piece of piecesInSelection) {
-		// Determine the transformed state for this piece
-		const transformed = transformer(piece);
-		// Queue the addition of the piece at its new location/type
-		const hasSpecialRights = specialRights.has(getKey(piece.coords));
-		boardeditor.queueAddPiece(gamefile, edit, transformed.coords, transformed.type, hasSpecialRights);
-	}
-    
-	// Apply the collective edit and add it to the history
-	applyEdit(gamefile, mesh, edit);
 }
 
 
