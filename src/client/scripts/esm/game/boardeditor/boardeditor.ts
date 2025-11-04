@@ -14,6 +14,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { listener_document } from '../chess/game.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
@@ -30,7 +31,6 @@ import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
-import { listener_document } from '../chess/game.js';
 
 
 // Type Definitions -------------------------------------------------------------

@@ -13,6 +13,13 @@ import type { DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
 
 import docutil from "../util/docutil.js";
 
+/**
+ * A list of all keyboard shortcuts that don't have a built in event in javascript.
+ * This includes: Undo, Redo, Select All
+ * This does NOT include: Copy, Cut, Paste (these have built in events).
+ */
+const manual_shortcuts: string[] = ['KeyZ', 'KeyY', 'KeyA'];
+
 const Mouse = {
 	LEFT: 0,
 	MIDDLE: 1,
@@ -139,7 +146,7 @@ interface InputListener {
 	/** 
 	 * Whether the provided keyboard key was pressed down this frame.
 	 * @param keyCode - The key code to check
-	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held. If false or undefined, returns true regardless of meta key state.
+	 * @param [requireMetaKey] If true, only returns true if a meta key (Ctrl/Cmd) was also held.
 	 */
     // eslint-disable-next-line no-unused-vars
     isKeyDown(keyCode: string, requireMetaKey?: boolean): boolean;
@@ -683,8 +690,11 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// Only add to keyHelds if no meta key was held
 			if (!keyHelds.includes(e.code) && !(e.ctrlKey || e.metaKey)) keyHelds.push(e.code);
 
-			// Prevent default behavior for all keys when a meta key is held
-			if (e.ctrlKey || e.metaKey) e.preventDefault();
+			// Prevent default behavior for shortcuts without a built in event.
+			// This still allows copy & paste events to bubble through to our listeners,
+			// but for example it prevents Ctrl+A from selecting all text on the page.
+			if (manual_shortcuts.includes(e.code) && (e.ctrlKey || e.metaKey)) e.preventDefault();
+
 			if (e.key === 'Tab') e.preventDefault(); // Prevents the default tabbing behavior of cycling through elements on the page.
 		}) as EventListener);
 
