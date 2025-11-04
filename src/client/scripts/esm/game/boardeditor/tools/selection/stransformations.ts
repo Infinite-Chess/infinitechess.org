@@ -4,7 +4,7 @@
 /**
  * Selection Tool Transformations
  * 
- * Contains transformation functions for the curreng
+ * Contains transformation functions for the current
  * selection from the Selection Tool in the Board Editor
  */
 
