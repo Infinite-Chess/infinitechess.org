@@ -55,9 +55,9 @@ const validTools = ["normal", "placer", "eraser", "specialrights", "selection-to
  * 
  * Naviary's machine got to 26 million changes before slowing, then crashing.
  * The tab was using roughly 5 GB of memory at that point.
- * I guess maybe a max of 10 million could be safe on most machines?
+ * I guess maybe a max of 8 million could be safe on most machines?
  */
-const EDIT_HISTORY_MAX_CHANGES = 10_000_000;
+const EDIT_HISTORY_MAX_CHANGES = 8_000_000;
 
 
 // State -------------------------------------------------------------------------
