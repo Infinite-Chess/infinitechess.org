@@ -24,8 +24,6 @@ import guiboardeditor from "../../../gui/boardeditor/guiboardeditor";
 import boardutil from "../../../../../../../shared/chess/util/boardutil";
 import gameslot from "../../../chess/gameslot";
 import boardeditor from "../../boardeditor";
-import Transition from "../../../rendering/transitions/Transition";
-import guinavigation from "../../../gui/guinavigation";
 import stransformations from "./stransformations";
 
 
@@ -231,12 +229,13 @@ function selectAll(): void {
 
 	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 
-	if (allCoords.length === 0) {
-		// No pieces, cancel selection
-		resetState();
-		guinavigation.recenter();
-		return;
-	}
+	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+	// if (allCoords.length === 0) {
+	// 	// No pieces, cancel selection
+	// 	resetState();
+	// 	guinavigation.recenter();
+	// 	return;
+	// }
 
 	const box: BoundingBox = bounds.getBoxFromCoordsList(allCoords);
 
@@ -244,7 +243,8 @@ function selectAll(): void {
 	endPoint = [box.right, box.bottom];
 
 	guiboardeditor.onNewSelection();
-	Transition.zoomToCoordsBox(box);
+	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+	// Transition.zoomToCoordsBox(box);
 }
 
 
