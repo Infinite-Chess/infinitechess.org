@@ -99,7 +99,7 @@ function closeBoardEditor(): void {
 function update(): void {
 	if (!inBoardEditor) return;
 
-	testControls();
+	testShortcuts();
 
 	// Handle starting and ending the drawing state
 	if (drawingtool.isToolADrawingTool(currentTool)) drawingtool.update(currentTool);
@@ -108,7 +108,7 @@ function update(): void {
 }
 
 /** Tests for keyboard shortcuts in the board editor. */
-function testControls(): void {
+function testShortcuts(): void {
 	// Check for Ctrl+A or Cmd+A to select all
 	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
 }
