@@ -95,7 +95,7 @@ function detectPanning(): void {
 	let panVel = boardpos.getPanVel();
 
 	let panning = false; // Any panning key pressed this frame?
-	if (!guipromotion.isUIOpen()) { // Disable the controls temporarily
+	if (!guipromotion.isUIOpen() && !boardeditor.areInBoardEditor()) { // Disable the controls temporarily
 		if (listener_document.isKeyHeld('KeyD')) {
 			panning = true;
 			accelPanVel(panVel, 0);
@@ -243,9 +243,9 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 		piecemodels.regenAll(gamefile.boardsim, mesh);
 		statustext.showStatus('Regenerated piece models.', false, 0.5);
 	}
-	if (listener_document.isKeyDown('KeyN')) {
+	if (listener_document.isKeyDown('KeyN') && !boardeditor.areInBoardEditor()) {
 		guinavigation.toggle();
-		if (!boardeditor.areInBoardEditor()) guigameinfo.toggle();
+		guigameinfo.toggle();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 	

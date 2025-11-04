@@ -116,6 +116,13 @@ function testShortcuts(): void {
 	if (listener_document.isKeyDown('KeyY', true)) redo();
 	if (listener_document.isKeyDown('KeyZ', true, true)) redo(); // Also requires shift key
 	else if (listener_document.isKeyDown('KeyZ', true)) undo();
+
+	// Tools
+	if (listener_document.isKeyDown('KeyN')) setTool("normal");
+	// else if (listener_document.isKeyDown('KeyP')) setTool("placer"); // Already bound to toggling miniimages
+	else if (listener_document.isKeyDown('KeyE')) setTool("eraser");
+	else if (listener_document.isKeyDown('KeyS')) setTool("selection-tool");
+	// else if (listener_document.isKeyDown('KeyR')) setTool("specialrights"); // Already bound to regenerating piece models
 }
 
 
