@@ -255,6 +255,7 @@ export default {
 	update,
 	getPointerCoords,
 	resetState,
+	isExistingSelection,
 	render,
 	getSelectionIntBox,
 	getSelectionWorldBox,

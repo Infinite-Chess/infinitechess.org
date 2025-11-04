@@ -31,6 +31,7 @@ import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
+import eactions from './eactions.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -82,6 +83,8 @@ function initBoardEditor(): void {
 	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
 	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
 	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
+
+	addEventListeners();
 }
 
 function closeBoardEditor(): void {
@@ -94,6 +97,20 @@ function closeBoardEditor(): void {
 	drawingtool.onCloseEditor();
 	selectiontool.resetState();
 	stransformations.resetState(); // Drops reference to clipboard
+
+	removeEventListeners();
+}
+
+function addEventListeners(): void {
+	document.addEventListener('copy', Copy);
+	document.addEventListener('cut', Cut);
+	document.addEventListener('paste', Paste);
+}
+
+function removeEventListeners(): void {
+	document.removeEventListener('copy', Copy);
+	document.removeEventListener('cut', Cut);
+	document.removeEventListener('paste', Paste);
 }
 
 function update(): void {
@@ -221,6 +238,55 @@ function queueSpecialRights(gamefile: FullGame, edit: Edit, coords: Coords, add:
 	const coordsKey = coordutil.getKeyFromCoords(coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordsKey, current, add);
+}
+
+
+// Copy/Paste Handlers ----------------------------------------------------------
+
+
+/** Custom Board Editor handler for Copy event. */
+function Copy(): void {
+	if (document.activeElement !== document.body) return; // Don't copy if the user is typing in an input field
+	
+	if (currentTool !== "selection-tool") {
+		// Copy game notation
+		eactions.save();
+	} else if (selectiontool.isExistingSelection()) {
+		// Copy current selection
+		const gamefile = gameslot.getGamefile()!;
+		const selectionBox = selectiontool.getSelectionIntBox()!;
+		stransformations.Copy(gamefile, selectionBox);
+	}
+}
+
+/** Board Editor handler for Cut event. */
+function Cut(): void {
+	if (document.activeElement !== document.body) return; // Don't cut if the user is typing in an input field
+
+	if (currentTool !== "selection-tool" || !selectiontool.isExistingSelection()) return;
+
+	// Cut current selection
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const selectionBox = selectiontool.getSelectionIntBox()!;
+	stransformations.Copy(gamefile, selectionBox);
+	stransformations.Delete(gamefile, mesh, selectionBox);
+}
+
+/** Custom Board Editor handler for Paste event. */
+function Paste(): void {
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
+
+	if (currentTool !== "selection-tool") {
+		// Paste game notation
+		eactions.load();
+	} else if (selectiontool.isExistingSelection()) {
+		// Paste clipboard at current selection
+		const gamefile = gameslot.getGamefile()!;
+		const mesh = gameslot.getMesh()!;
+		const selectionBox = selectiontool.getSelectionIntBox()!;
+		stransformations.Paste(gamefile, mesh, selectionBox);
+	}
 }
 
 
