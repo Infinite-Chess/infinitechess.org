@@ -109,8 +109,12 @@ function update(): void {
 
 /** Tests for keyboard shortcuts in the board editor. */
 function testShortcuts(): void {
-	// Check for Ctrl+A or Cmd+A to select all
+	// Select all
 	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
+	// Undo/Redo
+	if (listener_document.isKeyDown('KeyY', true)) redo();
+	if (listener_document.isKeyDown('KeyZ', true, true)) redo(); // Also requires shift key
+	else if (listener_document.isKeyDown('KeyZ', true)) undo();
 }
 
 
