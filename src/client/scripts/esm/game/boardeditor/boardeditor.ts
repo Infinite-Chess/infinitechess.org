@@ -35,6 +35,7 @@ import eactions from './eactions.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
+import perspective from '../rendering/perspective.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -139,6 +140,8 @@ function update(): void {
 
 /** Tests for keyboard shortcuts in the board editor. */
 function testShortcuts(): void {
+	if (perspective.getEnabled()) return; // Disable shortcuts while in perspective mode, WASD is reserved for camera movement
+
 	// Select all
 	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
 

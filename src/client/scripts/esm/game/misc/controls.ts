@@ -95,7 +95,7 @@ function detectPanning(): void {
 	let panVel = boardpos.getPanVel();
 
 	let panning = false; // Any panning key pressed this frame?
-	if (!guipromotion.isUIOpen() && !boardeditor.areInBoardEditor()) { // Disable the controls temporarily
+	if (!guipromotion.isUIOpen() && (!boardeditor.areInBoardEditor() || perspective.getEnabled())) { // Disable the controls temporarily
 		if (listener_document.isKeyHeld('KeyD')) {
 			panning = true;
 			accelPanVel(panVel, 0);
