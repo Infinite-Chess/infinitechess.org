@@ -127,8 +127,9 @@ function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox
 	for (let i = 1n; i <= wholeCopies + 1n; i++) {	
 		currentCopyStartAxis += axisIncrement;
 
+		/** Whether this iteration can only fit a partial copy. */
 		const partial: boolean = i === wholeCopies + 1n;
-		if (partial && currentCopyStartAxis * direction > fillBoxAxisEnd * direction) break; // No more space to fill even a partial box
+		if (partial && currentCopyStartAxis * direction > fillBoxAxisEnd * direction) break; // No more space to fill even a partial box (a whole number of copies fit exactly)
 
 		// Add all the pieces from the selection box, translated to this copy's position
 		for (const piece of piecesInSelection) {
