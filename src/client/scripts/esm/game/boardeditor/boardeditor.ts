@@ -49,6 +49,16 @@ type Tool = (typeof validTools)[number];
 /** All tools that can be used in the board editor. */
 const validTools = ["normal", "placer", "eraser", "specialrights", "selection-tool"] as const;
 
+/**
+ * The maximum allowed summed changes in the edit history before oldest edits are pruned.
+ * This is to prevent excessive memory usage crashing the browser.
+ * 
+ * Naviary's machine got to 26 million changes before slowing, then crashing.
+ * The tab was using roughly 5 GB of memory at that point.
+ * I guess maybe a max of 10 million could be safe on most machines?
+ */
+const EDIT_HISTORY_MAX_CHANGES = 10_000_000;
+
 
 // State -------------------------------------------------------------------------
 
@@ -193,6 +203,19 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	if (pieceCount > miniimage.pieceCountToDisableMiniImages || pieceCount > arrows.pieceCountToDisableArrows) {
 		miniimage.disable();
 		arrows.setMode(0);
+	}
+
+	// Prune the oldest edits in the history if we exceed the cap, to help prevent memory crashes.
+	const totalChanges: number = edits!.reduce((sum, edit) => sum + edit.changes.length, 0);
+	// console.log("Total changes in edit history: " + totalChanges);
+	if (totalChanges > EDIT_HISTORY_MAX_CHANGES) {
+		let changesToRemove = totalChanges - EDIT_HISTORY_MAX_CHANGES;
+		while (changesToRemove > 0 && edits!.length > 0) {
+			const oldestEdit = edits!.shift()!;
+			changesToRemove -= oldestEdit.changes.length;
+			indexOfThisEdit!--;
+		}
+		// console.log("Pruned oldest edits.");
 	}
 }
 
