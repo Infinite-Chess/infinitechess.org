@@ -173,7 +173,7 @@ function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassan
 /** Creates a specialrights global StateChange, queueing it by adding it to the Move. */
 function createSpecialRightsState(move: Edit, coordsKey: CoordsKey, current: boolean, future: boolean): void {
 	// IF THIS IS ENABLED, It creates a bug in the board editor selection reflection tool,
-	// where the specialrights fail to correctly reflect. This is because this normally,
+	// where the specialrights fail to correctly reflect. This is because normally,
 	// changes arrays don't contain two specialrights state changes for the same square,
 	// but may in the editor for selection actions. But this line prevents that second
 	// state change from being queued.
