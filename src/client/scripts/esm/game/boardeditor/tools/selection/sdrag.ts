@@ -9,7 +9,7 @@
  */
 
 import { Mouse } from "../../../input";
-import coordutil, { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
+import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
 import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import mouse from "../../../../util/mouse";
@@ -136,7 +136,7 @@ function pickUpSelection(): void {
 	// This will be the anchor
 
 	const selectionIntBox: BoundingBox = selectiontool.getSelectionIntBox()!;
-	const pointerCoordRounded: Coords = getIntCoordOfPointer();
+	const pointerCoordRounded: Coords = selectiontool.getPointerCoords(pointerId!);
 
 	// Clamp the pointer coord to the int box
 	anchorCoords = [
@@ -164,15 +164,6 @@ function dropSelection(): void {
 	stransformations.Translate(gamefile, mesh, selectionBox, translation);
 }
 
-/**
- * Returns the integer-rounded coordinate the pointer is currently over.
- * ONLY CALL if you are sure the pointer exists!
- */
-function getIntCoordOfPointer(): Coords {
-	const pointerWorld: DoubleCoords = mouse.getPointerWorld(pointerId!)!;
-	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
-}
-
 // /**
 //  * Whether we are currently dragging the selection, AND
 //  * we have dragged it atleast 1 square away from the anchor.
@@ -197,7 +188,7 @@ function render(): void {
 	if (!areDragging || !anchorCoords) return;
 
 	// Determine the current int coord of the pointer
-	const pointerCoordRounded: Coords = getIntCoordOfPointer();
+	const pointerCoordRounded: Coords = selectiontool.getPointerCoords(pointerId!);
 
 	// Determine by how many tiles the pointer has dragged from the anchor
 	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords);

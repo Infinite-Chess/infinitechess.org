@@ -7,7 +7,7 @@
  * Acts similarly to that of Google Sheets
  */
 
-import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
+import type { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
 
 import mouse from "../../../../util/mouse";
 import arrows from "../../../rendering/arrows/arrows";
@@ -92,7 +92,7 @@ function testShortcuts(): void {
  * ONLY CALL if you know the pointer exists!
  */
 function getPointerCoords(pointerId: string): Coords {
-	const pointerWorld = mouse.getPointerWorld(pointerId)!;
+	const pointerWorld: DoubleCoords = mouse.getPointerWorld(pointerId)!;
 	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 }
 
