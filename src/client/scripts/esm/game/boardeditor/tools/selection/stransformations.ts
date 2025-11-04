@@ -536,18 +536,37 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	const rangeStart = axis === 0 ? intBox.left : intBox.bottom;
 	const rangeEnd =   axis === 0 ? intBox.right : intBox.top;
 
-	for (let i = linesStart; i <= linesEnd; i++) {
-		const coordsForKey: Coords = axis === 0 ? [0n, i] : [i, 0n]; // 0n makes no difference for the final key of the line, it can be anything.
-		const lineKey: LineKey = organizedpieces.getKeyFromLine(step, coordsForKey);
+	const numOfLines: bigint = linesEnd - linesStart + 1n;
+	const lineEntries: bigint = BigInt(lines.size);
 
-		const thisLine: number[] | undefined = lines.get(lineKey);
-		if (!thisLine) continue; // Empty line
-		for (let a = 0; a < thisLine.length; a++) {
-			const idx = thisLine[a]!;
-			// The piece is in the selection area if it's axis coord is within bounds
-			const thisCoord: bigint = coordPositions[idx]!;
-			if (thisCoord >= rangeStart && thisCoord <= rangeEnd) {
-				piecesInSelection.push(boardutil.getDefinedPieceFromIdx(o, idx));
+	// If the total number of line entries is less than the number of lines in the selection box,
+	// iterate through them instead. It's more efficient.
+	if (lineEntries <= numOfLines) {
+		for (const thisLine of lines.values()) {
+			for (let a = 0; a < thisLine.length; a++) {
+				const idx = thisLine[a]!;
+				// Check if the piece coords is within the selection area
+				const coords: Coords = boardutil.getCoordsFromIdx(o, idx);
+				if (bounds.boxContainsSquare(intBox, coords)) {
+					piecesInSelection.push(boardutil.getDefinedPieceFromIdx(o, idx));
+				}
+			}
+		}
+	} else {
+		// Iterate through each line to find all pieces within the selection box
+		for (let i = linesStart; i <= linesEnd; i++) {
+			const coordsForKey: Coords = axis === 0 ? [0n, i] : [i, 0n]; // 0n makes no difference for the final key of the line, it can be anything.
+			const lineKey: LineKey = organizedpieces.getKeyFromLine(step, coordsForKey);
+
+			const thisLine: number[] | undefined = lines.get(lineKey);
+			if (!thisLine) continue; // Empty line
+			for (let a = 0; a < thisLine.length; a++) {
+				const idx = thisLine[a]!;
+				// The piece is in the selection area if its axis coord is within bounds
+				const thisCoord: bigint = coordPositions[idx]!;
+				if (thisCoord >= rangeStart && thisCoord <= rangeEnd) {
+					piecesInSelection.push(boardutil.getDefinedPieceFromIdx(o, idx));
+				}
 			}
 		}
 	}
