@@ -5,6 +5,8 @@
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
+import type { Coords } from "../../../../../../shared/chess/util/coordutil";
+
 import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter";
 import { RawType } from "../../../../../../shared/chess/util/typeutil";
 import jsutil from "../../../../../../shared/util/jsutil";
@@ -278,15 +280,9 @@ function readGameRules(): void {
 		winConditions
 	};
 
-	// Set en passant state for rendering purposes
-	if (enPassant !== undefined) egamerules.setEnpassantState([enPassant.x, enPassant.y]);
-	else egamerules.setEnpassantState(undefined);
-
-	// Update the promotionlines in the gamefile for rendering purposes
-	egamerules.updatePromotionLines(gameRules.promotionRanks);
-
-	// Update the turn order so that using the Normal tool, pawns correctly show enpassant as legal.
-	egamerules.updateTurnOrder(gameRules.playerToMove);
+	// Update gamefile properties for rendering purposes and correct legal move calculation
+	const enpassantSquare: Coords | undefined = gameRules.enPassant !== undefined ? [gameRules.enPassant.x, gameRules.enPassant.y] : undefined;
+	egamerules.updateGamefileProperties(enpassantSquare, gameRules.promotionRanks, gameRules.playerToMove);
 
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
