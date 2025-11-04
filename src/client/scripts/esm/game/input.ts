@@ -148,10 +148,11 @@ interface InputListener {
 	/** 
 	 * Whether the provided keyboard key was pressed down this frame.
 	 * @param keyCode - The key code to check
-	 * @param [requireMetaKey] If true, only returns true if a meta key (Ctrl/Cmd) was also held.
+	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held. If false or undefined, returns true regardless of meta key state.
+	 * @param requireShiftKey - If true, only returns true if the Shift key was also held. If false or undefined, returns true regardless of shift key state.
 	 */
     // eslint-disable-next-line no-unused-vars
-    isKeyDown(keyCode: string, requireMetaKey?: boolean): boolean;
+    isKeyDown(keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean;
 	/** Whether the provided keyboard key is currently being held down. */
     // eslint-disable-next-line no-unused-vars
     isKeyHeld(keyCode: string): boolean;
@@ -800,8 +801,12 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			return logicalPointer.physical === physicalPointers[physicalPointerId];
 		},
 		getWheelDelta: (): number => wheelDelta,
-		isKeyDown: (keyCode: string, requireMetaKey?: boolean): boolean => {
-			return keyDowns.some(keyInfo => keyInfo.keyCode === keyCode && (!requireMetaKey || keyInfo.metaKey));
+		isKeyDown: (keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean => {
+			return keyDowns.some(keyInfo => 
+				keyInfo.keyCode === keyCode && 
+				(!requireMetaKey || keyInfo.metaKey) &&
+				(!requireShiftKey || keyInfo.shiftKey)
+			);
 		},
 		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
 		removeEventListeners: (): void => {
