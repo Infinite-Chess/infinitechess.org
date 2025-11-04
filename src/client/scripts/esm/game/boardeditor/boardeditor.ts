@@ -32,6 +32,9 @@ import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
 import eactions from './eactions.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import miniimage from '../rendering/miniimage.js';
+import arrows from '../rendering/arrows/arrows.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -184,6 +187,13 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
 
 	specialrighthighlights.onMove();
+
+	// If the piece count is now high enough, disable icons and arrows.
+	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
+	if (pieceCount > miniimage.pieceCountToDisableMiniImages || pieceCount > arrows.pieceCountToDisableArrows) {
+		miniimage.disable();
+		arrows.setMode(0);
+	}
 }
 
 function addEditToHistory(edit: Edit): void {
