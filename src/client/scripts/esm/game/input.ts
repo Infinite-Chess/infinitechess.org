@@ -41,6 +41,8 @@ interface KeyDownInfo {
 	keyCode: string;
 	/** Whether a meta key (Ctrl or Cmd) was held when the key was pressed. */
 	metaKey: boolean;
+	/** Whether the Shift key was held when the key was pressed. */
+	shiftKey: boolean;
 }
 
 interface InputListener {
@@ -684,7 +686,8 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (!keyDowns.some(keyInfo => keyInfo.keyCode === e.code)) {
 				keyDowns.push({
 					keyCode: e.code,
-					metaKey: e.ctrlKey || e.metaKey
+					metaKey: e.ctrlKey || e.metaKey,
+					shiftKey: e.shiftKey
 				});
 			}
 			// Only add to keyHelds if no meta key was held
