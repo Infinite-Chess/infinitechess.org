@@ -250,13 +250,17 @@ function getAbsoluteIdx(o: OrganizedPieces, piece: Piece): number {
 /**
  * Returns the Piece object of the piece with given idx, or undefined if the
  * idx is an undefined placeholder (has to perform a search to find that out).
+ * IF YOU KNOW it's not an undefined placeholder, use {@link getDefinedPieceFromIdx} instead for better performance.
  */
 function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 	if (isIdxUndefinedPiece(o, idx)) return undefined;
 	return getDefinedPieceFromIdx(o, idx);
 }
 
-/** Returns the Piece object of the piece with given idx. Only call if you know it's not an undefined placeholder. */
+/**
+ * Returns the Piece object of the piece with given idx. MORE PERFORMANT than {@link getPieceFromIdx}.
+ * Only call if you know it's not an undefined placeholder.
+ */
 function getDefinedPieceFromIdx(o: OrganizedPieces, idx: number): Piece {
 	const type = o.types[idx]!;
 	return {
