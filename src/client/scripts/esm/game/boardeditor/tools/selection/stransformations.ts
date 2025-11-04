@@ -8,20 +8,6 @@
  * selection from the Selection Tool in the Board Editor
  */
 
-/**
- * Implement TODO:
- * 
- * * Copy
- * * Paste (in whole multiples)
- * * Flip horizontally
- * * Flip vertically
- * * Rotate left
- * * Rotate right
- * * Invert color
- * 
- * * Fill (allows partial multiples)
- */
-
 import type { BoundingBox } from "../../../../../../../shared/util/math/bounds";
 import type { FullGame } from "../../../../../../../shared/chess/logic/gamefile";
 import type { Mesh } from "../../../rendering/piecemodels";
