@@ -189,6 +189,14 @@ function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigin
 	}
 }
 
+/** Updates the turn order in the current gamefile, needed so in the Normal tool, pawns correctly show enpassant as legal. */
+function updateTurnOrder(playerToMove: 'white' | 'black'): void {
+	const gamefile = gameslot.getGamefile()!;
+	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [players.WHITE, players.BLACK] : playerToMove === 'black' ? [players.BLACK, players.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	// Update whosTurn as well
+	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0];
+}
+
 
 // Exports -------------------------------------------------------------
 
@@ -206,4 +214,5 @@ export default {
 	// Specific Rules
 	setEnpassantState,
 	updatePromotionLines,
+	updateTurnOrder,
 };

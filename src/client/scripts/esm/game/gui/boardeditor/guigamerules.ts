@@ -157,7 +157,7 @@ function resetPositioning(): void {
 // Reading/Writing Game Rules -----------------------------------------------
 
 
-/** Reads the game rules inserted into the input boxes and updates boardeditor.gameRulesGUIinfo */
+/** Reads the game rules inserted into the input boxes and updates egamerules.gameRulesGUIinfo */
 function readGameRules(): void {
 	// playerToMove
 	const playerToMove = element_white.checked ? 'white' : 'black';
@@ -284,6 +284,9 @@ function readGameRules(): void {
 
 	// Update the promotionlines in the gamefile for rendering purposes
 	egamerules.updatePromotionLines(gameRules.promotionRanks);
+
+	// Update the turn order so that using the Normal tool, pawns correctly show enpassant as legal.
+	egamerules.updateTurnOrder(gameRules.playerToMove);
 
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
