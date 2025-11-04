@@ -111,6 +111,7 @@ function update(): void {
 function testShortcuts(): void {
 	// Select all
 	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
+
 	// Undo/Redo
 	if (listener_document.isKeyDown('KeyY', true)) redo();
 	if (listener_document.isKeyDown('KeyZ', true, true)) redo(); // Also requires shift key

@@ -14,7 +14,7 @@ import arrows from "../../../rendering/arrows/arrows";
 import stoolgraphics from "./stoolgraphics";
 import space from "../../../misc/space";
 import { Mouse } from "../../../input";
-import { listener_overlay } from "../../../chess/game";
+import { listener_document, listener_overlay } from "../../../chess/game";
 import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import meshes from "../../../rendering/meshes";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
@@ -26,6 +26,7 @@ import gameslot from "../../../chess/gameslot";
 import boardeditor from "../../boardeditor";
 import Transition from "../../../rendering/transitions/Transition";
 import guinavigation from "../../../gui/guinavigation";
+import stransformations from "./stransformations";
 
 
 // State ----------------------------------------------
@@ -52,6 +53,8 @@ let endPoint: Coords | undefined;
 
 
 function update(): void {
+	if (selecting || endPoint) testShortcuts(); // Is a current selection, or one is in progress
+
 	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
 		// Update grabbing the selection box first
 		if (isACurrentSelection()) {
@@ -72,6 +75,17 @@ function update(): void {
 		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = getPointerCoords(pointerId!);
 		// Test if pointer released (finalize new selection)
 		if (!respectiveListener.isPointerHeld(pointerId!)) endSelection();
+	}
+}
+
+/** Tests for keyboard shortcuts while using the Selection Tool. */
+function testShortcuts(): void {
+	// Delete selection
+	if (listener_document.isKeyDown('Delete') || listener_document.isKeyDown('Backspace')) {
+		const gamefile = gameslot.getGamefile()!;
+		const mesh = gameslot.getMesh()!;
+		const selectionBox: BoundingBox = getSelectionIntBox()!;
+		stransformations.Delete(gamefile, mesh, selectionBox);
 	}
 }
 
