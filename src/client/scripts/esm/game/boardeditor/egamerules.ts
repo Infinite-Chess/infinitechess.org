@@ -146,12 +146,9 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 		...gameRules.winConditions[players.BLACK] || [icnconverter.default_win_condition]
 	])].filter(wincon => winconutil.isWinConditionValid(wincon));
 
-	// Set en passant state for rendering purposes
-	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
-	else setEnpassantState(undefined);
-
-	// Update the promotionlines in the gamefile for rendering purposes
-	updatePromotionLines(gamerulesGUIinfo.promotionRanks);
+	// Update gamefile properties for rendering purposes and correct legal move calculation
+	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
+	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -162,39 +159,42 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 }
 
 
-// Specific Rules -------------------------------------------------------------
+// Updating Gamefile State -------------------------------------------------------------
 
 
-/** Updates the en passant square in the current gamefile, needed for display purposes */
-function setEnpassantState(coords: Coords | undefined): void {
+/**
+ * Updates the en passant square, promotion lines, and turn order in the current gamefile.
+ * Needed for display purposes and correct legal move calculation.
+ */
+function updateGamefileProperties(
+	enpassantCoords: Coords | undefined,
+	promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined,
+	playerToMove: 'white' | 'black',
+): void {
 	const gamefile = gameslot.getGamefile()!;
-	if (coords === undefined) {
+
+	// Update en passant state for rendering purposes, and correct enpassant legality calculation
+	if (enpassantCoords === undefined) {
 		gamefile.boardsim.state.global.enpassant = undefined;
-		return;
+	} else {
+		const pawn: Coords = playerToMove === 'white' ? [enpassantCoords[0], enpassantCoords[1] - 1n] : playerToMove === 'black' ? [enpassantCoords[0], enpassantCoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+		const enpassant: EnPassant = { square: enpassantCoords, pawn };
+		gamefile.boardsim.state.global.enpassant = enpassant;
 	}
 
-	const pawn: Coords = gamerulesGUIinfo.playerToMove === 'white' ? [coords[0], coords[1] - 1n] : gamerulesGUIinfo.playerToMove === 'black' ? [coords[0], coords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
-	const enpassant: EnPassant | undefined = { square: coords, pawn };
-	gamefile.boardsim.state.global.enpassant = enpassant;
-}
-
-/** Updates the promotion lines in the current gamefile, needed for display purposes */
-function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined ): void {
-	const gamefile = gameslot.getGamefile()!;
-	if (promotionRanks === undefined) gamefile.basegame.gameRules.promotionRanks = undefined;
-	else {
+	// Update the promotionlines in the gamefile for rendering purposes
+	if (promotionRanks === undefined) {
+		gamefile.basegame.gameRules.promotionRanks = undefined;
+	} else {
 		gamefile.basegame.gameRules.promotionRanks = {};
 		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = promotionRanks.white || [];
 		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = promotionRanks.black || [];
 	}
-}
 
-/** Updates the turn order in the current gamefile, needed so in the Normal tool, pawns correctly show enpassant as legal. */
-function updateTurnOrder(playerToMove: 'white' | 'black'): void {
-	const gamefile = gameslot.getGamefile()!;
+	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
 	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [players.WHITE, players.BLACK] : playerToMove === 'black' ? [players.BLACK, players.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
-	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0];
+	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
 }
 
 
@@ -211,8 +211,6 @@ export default {
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	updateGamerulesGUIinfo,
-	// Specific Rules
-	setEnpassantState,
-	updatePromotionLines,
-	updateTurnOrder,
+	// Updating Gamefile State
+	updateGamefileProperties,
 };
