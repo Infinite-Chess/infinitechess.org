@@ -148,8 +148,8 @@ interface InputListener {
 	/** 
 	 * Whether the provided keyboard key was pressed down this frame.
 	 * @param keyCode - The key code to check
-	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held. If false or undefined, returns true regardless of meta key state.
-	 * @param requireShiftKey - If true, only returns true if the Shift key was also held. If false or undefined, returns true regardless of shift key state.
+	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held.
+	 * @param requireShiftKey - If true, only returns true if the Shift key was also held.
 	 */
     // eslint-disable-next-line no-unused-vars
     isKeyDown(keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean;
