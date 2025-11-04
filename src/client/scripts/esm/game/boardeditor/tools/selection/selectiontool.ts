@@ -51,7 +51,7 @@ let endPoint: Coords | undefined;
 
 
 function update(): void {
-	if (selecting || endPoint) testShortcuts(); // Is a current selection, or one is in progress
+	if (isExistingSelection()) testShortcuts(); // Is a current selection, or one is in progress
 
 	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
 		// Update grabbing the selection box first
@@ -142,15 +142,17 @@ function isACurrentSelection(): boolean {
 	return !!startPoint && !!endPoint;
 }
 
+/**
+ * Returns whether there is a current selection, or one in progress.
+ * Also considered whether a selection area is renderable or not.
+ */
+function isExistingSelection(): boolean {
+	return !!selecting || !!endPoint;
+}
 
 
 function render(): void {
-	if (!selecting && !endPoint) { // No selection, and not currently making one
-		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
-		// Outline the rank and file of the square hovered over
-		stoolgraphics.outlineRankAndFile(); 
-	} else { // There either is a selection, or we are currently making one
-
+	if (isExistingSelection()) { // There either is a selection, or we are currently making one
 		const selectionWorldBox = getSelectionWorldBox()!;
 
 		// Render the selection box
@@ -163,6 +165,10 @@ function render(): void {
 			sfill.render(); // Fill tool graphics
 			sdrag.render(); // Selection drag graphics
 		}
+	} else { // No selection, and not currently making one
+		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
+		// Outline the rank and file of the square hovered over
+		stoolgraphics.outlineRankAndFile(); 
 	}
 }
 
