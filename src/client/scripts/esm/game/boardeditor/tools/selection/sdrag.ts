@@ -58,7 +58,7 @@ function update(): void {
 
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = selectiontool.getPointerCoords(pointerId!);
+		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 		// Test if pointer released (execute selection translation)
 		if (!respectiveListener.isPointerHeld(pointerId!)) dropSelection();
 	} else {
@@ -136,7 +136,7 @@ function pickUpSelection(): void {
 	// This will be the anchor
 
 	const selectionIntBox: BoundingBox = selectiontool.getSelectionIntBox()!;
-	const pointerCoordRounded: Coords = selectiontool.getPointerCoords(pointerId!);
+	const pointerCoordRounded: Coords = mouse.getTilePointerOver_Integer(pointerId!)!;
 
 	// Clamp the pointer coord to the int box
 	anchorCoords = [
@@ -188,7 +188,7 @@ function render(): void {
 	if (!areDragging || !anchorCoords) return;
 
 	// Determine the current int coord of the pointer
-	const pointerCoordRounded: Coords = selectiontool.getPointerCoords(pointerId!);
+	const pointerCoordRounded: Coords = mouse.getTilePointerOver_Integer(pointerId!)!;
 
 	// Determine by how many tiles the pointer has dragged from the anchor
 	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords);
