@@ -235,13 +235,13 @@ function selectAll(): void {
 
 	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 
-	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
-	// if (allCoords.length === 0) {
-	// 	// No pieces, cancel selection
-	// 	resetState();
-	// 	guinavigation.recenter();
-	// 	return;
-	// }
+	if (allCoords.length === 0) {
+		// No pieces, cancel selection
+		resetState();
+		// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+		// guinavigation.recenter();
+		return;
+	}
 
 	const box: BoundingBox = bounds.getBoxFromCoordsList(allCoords);
 
