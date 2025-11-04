@@ -7,12 +7,11 @@
  * Acts similarly to that of Google Sheets
  */
 
-import type { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
+import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
 
 import mouse from "../../../../util/mouse";
 import arrows from "../../../rendering/arrows/arrows";
 import stoolgraphics from "./stoolgraphics";
-import space from "../../../misc/space";
 import { Mouse } from "../../../input";
 import { listener_document, listener_overlay } from "../../../chess/game";
 import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
@@ -112,9 +111,9 @@ function endSelection(): void {
 	pointerId = undefined;
 }
 
-function cancelSelection(): void {
-	resetState();
-}
+// function cancelSelection(): void {
+// 	resetState();
+// }
 
 function resetState(): void {
 	selecting = false;
