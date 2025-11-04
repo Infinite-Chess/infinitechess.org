@@ -170,7 +170,7 @@ function startLocalGame() : void {
 /** Queues the removal of all pieces from the position. */
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {
-		const pieceToDelete: Piece = boardutil.getPieceFromIdx(pieces, idx)!;
+		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		boardeditor.queueRemovePiece(gamefile, edit, pieceToDelete);
 	};
 }
