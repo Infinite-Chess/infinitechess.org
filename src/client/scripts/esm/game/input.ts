@@ -13,6 +13,13 @@ import type { DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
 
 import docutil from "../util/docutil.js";
 
+/**
+ * A list of all keyboard shortcuts that don't have a built in event in javascript.
+ * This includes: Undo, Redo, Select All
+ * This does NOT include: Copy, Cut, Paste (these have built in events).
+ */
+const manual_shortcuts: string[] = ['KeyZ', 'KeyY', 'KeyA'];
+
 const Mouse = {
 	LEFT: 0,
 	MIDDLE: 1,
@@ -28,6 +35,15 @@ const MouseNames = {
 
 type MouseButton = typeof Mouse[keyof typeof Mouse];
 
+/** Information about a key that was pressed down this frame. */
+interface KeyDownInfo {
+	/** The key code that was pressed. */
+	keyCode: string;
+	/** Whether a meta key (Ctrl or Cmd) was held when the key was pressed. */
+	metaKey: boolean;
+	/** Whether the Shift key was held when the key was pressed. */
+	shiftKey: boolean;
+}
 
 interface InputListener {
 	/** Whether this input listener has experience atleast one input event the past frame. */
@@ -129,9 +145,14 @@ interface InputListener {
 	doesPointerBelongToPhysicalPointer(logicalPointerId: string, physicalPointerId: string): boolean;
 	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
-	/** Whether the provided keyboard key was pressed down this frame. */
+	/** 
+	 * Whether the provided keyboard key was pressed down this frame.
+	 * @param keyCode - The key code to check
+	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held.
+	 * @param requireShiftKey - If true, only returns true if the Shift key was also held.
+	 */
     // eslint-disable-next-line no-unused-vars
-    isKeyDown(keyCode: string): boolean;
+    isKeyDown(keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean;
 	/** Whether the provided keyboard key is currently being held down. */
     // eslint-disable-next-line no-unused-vars
     isKeyHeld(keyCode: string): boolean;
@@ -262,7 +283,7 @@ interface ClickInfo {
  * @returns An object with methods to check the state of mouse and keyboard inputs.
  */
 function CreateInputListener(element: HTMLElement | typeof document, { keyboard = true, mouse = true }: { keyboard?: boolean, mouse?: boolean } = {}): InputListener {
-	const keyDowns: string[] = [];
+	const keyDowns: KeyDownInfo[] = [];
 	const keyHelds: string[] = [];
 	/** The amount the scroll wheel has scrolled this frame. */
 	let wheelDelta: number = 0;
@@ -663,8 +684,20 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
-			if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
-			if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
+			if (!keyDowns.some(keyInfo => keyInfo.keyCode === e.code)) {
+				keyDowns.push({
+					keyCode: e.code,
+					metaKey: e.ctrlKey || e.metaKey,
+					shiftKey: e.shiftKey
+				});
+			}
+			// Only add to keyHelds if no meta key was held
+			if (!keyHelds.includes(e.code) && !(e.ctrlKey || e.metaKey)) keyHelds.push(e.code);
+
+			// Prevent default behavior for shortcuts without a built in event.
+			// This still allows copy & paste events to bubble through to our listeners,
+			// but for example it prevents Ctrl+A from selecting all text on the page.
+			if (manual_shortcuts.includes(e.code) && (e.ctrlKey || e.metaKey)) e.preventDefault();
 
 			if (e.key === 'Tab') e.preventDefault(); // Prevents the default tabbing behavior of cycling through elements on the page.
 		}) as EventListener);
@@ -673,7 +706,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		addListener(element, 'keyup', ((e: KeyboardEvent): void => {
 			// console.log("Key up: ", e.code);
 			atleastOneInputThisFrame = true;
-			const downIndex = keyDowns.indexOf(e.code);
+			const downIndex = keyDowns.findIndex(keyInfo => keyInfo.keyCode === e.code);
 			if (downIndex !== -1) keyDowns.splice(downIndex, 1);
 			
 			const heldIndex = keyHelds.indexOf(e.code);
@@ -768,7 +801,13 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			return logicalPointer.physical === physicalPointers[physicalPointerId];
 		},
 		getWheelDelta: (): number => wheelDelta,
-		isKeyDown: (keyCode: string): boolean => keyDowns.includes(keyCode),
+		isKeyDown: (keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean => {
+			return keyDowns.some(keyInfo => 
+				keyInfo.keyCode === keyCode && 
+				(!requireMetaKey || keyInfo.metaKey) &&
+				(!requireShiftKey || keyInfo.shiftKey)
+			);
+		},
 		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
 		removeEventListeners: (): void => {
 			Object.keys(eventHandlers).forEach((eventType) => {

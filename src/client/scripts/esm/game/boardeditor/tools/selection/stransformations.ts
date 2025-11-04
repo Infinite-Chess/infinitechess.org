@@ -61,7 +61,7 @@ const TWO = bd.FromBigInt(2n, 1);
 
 /** Whatever's copied to the clipboard via the "Copy selection" action button. */
 let clipboard: StatePiece[] | undefined;
-/** The top-left corner tile of the clipboard selection. */
+/** The box containing all clipboard pieces. */
 let clipboardBox: BoundingBox | undefined;
 
 

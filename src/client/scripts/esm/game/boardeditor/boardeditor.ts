@@ -14,6 +14,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { listener_document } from '../chess/game.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
@@ -98,10 +99,18 @@ function closeBoardEditor(): void {
 function update(): void {
 	if (!inBoardEditor) return;
 
+	testShortcuts();
+
 	// Handle starting and ending the drawing state
 	if (drawingtool.isToolADrawingTool(currentTool)) drawingtool.update(currentTool);
 	// Update selection tool, if that is active
 	else if (currentTool === "selection-tool") selectiontool.update();
+}
+
+/** Tests for keyboard shortcuts in the board editor. */
+function testShortcuts(): void {
+	// Check for Ctrl+A or Cmd+A to select all
+	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
 }
 
 
