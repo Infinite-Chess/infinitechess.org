@@ -90,6 +90,9 @@ function clearAll(): void {
  */
 function save(): void {
 	if (!boardeditor.areInBoardEditor()) return;
+	
+	const gamefile = gameslot.getGamefile()!;
+	if (!boardutil.hasAtleastOnePiece(gamefile.boardsim.pieces)) return; // Don't copy empty positions
 
 	const variantOptions = getCurrentPositionInformation();
 	const LongFormatIn : LongFormatIn = {
