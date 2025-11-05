@@ -112,6 +112,52 @@ function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a
     ];
 }
 
+/** [TRIANGLES] Generates vertex data for the outline of a 2D DASHED rectangle. */
+function DashedRect(left: number, bottom: number, right: number, top: number, thickness: number, dashLength: number, gapLength: number, [r,g,b,a]: Color): number[] {
+	const data: number[] = [];
+	const cycleLength = dashLength + gapLength;
+	const halfThick = thickness / 2;
+
+	// Return empty array for invalid parameters to avoid infinite loops or drawing garbage.
+	if (dashLength <= 0 || thickness <= 0 || cycleLength <= 0) return [];
+
+	const pushQuad = (left: number, bottom: number, right: number, top: number): void => {
+		data.push(
+			// Position     	  Color
+			left,  bottom,      r, g, b, a,
+			left,  top,         r, g, b, a,
+			right, bottom,      r, g, b, a,
+			right, bottom,      r, g, b, a,
+			left,  top,         r, g, b, a,
+			right, top,         r, g, b, a
+		);
+	};
+
+	// Horizontal dashes (bottom and top edges)
+	for (let x = left; x < right; x += cycleLength) {
+		const dashEnd = Math.min(x + dashLength, right);
+		if (dashEnd > x) {
+			// Bottom
+			pushQuad(x, bottom - halfThick, dashEnd, bottom + halfThick);
+			// Top
+			pushQuad(x, top - halfThick, dashEnd, top + halfThick);
+		}
+	}
+	
+	// Vertical dashes (left and right edges)
+	for (let y = bottom; y < top; y += cycleLength) {
+		const dashEnd = Math.min(y + dashLength, top);
+		if (dashEnd > y) {
+			// Left
+			pushQuad(left - halfThick, y, left + halfThick, dashEnd);
+			// Right
+			pushQuad(right - halfThick, y, right + halfThick, dashEnd);
+		}
+	}
+
+	return data;
+}
+
 
 
 // =========================================== Circles ================================================
@@ -305,6 +351,7 @@ export default {
 	Quad_ColorTexture,
 	Quad_ColorTexture3D,
 	Rect,
+	DashedRect,
 	// Circles
 	Circle,
 	GlowDot,

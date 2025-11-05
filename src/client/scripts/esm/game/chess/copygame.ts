@@ -28,10 +28,7 @@ const variantsTooBigToCopyPositionToICN: string[] = ['Omega_Squared', 'Omega_Cub
  */
 function copyGame(copySinglePosition: boolean): void {
 	// If we are in the board editor, let the board editor script handle this instead
-	if (boardeditor.areInBoardEditor()) {
-		eactions.save();
-		return;
-	}
+	if (boardeditor.areInBoardEditor()) return; // Editor has its own listener
 
 	const gamefile = gameslot.getGamefile()!;
 	const Variant = gamefile.basegame.metadata.Variant!;

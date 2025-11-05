@@ -371,7 +371,7 @@ function generatePositionFromPieces({ coords, types }: OrganizedPieces): Map<Coo
  * 
  * More efficient than {@link generatePositionFromPieces}, as this doesn't create an intermediate map.
  * @param {OrganizedPieces} o - The organized pieces object. Destructure the `coords` and `type` objects so the organized pieces can be garbage cleaned.
- * @returns The piece iterator
+ * @returns The piece iterator, yielding [coordsKey, pieceType] pairs.
  */
 function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[CoordsKey, number]> {
 	for (const [coordsKey, idx] of coords) {

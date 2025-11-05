@@ -12,7 +12,7 @@ import type { FullGame } from "../../../../../../shared/chess/logic/gamefile";
 import state from "../../../../../../shared/chess/logic/state";
 import boardutil, { Piece } from "../../../../../../shared/chess/util/boardutil";
 import coordutil, { Coords } from "../../../../../../shared/chess/util/coordutil";
-import { Player, players, rawTypes } from "../../../../../../shared/chess/util/typeutil";
+import typeutil, { Player, players, rawTypes } from "../../../../../../shared/chess/util/typeutil";
 import mouse from "../../../util/mouse";
 import gameslot from "../../chess/gameslot";
 import selection from "../../chess/selection";
@@ -34,7 +34,7 @@ const drawingTools: Tool[] = ["placer", "eraser", "specialrights"];
 
 
 let currentColor: Player = players.WHITE;
-let currentPieceType: number = rawTypes.VOID;
+let currentPieceType: number = typeutil.buildType(rawTypes.PAWN, currentColor);
 
 /**
  * Changes are stored in `thisEdit` until the user releases the button.
@@ -57,9 +57,6 @@ let addingSpecialRights: boolean | undefined;
 
 
 function init(): void {
-	setColor(players.WHITE);
-	setPiece(rawTypes.VOID);
-
 	guiboardeditor.updatePieceColors(currentColor);
 	guiboardeditor.markPiece(currentPieceType);
 }

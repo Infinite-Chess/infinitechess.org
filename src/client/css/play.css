@@ -109,6 +109,10 @@ button {
     transform: scale(0.9) translate(-1%, -1%);
 }
 
+.svg-select-all {
+	transform: scale(0.8);
+}
+
 .svg-delete-selection {
 	transform: scale(1.0);
 }
@@ -153,7 +157,7 @@ button {
 	background-color: var(--background-theme-color);
 }
 
-.position-actions div, .editor-tools div, .selection-actions, .editor-types .piece {
+.position-actions div, .editor-tools div, .selection-actions div, .editor-types .piece {
     cursor: pointer;
 }
 
@@ -162,7 +166,7 @@ button {
     grid-template-columns: repeat(4, 1fr);
 }
 
-.selection-actions.disabled {
+.selection-actions div.disabled {
 	opacity: 0.4;
 	pointer-events: none;
 }

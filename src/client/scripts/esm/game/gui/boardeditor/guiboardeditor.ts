@@ -48,16 +48,21 @@ const elements_actions = [
 	document.getElementById("gamerules")!,
 	document.getElementById("start-game")!,
 	// Selection
+	document.getElementById("select-all")!,
 	document.getElementById("delete-selection")!,
 	document.getElementById("copy-selection")!,
 	document.getElementById("paste-selection")!,
-	document.getElementById("flip-horizontal")!,
-	document.getElementById("flip-vertical")!,
+	document.getElementById("invert-color")!,
 	document.getElementById("rotate-left")!,
 	document.getElementById("rotate-right")!,
-	document.getElementById("invert-color")!,
+	document.getElementById("flip-horizontal")!,
+	document.getElementById("flip-vertical")!,
 	// Palette
 	document.getElementById("editor-color-select")!
+];
+/** These selection action buttons are always enabled. */
+const alwaysActiveSelectionActions = [
+	document.getElementById("select-all")!,
 ];
 
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
@@ -268,14 +273,22 @@ function markPiece(type: number | null): void {
 	});
 }
 
+// Un-greys selection action buttons
 function onNewSelection(): void {
-	// Un-greys selection action buttons
-	element_selectionActions.classList.remove('disabled');
+	// Remove 'disabled' class to all children except those included in the alwaysActiveSelectionActions array
+	Array.from(element_selectionActions.children).forEach((child) => {
+		(child as HTMLElement).classList.remove('disabled');
+	});
 }
 
+// Greys out selection action buttons
 function onClearSelection(): void {
-	// Greys out selection action buttons
-	element_selectionActions.classList.add('disabled');
+	// Remove 'disabled' from all children except those included in the alwaysActiveSelectionActions array
+	Array.from(element_selectionActions.children).forEach((child) => {
+		if (!alwaysActiveSelectionActions.includes(child as HTMLElement)) {
+			(child as HTMLElement).classList.add('disabled');
+		}
+	});
 }
 
 
@@ -316,29 +329,33 @@ function callback_Action(e: Event): void {
 		// Position ---------------------
 		case "reset":
 			eactions.reset();
-			break;
+			return;
 		case "clearall":
 			eactions.clearAll();
-			break;
+			return;
 		case "saved-positions":
 			statustext.showStatus("Not implemented yet.");
-			break;
+			return;
 		case "copy-notation":
 			eactions.save();
-			break;
+			return;
 		case "paste-notation":
 			eactions.load();
-			break;
+			return;
 		case "gamerules":
 			guigamerules.toggleGameRules();
-			break;
+			return;
 		case "start-game":
 			handleStartLocalGame();
-			break;
+			return;
+		// Selection (buttons that are always active)
+		case "select-all":
+			selectiontool.selectAll();
+			return;
 		// Palette ---------------------
 		case "color":
 			nextColor();
-			break;
+			return;
 	}
 
 	// Selection actions...
@@ -358,20 +375,20 @@ function callback_Action(e: Event): void {
 		case "paste-selection":
 			stransformations.Paste(gamefile, mesh, selectionBox);
 			break;
+		case "invert-color":
+			stransformations.InvertColor(gamefile, mesh, selectionBox);
+			break;
+		case "rotate-left":
+			stransformations.RotateLeft(gamefile, mesh, selectionBox);
+			break;
+		case "rotate-right":
+			stransformations.RotateRight(gamefile, mesh, selectionBox);
+			break;
 		case "flip-horizontal":
 			stransformations.FlipHorizontal(gamefile, mesh, selectionBox);
 			break;
 		case "flip-vertical":
 			stransformations.FlipVertical(gamefile, mesh, selectionBox);
-			break;
-		case "rotate-left":
-			statustext.showStatus("Not implemented yet.");
-			break;
-		case "rotate-right":
-			statustext.showStatus("Not implemented yet.");
-			break;
-		case "invert-color":
-			stransformations.InvertColor(gamefile, mesh, selectionBox);
 			break;
 		default:
 			console.error(`Unknown action: ${action}`);

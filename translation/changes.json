@@ -1,4 +1,8 @@
 {
+	"75": {
+		"note": "Modified undo_edit and redo_edit to include keyboard shortcuts on lines 320-321.",
+		"changes": []
+	},
 	"74": {
 		"note": "Added Palace line 265. Added CoaIP_RO & CoaIP_NO on lines 282-283.",
 		"changes": []

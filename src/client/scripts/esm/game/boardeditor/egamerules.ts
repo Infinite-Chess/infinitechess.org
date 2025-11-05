@@ -11,8 +11,7 @@ import type { Coords } from "../../../../../shared/chess/util/coordutil";
 import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
 
 import { PlayerGroup, players, RawType } from "../../../../../shared/chess/util/typeutil";
-import state, { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
-import boardeditor, { Edit } from "./boardeditor";
+import { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
 import winconutil from "../../../../../shared/chess/util/winconutil";
 import gameslot from "../chess/gameslot";
@@ -55,6 +54,10 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 // Getting & Setting -------------------------------------------------------------
 
 
+function getPlayerToMove(): 'white' | 'black' {
+	return gamerulesGUIinfo.playerToMove;
+}
+
 function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: number | undefined; enpassantcoords: Coords | undefined; } {
 	// Construct gameRules
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
@@ -95,6 +98,9 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 
 /** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
 function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>): void {
+	const firstPlayer = gameRules.turnOrder[0];
+	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
+
 	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
 	else gamerulesGUIinfo.playerToMove = "black";
 
@@ -140,12 +146,9 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 		...gameRules.winConditions[players.BLACK] || [icnconverter.default_win_condition]
 	])].filter(wincon => winconutil.isWinConditionValid(wincon));
 
-	// Set en passant state for rendering purposes
-	if (gamerulesGUIinfo.enPassant !== undefined) setEnpassantState([gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y]);
-	else setEnpassantState(undefined);
-
-	// Update the promotionlines in the gamefile for rendering purposes
-	updatePromotionLines(gamerulesGUIinfo.promotionRanks);
+	// Update gamefile properties for rendering purposes and correct legal move calculation
+	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
+	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -156,29 +159,42 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 }
 
 
-// Specific Rules -------------------------------------------------------------
+// Updating Gamefile State -------------------------------------------------------------
 
 
-/** Updates the en passant square in the current gamefile, needed for display purposes */
-function setEnpassantState(coord: Coords | undefined): void {
-	const enpassant: EnPassant | undefined = (coord !== undefined) ? { square: coord, pawn: [coord[0], coord[1] - 1n] } : undefined; // dummy enpassant object
-	const edit: Edit = { changes: [], state: { local: [], global: [] } }; // dummy edit object
-
+/**
+ * Updates the en passant square, promotion lines, and turn order in the current gamefile.
+ * Needed for display purposes and correct legal move calculation.
+ */
+function updateGamefileProperties(
+	enpassantCoords: Coords | undefined,
+	promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined,
+	playerToMove: 'white' | 'black',
+): void {
 	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
-	state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, enpassant);
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-}
 
-/** Updates the promotion lines in the current gamefile, needed for display purposes */
-function updatePromotionLines(promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined ): void {
-	const gamefile = gameslot.getGamefile()!;
-	if (promotionRanks === undefined) gamefile.basegame.gameRules.promotionRanks = undefined;
-	else {
+	// Update en passant state for rendering purposes, and correct enpassant legality calculation
+	if (enpassantCoords === undefined) {
+		gamefile.boardsim.state.global.enpassant = undefined;
+	} else {
+		const pawn: Coords = playerToMove === 'white' ? [enpassantCoords[0], enpassantCoords[1] - 1n] : playerToMove === 'black' ? [enpassantCoords[0], enpassantCoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+		const enpassant: EnPassant = { square: enpassantCoords, pawn };
+		gamefile.boardsim.state.global.enpassant = enpassant;
+	}
+
+	// Update the promotionlines in the gamefile for rendering purposes
+	if (promotionRanks === undefined) {
+		gamefile.basegame.gameRules.promotionRanks = undefined;
+	} else {
 		gamefile.basegame.gameRules.promotionRanks = {};
 		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = promotionRanks.white || [];
 		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = promotionRanks.black || [];
 	}
+
+	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
+	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [players.WHITE, players.BLACK] : playerToMove === 'black' ? [players.BLACK, players.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	// Update whosTurn as well
+	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
 }
 
 
@@ -191,10 +207,10 @@ export type {
 
 export default {
 	// Getting & Setting
+	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	updateGamerulesGUIinfo,
-	// Specific Rules
-	setEnpassantState,
-	updatePromotionLines,
+	// Updating Gamefile State
+	updateGamefileProperties,
 };

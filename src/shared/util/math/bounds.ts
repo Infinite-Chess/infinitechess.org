@@ -9,6 +9,7 @@ import type { BigDecimal } from "../bigdecimal/bigdecimal.js";
 import type { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
 
 import bd from "../bigdecimal/bigdecimal.js";
+import bimath from "../bigdecimal/bimath.js";
 
 
 // Type Definitions --------------------------------------------------------------
@@ -140,6 +141,18 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
 }
 
 /**
+ * Returns the mimimum bounding box that contains both of the provided boxes.
+ */
+function mergeBoundingBoxDoubles(box1: BoundingBox, box2: BoundingBox): BoundingBox {
+	return {
+		left: bimath.min(box1.left, box2.left),
+		right: bimath.max(box1.right, box2.right),
+		bottom: bimath.min(box1.bottom, box2.bottom),
+		top: bimath.max(box1.top, box2.top)
+	};
+}
+
+/**
  * Translates a bounding box by the given coordinates.
  * Non-mutating.
  */
@@ -265,6 +278,7 @@ export default {
 	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
+	mergeBoundingBoxDoubles,
 	translateBoundingBox,
 
 	// Operations

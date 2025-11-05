@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "74"
+version = "75"
 maintainer = "Naviary"
 
 [header]
@@ -317,8 +317,8 @@ erase = "Erase annotations"
 collapse = "Collapse annotations"
 rewind_move = "Rewind move"
 forward_move = "Forward move"
-undo_edit = "Undo edit" # Board editor
-redo_edit = "Redo edit" # Board editor
+undo_edit = "Undo edit (Ctrl+Z)" # Board editor
+redo_edit = "Redo edit (Ctrl+Y)" # Board editor
 pause = "Pause"
 undo = "Undo move" # Checkmate practice game
 restart = "Restart game" # Checkmate practice game

@@ -14,12 +14,17 @@ import arrows from "../../../rendering/arrows/arrows";
 import stoolgraphics from "./stoolgraphics";
 import space from "../../../misc/space";
 import { Mouse } from "../../../input";
-import { listener_overlay } from "../../../chess/game";
-import { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
+import { listener_document, listener_overlay } from "../../../chess/game";
+import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
 import meshes from "../../../rendering/meshes";
 import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
+import sfill from "./sfill";
 import sdrag from "./sdrag";
 import guiboardeditor from "../../../gui/boardeditor/guiboardeditor";
+import boardutil from "../../../../../../../shared/chess/util/boardutil";
+import gameslot from "../../../chess/gameslot";
+import boardeditor from "../../boardeditor";
+import stransformations from "./stransformations";
 
 
 // State ----------------------------------------------
@@ -46,11 +51,13 @@ let endPoint: Coords | undefined;
 
 
 function update(): void {
+	if (isExistingSelection()) testShortcuts(); // Is a current selection, or one is in progress
+
 	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
 		// Update grabbing the selection box first
 		if (isACurrentSelection()) {
-			// Update selection box drag handler
-			sdrag.update();
+			sfill.update(); // Update fill tool handler
+			sdrag.update(); // Update selection box drag handler
 		}
 		// Test if a new selection is beginning
 		if (mouse.isMouseDown(Mouse.LEFT) && !selecting && !arrows.areHoveringAtleastOneArrow()) {
@@ -69,6 +76,17 @@ function update(): void {
 	}
 }
 
+/** Tests for keyboard shortcuts while using the Selection Tool. */
+function testShortcuts(): void {
+	// Delete selection
+	if (listener_document.isKeyDown('Delete') || listener_document.isKeyDown('Backspace')) {
+		const gamefile = gameslot.getGamefile()!;
+		const mesh = gameslot.getMesh()!;
+		const selectionBox: BoundingBox = getSelectionIntBox()!;
+		stransformations.Delete(gamefile, mesh, selectionBox);
+	}
+}
+
 /**
  * Gets the given pointer's current coordinates being hovered over, rounded to the integer square.
  * ONLY CALL if you know the pointer exists!
@@ -84,6 +102,7 @@ function beginSelection(): void {
 	startPoint = undefined;
 	endPoint = undefined;
 	selecting = true;
+	sfill.resetState();
 	sdrag.resetState();
 
 	// Set the start point
@@ -112,6 +131,7 @@ function resetState(): void {
 	lastPointerCoords = undefined;
 	startPoint = undefined;
 	endPoint = undefined;
+	sfill.resetState();
 	sdrag.resetState();
 	guiboardeditor.onClearSelection();
 }
@@ -122,15 +142,17 @@ function isACurrentSelection(): boolean {
 	return !!startPoint && !!endPoint;
 }
 
+/**
+ * Returns whether there is a current selection, or one in progress.
+ * Also considered whether a selection area is renderable or not.
+ */
+function isExistingSelection(): boolean {
+	return !!selecting || !!endPoint;
+}
 
 
 function render(): void {
-	if (!selecting && !endPoint) { // No selection, and not currently making one
-		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
-		// Outline the rank and file of the square hovered over
-		stoolgraphics.outlineRankAndFile(); 
-	} else { // There either is a selection, or we are currently making one
-
+	if (isExistingSelection()) { // There either is a selection, or we are currently making one
 		const selectionWorldBox = getSelectionWorldBox()!;
 
 		// Render the selection box
@@ -140,8 +162,13 @@ function render(): void {
 		if (isACurrentSelection()) {
 			// Render the small square in the corner
 			stoolgraphics.renderCornerSquare(selectionWorldBox);
-			sdrag.render();
+			sfill.render(); // Fill tool graphics
+			sdrag.render(); // Selection drag graphics
 		}
+	} else { // No selection, and not currently making one
+		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
+		// Outline the rank and file of the square hovered over
+		stoolgraphics.outlineRankAndFile(); 
 	}
 }
 
@@ -202,6 +229,30 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 	endPoint = corner2;
 }
 
+/** Selects all pieces in the current position, and transitions to the selection. */
+function selectAll(): void {
+	boardeditor.setTool("selection-tool"); // Switch if we're not already using
+
+	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+
+	if (allCoords.length === 0) {
+		// No pieces, cancel selection
+		resetState();
+		// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+		// guinavigation.recenter();
+		return;
+	}
+
+	const box: BoundingBox = bounds.getBoxFromCoordsList(allCoords);
+
+	startPoint = [box.left, box.top];
+	endPoint = [box.right, box.bottom];
+
+	guiboardeditor.onNewSelection();
+	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+	// Transition.zoomToCoordsBox(box);
+}
+
 
 // Exports ------------------------------------------------------
 
@@ -210,10 +261,12 @@ export default {
 	update,
 	getPointerCoords,
 	resetState,
+	isExistingSelection,
 	render,
 	getSelectionIntBox,
 	getSelectionWorldBox,
 	convertIntBoxToWorldBox,
 	getSelectionCorners,
 	setSelection,
+	selectAll,
 };

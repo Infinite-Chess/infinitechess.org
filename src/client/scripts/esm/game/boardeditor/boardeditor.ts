@@ -14,6 +14,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { listener_document } from '../chess/game.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
@@ -30,6 +31,11 @@ import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
+import eactions from './eactions.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import miniimage from '../rendering/miniimage.js';
+import arrows from '../rendering/arrows/arrows.js';
+import perspective from '../rendering/perspective.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -43,6 +49,16 @@ type Tool = (typeof validTools)[number];
 
 /** All tools that can be used in the board editor. */
 const validTools = ["normal", "placer", "eraser", "specialrights", "selection-tool"] as const;
+
+/**
+ * The maximum allowed summed changes in the edit history before oldest edits are pruned.
+ * This is to prevent excessive memory usage crashing the browser.
+ * 
+ * Naviary's machine got to 26 million changes before slowing, then crashing.
+ * The tab was using roughly 5 GB of memory at that point.
+ * I guess maybe a max of 8 million could be safe on most machines?
+ */
+const EDIT_HISTORY_MAX_CHANGES = 8_000_000;
 
 
 // State -------------------------------------------------------------------------
@@ -81,6 +97,8 @@ function initBoardEditor(): void {
 	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
 	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
 	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
+
+	addEventListeners();
 }
 
 function closeBoardEditor(): void {
@@ -93,15 +111,51 @@ function closeBoardEditor(): void {
 	drawingtool.onCloseEditor();
 	selectiontool.resetState();
 	stransformations.resetState(); // Drops reference to clipboard
+
+	removeEventListeners();
+}
+
+function addEventListeners(): void {
+	document.addEventListener('copy', Copy);
+	document.addEventListener('cut', Cut);
+	document.addEventListener('paste', Paste);
+}
+
+function removeEventListeners(): void {
+	document.removeEventListener('copy', Copy);
+	document.removeEventListener('cut', Cut);
+	document.removeEventListener('paste', Paste);
 }
 
 function update(): void {
 	if (!inBoardEditor) return;
 
+	testShortcuts();
+
 	// Handle starting and ending the drawing state
 	if (drawingtool.isToolADrawingTool(currentTool)) drawingtool.update(currentTool);
 	// Update selection tool, if that is active
 	else if (currentTool === "selection-tool") selectiontool.update();
+}
+
+/** Tests for keyboard shortcuts in the board editor. */
+function testShortcuts(): void {
+	if (perspective.getEnabled()) return; // Disable shortcuts while in perspective mode, WASD is reserved for camera movement
+
+	// Select all
+	if (listener_document.isKeyDown('KeyA', true)) selectiontool.selectAll();
+
+	// Undo/Redo
+	if (listener_document.isKeyDown('KeyY', true)) redo();
+	if (listener_document.isKeyDown('KeyZ', true, true)) redo(); // Also requires shift key
+	else if (listener_document.isKeyDown('KeyZ', true)) undo();
+
+	// Tools
+	if (listener_document.isKeyDown('KeyN')) setTool("normal");
+	// else if (listener_document.isKeyDown('KeyP')) setTool("placer"); // Already bound to toggling miniimages
+	else if (listener_document.isKeyDown('KeyE')) setTool("eraser");
+	else if (listener_document.isKeyDown('KeyS')) setTool("selection-tool");
+	// else if (listener_document.isKeyDown('KeyR')) setTool("specialrights"); // Already bound to regenerating piece models
 }
 
 
@@ -146,6 +200,26 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
 
 	specialrighthighlights.onMove();
+
+	// If the piece count is now high enough, disable icons and arrows.
+	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
+	if (pieceCount > miniimage.pieceCountToDisableMiniImages || pieceCount > arrows.pieceCountToDisableArrows) {
+		miniimage.disable();
+		arrows.setMode(0);
+	}
+
+	// Prune the oldest edits in the history if we exceed the cap, to help prevent memory crashes.
+	const totalChanges: number = edits!.reduce((sum, edit) => sum + edit.changes.length, 0);
+	// console.log("Total changes in edit history: " + totalChanges);
+	if (totalChanges > EDIT_HISTORY_MAX_CHANGES) {
+		let changesToRemove = totalChanges - EDIT_HISTORY_MAX_CHANGES;
+		while (changesToRemove > 0 && edits!.length > 0) {
+			const oldestEdit = edits!.shift()!;
+			changesToRemove -= oldestEdit.changes.length;
+			indexOfThisEdit!--;
+		}
+		// console.log("Pruned oldest edits.");
+	}
 }
 
 function addEditToHistory(edit: Edit): void {
@@ -200,6 +274,55 @@ function queueSpecialRights(gamefile: FullGame, edit: Edit, coords: Coords, add:
 	const coordsKey = coordutil.getKeyFromCoords(coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordsKey, current, add);
+}
+
+
+// Copy/Paste Handlers ----------------------------------------------------------
+
+
+/** Custom Board Editor handler for Copy event. */
+function Copy(): void {
+	if (document.activeElement !== document.body) return; // Don't copy if the user is typing in an input field
+	
+	if (currentTool !== "selection-tool") {
+		// Copy game notation
+		eactions.save();
+	} else if (selectiontool.isExistingSelection()) {
+		// Copy current selection
+		const gamefile = gameslot.getGamefile()!;
+		const selectionBox = selectiontool.getSelectionIntBox()!;
+		stransformations.Copy(gamefile, selectionBox);
+	}
+}
+
+/** Board Editor handler for Cut event. */
+function Cut(): void {
+	if (document.activeElement !== document.body) return; // Don't cut if the user is typing in an input field
+
+	if (currentTool !== "selection-tool" || !selectiontool.isExistingSelection()) return;
+
+	// Cut current selection
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const selectionBox = selectiontool.getSelectionIntBox()!;
+	stransformations.Copy(gamefile, selectionBox);
+	stransformations.Delete(gamefile, mesh, selectionBox);
+}
+
+/** Custom Board Editor handler for Paste event. */
+function Paste(): void {
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
+
+	if (currentTool !== "selection-tool") {
+		// Paste game notation
+		eactions.load();
+	} else if (selectiontool.isExistingSelection()) {
+		// Paste clipboard at current selection
+		const gamefile = gameslot.getGamefile()!;
+		const mesh = gameslot.getMesh()!;
+		const selectionBox = selectiontool.getSelectionIntBox()!;
+		stransformations.Paste(gamefile, mesh, selectionBox);
+	}
 }
 
 

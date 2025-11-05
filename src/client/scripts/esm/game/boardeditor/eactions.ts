@@ -27,7 +27,7 @@ import icnconverter, { _Move_Out, LongFormatIn, LongFormatOut } from "../../../.
 import boardeditor, { Edit } from "./boardeditor";
 import organizedpieces, { OrganizedPieces } from "../../../../../shared/chess/logic/organizedpieces";
 import boardutil, { Piece } from "../../../../../shared/chess/util/boardutil";
-import coordutil from "../../../../../shared/chess/util/coordutil";
+import coordutil, { Coords } from "../../../../../shared/chess/util/coordutil";
 import timeutil from "../../../../../shared/util/timeutil";
 import docutil from "../../util/docutil";
 import gamecompressor, { SimplifiedGameState } from "../chess/gamecompressor";
@@ -90,6 +90,9 @@ function clearAll(): void {
  */
 function save(): void {
 	if (!boardeditor.areInBoardEditor()) return;
+	
+	const gamefile = gameslot.getGamefile()!;
+	if (!boardutil.hasAtleastOnePiece(gamefile.boardsim.pieces)) return; // Don't copy empty positions
 
 	const variantOptions = getCurrentPositionInformation();
 	const LongFormatIn : LongFormatIn = {
@@ -167,7 +170,7 @@ function startLocalGame() : void {
 /** Queues the removal of all pieces from the position. */
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {
-		const pieceToDelete: Piece = boardutil.getPieceFromIdx(pieces, idx)!;
+		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		boardeditor.queueRemovePiece(gamefile, edit, pieceToDelete);
 	};
 }
@@ -186,7 +189,12 @@ function getCurrentPositionInformation(): VariantOptions {
 
 	// Construct state_global
 	const specialRights = gamefile.boardsim.state.global.specialRights;
-	const enpassant: EnPassant | undefined = enpassantcoords !== undefined ? { square: enpassantcoords, pawn: [enpassantcoords[0], enpassantcoords[1] - 1n] } : undefined; // dummy enpassant object
+	let enpassant: EnPassant | undefined;
+	if (enpassantcoords !== undefined) {
+		const playerToMove = egamerules.getPlayerToMove();
+		const pawn: Coords = playerToMove === 'white' ? [enpassantcoords[0], enpassantcoords[1] - 1n] : playerToMove === 'black' ? [enpassantcoords[0], enpassantcoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+		enpassant = { square: enpassantcoords, pawn };
+	}
 	const state_global: GlobalGameState = {
 		specialRights,
 		moveRuleState,

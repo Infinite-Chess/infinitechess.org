@@ -64,13 +64,13 @@
 				<div>
 					<div class="editor-header">Tools</div>
 					<div class="editor-tools">
-						<div data-tool="normal" id="normal" class="active tooltip-dr" data-tooltip="Normal">
+						<div data-tool="normal" id="normal" class="active tooltip-dr" data-tooltip="Normal (N)">
 							<svg class="svg-normal" xmlns="http://www.w3.org/2000/svg" fill="#333" stroke="#333" viewBox="-96 0 512 512"><path d="M302.19 329.13H196.1l55.84 135.99c3.88 9.43-.56 20-9.45 24l-49.16 21.42c-9.17 4-19.45-.57-23.34-9.7L116.95 371.7 30.3 460.83C18.72 472.71 0 463.55 0 447.98V18.3C0 1.9 19.92-6.1 30.28 5.44l284.4 292.54c11.48 11.18 3.02 31.15-12.5 31.15z"/></svg>
 						</div>
-						<div data-tool="eraser" id="eraser" class="tooltip-d" data-tooltip="Eraser">
+						<div data-tool="eraser" id="eraser" class="tooltip-d" data-tooltip="Eraser (E)">
 							<svg class="svg-eraser" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 240 240"><g fill="#333" stroke="none"><path d="M114 55C131 38 140 30 150 30s18 8 35 25S210 80 210 90s-8 20-25 36l-42 42-70-71 41-42Z"/><path d="m62 108 70 70-6 7-10 10H210a8 8 0 01 0 15H90c-10 0-19-9-35-25C38 168 30 160 30 150s8-20 25-36l7-6Z"/></g></svg>
 						</div>
-						<div data-tool="selection-tool" id="selection-tool" class="tooltip-d" data-tooltip="Selection">
+						<div data-tool="selection-tool" id="selection-tool" class="tooltip-d" data-tooltip="Selection (S)">
 							<svg class="svg-selection-tool" xmlns="http://www.w3.org/2000/svg" fill="#222" viewBox="0 0 2560 2560"><path d="M1520 480a120 120 0 01-120 120h-240a120 120 0 01 0-240h240a120 120 0 01 120 120Zm-120 1480h-240a120 120 0 00 0 240h240a120 120 0 00 0-240Zm400-1360h160v160a120 120 0 00 240 0V560a200.2 200.2 0 00-200-200h-200a120 120 0 00 0 240Zm280 440a120 120 0 00-120 120v240a120 120 0 00 240 0v-240a120 120 0 00-120-120ZM480 1520a120 120 0 00 120-120v-240a120 120 0 10-240 0v240a120 120 0 00 120 120Zm280 440H600v-160a120 120 0 00-240 0v200a200.2 200.2 0 00 200 200h200a120 120 0 00 0-240Zm0-1600H560a200.2 200.2 0 00-200 200v200a120 120 0 00 240 0V600h160a120 120 0 00 0-240Zm1600 1600h-160v-160a120 120 0 00-240 0v160h-160a120 120 0 00 0 240h160v160a120 120 0 00 240 0v-160h160a120 120 0 00 0-240Z"/></svg>
 						</div>
 						<div data-tool="specialrights" id="specialrights" class="tooltip-d" data-tooltip="Special rights toggle">
@@ -82,30 +82,33 @@
 				<!-- Section: Selection -->
 				<div>
 					<div class="editor-header">Selection</div>
-					<div class="selection-actions disabled">
-						<div data-action="delete-selection" id="delete-selection" class="tooltip-dr" data-tooltip="Clear selection">
+					<div class="selection-actions">
+						<div data-action="select-all" id="select-all" class="tooltip-dr" data-tooltip="Select all (Ctrl+A)">
+                            <svg class="svg-select-all" xmlns="http://www.w3.org/2000/svg" fill="#000" viewBox="0 0 240 240"><path d="M30 180h1.2a10 10 0 01 8.7 8.8V200h11.3a10 10 0 01 0 20H28.8a10 10 0 01-8.7-8.8v-22.4a10 10 0 01 8.7-8.7H30Zm180 0h1.2a10 10 0 01 8.5 7.7l.2 1.1.1 1.2v21.2a10 10 0 01-7.7 8.5l-1 .2L210 220h-21.2a10 10 0 01-1-19.7l1-.2L190 200h10v-11.2a10 10 0 01 7.7-8.5l1.1-.2L210 180Zm-80 20a10 10 0 01 0 20h-20a10 10 0 01 0-20h20ZM30 100a10 10 0 01 10 10v20a10 10 0 01-20 0v-20a10 10 0 01 10-10Zm180 0a10 10 0 01 10 10v20a10 10 0 01-20 0v-20a10 10 0 01 10-10Zm0-80h1.2a10 10 0 01 8.7 8.8v22.4a10 10 0 01-9 8.7h-2.5a10 10 0 01-8.7-8.7V40h-11.2a10 10 0 01 0-20H210ZM50 20h1.2a10 10 0 01 1 19.7l-1 .2H40v11.3a10 10 0 01-7.7 8.5l-1 .3h-2.5a10 10 0 01-8.5-7.6L20 51.2V28.8a10 10 0 01 7.6-8.5L28.8 20H50Zm100 40a30 30 0 01 30 28.2V150a30 30 0 01-28.2 30H90a30 30 0 01-30-28.2V90a30 30 0 01 28.2-30H150Zm0 20H90a10 10 0 00-10 8.8V150a10 10 0 00 8.8 10H150a10 10 0 00 10-8.8V90a10 10 0 00-8.8-10H150Zm-20-60a10 10 0 01 0 20h-20a10 10 0 01 0-20h20Z"/></svg>
+						</div>
+						<div data-action="delete-selection" id="delete-selection" class="disabled tooltip-d" data-tooltip="Clear selection (Del)">
                             <svg class="svg-delete-selection" xmlns="http://www.w3.org/2000/svg" fill="#333" baseProfile="tiny" version="1.2" viewBox="0 0 240 240"><path d="M120 40a80 80 0 10 0 160 80 80 0 00 0-160zm37 103a10 10 0 11-14 14L120 134.2l-23 23a10 10 0 01-14 0 10 10 0 01 0-14.2l22.9-23-23-23A10 10 0 11 97 83l23 22.9 23-23a10 10 0 11 14 14.2L134.3 120l23 23"/></svg>
 						</div>
-						<div data-action="copy-selection" id="copy-selection" class="tooltip-d" data-tooltip="Copy selection">
+						<div data-action="copy-selection" id="copy-selection" class="disabled tooltip-d" data-tooltip="Copy selection (Ctrl+C)">
 							<svg class="svg-copy-selection" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000" viewBox="0 0 2400 2400"><g stroke="#000" stroke-linecap="round" stroke-width="150"><path d="M2100 1000c-1-218-11-335-88-412C1924 500 1782 500 1500 500h-300c-283 0-424 0-512 88C600 676 600 818 600 1100v500c0 283 0 424 88 512 88 88 230 88 512 88h300c283 0 424 0 512-88 88-88 88-230 88-512v-100"/><path d="M300 1000v600a300 300 0 00 300 300M1800 500a300 300 0 00-300-300h-400C723 200 534 200 417 317 352 382 323 470 310 600"/></g></svg>
 						</div>
-						<div data-action="paste-selection" id="paste-selection" class="tooltip-d" data-tooltip="Paste selection">
+						<div data-action="paste-selection" id="paste-selection" class="disabled tooltip-d" data-tooltip="Paste selection (Ctrl+V)">
 							<svg class="svg-paste-selection" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="M120 0a41.4 41.4 0 00-23.1 6.3l-1 .6-2.7 1.6C91 9.8 90.1 10 90 10a20 20 0 00-20 20H60a30 30 0 00-30 30v140a30 30 0 00 30 30h120a30 30 0 00 30-30V60a30 30 0 00-30-30h-10a20 20 0 00-20-20s-1-.2-3.2-1.5L144 7l-1-.6A41.4 41.4 0 00 120 0Zm47.3 50A20 20 0 01 150 60H90a20 20 0 01-17.3-10H60a10 10 0 00-10 10v140a10 10 0 00 10 10h120a10 10 0 00 10-10V60a10 10 0 00-10-10h-12.7Zm-56.9-28.5c1.2-.6 4-1.5 9.6-1.5 5.6 0 8.4 1 9.6 1.5l3 1.7.7.5 3.5 2.2c3 1.4 7.6 3.9 13.2 3.9v10H90v-10c5.6 0 10.3-2.4 13.2-4l3.5-2.3.8-.5 3-1.7Z" fill="#111" fill-rule="evenodd" clip-rule="evenodd"/></svg>
 						</div>
-						<div data-action="flip-horizontal" id="flip-horizontal" class="tooltip-d" data-tooltip="Flip selection horizontally">
-                            <svg class="svg-flip-selection-horizontally" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><path d="M200 1811V591c0-170 0-257 54-285 54-28 124 22 262 120L674 540c62 44 93 66 110 98 16 32 16 70 16 146v834c0 76 0 114-17 146-16 32-47 54-109 98l-158 113c-138 100-208 149-262 120C200 2068 200 1983 200 1812Zm2000 0V591c0-170 0-257-54-285-54-28-124 22-262 120L1726 540c-62 44-93 66-110 98-16 32-16 70-16 146v834c0 76 0 114 17 146 16 32 47 54 109 98l158 113c138 100 208 149 262 120 54-27 54-112 54-283Z" fill="#333"/><path d="M1200 125c41 0 75 34 75 75v400a75 75 0 01-150 0V200c0-41 34-75 75-75Zm0 800c41 0 75 34 75 75v400a75 75 0 01-150 0v-400c0-41 34-75 75-75Zm0 800c41 0 75 34 75 75v400a75 75 0 01-150 0v-400c0-41 34-75 75-75Z" fill="#333" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+						<div data-action="invert-color" id="invert-color" class="disabled tooltip-d" data-tooltip="Invert selection color">
+                            <svg class="svg-invert-selection-color" xmlns="http://www.w3.org/2000/svg" fill="#333" stroke="#333" stroke-width=".38" transform="scale(-1 1)" viewBox="0 0 160 160"><path d="M80 10a70 70 0 10 0 140A70 70 0 00 80 10zm0 130V20a60 60 0 11 0 120"/></svg>
 						</div>
-						<div data-action="flip-vertical" id="flip-vertical" class="tooltip-d" data-tooltip="Flip selection vertically">
-                            <svg class="svg-flip-selection-vertically" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><path d="M1811 2200H591c-170 0-257 0-285-54-28-54 22-124 120-262l114-158c44-62 66-93 98-110 32-16 70-16 146-16h834c76 0 114 0 146 17 32 16 54 47 98 109l113 158c100 138 149 208 120 262-27 54-112 54-283 54Zm0-2000H591c-170 0-257 0-285 54-28 54 22 124 120 262L540 674c44 62 66 93 98 110 32 16 70 16 146 16h834c76 0 114 0 146-17 32-16 54-47 98-109l113-158c100-138 149-208 120-262C2068 200 1983 200 1812 200Z" fill="#333"/><path d="M125 1200c0-41 34-75 75-75h400a75 75 0 01 0 150H200a75 75 0 01-75-75Zm800 0c0-41 34-75 75-75h400a75 75 0 01 0 150h-400a75 75 0 01-75-75Zm800 0c0-41 34-75 75-75h400a75 75 0 01 0 150h-400a75 75 0 01-75-75Z" fill="#333" fill-rule="evenodd" clip-rule="evenodd"/></svg>
-						</div>
-						<div data-action="rotate-left" id="rotate-left" class="tooltip-dr" data-tooltip="Rotate selection left">
+						<div data-action="rotate-left" id="rotate-left" class="disabled tooltip-dr" data-tooltip="Rotate selection left">
                             <svg class="svg-rotate-selection-left" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="M125 205a85 85 0 10-73.7-42.6M15 150l36.3 12.4m17-38.6-13.6 39.7-3.4-1.1" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
 						</div>
-						<div data-action="rotate-right" id="rotate-right" class="tooltip-d" data-tooltip="Rotate selection right">
+						<div data-action="rotate-right" id="rotate-right" class="disabled tooltip-d" data-tooltip="Rotate selection right">
                             <svg class="svg-rotate-selection-right" xmlns="http://www.w3.org/2000/svg" fill="none" transform="scale(-1 1)" viewBox="0 0 240 240"><path d="M125 205a85 85 0 10-73.7-42.6M15 150l36.3 12.4m17-38.6-13.6 39.7-3.4-1.1" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
 						</div>
-						<div data-action="invert-color" id="invert-color" class="tooltip-d" data-tooltip="Invert selection color">
-                            <svg class="svg-invert-selection-color" xmlns="http://www.w3.org/2000/svg" fill="#333" stroke="#333" stroke-width=".38" transform="scale(-1 1)" viewBox="0 0 160 160"><path d="M80 10a70 70 0 10 0 140A70 70 0 00 80 10zm0 130V20a60 60 0 11 0 120"/></svg>
+						<div data-action="flip-horizontal" id="flip-horizontal" class="disabled tooltip-d" data-tooltip="Flip selection horizontally">
+                            <svg class="svg-flip-selection-horizontally" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><path d="M200 1811V591c0-170 0-257 54-285 54-28 124 22 262 120L674 540c62 44 93 66 110 98 16 32 16 70 16 146v834c0 76 0 114-17 146-16 32-47 54-109 98l-158 113c-138 100-208 149-262 120C200 2068 200 1983 200 1812Zm2000 0V591c0-170 0-257-54-285-54-28-124 22-262 120L1726 540c-62 44-93 66-110 98-16 32-16 70-16 146v834c0 76 0 114 17 146 16 32 47 54 109 98l158 113c138 100 208 149 262 120 54-27 54-112 54-283Z" fill="#333"/><path d="M1200 125c41 0 75 34 75 75v400a75 75 0 01-150 0V200c0-41 34-75 75-75Zm0 800c41 0 75 34 75 75v400a75 75 0 01-150 0v-400c0-41 34-75 75-75Zm0 800c41 0 75 34 75 75v400a75 75 0 01-150 0v-400c0-41 34-75 75-75Z" fill="#333" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+						</div>
+						<div data-action="flip-vertical" id="flip-vertical" class="disabled tooltip-d" data-tooltip="Flip selection vertically">
+                            <svg class="svg-flip-selection-vertically" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><path d="M1811 2200H591c-170 0-257 0-285-54-28-54 22-124 120-262l114-158c44-62 66-93 98-110 32-16 70-16 146-16h834c76 0 114 0 146 17 32 16 54 47 98 109l113 158c100 138 149 208 120 262-27 54-112 54-283 54Zm0-2000H591c-170 0-257 0-285 54-28 54 22 124 120 262L540 674c44 62 66 93 98 110 32 16 70 16 146 16h834c76 0 114 0 146-17 32-16 54-47 98-109l113-158c100-138 149-208 120-262C2068 200 1983 200 1812 200Z" fill="#333"/><path d="M125 1200c0-41 34-75 75-75h400a75 75 0 01 0 150H200a75 75 0 01-75-75Zm800 0c0-41 34-75 75-75h400a75 75 0 01 0 150h-400a75 75 0 01-75-75Zm800 0c0-41 34-75 75-75h400a75 75 0 01 0 150h-400a75 75 0 01-75-75Z" fill="#333" fill-rule="evenodd" clip-rule="evenodd"/></svg>
 						</div>
 					</div>
 				</div>
