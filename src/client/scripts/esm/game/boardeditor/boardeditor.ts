@@ -151,11 +151,11 @@ function testShortcuts(): void {
 	else if (listener_document.isKeyDown('KeyZ', true)) undo();
 
 	// Tools
-	if (listener_document.isKeyDown('KeyN')) setTool("normal");
-	// else if (listener_document.isKeyDown('KeyP')) setTool("placer"); // Already bound to toggling miniimages
-	else if (listener_document.isKeyDown('KeyE')) setTool("eraser");
-	else if (listener_document.isKeyDown('KeyS')) setTool("selection-tool");
-	// else if (listener_document.isKeyDown('KeyR')) setTool("specialrights"); // Already bound to regenerating piece models
+	if (listener_document.isKeyDown('KeyF')) setTool("normal");
+	else if (listener_document.isKeyDown('KeyG')) setTool("eraser");
+	else if (listener_document.isKeyDown('KeyH')) setTool("selection-tool");
+	else if (listener_document.isKeyDown('KeyJ')) setTool("specialrights");
+	else if (listener_document.isKeyDown('KeyK')) setTool("placer");
 }
 
 
