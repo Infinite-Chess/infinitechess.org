@@ -153,16 +153,12 @@ function getTilePointerOver_Float(pointerId: string): BDCoords | undefined {
 	return space.convertWorldSpaceToCoords(pointerWorld);
 }
 
-// function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
-// 	const physicalPointerId = listener_overlay.getPhysicalPointerIdOfPointer(pointerId);
-// 	if (!physicalPointerId) return;
-// 	// const pointerCoords = listener_overlay.getPointerPos(pointerId)!;
-// 	const pointerCoords = getPhysicalPointerPosition_Offscreen(physicalPointerId);
-// 	if (!pointerCoords) return undefined;
-
-// 	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_overlay.element);
-// 	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
-// }
+/** Gets the given pointer's current coordinates being hovered over, rounded to the integer square. */
+function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
+	const pointerWorld: DoubleCoords | undefined = getPointerWorld(pointerId);
+	if (!pointerWorld) return undefined;
+	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+}
 
 /**
  * Wrapper for reading the correct listener for whether the mouse button is down,
@@ -288,7 +284,7 @@ export default {
 	getTileMouseOver_Float,
 	getTileMouseOver_Integer,
 	getTilePointerOver_Float,
-	// getTilePointerOver_Integer,
+	getTilePointerOver_Integer,
 	isMouseDown,
 	isMouseHeld,
 	isMouseClicked,

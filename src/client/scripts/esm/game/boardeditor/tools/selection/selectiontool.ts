@@ -12,7 +12,6 @@ import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
 import mouse from "../../../../util/mouse";
 import arrows from "../../../rendering/arrows/arrows";
 import stoolgraphics from "./stoolgraphics";
-import space from "../../../misc/space";
 import { Mouse } from "../../../input";
 import { listener_document, listener_overlay } from "../../../chess/game";
 import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
@@ -70,7 +69,7 @@ function update(): void {
 	} else { // Selection in progress
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = getPointerCoords(pointerId!);
+		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 		// Test if pointer released (finalize new selection)
 		if (!respectiveListener.isPointerHeld(pointerId!)) endSelection();
 	}
@@ -87,15 +86,6 @@ function testShortcuts(): void {
 	}
 }
 
-/**
- * Gets the given pointer's current coordinates being hovered over, rounded to the integer square.
- * ONLY CALL if you know the pointer exists!
- */
-function getPointerCoords(pointerId: string): Coords {
-	const pointerWorld = mouse.getPointerWorld(pointerId)!;
-	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
-}
-
 function beginSelection(): void {
 	// console.log("Beginning selection");
 
@@ -106,7 +96,7 @@ function beginSelection(): void {
 	sdrag.resetState();
 
 	// Set the start point
-	startPoint = getPointerCoords(pointerId!);
+	startPoint = mouse.getTilePointerOver_Integer(pointerId!)!;
 	lastPointerCoords = startPoint;
 }
 
@@ -121,9 +111,9 @@ function endSelection(): void {
 	pointerId = undefined;
 }
 
-function cancelSelection(): void {
-	resetState();
-}
+// function cancelSelection(): void {
+// 	resetState();
+// }
 
 function resetState(): void {
 	selecting = false;
@@ -259,7 +249,6 @@ function selectAll(): void {
 
 export default {
 	update,
-	getPointerCoords,
 	resetState,
 	isExistingSelection,
 	render,

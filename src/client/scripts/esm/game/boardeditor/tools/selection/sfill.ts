@@ -57,7 +57,7 @@ function update(): void {
 
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = selectiontool.getPointerCoords(pointerId!);
+		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 		// Test if pointer released (execute selection translation)
 		if (!respectiveListener.isPointerHeld(pointerId!)) executeFill();
 	} else {
@@ -120,7 +120,7 @@ function resetState(): void {
 function startFill(): void {
 	areFilling = true;
 
-	lastPointerCoords = selectiontool.getPointerCoords(pointerId!);
+	lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 }
 
 function executeFill(): void {

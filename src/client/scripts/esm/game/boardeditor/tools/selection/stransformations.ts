@@ -50,6 +50,13 @@ let clipboard: StatePiece[] | undefined;
 /** The box containing all clipboard pieces. */
 let clipboardBox: BoundingBox | undefined;
 
+/**
+ * The parity of which vector the pivot point of rotations shifts
+ * so as the pieces don't land on floating point coords after rotation.
+ * This makes it so that 2 consecutive rotations return to the original position.
+ */
+let rotationParity: boolean = false;
+
 
 // Selection Box Transformations ------------------------------------------------
 
@@ -311,13 +318,6 @@ function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 function RotateRight(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	Rotate(gamefile, mesh, box, true); // true for clockwise
 }
-
-/**
- * The parity of which vector the pivot point of rotations shifts
- * so as the pieces don't land on floating point coords after rotation.
- * This makes it so that 2 consecutive rotations return to the original position.
- */
-let rotationParity: boolean = false;
 
 /** Rotates the selection 90 degrees clockwise or counter-clockwise. */
 function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boolean): void {
