@@ -5,6 +5,29 @@
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
  * Without proper management, stored data would never expire or be deleted
  * (unless the user clears their browser data).
+ * 
+ * @example
+ * ```typescript
+ * import indexeddb from './indexeddb.js';
+ * 
+ * // Save data with default 24-hour expiry
+ * await indexeddb.saveItem('user-preferences', { theme: 'dark', language: 'en' });
+ * 
+ * // Save data with custom expiry (1 hour)
+ * await indexeddb.saveItem('session-data', { token: 'abc123' }, 1000 * 60 * 60);
+ * 
+ * // Load data (returns undefined if not found or expired)
+ * const preferences = await indexeddb.loadItem('user-preferences');
+ * 
+ * // Delete specific item
+ * await indexeddb.deleteItem('session-data');
+ * 
+ * // Clean up all expired items
+ * await indexeddb.eraseExpiredItems();
+ * 
+ * // Clear all storage
+ * await indexeddb.eraseAll();
+ * ```
  */
 
 import jsutil from "../../../../shared/util/jsutil.js";
