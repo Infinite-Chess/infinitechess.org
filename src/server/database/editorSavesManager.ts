@@ -91,17 +91,6 @@ function getSavedPositionICN(position_id: number, user_id: number): EditorSavesI
 }
 
 /**
- * Gets the count of saved positions for a given user_id.
- * @param user_id - The user ID
- * @returns The number of saved positions the user has.
- */
-function getSavedPositionCount(user_id: number): number {
-	const query = `SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`;
-	const result = db.get<{ count: number }>(query, [user_id]);
-	return result?.count ?? 0;
-}
-
-/**
  * Deletes a saved position by position_id and user_id.
  * Will fail to delete if the user_id doesn't match the position owner.
  * @param position_id - The position ID
@@ -131,7 +120,6 @@ export default {
 	getAllSavedPositionsForUser,
 	addSavedPosition,
 	getSavedPositionICN,
-	getSavedPositionCount,
 	deleteSavedPosition,
 	renameSavedPosition,
 };
