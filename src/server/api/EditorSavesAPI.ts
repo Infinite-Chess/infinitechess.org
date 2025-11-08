@@ -30,25 +30,24 @@ const MAX_SAVED_POSITIONS = 50;
 
 
 /** Schema for validating the body of POST /api/editor-saves (save position) */
-const SavePositionBodySchema = z.strictObject({
+const SavePositionBodySchema = z.object({
 	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 	icn: z.string().min(1, 'ICN is required').max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
 });
 type SavePositionBody = z.infer<typeof SavePositionBodySchema>;
 
 /** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
-const RenamePositionBodySchema = z.strictObject({
+const RenamePositionBodySchema = z.object({
 	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 });
 type RenamePositionBody = z.infer<typeof RenamePositionBodySchema>;
 
 /** Schema for validating position_id in URL params */
-const PositionIdParamSchema = z.strictObject({
-	position_id: z.string().transform((val) => {
+const PositionIdParamSchema = z.object({
+	position_id: z.string().refine((val) => {
 		const num = Number(val);
-		if (isNaN(num) || num <= 0) throw new Error('Invalid position_id');
-		return num;
-	}),
+		return !isNaN(num) && num > 0;
+	}, { message: 'Invalid position_id' }).transform((val) => Number(val)),
 });
 type PositionIdParam = z.infer<typeof PositionIdParamSchema>;
 
@@ -99,7 +98,8 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 	// Validate request body with Zod
 	const parseResult = SavePositionBodySchema.safeParse(req.body);
 	if (!parseResult.success) {
-		const errorMessage = parseResult.error.errors[0]?.message || 'Invalid request body';
+		const firstError = parseResult.error.issues[0];
+		const errorMessage = firstError?.message || 'Invalid request body';
 		res.status(400).json({ error: errorMessage });
 		return;
 	}
@@ -236,7 +236,8 @@ function renamePosition(req: IdentifiedRequest, res: Response): void {
 	// Validate request body with Zod
 	const bodyParseResult = RenamePositionBodySchema.safeParse(req.body);
 	if (!bodyParseResult.success) {
-		const errorMessage = bodyParseResult.error.errors[0]?.message || 'Invalid request body';
+		const firstError = bodyParseResult.error.issues[0];
+		const errorMessage = firstError?.message || 'Invalid request body';
 		res.status(400).json({ error: errorMessage });
 		return;
 	}
