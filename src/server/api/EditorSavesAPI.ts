@@ -106,7 +106,7 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 /**
  * API endpoint to get a specific saved position by position_id.
  * Returns { icn: string } on success.
- * Requires authentication.
+ * Requires authentication and ownership of the position.
  */
 function getPosition(req: IdentifiedRequest, res: Response): void {
 	// Check if user is authenticated
@@ -114,6 +114,8 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
+
+	const userId = req.memberInfo.user_id;
 
 	// Get position_id from request params
 	const positionId = Number((req as any).params.position_id);
@@ -129,6 +131,12 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 
 		if (!position) {
 			res.status(404).json({ error: 'Position not found' });
+			return;
+		}
+
+		// Verify the user owns this position
+		if (position.user_id !== userId) {
+			res.status(403).json({ error: 'Access denied' });
 			return;
 		}
 

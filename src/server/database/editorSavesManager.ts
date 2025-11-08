@@ -20,10 +20,11 @@ export type EditorSavesListRecord = {
 };
 
 /**
- * Represents a saved position ICN record (icn only).
+ * Represents a saved position ICN record (icn and user_id).
  */
 export type EditorSavesIcnRecord = {
 	icn: string;
+	user_id: number;
 };
 
 
@@ -56,11 +57,11 @@ export function addSavedPosition(user_id: number, name: string, size: number, ic
 }
 
 /**
- * Retrieves the ICN notation for a specific saved position by position_id.
+ * Retrieves the ICN notation and user_id for a specific saved position by position_id.
  * @param position_id - The position ID
- * @returns The ICN record if found, otherwise undefined.
+ * @returns The ICN and user_id record if found, otherwise undefined.
  */
 export function getSavedPositionIcn(position_id: number): EditorSavesIcnRecord | undefined {
-	const query = `SELECT icn FROM editor_saves WHERE position_id = ?`;
+	const query = `SELECT icn, user_id FROM editor_saves WHERE position_id = ?`;
 	return db.get<EditorSavesIcnRecord>(query, [position_id]);
 }
