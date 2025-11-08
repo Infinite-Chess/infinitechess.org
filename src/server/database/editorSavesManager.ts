@@ -30,7 +30,7 @@ export type EditorSavesIcnRecord = {
 // Constants ---------------------------------------------------------------------------------
 
 
-/** Maximum number of saved positions per user */
+/** Maximum number of saved positions allowed per user */
 export const MAX_SAVED_POSITIONS = 50;
 
 
