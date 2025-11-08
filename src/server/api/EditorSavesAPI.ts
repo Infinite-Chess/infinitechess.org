@@ -29,39 +29,24 @@ export const MAX_SAVED_POSITIONS = 50;
 // Zod Schemas -------------------------------------------------------------------------------
 
 
-/**
- * Schema for validating the body of POST /api/editor-saves (save position)
- * @internal Type exported for documentation purposes
- */
+/** Schema for validating the body of POST /api/editor-saves (save position) */
 const SavePositionBodySchema = z.object({
 	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 	icn: z.string().min(1, 'ICN is required').max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
 });
-// eslint-disable-next-line no-unused-vars
-type SavePositionBody = z.infer<typeof SavePositionBodySchema>;
 
-/**
- * Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position)
- * @internal Type exported for documentation purposes
- */
+/** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
 const RenamePositionBodySchema = z.object({
 	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 });
-// eslint-disable-next-line no-unused-vars
-type RenamePositionBody = z.infer<typeof RenamePositionBodySchema>;
 
-/**
- * Schema for validating position_id in URL params
- * @internal Type exported for documentation purposes
- */
+/** Schema for validating position_id in URL params */
 const PositionIdParamSchema = z.object({
 	position_id: z.string().refine((val: string) => {
 		const num = Number(val);
 		return !isNaN(num) && num > 0;
 	}, { message: 'Invalid position_id' }).transform((val: string) => Number(val)),
 });
-// eslint-disable-next-line no-unused-vars
-type PositionIdParam = z.infer<typeof PositionIdParamSchema>;
 
 
 // API Endpoints -----------------------------------------------------------------------------

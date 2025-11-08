@@ -96,15 +96,6 @@ const allRatingAbuseColumns: string[] = [
 	'last_alerted_at'
 ];
 
-/** All columns of the editor_saves table. Each of these would be valid to retrieve from any saved position. */
-const allEditorSavesColumns: string[] = [
-	'position_id',
-	'user_id',
-	'name',
-	'size',
-	'icn'
-];
-
 
 // Functions -----------------------------------------------------------------------------------
 
@@ -362,6 +353,5 @@ export {
 	allPlayerGamesColumns,
 	allGamesColumns,
 	allRatingAbuseColumns,
-	allEditorSavesColumns,
 	initDatabase,
 };

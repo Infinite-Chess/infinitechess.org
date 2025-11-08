@@ -1,3 +1,4 @@
+
 // src/server/database/editorSavesManager.ts
 
 /**
@@ -5,26 +6,28 @@
  */
 
 
-import db from './database.js';
-
 import type { RunResult } from 'better-sqlite3';
 
+import db from './database.js';
 
-/**
- * Represents a saved position list record (position_id, name, size only).
- */
+
+// Type Definitions --------------------------------------------------------------------
+
+
+/** Represents a saved position list record (position_id, name, size only). */
 export type EditorSavesListRecord = {
 	position_id: number;
 	name: string;
 	size: number;
 };
 
-/**
- * Represents a saved position ICN record (icn only).
- */
+/** Represents a saved position ICN record (icn only). */
 export type EditorSavesIcnRecord = {
 	icn: string;
 };
+
+
+// Methods -----------------------------------------------------------------------------
 
 
 /**
@@ -40,10 +43,9 @@ export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRec
 
 /**
  * Adds a new saved position to the editor_saves table.
- * The position_id will be auto-generated.
  * @param user_id - The user ID who owns the position
  * @param name - The name of the saved position
- * @param size - The size (piece count) of the position
+ * @param size - The size (icn length) of the position
  * @param icn - The ICN notation of the position
  * @returns The RunResult containing lastInsertRowid.
  */
