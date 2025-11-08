@@ -161,18 +161,18 @@ async function establishSocket() {
  */
 async function openSocket() {
 	onSocketUpgradeReqLeave();
-	return new Promise((_resolve, _reject) => {
+	return new Promise((resolve, _reject) => {
 		let url = `wss://${window.location.hostname}`;
 		if (window.location.port !== '443') url += `:${window.location.port}`; // Enables localhost to work during development
 		const ws = new WebSocket(url);
 		ws.onopen = () => {
 			onReqBack();
 			socket = ws;
-			_resolve(true);
+			resolve(true);
 		}; // Resolve the promise with the WebSocket object
 		ws.onerror = (_event) => {
 			onReqBack();
-			_resolve(false);
+			resolve(false);
 		};
 		ws.onmessage = onmessage;
 		ws.onclose = onclose;

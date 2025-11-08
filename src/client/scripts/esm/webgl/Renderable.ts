@@ -90,11 +90,7 @@ interface BaseRenderable {
      * @param [scale] - The scaling transformation, default [1,1,1]
      * @param uniforms - Custom uniform values, for example, 'u_size'. 
      */
-	render: (
-		_position?: Vec3,
-		_scale?: Vec3,
-		_uniforms?: Record<string, any>
-	) => void
+	render: (_position?: Vec3, _scale?: Vec3, _uniforms?: Record<string, any>) => void
 }
 
 /** A renderable model. */

@@ -163,6 +163,7 @@ function getOpponentsOfUserFromGames(user_id: number, game_id_list: number[], co
  * @param columnsAndValues - An object containing column-value pairs to update.
  * @returns - A result object indicating success or failure.
  */
+// eslint-disable-next-line no-unused-vars
 function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndValues: PlayerGamesRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
