@@ -65,7 +65,7 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 	const userId = req.memberInfo.user_id;
 
 	// Validate request body
-	const { name, icn } = req.body;
+	const { name, icn } = (req as any).body;
 
 	if (typeof name !== 'string' || name.trim() === '') {
 		res.status(400).json({ error: 'Name is required' });
@@ -116,7 +116,7 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 	}
 
 	// Get position_id from request params
-	const positionId = Number(req.params.position_id);
+	const positionId = Number((req as any).params.position_id);
 
 	if (isNaN(positionId) || positionId <= 0) {
 		res.status(400).json({ error: 'Invalid position_id' });
