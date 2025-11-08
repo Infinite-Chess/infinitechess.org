@@ -9,8 +9,7 @@ import type { RawType, Player } from "../../chess/util/typeutil.js";
 import type { Color } from "../../util/math/math.js";
 
 type PieceColorGroup = {
-	// eslint-disable-next-line no-unused-vars
-	[team in Player]: Color
+	[_team in Player]: Color
 }
 
 /** The default tints for a piece, if not provided. */
@@ -27,8 +26,7 @@ const defaultBaseColors: PieceColorGroup = {
 
 /** Config for the SVGs of the pieces */
 const SVGConfig: {
-    // eslint-disable-next-line no-unused-vars
-    [type in RawType]: {
+    [_type in RawType]: {
 		/** null if the raw type doesn't have an svg (VOID) */
         location: string | null
         colors?: PieceColorGroup

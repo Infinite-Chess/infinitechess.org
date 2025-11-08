@@ -133,16 +133,14 @@ const xss_options = {
 		sub: [],
 		sup: [],
 	},
-	// eslint-disable-next-line no-unused-vars
-	onTagAttr: function(tag, name, value, isWhiteAttr) {
+	onTagAttr: function(_tag, _name, _value, _isWhiteAttr) {
 		/*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
 	  console.warn(
 		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
 	  );
 	}*/
 	},
-	// eslint-disable-next-line no-unused-vars
-	safeAttrValue: function(tag, name, value) {
+	safeAttrValue: function(_tag, _name, _value) {
 		/*if (
 	  tag === "a" &&
 		name === "href" &&

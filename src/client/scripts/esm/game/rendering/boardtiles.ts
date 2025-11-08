@@ -102,8 +102,7 @@ let darkTiles: Color;
 
 
 // Add event listener for theme changes
-// eslint-disable-next-line no-unused-vars
-document.addEventListener('theme-change', (event) => { // Custom Event listener.
+document.addEventListener('theme-change', (_event) => { // Custom Event listener.
 	console.log(`Theme change event detected: ${preferences.getTheme()}`);
 	updateTheme();
 	const gamefile = gameslot.getGamefile();

@@ -23,13 +23,11 @@ export class TheBeginningZone implements Zone {
 		return [];
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	public fadeInAmbience(transitionDurationMillis: number): void {
+	public fadeInAmbience(_transitionDurationMillis: number): void {
 
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	public fadeOutAmbience(transitionDurationMillis: number): void {
+	public fadeOutAmbience(_transitionDurationMillis: number): void {
 
 	}
 }

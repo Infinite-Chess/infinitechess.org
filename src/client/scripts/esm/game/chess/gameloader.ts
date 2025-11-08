@@ -147,8 +147,7 @@ async function startLocalGame(options: {
 		// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
 		// additional: { worldBorder: BigInt(15) }
 	})
-		// eslint-disable-next-line no-unused-vars
-		.then((result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -195,8 +194,7 @@ async function startOnlineGame(options: {
 		allowEditCoords: false,
 		additional
 	})
-		// eslint-disable-next-line no-unused-vars
-		.then((result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	onlinegame.initOnlineGame({
@@ -278,8 +276,7 @@ async function startEngineGame(options: {
 	 * OR rejects immediately when one of them rejects!
 	 */
 	Promise.all([graphicalPromise, enginePromise])
-		// eslint-disable-next-line no-unused-vars
-		.then((results: any[]) => onFinishedLoading())
+		.then((_results: any[]) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -316,8 +313,7 @@ async function startBoardEditor(): Promise<void> {
 		 */
 		additional: { editor: true }
 	})
-		// eslint-disable-next-line no-unused-vars
-		.then((result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	await guiboardeditor.initUI();
@@ -344,8 +340,7 @@ async function startCustomLocalGame(options: {
 		viewWhitePerspective: true,
 		allowEditCoords: true
 	})
-		// eslint-disable-next-line no-unused-vars
-		.then((result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -384,8 +379,7 @@ async function pasteGame(options: {
 		presetAnnotes: options.presetAnnotes,
 		additional: options.additional,
 	})
-		// eslint-disable-next-line no-unused-vars
-		.then((result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 	
 	// Open the gui stuff AFTER initiating the logical stuff,

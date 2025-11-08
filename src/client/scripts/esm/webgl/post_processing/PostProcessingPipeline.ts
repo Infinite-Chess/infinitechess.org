@@ -20,8 +20,7 @@ export interface PostProcessPass {
 	 * @param gl The WebGL2 rendering context.
 	 * @param inputTexture The texture to read from (the result of the previous pass).
 	 */
-	// eslint-disable-next-line no-unused-vars
-	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void;
+	render(_gl: WebGL2RenderingContext, _inputTexture: WebGLTexture): void;
 }
 
 

@@ -63,8 +63,7 @@ type Change = {
  * the piece lists to reflect that move, or modifies the mesh of the pieces,
  * depending on the function, BUT NOT BOTH.
  */
-// eslint-disable-next-line no-unused-vars
-type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
+type genericChangeFunc<T> = (_actiondata: T, _change: Change) => void;
 
 /**
  * An actionlist is a dictionary links actions to functions.

@@ -394,8 +394,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 	});
 }
 
-// eslint-disable-next-line no-unused-vars
-function callback_practiceBack(event: Event): void {
+function callback_practiceBack(_event: Event): void {
 	close();
 	guititle.open();
 }

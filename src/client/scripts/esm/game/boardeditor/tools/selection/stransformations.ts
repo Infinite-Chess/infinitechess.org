@@ -440,8 +440,7 @@ function Transform(
 	destinationBox: BoundingBox,
 	newSelectionCorners: [Coords, Coords],
 	/** A function to transform an individual piece's coordinates and type. */
-	// eslint-disable-next-line no-unused-vars
-	transformer: (piece: Piece) => { coords: Coords, type: number }
+	transformer: (_piece: Piece) => { coords: Coords, type: number }
 ): void {
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);

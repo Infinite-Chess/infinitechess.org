@@ -49,8 +49,7 @@ describe('EditorSavesAPI', () => {
 		app.patch('/api/editor-saves/:position_id', renamePosition as any);
 
 		// Error handler middleware
-		// eslint-disable-next-line no-unused-vars
-		app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+		app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 			console.error('Error caught:', err.message || err);
 			res.status(500).json({ error: err.message || 'Internal server error' });
 		});

@@ -161,8 +161,7 @@ async function establishSocket() {
  */
 async function openSocket() {
 	onSocketUpgradeReqLeave();
-	// eslint-disable-next-line no-unused-vars
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve, _reject) => {
 		let url = `wss://${window.location.hostname}`;
 		if (window.location.port !== '443') url += `:${window.location.port}`; // Enables localhost to work during development
 		const ws = new WebSocket(url);
@@ -171,8 +170,7 @@ async function openSocket() {
 			socket = ws;
 			resolve(true);
 		}; // Resolve the promise with the WebSocket object
-		// eslint-disable-next-line no-unused-vars
-		ws.onerror = (event) => {
+		ws.onerror = (_event) => {
 			onReqBack();
 			resolve(false);
 		};
