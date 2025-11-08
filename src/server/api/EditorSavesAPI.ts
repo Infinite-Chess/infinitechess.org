@@ -44,10 +44,10 @@ type RenamePositionBody = z.infer<typeof RenamePositionBodySchema>;
 
 /** Schema for validating position_id in URL params */
 const PositionIdParamSchema = z.object({
-	position_id: z.string().refine((val) => {
+	position_id: z.string().refine((val: string) => {
 		const num = Number(val);
 		return !isNaN(num) && num > 0;
-	}, { message: 'Invalid position_id' }).transform((val) => Number(val)),
+	}, { message: 'Invalid position_id' }).transform((val: string) => Number(val)),
 });
 type PositionIdParam = z.infer<typeof PositionIdParamSchema>;
 

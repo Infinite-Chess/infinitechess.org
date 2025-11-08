@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import express, { type Express } from 'express';
+import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import request from 'supertest';
 import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition } from './EditorSavesAPI.js';
 import * as editorSavesManager from '../database/editorSavesManager.js';
@@ -29,7 +29,7 @@ describe('EditorSavesAPI', () => {
 		app.use(express.json({ limit: '10mb' }));
 
 		// Mock middleware to set up authenticated user
-		app.use((req, res, next) => {
+		app.use((req: Request, res: Response, next: NextFunction) => {
 			// Default to authenticated user
 			(req as any).memberInfo = {
 				signedIn: true,
@@ -48,7 +48,7 @@ describe('EditorSavesAPI', () => {
 		app.patch('/api/editor-saves/:position_id', renamePosition);
 
 		// Error handler middleware
-		app.use((err: any, req: any, res: any, next: any) => {
+		app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 			console.error('Error caught:', err.message || err);
 			res.status(500).json({ error: err.message || 'Internal server error' });
 		});
@@ -81,7 +81,7 @@ describe('EditorSavesAPI', () => {
 			// Create app with unauthenticated user
 			const unauthApp = express();
 			unauthApp.use(express.json());
-			unauthApp.use((req, res, next) => {
+			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
@@ -201,7 +201,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 401 if user is not authenticated', async () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
-			unauthApp.use((req, res, next) => {
+			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
@@ -262,7 +262,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 401 if user is not authenticated', async () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
-			unauthApp.use((req, res, next) => {
+			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
@@ -309,7 +309,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 401 if user is not authenticated', async () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
-			unauthApp.use((req, res, next) => {
+			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
@@ -391,7 +391,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 401 if user is not authenticated', async () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
-			unauthApp.use((req, res, next) => {
+			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});

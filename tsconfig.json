@@ -25,7 +25,9 @@
 		"src"
 	],
 	"exclude": [
-		"node_modules", // Don't look in node_modules
-		"dist",         // Don't look in the output directory
+		"node_modules",     // Don't look in node_modules
+		"dist",             // Don't look in the output directory
+		"**/*.test.ts",     // Don't type-check test files (tested separately with vitest)
+		"**/*.test.js"      // Don't type-check test files (tested separately with vitest)
 	]
 }
