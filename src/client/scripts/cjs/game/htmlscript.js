@@ -24,8 +24,7 @@ const htmlscript = (function() {
 	let loadingErrorOcurred = false;
 	let lostNetwork = false;
 
-	// eslint-disable-next-line no-unused-vars
-	function callback_LoadingError(event) {
+	function callback_LoadingError(_event) {
 		// const type = event.type; // Event type: "error"/"abort"
 		// const target = event.target; // Element that triggered the event
 		// const elementType = target?.tagName.toLowerCase();

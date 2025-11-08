@@ -79,8 +79,7 @@ interface TextureInfo {
  * @param {number} changedIndicesStart - The index in the vertex data marking the first value changed.
  * @param {number} changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
-// eslint-disable-next-line no-unused-vars
-type UpdateBufferIndicesFunc = (changedIndicesStart: number, changedIndicesCount: number) => void;
+type UpdateBufferIndicesFunc = (_changedIndicesStart: number, _changedIndicesCount: number) => void;
 
 /** Contains the properties that both the {@link Renderable} and {@link RenderableInstanced} types share. */
 interface BaseRenderable {
@@ -92,12 +91,9 @@ interface BaseRenderable {
      * @param uniforms - Custom uniform values, for example, 'u_size'. 
      */
 	render: (
-		// eslint-disable-next-line no-unused-vars
-		position?: Vec3,
-		// eslint-disable-next-line no-unused-vars
-		scale?: Vec3,
-		// eslint-disable-next-line no-unused-vars
-		uniforms?: Record<string, any>
+		_position?: Vec3,
+		_scale?: Vec3,
+		_uniforms?: Record<string, any>
 	) => void
 }
 

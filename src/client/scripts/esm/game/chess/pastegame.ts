@@ -48,8 +48,7 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate','UTCTime'];
  * This callback is called when the "Paste Game" button is pressed.
  * @param event - The event fired from the event listener
  */
-// eslint-disable-next-line no-unused-vars
-async function callbackPaste(event: Event): Promise<void> {
+async function callbackPaste(_event: Event): Promise<void> {
 	// If we are in the board editor, let the board editor script handle this instead
 	if (boardeditor.areInBoardEditor()) return; // Editor has its own listener
 

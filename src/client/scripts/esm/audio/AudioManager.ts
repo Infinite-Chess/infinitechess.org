@@ -31,16 +31,14 @@ interface SoundObject {
 	 * [Non-looping sounds] Fades to silent and then stops the sound entirely.
 	 * @param durationMillis - The duration of the fade out in milliseconds.
 	 */
-	// eslint-disable-next-line no-unused-vars
-	fadeOut: (durationMillis: number) => void
+	fadeOut: (_durationMillis: number) => void
 	/**
 	 * Fades in the sound from its current volume to a target volume.
 	 * If you wish to fade-in a non-looping sound, initate the sound object with 0 volume initially.
 	 * @param targetVolume - The final volume level (0-1).
 	 * @param durationMillis - The duration of the fade-in effect in milliseconds.
 	 */
-	// eslint-disable-next-line no-unused-vars
-	fadeIn: (targetVolume: number, durationMillis: number) => void
+	fadeIn: (_targetVolume: number, _durationMillis: number) => void
 }
 
 

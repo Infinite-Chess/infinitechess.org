@@ -107,8 +107,7 @@ function configureMiddleware(app) {
 			}
 
 			next();
-		// eslint-disable-next-line no-unused-vars
-		} catch (err) {
+		} catch (_err) {
 			console.warn('Blocked invalid URL encoding:', req.url); 
 			res.status(400).send('Invalid URL encoding');
 		}

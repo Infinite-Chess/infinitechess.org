@@ -93,8 +93,7 @@ type SlidingMoves = {
  * The gamefile and detectCheck method may be used for the Royal Queen,
  * as it can test if the squares are check for positive.
  */
-// eslint-disable-next-line no-unused-vars
-type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
+type IgnoreFunction = (_startCoords: Coords, _endCoords: Coords) => boolean;
 
 /**
  * This runs once for every piece on the same line of the selected piece.
@@ -108,14 +107,12 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * An example of this would be the "witch", which makes all adjacent friendly
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
-// eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Coords, premove: boolean) => 0 | 1 | 2;
+type BlockingFunction = (_friendlyColor: Player, _blockingPiece: Piece, _coords: Coords, _premove: boolean) => 0 | 1 | 2;
 /**
  * A function that returns an array of any legal special individual moves for the piece,
  * each of the coords will have a special property attached to it. castle/promote/enpassant
  */
-// eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: FullGame, coords: Coords, color: Player, premove: boolean) => CoordsSpecial[]
+type SpecialFunction = (_gamefile: FullGame, _coords: Coords, _color: Player, _premove: boolean) => CoordsSpecial[]
 
 
 

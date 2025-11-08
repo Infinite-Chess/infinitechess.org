@@ -91,8 +91,7 @@ function toggle(): void {
 
 
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
-// eslint-disable-next-line no-unused-vars
-function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void): void {
+function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => void): void {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 

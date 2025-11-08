@@ -105,8 +105,7 @@ type Player = typeof players[keyof typeof players]
 
 /** A dictionary type with raw types for keys */
 type RawTypeGroup<T> = {
-	// eslint-disable-next-line no-unused-vars
-	[t in RawType]?: T
+	[_t in RawType]?: T
 }
 
 /** A dictionary type with all types for keys */
@@ -114,8 +113,7 @@ type TypeGroup<T> = { [t: number]: T }
 
 /** A dictionary type with player colors for keys */
 type PlayerGroup<T> = {
-	// eslint-disable-next-line no-unused-vars
-	[p in Player]?: T
+	[_p in Player]?: T
 }
 
 function getRawType(type: number): RawType {
@@ -146,8 +144,7 @@ function buildAllTypesForPlayers(players: Player[], rawTypes: RawType[]): number
 	return builtTypes;
 }
 
-// eslint-disable-next-line no-unused-vars
-function forEachPieceType(callback: (pieceType: number) => void, players: Player[], includePieces: RawType[]): void {
+function forEachPieceType(callback: (_pieceType: number) => void, players: Player[], includePieces: RawType[]): void {
 	for (let i = players.length - 1; i >= 0; i--) {
 		for (const r of includePieces) {
 			callback(buildType(r, players[i]!));

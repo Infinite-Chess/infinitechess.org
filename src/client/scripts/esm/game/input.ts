@@ -127,11 +127,9 @@ interface InputListener {
 	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held.
 	 * @param requireShiftKey - If true, only returns true if the Shift key was also held.
 	 */
-    // eslint-disable-next-line no-unused-vars
-    isKeyDown(keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean;
+    isKeyDown(_keyCode: string, _requireMetaKey?: boolean, _requireShiftKey?: boolean): boolean;
 	/** Whether the provided keyboard key is currently being held down. */
-    // eslint-disable-next-line no-unused-vars
-    isKeyHeld(keyCode: string): boolean;
+    isKeyHeld(_keyCode: string): boolean;
 	/** Call when done with the input listener. This closes all its event listeners. */
     removeEventListeners(): void;
 	/** The element this input listener is attached to. */

@@ -97,8 +97,7 @@ function initEngineGame(options: {
 		engineWorker!.onerror = (e: ErrorEvent): void => {
 			reject(new Error("Worker failed to load: " + e.message));
 		};
-	// eslint-disable-next-line no-unused-vars
-	}).then((result: any) => {
+	}).then((_result: any) => {
 		// After the promise resolves, we know the worker is ready
 		// Overwrite the onmessage listener to listen for move submissions
 		engineWorker!.onmessage = (e: MessageEvent): void => makeEngineMove(e.data);

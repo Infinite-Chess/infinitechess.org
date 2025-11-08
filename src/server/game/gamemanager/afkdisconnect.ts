@@ -63,8 +63,7 @@ function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}): v
  * @param closureNotByChoice - True if the player didn't close the connection on purpose.
  * @param onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
  */
-// eslint-disable-next-line no-unused-vars
-function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boolean, onAutoResignFunc: (game: Game, winner: Player) => void): void {
+function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boolean, onAutoResignFunc: (_game: Game, _winner: Player) => void): void {
 	console.log(`Starting disconnect timer to auto resign player ${color}.`);
 
 	const now = Date.now();
