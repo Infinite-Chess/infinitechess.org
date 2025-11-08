@@ -7,6 +7,8 @@
 
 import db from './database.js';
 
+import type { RunResult } from 'better-sqlite3';
+
 
 /**
  * Represents a saved position list record (position_id, name, size only).
@@ -43,13 +45,14 @@ export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRec
  * @param name - The name of the saved position
  * @param size - The size (piece count) of the position
  * @param icn - The ICN notation of the position
+ * @returns The RunResult containing lastInsertRowid.
  */
-export function addSavedPosition(user_id: number, name: string, size: number, icn: string): void {
+export function addSavedPosition(user_id: number, name: string, size: number, icn: string): RunResult {
 	const query = `
 		INSERT INTO editor_saves (user_id, name, size, icn)
 		VALUES (?, ?, ?, ?)
 	`;
-	db.run(query, [user_id, name, size, icn]);
+	return db.run(query, [user_id, name, size, icn]);
 }
 
 /**
