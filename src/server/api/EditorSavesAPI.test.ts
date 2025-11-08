@@ -42,13 +42,14 @@ describe('EditorSavesAPI', () => {
 		});
 
 		// Register the routes
-		app.get('/api/editor-saves', getSavedPositions);
-		app.post('/api/editor-saves', savePosition);
-		app.get('/api/editor-saves/:position_id', getPosition);
-		app.delete('/api/editor-saves/:position_id', deletePosition);
-		app.patch('/api/editor-saves/:position_id', renamePosition);
+		app.get('/api/editor-saves', getSavedPositions as any);
+		app.post('/api/editor-saves', savePosition as any);
+		app.get('/api/editor-saves/:position_id', getPosition as any);
+		app.delete('/api/editor-saves/:position_id', deletePosition as any);
+		app.patch('/api/editor-saves/:position_id', renamePosition as any);
 
 		// Error handler middleware
+		// eslint-disable-next-line no-unused-vars
 		app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 			console.error('Error caught:', err.message || err);
 			res.status(500).json({ error: err.message || 'Internal server error' });
@@ -63,7 +64,7 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('GET /api/editor-saves', () => {
-		it('should return all saved positions for authenticated user', async () => {
+		it('should return all saved positions for authenticated user', async() => {
 			const mockSaves = [
 				{ position_id: 1, name: 'Position 1', size: 100 },
 				{ position_id: 2, name: 'Position 2', size: 200 },
@@ -78,7 +79,7 @@ describe('EditorSavesAPI', () => {
 			expect(editorSavesManager.getAllSavedPositionsForUser).toHaveBeenCalledWith(1);
 		});
 
-		it('should return 401 if user is not authenticated', async () => {
+		it('should return 401 if user is not authenticated', async() => {
 			// Create app with unauthenticated user
 			const unauthApp = express();
 			unauthApp.use(express.json());
@@ -86,7 +87,7 @@ describe('EditorSavesAPI', () => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.get('/api/editor-saves', getSavedPositions);
+			unauthApp.get('/api/editor-saves', getSavedPositions as any);
 
 			const response = await request(unauthApp).get('/api/editor-saves');
 
@@ -94,7 +95,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body).toEqual({ error: 'Must be signed in' });
 		});
 
-		it('should return 500 if database error occurs', async () => {
+		it('should return 500 if database error occurs', async() => {
 			vi.mocked(editorSavesManager.getAllSavedPositionsForUser).mockImplementation(() => {
 				throw new Error('Database error');
 			});
@@ -107,7 +108,7 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('POST /api/editor-saves', () => {
-		it('should save a new position successfully', async () => {
+		it('should save a new position successfully', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
@@ -129,7 +130,7 @@ describe('EditorSavesAPI', () => {
 			);
 		});
 
-		it('should return 400 if name is missing', async () => {
+		it('should return 400 if name is missing', async() => {
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ icn: 'test-icn-data' });
@@ -139,7 +140,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toBeTruthy();
 		});
 
-		it('should return 400 if name is empty', async () => {
+		it('should return 400 if name is empty', async() => {
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: '', icn: 'test-icn-data' });
@@ -148,7 +149,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain('Name is required');
 		});
 
-		it('should return 400 if name exceeds max length', async () => {
+		it('should return 400 if name exceeds max length', async() => {
 			const longName = 'a'.repeat(MAX_NAME_LENGTH + 1);
 
 			const response = await request(app)
@@ -159,7 +160,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain(`${MAX_NAME_LENGTH} characters or less`);
 		});
 
-		it('should return 400 if icn is missing', async () => {
+		it('should return 400 if icn is missing', async() => {
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position' });
@@ -168,7 +169,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toBeTruthy();
 		});
 
-		it('should return 400 if icn is empty', async () => {
+		it('should return 400 if icn is empty', async() => {
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: '' });
@@ -177,7 +178,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain('ICN is required');
 		});
 
-		it('should return 400 if icn exceeds max length', async () => {
+		it('should return 400 if icn exceeds max length', async() => {
 			const longIcn = 'a'.repeat(MAX_ICN_LENGTH + 1);
 
 			const response = await request(app)
@@ -188,7 +189,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain(`${MAX_ICN_LENGTH} characters or less`);
 		});
 
-		it('should return 403 if quota is exceeded', async () => {
+		it('should return 403 if quota is exceeded', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(MAX_SAVED_POSITIONS);
 
 			const response = await request(app)
@@ -199,14 +200,14 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain(`Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded`);
 		});
 
-		it('should return 401 if user is not authenticated', async () => {
+		it('should return 401 if user is not authenticated', async() => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.post('/api/editor-saves', savePosition);
+			unauthApp.post('/api/editor-saves', savePosition as any);
 
 			const response = await request(unauthApp)
 				.post('/api/editor-saves')
@@ -218,7 +219,7 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('GET /api/editor-saves/:position_id', () => {
-		it('should return position ICN if user owns it', async () => {
+		it('should return position ICN if user owns it', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionIcn).mockReturnValue({
 				icn: 'test-icn-data'
 			});
@@ -230,7 +231,7 @@ describe('EditorSavesAPI', () => {
 			expect(editorSavesManager.getSavedPositionIcn).toHaveBeenCalledWith(123, 1);
 		});
 
-		it('should return 404 if position not found or not owned', async () => {
+		it('should return 404 if position not found or not owned', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionIcn).mockReturnValue(undefined);
 
 			const response = await request(app).get('/api/editor-saves/999');
@@ -239,35 +240,35 @@ describe('EditorSavesAPI', () => {
 			expect(response.body).toEqual({ error: 'Position not found' });
 		});
 
-		it('should return 400 if position_id is invalid', async () => {
+		it('should return 400 if position_id is invalid', async() => {
 			const response = await request(app).get('/api/editor-saves/invalid');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
-		it('should return 400 if position_id is zero', async () => {
+		it('should return 400 if position_id is zero', async() => {
 			const response = await request(app).get('/api/editor-saves/0');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
-		it('should return 400 if position_id is negative', async () => {
+		it('should return 400 if position_id is negative', async() => {
 			const response = await request(app).get('/api/editor-saves/-5');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
-		it('should return 401 if user is not authenticated', async () => {
+		it('should return 401 if user is not authenticated', async() => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.get('/api/editor-saves/:position_id', getPosition);
+			unauthApp.get('/api/editor-saves/:position_id', getPosition as any);
 
 			const response = await request(unauthApp).get('/api/editor-saves/123');
 
@@ -277,7 +278,7 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('DELETE /api/editor-saves/:position_id', () => {
-		it('should delete position successfully', async () => {
+		it('should delete position successfully', async() => {
 			vi.mocked(editorSavesManager.deleteSavedPosition).mockReturnValue({
 				changes: 1,
 			} as any);
@@ -289,7 +290,7 @@ describe('EditorSavesAPI', () => {
 			expect(editorSavesManager.deleteSavedPosition).toHaveBeenCalledWith(123, 1);
 		});
 
-		it('should return 404 if position not found or not owned', async () => {
+		it('should return 404 if position not found or not owned', async() => {
 			vi.mocked(editorSavesManager.deleteSavedPosition).mockReturnValue({
 				changes: 0,
 			} as any);
@@ -300,21 +301,21 @@ describe('EditorSavesAPI', () => {
 			expect(response.body).toEqual({ error: 'Position not found' });
 		});
 
-		it('should return 400 if position_id is invalid', async () => {
+		it('should return 400 if position_id is invalid', async() => {
 			const response = await request(app).delete('/api/editor-saves/invalid');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
-		it('should return 401 if user is not authenticated', async () => {
+		it('should return 401 if user is not authenticated', async() => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.delete('/api/editor-saves/:position_id', deletePosition);
+			unauthApp.delete('/api/editor-saves/:position_id', deletePosition as any);
 
 			const response = await request(unauthApp).delete('/api/editor-saves/123');
 
@@ -324,7 +325,7 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('PATCH /api/editor-saves/:position_id', () => {
-		it('should rename position successfully', async () => {
+		it('should rename position successfully', async() => {
 			vi.mocked(editorSavesManager.renameSavedPosition).mockReturnValue({
 				changes: 1,
 			} as any);
@@ -338,7 +339,7 @@ describe('EditorSavesAPI', () => {
 			expect(editorSavesManager.renameSavedPosition).toHaveBeenCalledWith(123, 1, 'New Name');
 		});
 
-		it('should return 404 if position not found or not owned', async () => {
+		it('should return 404 if position not found or not owned', async() => {
 			vi.mocked(editorSavesManager.renameSavedPosition).mockReturnValue({
 				changes: 0,
 			} as any);
@@ -351,7 +352,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body).toEqual({ error: 'Position not found' });
 		});
 
-		it('should return 400 if name is missing', async () => {
+		it('should return 400 if name is missing', async() => {
 			const response = await request(app)
 				.patch('/api/editor-saves/123')
 				.send({});
@@ -360,7 +361,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toBeTruthy();
 		});
 
-		it('should return 400 if name is empty', async () => {
+		it('should return 400 if name is empty', async() => {
 			const response = await request(app)
 				.patch('/api/editor-saves/123')
 				.send({ name: '' });
@@ -369,7 +370,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain('Name is required');
 		});
 
-		it('should return 400 if name exceeds max length', async () => {
+		it('should return 400 if name exceeds max length', async() => {
 			const longName = 'a'.repeat(MAX_NAME_LENGTH + 1);
 
 			const response = await request(app)
@@ -380,7 +381,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.body.error).toContain(`${MAX_NAME_LENGTH} characters or less`);
 		});
 
-		it('should return 400 if position_id is invalid', async () => {
+		it('should return 400 if position_id is invalid', async() => {
 			const response = await request(app)
 				.patch('/api/editor-saves/invalid')
 				.send({ name: 'New Name' });
@@ -389,14 +390,14 @@ describe('EditorSavesAPI', () => {
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
-		it('should return 401 if user is not authenticated', async () => {
+		it('should return 401 if user is not authenticated', async() => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.patch('/api/editor-saves/:position_id', renamePosition);
+			unauthApp.patch('/api/editor-saves/:position_id', renamePosition as any);
 
 			const response = await request(unauthApp)
 				.patch('/api/editor-saves/123')
@@ -408,7 +409,7 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('Edge cases and integration', () => {
-		it('should handle very long ICN within limit', async () => {
+		it('should handle very long ICN within limit', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
@@ -430,7 +431,7 @@ describe('EditorSavesAPI', () => {
 			);
 		});
 
-		it('should handle name at max length', async () => {
+		it('should handle name at max length', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
@@ -446,7 +447,7 @@ describe('EditorSavesAPI', () => {
 			expect(response.status).toBe(201);
 		});
 
-		it('should calculate size correctly from ICN length', async () => {
+		it('should calculate size correctly from ICN length', async() => {
 			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
