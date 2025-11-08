@@ -19,7 +19,7 @@ describe('IndexedDB Storage Module Interface', () => {
 		expect(typeof indexeddb.default.saveItem).toBe('function');
 		expect(typeof indexeddb.default.loadItem).toBe('function');
 		expect(typeof indexeddb.default.deleteItem).toBe('function');
-		expect(typeof indexeddb.default.eraseExpiredItems).toBe('function');
+		expect(typeof indexeddb.default.getAllKeys).toBe('function');
 		expect(typeof indexeddb.default.eraseAll).toBe('function');
 		expect(typeof indexeddb.default.resetDBInstance).toBe('function');
 	});
@@ -48,9 +48,9 @@ describe('IndexedDB Storage Module Interface', () => {
 		result.catch(() => {/* expected */});
 	});
 
-	it('should have eraseExpiredItems as an async function', async() => {
+	it('should have getAllKeys as an async function', async() => {
 		const indexeddb = await import('./indexeddb.js');
-		const result = indexeddb.default.eraseExpiredItems();
+		const result = indexeddb.default.getAllKeys();
 		expect(result).toBeInstanceOf(Promise);
 		// Catch the rejection since IndexedDB isn't available in test environment
 		result.catch(() => {/* expected */});

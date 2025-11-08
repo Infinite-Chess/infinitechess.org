@@ -1,51 +1,32 @@
 /**
- * This script handles reading, saving, and deleting expired
+ * This script handles reading, saving, and deleting
  * browser IndexedDB data for us!
  * 
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
- * Without proper management, stored data would never expire or be deleted
- * (unless the user clears their browser data).
  * 
  * @example
  * ```typescript
  * import indexeddb from './indexeddb.js';
  * 
- * // Save data with default 24-hour expiry
+ * // Save data
  * await indexeddb.saveItem('user-preferences', { theme: 'dark', language: 'en' });
  * 
- * // Save data with custom expiry (1 hour)
- * await indexeddb.saveItem('session-data', { token: 'abc123' }, 1000 * 60 * 60);
- * 
- * // Load data (returns undefined if not found or expired)
+ * // Load data (returns undefined if not found)
  * const preferences = await indexeddb.loadItem('user-preferences');
  * 
- * // Delete specific item
- * await indexeddb.deleteItem('session-data');
+ * // Get all keys
+ * const keys = await indexeddb.getAllKeys();
  * 
- * // Clean up all expired items
- * await indexeddb.eraseExpiredItems();
+ * // Delete specific item
+ * await indexeddb.deleteItem('user-preferences');
  * 
  * // Clear all storage
  * await indexeddb.eraseAll();
  * ```
  */
 
-import jsutil from "../../../../shared/util/jsutil.js";
-
-
-/** An entry in IndexedDB storage */
-interface Entry {
-	/** The actual value of the entry */
-	value: any,
-	/** The timestamp the entry will become stale, at which point it should be deleted. */
-	expires: number
-}
-
 /** For debugging. This prints to the console all save and delete operations. */
 const printSavesAndDeletes = false;
-
-const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24; // 24 hours
-// const defaultExpiryTimeMillis = 1000 * 20; // 20 seconds
 
 const DB_NAME = 'infinitechess-storage';
 const DB_VERSION = 1;
@@ -78,8 +59,6 @@ function initDB(): Promise<IDBDatabase> {
 
 		request.onsuccess = () => {
 			dbInstance = request.result;
-			// Erase expired items on database open (async, don't wait)
-			eraseExpiredItems().catch(console.error);
 			resolve(dbInstance);
 		};
 
@@ -100,20 +79,17 @@ function initDB(): Promise<IDBDatabase> {
  * Saves an item in browser IndexedDB storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
- * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
  * @returns A promise that resolves when the item is saved
  */
-async function saveItem(key: string, value: any, expiryMillis: number = defaultExpiryTimeMillis): Promise<void> {
+async function saveItem(key: string, value: any): Promise<void> {
 	if (printSavesAndDeletes) console.log(`Saving key to IndexedDB: ${key}`);
 	
 	const db = await initDB();
-	const timeExpires = Date.now() + expiryMillis;
-	const save: Entry = { value, expires: timeExpires };
 
 	return new Promise((resolve, reject) => {
 		const transaction = db.transaction([STORE_NAME], 'readwrite');
 		const store = transaction.objectStore(STORE_NAME);
-		const request = store.put(save, key);
+		const request = store.put(value, key);
 
 		transaction.oncomplete = () => {
 			resolve();
@@ -132,7 +108,7 @@ async function saveItem(key: string, value: any, expiryMillis: number = defaultE
 /**
  * Loads an item from browser IndexedDB storage
  * @param key - The name/key of the item in storage
- * @returns A promise that resolves to the entry value, or undefined if not found or expired
+ * @returns A promise that resolves to the entry value, or undefined if not found
  */
 async function loadItem(key: string): Promise<any> {
 	const db = await initDB();
@@ -143,22 +119,8 @@ async function loadItem(key: string): Promise<any> {
 		const request = store.get(key);
 
 		request.onsuccess = () => {
-			const save = request.result;
-			
-			if (!save) {
-				resolve(undefined);
-				return;
-			}
-
-			if (hasItemExpired(save)) {
-				// Delete expired item asynchronously
-				deleteItem(key).catch(console.error);
-				resolve(undefined);
-				return;
-			}
-
-			// Not expired...
-			resolve(save.value);
+			const value = request.result;
+			resolve(value);
 		};
 
 		transaction.onerror = () => {
@@ -201,53 +163,27 @@ async function deleteItem(key: string): Promise<void> {
 }
 
 /**
- * Checks if an entry has expired
- * @param save The entry to check
- * @returns true if expired, false otherwise
+ * Gets all keys present in the IndexedDB storage
+ * @returns A promise that resolves to an array of all keys
  */
-function hasItemExpired(save: Entry | any): boolean {
-	if (save.expires === undefined) {
-		console.log(`IndexedDB item was in an old format. Deleting it! Value: ${JSON.stringify(save, jsutil.stringifyReplacer)}}`);
-		return true;
-	}
-	return Date.now() >= save.expires;
-}
-
-/**
- * Erases all expired items from IndexedDB storage
- * @returns A promise that resolves when all expired items are deleted
- */
-async function eraseExpiredItems(): Promise<void> {
+async function getAllKeys(): Promise<string[]> {
 	const db = await initDB();
 
 	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([STORE_NAME], 'readwrite');
+		const transaction = db.transaction([STORE_NAME], 'readonly');
 		const store = transaction.objectStore(STORE_NAME);
-		const request = store.openCursor();
+		const request = store.getAllKeys();
 
-		request.onsuccess = (event) => {
-			const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-			
-			if (cursor) {
-				const save = cursor.value;
-				if (hasItemExpired(save)) {
-					// Delete the expired item directly using the cursor
-					cursor.delete();
-				}
-				cursor.continue();
-			}
-		};
-
-		transaction.oncomplete = () => {
-			resolve();
+		request.onsuccess = () => {
+			resolve(request.result as string[]);
 		};
 
 		transaction.onerror = () => {
-			reject(new Error('Failed to iterate over IndexedDB entries'));
+			reject(new Error('Failed to get all keys from IndexedDB'));
 		};
 
 		request.onerror = () => {
-			reject(new Error('Failed to iterate over IndexedDB entries'));
+			reject(new Error('Failed to get all keys from IndexedDB'));
 		};
 	});
 }
@@ -292,7 +228,7 @@ export default {
 	saveItem,
 	loadItem,
 	deleteItem,
-	eraseExpiredItems,
+	getAllKeys,
 	eraseAll,
 	resetDBInstance
 };
