@@ -13,7 +13,7 @@ import express from 'express';
 import request from 'supertest';
 import type { Express, Request, Response, NextFunction } from 'express';
 import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition, MAX_NAME_LENGTH, MAX_ICN_LENGTH } from './EditorSavesAPI.js';
-import * as editorSavesManager from '../database/editorSavesManager.js';
+import editorSavesManager from '../database/editorSavesManager.js';
 
 // Mock the database manager
 vi.mock('../database/editorSavesManager.js');
