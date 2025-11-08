@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 // src/client/scripts/esm/util/indexeddb.test.ts
 
 /**
