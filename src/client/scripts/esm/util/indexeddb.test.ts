@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 // src/client/scripts/esm/util/indexeddb.test.ts
 
 /**
@@ -7,15 +7,14 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
-import FDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
+import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 
 import indexeddb from './indexeddb.js';
 
 beforeEach(() => {
 	// Fresh fake IndexedDB and key range per test
-	(globalThis as any).indexedDB = new FDBFactory();
-	(globalThis as any).IDBKeyRange = FDBKeyRange;
+	(globalThis as any).indexedDB = new IDBFactory();
+	(globalThis as any).IDBKeyRange = IDBKeyRange;
 	// Ensure module will open a brand-new DB for this test
 	indexeddb.resetDBInstance();
 });
@@ -109,8 +108,8 @@ describe('IndexedDB storage functional behavior', () => {
 
 		// Simulate a fresh environment
 		indexeddb.resetDBInstance();
-		(globalThis as any).indexedDB = new FDBFactory();
-		(globalThis as any).IDBKeyRange = FDBKeyRange;
+		(globalThis as any).indexedDB = new IDBFactory();
+		(globalThis as any).IDBKeyRange = IDBKeyRange;
 
 		// New open should yield empty store
 		expect(await indexeddb.getAllKeys()).toEqual([]);
