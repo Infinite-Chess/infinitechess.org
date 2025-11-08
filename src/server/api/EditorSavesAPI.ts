@@ -7,7 +7,7 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import { getAllSavedPositionsForUser, addSavedPosition, getSavedPositionIcn } from '../database/editorSavesManager.js';
+import { getAllSavedPositionsForUser, addSavedPosition, getSavedPositionIcn, getSavedPositionCount } from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
@@ -19,6 +19,9 @@ const MAX_NAME_LENGTH = 100;
 
 /** Maximum length for ICN notation (also determines max size) */
 const MAX_ICN_LENGTH = 1_000_000;
+
+/** Maximum number of saved positions per user */
+const MAX_SAVED_POSITIONS = 50;
 
 
 // API Endpoints -----------------------------------------------------------------------------
@@ -91,6 +94,13 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 	const size = icn.length;
 
 	try {
+		// Check if user has exceeded the quota
+		const currentCount = getSavedPositionCount(userId);
+		if (currentCount >= MAX_SAVED_POSITIONS) {
+			res.status(403).json({ error: `Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded` });
+			return;
+		}
+
 		// Add the saved position to the database
 		const result = addSavedPosition(userId, name, size, icn);
 

@@ -65,3 +65,14 @@ export function getSavedPositionIcn(position_id: number): EditorSavesIcnRecord |
 	const query = `SELECT icn, user_id FROM editor_saves WHERE position_id = ?`;
 	return db.get<EditorSavesIcnRecord>(query, [position_id]);
 }
+
+/**
+ * Gets the count of saved positions for a given user_id.
+ * @param user_id - The user ID
+ * @returns The number of saved positions the user has.
+ */
+export function getSavedPositionCount(user_id: number): number {
+	const query = `SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`;
+	const result = db.get<{ count: number }>(query, [user_id]);
+	return result?.count ?? 0;
+}
