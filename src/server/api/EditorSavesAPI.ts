@@ -17,13 +17,13 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 /** Maximum length for a position name */
-const MAX_NAME_LENGTH = 100;
+export const MAX_NAME_LENGTH = 100;
 
 /** Maximum length for ICN notation (also determines max size) */
-const MAX_ICN_LENGTH = 1_000_000;
+export const MAX_ICN_LENGTH = 1_000_000;
 
 /** Maximum number of saved positions per user */
-const MAX_SAVED_POSITIONS = 50;
+export const MAX_SAVED_POSITIONS = 50;
 
 
 // Zod Schemas -------------------------------------------------------------------------------

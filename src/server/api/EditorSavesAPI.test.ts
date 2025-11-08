@@ -8,9 +8,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import express, { type Express, type Request, type Response, type NextFunction } from 'express';
+import express from 'express';
 import request from 'supertest';
-import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition } from './EditorSavesAPI.js';
+import type { Express, Request, Response, NextFunction } from 'express';
+import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition, MAX_NAME_LENGTH, MAX_ICN_LENGTH, MAX_SAVED_POSITIONS } from './EditorSavesAPI.js';
 import * as editorSavesManager from '../database/editorSavesManager.js';
 
 // Mock the database manager
@@ -148,14 +149,14 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name exceeds max length', async () => {
-			const longName = 'a'.repeat(101); // MAX_NAME_LENGTH is 100
+			const longName = 'a'.repeat(MAX_NAME_LENGTH + 1);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: longName, icn: 'test-icn-data' });
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toContain('100 characters or less');
+			expect(response.body.error).toContain(`${MAX_NAME_LENGTH} characters or less`);
 		});
 
 		it('should return 400 if icn is missing', async () => {
@@ -177,25 +178,25 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if icn exceeds max length', async () => {
-			const longIcn = 'a'.repeat(1_000_001); // MAX_ICN_LENGTH is 1_000_000
+			const longIcn = 'a'.repeat(MAX_ICN_LENGTH + 1);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: longIcn });
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toContain('1000000 characters or less');
+			expect(response.body.error).toContain(`${MAX_ICN_LENGTH} characters or less`);
 		});
 
 		it('should return 403 if quota is exceeded', async () => {
-			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(50); // MAX_SAVED_POSITIONS
+			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(MAX_SAVED_POSITIONS);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
 			expect(response.status).toBe(403);
-			expect(response.body.error).toContain('Maximum of 50 saved positions exceeded');
+			expect(response.body.error).toContain(`Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded`);
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
@@ -369,14 +370,14 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name exceeds max length', async () => {
-			const longName = 'a'.repeat(101);
+			const longName = 'a'.repeat(MAX_NAME_LENGTH + 1);
 
 			const response = await request(app)
 				.patch('/api/editor-saves/123')
 				.send({ name: longName });
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toContain('100 characters or less');
+			expect(response.body.error).toContain(`${MAX_NAME_LENGTH} characters or less`);
 		});
 
 		it('should return 400 if position_id is invalid', async () => {
@@ -414,7 +415,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123 
 			} as any);
 
-			const maxLengthIcn = 'a'.repeat(1_000_000);
+			const maxLengthIcn = 'a'.repeat(MAX_ICN_LENGTH);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
@@ -424,7 +425,7 @@ describe('EditorSavesAPI', () => {
 			expect(editorSavesManager.addSavedPosition).toHaveBeenCalledWith(
 				1,
 				'Test',
-				1_000_000,
+				MAX_ICN_LENGTH,
 				maxLengthIcn
 			);
 		});
@@ -436,7 +437,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123 
 			} as any);
 
-			const maxLengthName = 'a'.repeat(100);
+			const maxLengthName = 'a'.repeat(MAX_NAME_LENGTH);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
