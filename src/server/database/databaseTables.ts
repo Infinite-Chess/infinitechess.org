@@ -99,9 +99,9 @@ const allRatingAbuseColumns: string[] = [
 /** All columns of the editor_saves table. Each of these would be valid to retrieve from any saved position. */
 const allEditorSavesColumns: string[] = [
 	'position_id',
-	'name',
 	'user_id',
-	'piece_count',
+	'name',
+	'size',
 	'icn'
 ];
 
@@ -283,10 +283,10 @@ function generateTables(): void {
 	// Editor Saves table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS editor_saves (
-			position_id INTEGER PRIMARY KEY NOT NULL,
-			name TEXT NOT NULL,
+			position_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
-			piece_count INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			size INTEGER NOT NULL,
 			icn TEXT NOT NULL,
 
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
