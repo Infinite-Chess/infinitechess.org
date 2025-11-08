@@ -2,65 +2,111 @@
 // src/client/scripts/esm/util/indexeddb.test.ts
 
 /**
- * Tests for the IndexedDB storage module.
- * 
- * This test suite verifies that the IndexedDB module has the correct interface
- * and basic functionality. Full integration tests would require a browser environment.
+ * Functional tests for the IndexedDB storage module using a simulated IDB.
+ * These tests run in Node via Vitest using fake-indexeddb.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
+import FDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
 
-describe('IndexedDB Storage Module Interface', () => {
-	// Test that the module can be imported
-	it('should export the correct interface', async() => {
-		const indexeddb = await import('./indexeddb.js');
-		
-		expect(indexeddb.default).toBeDefined();
-		expect(typeof indexeddb.default.saveItem).toBe('function');
-		expect(typeof indexeddb.default.loadItem).toBe('function');
-		expect(typeof indexeddb.default.deleteItem).toBe('function');
-		expect(typeof indexeddb.default.getAllKeys).toBe('function');
-		expect(typeof indexeddb.default.eraseAll).toBe('function');
-		expect(typeof indexeddb.default.resetDBInstance).toBe('function');
+// Helper to ensure the module sees the freshly patched globals
+async function loadModule(): Promise<typeof import('./indexeddb.js')> {
+	// Force a fresh import so the module picks up the current globalThis.indexedDB
+	vi.resetModules();
+	return await import('./indexeddb.js');
+}
+
+beforeEach(() => {
+	// Fresh fake IndexedDB instance each test
+	// Note: assign both indexedDB and IDBKeyRange for completeness
+	(globalThis as any).indexedDB = new FDBFactory();
+	(globalThis as any).IDBKeyRange = FDBKeyRange;
+});
+
+describe('IndexedDB storage functional behavior', () => {
+	it('saves and loads an item', async() => {
+		const mod = await loadModule();
+
+		await mod.default.saveItem('pos:1', { fen: 'start' });
+		const value = await mod.default.loadItem('pos:1');
+
+		expect(value).toEqual({ fen: 'start' });
 	});
 
-	it('should have saveItem as an async function', async() => {
-		const indexeddb = await import('./indexeddb.js');
-		const result = indexeddb.default.saveItem('test', 'value');
-		expect(result).toBeInstanceOf(Promise);
-		// Catch the rejection since IndexedDB isn't available in test environment
-		result.catch(() => {/* expected */});
+	it('overwrites an existing item with the same key', async() => {
+		const mod = await loadModule();
+
+		await mod.default.saveItem('k', 'one');
+		await mod.default.saveItem('k', 'two');
+
+		const value = await mod.default.loadItem('k');
+		expect(value).toBe('two');
 	});
 
-	it('should have loadItem as an async function', async() => {
-		const indexeddb = await import('./indexeddb.js');
-		const result = indexeddb.default.loadItem('test');
-		expect(result).toBeInstanceOf(Promise);
-		// Catch the rejection since IndexedDB isn't available in test environment
-		result.catch(() => {/* expected */});
+	it('returns undefined for a missing key', async() => {
+		const mod = await loadModule();
+
+		const value = await mod.default.loadItem('missing');
+		expect(value).toBeUndefined();
 	});
 
-	it('should have deleteItem as an async function', async() => {
-		const indexeddb = await import('./indexeddb.js');
-		const result = indexeddb.default.deleteItem('test');
-		expect(result).toBeInstanceOf(Promise);
-		// Catch the rejection since IndexedDB isn't available in test environment
-		result.catch(() => {/* expected */});
+	it('deletes an item', async() => {
+		const mod = await loadModule();
+
+		await mod.default.saveItem('x', 123);
+		await mod.default.deleteItem('x');
+
+		const value = await mod.default.loadItem('x');
+		expect(value).toBeUndefined();
 	});
 
-	it('should have getAllKeys as an async function', async() => {
-		const indexeddb = await import('./indexeddb.js');
-		const result = indexeddb.default.getAllKeys();
-		expect(result).toBeInstanceOf(Promise);
-		// Catch the rejection since IndexedDB isn't available in test environment
-		result.catch(() => {/* expected */});
+	it('getAllKeys returns the current keys only', async() => {
+		const mod = await loadModule();
+
+		await mod.default.saveItem('a', 1);
+		await mod.default.saveItem('b', 2);
+		await mod.default.deleteItem('a');
+
+		const keys = await mod.default.getAllKeys();
+		expect(keys.sort()).toEqual(['b']);
 	});
 
-	it('should have eraseAll as an async function', async() => {
-		const indexeddb = await import('./indexeddb.js');
-		const result = indexeddb.default.eraseAll();
-		expect(result).toBeInstanceOf(Promise);
-		// Catch the rejection since IndexedDB isn't available in test environment
-		result.catch(() => {/* expected */});
+	it('handles concurrent writes and reads', async() => {
+		const mod = await loadModule();
+
+		const writes = Array.from({ length: 50 }, (_, i) =>
+			mod.default.saveItem(`k${i}`, { v: i })
+		);
+		await Promise.all(writes);
+
+		const keys = await mod.default.getAllKeys();
+		const numericSorted = [...keys].sort(
+			(a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1))
+		);
+		expect(numericSorted).toEqual(
+			Array.from({ length: 50 }, (_, i) => `k${i}`)
+		);
+
+		const reads = await Promise.all([
+			mod.default.loadItem('k0'),
+			mod.default.loadItem('k25'),
+			mod.default.loadItem('k49'),
+		]);
+
+		expect(reads).toEqual([{ v: 0 }, { v: 25 }, { v: 49 }]);
+	});
+
+	it('rejects with a clear error when IndexedDB is not supported', async() => {
+		// Simulate a non-browser environment without IndexedDB
+		(globalThis as any).indexedDB = undefined;
+
+		const mod = await loadModule();
+
+		await expect(mod.default.saveItem('a', 1))
+			.rejects.toThrow('IndexedDB is not supported in this browser');
+
+		await expect(mod.default.loadItem('a'))
+			.rejects.toThrow('IndexedDB is not supported in this browser');
 	});
 });
