@@ -1,0 +1,63 @@
+// src/server/database/editorSavesManager.ts
+
+/**
+ * This module manages saved positions in the editor_saves table.
+ */
+
+
+import db from './database.js';
+
+
+/**
+ * Represents a saved position list record (position_id, name, size only).
+ */
+export type EditorSavesListRecord = {
+	position_id: number;
+	name: string;
+	size: number;
+};
+
+/**
+ * Represents a saved position ICN record (icn only).
+ */
+export type EditorSavesIcnRecord = {
+	icn: string;
+};
+
+
+/**
+ * Retrieves all saved positions for a given user_id.
+ * Returns only position_id, name, and size columns.
+ * @param user_id - The user ID
+ * @returns An array of saved positions.
+ */
+export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
+	const query = `SELECT position_id, name, size FROM editor_saves WHERE user_id = ?`;
+	return db.all<EditorSavesListRecord>(query, [user_id]);
+}
+
+/**
+ * Adds a new saved position to the editor_saves table.
+ * The position_id will be auto-generated.
+ * @param user_id - The user ID who owns the position
+ * @param name - The name of the saved position
+ * @param size - The size (piece count) of the position
+ * @param icn - The ICN notation of the position
+ */
+export function addSavedPosition(user_id: number, name: string, size: number, icn: string): void {
+	const query = `
+		INSERT INTO editor_saves (user_id, name, size, icn)
+		VALUES (?, ?, ?, ?)
+	`;
+	db.run(query, [user_id, name, size, icn]);
+}
+
+/**
+ * Retrieves the ICN notation for a specific saved position by position_id.
+ * @param position_id - The position ID
+ * @returns The ICN record if found, otherwise undefined.
+ */
+export function getSavedPositionIcn(position_id: number): EditorSavesIcnRecord | undefined {
+	const query = `SELECT icn FROM editor_saves WHERE position_id = ?`;
+	return db.get<EditorSavesIcnRecord>(query, [position_id]);
+}
