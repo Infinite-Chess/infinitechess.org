@@ -20,11 +20,10 @@ export type EditorSavesListRecord = {
 };
 
 /**
- * Represents a saved position ICN record (icn and user_id).
+ * Represents a saved position ICN record (icn only).
  */
 export type EditorSavesIcnRecord = {
 	icn: string;
-	user_id: number;
 };
 
 
@@ -57,13 +56,14 @@ export function addSavedPosition(user_id: number, name: string, size: number, ic
 }
 
 /**
- * Retrieves the ICN notation and user_id for a specific saved position by position_id.
+ * Retrieves the ICN notation for a specific saved position by position_id and user_id.
  * @param position_id - The position ID
- * @returns The ICN and user_id record if found, otherwise undefined.
+ * @param user_id - The user ID who owns the position
+ * @returns The ICN record if found and owned by the user, otherwise undefined.
  */
-export function getSavedPositionIcn(position_id: number): EditorSavesIcnRecord | undefined {
-	const query = `SELECT icn, user_id FROM editor_saves WHERE position_id = ?`;
-	return db.get<EditorSavesIcnRecord>(query, [position_id]);
+export function getSavedPositionIcn(position_id: number, user_id: number): EditorSavesIcnRecord | undefined {
+	const query = `SELECT icn FROM editor_saves WHERE position_id = ? AND user_id = ?`;
+	return db.get<EditorSavesIcnRecord>(query, [position_id, user_id]);
 }
 
 /**
@@ -75,4 +75,29 @@ export function getSavedPositionCount(user_id: number): number {
 	const query = `SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`;
 	const result = db.get<{ count: number }>(query, [user_id]);
 	return result?.count ?? 0;
+}
+
+/**
+ * Deletes a saved position by position_id and user_id.
+ * Will fail to delete if the user_id doesn't match the position owner.
+ * @param position_id - The position ID
+ * @param user_id - The user ID who owns the position
+ * @returns The RunResult containing the number of changes.
+ */
+export function deleteSavedPosition(position_id: number, user_id: number): RunResult {
+	const query = `DELETE FROM editor_saves WHERE position_id = ? AND user_id = ?`;
+	return db.run(query, [position_id, user_id]);
+}
+
+/**
+ * Renames a saved position by position_id and user_id.
+ * Will fail to rename if the user_id doesn't match the position owner.
+ * @param position_id - The position ID
+ * @param user_id - The user ID who owns the position
+ * @param name - The new name for the saved position
+ * @returns The RunResult containing the number of changes.
+ */
+export function renameSavedPosition(position_id: number, user_id: number, name: string): RunResult {
+	const query = `UPDATE editor_saves SET name = ? WHERE position_id = ? AND user_id = ?`;
+	return db.run(query, [name, position_id, user_id]);
 }

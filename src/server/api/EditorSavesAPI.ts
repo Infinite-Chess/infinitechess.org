@@ -7,7 +7,7 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import { getAllSavedPositionsForUser, addSavedPosition, getSavedPositionIcn, getSavedPositionCount } from '../database/editorSavesManager.js';
+import { getAllSavedPositionsForUser, addSavedPosition, getSavedPositionIcn, getSavedPositionCount, deleteSavedPosition, renameSavedPosition } from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
@@ -136,17 +136,11 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 	}
 
 	try {
-		// Get the position from the database
-		const position = getSavedPositionIcn(positionId);
+		// Get the position from the database (filtered by user_id)
+		const position = getSavedPositionIcn(positionId, userId);
 
 		if (!position) {
 			res.status(404).json({ error: 'Position not found' });
-			return;
-		}
-
-		// Verify the user owns this position
-		if (position.user_id !== userId) {
-			res.status(403).json({ error: 'Access denied' });
 			return;
 		}
 
@@ -155,6 +149,97 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error retrieving position for position_id ${positionId}: ${message}`, 'errLog.txt');
 		res.status(500).json({ error: 'Failed to retrieve position' });
+	}
+}
+/**
+ * API endpoint to delete a specific saved position by position_id.
+ * Returns { success: true } on success.
+ * Requires authentication and ownership of the position.
+ */
+function deletePosition(req: IdentifiedRequest, res: Response): void {
+	// Check if user is authenticated
+	if (!req.memberInfo || !req.memberInfo.signedIn) {
+		res.status(401).json({ error: 'Must be signed in' });
+		return;
+	}
+
+	const userId = req.memberInfo.user_id;
+
+	// Get position_id from request params
+	const positionId = Number((req as any).params.position_id);
+
+	if (isNaN(positionId) || positionId <= 0) {
+		res.status(400).json({ error: 'Invalid position_id' });
+		return;
+	}
+
+	try {
+		// Delete the position from the database (filtered by user_id)
+		const result = deleteSavedPosition(positionId, userId);
+
+		if (result.changes === 0) {
+			res.status(404).json({ error: 'Position not found' });
+			return;
+		}
+
+		res.json({ success: true });
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error deleting position for position_id ${positionId}: ${message}`, 'errLog.txt');
+		res.status(500).json({ error: 'Failed to delete position' });
+	}
+}
+
+/**
+ * API endpoint to rename a specific saved position by position_id.
+ * Expects { name: string } in request body.
+ * Returns { success: true } on success.
+ * Requires authentication and ownership of the position.
+ */
+function renamePosition(req: IdentifiedRequest, res: Response): void {
+	// Check if user is authenticated
+	if (!req.memberInfo || !req.memberInfo.signedIn) {
+		res.status(401).json({ error: 'Must be signed in' });
+		return;
+	}
+
+	const userId = req.memberInfo.user_id;
+
+	// Get position_id from request params
+	const positionId = Number((req as any).params.position_id);
+
+	if (isNaN(positionId) || positionId <= 0) {
+		res.status(400).json({ error: 'Invalid position_id' });
+		return;
+	}
+
+	// Validate request body
+	const { name } = (req as any).body;
+
+	if (typeof name !== 'string' || name.trim() === '') {
+		res.status(400).json({ error: 'Name is required' });
+		return;
+	}
+
+	if (name.length > MAX_NAME_LENGTH) {
+		res.status(400).json({ error: `Name must be ${MAX_NAME_LENGTH} characters or less` });
+		return;
+	}
+
+	try {
+		// Rename the position in the database (filtered by user_id)
+		const result = renameSavedPosition(positionId, userId, name);
+
+		if (result.changes === 0) {
+			res.status(404).json({ error: 'Position not found' });
+			return;
+		}
+
+		res.json({ success: true });
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error renaming position for position_id ${positionId}: ${message}`, 'errLog.txt');
+		res.status(500).json({ error: 'Failed to rename position' });
 	}
 }
 
@@ -166,4 +251,6 @@ export {
 	getSavedPositions,
 	savePosition,
 	getPosition,
+	deletePosition,
+	renamePosition,
 };

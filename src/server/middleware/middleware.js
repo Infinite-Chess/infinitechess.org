@@ -46,7 +46,7 @@ import { getContributors } from '../api/GitHub.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
-import { getSavedPositions, savePosition, getPosition } from '../api/EditorSavesAPI.js';
+import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition } from '../api/EditorSavesAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -214,6 +214,8 @@ function configureMiddleware(app) {
 	app.get('/api/editor-saves', getSavedPositions);
 	app.post('/api/editor-saves', savePosition);
 	app.get('/api/editor-saves/:position_id', getPosition);
+	app.delete('/api/editor-saves/:position_id', deletePosition);
+	app.patch('/api/editor-saves/:position_id', renamePosition);
 
 	app.get("/logout", handleLogout);
 
