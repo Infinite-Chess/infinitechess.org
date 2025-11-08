@@ -36,7 +36,7 @@ export type EditorSavesIcnRecord = {
  * @param user_id - The user ID
  * @returns An array of saved positions.
  */
-export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
+function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 	const query = `SELECT position_id, name, size FROM editor_saves WHERE user_id = ?`;
 	return db.all<EditorSavesListRecord>(query, [user_id]);
 }
@@ -49,7 +49,7 @@ export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRec
  * @param icn - The ICN notation of the position
  * @returns The RunResult containing lastInsertRowid.
  */
-export function addSavedPosition(user_id: number, name: string, size: number, icn: string): RunResult {
+function addSavedPosition(user_id: number, name: string, size: number, icn: string): RunResult {
 	const query = `
 		INSERT INTO editor_saves (user_id, name, size, icn)
 		VALUES (?, ?, ?, ?)
@@ -63,7 +63,7 @@ export function addSavedPosition(user_id: number, name: string, size: number, ic
  * @param user_id - The user ID who owns the position
  * @returns The ICN record if found and owned by the user, otherwise undefined.
  */
-export function getSavedPositionIcn(position_id: number, user_id: number): EditorSavesIcnRecord | undefined {
+function getSavedPositionICN(position_id: number, user_id: number): EditorSavesIcnRecord | undefined {
 	const query = `SELECT icn FROM editor_saves WHERE position_id = ? AND user_id = ?`;
 	return db.get<EditorSavesIcnRecord>(query, [position_id, user_id]);
 }
@@ -73,7 +73,7 @@ export function getSavedPositionIcn(position_id: number, user_id: number): Edito
  * @param user_id - The user ID
  * @returns The number of saved positions the user has.
  */
-export function getSavedPositionCount(user_id: number): number {
+function getSavedPositionCount(user_id: number): number {
 	const query = `SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`;
 	const result = db.get<{ count: number }>(query, [user_id]);
 	return result?.count ?? 0;
@@ -86,7 +86,7 @@ export function getSavedPositionCount(user_id: number): number {
  * @param user_id - The user ID who owns the position
  * @returns The RunResult containing the number of changes.
  */
-export function deleteSavedPosition(position_id: number, user_id: number): RunResult {
+function deleteSavedPosition(position_id: number, user_id: number): RunResult {
 	const query = `DELETE FROM editor_saves WHERE position_id = ? AND user_id = ?`;
 	return db.run(query, [position_id, user_id]);
 }
@@ -99,7 +99,17 @@ export function deleteSavedPosition(position_id: number, user_id: number): RunRe
  * @param name - The new name for the saved position
  * @returns The RunResult containing the number of changes.
  */
-export function renameSavedPosition(position_id: number, user_id: number, name: string): RunResult {
+function renameSavedPosition(position_id: number, user_id: number, name: string): RunResult {
 	const query = `UPDATE editor_saves SET name = ? WHERE position_id = ? AND user_id = ?`;
 	return db.run(query, [name, position_id, user_id]);
 }
+
+
+export default {
+	getAllSavedPositionsForUser,
+	addSavedPosition,
+	getSavedPositionICN,
+	getSavedPositionCount,
+	deleteSavedPosition,
+	renameSavedPosition,
+};

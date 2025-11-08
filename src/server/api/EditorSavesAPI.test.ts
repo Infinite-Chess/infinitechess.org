@@ -219,7 +219,7 @@ describe('EditorSavesAPI', () => {
 
 	describe('GET /api/editor-saves/:position_id', () => {
 		it('should return position ICN if user owns it', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionIcn).mockReturnValue({
+			vi.mocked(editorSavesManager.getSavedPositionICN).mockReturnValue({
 				icn: 'test-icn-data'
 			});
 
@@ -227,11 +227,11 @@ describe('EditorSavesAPI', () => {
 
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual({ icn: 'test-icn-data' });
-			expect(editorSavesManager.getSavedPositionIcn).toHaveBeenCalledWith(123, 1);
+			expect(editorSavesManager.getSavedPositionICN).toHaveBeenCalledWith(123, 1);
 		});
 
 		it('should return 404 if position not found or not owned', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionIcn).mockReturnValue(undefined);
+			vi.mocked(editorSavesManager.getSavedPositionICN).mockReturnValue(undefined);
 
 			const response = await request(app).get('/api/editor-saves/999');
 

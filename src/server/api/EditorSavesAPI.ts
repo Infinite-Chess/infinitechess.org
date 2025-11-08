@@ -9,7 +9,7 @@ import * as z from 'zod';
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import { getAllSavedPositionsForUser, addSavedPosition, getSavedPositionIcn, getSavedPositionCount, deleteSavedPosition, renameSavedPosition } from '../database/editorSavesManager.js';
+import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
@@ -68,7 +68,7 @@ function getSavedPositions(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Get all saved positions for this user
-		const saves = getAllSavedPositionsForUser(userId);
+		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
 		res.json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -108,14 +108,14 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Check if user has exceeded the quota
-		const currentCount = getSavedPositionCount(userId);
+		const currentCount = editorSavesManager.getSavedPositionCount(userId);
 		if (currentCount >= MAX_SAVED_POSITIONS) {
 			res.status(403).json({ error: `Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded` });
 			return;
 		}
 
 		// Add the saved position to the database
-		const result = addSavedPosition(userId, name, size, icn);
+		const result = editorSavesManager.addSavedPosition(userId, name, size, icn);
 
 		// Return success with the auto-generated position_id
 		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
@@ -151,7 +151,7 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Get the position from the database (filtered by user_id)
-		const position = getSavedPositionIcn(positionId, userId);
+		const position = editorSavesManager.getSavedPositionICN(positionId, userId);
 
 		if (!position) {
 			res.status(404).json({ error: 'Position not found' });
@@ -191,7 +191,7 @@ function deletePosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Delete the position from the database (filtered by user_id)
-		const result = deleteSavedPosition(positionId, userId);
+		const result = editorSavesManager.deleteSavedPosition(positionId, userId);
 
 		if (result.changes === 0) {
 			res.status(404).json({ error: 'Position not found' });
@@ -243,7 +243,7 @@ function renamePosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Rename the position in the database (filtered by user_id)
-		const result = renameSavedPosition(positionId, userId, name);
+		const result = editorSavesManager.renameSavedPosition(positionId, userId, name);
 
 		if (result.changes === 0) {
 			res.status(404).json({ error: 'Position not found' });
