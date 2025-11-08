@@ -49,77 +49,57 @@ interface InputListener {
 	/** Whether this input listener has experience atleast one input event the past frame. */
 	atleastOneInput: () => boolean;
 	/** Whether the given mouse button experienced a click-down this frame. */
-    // eslint-disable-next-line no-unused-vars
-    isMouseDown(button: MouseButton): boolean;
+    isMouseDown(_button: MouseButton): boolean;
 	/** Removes the mouse down so that other scripts don't also use it. Also removes the pointer down. */
-	// eslint-disable-next-line no-unused-vars
-	claimMouseDown(button: MouseButton): void;
+	claimMouseDown(_button: MouseButton): void;
 	/** Removes the pointer down so that other scripts don't also use it. */
-	// eslint-disable-next-line no-unused-vars
-	claimPointerDown(pointerId: string): void;
+	claimPointerDown(_pointerId: string): void;
 	/** Removes the simulated mouse click so that other scripts don't also use it. */
-	// eslint-disable-next-line no-unused-vars
-	claimMouseClick(button: MouseButton): void;
+	claimMouseClick(_button: MouseButton): void;
 	/**
 	 * Resets the simulated mouse click on mouse-down so that
 	 * when it released it DOESN'T count as a click.
 	 */
-	// eslint-disable-next-line no-unused-vars
-	cancelMouseClick(button: MouseButton): void;
+	cancelMouseClick(_button: MouseButton): void;
 	/** Whether the given mouse button is currently held down. */
-    // eslint-disable-next-line no-unused-vars
-    isMouseHeld(button: MouseButton): boolean;
+    isMouseHeld(_button: MouseButton): boolean;
 	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
-    // eslint-disable-next-line no-unused-vars
-	isMouseTouch(button: MouseButton): boolean;
+	isMouseTouch(_button: MouseButton): boolean;
 	/** Returns true if the given pointer is a touch (not mouse). */
-    // eslint-disable-next-line no-unused-vars
-	isPointerTouch(pointerId: string): boolean;
+	isPointerTouch(_pointerId: string): boolean;
 	/** Returns the id of the LOGICAL pointer that most recently performed an action on the specified mouse button. */
-	// eslint-disable-next-line no-unused-vars
-	getMouseId(button: MouseButton): string | undefined;
+	getMouseId(_button: MouseButton): string | undefined;
 	/** Returns the id of the PHYSICAL pointer that most recently performed an action on the specified mouse button. */
-	// eslint-disable-next-line no-unused-vars
-	getMousePhysicalId(button: MouseButton): string | undefined;
+	getMousePhysicalId(_button: MouseButton): string | undefined;
 	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
-	// eslint-disable-next-line no-unused-vars
-	getMousePosition(button: MouseButton): DoubleCoords | undefined;
+	getMousePosition(_button: MouseButton): DoubleCoords | undefined;
 	/** Whether the given mouse button simulated a full CLICK this frame. */
-	// eslint-disable-next-line no-unused-vars
-	isMouseClicked(button: MouseButton): boolean;
+	isMouseClicked(_button: MouseButton): boolean;
 	/** Whether the given mouse button experience a double-click-down this frame. */
-	// eslint-disable-next-line no-unused-vars
-	isMouseDoubleClickDragged(button: MouseButton): boolean;
+	isMouseDoubleClickDragged(_button: MouseButton): boolean;
 	/**
 	 * Toggles all-left click actions being treated as right-click actions.
 	 * This is useful for allowing fingers to right click.
 	 */
-	// eslint-disable-next-line no-unused-vars
-	setTreatLeftasRight(value: boolean): void,
+	setTreatLeftasRight(_value: boolean): void,
 	/** Returns the position of the given LOGICAL pointer id, if it still exists. */
-    // eslint-disable-next-line no-unused-vars
-    getPointerPos(pointerId?: string): DoubleCoords | undefined;
+    getPointerPos(_pointerId?: string): DoubleCoords | undefined;
 	/** Returns the position of the given PHYSICAL pointer id, if it still exists. */
-    // eslint-disable-next-line no-unused-vars
-    getPhysicalPointerPos(pointerId?: string): DoubleCoords | undefined;
+    getPhysicalPointerPos(_pointerId?: string): DoubleCoords | undefined;
 	/** Returns the PHYSICAL pointer id this pointer is attached to. */
-    // eslint-disable-next-line no-unused-vars
-	getPhysicalPointerIdOfPointer(pointerId: string): string | undefined;
+	getPhysicalPointerIdOfPointer(_pointerId: string): string | undefined;
 	/**
 	 * Returns the delta movement of the given PHYSICAL pointer id over the
 	 * past frame, if it still exists. The mouse pointer's id is 'mouse'.
 	 */
-    // eslint-disable-next-line no-unused-vars
-	getPhysicalPointerDelta(physicalPointerId: string): DoubleCoords | undefined;
+	getPhysicalPointerDelta(_physicalPointerId: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
 	 */
-    // eslint-disable-next-line no-unused-vars
-	getPointerVel(pointerId: string): DoubleCoords | undefined;
+	getPointerVel(_pointerId: string): DoubleCoords | undefined;
 	/** Returns the ids of all existing LOGICAL pointers for the given button action. */
-    // eslint-disable-next-line no-unused-vars
-	getAllPointers(button: MouseButton): string[];
+	getAllPointers(_button: MouseButton): string[];
 	/** Returns the ids of all existing touch LOGICAL pointers, regardless of what button action they were for. */
 	getAllTouchPointers(): string[];
 	/** Returns the ids of all existing PHYSICAL pointers. */
@@ -128,21 +108,17 @@ interface InputListener {
 	 * Whether the given LOGICAL pointer is currently being held down.
 	 * Which also happens to be true if the pointer still EXISTS.
 	 */
-	// eslint-disable-next-line no-unused-vars
-	isPointerHeld(pointerId: string): boolean;
+	isPointerHeld(_pointerId: string): boolean;
 	/** Whether the given LOGICAL pointer still exists (held down). */
-	// eslint-disable-next-line no-unused-vars
-	pointerExists(pointerId: string): boolean;
+	pointerExists(_pointerId: string): boolean;
 	/** Returns a list of all LOGICAL pointers that were pressed down this frame for the given button action. */
-	// eslint-disable-next-line no-unused-vars
-	getPointersDown(button: MouseButton): string[];
+	getPointersDown(_button: MouseButton): string[];
 	/** Returns a list of all touch LOGICAL pointers that were pressed down this frame, regardless of what button action they were for. */
 	getTouchPointersDown(): string[];
 	/** Returns the number of pointers that were pressed down this frame. */
 	getPointersDownCount(): number;
 	/** Returns whether the provided LOGICAL pointer belongs to the provided PHYSICAL pointer. */
-    // eslint-disable-next-line no-unused-vars
-	doesPointerBelongToPhysicalPointer(logicalPointerId: string, physicalPointerId: string): boolean;
+	doesPointerBelongToPhysicalPointer(_logicalPointerId: string, _physicalPointerId: string): boolean;
 	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
 	/** 
