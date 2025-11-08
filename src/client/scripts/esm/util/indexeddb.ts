@@ -59,10 +59,14 @@ function initDB(): Promise<IDBDatabase> {
 
 		request.onsuccess = () => {
 			dbInstance = request.result;
-			resolve(dbInstance);
+			if (dbInstance) {
+				resolve(dbInstance);
+			} else {
+				reject(new Error('Failed to initialize IndexedDB database'));
+			}
 		};
 
-		request.onupgradeneeded = (event) => {
+		request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
 			const db = (event.target as IDBOpenDBRequest).result;
 			
 			// Create object store if it doesn't exist
