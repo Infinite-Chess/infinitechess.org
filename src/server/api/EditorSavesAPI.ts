@@ -22,9 +22,6 @@ export const MAX_NAME_LENGTH = 100;
 /** Maximum length for ICN notation (also determines max size) */
 export const MAX_ICN_LENGTH = 1_000_000;
 
-/** Maximum number of saved positions per user */
-export const MAX_SAVED_POSITIONS = 50;
-
 
 // Zod Schemas -------------------------------------------------------------------------------
 
@@ -107,19 +104,18 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 	const size = icn.length;
 
 	try {
-		// Check if user has exceeded the quota
-		const currentCount = editorSavesManager.getSavedPositionCount(userId);
-		if (currentCount >= MAX_SAVED_POSITIONS) {
-			res.status(403).json({ error: `Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded` });
+		// Add the saved position to the database (throws on quota exceeded)
+		const result = editorSavesManager.addSavedPosition(userId, name, size, icn);
+
+		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
+
+	} catch (error: unknown) {
+		// Handle the specific quota error
+		if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
+			res.status(403).json({ error: `Maximum saved positions exceeded` });
 			return;
 		}
 
-		// Add the saved position to the database
-		const result = editorSavesManager.addSavedPosition(userId, name, size, icn);
-
-		// Return success with the auto-generated position_id
-		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
-	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
 		res.status(500).json({ error: 'Failed to save position' });
