@@ -1,34 +1,13 @@
+
+// src/client/scripts/esm/util/indexeddb.ts
+
 /**
- * This script handles reading, saving, and deleting
- * browser IndexedDB data for us!
+ * This script handles reading, saving, and deleting browser IndexedDB data.
  * 
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
- * 
- * @example
- * ```typescript
- * import indexeddb from './indexeddb.js';
- * 
- * // Save data
- * await indexeddb.saveItem('user-preferences', { theme: 'dark', language: 'en' });
- * 
- * // Load data (returns undefined if not found)
- * const preferences = await indexeddb.loadItem('user-preferences');
- * 
- * // Get all keys
- * const keys = await indexeddb.getAllKeys();
- * 
- * // Delete specific item
- * await indexeddb.deleteItem('user-preferences');
- * 
- * // Clear all storage
- * await indexeddb.eraseAll();
- * ```
  */
 
-/** For debugging. This prints to the console all save and delete operations. */
-const printSavesAndDeletes = false;
-
-const DB_NAME = 'infinitechess-storage';
+const DB_NAME = 'infinitechess';
 const DB_VERSION = 1;
 const STORE_NAME = 'entries';
 
@@ -45,7 +24,7 @@ function initDB(): Promise<IDBDatabase> {
 
 	dbInitPromise = new Promise((resolve, reject) => {
 		// Check if IndexedDB is available
-		const idb = typeof window !== 'undefined' ? window.indexedDB : (globalThis as any).indexedDB;
+		const idb = (globalThis as any).indexedDB;
 		if (!idb) {
 			reject(new Error('IndexedDB is not supported in this browser'));
 			return;
@@ -53,13 +32,19 @@ function initDB(): Promise<IDBDatabase> {
 
 		const request = idb.open(DB_NAME, DB_VERSION);
 
+		request.onblocked = () => {
+			console.warn('IndexedDB upgrade blocked: another tab/session holds the DB open');
+		};
+
 		request.onerror = () => {
+			dbInitPromise = null; // Allow future calls to retry opening the DB
 			reject(new Error('Failed to open IndexedDB database'));
 		};
 
 		request.onsuccess = () => {
 			dbInstance = request.result;
 			if (dbInstance) {
+				dbInstance.onversionchange = () => dbInstance?.close();
 				resolve(dbInstance);
 			} else {
 				reject(new Error('Failed to initialize IndexedDB database'));
@@ -79,34 +64,49 @@ function initDB(): Promise<IDBDatabase> {
 	return dbInitPromise;
 }
 
+/** Run a readonly transaction and return the request result. */
+async function withRead<T>(op: (_store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+	const db = await initDB();
+	return new Promise<T>((resolve, reject) => {
+		// Open a readonly transaction on the object store
+		const tx = db.transaction([STORE_NAME], 'readonly');
+		const store = tx.objectStore(STORE_NAME);
+		// Execute caller-provided operation (e.g., store.get(key))
+		const req = op(store);
+
+		req.onsuccess = () => resolve(req.result as T);
+		// Reject on transaction or request errors
+		tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		req.onerror = () => reject(req.error || new Error('Request error'));
+	});
+}
+
+/** Run a readwrite transaction. Resolves when the transaction completes. */
+async function withWrite<R>(op: (_store: IDBObjectStore) => IDBRequest<R>): Promise<void> {
+	const db = await initDB();
+	return new Promise<void>((resolve, reject) => {
+		// Open a readwrite transaction to modify data
+		const tx = db.transaction([STORE_NAME], 'readwrite');
+		const store = tx.objectStore(STORE_NAME);
+		// Execute caller-provided operation (e.g., store.put(...), store.delete(...))
+		const req = op(store);
+
+		// Resolve only after the entire transaction finishes
+		tx.oncomplete = () => resolve();
+		// Reject on transaction or request errors
+		tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		req.onerror = () => reject(req.error || new Error('Request error'));
+	});
+}
+
 /**
  * Saves an item in browser IndexedDB storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
  * @returns A promise that resolves when the item is saved
  */
-async function saveItem(key: string, value: any): Promise<void> {
-	if (printSavesAndDeletes) console.log(`Saving key to IndexedDB: ${key}`);
-	
-	const db = await initDB();
-
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([STORE_NAME], 'readwrite');
-		const store = transaction.objectStore(STORE_NAME);
-		const request = store.put(value, key);
-
-		transaction.oncomplete = () => {
-			resolve();
-		};
-
-		transaction.onerror = () => {
-			reject(new Error(`Failed to save item with key: ${key}`));
-		};
-
-		request.onerror = () => {
-			reject(new Error(`Failed to save item with key: ${key}`));
-		};
-	});
+async function saveItem<T>(key: string, value: T): Promise<void> {
+	return withWrite(store => store.put(value, key));
 }
 
 /**
@@ -114,27 +114,8 @@ async function saveItem(key: string, value: any): Promise<void> {
  * @param key - The name/key of the item in storage
  * @returns A promise that resolves to the entry value, or undefined if not found
  */
-async function loadItem(key: string): Promise<any> {
-	const db = await initDB();
-
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([STORE_NAME], 'readonly');
-		const store = transaction.objectStore(STORE_NAME);
-		const request = store.get(key);
-
-		request.onsuccess = () => {
-			const value = request.result;
-			resolve(value);
-		};
-
-		transaction.onerror = () => {
-			reject(new Error(`Failed to load item with key: ${key}`));
-		};
-
-		request.onerror = () => {
-			reject(new Error(`Failed to load item with key: ${key}`));
-		};
-	});
+async function loadItem<T>(key: string): Promise<T | undefined> {
+	return withRead<T | undefined>(store => store.get(key));
 }
 
 /**
@@ -142,28 +123,8 @@ async function loadItem(key: string): Promise<any> {
  * @param key The name/key of the item in storage
  * @returns A promise that resolves when the item is deleted
  */
-async function deleteItem(key: string): Promise<void> {
-	if (printSavesAndDeletes) console.log(`Deleting IndexedDB item with key '${key}!'`);
-	
-	const db = await initDB();
-
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([STORE_NAME], 'readwrite');
-		const store = transaction.objectStore(STORE_NAME);
-		const request = store.delete(key);
-
-		transaction.oncomplete = () => {
-			resolve();
-		};
-
-		transaction.onerror = () => {
-			reject(new Error(`Failed to delete item with key: ${key}`));
-		};
-
-		request.onerror = () => {
-			reject(new Error(`Failed to delete item with key: ${key}`));
-		};
-	});
+async function deleteItem(key: string): Promise<void> {	
+	return withWrite(store => store.delete(key));
 }
 
 /**
@@ -171,25 +132,8 @@ async function deleteItem(key: string): Promise<void> {
  * @returns A promise that resolves to an array of all keys
  */
 async function getAllKeys(): Promise<string[]> {
-	const db = await initDB();
-
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([STORE_NAME], 'readonly');
-		const store = transaction.objectStore(STORE_NAME);
-		const request = store.getAllKeys();
-
-		request.onsuccess = () => {
-			resolve(request.result as string[]);
-		};
-
-		transaction.onerror = () => {
-			reject(new Error('Failed to get all keys from IndexedDB'));
-		};
-
-		request.onerror = () => {
-			reject(new Error('Failed to get all keys from IndexedDB'));
-		};
-	});
+	const keys = await withRead<IDBValidKey[]>(store => store.getAllKeys());
+	return keys as string[];
 }
 
 /**
@@ -197,36 +141,22 @@ async function getAllKeys(): Promise<string[]> {
  * @returns A promise that resolves when all items are deleted
  */
 async function eraseAll(): Promise<void> {
-	console.log("Erasing ALL items in IndexedDB...");
-	const db = await initDB();
-
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([STORE_NAME], 'readwrite');
-		const store = transaction.objectStore(STORE_NAME);
-		const request = store.clear();
-
-		transaction.oncomplete = () => {
-			resolve();
-		};
-
-		transaction.onerror = () => {
-			reject(new Error('Failed to clear all items from IndexedDB'));
-		};
-
-		request.onerror = () => {
-			reject(new Error('Failed to clear all items from IndexedDB'));
-		};
-	});
+	return withWrite(store => store.clear());
 }
 
-/**
- * Resets the database instance. Useful for testing.
- * @internal
- */
+/** Reset the cached DB instance (close if open) so the next call to initDB() re-initializes. */
 function resetDBInstance(): void {
+	// Close the existing database connection if it’s open (ignore any close errors)
+	try {
+		dbInstance?.close();
+	} catch {
+		// Ignore
+	}
+	// Null out cached references so initDB() will run fresh
 	dbInstance = null;
 	dbInitPromise = null;
 }
+
 
 export default {
 	saveItem,
@@ -234,5 +164,5 @@ export default {
 	deleteItem,
 	getAllKeys,
 	eraseAll,
-	resetDBInstance
+	resetDBInstance,
 };
