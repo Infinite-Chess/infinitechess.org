@@ -25,7 +25,7 @@
 		"src"
 	],
 	"exclude": [
-		"node_modules", // Don't look in node_modules
-		"dist",         // Don't look in the output directory
+		"node_modules",     // Don't look in node_modules
+		"dist"              // Don't look in the output directory
 	]
 }
