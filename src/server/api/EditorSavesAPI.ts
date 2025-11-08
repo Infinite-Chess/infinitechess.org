@@ -4,6 +4,8 @@
  * API endpoints for managing saved positions in the editor.
  */
 
+import * as z from 'zod';
+
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
@@ -22,6 +24,33 @@ const MAX_ICN_LENGTH = 1_000_000;
 
 /** Maximum number of saved positions per user */
 const MAX_SAVED_POSITIONS = 50;
+
+
+// Zod Schemas -------------------------------------------------------------------------------
+
+
+/** Schema for validating the body of POST /api/editor-saves (save position) */
+const SavePositionBodySchema = z.strictObject({
+	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
+	icn: z.string().min(1, 'ICN is required').max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
+});
+type SavePositionBody = z.infer<typeof SavePositionBodySchema>;
+
+/** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
+const RenamePositionBodySchema = z.strictObject({
+	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
+});
+type RenamePositionBody = z.infer<typeof RenamePositionBodySchema>;
+
+/** Schema for validating position_id in URL params */
+const PositionIdParamSchema = z.strictObject({
+	position_id: z.string().transform((val) => {
+		const num = Number(val);
+		if (isNaN(num) || num <= 0) throw new Error('Invalid position_id');
+		return num;
+	}),
+});
+type PositionIdParam = z.infer<typeof PositionIdParamSchema>;
 
 
 // API Endpoints -----------------------------------------------------------------------------
@@ -67,28 +96,15 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Validate request body
-	const { name, icn } = (req as any).body;
-
-	if (typeof name !== 'string' || name.trim() === '') {
-		res.status(400).json({ error: 'Name is required' });
+	// Validate request body with Zod
+	const parseResult = SavePositionBodySchema.safeParse(req.body);
+	if (!parseResult.success) {
+		const errorMessage = parseResult.error.errors[0]?.message || 'Invalid request body';
+		res.status(400).json({ error: errorMessage });
 		return;
 	}
 
-	if (name.length > MAX_NAME_LENGTH) {
-		res.status(400).json({ error: `Name must be ${MAX_NAME_LENGTH} characters or less` });
-		return;
-	}
-
-	if (typeof icn !== 'string' || icn.trim() === '') {
-		res.status(400).json({ error: 'ICN is required' });
-		return;
-	}
-
-	if (icn.length > MAX_ICN_LENGTH) {
-		res.status(400).json({ error: `ICN must be ${MAX_ICN_LENGTH} characters or less` });
-		return;
-	}
+	const { name, icn } = parseResult.data;
 
 	// Calculate size from ICN length
 	const size = icn.length;
@@ -127,13 +143,14 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Get position_id from request params
-	const positionId = Number((req as any).params.position_id);
-
-	if (isNaN(positionId) || positionId <= 0) {
+	// Validate position_id from URL params with Zod
+	const parseResult = PositionIdParamSchema.safeParse(req.params);
+	if (!parseResult.success) {
 		res.status(400).json({ error: 'Invalid position_id' });
 		return;
 	}
+
+	const positionId = parseResult.data.position_id;
 
 	try {
 		// Get the position from the database (filtered by user_id)
@@ -151,6 +168,7 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 		res.status(500).json({ error: 'Failed to retrieve position' });
 	}
 }
+
 /**
  * API endpoint to delete a specific saved position by position_id.
  * Returns { success: true } on success.
@@ -165,13 +183,14 @@ function deletePosition(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Get position_id from request params
-	const positionId = Number((req as any).params.position_id);
-
-	if (isNaN(positionId) || positionId <= 0) {
+	// Validate position_id from URL params with Zod
+	const parseResult = PositionIdParamSchema.safeParse(req.params);
+	if (!parseResult.success) {
 		res.status(400).json({ error: 'Invalid position_id' });
 		return;
 	}
+
+	const positionId = parseResult.data.position_id;
 
 	try {
 		// Delete the position from the database (filtered by user_id)
@@ -205,26 +224,24 @@ function renamePosition(req: IdentifiedRequest, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Get position_id from request params
-	const positionId = Number((req as any).params.position_id);
-
-	if (isNaN(positionId) || positionId <= 0) {
+	// Validate position_id from URL params with Zod
+	const paramsParseResult = PositionIdParamSchema.safeParse(req.params);
+	if (!paramsParseResult.success) {
 		res.status(400).json({ error: 'Invalid position_id' });
 		return;
 	}
 
-	// Validate request body
-	const { name } = (req as any).body;
+	const positionId = paramsParseResult.data.position_id;
 
-	if (typeof name !== 'string' || name.trim() === '') {
-		res.status(400).json({ error: 'Name is required' });
+	// Validate request body with Zod
+	const bodyParseResult = RenamePositionBodySchema.safeParse(req.body);
+	if (!bodyParseResult.success) {
+		const errorMessage = bodyParseResult.error.errors[0]?.message || 'Invalid request body';
+		res.status(400).json({ error: errorMessage });
 		return;
 	}
 
-	if (name.length > MAX_NAME_LENGTH) {
-		res.status(400).json({ error: `Name must be ${MAX_NAME_LENGTH} characters or less` });
-		return;
-	}
+	const { name } = bodyParseResult.data;
 
 	try {
 		// Rename the position in the database (filtered by user_id)
