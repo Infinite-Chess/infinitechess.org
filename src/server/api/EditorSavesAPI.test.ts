@@ -1,3 +1,4 @@
+
 // src/server/api/EditorSavesAPI.test.ts
 
 /**
@@ -11,7 +12,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import type { Express, Request, Response, NextFunction } from 'express';
-import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition, MAX_NAME_LENGTH, MAX_ICN_LENGTH, MAX_SAVED_POSITIONS } from './EditorSavesAPI.js';
+import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition, MAX_NAME_LENGTH, MAX_ICN_LENGTH } from './EditorSavesAPI.js';
 import * as editorSavesManager from '../database/editorSavesManager.js';
 
 // Mock the database manager
@@ -108,10 +109,9 @@ describe('EditorSavesAPI', () => {
 
 	describe('POST /api/editor-saves', () => {
 		it('should save a new position successfully', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
-			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
-				changes: 1, 
-				lastInsertRowid: 123 
+			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({
+				changes: 1,
+				lastInsertRowid: 123
 			} as any);
 
 			const response = await request(app)
@@ -120,7 +120,6 @@ describe('EditorSavesAPI', () => {
 
 			expect(response.status).toBe(201);
 			expect(response.body).toEqual({ success: true, position_id: 123 });
-			expect(editorSavesManager.getSavedPositionCount).toHaveBeenCalledWith(1);
 			expect(editorSavesManager.addSavedPosition).toHaveBeenCalledWith(
 				1,
 				'Test Position',
@@ -189,14 +188,17 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 403 if quota is exceeded', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(MAX_SAVED_POSITIONS);
+			vi.mocked(editorSavesManager.addSavedPosition).mockImplementation(() => {
+				throw new Error('QUOTA_EXCEEDED');
+			});
 
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
 			expect(response.status).toBe(403);
-			expect(response.body.error).toContain(`Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded`);
+			expect(response.body.error).toContain(`Maximum saved positions exceeded`);
+			expect(editorSavesManager.addSavedPosition).toHaveBeenCalled();
 		});
 
 		it('should return 401 if user is not authenticated', async() => {
@@ -409,7 +411,6 @@ describe('EditorSavesAPI', () => {
 
 	describe('Edge cases and integration', () => {
 		it('should handle very long ICN within limit', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
 				lastInsertRowid: 123 
@@ -431,7 +432,6 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should handle name at max length', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
 				lastInsertRowid: 123 
@@ -447,7 +447,6 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should calculate size correctly from ICN length', async() => {
-			vi.mocked(editorSavesManager.getSavedPositionCount).mockReturnValue(0);
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
 				lastInsertRowid: 123 
