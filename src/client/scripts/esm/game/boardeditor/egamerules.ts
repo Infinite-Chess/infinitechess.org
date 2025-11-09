@@ -236,26 +236,22 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
  * When a special rights change gets queued, this function gets called
  * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
  * */
-function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, coords: Coords, future: boolean): void {
+function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, piece: Piece, future: boolean): void {
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
-		const type = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, coords);
+		const rawtype = typeutil.getRawType(piece.type);
 		if (
-			type !== undefined &&
-			pawnDoublePushTypes.includes(typeutil.getRawType(type)) &&
+			pawnDoublePushTypes.includes(rawtype) &&
 			gamerulesGUIinfo.pawnDoublePush !== future
 		) gamerulesGUIinfo.pawnDoublePush = undefined;
 	}
 	
 	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
-		const type = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, coords);
-		if (type !== undefined) {
-			const rawtype = typeutil.getRawType(type);
-			if (castlingWithRooksTypes.includes(rawtype)) {
-				if (gamerulesGUIinfo.castlingWithRooks !== future) gamerulesGUIinfo.castlingWithRooks = undefined;
-			}
-			else if (!pawnDoublePushTypes.includes(rawtype)) {
-				if (future) gamerulesGUIinfo.castlingWithRooks = undefined;
-			}
+		const rawtype = typeutil.getRawType(piece.type);
+		if (castlingWithRooksTypes.includes(rawtype)) {
+			if (gamerulesGUIinfo.castlingWithRooks !== future) gamerulesGUIinfo.castlingWithRooks = undefined;
+		}
+		else if (!pawnDoublePushTypes.includes(rawtype)) {
+			if (future) gamerulesGUIinfo.castlingWithRooks = undefined;
 		}
 	}
 

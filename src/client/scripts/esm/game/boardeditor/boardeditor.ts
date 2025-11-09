@@ -43,7 +43,10 @@ import perspective from '../rendering/perspective.js';
 
 type Tool = (typeof validTools)[number];
 
-/** An edit that also keeps track of the state of certain position dependent game rules after the edit is made */
+/** 
+ * An edit that also keeps track of the state of certain position dependent game rules after the edit is made.
+ * Used exclusively for game history purposes
+ */
 interface EditWithRules extends Edit {
 	pawnDoublePush?: boolean,
 	castlingWithRooks?: boolean

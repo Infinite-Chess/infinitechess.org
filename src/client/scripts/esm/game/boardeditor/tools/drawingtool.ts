@@ -163,7 +163,7 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 
-	egamerules.updateGamerulesUponQueueToggleSpecialRight(gamefile, pieceHovered.coords, future);
+	if (pieceHovered !== undefined) egamerules.updateGamerulesUponQueueToggleSpecialRight(gamefile, pieceHovered, future);
 }
 
 
