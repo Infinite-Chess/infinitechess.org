@@ -33,7 +33,7 @@ describe('EditorSavesAPI', () => {
 		// Mock middleware to set up authenticated user
 		app.use((req: Request, res: Response, next: NextFunction) => {
 			// Default to authenticated user
-			(req as any).memberInfo = {
+			req.memberInfo = {
 				signedIn: true,
 				user_id: 1,
 				username: 'testuser',
@@ -43,11 +43,11 @@ describe('EditorSavesAPI', () => {
 		});
 
 		// Register the routes
-		app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions as any);
-		app.post('/api/editor-saves', EditorSavesAPI.savePosition as any);
-		app.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition as any);
-		app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition as any);
-		app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition as any);
+		app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
+		app.post('/api/editor-saves', EditorSavesAPI.savePosition);
+		app.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
+		app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
+		app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
 
 		// Error handler middleware
 		app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -84,10 +84,10 @@ describe('EditorSavesAPI', () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
-				(req as any).memberInfo = { signedIn: false };
+				req.memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.get('/api/editor-saves', EditorSavesAPI.getSavedPositions as any);
+			unauthApp.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
 
 			const response = await request(unauthApp).get('/api/editor-saves');
 
@@ -112,7 +112,7 @@ describe('EditorSavesAPI', () => {
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({
 				changes: 1,
 				lastInsertRowid: 123
-			} as any);
+			});
 
 			const response = await request(app)
 				.post('/api/editor-saves')
@@ -205,10 +205,10 @@ describe('EditorSavesAPI', () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
-				(req as any).memberInfo = { signedIn: false };
+				req.memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.post('/api/editor-saves', EditorSavesAPI.savePosition as any);
+			unauthApp.post('/api/editor-saves', EditorSavesAPI.savePosition);
 
 			const response = await request(unauthApp)
 				.post('/api/editor-saves')
@@ -266,10 +266,10 @@ describe('EditorSavesAPI', () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
-				(req as any).memberInfo = { signedIn: false };
+				req.memberInfo = { signedIn2: false };
 				next();
 			});
-			unauthApp.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition as any);
+			unauthApp.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
 
 			const response = await request(unauthApp).get('/api/editor-saves/123');
 
@@ -282,7 +282,8 @@ describe('EditorSavesAPI', () => {
 		it('should delete position successfully', async() => {
 			vi.mocked(editorSavesManager.deleteSavedPosition).mockReturnValue({
 				changes: 1,
-			} as any);
+				lastInsertRowid: 0
+			});
 
 			const response = await request(app).delete('/api/editor-saves/123');
 
@@ -294,7 +295,8 @@ describe('EditorSavesAPI', () => {
 		it('should return 404 if position not found or not owned', async() => {
 			vi.mocked(editorSavesManager.deleteSavedPosition).mockReturnValue({
 				changes: 0,
-			} as any);
+				lastInsertRowid: 0
+			});
 
 			const response = await request(app).delete('/api/editor-saves/999');
 
@@ -313,10 +315,10 @@ describe('EditorSavesAPI', () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
-				(req as any).memberInfo = { signedIn: false };
+				req.memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition as any);
+			unauthApp.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
 
 			const response = await request(unauthApp).delete('/api/editor-saves/123');
 
@@ -329,7 +331,8 @@ describe('EditorSavesAPI', () => {
 		it('should rename position successfully', async() => {
 			vi.mocked(editorSavesManager.renameSavedPosition).mockReturnValue({
 				changes: 1,
-			} as any);
+				lastInsertRowid: 0
+			});
 
 			const response = await request(app)
 				.patch('/api/editor-saves/123')
@@ -343,7 +346,8 @@ describe('EditorSavesAPI', () => {
 		it('should return 404 if position not found or not owned', async() => {
 			vi.mocked(editorSavesManager.renameSavedPosition).mockReturnValue({
 				changes: 0,
-			} as any);
+				lastInsertRowid: 0
+			});
 
 			const response = await request(app)
 				.patch('/api/editor-saves/999')
@@ -395,10 +399,10 @@ describe('EditorSavesAPI', () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
-				(req as any).memberInfo = { signedIn: false };
+				req.memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition as any);
+			unauthApp.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
 
 			const response = await request(unauthApp)
 				.patch('/api/editor-saves/123')
@@ -414,7 +418,7 @@ describe('EditorSavesAPI', () => {
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
 				lastInsertRowid: 123 
-			} as any);
+			});
 
 			const maxLengthIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH);
 
@@ -435,7 +439,7 @@ describe('EditorSavesAPI', () => {
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
 				lastInsertRowid: 123 
-			} as any);
+			});
 
 			const maxLengthName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH);
 
@@ -450,7 +454,7 @@ describe('EditorSavesAPI', () => {
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({ 
 				changes: 1, 
 				lastInsertRowid: 123 
-			} as any);
+			});
 
 			const icn = '12345';
 

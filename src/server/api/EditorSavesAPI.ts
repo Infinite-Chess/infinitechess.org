@@ -6,8 +6,7 @@
 
 import * as z from 'zod';
 
-import type { IdentifiedRequest } from '../types.js';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
@@ -54,9 +53,14 @@ const PositionIdParamSchema = z.object({
  * Returns { saves: EditorSavesListRecord[] } with position_id, name, and size.
  * Requires authentication.
  */
-function getSavedPositions(req: IdentifiedRequest, res: Response): void {
+function getSavedPositions(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // `memberInfo` should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -80,9 +84,14 @@ function getSavedPositions(req: IdentifiedRequest, res: Response): void {
  * Returns { success: true, position_id: number } on success.
  * Requires authentication.
  */
-function savePosition(req: IdentifiedRequest, res: Response): void {
+function savePosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -127,9 +136,14 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
  * Returns { icn: string } on success.
  * Requires authentication and ownership of the position.
  */
-function getPosition(req: IdentifiedRequest, res: Response): void {
+function getPosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -167,9 +181,14 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
  * Returns { success: true } on success.
  * Requires authentication and ownership of the position.
  */
-function deletePosition(req: IdentifiedRequest, res: Response): void {
+function deletePosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -208,9 +227,14 @@ function deletePosition(req: IdentifiedRequest, res: Response): void {
  * Returns { success: true } on success.
  * Requires authentication and ownership of the position.
  */
-function renamePosition(req: IdentifiedRequest, res: Response): void {
+function renamePosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
