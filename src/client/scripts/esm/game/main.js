@@ -39,8 +39,7 @@ function start() {
 }
 
 function initListeners() {
-	// eslint-disable-next-line no-unused-vars
-	window.addEventListener('beforeunload', (event) => {
+	window.addEventListener('beforeunload', (_event) => {
 		// console.log('Detecting unload');
 
 		// This allows us to control the reason why the socket was closed.

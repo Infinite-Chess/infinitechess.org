@@ -263,30 +263,12 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
 
-	// Keep track of all squares where special rights got removed
-	const specialRightsRemoved = edit.state.global.reduce<{ [key: string]: number }>((acc, item, index) => {
-		if (item.type === 'specialrights' && !item.future) acc[item.coordsKey] = index;
-		return acc;
-	}, {});
-	// This set will keep track of the problematic indices in edit.state.global where special rights got unnecessarily removed
-	const unnecessaryGlobalStateChangeIndices = new Set<number>();
-
 	// Add all new pieces as dictated by the pasted position
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		const hasSpecialRights = specialRights.has(coordKey);
-		if (hasSpecialRights && coordKey in specialRightsRemoved) {
-			unnecessaryGlobalStateChangeIndices.add(specialRightsRemoved[coordKey]!);
-		}
 		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 	};
-
-	// Filter out all unnecessary special rights removals from the edit from the first step
-	for (let i = Math.max(...unnecessaryGlobalStateChangeIndices); i >= 0; i--) {
-		if (unnecessaryGlobalStateChangeIndices.has(i)) {
-			edit.state.global.splice(i, 1);
-		}
-	}
 
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);

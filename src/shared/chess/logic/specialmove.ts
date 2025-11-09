@@ -18,8 +18,7 @@ import type { Board } from './gamefile.js';
 /**
  * Function that queues all of the changes a special move makes when executed.
  */
-// eslint-disable-next-line no-unused-vars
-type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveDraftEdit) => boolean;
+type SpecialMoveFunction = (_boardsim: Board, _piece: Piece, _move: MoveDraftEdit) => boolean;
 
 /** All properties of the Move that special move functions need to access */
 interface MoveDraftEdit extends MoveDraft, Edit {}

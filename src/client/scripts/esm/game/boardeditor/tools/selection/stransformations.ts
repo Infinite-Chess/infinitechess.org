@@ -50,6 +50,13 @@ let clipboard: StatePiece[] | undefined;
 /** The box containing all clipboard pieces. */
 let clipboardBox: BoundingBox | undefined;
 
+/**
+ * The parity of which vector the pivot point of rotations shifts
+ * so as the pieces don't land on floating point coords after rotation.
+ * This makes it so that 2 consecutive rotations return to the original position.
+ */
+let rotationParity: boolean = false;
+
 
 // Selection Box Transformations ------------------------------------------------
 
@@ -312,13 +319,6 @@ function RotateRight(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	Rotate(gamefile, mesh, box, true); // true for clockwise
 }
 
-/**
- * The parity of which vector the pivot point of rotations shifts
- * so as the pieces don't land on floating point coords after rotation.
- * This makes it so that 2 consecutive rotations return to the original position.
- */
-let rotationParity: boolean = false;
-
 /** Rotates the selection 90 degrees clockwise or counter-clockwise. */
 function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boolean): void {
 	// Calculate the pivot point for rotation.
@@ -440,8 +440,7 @@ function Transform(
 	destinationBox: BoundingBox,
 	newSelectionCorners: [Coords, Coords],
 	/** A function to transform an individual piece's coordinates and type. */
-	// eslint-disable-next-line no-unused-vars
-	transformer: (piece: Piece) => { coords: Coords, type: number }
+	transformer: (_piece: Piece) => { coords: Coords, type: number }
 ): void {
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);

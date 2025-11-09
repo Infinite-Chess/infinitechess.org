@@ -51,8 +51,7 @@ function loadItem(key: string): any {
 	let save: Entry | any;
 	try {
 		save = JSON.parse(stringifiedSave, jsutil.parseReviver); // { value, expires }
-	// eslint-disable-next-line no-unused-vars
-	} catch (e) { // Value wasn't in json format, just delete it. They have to be in json because we always store the 'expiry' property.
+	} catch (_e) { // Value wasn't in json format, just delete it. They have to be in json because we always store the 'expiry' property.
 		deleteItem(key);
 		return;
 	}

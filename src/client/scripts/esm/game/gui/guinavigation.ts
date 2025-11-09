@@ -416,8 +416,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 	let proposed: bigint;
 	try {
 		proposed = parseStringToBigInt(target.value);
-	// eslint-disable-next-line no-unused-vars
-	} catch (e) {
+	} catch (_e) {
 		console.log(`Entered: ${target.value}`);
 		statustext.showStatus(translations['coords-invalid'], true);
 		return;

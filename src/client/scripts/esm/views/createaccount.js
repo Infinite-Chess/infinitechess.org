@@ -214,8 +214,7 @@ function sendForm(username, email, password) {
 			if (response.ok) OK = true;
 			return response.json();
 		})
-		// eslint-disable-next-line no-unused-vars
-		.then((result) => {
+		.then((_result) => {
 			if (OK) { // Account created!
 				// We also received the refresh token cookie to start a session.
 				// token = docutil.getCookieValue('token') // Cookie expires in 60s

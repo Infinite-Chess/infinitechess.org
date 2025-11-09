@@ -13,7 +13,11 @@ export default [
 		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
-			'no-unused-vars': 'warn', // Unused variables give a warning
+			'no-unused-vars': ['warn', { // Unused variables give a warning
+				argsIgnorePattern: '^_',
+				varsIgnorePattern: '^_',
+				caughtErrorsIgnorePattern: '^_',
+			}],
 			'semi': ['error', 'always'], // Enforces semicolons be present at the end of every line.
 			'semi-spacing': ['error', { // Enforces semicolons have a space after them if they are proceeded by other statements.
 				before: false,

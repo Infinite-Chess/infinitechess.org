@@ -442,8 +442,7 @@ function rewindMove(gamefile: FullGame): void {
  * @param {number} index 
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
-// eslint-disable-next-line no-unused-vars
-function goToMove(boardsim: Board, index: number, callback: (move: Move ) => void): void {
+function goToMove(boardsim: Board, index: number, callback: (_move: Move) => void): void {
 	if (index === boardsim.state.local.moveIndex) return;
 
 	const forwards = index >= boardsim.state.local.moveIndex;

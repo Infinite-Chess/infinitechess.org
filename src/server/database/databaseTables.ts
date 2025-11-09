@@ -271,6 +271,21 @@ function generateTables(): void {
 	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`);
 
+	// Editor Saves table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS editor_saves (
+			position_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			size INTEGER NOT NULL,
+			icn TEXT NOT NULL,
+
+			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+		);
+	`);
+	// Indexes for editor_saves table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_editor_saves_user_id ON editor_saves (user_id);`);
+
 	// Bans table
 	// createTableSQLQuery = `
 	// 	CREATE TABLE IF NOT EXISTS bans (

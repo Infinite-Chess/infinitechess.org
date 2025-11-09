@@ -77,8 +77,7 @@ type AxisGroup = {
  * Takes a pair of coordinates and returns a single
  * value that is unique to the axis line that piece is on.
  */
-// eslint-disable-next-line no-unused-vars
-type AxisDeterminer = (coords: Coords) => bigint;
+type AxisDeterminer = (_coords: Coords) => bigint;
 
 /** All orthogonal axes. */
 type OrthoAxis = '1,0' | '0,1';

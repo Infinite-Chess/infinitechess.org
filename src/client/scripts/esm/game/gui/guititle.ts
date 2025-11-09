@@ -57,26 +57,22 @@ function closeListeners(): void {
 	element_boardEditor.removeEventListener('click', callback_BoardEditor);
 }
 
-// eslint-disable-next-line no-unused-vars
-function callback_Play(event: Event): void {
+function callback_Play(_event: Event): void {
 	close();
 	guiplay.open();
 }
 
-// eslint-disable-next-line no-unused-vars
-function callback_Practice(event: Event): void {
+function callback_Practice(_event: Event): void {
 	close();
 	guipractice.open();
 }
 
-// eslint-disable-next-line no-unused-vars
-function callback_Guide(event: Event): void {
+function callback_Guide(_event: Event): void {
 	// Navigate to the guide page
 	window.location.href = '/guide';
 }
 
-// eslint-disable-next-line no-unused-vars
-function callback_BoardEditor(event: Event): void {
+function callback_BoardEditor(_event: Event): void {
 	close();
 	guiboardeditor.open();
 }

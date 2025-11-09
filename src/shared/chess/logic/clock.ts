@@ -22,8 +22,7 @@ import type { Player } from '../util/typeutil.js';
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
 interface ClockValues {
 	/** The actual clock values. An object containing each color in the game for the keys, and that color's time left in milliseconds for the values. */
-	// eslint-disable-next-line no-unused-vars
-	clocks: { [color in Player]?: number }
+	clocks: { [_color in Player]?: number }
 	/**
 	 * If a player's timer is currently counting down, this should be specified.
 	 * No clock is ticking if less than 2 moves are played, or if game is over.

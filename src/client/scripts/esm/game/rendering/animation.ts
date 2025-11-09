@@ -536,8 +536,7 @@ function getCurrentAnimationPosition(segments: AnimationSegment[], segmentInfo: 
  * Iterates over all keyframes that have not been passed by the animation.
  * This is all showKeyframes that are still being shown, or all hideKeyframes that are still being hidden.
  */
-// eslint-disable-next-line no-unused-vars
-function forEachActiveKeyframe<T>(keyframes: Map<number, T>, segment: number, callback: (value: T) => void): void {
+function forEachActiveKeyframe<T>(keyframes: Map<number, T>, segment: number, callback: (_value: T) => void): void {
 	for (const [k, v] of keyframes) {
 		if (k < segment) continue;
 		callback(v);

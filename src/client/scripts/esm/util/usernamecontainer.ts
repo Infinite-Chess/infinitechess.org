@@ -265,8 +265,7 @@ function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameCon
  * @param confident - Whether the new rating is confident or not.
  * @returns A function that takes a numeric value and returns the formatted text content for the elo rating.
  */
-// eslint-disable-next-line no-unused-vars
-function createEloFormatter(confident: boolean): (value: number) => string {
+function createEloFormatter(confident: boolean): (_value: number) => string {
 	// Create a text content generator
 	return (value: number): string => {
 		const rating: Rating = { value, confident };
@@ -337,10 +336,8 @@ function animateNumber(
 	start: number,
 	end: number,
 	durationMillis: number,
-	// eslint-disable-next-line no-unused-vars
-	easingFn: (t: number) => number = t => 1 - Math.pow(1 - t, 2), // Default: ease-out
-	// eslint-disable-next-line no-unused-vars
-	valueFormatter: (value: number) => string = v => v.toLocaleString(),
+	easingFn: (_t: number) => number = t => 1 - Math.pow(1 - t, 2), // Default: ease-out
+	valueFormatter: (_value: number) => string = v => v.toLocaleString(),
 ): { cancel(): void } {
 	let frameId: number | null = null;
 	let cancelled = false;

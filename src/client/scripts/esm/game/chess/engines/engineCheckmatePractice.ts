@@ -163,11 +163,9 @@ const shortRangeJumpDictionary: { [key: number]: number } = {
 
 // weights for the evaluation function
 let pieceExistenceEvalDictionary: { [key: number]: number };
-// eslint-disable-next-line no-unused-vars
-let distancesEvalDictionary: { [key: number]: [number, (square: DoubleCoords) => number][] };
+let distancesEvalDictionary: { [key: number]: [number, (_square: DoubleCoords) => number][] };
 let legalMoveEvalDictionary: { [key: number]: { [key: number]: number } };
-// eslint-disable-next-line no-unused-vars
-let centerOfMassEvalDictionary: { [key: string]: [number, number, number, (square: DoubleCoords) => number][] };
+let centerOfMassEvalDictionary: { [key: string]: [number, number, number, (_square: DoubleCoords) => number][] };
 
 // number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
 let wiggleroomDictionary: { [key: number]: number };
