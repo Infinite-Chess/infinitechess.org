@@ -396,6 +396,7 @@ export default {
 	// Queuing Edits
 	queueAddPiece,
 	queueRemovePiece,
+	queueSpecialRights,
 	// Utility
 	canUndo,
 	canRedo,
