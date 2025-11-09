@@ -6,10 +6,9 @@
 
 import * as z from 'zod';
 
-import type { IdentifiedRequest } from '../types.js';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
-import { getAllSavedPositionsForUser, addSavedPosition, getSavedPositionIcn, getSavedPositionCount, deleteSavedPosition, renameSavedPosition } from '../database/editorSavesManager.js';
+import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
@@ -21,9 +20,6 @@ export const MAX_NAME_LENGTH = 100;
 
 /** Maximum length for ICN notation (also determines max size) */
 export const MAX_ICN_LENGTH = 1_000_000;
-
-/** Maximum number of saved positions per user */
-export const MAX_SAVED_POSITIONS = 50;
 
 
 // Zod Schemas -------------------------------------------------------------------------------
@@ -57,9 +53,14 @@ const PositionIdParamSchema = z.object({
  * Returns { saves: EditorSavesListRecord[] } with position_id, name, and size.
  * Requires authentication.
  */
-function getSavedPositions(req: IdentifiedRequest, res: Response): void {
+function getSavedPositions(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // `memberInfo` should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -68,7 +69,7 @@ function getSavedPositions(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Get all saved positions for this user
-		const saves = getAllSavedPositionsForUser(userId);
+		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
 		res.json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -83,9 +84,14 @@ function getSavedPositions(req: IdentifiedRequest, res: Response): void {
  * Returns { success: true, position_id: number } on success.
  * Requires authentication.
  */
-function savePosition(req: IdentifiedRequest, res: Response): void {
+function savePosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -107,19 +113,18 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 	const size = icn.length;
 
 	try {
-		// Check if user has exceeded the quota
-		const currentCount = getSavedPositionCount(userId);
-		if (currentCount >= MAX_SAVED_POSITIONS) {
-			res.status(403).json({ error: `Maximum of ${MAX_SAVED_POSITIONS} saved positions exceeded` });
+		// Add the saved position to the database (throws on quota exceeded)
+		const result = editorSavesManager.addSavedPosition(userId, name, size, icn);
+
+		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
+
+	} catch (error: unknown) {
+		// Handle the specific quota error
+		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
+			res.status(403).json({ error: `Maximum saved positions exceeded` });
 			return;
 		}
 
-		// Add the saved position to the database
-		const result = addSavedPosition(userId, name, size, icn);
-
-		// Return success with the auto-generated position_id
-		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
-	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
 		res.status(500).json({ error: 'Failed to save position' });
@@ -131,9 +136,14 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
  * Returns { icn: string } on success.
  * Requires authentication and ownership of the position.
  */
-function getPosition(req: IdentifiedRequest, res: Response): void {
+function getPosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -151,7 +161,7 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Get the position from the database (filtered by user_id)
-		const position = getSavedPositionIcn(positionId, userId);
+		const position = editorSavesManager.getSavedPositionICN(positionId, userId);
 
 		if (!position) {
 			res.status(404).json({ error: 'Position not found' });
@@ -171,9 +181,14 @@ function getPosition(req: IdentifiedRequest, res: Response): void {
  * Returns { success: true } on success.
  * Requires authentication and ownership of the position.
  */
-function deletePosition(req: IdentifiedRequest, res: Response): void {
+function deletePosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -191,7 +206,7 @@ function deletePosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Delete the position from the database (filtered by user_id)
-		const result = deleteSavedPosition(positionId, userId);
+		const result = editorSavesManager.deleteSavedPosition(positionId, userId);
 
 		if (result.changes === 0) {
 			res.status(404).json({ error: 'Position not found' });
@@ -212,9 +227,14 @@ function deletePosition(req: IdentifiedRequest, res: Response): void {
  * Returns { success: true } on success.
  * Requires authentication and ownership of the position.
  */
-function renamePosition(req: IdentifiedRequest, res: Response): void {
+function renamePosition(req: Request, res: Response): void {
+	if (!req.memberInfo) {
+		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		return;
+	}
+
 	// Check if user is authenticated
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
+	if (!req.memberInfo.signedIn) {
 		res.status(401).json({ error: 'Must be signed in' });
 		return;
 	}
@@ -243,7 +263,7 @@ function renamePosition(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Rename the position in the database (filtered by user_id)
-		const result = renameSavedPosition(positionId, userId, name);
+		const result = editorSavesManager.renameSavedPosition(positionId, userId, name);
 
 		if (result.changes === 0) {
 			res.status(404).json({ error: 'Position not found' });
@@ -262,7 +282,11 @@ function renamePosition(req: IdentifiedRequest, res: Response): void {
 // Exports -----------------------------------------------------------------------------------
 
 
-export {
+export default {
+	// Constants
+	MAX_NAME_LENGTH,
+	MAX_ICN_LENGTH,
+	// Endpoints
 	getSavedPositions,
 	savePosition,
 	getPosition,
