@@ -39,6 +39,7 @@ import guinavigation from "../gui/guinavigation";
 import annotations from "../rendering/highlights/annotations/annotations";
 import egamerules from "./egamerules";
 import selectiontool from "./tools/selection/selectiontool";
+import typeutil from "../../../../../shared/chess/util/typeutil";
 
 
 // Actions ----------------------------------------------------------------------
@@ -267,15 +268,37 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
 
 	// Add all new pieces as dictated by the pasted position
+	let all_pawns_have_double_push = true;
+	let at_least_one_pawn_has_double_push = false;
+	let all_pieces_obey_normal_castling = true;
+	let at_least_one_piece_obeys_normal_castling = false;
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		const hasSpecialRights = specialRights.has(coordKey);
 		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
+
+		const rawtype = typeutil.getRawType(pieceType);
+		if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
+			if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
+			else all_pawns_have_double_push = false;
+		}
+		else if (egamerules.castlingTypes.includes(rawtype)) {
+			if (hasSpecialRights) at_least_one_piece_obeys_normal_castling = true;
+			else all_pieces_obey_normal_castling = false;
+		}
+		else {
+			if (hasSpecialRights) {
+				at_least_one_piece_obeys_normal_castling = true;
+				all_pieces_obey_normal_castling = false;
+			}
+		}
 	};
 
+	const pawnDoublePush = all_pawns_have_double_push && at_least_one_pawn_has_double_push ? true : (at_least_one_pawn_has_double_push ? undefined : false);
+	const castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : (at_least_one_piece_obeys_normal_castling ? undefined : false);
+
 	// Set gamerules object according to pasted game
-	// Currently, we do not compute and pass { pawnDoublePush, castling } here as it might be unnecessarily expensive to compute this when pasting a game
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { edit });
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { pawnDoublePush, castling, edit });
 
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
