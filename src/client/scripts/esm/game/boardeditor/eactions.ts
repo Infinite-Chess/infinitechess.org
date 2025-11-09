@@ -39,6 +39,7 @@ import guinavigation from "../gui/guinavigation";
 import annotations from "../rendering/highlights/annotations/annotations";
 import egamerules from "./egamerules";
 import selectiontool from "./tools/selection/selectiontool";
+import { players } from "../../../../../shared/chess/util/typeutil";
 
 
 // Actions ----------------------------------------------------------------------
@@ -62,6 +63,12 @@ function reset(): void {
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
+
+	// Set original game rules of Classical upon resetting, like in boardeditor.initBoardEditor()
+	const currentgamefile = gameslot.getGamefile()!;
+	currentgamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
+	currentgamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
+	egamerules.setGamerulesGUIinfo(currentgamefile.basegame.gameRules, currentgamefile.boardsim.state.global, {pawnDoublePush: true, castlingWithRooks: true});
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
@@ -79,6 +86,7 @@ function clearAll(): void {
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 	selectiontool.resetState(); // Clear current selection
+	egamerules.setGamerulesGUIinfoUponPositionClearing();
 
 	statustext.showStatus(translations['copypaste'].clear_position);
 }
@@ -274,7 +282,9 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
+	 // Set gamerules object according to pasted game
+	 // Currently, we do not compute and pass { pawnDoublePush, castlingWithRooks } here as it might be unnecessarily expensive
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal);
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }

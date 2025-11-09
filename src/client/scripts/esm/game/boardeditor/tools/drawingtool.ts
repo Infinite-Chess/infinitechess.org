@@ -21,6 +21,7 @@ import { Mouse } from "../../input";
 import arrows from "../../rendering/arrows/arrows";
 import specialrighthighlights from "../../rendering/highlights/specialrighthighlights";
 import boardeditor, { Edit, Tool } from "../boardeditor";
+import egamerules from "../egamerules";
 
 
 // Constants -------------------------------------------------------
@@ -161,6 +162,8 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 	else if (addingSpecialRights !== future) return;
 
 	state.createSpecialRightsState(edit, coordsKey, current, future);
+
+	egamerules.updateGamerulesUponQueueToggleSpecialRight(gamefile, pieceHovered.coords, current, future);
 }
 
 

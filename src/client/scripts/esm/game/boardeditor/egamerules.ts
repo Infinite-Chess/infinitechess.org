@@ -186,6 +186,19 @@ function setGamerulesGUIinfo(
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
+/** Set empty default game rules upon position clearing */
+function setGamerulesGUIinfoUponPositionClearing(): void {
+	gamerulesGUIinfo = {
+		playerToMove: 'white',
+		winConditions: [icnconverter.default_win_condition],
+		pawnDoublePush: false,
+		castlingWithRooks: false
+	};
+
+	updateGamefileProperties(undefined, undefined, "white");
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
 /** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
 function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 	gamerulesGUIinfo = new_gamerulesGUIinfo;
@@ -215,7 +228,7 @@ function updateGamerulesUponQueueAddPiece(type: number, specialright: boolean): 
  * When a special rights change gets queued, this function gets called
  * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
  * */
-function updateGamerulesUponQueueSpecialRights(gamefile: FullGame, coords: Coords, current: boolean, future: boolean): void {
+function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, coords: Coords, current: boolean, future: boolean): void {
 	if (current === future) return; // Nothing to do, if nothing gets changed
 
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
@@ -271,7 +284,7 @@ function toggleGlobalCastlingWithRooks(castlingWithRooks: boolean) : void {
 function queueToggleAllSpecialRightsOfPiecetypes(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces, futurerights: boolean, rawtypesList: RawType[]): void {
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (rawtypesList.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, futurerights, {skipUpdatingGamerules: true});
+		if (rawtypesList.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, futurerights);
 	};
 }
 
@@ -327,9 +340,10 @@ export default {
 	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
+	setGamerulesGUIinfoUponPositionClearing,
 	updateGamerulesGUIinfo,
 	updateGamerulesUponQueueAddPiece,
-	updateGamerulesUponQueueSpecialRights,
+	updateGamerulesUponQueueToggleSpecialRight,
 	// Updating Special Rights
 	toggleGlobalPawnDoublePush,
 	toggleGlobalCastlingWithRooks,
