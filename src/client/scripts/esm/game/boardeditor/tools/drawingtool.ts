@@ -133,10 +133,10 @@ function update(currentTool: Tool): void {
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
 			// Determine if special right should be given to the new piece, depending on gamerule checkboxes.
-			const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
+			const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 			const specialright: boolean = (
 				(!!pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
-				(!!castlingWithRooks && egamerules.castlingWithRooksTypes.includes(typeutil.getRawType(currentPieceType)))
+				(!!castling && egamerules.castlingTypes.includes(typeutil.getRawType(currentPieceType)))
 			);
 			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
 			break;

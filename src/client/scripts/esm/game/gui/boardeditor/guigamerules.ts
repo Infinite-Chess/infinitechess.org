@@ -283,8 +283,8 @@ function readGameRules(): void {
 	if (!element_pawnDoublePush.indeterminate) pawnDoublePush = element_pawnDoublePush.checked;
 
 	// castling with rooks
-	let castlingWithRooks : boolean | undefined = undefined;
-	if (!element_castling.indeterminate) castlingWithRooks = element_castling.checked;
+	let castling : boolean | undefined = undefined;
+	if (!element_castling.indeterminate) castling = element_castling.checked;
 
 	const gameRules: GameRulesGUIinfo = {
 		playerToMove,
@@ -294,7 +294,7 @@ function readGameRules(): void {
 		promotionsAllowed: promotionsAllowed as RawType[],
 		winConditions,
 		pawnDoublePush,
-		castlingWithRooks
+		castling
 	};
 
 	// Update gamefile properties for rendering purposes and correct legal move calculation
@@ -309,7 +309,7 @@ function readGameRules(): void {
 	if (gameRules.pawnDoublePush !== undefined) egamerules.queueToggleGlobalPawnDoublePush(gameRules.pawnDoublePush, edit);
 
 	// Update castling with rooks specialrights of position
-	if (gameRules.castlingWithRooks !== undefined) egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castlingWithRooks, edit);
+	if (gameRules.castling !== undefined) egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castling, edit);
 
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
@@ -374,12 +374,12 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 		element_pawnDoublePush.checked = gamerulesGUIinfo.pawnDoublePush;
 	}
 
-	if (gamerulesGUIinfo.castlingWithRooks === undefined) {
+	if (gamerulesGUIinfo.castling === undefined) {
 		element_castling.indeterminate = true;
 		element_castling.checked = false;
 	} else {
 		element_castling.indeterminate = false;
-		element_castling.checked = gamerulesGUIinfo.castlingWithRooks;
+		element_castling.checked = gamerulesGUIinfo.castling;
 	}
 
 	// Since we manually set all inputs in this function, they are all valid

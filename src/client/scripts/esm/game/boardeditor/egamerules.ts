@@ -44,7 +44,7 @@ interface GameRulesGUIinfo {
 	promotionsAllowed?: RawType[];
 	winConditions: string[];
 	pawnDoublePush?: boolean;
-	castlingWithRooks?: boolean;
+	castling?: boolean;
 }
 
 
@@ -55,8 +55,8 @@ interface GameRulesGUIinfo {
 
 /** All piece types affected by the pawnDoublePush rule */
 const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN];
-/** All piece types affected by the castlingWithRooks rule. These pieces are the only pieces allowed to castle under the castlingWithRooks rule. */
-const castlingWithRooksTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
+/** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
+const castlingTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
 
 
 // State -------------------------------------------------------------
@@ -116,7 +116,7 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 
 /** 
  * Update the game rules object keeping track of all current game rules by using new gameRules and state_global.
- * Optionally, pawnDoublePush and castlingWithRooks can also be passed into this function, if they should take values other than undefined.
+ * Optionally, pawnDoublePush and castling can also be passed into this function, if they should take values other than undefined.
  * Optionally, an Edit object can be passed to this function if the board state should be updated
  */
 function setGamerulesGUIinfo(
@@ -125,7 +125,7 @@ function setGamerulesGUIinfo(
 	additional: {
 		edit?: Edit,
 		pawnDoublePush?: boolean,
-		castlingWithRooks?: boolean
+		castling?: boolean
 	} = {}): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
@@ -190,10 +190,10 @@ function setGamerulesGUIinfo(
 	// Update castling with rooks specialrights of position, if necessary
 	if (
 		additional.edit !== undefined &&
-		gamerulesGUIinfo.castlingWithRooks !== additional.castlingWithRooks &&
-		additional.castlingWithRooks !== undefined
-	) queueToggleGlobalCastlingWithRooks(additional.castlingWithRooks, additional.edit);
-	gamerulesGUIinfo.castlingWithRooks = additional.castlingWithRooks;
+		gamerulesGUIinfo.castling !== additional.castling &&
+		additional.castling !== undefined
+	) queueToggleGlobalCastlingWithRooks(additional.castling, additional.edit);
+	gamerulesGUIinfo.castling = additional.castling;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -204,7 +204,7 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
 		playerToMove: 'white',
 		winConditions: [icnconverter.default_win_condition],
 		pawnDoublePush: false,
-		castlingWithRooks: false
+		castling: false
 	};
 
 	updateGamefileProperties(undefined, undefined, "white");
@@ -212,22 +212,22 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
 }
 
 /**
- * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castlingWithRooks entries of the gamerules
+ * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castling entries of the gamerules
  * since we do not keep track of the checkbox state between edits.
  * This also gets called when resetting the position.
- * @param value - The value to set pawnDoublePush and castlingWithRooks to, or undefined to set them to indeterminate.
+ * @param value - The value to set pawnDoublePush and castling to, or undefined to set them to indeterminate.
  */
-function setPositionDependentGameRules(options: { pawnDoublePush?: boolean | undefined, castlingWithRooks?: boolean | undefined } = {}): void {
+function setPositionDependentGameRules(options: { pawnDoublePush?: boolean | undefined, castling?: boolean | undefined } = {}): void {
 	gamerulesGUIinfo.pawnDoublePush = options.pawnDoublePush;
-	gamerulesGUIinfo.castlingWithRooks = options.castlingWithRooks;
+	gamerulesGUIinfo.castling = options.castling;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
-function getPositionDependentGameRules(): { pawnDoublePush: boolean | undefined, castlingWithRooks: boolean | undefined } {
+function getPositionDependentGameRules(): { pawnDoublePush: boolean | undefined, castling: boolean | undefined } {
 	return {
 		pawnDoublePush: gamerulesGUIinfo.pawnDoublePush,
-		castlingWithRooks: gamerulesGUIinfo.castlingWithRooks
+		castling: gamerulesGUIinfo.castling
 	};
 }
 
@@ -238,7 +238,7 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 
 /**
  * When a special rights change gets queued, this function gets called
- * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
+ * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castling to indeterminate
  * @param type - The piece type whose special right is being changed
  * @param future - The future value of the special right being changed
  */
@@ -251,13 +251,13 @@ function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolea
 		) gamerulesGUIinfo.pawnDoublePush = undefined;
 	}
 	
-	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
+	if (gamerulesGUIinfo.castling !== undefined) {
 		const rawtype = typeutil.getRawType(type);
-		if (castlingWithRooksTypes.includes(rawtype)) {
-			if (gamerulesGUIinfo.castlingWithRooks !== future) gamerulesGUIinfo.castlingWithRooks = undefined;
+		if (castlingTypes.includes(rawtype)) {
+			if (gamerulesGUIinfo.castling !== future) gamerulesGUIinfo.castling = undefined;
 		}
 		else if (!pawnDoublePushTypes.includes(rawtype)) {
-			if (future) gamerulesGUIinfo.castlingWithRooks = undefined;
+			if (future) gamerulesGUIinfo.castling = undefined;
 		}
 	}
 
@@ -279,8 +279,8 @@ function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit) : 
 	};
 }
 
-/** Gives or removes all special rights of rooks and jumping royals according to the value of castlingWithRooks. */
-function queueToggleGlobalCastlingWithRooks(castlingWithRooks: boolean, edit: Edit) : void {
+/** Gives or removes all special rights of rooks and jumping royals according to the value of castling. */
+function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit) : void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const gamefile = gameslot.getGamefile()!;
@@ -288,7 +288,7 @@ function queueToggleGlobalCastlingWithRooks(castlingWithRooks: boolean, edit: Ed
 	
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (castlingWithRooksTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castlingWithRooks);
+		if (castlingTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
 		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
 	};
 }
@@ -342,7 +342,7 @@ export type {
 
 export default {
 	pawnDoublePushTypes,
-	castlingWithRooksTypes,
+	castlingTypes,
 	// Getting & Setting
 	getPlayerToMove,
 	getCurrentGamerulesAndState,

@@ -51,7 +51,7 @@ interface EditWithRules extends Edit {
 	/** The state of the pawn double push gamerules checkbox AFTER this edit was made. */
 	pawnDoublePush?: boolean,
 	/** The state of the castling gamerules checkbox AFTER this edit was made. */
-	castlingWithRooks?: boolean
+	castling?: boolean
 }
 
 
@@ -107,7 +107,7 @@ function initBoardEditor(): void {
 	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
 	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
 	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global, { pawnDoublePush: true, castlingWithRooks: true });
+	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global, { pawnDoublePush: true, castling: true });
 
 	addEventListeners();
 }
@@ -236,11 +236,11 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 function addEditToHistory(edit: Edit): void {
 	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	edits!.length = indexOfThisEdit!; // Truncate any "redo" edits, that timeline is being erased.
-	const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
+	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 	const editWithRules: EditWithRules = {
 		...edit,
 		pawnDoublePush,
-		castlingWithRooks
+		castling
 	};
 	edits!.push(editWithRules);
 	indexOfThisEdit!++;
@@ -260,8 +260,8 @@ function undo(): void {
 	// Restore position dependent game rules to what they were before this edit
 	if (indexOfThisEdit! !== 0) {
 		const previousEdit = edits![indexOfThisEdit! - 1]!;
-		egamerules.setPositionDependentGameRules({ pawnDoublePush: previousEdit.pawnDoublePush, castlingWithRooks: previousEdit.castlingWithRooks });
-	} else egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castlingWithRooks: true }); // Reset to Classical state
+		egamerules.setPositionDependentGameRules({ pawnDoublePush: previousEdit.pawnDoublePush, castling: previousEdit.castling });
+	} else egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Reset to Classical state
 
 	guinavigation.update_EditButtons();
 }
@@ -276,7 +276,7 @@ function redo(): void {
 	runEdit(gamefile, mesh, thisEdit, true);
 
 	// Update position dependent game rules to what they are after this edit
-	egamerules.setPositionDependentGameRules({ pawnDoublePush: thisEdit.pawnDoublePush, castlingWithRooks: thisEdit.castlingWithRooks});
+	egamerules.setPositionDependentGameRules({ pawnDoublePush: thisEdit.pawnDoublePush, castling: thisEdit.castling});
 	
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
