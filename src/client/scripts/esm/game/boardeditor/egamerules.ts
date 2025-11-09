@@ -60,6 +60,13 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 };
 
 
+// Game rule relevant piece types ------------------------------------------------
+
+
+const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN]; // These pieces are affected by the pawnDoublePush rule
+const castlingWithRooksTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR]; // These pieces are affected by the castlingWithRooks rule
+
+
 // Getting & Setting -------------------------------------------------------------
 
 
@@ -168,17 +175,13 @@ function setGamerulesGUIinfo(
 	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
-	if (gamerulesGUIinfo.pawnDoublePush !== additional.pawnDoublePush) {
-		gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
-		// Update pawn double push specialrights of position, because they just changed
-		if (gamerulesGUIinfo.pawnDoublePush !== undefined) toggleGlobalPawnDoublePush(gamerulesGUIinfo.pawnDoublePush);
-	} else gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
+	// Update pawn double push specialrights of position, if necessary
+	if (gamerulesGUIinfo.pawnDoublePush !== additional.pawnDoublePush && additional.pawnDoublePush !== undefined) toggleGlobalPawnDoublePush(additional.pawnDoublePush);
+	gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
 
-	if (gamerulesGUIinfo.castlingWithRooks !== additional.castlingWithRooks) {
-		gamerulesGUIinfo.castlingWithRooks = additional.castlingWithRooks;
-		// Update castling with rooks specialrights of position, because they just changed
-		if (gamerulesGUIinfo.castlingWithRooks !== undefined) toggleGlobalCastlingWithRooks(gamerulesGUIinfo.castlingWithRooks);
-	} else gamerulesGUIinfo.castlingWithRooks = additional.castlingWithRooks;
+	// Update castling with rooks specialrights of position, if necessary
+	if (gamerulesGUIinfo.castlingWithRooks !== additional.castlingWithRooks && additional.castlingWithRooks !== undefined) toggleGlobalCastlingWithRooks(additional.castlingWithRooks);
+	gamerulesGUIinfo.castlingWithRooks = additional.castlingWithRooks;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -188,13 +191,65 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 	gamerulesGUIinfo = new_gamerulesGUIinfo;
 }
 
+/**
+ * When a piece addition gets queued, this function gets called
+ * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
+ * */
+function updateGamerulesUponQueueAddPiece(type: number, specialright: boolean): void {
+	if (
+		gamerulesGUIinfo.pawnDoublePush !== undefined &&
+		pawnDoublePushTypes.includes(typeutil.getRawType(type)) &&
+		gamerulesGUIinfo.pawnDoublePush !== specialright 
+	) gamerulesGUIinfo.pawnDoublePush = undefined;
+
+	if (
+		gamerulesGUIinfo.castlingWithRooks !== undefined &&
+		castlingWithRooksTypes.includes(typeutil.getRawType(type)) &&
+		gamerulesGUIinfo.castlingWithRooks !== specialright 
+	) gamerulesGUIinfo.castlingWithRooks = undefined;
+
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+/**
+ * When a special rights change gets queued, this function gets called
+ * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
+ * */
+function updateGamerulesUponQueueSpecialRights(gamefile: FullGame, coords: Coords, current: boolean, future: boolean): void {
+	if (current === future) return; // Nothing to do, if nothing gets changed
+
+	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
+		const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
+		if (
+			piece !== undefined &&
+			pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)) &&
+			gamerulesGUIinfo.pawnDoublePush !== future
+		) gamerulesGUIinfo.pawnDoublePush = undefined;
+	}
+	
+	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
+		const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
+		if (
+			piece !== undefined &&
+			castlingWithRooksTypes.includes(typeutil.getRawType(piece.type)) &&
+			gamerulesGUIinfo.castlingWithRooks !== future
+		) gamerulesGUIinfo.castlingWithRooks = undefined;
+	}
+
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+
+// Updating Special Rights -------------------------------------------------------------
+
+
 /** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
 function toggleGlobalPawnDoublePush(pawnDoublePush: boolean) : void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, pawnDoublePush, [rawTypes.PAWN]);
+	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, pawnDoublePush, pawnDoublePushTypes);
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 }
@@ -207,20 +262,16 @@ function toggleGlobalCastlingWithRooks(castlingWithRooks: boolean) : void {
 	const mesh = gameslot.getMesh()!;
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, castlingWithRooks, [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR]);
+	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, castlingWithRooks, castlingWithRooksTypes);
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 }
 
-
-// Updating Special Rights -------------------------------------------------------------
-
-
-/** Queues the toggle on/off of all special rights of piece types in rawtypesList in the position. */
+/** Helper: Queues the toggle on/off of all special rights of piece types in rawtypesList in the position. */
 function queueToggleAllSpecialRightsOfPiecetypes(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces, futurerights: boolean, rawtypesList: RawType[]): void {
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (rawtypesList.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, futurerights);
+		if (rawtypesList.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, futurerights, {skipUpdatingGamerules: true});
 	};
 }
 
@@ -277,6 +328,8 @@ export default {
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	updateGamerulesGUIinfo,
+	updateGamerulesUponQueueAddPiece,
+	updateGamerulesUponQueueSpecialRights,
 	// Updating Special Rights
 	toggleGlobalPawnDoublePush,
 	toggleGlobalCastlingWithRooks,
