@@ -70,8 +70,6 @@ function reset(): void {
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
-
-	egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Set original game rules of Classical upon resetting
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
