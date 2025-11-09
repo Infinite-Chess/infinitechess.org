@@ -266,7 +266,7 @@ describe('EditorSavesAPI', () => {
 			const unauthApp = express();
 			unauthApp.use(express.json());
 			unauthApp.use((req: Request, res: Response, next: NextFunction) => {
-				req.memberInfo = { signedIn2: false };
+				req.memberInfo = { signedIn: false };
 				next();
 			});
 			unauthApp.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
