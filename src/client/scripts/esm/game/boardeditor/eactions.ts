@@ -282,8 +282,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 
-	 // Set gamerules object according to pasted game
-	 // Currently, we do not compute and pass { pawnDoublePush, castlingWithRooks } here as it might be unnecessarily expensive
+	// Set gamerules object according to pasted game
+	// Currently, we do not compute and pass { pawnDoublePush, castlingWithRooks } here as it might be unnecessarily expensive to compute this when pasting a game
 	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal);
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
