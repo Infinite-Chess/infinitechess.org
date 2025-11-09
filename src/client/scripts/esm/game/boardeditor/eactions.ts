@@ -77,11 +77,11 @@ function clearAll(): void {
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 	queueRemovalOfAllPieces(gamefile, edit, pieces);
+	egamerules.setGamerulesGUIinfoUponPositionClearing();
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 	selectiontool.resetState(); // Clear current selection
-	egamerules.setGamerulesGUIinfoUponPositionClearing();
 
 	statustext.showStatus(translations['copypaste'].clear_position);
 }
