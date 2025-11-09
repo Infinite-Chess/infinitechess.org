@@ -39,7 +39,6 @@ import guinavigation from "../gui/guinavigation";
 import annotations from "../rendering/highlights/annotations/annotations";
 import egamerules from "./egamerules";
 import selectiontool from "./tools/selection/selectiontool";
-import { players } from "../../../../../shared/chess/util/typeutil";
 
 
 // Actions ----------------------------------------------------------------------
@@ -64,11 +63,7 @@ function reset(): void {
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
 
-	// Set original game rules of Classical upon resetting, like in boardeditor.initBoardEditor()
-	const currentgamefile = gameslot.getGamefile()!;
-	currentgamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
-	currentgamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(currentgamefile.basegame.gameRules, currentgamefile.boardsim.state.global, {pawnDoublePush: true, castlingWithRooks: true});
+	egamerules.setPositionDependentGameRules(true); // Set original game rules of Classical upon resetting
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }

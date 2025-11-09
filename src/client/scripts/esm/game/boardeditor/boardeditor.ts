@@ -239,7 +239,7 @@ function undo(): void {
 	indexOfThisEdit!--;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
 	guinavigation.update_EditButtons();
-	egamerules.scramblePositionDependentGameRules();
+	egamerules.setPositionDependentGameRules(undefined);
 }
 
 function redo(): void {
@@ -251,7 +251,7 @@ function redo(): void {
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
-	egamerules.scramblePositionDependentGameRules();
+	egamerules.setPositionDependentGameRules(undefined);
 }
 
 
