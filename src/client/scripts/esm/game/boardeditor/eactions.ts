@@ -295,8 +295,6 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 			const hasSpecialRights = specialRights.has(coordKey);
 			boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 
-			if (position.size >= PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS) continue;
-
 			const rawtype = typeutil.getRawType(pieceType);
 			if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
 				if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
