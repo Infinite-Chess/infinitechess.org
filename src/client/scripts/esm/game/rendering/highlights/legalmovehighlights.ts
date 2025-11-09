@@ -115,7 +115,6 @@ function render(): void {
 function regenerateAll(): void {
 	regenSelectedPieceLegalMovesHighlightsModel();
 	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
-	specialrighthighlights.regenModel();
 }
 
 // Regenerates the model for all highlighted legal moves.
