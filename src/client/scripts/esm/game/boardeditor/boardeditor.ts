@@ -96,7 +96,7 @@ function initBoardEditor(): void {
 	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
 	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
 	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
+	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global, {pawnDoublePush: true, castlingWithRooks: true});
 
 	addEventListeners();
 }
@@ -395,6 +395,7 @@ export default {
 	// Queuing Edits
 	queueAddPiece,
 	queueRemovePiece,
+	queueSpecialRights,
 	// Utility
 	canUndo,
 	canRedo,

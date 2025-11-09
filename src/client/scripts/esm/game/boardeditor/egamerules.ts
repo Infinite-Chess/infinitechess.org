@@ -9,13 +9,20 @@
 
 import type { Coords } from "../../../../../shared/chess/util/coordutil";
 import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
+import type { RawType, PlayerGroup } from "../../../../../shared/chess/util/typeutil";
+import type { FullGame } from "../../../../../shared/chess/logic/gamefile";
+import type { Edit } from "./boardeditor";
+import type { OrganizedPieces } from "../../../../../shared/chess/logic/organizedpieces";
+import type { Piece } from "../../../../../shared/chess/util/boardutil";
 
-import { PlayerGroup, players, RawType } from "../../../../../shared/chess/util/typeutil";
+import typeutil, { players, rawTypes } from "../../../../../shared/chess/util/typeutil";
 import { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
 import winconutil from "../../../../../shared/chess/util/winconutil";
 import gameslot from "../chess/gameslot";
 import guigamerules from "../gui/boardeditor/guigamerules";
+import boardeditor from "./boardeditor";
+import boardutil from "../../../../../shared/chess/util/boardutil";
 
 
 // Type Definitions --------------------------------------------------------------
@@ -38,6 +45,8 @@ interface GameRulesGUIinfo {
 	};
 	promotionsAllowed?: RawType[];
 	winConditions: string[];
+	pawnDoublePush?: boolean;
+	castlingWithRooks?: boolean;
 }
 
 
@@ -96,8 +105,17 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 	};
 }
 
-/** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
-function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>): void {
+/** 
+ * Update the game rules object keeping track of all current game rules by using new gameRules and state_global.
+ * Optionally, pawnDoublePush and castlingWithRooks can also be passed into this function, if they should take values other than undefined.
+ */
+function setGamerulesGUIinfo(
+	gameRules: GameRules,
+	state_global: Partial<GlobalGameState>,
+	additional: {
+		pawnDoublePush?: boolean,
+		castlingWithRooks?: boolean
+	} = {}): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
 
@@ -150,12 +168,60 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
+	if (gamerulesGUIinfo.pawnDoublePush !== additional.pawnDoublePush) {
+		gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
+		// Update pawn double push specialrights of position, because they just changed
+		if (gamerulesGUIinfo.pawnDoublePush !== undefined) toggleGlobalPawnDoublePush(gamerulesGUIinfo.pawnDoublePush);
+	} else gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
+
+	if (gamerulesGUIinfo.castlingWithRooks !== additional.castlingWithRooks) {
+		gamerulesGUIinfo.castlingWithRooks = additional.castlingWithRooks;
+		// Update castling with rooks specialrights of position, because they just changed
+		if (gamerulesGUIinfo.castlingWithRooks !== undefined) toggleGlobalCastlingWithRooks(gamerulesGUIinfo.castlingWithRooks);
+	} else gamerulesGUIinfo.castlingWithRooks = additional.castlingWithRooks;
+
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
 /** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
 function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 	gamerulesGUIinfo = new_gamerulesGUIinfo;
+}
+
+/** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
+function toggleGlobalPawnDoublePush(pawnDoublePush: boolean) : void {
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const pieces = gamefile.boardsim.pieces;
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, pawnDoublePush, [rawTypes.PAWN]);
+	boardeditor.runEdit(gamefile, mesh, edit, true);
+	boardeditor.addEditToHistory(edit);
+}
+
+/** Gives or removes all special rights of rooks and jumping royals according to the value of pawnDoublePush. */
+function toggleGlobalCastlingWithRooks(castlingWithRooks: boolean) : void {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const pieces = gamefile.boardsim.pieces;
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, castlingWithRooks, [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR]);
+	boardeditor.runEdit(gamefile, mesh, edit, true);
+	boardeditor.addEditToHistory(edit);
+}
+
+
+// Updating Special Rights -------------------------------------------------------------
+
+
+/** Queues the toggle on/off of all special rights of piece types in rawtypesList in the position. */
+function queueToggleAllSpecialRightsOfPiecetypes(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces, futurerights: boolean, rawtypesList: RawType[]): void {
+	for (const idx of pieces.coords.values()) {
+		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
+		if (rawtypesList.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, futurerights);
+	};
 }
 
 
@@ -211,6 +277,9 @@ export default {
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	updateGamerulesGUIinfo,
+	// Updating Special Rights
+	toggleGlobalPawnDoublePush,
+	toggleGlobalCastlingWithRooks,
 	// Updating Gamefile State
 	updateGamefileProperties,
 };
