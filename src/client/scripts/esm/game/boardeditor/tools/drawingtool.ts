@@ -132,12 +132,13 @@ function update(currentTool: Tool): void {
 			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
+			// Determine if special right should be given to the new piece, depending on gamerule checkboxes.
 			const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
-			const specialright = (
-				(pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
-				(castlingWithRooks && egamerules.castlingWithRooksTypes.includes(typeutil.getRawType(currentPieceType)))
+			const specialright: boolean = (
+				(!!pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
+				(!!castlingWithRooks && egamerules.castlingWithRooksTypes.includes(typeutil.getRawType(currentPieceType)))
 			);
-			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, !!specialright);
+			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
 			break;
 		}
 		case "eraser":
