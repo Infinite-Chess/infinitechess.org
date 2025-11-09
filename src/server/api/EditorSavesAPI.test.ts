@@ -12,8 +12,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import type { Express, Request, Response, NextFunction } from 'express';
-import { getSavedPositions, savePosition, getPosition, deletePosition, renamePosition, MAX_NAME_LENGTH, MAX_ICN_LENGTH } from './EditorSavesAPI.js';
+import EditorSavesAPI from './EditorSavesAPI.js';
 import editorSavesManager from '../database/editorSavesManager.js';
+
+const { MAX_NAME_LENGTH, MAX_ICN_LENGTH, getSavedPositions, savePosition, getPosition, deletePosition, renamePosition } = EditorSavesAPI;
 
 // Mock the database manager
 vi.mock('../database/editorSavesManager.js');

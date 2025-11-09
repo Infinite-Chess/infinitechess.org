@@ -258,7 +258,11 @@ function renamePosition(req: IdentifiedRequest, res: Response): void {
 // Exports -----------------------------------------------------------------------------------
 
 
-export {
+export default {
+	// Constants
+	MAX_NAME_LENGTH,
+	MAX_ICN_LENGTH,
+	// Endpoints
 	getSavedPositions,
 	savePosition,
 	getPosition,
