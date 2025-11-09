@@ -43,6 +43,11 @@ import perspective from '../rendering/perspective.js';
 
 type Tool = (typeof validTools)[number];
 
+/** An edit that also keeps track of the state of certain position dependent game rules after the edit is made */
+interface EditWithRules extends Edit {
+	pawnDoublePush?: boolean,
+	castlingWithRooks?: boolean
+}
 
 // Constants --------------------------------------------------------------------
 
@@ -71,7 +76,7 @@ let inBoardEditor = false;
 let currentTool: Tool = "normal";
 
 /** The list of all edits the user has made. */
-let edits: Array<Edit> | undefined;
+let edits: Array<EditWithRules> | undefined;
 let indexOfThisEdit: number | undefined;
 
 
@@ -225,7 +230,13 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 function addEditToHistory(edit: Edit): void {
 	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	edits!.length = indexOfThisEdit!; // Truncate any "redo" edits, that timeline is being erased.
-	edits!.push(edit);
+	const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
+	const editWithRules = {
+		...edit,
+		pawnDoublePush,
+		castlingWithRooks
+	};
+	edits!.push(editWithRules);
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 }
@@ -238,8 +249,11 @@ function undo(): void {
 	const mesh = gameslot.getMesh()!;
 	indexOfThisEdit!--;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
+	if (indexOfThisEdit! !== 0) {
+		const previousEdit = edits![indexOfThisEdit! - 1]!;
+		egamerules.setPositionDependentGameRules({pawnDoublePush: previousEdit.pawnDoublePush, castlingWithRooks: previousEdit.castlingWithRooks});
+	} else egamerules.setPositionDependentGameRules({pawnDoublePush: true, castlingWithRooks: true});
 	guinavigation.update_EditButtons();
-	egamerules.setPositionDependentGameRules(undefined);
 }
 
 function redo(): void {
@@ -249,9 +263,9 @@ function redo(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
+	egamerules.setPositionDependentGameRules({pawnDoublePush: edits![indexOfThisEdit!]!.pawnDoublePush, castlingWithRooks: edits![indexOfThisEdit!]!.castlingWithRooks});
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
-	egamerules.setPositionDependentGameRules(undefined);
 }
 
 

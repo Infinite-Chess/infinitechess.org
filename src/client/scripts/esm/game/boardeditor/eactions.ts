@@ -63,7 +63,7 @@ function reset(): void {
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
 
-	egamerules.setPositionDependentGameRules(true); // Set original game rules of Classical upon resetting
+	egamerules.setPositionDependentGameRules({pawnDoublePush: true, castlingWithRooks: true}); // Set original game rules of Classical upon resetting
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
@@ -273,13 +273,13 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 	};
 
+	// Set gamerules object according to pasted game
+	// Currently, we do not compute and pass { pawnDoublePush, castlingWithRooks } here as it might be unnecessarily expensive to compute this when pasting a game
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { edit });
+
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
-
-	// Set gamerules object according to pasted game
-	// Currently, we do not compute and pass { pawnDoublePush, castlingWithRooks } here as it might be unnecessarily expensive to compute this when pasting a game
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal);
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }

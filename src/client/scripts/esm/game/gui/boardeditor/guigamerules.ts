@@ -6,12 +6,15 @@
  */
 
 import type { Coords } from "../../../../../../shared/chess/util/coordutil";
+import type { Edit } from "../../boardeditor/boardeditor";
 
 import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter";
 import { RawType } from "../../../../../../shared/chess/util/typeutil";
 import jsutil from "../../../../../../shared/util/jsutil";
 import math from "../../../../../../shared/util/math/math";
 import egamerules, { GameRulesGUIinfo } from "../../boardeditor/egamerules";
+import boardeditor from "../../boardeditor/boardeditor";
+import gameslot from "../../chess/gameslot";
 
 
 // Elements ----------------------------------------------------------
@@ -298,14 +301,21 @@ function readGameRules(): void {
 	const enpassantSquare: Coords | undefined = gameRules.enPassant !== undefined ? [gameRules.enPassant.x, gameRules.enPassant.y] : undefined;
 	egamerules.updateGamefileProperties(enpassantSquare, gameRules.promotionRanks, gameRules.playerToMove);
 
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
 	// Update pawn double push specialrights of position
-	if (gameRules.pawnDoublePush !== undefined) egamerules.toggleGlobalPawnDoublePush(gameRules.pawnDoublePush);
+	if (gameRules.pawnDoublePush !== undefined) egamerules.queueToggleGlobalPawnDoublePush(gameRules.pawnDoublePush, edit);
 
 	// Update castling with rooks specialrights of position
-	if (gameRules.castlingWithRooks !== undefined) egamerules.toggleGlobalCastlingWithRooks(gameRules.castlingWithRooks);
+	if (gameRules.castlingWithRooks !== undefined) egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castlingWithRooks, edit);
 
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
+
+	boardeditor.runEdit(gamefile, mesh, edit, true);
+	boardeditor.addEditToHistory(edit);
 }
 
 /** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
