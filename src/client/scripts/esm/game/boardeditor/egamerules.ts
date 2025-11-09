@@ -244,18 +244,18 @@ function updateGamerulesUponQueueAddPiece(type: number, specialright: boolean): 
  * */
 function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, coords: Coords, future: boolean): void {
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
-		const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
+		const type = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, coords);
 		if (
-			piece !== undefined &&
-			pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)) &&
+			type !== undefined &&
+			pawnDoublePushTypes.includes(typeutil.getRawType(type)) &&
 			gamerulesGUIinfo.pawnDoublePush !== future
 		) gamerulesGUIinfo.pawnDoublePush = undefined;
 	}
 	
 	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
-		const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
-		if (piece !== undefined) {
-			const rawtype = typeutil.getRawType(piece.type);
+		const type = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, coords);
+		if (type !== undefined) {
+			const rawtype = typeutil.getRawType(type);
 			if (castlingWithRooksTypes.includes(rawtype)) {
 				if (gamerulesGUIinfo.castlingWithRooks !== future) gamerulesGUIinfo.castlingWithRooks = undefined;
 			}
