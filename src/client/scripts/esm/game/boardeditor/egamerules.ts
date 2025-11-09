@@ -9,13 +9,18 @@
 
 import type { Coords } from "../../../../../shared/chess/util/coordutil";
 import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
+import type { RawType, PlayerGroup } from "../../../../../shared/chess/util/typeutil";
+import type { Edit } from "./boardeditor";
+import type { Piece } from "../../../../../shared/chess/util/boardutil";
 
-import { PlayerGroup, players, RawType } from "../../../../../shared/chess/util/typeutil";
+import typeutil, { players, rawTypes } from "../../../../../shared/chess/util/typeutil";
 import { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
 import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
 import winconutil from "../../../../../shared/chess/util/winconutil";
 import gameslot from "../chess/gameslot";
 import guigamerules from "../gui/boardeditor/guigamerules";
+import boardeditor from "./boardeditor";
+import boardutil from "../../../../../shared/chess/util/boardutil";
 
 
 // Type Definitions --------------------------------------------------------------
@@ -38,7 +43,20 @@ interface GameRulesGUIinfo {
 	};
 	promotionsAllowed?: RawType[];
 	winConditions: string[];
+	pawnDoublePush?: boolean;
+	castling?: boolean;
 }
+
+
+// Constants -------------------------------------------------------------
+
+
+// Game rule relevant piece types
+
+/** All piece types affected by the pawnDoublePush rule */
+const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN];
+/** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
+const castlingTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
 
 
 // State -------------------------------------------------------------
@@ -96,8 +114,19 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 	};
 }
 
-/** Update the game rules object keeping track of all current game rules by using new gameRules and state_global */
-function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalGameState>): void {
+/** 
+ * Update the game rules object keeping track of all current game rules by using new gameRules and state_global.
+ * Optionally, pawnDoublePush and castling can also be passed into this function, if they should take values other than undefined.
+ * Optionally, an Edit object can be passed to this function if the board state should be updated
+ */
+function setGamerulesGUIinfo(
+	gameRules: GameRules,
+	state_global: Partial<GlobalGameState>,
+	additional: {
+		edit?: Edit,
+		pawnDoublePush?: boolean,
+		castling?: boolean
+	} = {}): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
 
@@ -150,12 +179,118 @@ function setGamerulesGUIinfo(gameRules: GameRules, state_global: Partial<GlobalG
 	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
+	// Update pawn double push specialrights of position, if necessary
+	if (
+		additional.edit !== undefined &&
+		gamerulesGUIinfo.pawnDoublePush !== additional.pawnDoublePush &&
+		additional.pawnDoublePush !== undefined
+	) queueToggleGlobalPawnDoublePush(additional.pawnDoublePush, additional.edit);
+	gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
+
+	// Update castling with rooks specialrights of position, if necessary
+	if (
+		additional.edit !== undefined &&
+		gamerulesGUIinfo.castling !== additional.castling &&
+		additional.castling !== undefined
+	) queueToggleGlobalCastlingWithRooks(additional.castling, additional.edit);
+	gamerulesGUIinfo.castling = additional.castling;
+
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+/** Set empty default game rules upon position clearing */
+function setGamerulesGUIinfoUponPositionClearing(): void {
+	gamerulesGUIinfo = {
+		playerToMove: 'white',
+		winConditions: [icnconverter.default_win_condition],
+		pawnDoublePush: false,
+		castling: false
+	};
+
+	updateGamefileProperties(undefined, undefined, "white");
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+/**
+ * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castling entries of the gamerules
+ * since we do not keep track of the checkbox state between edits.
+ * This also gets called when resetting the position.
+ * @param value - The value to set pawnDoublePush and castling to, or undefined to set them to indeterminate.
+ */
+function setPositionDependentGameRules(options: { pawnDoublePush?: boolean | undefined, castling?: boolean | undefined } = {}): void {
+	gamerulesGUIinfo.pawnDoublePush = options.pawnDoublePush;
+	gamerulesGUIinfo.castling = options.castling;
+
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+function getPositionDependentGameRules(): { pawnDoublePush: boolean | undefined, castling: boolean | undefined } {
+	return {
+		pawnDoublePush: gamerulesGUIinfo.pawnDoublePush,
+		castling: gamerulesGUIinfo.castling
+	};
 }
 
 /** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
 function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 	gamerulesGUIinfo = new_gamerulesGUIinfo;
+}
+
+/**
+ * When a special rights change gets queued, this function gets called
+ * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castling to indeterminate
+ * @param type - The piece type whose special right is being changed
+ * @param future - The future value of the special right being changed
+ */
+function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolean): void {
+	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
+		const rawtype = typeutil.getRawType(type);
+		if (
+			pawnDoublePushTypes.includes(rawtype) &&
+			gamerulesGUIinfo.pawnDoublePush !== future
+		) gamerulesGUIinfo.pawnDoublePush = undefined;
+	}
+	
+	if (gamerulesGUIinfo.castling !== undefined) {
+		const rawtype = typeutil.getRawType(type);
+		if (castlingTypes.includes(rawtype)) {
+			if (gamerulesGUIinfo.castling !== future) gamerulesGUIinfo.castling = undefined;
+		}
+		else if (!pawnDoublePushTypes.includes(rawtype)) {
+			if (future) gamerulesGUIinfo.castling = undefined;
+		}
+	}
+
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
+
+// Updating Special Rights -------------------------------------------------------------
+
+
+/** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
+function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit) : void {
+	const gamefile = gameslot.getGamefile()!;
+	const pieces = gamefile.boardsim.pieces;
+
+	for (const idx of pieces.coords.values()) {
+		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
+		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
+	};
+}
+
+/** Gives or removes all special rights of rooks and jumping royals according to the value of castling. */
+function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit) : void {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	const gamefile = gameslot.getGamefile()!;
+	const pieces = gamefile.boardsim.pieces;
+	
+	for (const idx of pieces.coords.values()) {
+		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
+		if (castlingTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
+		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
+	};
 }
 
 
@@ -206,11 +341,20 @@ export type {
 };
 
 export default {
+	pawnDoublePushTypes,
+	castlingTypes,
 	// Getting & Setting
 	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
+	setGamerulesGUIinfoUponPositionClearing,
+	setPositionDependentGameRules,
+	getPositionDependentGameRules,
 	updateGamerulesGUIinfo,
+	updateGamerulesUponQueueToggleSpecialRight,
+	// Updating Special Rights
+	queueToggleGlobalPawnDoublePush,
+	queueToggleGlobalCastlingWithRooks,
 	// Updating Gamefile State
 	updateGamefileProperties,
 };

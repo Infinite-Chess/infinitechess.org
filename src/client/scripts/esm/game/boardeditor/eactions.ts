@@ -62,6 +62,8 @@ function reset(): void {
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
+
+	egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Set original game rules of Classical upon resetting
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
@@ -75,6 +77,7 @@ function clearAll(): void {
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 	queueRemovalOfAllPieces(gamefile, edit, pieces);
+	egamerules.setGamerulesGUIinfoUponPositionClearing();
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
@@ -270,11 +273,13 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 	};
 
+	// Set gamerules object according to pasted game
+	// Currently, we do not compute and pass { pawnDoublePush, castling } here as it might be unnecessarily expensive to compute this when pasting a game
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { edit });
+
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
-
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal); // Set gamerules object according to pasted game
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }

@@ -6,12 +6,15 @@
  */
 
 import type { Coords } from "../../../../../../shared/chess/util/coordutil";
+import type { Edit } from "../../boardeditor/boardeditor";
 
 import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter";
 import { RawType } from "../../../../../../shared/chess/util/typeutil";
 import jsutil from "../../../../../../shared/util/jsutil";
 import math from "../../../../../../shared/util/math/math";
 import egamerules, { GameRulesGUIinfo } from "../../boardeditor/egamerules";
+import boardeditor from "../../boardeditor/boardeditor";
+import gameslot from "../../chess/gameslot";
 
 
 // Elements ----------------------------------------------------------
@@ -40,6 +43,8 @@ const element_checkmate = document.getElementById("rules-checkmate")! as HTMLInp
 const element_royalcapture = document.getElementById("rules-royalcapture")! as HTMLInputElement;
 const element_allroyalscaptured = document.getElementById("rules-allroyalscaptured")! as HTMLInputElement;
 const element_allpiecescaptured = document.getElementById("rules-allpiecescaptured")! as HTMLInputElement;
+const element_pawnDoublePush = document.getElementById('rules-doublepush')! as HTMLInputElement;
+const element_castling = document.getElementById('rules-castling')! as HTMLInputElement;
 
 const elements_selectionList: HTMLInputElement[] = [
 	element_white,
@@ -54,7 +59,9 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_checkmate,
 	element_royalcapture,
 	element_allroyalscaptured,
-	element_allpiecescaptured
+	element_allpiecescaptured,
+	element_pawnDoublePush,
+	element_castling
 ];
 
 
@@ -271,21 +278,44 @@ function readGameRules(): void {
 	if (element_allpiecescaptured.checked) winConditions.push("allpiecescaptured");
 	if (winConditions.length === 0) winConditions.push(icnconverter.default_win_condition);
 
+	// pawn double push
+	let pawnDoublePush : boolean | undefined = undefined;
+	if (!element_pawnDoublePush.indeterminate) pawnDoublePush = element_pawnDoublePush.checked;
+
+	// castling with rooks
+	let castling : boolean | undefined = undefined;
+	if (!element_castling.indeterminate) castling = element_castling.checked;
+
 	const gameRules: GameRulesGUIinfo = {
 		playerToMove,
 		enPassant,
 		moveRule,
 		promotionRanks,
 		promotionsAllowed: promotionsAllowed as RawType[],
-		winConditions
+		winConditions,
+		pawnDoublePush,
+		castling
 	};
 
 	// Update gamefile properties for rendering purposes and correct legal move calculation
 	const enpassantSquare: Coords | undefined = gameRules.enPassant !== undefined ? [gameRules.enPassant.x, gameRules.enPassant.y] : undefined;
 	egamerules.updateGamefileProperties(enpassantSquare, gameRules.promotionRanks, gameRules.playerToMove);
 
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+
+	// Update pawn double push specialrights of position
+	if (gameRules.pawnDoublePush !== undefined) egamerules.queueToggleGlobalPawnDoublePush(gameRules.pawnDoublePush, edit);
+
+	// Update castling with rooks specialrights of position
+	if (gameRules.castling !== undefined) egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castling, edit);
+
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
+
+	boardeditor.runEdit(gamefile, mesh, edit, true);
+	boardeditor.addEditToHistory(edit);
 }
 
 /** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
@@ -335,6 +365,22 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	element_royalcapture.checked = gamerulesGUIinfo.winConditions.includes("royalcapture");
 	element_allroyalscaptured.checked = gamerulesGUIinfo.winConditions.includes("allroyalscaptured");
 	element_allpiecescaptured.checked = gamerulesGUIinfo.winConditions.includes("allpiecescaptured");
+
+	if (gamerulesGUIinfo.pawnDoublePush === undefined) {
+		element_pawnDoublePush.indeterminate = true;
+		element_pawnDoublePush.checked = false;
+	} else {
+		element_pawnDoublePush.indeterminate = false;
+		element_pawnDoublePush.checked = gamerulesGUIinfo.pawnDoublePush;
+	}
+
+	if (gamerulesGUIinfo.castling === undefined) {
+		element_castling.indeterminate = true;
+		element_castling.checked = false;
+	} else {
+		element_castling.indeterminate = false;
+		element_castling.checked = gamerulesGUIinfo.castling;
+	}
 
 	// Since we manually set all inputs in this function, they are all valid
 	element_enPassantX.classList.remove('invalid-input');

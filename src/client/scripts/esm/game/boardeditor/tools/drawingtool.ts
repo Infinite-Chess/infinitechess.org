@@ -21,6 +21,7 @@ import { Mouse } from "../../input";
 import arrows from "../../rendering/arrows/arrows";
 import specialrighthighlights from "../../rendering/highlights/specialrighthighlights";
 import boardeditor, { Edit, Tool } from "../boardeditor";
+import egamerules from "../egamerules";
 
 
 // Constants -------------------------------------------------------
@@ -127,12 +128,19 @@ function update(currentTool: Tool): void {
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
-		case "placer":
+		case "placer": {
 			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
-			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, false);
+			// Determine if special right should be given to the new piece, depending on gamerule checkboxes.
+			const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+			const specialright: boolean = (
+				(!!pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
+				(!!castling && egamerules.castlingTypes.includes(typeutil.getRawType(currentPieceType)))
+			);
+			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
 			break;
+		}
 		case "eraser":
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
@@ -150,7 +158,7 @@ function update(currentTool: Tool): void {
 	thisEdit.state.global.push(...edit.state.global);
 }
 
-/** Queues a specialrights state addition/deletion on the specified */
+/** Queues a specialrights state addition/deletion on the specified piece. */
 function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
@@ -161,6 +169,8 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 	else if (addingSpecialRights !== future) return;
 
 	state.createSpecialRightsState(edit, coordsKey, current, future);
+
+	egamerules.updateGamerulesUponQueueToggleSpecialRight(pieceHovered.type, future);
 }
 
 

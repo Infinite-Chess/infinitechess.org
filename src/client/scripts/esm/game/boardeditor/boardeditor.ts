@@ -43,6 +43,17 @@ import perspective from '../rendering/perspective.js';
 
 type Tool = (typeof validTools)[number];
 
+/** 
+ * An edit that also keeps track of the state of certain position dependent game rules AFTER the edit is made.
+ * Used exclusively for game history purposes.
+ */
+interface EditWithRules extends Edit {
+	/** The state of the pawn double push gamerules checkbox AFTER this edit was made. */
+	pawnDoublePush?: boolean,
+	/** The state of the castling gamerules checkbox AFTER this edit was made. */
+	castling?: boolean
+}
+
 
 // Constants --------------------------------------------------------------------
 
@@ -71,7 +82,7 @@ let inBoardEditor = false;
 let currentTool: Tool = "normal";
 
 /** The list of all edits the user has made. */
-let edits: Array<Edit> | undefined;
+let edits: Array<EditWithRules> | undefined;
 let indexOfThisEdit: number | undefined;
 
 
@@ -96,7 +107,7 @@ function initBoardEditor(): void {
 	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
 	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
 	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global);
+	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global, { pawnDoublePush: true, castling: true });
 
 	addEventListeners();
 }
@@ -225,7 +236,13 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 function addEditToHistory(edit: Edit): void {
 	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	edits!.length = indexOfThisEdit!; // Truncate any "redo" edits, that timeline is being erased.
-	edits!.push(edit);
+	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+	const editWithRules: EditWithRules = {
+		...edit,
+		pawnDoublePush,
+		castling
+	};
+	edits!.push(editWithRules);
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 }
@@ -237,7 +254,15 @@ function undo(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	indexOfThisEdit!--;
-	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
+	const thisEdit = edits![indexOfThisEdit!]!;
+	runEdit(gamefile, mesh, thisEdit, false);
+
+	// Restore position dependent game rules to what they were before this edit
+	if (indexOfThisEdit! !== 0) {
+		const previousEdit = edits![indexOfThisEdit! - 1]!;
+		egamerules.setPositionDependentGameRules({ pawnDoublePush: previousEdit.pawnDoublePush, castling: previousEdit.castling });
+	} else egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Reset to Classical state
+
 	guinavigation.update_EditButtons();
 }
 
@@ -247,7 +272,12 @@ function redo(): void {
 	if (indexOfThisEdit! >= edits!.length) return;
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
-	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
+	const thisEdit = edits![indexOfThisEdit!]!;
+	runEdit(gamefile, mesh, thisEdit, true);
+
+	// Update position dependent game rules to what they are after this edit
+	egamerules.setPositionDependentGameRules({ pawnDoublePush: thisEdit.pawnDoublePush, castling: thisEdit.castling});
+	
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 }
@@ -262,11 +292,14 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
 	queueSpecialRights(gamefile, edit, piece.coords, false);
 }
 
-/** Queues the addition of a piece, including its special rights, if specified, to the edit changes. */
+/** 
+ * Queues the addition of a piece, including its special rights, if specified, to the edit changes.
+ * If specialrights is left undefined, it is set according to the game rules
+ */
 function queueAddPiece(gamefile: FullGame, edit: Edit, coords: Coords, type: number, specialright: boolean): void {
 	const piece: Piece = { type, coords, index: -1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
-	if (specialright) queueSpecialRights(gamefile, edit, coords, true);
+	if (specialright) queueSpecialRights(gamefile, edit, coords, specialright);
 }
 
 /** Queues the addition/removal of a specialright at the specified coordinates. */
@@ -395,6 +428,7 @@ export default {
 	// Queuing Edits
 	queueAddPiece,
 	queueRemovePiece,
+	queueSpecialRights,
 	// Utility
 	canUndo,
 	canRedo,

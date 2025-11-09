@@ -1458,21 +1458,48 @@ svg.collapse {
     cursor: pointer;
 }
 
-.win-list {
+.rules-list {
     display: flex;
     flex-direction: column;
     gap: 6px; /* space between items */
 }
 
-.win-item {
+.checkbox-item {
     display: flex;
     align-items: center;
     gap: 8px; /* space between checkbox and label */
+    line-height: 1.2;
 }
 
-.win-item input[type="checkbox"] {
-    transform: scale(1.1); /* slightly larger checkbox */
+.checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
     cursor: pointer;
+    accent-color: #4285f4; /* optional for modern browsers */
+    vertical-align: middle;
+    position: relative;
+    top: -2px; /* fine-tune to align checkbox center with label text */
+}
+
+/* Tri-state (indeterminate) style enhancement */
+.checkbox-item input[type="checkbox"]:indeterminate {
+    background-color: #ddd;
+    border: 1px solid #888;
+    appearance: none;
+    display: inline-block;
+    position: relative;
+}
+
+.checkbox-item input[type="checkbox"]:indeterminate::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 2px;
+    background-color: #333;
+    transform: translate(-50%, -50%);
+    border-radius: 1px;
 }
 
 #game-rules input::placeholder {
