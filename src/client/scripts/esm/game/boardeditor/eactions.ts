@@ -274,40 +274,51 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
 
-	// Add all new pieces as dictated by the pasted position, while keeping track of special rights
-	let all_pawns_have_double_push = true;
-	let at_least_one_pawn_has_double_push = false;
-	let all_pieces_obey_normal_castling = true;
-	let at_least_one_piece_obeys_normal_castling = false;
-	for (const [coordKey, pieceType] of position.entries()) {
-		const coords = coordutil.getCoordsFromKey(coordKey);
-		const hasSpecialRights = specialRights.has(coordKey);
-		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
-
-		if (position.size >= PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS) continue;
-
-		const rawtype = typeutil.getRawType(pieceType);
-		if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
-			if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
-			else all_pawns_have_double_push = false;
+	// Add all new pieces as dictated by the pasted position
+	// If the position has few pieces, then also keep track of special rights
+	if (position.size >= PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS) {
+		for (const [coordKey, pieceType] of position.entries()) {
+			const coords = coordutil.getCoordsFromKey(coordKey);
+			const hasSpecialRights = specialRights.has(coordKey);
+			boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 		}
-		else if (egamerules.castlingTypes.includes(rawtype)) {
-			if (hasSpecialRights) at_least_one_piece_obeys_normal_castling = true;
-			else all_pieces_obey_normal_castling = false;
-		}
-		else {
-			if (hasSpecialRights) {
-				at_least_one_piece_obeys_normal_castling = true;
-				all_pieces_obey_normal_castling = false;
+
+		egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { edit }); // Set gamerules object according to pasted game
+	}
+	else {
+		let all_pawns_have_double_push = true;
+		let at_least_one_pawn_has_double_push = false;
+		let all_pieces_obey_normal_castling = true;
+		let at_least_one_piece_obeys_normal_castling = false;
+		for (const [coordKey, pieceType] of position.entries()) {
+			const coords = coordutil.getCoordsFromKey(coordKey);
+			const hasSpecialRights = specialRights.has(coordKey);
+			boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
+
+			if (position.size >= PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS) continue;
+
+			const rawtype = typeutil.getRawType(pieceType);
+			if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
+				if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
+				else all_pawns_have_double_push = false;
 			}
-		}
-	};
+			else if (egamerules.castlingTypes.includes(rawtype)) {
+				if (hasSpecialRights) at_least_one_piece_obeys_normal_castling = true;
+				else all_pieces_obey_normal_castling = false;
+			}
+			else {
+				if (hasSpecialRights) {
+					at_least_one_piece_obeys_normal_castling = true;
+					all_pieces_obey_normal_castling = false;
+				}
+			}
+		};
 
-	const pawnDoublePush = all_pawns_have_double_push && at_least_one_pawn_has_double_push ? true : (at_least_one_pawn_has_double_push ? undefined : false);
-	const castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : (at_least_one_piece_obeys_normal_castling ? undefined : false);
+		const pawnDoublePush = all_pawns_have_double_push && at_least_one_pawn_has_double_push ? true : (at_least_one_pawn_has_double_push ? undefined : false);
+		const castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : (at_least_one_piece_obeys_normal_castling ? undefined : false);
 
-	// Set gamerules object according to pasted game
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { pawnDoublePush, castling, edit });
+		egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { pawnDoublePush, castling, edit }); // Set gamerules object according to pasted game
+	}
 
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
