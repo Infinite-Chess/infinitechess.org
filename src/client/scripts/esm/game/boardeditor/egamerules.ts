@@ -22,7 +22,6 @@ import gameslot from "../chess/gameslot";
 import guigamerules from "../gui/boardeditor/guigamerules";
 import boardeditor from "./boardeditor";
 import boardutil from "../../../../../shared/chess/util/boardutil";
-import coordutil from "../../../../../shared/chess/util/coordutil";
 
 
 // Type Definitions --------------------------------------------------------------
@@ -270,9 +269,7 @@ function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit) : 
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		const coordsKey = coordutil.getKeyFromCoords(piece.coords);
-		const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
-		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)) && current !== pawnDoublePush) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
+		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
 	};
 }
 
@@ -285,10 +282,8 @@ function queueToggleGlobalCastlingWithRooks(castlingWithRooks: boolean, edit: Ed
 	
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		const coordsKey = coordutil.getKeyFromCoords(piece.coords);
-		const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
-		if (castlingWithRooksTypes.includes(typeutil.getRawType(piece.type)) && current !== castlingWithRooks) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castlingWithRooks);
-		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)) && current) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
+		if (castlingWithRooksTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castlingWithRooks);
+		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
 	};
 }
 
