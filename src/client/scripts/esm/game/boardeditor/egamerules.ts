@@ -12,7 +12,6 @@ import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
 import type { RawType, PlayerGroup } from "../../../../../shared/chess/util/typeutil";
 import type { FullGame } from "../../../../../shared/chess/logic/gamefile";
 import type { Edit } from "./boardeditor";
-import type { OrganizedPieces } from "../../../../../shared/chess/logic/organizedpieces";
 import type { Piece } from "../../../../../shared/chess/util/boardutil";
 
 import typeutil, { players, rawTypes } from "../../../../../shared/chess/util/typeutil";
@@ -262,12 +261,17 @@ function toggleGlobalPawnDoublePush(pawnDoublePush: boolean) : void {
 	const mesh = gameslot.getMesh()!;
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, pawnDoublePush, pawnDoublePushTypes);
+
+	for (const idx of pieces.coords.values()) {
+		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
+		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
+	};
+
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
 }
 
-/** Gives or removes all special rights of rooks and jumping royals according to the value of pawnDoublePush. */
+/** Gives or removes all special rights of rooks and jumping royals according to the value of castlingWithRooks. */
 function toggleGlobalCastlingWithRooks(castlingWithRooks: boolean) : void {
 	if (!boardeditor.areInBoardEditor()) return;
 
@@ -275,17 +279,18 @@ function toggleGlobalCastlingWithRooks(castlingWithRooks: boolean) : void {
 	const mesh = gameslot.getMesh()!;
 	const pieces = gamefile.boardsim.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	queueToggleAllSpecialRightsOfPiecetypes(gamefile, edit, pieces, castlingWithRooks, castlingWithRooksTypes);
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
-}
-
-/** Helper: Queues the toggle on/off of all special rights of piece types in rawtypesList in the position. */
-function queueToggleAllSpecialRightsOfPiecetypes(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces, futurerights: boolean, rawtypesList: RawType[]): void {
+	
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (rawtypesList.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, futurerights);
+		if (castlingWithRooks) {
+			if (castlingWithRooksTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, true);
+		} else {
+			if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
+		}
 	};
+
+	boardeditor.runEdit(gamefile, mesh, edit, true);
+	boardeditor.addEditToHistory(edit);
 }
 
 
