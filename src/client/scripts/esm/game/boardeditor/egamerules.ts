@@ -63,7 +63,7 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 
 
 const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN]; // These pieces are affected by the pawnDoublePush rule
-const castlingWithRooksTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR]; // These pieces are affected by the castlingWithRooks rule
+const castlingWithRooksTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR]; // These pieces are the only pieces allowed to castle under the castlingWithRooks rule
 
 
 // Getting & Setting -------------------------------------------------------------
@@ -214,11 +214,15 @@ function updateGamerulesUponQueueAddPiece(type: number, specialright: boolean): 
 		gamerulesGUIinfo.pawnDoublePush !== specialright 
 	) gamerulesGUIinfo.pawnDoublePush = undefined;
 
-	if (
-		gamerulesGUIinfo.castlingWithRooks !== undefined &&
-		castlingWithRooksTypes.includes(typeutil.getRawType(type)) &&
-		gamerulesGUIinfo.castlingWithRooks !== specialright 
-	) gamerulesGUIinfo.castlingWithRooks = undefined;
+	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
+		const rawtype = typeutil.getRawType(type);
+		if (castlingWithRooksTypes.includes(rawtype)) {
+			if (gamerulesGUIinfo.castlingWithRooks !== specialright) gamerulesGUIinfo.castlingWithRooks = undefined;
+		}
+		else if (!pawnDoublePushTypes.includes(rawtype)) {
+			if (specialright) gamerulesGUIinfo.castlingWithRooks = undefined;
+		}
+	}
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -227,9 +231,7 @@ function updateGamerulesUponQueueAddPiece(type: number, specialright: boolean): 
  * When a special rights change gets queued, this function gets called
  * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
  * */
-function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, coords: Coords, current: boolean, future: boolean): void {
-	if (current === future) return; // Nothing to do, if nothing gets changed
-
+function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, coords: Coords, future: boolean): void {
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
 		const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
 		if (
@@ -241,11 +243,15 @@ function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, coords: 
 	
 	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
 		const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
-		if (
-			piece !== undefined &&
-			castlingWithRooksTypes.includes(typeutil.getRawType(piece.type)) &&
-			gamerulesGUIinfo.castlingWithRooks !== future
-		) gamerulesGUIinfo.castlingWithRooks = undefined;
+		if (piece !== undefined) {
+			const rawtype = typeutil.getRawType(piece.type);
+			if (castlingWithRooksTypes.includes(rawtype)) {
+				if (gamerulesGUIinfo.castlingWithRooks !== future) gamerulesGUIinfo.castlingWithRooks = undefined;
+			}
+			else if (!pawnDoublePushTypes.includes(rawtype)) {
+				if (future) gamerulesGUIinfo.castlingWithRooks = undefined;
+			}
+		}
 	}
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
@@ -282,11 +288,8 @@ function toggleGlobalCastlingWithRooks(castlingWithRooks: boolean) : void {
 	
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (castlingWithRooks) {
-			if (castlingWithRooksTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, true);
-		} else {
-			if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
-		}
+		if (castlingWithRooksTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castlingWithRooks);
+		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
 	};
 
 	boardeditor.runEdit(gamefile, mesh, edit, true);
