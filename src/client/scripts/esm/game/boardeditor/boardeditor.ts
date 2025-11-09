@@ -231,7 +231,6 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 }
 
 function addEditToHistory(edit: Edit): void {
-	console.log(edit)
 	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	edits!.length = indexOfThisEdit!; // Truncate any "redo" edits, that timeline is being erased.
 	const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
