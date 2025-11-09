@@ -128,12 +128,18 @@ function update(currentTool: Tool): void {
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
-		case "placer":
+		case "placer": {
 			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
-			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, undefined);
+			const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
+			const specialright = (
+				(pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
+				(castlingWithRooks && egamerules.castlingWithRooksTypes.includes(typeutil.getRawType(currentPieceType)))
+			);
+			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, !!specialright);
 			break;
+		}
 		case "eraser":
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
