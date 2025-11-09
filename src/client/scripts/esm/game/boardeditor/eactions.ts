@@ -42,6 +42,13 @@ import selectiontool from "./tools/selection/selectiontool";
 import typeutil from "../../../../../shared/chess/util/typeutil";
 
 
+// Constants ----------------------------------------------------------------------
+
+
+/** If a position with less pieces than this is pasted, the position dependent game rules are updated */
+const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
+
+
 // Actions ----------------------------------------------------------------------
 
 
@@ -267,7 +274,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
 
-	// Add all new pieces as dictated by the pasted position
+	// Add all new pieces as dictated by the pasted position, while keeping track of special rights
 	let all_pawns_have_double_push = true;
 	let at_least_one_pawn_has_double_push = false;
 	let all_pieces_obey_normal_castling = true;
@@ -276,6 +283,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		const hasSpecialRights = specialRights.has(coordKey);
 		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
+
+		if (position.size >= PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS) continue;
 
 		const rawtype = typeutil.getRawType(pieceType);
 		if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
