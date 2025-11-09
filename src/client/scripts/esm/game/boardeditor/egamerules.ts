@@ -198,6 +198,17 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
+/**
+ * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castlingWithRooks entries of the gamerules
+ * since we do not keep track of the checkbox state between edits
+ */
+function scramblePositionDependentGameRules(): void {
+	gamerulesGUIinfo.pawnDoublePush = undefined;
+	gamerulesGUIinfo.castlingWithRooks = undefined;
+
+	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
+}
+
 /** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
 function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 	gamerulesGUIinfo = new_gamerulesGUIinfo;
@@ -349,6 +360,7 @@ export default {
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	setGamerulesGUIinfoUponPositionClearing,
+	scramblePositionDependentGameRules,
 	updateGamerulesGUIinfo,
 	updateGamerulesUponQueueAddPiece,
 	updateGamerulesUponQueueToggleSpecialRight,
