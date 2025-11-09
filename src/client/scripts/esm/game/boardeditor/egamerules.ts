@@ -210,33 +210,16 @@ function setPositionDependentGameRules(value: boolean | undefined): void {
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
+function getPositionDependentGameRules(): { pawnDoublePush: boolean | undefined, castlingWithRooks: boolean | undefined } {
+	return {
+		pawnDoublePush: gamerulesGUIinfo.pawnDoublePush,
+		castlingWithRooks: gamerulesGUIinfo.castlingWithRooks
+	};
+}
+
 /** Update the game rules object keeping track of all current game rules by using changes from guiboardeditor */
 function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 	gamerulesGUIinfo = new_gamerulesGUIinfo;
-}
-
-/**
- * When a piece addition gets queued, this function gets called
- * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
- * */
-function updateGamerulesUponQueueAddPiece(type: number, specialright: boolean): void {
-	if (
-		gamerulesGUIinfo.pawnDoublePush !== undefined &&
-		pawnDoublePushTypes.includes(typeutil.getRawType(type)) &&
-		gamerulesGUIinfo.pawnDoublePush !== specialright 
-	) gamerulesGUIinfo.pawnDoublePush = undefined;
-
-	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
-		const rawtype = typeutil.getRawType(type);
-		if (castlingWithRooksTypes.includes(rawtype)) {
-			if (gamerulesGUIinfo.castlingWithRooks !== specialright) gamerulesGUIinfo.castlingWithRooks = undefined;
-		}
-		else if (!pawnDoublePushTypes.includes(rawtype)) {
-			if (specialright) gamerulesGUIinfo.castlingWithRooks = undefined;
-		}
-	}
-
-	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
 /**
@@ -356,14 +339,16 @@ export type {
 };
 
 export default {
+	pawnDoublePushTypes,
+	castlingWithRooksTypes,
 	// Getting & Setting
 	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
 	setGamerulesGUIinfoUponPositionClearing,
 	setPositionDependentGameRules,
+	getPositionDependentGameRules,
 	updateGamerulesGUIinfo,
-	updateGamerulesUponQueueAddPiece,
 	updateGamerulesUponQueueToggleSpecialRight,
 	// Updating Special Rights
 	toggleGlobalPawnDoublePush,

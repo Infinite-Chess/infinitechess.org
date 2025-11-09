@@ -13,7 +13,7 @@ import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document } from '../chess/game.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
@@ -264,12 +264,19 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
 	queueSpecialRights(gamefile, edit, piece.coords, false);
 }
 
-/** Queues the addition of a piece, including its special rights, if specified, to the edit changes. */
-function queueAddPiece(gamefile: FullGame, edit: Edit, coords: Coords, type: number, specialright: boolean): void {
+/** 
+ * Queues the addition of a piece, including its special rights, if specified, to the edit changes.
+ * If specialrights is left undefined, it is set according to the game rules
+ */
+function queueAddPiece(gamefile: FullGame, edit: Edit, coords: Coords, type: number, specialright: boolean | undefined): void {
 	const piece: Piece = { type, coords, index: -1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
 	if (specialright) queueSpecialRights(gamefile, edit, coords, true);
-	egamerules.updateGamerulesUponQueueAddPiece(type, specialright);
+	else if (specialright === undefined) {
+		const { pawnDoublePush, castlingWithRooks } = egamerules.getPositionDependentGameRules();
+		if (pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(type))) queueSpecialRights(gamefile, edit, coords, true);
+		else if (castlingWithRooks && egamerules.castlingWithRooksTypes.includes(typeutil.getRawType(type))) queueSpecialRights(gamefile, edit, coords, true);
+	}
 }
 
 /** Queues the addition/removal of a specialright at the specified coordinates. */

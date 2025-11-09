@@ -132,7 +132,7 @@ function update(currentTool: Tool): void {
 			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
-			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, false);
+			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, undefined);
 			break;
 		case "eraser":
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
