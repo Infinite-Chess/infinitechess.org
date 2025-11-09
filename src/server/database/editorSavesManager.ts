@@ -31,10 +31,10 @@ export type EditorSavesIcnRecord = {
 
 
 /** Maximum number of saved positions allowed per user */
-export const MAX_SAVED_POSITIONS = 50;
+const MAX_SAVED_POSITIONS = 50;
 
-/** Error message constant for when the user's save quota is exceeded. */
-export const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
+/** Error message for when the user's save quota is exceeded. */
+const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
 
 
 // Methods -----------------------------------------------------------------------------
@@ -52,7 +52,8 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 }
 
 /**
- * Adds a new saved position to the editor_saves table.
+ * Adds a new saved position to the editor_saves table,
+ * enforcing the maximum saved positions quota per user.
  * @param user_id - The user ID who owns the position
  * @param name - The name of the saved position
  * @param size - The size (icn length) of the position
