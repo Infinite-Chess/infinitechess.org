@@ -45,7 +45,7 @@ import typeutil from "../../../../../shared/chess/util/typeutil";
 // Constants ----------------------------------------------------------------------
 
 
-/** If a position with less pieces than this is pasted, the position dependent game rules are updated */
+/** If a position with less pieces than this is pasted, the position dependent game rules are accurately updated, else they are set to undetermined */
 const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 
 
