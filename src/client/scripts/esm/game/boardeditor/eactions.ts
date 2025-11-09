@@ -63,7 +63,7 @@ function reset(): void {
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
 
-	egamerules.setPositionDependentGameRules({pawnDoublePush: true, castlingWithRooks: true}); // Set original game rules of Classical upon resetting
+	egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castlingWithRooks: true }); // Set original game rules of Classical upon resetting
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }

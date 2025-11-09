@@ -44,7 +44,7 @@ const element_royalcapture = document.getElementById("rules-royalcapture")! as H
 const element_allroyalscaptured = document.getElementById("rules-allroyalscaptured")! as HTMLInputElement;
 const element_allpiecescaptured = document.getElementById("rules-allpiecescaptured")! as HTMLInputElement;
 const element_pawnDoublePush = document.getElementById('rules-doublepush')! as HTMLInputElement;
-const element_castlingWithRooks = document.getElementById('rules-castling')! as HTMLInputElement;
+const element_castling = document.getElementById('rules-castling')! as HTMLInputElement;
 
 const elements_selectionList: HTMLInputElement[] = [
 	element_white,
@@ -61,7 +61,7 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_allroyalscaptured,
 	element_allpiecescaptured,
 	element_pawnDoublePush,
-	element_castlingWithRooks
+	element_castling
 ];
 
 
@@ -284,7 +284,7 @@ function readGameRules(): void {
 
 	// castling with rooks
 	let castlingWithRooks : boolean | undefined = undefined;
-	if (!element_castlingWithRooks.indeterminate) castlingWithRooks = element_castlingWithRooks.checked;
+	if (!element_castling.indeterminate) castlingWithRooks = element_castling.checked;
 
 	const gameRules: GameRulesGUIinfo = {
 		playerToMove,
@@ -375,11 +375,11 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	}
 
 	if (gamerulesGUIinfo.castlingWithRooks === undefined) {
-		element_castlingWithRooks.indeterminate = true;
-		element_castlingWithRooks.checked = false;
+		element_castling.indeterminate = true;
+		element_castling.checked = false;
 	} else {
-		element_castlingWithRooks.indeterminate = false;
-		element_castlingWithRooks.checked = gamerulesGUIinfo.castlingWithRooks;
+		element_castling.indeterminate = false;
+		element_castling.checked = gamerulesGUIinfo.castlingWithRooks;
 	}
 
 	// Since we manually set all inputs in this function, they are all valid

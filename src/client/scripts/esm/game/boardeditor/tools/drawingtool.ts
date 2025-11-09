@@ -151,7 +151,7 @@ function update(currentTool: Tool): void {
 	thisEdit.state.global.push(...edit.state.global);
 }
 
-/** Queues a specialrights state addition/deletion on the specified */
+/** Queues a specialrights state addition/deletion on the specified piece. */
 function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
@@ -163,7 +163,7 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 
-	if (pieceHovered !== undefined) egamerules.updateGamerulesUponQueueToggleSpecialRight(gamefile, pieceHovered, future);
+	egamerules.updateGamerulesUponQueueToggleSpecialRight(pieceHovered.type, future);
 }
 
 

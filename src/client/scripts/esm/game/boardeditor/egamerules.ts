@@ -10,7 +10,6 @@
 import type { Coords } from "../../../../../shared/chess/util/coordutil";
 import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
 import type { RawType, PlayerGroup } from "../../../../../shared/chess/util/typeutil";
-import type { FullGame } from "../../../../../shared/chess/logic/gamefile";
 import type { Edit } from "./boardeditor";
 import type { Piece } from "../../../../../shared/chess/util/boardutil";
 
@@ -49,6 +48,17 @@ interface GameRulesGUIinfo {
 }
 
 
+// Constants -------------------------------------------------------------
+
+
+// Game rule relevant piece types
+
+/** All piece types affected by the pawnDoublePush rule */
+const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN];
+/** All piece types affected by the castlingWithRooks rule. These pieces are the only pieces allowed to castle under the castlingWithRooks rule. */
+const castlingWithRooksTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
+
+
 // State -------------------------------------------------------------
 
 
@@ -57,13 +67,6 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
 	winConditions: [icnconverter.default_win_condition]
 };
-
-
-// Game rule relevant piece types ------------------------------------------------
-
-
-const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN]; // These pieces are affected by the pawnDoublePush rule
-const castlingWithRooksTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR]; // These pieces are the only pieces allowed to castle under the castlingWithRooks rule
 
 
 // Getting & Setting -------------------------------------------------------------
@@ -212,8 +215,9 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
  * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castlingWithRooks entries of the gamerules
  * since we do not keep track of the checkbox state between edits.
  * This also gets called when resetting the position.
+ * @param value - The value to set pawnDoublePush and castlingWithRooks to, or undefined to set them to indeterminate.
  */
-function setPositionDependentGameRules(options: {pawnDoublePush?: boolean | undefined, castlingWithRooks?: boolean | undefined} = {}): void {
+function setPositionDependentGameRules(options: { pawnDoublePush?: boolean | undefined, castlingWithRooks?: boolean | undefined } = {}): void {
 	gamerulesGUIinfo.pawnDoublePush = options.pawnDoublePush;
 	gamerulesGUIinfo.castlingWithRooks = options.castlingWithRooks;
 
@@ -235,10 +239,12 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 /**
  * When a special rights change gets queued, this function gets called
  * to potentially set gamerulesGUIinfo.pawnDoublePush and gamerulesGUIinfo.castlingWithRooks to indeterminate
- * */
-function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, piece: Piece, future: boolean): void {
+ * @param type - The piece type whose special right is being changed
+ * @param future - The future value of the special right being changed
+ */
+function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolean): void {
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
-		const rawtype = typeutil.getRawType(piece.type);
+		const rawtype = typeutil.getRawType(type);
 		if (
 			pawnDoublePushTypes.includes(rawtype) &&
 			gamerulesGUIinfo.pawnDoublePush !== future
@@ -246,7 +252,7 @@ function updateGamerulesUponQueueToggleSpecialRight(gamefile: FullGame, piece: P
 	}
 	
 	if (gamerulesGUIinfo.castlingWithRooks !== undefined) {
-		const rawtype = typeutil.getRawType(piece.type);
+		const rawtype = typeutil.getRawType(type);
 		if (castlingWithRooksTypes.includes(rawtype)) {
 			if (gamerulesGUIinfo.castlingWithRooks !== future) gamerulesGUIinfo.castlingWithRooks = undefined;
 		}
