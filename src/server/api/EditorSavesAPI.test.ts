@@ -15,8 +15,6 @@ import type { Express, Request, Response, NextFunction } from 'express';
 import EditorSavesAPI from './EditorSavesAPI.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 
-const { MAX_NAME_LENGTH, MAX_ICN_LENGTH, getSavedPositions, savePosition, getPosition, deletePosition, renamePosition } = EditorSavesAPI;
-
 // Mock the database manager
 vi.mock('../database/editorSavesManager.js');
 vi.mock('../middleware/logEvents.js', () => ({
@@ -45,11 +43,11 @@ describe('EditorSavesAPI', () => {
 		});
 
 		// Register the routes
-		app.get('/api/editor-saves', getSavedPositions as any);
-		app.post('/api/editor-saves', savePosition as any);
-		app.get('/api/editor-saves/:position_id', getPosition as any);
-		app.delete('/api/editor-saves/:position_id', deletePosition as any);
-		app.patch('/api/editor-saves/:position_id', renamePosition as any);
+		app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions as any);
+		app.post('/api/editor-saves', EditorSavesAPI.savePosition as any);
+		app.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition as any);
+		app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition as any);
+		app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition as any);
 
 		// Error handler middleware
 		app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -89,7 +87,7 @@ describe('EditorSavesAPI', () => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.get('/api/editor-saves', getSavedPositions as any);
+			unauthApp.get('/api/editor-saves', EditorSavesAPI.getSavedPositions as any);
 
 			const response = await request(unauthApp).get('/api/editor-saves');
 
@@ -150,14 +148,14 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name exceeds max length', async() => {
-			const longName = 'a'.repeat(MAX_NAME_LENGTH + 1);
+			const longName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH + 1);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: longName, icn: 'test-icn-data' });
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toContain(`${MAX_NAME_LENGTH} characters or less`);
+			expect(response.body.error).toContain(`${EditorSavesAPI.MAX_NAME_LENGTH} characters or less`);
 		});
 
 		it('should return 400 if icn is missing', async() => {
@@ -179,19 +177,19 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if icn exceeds max length', async() => {
-			const longIcn = 'a'.repeat(MAX_ICN_LENGTH + 1);
+			const longIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH + 1);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: longIcn });
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toContain(`${MAX_ICN_LENGTH} characters or less`);
+			expect(response.body.error).toContain(`${EditorSavesAPI.MAX_ICN_LENGTH} characters or less`);
 		});
 
 		it('should return 403 if quota is exceeded', async() => {
 			vi.mocked(editorSavesManager.addSavedPosition).mockImplementation(() => {
-				throw new Error('QUOTA_EXCEEDED');
+				throw new Error(editorSavesManager.QUOTA_EXCEEDED_ERROR);
 			});
 
 			const response = await request(app)
@@ -210,7 +208,7 @@ describe('EditorSavesAPI', () => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.post('/api/editor-saves', savePosition as any);
+			unauthApp.post('/api/editor-saves', EditorSavesAPI.savePosition as any);
 
 			const response = await request(unauthApp)
 				.post('/api/editor-saves')
@@ -271,7 +269,7 @@ describe('EditorSavesAPI', () => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.get('/api/editor-saves/:position_id', getPosition as any);
+			unauthApp.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition as any);
 
 			const response = await request(unauthApp).get('/api/editor-saves/123');
 
@@ -318,7 +316,7 @@ describe('EditorSavesAPI', () => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.delete('/api/editor-saves/:position_id', deletePosition as any);
+			unauthApp.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition as any);
 
 			const response = await request(unauthApp).delete('/api/editor-saves/123');
 
@@ -374,14 +372,14 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name exceeds max length', async() => {
-			const longName = 'a'.repeat(MAX_NAME_LENGTH + 1);
+			const longName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH + 1);
 
 			const response = await request(app)
 				.patch('/api/editor-saves/123')
 				.send({ name: longName });
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toContain(`${MAX_NAME_LENGTH} characters or less`);
+			expect(response.body.error).toContain(`${EditorSavesAPI.MAX_NAME_LENGTH} characters or less`);
 		});
 
 		it('should return 400 if position_id is invalid', async() => {
@@ -400,7 +398,7 @@ describe('EditorSavesAPI', () => {
 				(req as any).memberInfo = { signedIn: false };
 				next();
 			});
-			unauthApp.patch('/api/editor-saves/:position_id', renamePosition as any);
+			unauthApp.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition as any);
 
 			const response = await request(unauthApp)
 				.patch('/api/editor-saves/123')
@@ -418,7 +416,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123 
 			} as any);
 
-			const maxLengthIcn = 'a'.repeat(MAX_ICN_LENGTH);
+			const maxLengthIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
@@ -428,7 +426,7 @@ describe('EditorSavesAPI', () => {
 			expect(editorSavesManager.addSavedPosition).toHaveBeenCalledWith(
 				1,
 				'Test',
-				MAX_ICN_LENGTH,
+				EditorSavesAPI.MAX_ICN_LENGTH,
 				maxLengthIcn
 			);
 		});
@@ -439,7 +437,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123 
 			} as any);
 
-			const maxLengthName = 'a'.repeat(MAX_NAME_LENGTH);
+			const maxLengthName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH);
 
 			const response = await request(app)
 				.post('/api/editor-saves')

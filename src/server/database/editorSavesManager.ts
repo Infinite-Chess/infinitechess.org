@@ -33,6 +33,9 @@ export type EditorSavesIcnRecord = {
 /** Maximum number of saved positions allowed per user */
 export const MAX_SAVED_POSITIONS = 50;
 
+/** Error message constant for when the user's save quota is exceeded. */
+export const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
+
 
 // Methods -----------------------------------------------------------------------------
 
@@ -65,7 +68,7 @@ function addSavedPosition(user_id: number, name: string, size: number, icn: stri
 		// 2. Check quota
 		if (currentCount >= MAX_SAVED_POSITIONS) {
 			// Throw an error to roll back the transaction
-			throw new Error('QUOTA_EXCEEDED');
+			throw new Error(QUOTA_EXCEEDED_ERROR);
 		}
 
 		// 3. Insert the new record
@@ -117,6 +120,9 @@ function renameSavedPosition(position_id: number, user_id: number, name: string)
 
 
 export default {
+	// Constants
+	QUOTA_EXCEEDED_ERROR,
+	// Methods
 	getAllSavedPositionsForUser,
 	addSavedPosition,
 	getSavedPositionICN,

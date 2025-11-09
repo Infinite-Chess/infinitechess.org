@@ -111,7 +111,7 @@ function savePosition(req: IdentifiedRequest, res: Response): void {
 
 	} catch (error: unknown) {
 		// Handle the specific quota error
-		if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
+		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
 			res.status(403).json({ error: `Maximum saved positions exceeded` });
 			return;
 		}
