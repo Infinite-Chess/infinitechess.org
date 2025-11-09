@@ -14,7 +14,6 @@ import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import specialrighthighlights from './specialrighthighlights.js';
 import selection from '../../chess/selection.js';
 import frametracker from '../frametracker.js';
 import preferences from '../../../components/header/preferences.js';
@@ -115,7 +114,6 @@ function render(): void {
 function regenerateAll(): void {
 	regenSelectedPieceLegalMovesHighlightsModel();
 	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
-	specialrighthighlights.regenModel();
 }
 
 // Regenerates the model for all highlighted legal moves.
