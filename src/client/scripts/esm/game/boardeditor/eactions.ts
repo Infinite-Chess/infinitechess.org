@@ -39,6 +39,18 @@ import guinavigation from "../gui/guinavigation";
 import annotations from "../rendering/highlights/annotations/annotations";
 import egamerules from "./egamerules";
 import selectiontool from "./tools/selection/selectiontool";
+import typeutil from "../../../../../shared/chess/util/typeutil";
+
+
+// Constants ----------------------------------------------------------------------
+
+
+/**
+ * If a position with less pieces than this is pasted, the position dependent
+ * game rules (pawnDoublePush, castling) are accurately updated,
+ * else they are set to undetermined.
+ */
+const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 
 
 // Actions ----------------------------------------------------------------------
@@ -62,8 +74,6 @@ function reset(): void {
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
-
-	egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Set original game rules of Classical upon resetting
 	
 	statustext.showStatus(translations['copypaste'].reset_position);
 }
@@ -266,16 +276,41 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
 
+	const keepTrackOfGlobalSpecialRights = position.size < PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS;
+	let pawnDoublePush: boolean | undefined = undefined;
+	let castling: boolean | undefined = undefined;
+
 	// Add all new pieces as dictated by the pasted position
+	let all_pawns_have_double_push = true;
+	let at_least_one_pawn_has_double_push = false;
+	let all_pieces_obey_normal_castling = true;
+	let at_least_one_piece_obeys_normal_castling = false;
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		const hasSpecialRights = specialRights.has(coordKey);
 		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
-	};
 
-	// Set gamerules object according to pasted game
-	// Currently, we do not compute and pass { pawnDoublePush, castling } here as it might be unnecessarily expensive to compute this when pasting a game
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { edit });
+		if (!keepTrackOfGlobalSpecialRights) continue; // One if statement cost is very tiny per iteration
+
+		const rawtype = typeutil.getRawType(pieceType);
+		if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
+			if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
+			else all_pawns_have_double_push = false;
+		} else if (egamerules.castlingTypes.includes(rawtype)) {
+			if (hasSpecialRights) at_least_one_piece_obeys_normal_castling = true;
+			else all_pieces_obey_normal_castling = false;
+		} else if (hasSpecialRights) {
+			at_least_one_piece_obeys_normal_castling = true;
+			all_pieces_obey_normal_castling = false;
+		}
+	}
+
+	if (keepTrackOfGlobalSpecialRights) {
+		pawnDoublePush = all_pawns_have_double_push && at_least_one_pawn_has_double_push ? true : at_least_one_pawn_has_double_push ? undefined : false;
+		castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : at_least_one_piece_obeys_normal_castling ? undefined : false;
+	}
+
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { pawnDoublePush, castling, edit }); // Set gamerules object according to pasted game
 
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
