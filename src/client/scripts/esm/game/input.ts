@@ -654,6 +654,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	if (keyboard) {
 
 		addListener(element, 'keydown', ((e: KeyboardEvent): void => {
+			// If spacebar pressed when checkbox focused => Prevent default.
+			// Prevents pushing spacebar in the board editor game rules UI after
+			// toggling a checkbox from toggling it again when you intend to zoom.
+			if (e.code === 'Space' && document.activeElement instanceof HTMLInputElement && document.activeElement.type === 'checkbox') e.preventDefault();
 			// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 			// console.log("Key down: ", e.code);
