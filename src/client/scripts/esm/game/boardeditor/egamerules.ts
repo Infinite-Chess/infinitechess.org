@@ -123,7 +123,6 @@ function setGamerulesGUIinfo(
 	gameRules: GameRules,
 	state_global: Partial<GlobalGameState>,
 	additional: {
-		edit?: Edit,
 		pawnDoublePush?: boolean,
 		castling?: boolean
 	} = {}): void {
@@ -180,19 +179,8 @@ function setGamerulesGUIinfo(
 	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
 	// Update pawn double push specialrights of position, if necessary
-	if (
-		additional.edit !== undefined &&
-		gamerulesGUIinfo.pawnDoublePush !== additional.pawnDoublePush &&
-		additional.pawnDoublePush !== undefined
-	) queueToggleGlobalPawnDoublePush(additional.pawnDoublePush, additional.edit);
 	gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
-
 	// Update castling with rooks specialrights of position, if necessary
-	if (
-		additional.edit !== undefined &&
-		gamerulesGUIinfo.castling !== additional.castling &&
-		additional.castling !== undefined
-	) queueToggleGlobalCastlingWithRooks(additional.castling, additional.edit);
 	gamerulesGUIinfo.castling = additional.castling;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
