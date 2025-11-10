@@ -36,6 +36,8 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
+import gameloader from '../chess/gameloader.js';
+import statustext from '../gui/statustext.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -345,6 +347,7 @@ function Cut(): void {
 /** Custom Board Editor handler for Paste event. */
 function Paste(): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
+	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 
 	if (currentTool !== "selection-tool") {
 		// Paste game notation
