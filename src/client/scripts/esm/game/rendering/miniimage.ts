@@ -38,7 +38,7 @@ import { RenderableInstanced, AttributeInfoInstanced, createRenderable_Instanced
  * The maximum numbers of pieces in a game before we disable mini image rendering
  * for all pieces that aren't underneath a square annotation, ray intersection, being animated, or selected, for performance.
  */
-const pieceCountToDisableMiniImages = 50_000;
+const pieceCountToDisableMiniImages = 40_000;
 
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
