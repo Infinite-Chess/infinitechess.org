@@ -310,7 +310,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : at_least_one_piece_obeys_normal_castling ? undefined : false;
 	}
 
-	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, { pawnDoublePush, castling }); // Set gamerules object according to pasted game
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
 
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);

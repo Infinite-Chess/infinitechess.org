@@ -13,6 +13,8 @@ import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document } from '../chess/game.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
@@ -37,7 +39,6 @@ import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
 import gameloader from '../chess/gameloader.js';
-import statustext from '../gui/statustext.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -109,7 +110,7 @@ function initBoardEditor(): void {
 	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
 	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
 	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global, { pawnDoublePush: true, castling: true });
+	egamerules.setGamerulesGUIinfo(gamefile.basegame.gameRules, gamefile.boardsim.state.global, true, true);
 
 	addEventListeners();
 }

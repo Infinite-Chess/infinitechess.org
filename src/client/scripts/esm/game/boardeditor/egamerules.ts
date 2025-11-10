@@ -122,10 +122,9 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 function setGamerulesGUIinfo(
 	gameRules: GameRules,
 	state_global: Partial<GlobalGameState>,
-	additional: {
-		pawnDoublePush?: boolean,
-		castling?: boolean
-	} = {}): void {
+	pawnDoublePush: boolean | undefined,
+	castling: boolean | undefined,
+): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
 
@@ -179,9 +178,9 @@ function setGamerulesGUIinfo(
 	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
 
 	// Update pawn double push specialrights of position, if necessary
-	gamerulesGUIinfo.pawnDoublePush = additional.pawnDoublePush;
+	gamerulesGUIinfo.pawnDoublePush = pawnDoublePush;
 	// Update castling with rooks specialrights of position, if necessary
-	gamerulesGUIinfo.castling = additional.castling;
+	gamerulesGUIinfo.castling = castling;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
