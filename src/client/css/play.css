@@ -1386,15 +1386,15 @@ svg.collapse {
 #close-rules {
     background: none;
     border: none;
-    color: #444;
+    color: #616161;
     font-size: 20px;
     cursor: pointer;
     font-weight: bold;
-    transition: color 0.2s;
 }
 
 #close-rules:hover {
-    color: #e53935;
+    color: #000000;
+	transform: scale(1.1);
 }
 
 .divider {
