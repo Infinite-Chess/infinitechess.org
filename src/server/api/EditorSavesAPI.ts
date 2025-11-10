@@ -26,18 +26,18 @@ export const MAX_ICN_LENGTH = 1_000_000;
 
 
 /** Schema for validating the body of POST /api/editor-saves (save position) */
-const SavePositionBodySchema = z.object({
+const SavePositionBodySchema = z.strictObject({
 	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 	icn: z.string().min(1, 'ICN is required').max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
 });
 
 /** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
-const RenamePositionBodySchema = z.object({
+const RenamePositionBodySchema = z.strictObject({
 	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 });
 
 /** Schema for validating position_id in URL params */
-const PositionIdParamSchema = z.object({
+const PositionIdParamSchema = z.strictObject({
 	position_id: z.string().refine((val: string) => {
 		const num = Number(val);
 		return !isNaN(num) && num > 0;
