@@ -61,7 +61,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @returns The RunResult containing lastInsertRowid.
  */
 function addSavedPosition(user_id: number, name: string, size: number, icn: string): RunResult {
-	const transaction = db.db.transaction(() => {
+	const transaction = db.transaction(() => {
 		// 1. Get count within the transaction
 		const countResult = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`, [user_id]);
 		const currentCount = countResult?.count ?? 0;

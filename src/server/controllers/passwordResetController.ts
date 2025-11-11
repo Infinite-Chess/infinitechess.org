@@ -136,7 +136,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 5. Update the User's Password in the database.
 		// At the same time, invalidate the used token.
-		const resetTransaction = db.db.transaction(() => {
+		const resetTransaction = db.transaction(() => {
 			// Step 1: Update the User's Password
 			const updateResult = db.run(
 				'UPDATE members SET hashed_password = ? WHERE user_id = ?',

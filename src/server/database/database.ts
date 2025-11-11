@@ -97,13 +97,39 @@ function columnExists(tableName: string, columnName: string): boolean {
 	}
 }
 
+/**
+ * Creates a transaction function that wraps the given callback in a database transaction.
+ * The callback will be executed atomically - either all operations succeed or all are rolled back.
+ * 
+ * @template Args - The argument types for the transaction function
+ * @template Return - The return type of the transaction function
+ * @param callback - The function to execute within the transaction context
+ * @returns A transaction function that executes the callback atomically
+ * 
+ * @example
+ * ```typescript
+ * const transferFunds = transaction((fromId: number, toId: number, amount: number) => {
+ *   run('UPDATE accounts SET balance = balance - ? WHERE id = ?', [amount, fromId]);
+ *   run('UPDATE accounts SET balance = balance + ? WHERE id = ?', [amount, toId]);
+ * });
+ * 
+ * // Execute the transaction
+ * transferFunds(1, 2, 100);
+ * ```
+ */
+function transaction<Args extends unknown[], Return>(
+	callback: (..._args: Args) => Return
+): (..._args: Args) => Return {
+	return db.transaction(callback);
+}
+
 
 
 export default {
-	db,
 	run,
 	get,
 	all,
 	close,
 	columnExists,
+	transaction,
 };
