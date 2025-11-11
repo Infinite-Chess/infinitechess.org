@@ -46,7 +46,7 @@ const validDeleteReasons = [
  * @returns {{success: true, user_id: number} | {success: false, reason: string}}
  */
 function addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified) {
-	const createAccountTransaction = db.db.transaction((userData) => {
+	const createAccountTransaction = db.transaction((userData) => {
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
 
@@ -111,7 +111,7 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
-	const deleteTransaction = db.db.transaction((id, reason) => {
+	const deleteTransaction = db.transaction((id, reason) => {
 		// Step 1: Delete the user from the main 'members' table
 		const deleteQuery = 'DELETE FROM members WHERE user_id = ?';
 		const deleteResult = db.run(deleteQuery, [id]);
