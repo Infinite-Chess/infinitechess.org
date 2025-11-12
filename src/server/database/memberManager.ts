@@ -49,6 +49,9 @@ const validDeleteReasons = [
 	'rating abuse', // Unfairly boosted their own elo with a throwaway account
 ];
 
+/** SQLite constraint error code constant */
+const SQLITE_CONSTRAINT_ERROR = 'SQLITE_CONSTRAINT';
+
 
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
 
@@ -63,9 +66,11 @@ const validDeleteReasons = [
  * @param is_verified The verification status.
  * @param verification_code The unique code for verification, if they are not yet verified.
  * @param is_verification_notified The verified notification status.
- * @returns A result object: { success: true, user_id (number) } on success,
+ * @returns The user_id of the newly created user.
+ * 
+ * @throws If the insertion fails (e.g., due to constraint violation or other unexpected error).
  */
-function addUser(username: string, email: string, hashedPassword: string, is_verified: 0 | 1, verification_code: string | null, is_verification_notified: 0 | 1): { success: true, user_id: number} | { success: false, reason: string } {
+function addUser(username: string, email: string, hashedPassword: string, is_verified: 0 | 1, verification_code: string | null, is_verification_notified: 0 | 1): number {
 	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string; is_verified: 0 | 1; verification_code: string | null; is_verification_notified: 0 | 1 }], number>((userData) => {
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
@@ -102,14 +107,14 @@ function addUser(username: string, email: string, hashedPassword: string, is_ver
 	});
 
 	try {
-		const newUserId = createAccountTransaction({ username, email, hashedPassword, is_verified, verification_code, is_verification_notified });
-		return { success: true, user_id: newUserId };
+		return createAccountTransaction({ username, email, hashedPassword, is_verified, verification_code, is_verification_notified });
 	} catch (error: unknown) {
-		const errMessage = error instanceof SqliteError ? error.message : String(error);
-		logEventsAndPrint(`Account creation transaction for "${username}" failed and was rolled back: ${errMessage}`, 'errLog.txt');
-		let reason = 'An unexpected error occurred during account creation.';
-		if (error instanceof SqliteError && error.code.includes('SQLITE_CONSTRAINT')) reason = 'This username or email has just been taken.';
-		return { success: false, reason };
+		const detailedError = error instanceof SqliteError ? error.message : String(error);
+		logEventsAndPrint(`Account creation transaction for "${username}" failed and was rolled back: ${detailedError}`, 'errLog.txt');
+		
+		let genericError: string = 'A database error occurred.'; // Generic error message to avoid leaking details
+		if (error instanceof SqliteError && error.code === SQLITE_CONSTRAINT_ERROR) genericError = SQLITE_CONSTRAINT_ERROR;
+		throw Error(genericError); // Rethrow with the generic error message, or specific constraint error
 	}
 }
 // setTimeout(() => { console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
@@ -603,6 +608,8 @@ function isEmailTaken(email: string): boolean {
 
 
 export {
+	SQLITE_CONSTRAINT_ERROR,
+
 	addUser,
 	deleteUser,
 	getMemberDataByCriteria,
@@ -613,7 +620,6 @@ export {
 	updateLastReadNewsDate,
 	doesMemberOfIDExist,
 	doesMemberOfUsernameExist,
-	isUserIdTaken,
 	isUsernameTaken,
 	isEmailTaken,
 	genUniqueUserID
