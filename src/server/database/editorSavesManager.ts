@@ -9,6 +9,7 @@
 import type { RunResult } from 'better-sqlite3';
 
 import db from './database.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -45,10 +46,17 @@ const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
  * Returns only position_id, name, and size columns.
  * @param user_id - The user ID
  * @returns An array of saved positions.
+ * @throws {Error} A database error occurred while managing editor saves.
  */
 function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
-	const query = `SELECT position_id, name, size FROM editor_saves WHERE user_id = ?`;
-	return db.all<EditorSavesListRecord>(query, [user_id]);
+	try {
+		const query = `SELECT position_id, name, size FROM editor_saves WHERE user_id = ?`;
+		return db.all<EditorSavesListRecord>(query, [user_id]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error retrieving saved positions for user_id ${user_id}: ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred while managing editor saves.');
+	}
 }
 
 /**
@@ -59,28 +67,40 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @param size - The size (icn length) of the position
  * @param icn - The ICN notation of the position
  * @returns The RunResult containing lastInsertRowid.
+ * @throws {Error} QUOTA_EXCEEDED if the user has reached the maximum saved positions, or a generic database error.
  */
 function addSavedPosition(user_id: number, name: string, size: number, icn: string): RunResult {
-	const transaction = db.transaction(() => {
-		// 1. Get count within the transaction
-		const countResult = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`, [user_id]);
-		const currentCount = countResult?.count ?? 0;
+	try {
+		const transaction = db.transaction(() => {
+			// 1. Get count within the transaction
+			const countResult = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`, [user_id]);
+			const currentCount = countResult?.count ?? 0;
 
-		// 2. Check quota
-		if (currentCount >= MAX_SAVED_POSITIONS) {
-			// Throw an error to roll back the transaction
-			throw new Error(QUOTA_EXCEEDED_ERROR);
-		}
+			// 2. Check quota
+			if (currentCount >= MAX_SAVED_POSITIONS) {
+				// Throw an error to roll back the transaction
+				throw new Error(QUOTA_EXCEEDED_ERROR);
+			}
 
-		// 3. Insert the new record
-		const insertQuery = `
+			// 3. Insert the new record
+			const insertQuery = `
             INSERT INTO editor_saves (user_id, name, size, icn)
             VALUES (?, ?, ?, ?)
         `;
-		return db.run(insertQuery, [user_id, name, size, icn]);
-	});
+			return db.run(insertQuery, [user_id, name, size, icn]);
+		});
 
-	return transaction();
+		return transaction();
+	} catch (error: unknown) {
+		// Re-throw quota exceeded errors as-is (expected business logic failure)
+		if (error instanceof Error && error.message === QUOTA_EXCEEDED_ERROR) {
+			throw error;
+		}
+		// Log and throw generic error for all other database errors
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred while managing editor saves.');
+	}
 }
 
 /**
@@ -88,10 +108,17 @@ function addSavedPosition(user_id: number, name: string, size: number, icn: stri
  * @param position_id - The position ID
  * @param user_id - The user ID who owns the position
  * @returns The ICN record if found and owned by the user, otherwise undefined.
+ * @throws {Error} A database error occurred while managing editor saves.
  */
 function getSavedPositionICN(position_id: number, user_id: number): EditorSavesIcnRecord | undefined {
-	const query = `SELECT icn FROM editor_saves WHERE position_id = ? AND user_id = ?`;
-	return db.get<EditorSavesIcnRecord>(query, [position_id, user_id]);
+	try {
+		const query = `SELECT icn FROM editor_saves WHERE position_id = ? AND user_id = ?`;
+		return db.get<EditorSavesIcnRecord>(query, [position_id, user_id]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error retrieving ICN for position_id ${position_id} and user_id ${user_id}: ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred while managing editor saves.');
+	}
 }
 
 /**
@@ -100,10 +127,17 @@ function getSavedPositionICN(position_id: number, user_id: number): EditorSavesI
  * @param position_id - The position ID
  * @param user_id - The user ID who owns the position
  * @returns The RunResult containing the number of changes.
+ * @throws {Error} A database error occurred while managing editor saves.
  */
 function deleteSavedPosition(position_id: number, user_id: number): RunResult {
-	const query = `DELETE FROM editor_saves WHERE position_id = ? AND user_id = ?`;
-	return db.run(query, [position_id, user_id]);
+	try {
+		const query = `DELETE FROM editor_saves WHERE position_id = ? AND user_id = ?`;
+		return db.run(query, [position_id, user_id]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error deleting position_id ${position_id} for user_id ${user_id}: ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred while managing editor saves.');
+	}
 }
 
 /**
@@ -113,10 +147,17 @@ function deleteSavedPosition(position_id: number, user_id: number): RunResult {
  * @param user_id - The user ID who owns the position
  * @param name - The new name for the saved position
  * @returns The RunResult containing the number of changes.
+ * @throws {Error} A database error occurred while managing editor saves.
  */
 function renameSavedPosition(position_id: number, user_id: number, name: string): RunResult {
-	const query = `UPDATE editor_saves SET name = ? WHERE position_id = ? AND user_id = ?`;
-	return db.run(query, [name, position_id, user_id]);
+	try {
+		const query = `UPDATE editor_saves SET name = ? WHERE position_id = ? AND user_id = ?`;
+		return db.run(query, [name, position_id, user_id]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error renaming position_id ${position_id} for user_id ${user_id} to "${name}": ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred while managing editor saves.');
+	}
 }
 
 
