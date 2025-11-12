@@ -270,11 +270,18 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
-	boardpos.setBoardPos(centerArea.coords);
-	boardpos.setBoardScale(centerArea.scale * 1.75);
-	guinavigation.recenter();
-	transition.eraseTelHist();
+	// const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
+	// boardpos.setBoardPos(centerArea.coords);
+	// boardpos.setBoardScale(centerArea.scale * 1.75);
+	// guinavigation.recenter();
+	// transition.eraseTelHist();
+
+	boardpos.setBoardScale(1 * 10 ** -308); // FOR VIDEO
+	// boardpos.setBoardScale(1 * 10 ** -155); // FOR VIDEO
+	// boardpos.setBoardScale(1 * 1000 ** -102); // FOR VIDEO
+	// setTimeout(() => {
+	// 	selection.selectPiece(loadedGamefile!, boardutil.getPieceFromCoords(loadedGamefile!.boardsim.pieces, [4,1])!, false);
+	// }, 1000);
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
