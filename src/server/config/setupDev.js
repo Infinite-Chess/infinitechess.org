@@ -1,6 +1,6 @@
 import { DEV_BUILD } from './config.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
-import { doesMemberOfUsernameExist, updateMemberColumns } from '../database/memberManager.js';
+import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { giveRole } from '../controllers/roles.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
@@ -16,7 +16,7 @@ function initDevEnvironment() {
 }
 
 async function createDevelopmentAccounts() {
-	if (!doesMemberOfUsernameExist("owner")) {
+	if (!isUsernameTaken("owner")) {
 		const user_id = await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true });
 		giveRole(user_id, "owner");
 		giveRole(user_id, "admin");
@@ -33,15 +33,15 @@ async function createDevelopmentAccounts() {
 		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().join(',');
 		updateMemberColumns(user_id, { checkmates_beaten });
 	}
-	if (!doesMemberOfUsernameExist("admin")) {
+	if (!isUsernameTaken("admin")) {
 		const user_id = await generateAccount({ username: "Admin", email: "email5", password: "1", autoVerify: true });
 		giveRole(user_id, "admin");
 	}
-	if (!doesMemberOfUsernameExist("patron")) {
+	if (!isUsernameTaken("patron")) {
 		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
 		giveRole(user_id, "patron");
 	}
-	if (!doesMemberOfUsernameExist("member")) {
+	if (!isUsernameTaken("member")) {
 		await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
 

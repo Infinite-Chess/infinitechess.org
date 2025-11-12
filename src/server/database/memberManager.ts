@@ -474,16 +474,7 @@ function isUserIdTaken(userId: number): boolean {
 
 
 /**
- * Checks if a member of a given username exists in the members table.
- * @param username - The username check.
- * @returns Returns true if the member exists, false otherwise.
- */
-function doesMemberOfUsernameExist(username: string): boolean {
-	return isUsernameTaken(username);
-}
-
-/**
- * Checks if a given username exists in the members table (case-insensitive,
+ * Checks if a member with the given username exists in the members table (case-insensitive,
  * a username is taken even if it has the same spelling but different capitalization).
  * @param username - The username to check.
  * @returns Returns true if the username exists, false otherwise.
@@ -546,7 +537,6 @@ export {
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
 	doesMemberOfIDExist,
-	doesMemberOfUsernameExist,
 	isUsernameTaken,
 	isEmailTaken
 };
