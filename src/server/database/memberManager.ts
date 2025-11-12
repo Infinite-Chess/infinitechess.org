@@ -163,15 +163,6 @@ function deleteUser(user_id: number, reason_deleted: string): void {
 }
 // console.log(deleteUser(3887110, 'security'));
 
-/** Generates a unique user_id no other member has. */
-function genUniqueUserID(): number {
-	let id: number;
-	do {
-		id = Math.floor(Math.random() * user_id_upper_cap);
-	} while (isUserIdTaken(id, false));
-	return id;
-}
-
 
 
 // General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
@@ -412,36 +403,31 @@ function updateLastSeen(userId: number): void {
 // Utility -----------------------------------------------------------------------------------
 
 
-
 /**
- * Checks if a member of a given id exists in the members table.
- * @param userId - The user ID to check.
- * @returns Returns true if the member exists, false otherwise.
+ * Generates a unique user_id that no other member has ever used.
+ * @throws If a database error occurs during uniqueness checks.
  */
-function doesMemberOfIDExist(userId: number): boolean {
-	return isUserIdTaken(userId, true);
+function genUniqueUserID(): number {
+	let id: number;
+	do {
+		id = Math.floor(Math.random() * user_id_upper_cap);
+	} while (isUserIdTaken(id));
+	return id;
 }
 
 /**
- * Checks if a given user_id exists in the members table OR deleted_members table.
- * @param userId - The user ID to check.
- * @param ignoreDeleted - If true, skips checking the deleted_members table.
- * @returns Returns true if the user ID exists, false otherwise.
+ * Checks if a member of a given id exists in the members table.
+ * IGNORES whether the deleted_members table may contain the user_id.
+ * @param user_id - The user ID to check.
+ * @returns Returns true if the member exists, false otherwise.
+ * 
+ * @throws If a database error occurs during the check.
  */
-function isUserIdTaken(userId: number, ignoreDeleted: boolean): boolean {
+function doesMemberOfIDExist(user_id: number): boolean {
 	try {
-		const query = ignoreDeleted ? 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found'
-			: `
-				SELECT
-					EXISTS(SELECT 1 FROM members WHERE user_id = ?)
-					OR
-					EXISTS(SELECT 1 FROM deleted_members WHERE user_id = ?)
-				AS found
-			`;
-		const params = ignoreDeleted ? [userId] : [userId, userId];
-
+		const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found';
 		// Execute query to check if the user_id exists in the members table
-		const row = db.get<{ found: 0 | 1 }>(query, params);
+		const row = db.get<{ found: 0 | 1 }>(query, [user_id]);
 
 		// row.found will be 0 or 1
 		return Boolean(row?.found);
@@ -449,8 +435,39 @@ function isUserIdTaken(userId: number, ignoreDeleted: boolean): boolean {
 	} catch (error: unknown) {
 		// Log the error if the query fails
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error checking if user ID "${userId}" is taken: ${message}`, 'errLog.txt');
-		return false; // Return false if an error occurs
+		logEventsAndPrint(`Error checking if member of user_id (${user_id}) exists: ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred.'); // Rethrow generic error
+	}
+}
+
+/**
+ * Checks if a given user_id exists in the members table OR deleted_members table.
+ * @param userId - The user ID to check.
+ * @returns Returns true if the user_id has been used, false otherwise.
+ * 
+ * @throws If a database error occurs during the check.
+ */
+function isUserIdTaken(userId: number): boolean {
+	try {
+		const query = `
+			SELECT
+				EXISTS(SELECT 1 FROM members WHERE user_id = ?)
+				OR
+				EXISTS(SELECT 1 FROM deleted_members WHERE user_id = ?)
+			AS found
+		`;
+
+		// Execute query to check if the user_id exists in the members table
+		const row = db.get<{ found: 0 | 1 }>(query, [userId, userId]);
+
+		// row.found will be 0 or 1
+		return Boolean(row?.found);
+
+	} catch (error: unknown) {
+		// Log the error if the query fails
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error checking if user_id (${userId}) has been used: ${message}`, 'errLog.txt');
+		throw new Error('A database error occurred.'); // Rethrow generic error
 	}
 }
 // console.log("taken? " + isUserIdTaken(14443702));

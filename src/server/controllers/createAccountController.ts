@@ -131,6 +131,8 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
  * Generate an account only from the provided username, email, and password.
  * Regex tests are skipped.
  * @returns If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
+ * 
+ * @throws If account creation fails for any reason.
  */
 async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<number> {
 	// Use bcrypt to hash & salt password

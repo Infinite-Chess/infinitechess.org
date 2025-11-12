@@ -40,8 +40,15 @@ function isAccessTokenValid(token: string): {
 	const payload = decodeToken(token, false);
 	if (!payload) return { isValid: false, reason: "Token is expired or tampered." };
 
-	// Check if the user account still exists.
-	if (!doesMemberOfIDExist(payload.user_id)) return { isValid: false, reason: "User account does not exist." };
+	try {
+		// Check if the user account still exists.
+		if (!doesMemberOfIDExist(payload.user_id)) return { isValid: false, reason: "User account does not exist." };
+	} catch (error: unknown) {
+		// This block will catch any unexpected errors from database calls
+		const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+		// Reject the token as invalid in this case
+		return { isValid: false, reason: message };
+	}
 
 	updateLastSeen(payload.user_id);
 	return { isValid: true, payload };
