@@ -7,7 +7,7 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import { getMemberDataByCriteria, MemberRecord, updateLastReadNewsDate } from '../database/memberManager.js';
+import { getMemberDataByCriteria, MemberRecord, updateMemberColumns } from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
 /**
@@ -86,11 +86,10 @@ function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
 
 	const latestNewsDate = getLatestNewsDate();
 	
-	if (latestNewsDate) {
-		updateLastReadNewsDate(userId, latestNewsDate);
-	}
+	const success = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
 	
-	res.status(200).json({ success: true });
+	if (success) res.status(200).json({ success: true });
+	else res.status(500).json({ success: false, message: 'Failed to update last read news date.' });
 }
 
 export {

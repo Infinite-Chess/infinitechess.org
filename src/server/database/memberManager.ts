@@ -408,34 +408,6 @@ function updateLastSeen(userId: number): void {
 	}
 }
 
-/**
- * Updates the last_read_news_date column for a member based on their user ID.
- * @param userId - The user ID of the member.
- * @param newsDate - The date of the latest news post they read (format: 'YYYY-MM-DD').
- */
-function updateLastReadNewsDate(userId: number, newsDate: string): void {
-	// SQL query to update the last_read_news_date field
-	const query = `
-		UPDATE members
-		SET last_read_news_date = ?
-		WHERE user_id = ?
-	`;
-
-	try {
-		// Execute the query with the provided userId and newsDate
-		const result = db.run(query, [newsDate, userId]);
-
-		// Log if no changes were made
-		if (result.changes === 0) {
-			logEventsAndPrint(`No changes made when updating last_read_news_date for member of id "${userId}"!`, 'errLog.txt');
-		}
-	} catch (error: unknown) {
-		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error updating last_read_news_date for member of id "${userId}": ${message}`, 'errLog.txt');
-	}
-}
-
 
 // Utility -----------------------------------------------------------------------------------
 
@@ -556,7 +528,6 @@ export {
 	updateMemberColumns,
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
-	updateLastReadNewsDate,
 	doesMemberOfIDExist,
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
