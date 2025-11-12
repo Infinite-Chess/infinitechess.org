@@ -36,7 +36,7 @@ const getMemberData = async(req, res) => {
 		],
 		'username',
 		claimedUsername,
-		{ skipErrorLogging: true }
+		true
 	);
 
 	if (user_id === undefined) return res.status(404).json({ message: 'Member not found' });

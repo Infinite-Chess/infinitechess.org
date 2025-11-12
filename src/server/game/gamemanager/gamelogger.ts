@@ -43,7 +43,7 @@ async function logGame(game: Game): Promise<RatingData | undefined> {
 	try {
 		// Create the transaction by wrapping our orchestrator function.
 		// We no longer need to pass any parameters here.
-		const transaction = db.transaction((g: Game) => {
+		const transaction = db.transaction<[Game], RatingData | undefined>((g) => {
 			return logGame_orchestrator(g);
 		});
 

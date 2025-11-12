@@ -26,7 +26,7 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId, false);
 
 	const lastReadDate = memberData.last_read_news_date;
 
@@ -56,7 +56,7 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId, false);
 
 	const lastReadDate = memberData.last_read_news_date;
 

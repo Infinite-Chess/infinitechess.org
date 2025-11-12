@@ -43,14 +43,14 @@ export async function verifyAccount(req: IdentifiedRequest, res: Response): Prom
 		return;
 	}
 
-	const claimedUsername = req.params['member'];
-	const claimedCode = req.params['code'];
+	const claimedUsername = req.params['member']!;
+	const claimedCode = req.params['code']!;
 
 	const { user_id, username, is_verified, verification_code } = getMemberDataByCriteria(
 		['user_id', 'username', 'is_verified', 'verification_code'],
 		'username',
 		claimedUsername,
-		{ skipErrorLogging: true }
+		true
 	) as MemberVerificationData;
 	
 	if (user_id === undefined) { // User not found
@@ -109,7 +109,7 @@ export function manuallyVerifyUser(usernameCaseInsensitive: string): { success: 
 		['user_id', 'username', 'is_verified'],
 		'username',
 		usernameCaseInsensitive,
-		{ skipErrorLogging: true }
+		true
 	) as Partial<MemberVerificationData>;
 	
 	if (user_id === undefined || username === undefined) { // User not found

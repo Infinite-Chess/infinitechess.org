@@ -9,17 +9,38 @@ import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
+import { SqliteError } from 'better-sqlite3';
 
-/** @typedef {import('../controllers/sendMail.js').MemberRecord} MemberRecord */
+
+// Type Definitions ----------------------------------------------------------
 
 
-// Variables ----------------------------------------------------------
+/** Structure of a member record. */
+export interface MemberRecord {
+	user_id?: number;
+	username?: string;
+	email?: string;
+	hashed_password?: string;
+	roles?: string | null;
+	joined?: string;
+	last_seen?: string;
+	login_count?: number;
+	is_verified?: 0 | 1;
+	verification_code?: string | null;
+	is_verification_notified?: 0 | 1;
+	preferences?: string | null;
+	username_history?: string | null;
+	checkmates_beaten?: string;
+	last_read_news_date?: string | null;
+}
+
+
+// Constants ----------------------------------------------------------
 
 
 /**
  * A list of all valid reasons to delete an account.
  * These reasons are stored in the deleted_members table in the database.
- * @type {string[]}
  */
 const validDeleteReasons = [
 	'unverified', // They failed to verify after 3 days
@@ -29,7 +50,6 @@ const validDeleteReasons = [
 ];
 
 
-
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
 
 
@@ -37,21 +57,21 @@ const validDeleteReasons = [
  * Creates a new account. This is the single, authoritative function for user creation.
  * It atomically inserts records into both the `members` and `player_stats` tables
  * within a single database transaction, ensuring data integrity.
- * @param {string} username The user's username.
- * @param {string} email The user's email.
- * @param {string} hashedPassword The user's hashed password.
- * @param {0 | 1} is_verified The verification status.
- * @param {string | null} verification_code The unique code for verification, if they are not yet verified.
- * @param {0 | 1} is_verification_notified The verified notification status.
- * @returns {{success: true, user_id: number} | {success: false, reason: string}}
+ * @param username The user's username.
+ * @param email The user's email.
+ * @param hashedPassword The user's hashed password.
+ * @param is_verified The verification status.
+ * @param verification_code The unique code for verification, if they are not yet verified.
+ * @param is_verification_notified The verified notification status.
+ * @returns A result object: { success: true, user_id (number) } on success,
  */
-function addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified) {
-	const createAccountTransaction = db.transaction((userData) => {
+function addUser(username: string, email: string, hashedPassword: string, is_verified: 0 | 1, verification_code: string | null, is_verification_notified: 0 | 1): { success: true, user_id: number} | { success: false, reason: string } {
+	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string; is_verified: 0 | 1; verification_code: string | null; is_verification_notified: 0 | 1 }], number>((userData) => {
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
 
 		// Step 2: Set initial last_read_news_date to current date so new users don't see all news as unread
-		const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
+		const currentDate = new Date().toISOString().split('T')[0]!; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
 
 		// Step 3: Insert into the members table.
 		const membersQuery = `
@@ -84,11 +104,11 @@ function addUser(username, email, hashedPassword, is_verified, verification_code
 	try {
 		const newUserId = createAccountTransaction({ username, email, hashedPassword, is_verified, verification_code, is_verification_notified });
 		return { success: true, user_id: newUserId };
-	} catch (error) {
-		const errMessage = error.message || String(error);
+	} catch (error: unknown) {
+		const errMessage = error instanceof SqliteError ? error.message : String(error);
 		logEventsAndPrint(`Account creation transaction for "${username}" failed and was rolled back: ${errMessage}`, 'errLog.txt');
 		let reason = 'An unexpected error occurred during account creation.';
-		if (error.code?.includes('SQLITE_CONSTRAINT')) reason = 'This username or email has just been taken.';
+		if (error instanceof SqliteError && error.code.includes('SQLITE_CONSTRAINT')) reason = 'This username or email has just been taken.';
 		return { success: false, reason };
 	}
 }
@@ -96,22 +116,20 @@ function addUser(username, email, hashedPassword, is_verified, verification_code
 
 /**
  * Deletes a user from the members table and adds them to the deleted_members table.
- * @param {number} user_id - The ID of the user to delete.
- * @param {string} reason_deleted - The reason the user is being deleted.
- * @param {Object} [options] - Optional settings for the function.
- * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
- * @returns {object} A result object: { success (boolean), reason (string, if failed) }
+ * @param user_id - The ID of the user to delete.
+ * @param reason_deleted - The reason the user is being deleted.
+ * @returns A result object: { success: true } on success, or { success: false, reason: string } on failure.
  */
-function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
+function deleteUser(user_id: number, reason_deleted: string): { success: true } | { success: false, reason: string } {
 	if (!validDeleteReasons.includes(reason_deleted)) {
 		const reason = `Cannot delete user of ID "${user_id}". Delete reason "${reason_deleted}" is invalid.`;
-		if (!skipErrorLogging) logEventsAndPrint(reason, 'errLog.txt');
+		logEventsAndPrint(reason, 'errLog.txt');
 		return { success: false, reason };
 	}
 
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
-	const deleteTransaction = db.transaction((id, reason) => {
+	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {
 		// Step 1: Delete the user from the main 'members' table
 		const deleteQuery = 'DELETE FROM members WHERE user_id = ?';
 		const deleteResult = db.run(deleteQuery, [id]);
@@ -134,23 +152,24 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 		deleteTransaction(user_id, reason_deleted);
 		return { success: true }; // Transaction was successful (committed)
 
-	} catch (error) {
+	} catch (error: unknown) {
 		// The transaction was rolled back due to an error inside it.
 		
 		// Handle our custom "user not found" error
-		if (error.message === 'USER_NOT_FOUND') {
+		if (error instanceof Error && error.message === 'USER_NOT_FOUND') {
 			const reason = `Cannot delete user of ID "${user_id}", they were not found.`;
-			if (!skipErrorLogging) logEventsAndPrint(reason, 'errLog.txt');
+			logEventsAndPrint(reason, 'errLog.txt');
 			return { success: false, reason };
 		}
 		
 		// Handle any other unexpected database errors (like UNIQUE constraint)
 		let reason = `Failed to delete user of ID "${user_id}", an internal error occurred.`;
-		if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+		if (error instanceof SqliteError && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
 			reason = `Failed to delete user of ID "${user_id}" because they already exist in the deleted_members tables. But the user was not deleted from the members table.`;
 		}
 
-		logEventsAndPrint(`User deletion transaction for ID "${user_id}" failed and was rolled back: ${error.stack}`, 'errLog.txt');
+		const stack = error instanceof Error ? error.stack : String(error);
+		logEventsAndPrint(`User deletion transaction for ID "${user_id}" failed and was rolled back: ${stack}`, 'errLog.txt');
 		return { success: false, reason };
 	}
 }
@@ -158,23 +177,14 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 
 /**
  * Generates a **UNIQUE** user_id by testing if it's taken already.
- * @returns {number} A unique user_id.
+ * @returns A unique user_id.
  */
-function genUniqueUserID() {
-	let id;
+function genUniqueUserID(): number {
+	let id: number;
 	do {
-		id = generateRandomUserId();
-	} while (isUserIdTaken(id));
+		id = Math.floor(Math.random() * user_id_upper_cap);
+	} while (isUserIdTaken(id, false));
 	return id;
-}
-
-/**
- * Generates a random user_id. DOES NOT test if it's taken already.
- * @returns {number} A random user_id.
- */
-function generateRandomUserId() {
-	// Generate a random number between 0 and user_id_upper_cap
-	return Math.floor(Math.random() * user_id_upper_cap);
 }
 
 
@@ -192,7 +202,7 @@ function generateRandomUserId() {
 // 	try {
 // 		// Execute the query to get all users
 // 		return db.all('SELECT * FROM members');
-// 	} catch (error) {
+// 	} catch (error: unknown) {
 // 		// Log the error if the query fails
 // 		logEventsAndPrint(`Error fetching all users: ${error.message}`, 'errLog.txt');
 // 		// Return an empty array in case of error
@@ -215,7 +225,7 @@ function generateRandomUserId() {
 // 		// Execute the query with the username parameter
 // 		const row = db.get(query, [username]);
 // 		return row;
-// 	} catch (error) {
+// 	} catch (error: unknown) {
 // 		// Log the error for debugging purposes
 // 		logEventsAndPrint(`Error getting row of member "${username}": ${error.message}`, 'errLog.txt');
 // 		return;
@@ -226,14 +236,13 @@ function generateRandomUserId() {
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
- * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
- * @param {string} searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
- * @param {string | number} searchValue - The value to search for, can be a user ID, username, or email.
- * @param {Object} [options] - Optional settings for the function.
- * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
- * @returns {MemberRecord} - An object containing the requested columns, or an empty object if no match is found.
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
+ * @param searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
+ * @param searchValue - The value to search for, can be a user ID, username, or email.
+ * @param skipErrorLogging - If true, errors will not be logged when no match is found.
+ * @returns An object containing the requested columns, or an empty object if no match is found.
  */
-function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
+function getMemberDataByCriteria(columns: string[], searchKey: string, searchValue: string | number, skipErrorLogging: boolean): MemberRecord {
 
 	// Guard clauses... Validating the arguments...
 
@@ -263,7 +272,7 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get(query, [searchValue]);
+		const row = db.get<MemberRecord>(query, [searchValue]);
 
 		// If no row is found, return an empty object
 		if (!row) {
@@ -273,23 +282,23 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 
 		// Return the fetched row (single object)
 		return row;
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error and return an empty object
-		logEventsAndPrint(`Error executing query: ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error executing query: ${message}`, 'errLog.txt');
 		return {};
 	}
 }
 
 /**
  * Fetches specified columns of multiple members from the database based on a list of user_ids, usernames, or emails.
- * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'username', 'roles']).
- * @param {string} searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
- * @param {string[] | number[]} searchValueList - The value to search for, can be a list of user IDs, usernames, or emails.
- * @param {Object} [options] - Optional settings for the function.
- * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
- * @returns {MemberRecord[]} - An object containing a list of MemberRecords, or an empty list if no matches are found.
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'roles']).
+ * @param searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
+ * @param searchValueList - The value to search for, can be a list of user IDs, usernames, or emails.
+ * @param skipErrorLogging - If true, errors will not be logged when no match is found.
+ * @returns An object containing a list of MemberRecords, or an empty list if no matches are found.
  */
-function getMultipleMemberDataByCriteria(columns, searchKey, searchValueList, { skipErrorLogging } = {}) {
+function getMultipleMemberDataByCriteria(columns: string[], searchKey: string, searchValueList: string[] | number[]): MemberRecord[] {
 
 	// Guard clauses... Validating the arguments...
 
@@ -324,30 +333,31 @@ function getMultipleMemberDataByCriteria(columns, searchKey, searchValueList, { 
 
 	try {
 		// Execute the query and fetch result
-		const rows = db.all(query, searchValueList);
+		const rows = db.all<MemberRecord>(query, searchValueList);
 
 		// If no row is found, return an empty object
 		if (!rows || rows.length === 0) {
-			if (!skipErrorLogging) logEventsAndPrint(`No matches found for ${searchKey} in ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
+			logEventsAndPrint(`No matches found for ${searchKey} in ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
 			return [];
 		}
 
 		// Return the fetched rows
 		return rows;
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error and return an empty list
-		logEventsAndPrint(`Error executing query: ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error executing query: ${message}`, 'errLog.txt');
 		return [];
 	}
 }
 
 /**
  * Updates multiple column values in the members table for a given user.
- * @param {number} userId - The user ID of the member.
- * @param {object} columnsAndValues - An object containing column-value pairs to update.
- * @returns {boolean} - Returns true if the update was successful, false if no changes were made or validation failed.
+ * @param userId - The user ID of the member.
+ * @param columnsAndValues - An object containing column-value pairs to update.
+ * @returns Returns true if the update was successful, false if no changes were made or validation failed.
  */
-function updateMemberColumns(userId, columnsAndValues) {
+function updateMemberColumns(userId: number, columnsAndValues: Record<string, any>): boolean {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
 		logEventsAndPrint(`Invalid or empty columns and values provided for user ID "${userId}" when updating member columns!`, 'errLog.txt');
@@ -386,9 +396,10 @@ function updateMemberColumns(userId, columnsAndValues) {
 			logEventsAndPrint(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt');
 			return false;
 		}
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${userId}": ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${userId}": ${message}`, 'errLog.txt');
 
 		// Return false indicating failure
 		return false;
@@ -404,9 +415,9 @@ function updateMemberColumns(userId, columnsAndValues) {
 
 /**
  * Increments the login count and updates the last_seen column for a member based on their user ID.
- * @param {number} userId - The user ID of the member.
+ * @param userId - The user ID of the member.
  */
-function updateLoginCountAndLastSeen(userId) {
+function updateLoginCountAndLastSeen(userId: number): void {
 	// SQL query to update the login_count and last_seen fields
 	const query = `
 		UPDATE members
@@ -421,17 +432,18 @@ function updateLoginCountAndLastSeen(userId) {
 		// Log if no changes were made
 		if (result.changes === 0) logEventsAndPrint(`No changes made when updating login_count and last_seen for member of id "${userId}"!`, 'errLog.txt');
 
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating login_count and last_seen for member of id "${userId}": ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error updating login_count and last_seen for member of id "${userId}": ${message}`, 'errLog.txt');
 	}
 }
 
 /**
  * Updates the last_seen column for a member based on their user ID.
- * @param {number} userId - The user ID of the member.
+ * @param userId - The user ID of the member.
  */
-function updateLastSeen(userId) {
+function updateLastSeen(userId: number): void {
 	// SQL query to update the last_seen field
 	const query = `
 		UPDATE members
@@ -445,18 +457,19 @@ function updateLastSeen(userId) {
 
 		// Log if no changes were made
 		if (result.changes === 0) logEventsAndPrint(`No changes made when updating last_seen for member of id "${userId}"!`, 'errLog.txt');
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating last_seen for member of id "${userId}": ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error updating last_seen for member of id "${userId}": ${message}`, 'errLog.txt');
 	}
 }
 
 /**
  * Updates the last_read_news_date column for a member based on their user ID.
- * @param {number} userId - The user ID of the member.
- * @param {string} newsDate - The date of the latest news post they read (format: 'YYYY-MM-DD').
+ * @param userId - The user ID of the member.
+ * @param newsDate - The date of the latest news post they read (format: 'YYYY-MM-DD').
  */
-function updateLastReadNewsDate(userId, newsDate) {
+function updateLastReadNewsDate(userId: number, newsDate: string): void {
 	// SQL query to update the last_read_news_date field
 	const query = `
 		UPDATE members
@@ -472,9 +485,10 @@ function updateLastReadNewsDate(userId, newsDate) {
 		if (result.changes === 0) {
 			logEventsAndPrint(`No changes made when updating last_read_news_date for member of id "${userId}"!`, 'errLog.txt');
 		}
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating last_read_news_date for member of id "${userId}": ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error updating last_read_news_date for member of id "${userId}": ${message}`, 'errLog.txt');
 	}
 }
 
@@ -485,21 +499,20 @@ function updateLastReadNewsDate(userId, newsDate) {
 
 /**
  * Checks if a member of a given id exists in the members table.
- * @param {number} userId - The user ID to check.
- * @returns {boolean} - Returns true if the member exists, false otherwise.
+ * @param userId - The user ID to check.
+ * @returns Returns true if the member exists, false otherwise.
  */
-function doesMemberOfIDExist(userId) {
-	return isUserIdTaken(userId, { ignoreDeleted: true });
+function doesMemberOfIDExist(userId: number): boolean {
+	return isUserIdTaken(userId, true);
 }
 
 /**
  * Checks if a given user_id exists in the members table OR deleted_members table.
- * @param {number} userId - The user ID to check.
- * @param {Object} [options] - Optional parameters for the function.
- * @param {boolean} [options.ignoreDeleted] - If true, skips checking the deleted_members table.
- * @returns {boolean} - Returns true if the user ID exists, false otherwise.
+ * @param userId - The user ID to check.
+ * @param ignoreDeleted - If true, skips checking the deleted_members table.
+ * @returns Returns true if the user ID exists, false otherwise.
  */
-function isUserIdTaken(userId, { ignoreDeleted } = {}) {
+function isUserIdTaken(userId: number, ignoreDeleted: boolean): boolean {
 	try {
 		const query = ignoreDeleted ? 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found'
 			: `
@@ -512,59 +525,50 @@ function isUserIdTaken(userId, { ignoreDeleted } = {}) {
 		const params = ignoreDeleted ? [userId] : [userId, userId];
 
 		// Execute query to check if the user_id exists in the members table
-		const row = db.get(query, params); // { found: 0 | 1 }
+		const row = db.get<{ found: 0 | 1 }>(query, params);
 
 		// row.found will be 0 or 1
 		return Boolean(row?.found);
 
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error if the query fails
-		logEventsAndPrint(`Error checking if user ID "${userId}" is taken: ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error checking if user ID "${userId}" is taken: ${message}`, 'errLog.txt');
 		return false; // Return false if an error occurs
 	}
 }
 // console.log("taken? " + isUserIdTaken(14443702));
 
-/**
- * Fetches a member's user ID based on their username.
- * @param {string} username - The username to search for.
- * @returns {number | undefined} - The user ID if found, or undefined if no match is found.
- */
-function getUserIdByUsername(username) {
-	// Use the getMemberDataByCriteria function to fetch the user ID
-	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', username); // { user_id } || {}
-	return user_id;
-}
-
 
 /**
  * Checks if a member of a given username exists in the members table.
- * @param {number} username - The username check.
- * @returns {boolean} - Returns true if the member exists, false otherwise.
+ * @param username - The username check.
+ * @returns Returns true if the member exists, false otherwise.
  */
-function doesMemberOfUsernameExist(username) {
+function doesMemberOfUsernameExist(username: string): boolean {
 	return isUsernameTaken(username);
 }
 
 /**
  * Checks if a given username exists in the members table (case-insensitive,
  * a username is taken even if it has the same spelling but different capitalization).
- * @param {string} username - The username to check.
- * @returns {boolean} - Returns true if the username exists, false otherwise.
+ * @param username - The username to check.
+ * @returns Returns true if the username exists, false otherwise.
  */
-function isUsernameTaken(username) {
+function isUsernameTaken(username: string): boolean {
 	// SQL query to check if a username exists in the 'members' table
 	const query = 'SELECT 1 FROM members WHERE username = ?';
 
 	try {
 		// Execute the query with the username parameter
-		const row = db.get(query, [username]); // { '1': 1 }
+		const row = db.get<{ '1': 1 }>(query, [username]);
 
 		// If a row is found, the username exists
 		return row !== undefined;
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Error checking if username "${username}" is taken: ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error checking if username "${username}" is taken: ${message}`, 'errLog.txt');
 
 		// Return false if there's an error (indicating the username is not found)
 		return false;
@@ -575,22 +579,23 @@ function isUsernameTaken(username) {
 
 /**
  * Checks if a given email exists in the members table.
- * @param {string} email - The email to check, in LOWERCASE.
- * @returns {boolean} - Returns true if the email exists, false otherwise.
+ * @param email - The email to check, in LOWERCASE.
+ * @returns Returns true if the email exists, false otherwise.
  */
-function isEmailTaken(email) {
+function isEmailTaken(email: string): boolean {
 	// SQL query to check if an email exists in the 'members' table
 	const query = 'SELECT 1 FROM members WHERE email = ?';
 
 	try {
 		// Execute the query with the email parameter
-		const row = db.get(query, [email]); // { '1': 1 }
+		const row = db.get<{ '1': 1 }>(query, [email]);
 
 		// If a row is found, the email exists
 		return row !== undefined;
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log error if the query fails
-		logEventsAndPrint(`Error checking if email "${email}" exists: ${error.message}`, 'errLog.txt');
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error checking if email "${email}" exists: ${message}`, 'errLog.txt');
 		return false;  // Return false if there's an error
 	}
 }
@@ -607,7 +612,6 @@ export {
 	updateLastSeen,
 	updateLastReadNewsDate,
 	doesMemberOfIDExist,
-	getUserIdByUsername,
 	doesMemberOfUsernameExist,
 	isUserIdTaken,
 	isUsernameTaken,

@@ -23,7 +23,7 @@ function giveRole(userId, role) {
 	if (!validRoles.includes(role)) return logEventsAndPrint(`Cannot give INVALID role "${role}" to user of ID "${userId}"!`, 'errLog.txt');
 
 	// Fetch the member's current roles from the database
-	let { roles } = getMemberDataByCriteria(['roles'], 'user_id', userId);
+	let { roles } = getMemberDataByCriteria(['roles'], 'user_id', userId, false);
 	if (roles === undefined) return logEventsAndPrint(`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`, 'errLog.txt');
 	roles = roles === null ? [] : JSON.parse(roles); // ['role1','role2', ...]
 
