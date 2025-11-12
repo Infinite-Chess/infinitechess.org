@@ -133,7 +133,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
  * Regex tests are skipped.
  * @returns If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
  */
-async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<void> {
+async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<number> {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
 	
@@ -153,6 +153,8 @@ async function generateAccount({ username, email, password, autoVerify = false }
 
 	// SEND EMAIL CONFIRMATION
 	if (!autoVerify) sendEmailConfirmation(user_id);
+
+	return user_id;
 }
 
 /**
