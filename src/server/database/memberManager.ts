@@ -164,9 +164,7 @@ function deleteUser(user_id: number, reason_deleted: string): void {
 // console.log(deleteUser(3887110, 'security'));
 
 
-
 // General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
-
 
 
 /**
@@ -342,10 +340,7 @@ function updateMemberColumns(userId: number, columnsAndValues: Record<string, an
 }
 
 
-
-
 // Login Count & Last Seen ---------------------------------------------------------------------------------------
-
 
 
 /**
@@ -499,10 +494,8 @@ function isUsernameTaken(username: string): boolean {
 	}
 }
 
-
-
 /**
- * Checks if a given email exists in the members table.
+ * Checks if a member with the given email exists in the members table.
  * @param email - The email to check, in LOWERCASE.
  * @returns Returns true if the email exists, false otherwise.
  */
@@ -524,6 +517,8 @@ function isEmailTaken(email: string): boolean {
 	}
 }
 
+
+// Exports -----------------------------------------------------------------------------
 
 
 export {
