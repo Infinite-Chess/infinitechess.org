@@ -163,10 +163,7 @@ function deleteUser(user_id: number, reason_deleted: string): void {
 }
 // console.log(deleteUser(3887110, 'security'));
 
-/**
- * Generates a **UNIQUE** user_id by testing if it's taken already.
- * @returns A unique user_id.
- */
+/** Generates a unique user_id no other member has. */
 function genUniqueUserID(): number {
 	let id: number;
 	do {
@@ -180,47 +177,6 @@ function genUniqueUserID(): number {
 // General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
 
 
-
-// /**
-//  * Fetches all users from the members table.
-//  * @returns {Object[]} - An array of user objects. Each object represents a user 
-//  * and contains all columns from the 'members' table. If there are no users, it returns an empty array.
-//  */
-// function getAllUsers() {
-// 	try {
-// 		// Execute the query to get all users
-// 		return db.all('SELECT * FROM members');
-// 	} catch (error: unknown) {
-// 		// Log the error if the query fails
-// 		logEventsAndPrint(`Error fetching all users: ${error.message}`, 'errLog.txt');
-// 		// Return an empty array in case of error
-// 		return [];
-// 	}
-// }
-// console.log(getAllUsers());
-
-// /**
-//  * Fetches a single user from the 'members' table based on their username.
-//  * @param {string} username - The username of the member to retrieve.
-//  * @returns {Object | undefined} - An object representing the user, containing all columns 
-//  * from the 'members' table. Returns `undefined` if an error occurs or if the user is not found.
-//  */
-// function getMemberRowByUsername(username) {
-// 	// SQL query to check if a username exists in the 'members' table
-// 	const query = 'SELECT * FROM members WHERE username = ?';
-
-// 	try {
-// 		// Execute the query with the username parameter
-// 		const row = db.get(query, [username]);
-// 		return row;
-// 	} catch (error: unknown) {
-// 		// Log the error for debugging purposes
-// 		logEventsAndPrint(`Error getting row of member "${username}": ${error.message}`, 'errLog.txt');
-// 		return;
-// 	}
-// }
-// console.log("User:");
-// console.log(getMemberRowByUsername("User"));
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -604,6 +560,5 @@ export {
 	doesMemberOfIDExist,
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
-	isEmailTaken,
-	genUniqueUserID
+	isEmailTaken
 };
