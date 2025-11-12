@@ -11,7 +11,6 @@ import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessi
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
-// @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
 import { DEV_BUILD, GAME_VERSION } from '../config/config.js';

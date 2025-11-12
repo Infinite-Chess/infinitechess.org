@@ -21,9 +21,8 @@ import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
 import { handleLogin } from './loginController.js';
 // @ts-ignore
-import { addUser, isEmailTaken, isUsernameTaken, SQLITE_CONSTRAINT_ERROR } from '../database/memberManager.js';
-// @ts-ignore
 import emailValidator from 'node-email-verifier';
+import { addUser, isEmailTaken, isUsernameTaken, SQLITE_CONSTRAINT_ERROR } from '../database/memberManager.js';
 import { sendEmailConfirmation } from './sendMail.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { isEmailBanned } from '../middleware/banned.js';

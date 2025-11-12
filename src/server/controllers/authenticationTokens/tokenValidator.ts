@@ -11,7 +11,6 @@
 import jwt from 'jsonwebtoken';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { deleteRefreshToken, findRefreshToken, updateRefreshTokenIP, type RefreshTokenRecord } from '../../database/refreshTokenManager.js';
-// @ts-ignore
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 
 import type { TokenPayload } from './tokenSigner.js';

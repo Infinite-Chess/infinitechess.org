@@ -6,7 +6,6 @@
 import validcheckmates from "../../shared/chess/util/validcheckmates.js";
 import jsutil from "../../shared/util/jsutil.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
-// @ts-ignore
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 

@@ -7,7 +7,6 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-// @ts-ignore
 import { getMemberDataByCriteria, MemberRecord, updateLastReadNewsDate } from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 

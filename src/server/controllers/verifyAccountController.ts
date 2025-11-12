@@ -5,11 +5,10 @@
  * This controller handles verifying accounts, either manually or via an email link.
  */
 
-import { AddVerificationToAllSocketsOfMember } from "../socket/socketManager.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
 // @ts-ignore
 import { getTranslationForReq } from "../utility/translate.js";
-// @ts-ignore
+import { AddVerificationToAllSocketsOfMember } from "../socket/socketManager.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 import type { Response } from 'express';

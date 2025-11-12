@@ -1,5 +1,5 @@
 
-// src/server/database/memberManager.js
+// src/server/database/memberManager.ts
 
 /**
  * This script handles almost all of the queries we use to interact with the members table!

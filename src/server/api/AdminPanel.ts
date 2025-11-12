@@ -5,7 +5,6 @@
  */
 
 import { manuallyVerifyUser } from "../controllers/verifyAccountController.js";
-// @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
 import { deleteAccount } from "../controllers/deleteAccountController.js";
