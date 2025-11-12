@@ -63,7 +63,7 @@ function hasColorOfferedDrawTooFast(game: Game, color: Player): boolean {
  */
 function openDrawOffer(game: Game, color: Player): void {
 	if (isDrawOfferOpen(game)) {
-		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt");
+		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errLog.txt");
 		return;
 	}
 	const playerdata = game.players[color]!;

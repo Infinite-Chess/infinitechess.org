@@ -126,7 +126,7 @@ function removeOldUnverifiedMembers(): void {
 			if (result.success) {
 				logEventsAndPrint(`Removed old unverified account with ID: ${member.user_id}`, 'deletedAccounts.txt');
 			} else {
-				logEventsAndPrint(`FAILED to remove old unverified account with ID: ${member.user_id}. Reason: ${result.reason}`, 'errorLog.txt');
+				logEventsAndPrint(`FAILED to remove old unverified account with ID: ${member.user_id}. Reason: ${result.reason}`, 'errLog.txt');
 			}
 		}
 	} catch (error: unknown) {
