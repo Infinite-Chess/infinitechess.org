@@ -53,8 +53,9 @@ const panAccel2D: number = 145; // Default: 145
 const panAccel3D: number = 75; // Default: 75
 
 /** The acceleration/deration rate of the board SCALE velocity in 2D mode. */
-// const scaleAccel_Desktop: number = 6.0; // Acceleration of board scaling   Default: 6
-const scaleAccel_Desktop: number = 6.0 * 10; // FOR VIDEO
+const scaleAccel_Desktop: number = 6.0; // Acceleration of board scaling   Default: 6
+// const scaleAccel_Desktop: number = 6.0 * 10; // FOR VIDEO zooming out fast
+// const scaleAccel_Desktop: number = 6.0 * 2; // FOR VIDEO
 /**
  * The deceleration rate of the board SCALE velocity in 3D mode.
  * (No accerlation, scale velocity is determined by finger movement)
@@ -68,6 +69,7 @@ const scaleAccel_Mobile: number = 14.0 * 10; // FOR VIDEO
  */
 // const scaleVelCap = 1.0; // Default: 1
 const scaleVelCap = 2; // Default: 2   FOR VIDEO
+// const scaleVelCap = 80; // Default: 2   FOR VIDEO shrinking precision 308
 
 /** The  scale velocity cap when u sing the scroll wheel (higher). */
 const scaleVelCap_Scroll = 2.5;
@@ -250,7 +252,8 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();
-		guigameinfo.toggle();
+		// guigameinfo.toggle();
+		guigameinfo.close();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 	

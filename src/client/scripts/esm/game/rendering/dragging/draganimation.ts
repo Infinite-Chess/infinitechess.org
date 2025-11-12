@@ -43,7 +43,7 @@ import board from "../boardtiles.js";
 // Variables --------------------------------------------------------------------------------------
 
 
-const z: number = 0.01;
+const z: number = 0.02;
 
 /**
  * The minimum size of the rendered dragged piece on screen, in virtual pixels.

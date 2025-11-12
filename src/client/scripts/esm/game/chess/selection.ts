@@ -505,4 +505,5 @@ export default {
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
+	selectPiece,
 };

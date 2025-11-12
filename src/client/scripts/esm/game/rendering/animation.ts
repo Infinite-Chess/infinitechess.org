@@ -88,7 +88,7 @@ const SPLINES: {
  * 
  * THIS MUST BE GREATER THAN THE Z AT WHICH PIECES ARE RENDERED.
  */
-const TRANSPARENT_SQUARE_Z: number = 0.01;
+const TRANSPARENT_SQUARE_Z: number = 0.02;
 /** By adding a negative offset, the sound doesn't appear delayed. */
 const SOUND_OFFSET: number = -100;
 /** The maximum distance an animation can be without teleporting mid-animation. */

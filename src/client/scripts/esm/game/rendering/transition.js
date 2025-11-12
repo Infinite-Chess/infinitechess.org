@@ -21,7 +21,8 @@ const teleportHistory = [];
 const historyCap = 20;
 
 const baseSpeed = 600; // default 700
-const speedPerE = 70; // Milliseconds per 1E of zoom   default 70
+// const speedPerE = 70; // Milliseconds per 1E of zoom   default 70
+const speedPerE = 10; // Milliseconds per 1E of zoom   VIDEO
 const perspectiveMultiplier = 1.3;
 let speed; // 1000 Milliseconds. Time it takes to teleport
 

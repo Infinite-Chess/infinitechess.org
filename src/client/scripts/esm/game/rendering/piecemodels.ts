@@ -57,7 +57,7 @@ interface Mesh {
  * to be able to mask (block out) the currently-animated piece by rendering a transparent square
  * on the animated piece's destination that is higher in the depth buffer.
  */
-const Z: number = 0.001;
+const Z: number = 0.01;
 
 /**
  * The interval at which to modify the mesh's linear offset once you travel this distance.
