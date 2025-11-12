@@ -4,32 +4,10 @@
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-// @ts-ignore
-import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager.js';
 
 import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
-
-// --- Type Definitions ---
-
-/** Structure of a member record. */
-interface MemberRecord {
-	user_id?: number;
-	username?: string;
-	email?: string;
-	hashed_password?: string;
-	roles?: string | null;
-	joined?: string;
-	last_seen?: string;
-	login_count?: number;
-	is_verified?: 0 | 1;
-	verification_code?: string | null;
-	is_verification_notified?: 0 | 1;
-	preferences?: string | null;
-	username_history?: string | null;
-	checkmates_beaten?: string;
-	last_read_news_date?: string | null;
-}
 
 // --- Module Setup ---
 const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
@@ -106,7 +84,8 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 	const memberData = getMemberDataByCriteria(
 		['username', 'email', 'is_verified', 'verification_code'],
 		'user_id',
-		user_id
+		user_id,
+		false
 	) as MemberRecord;
 
 	if (!memberData.username || !memberData.email) {
@@ -219,8 +198,4 @@ export {
 	sendEmailConfirmation,
 	requestConfirmEmail,
 	sendRatingAbuseEmail
-};
-
-export type {
-	MemberRecord,
 };

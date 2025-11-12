@@ -32,7 +32,7 @@ async function handleLogin(req, res) {
 	try {
 		const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
-		const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
+		const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive, false);
 		
 		if (user_id === undefined) {
 			// This is a critical internal inconsistency.

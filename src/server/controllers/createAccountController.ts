@@ -21,9 +21,8 @@ import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
 import { handleLogin } from './loginController.js';
 // @ts-ignore
-import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManager.js';
-// @ts-ignore
 import emailValidator from 'node-email-verifier';
+import { addUser, isEmailTaken, isUsernameTaken, SQLITE_CONSTRAINT_ERROR } from '../database/memberManager.js';
 import { sendEmailConfirmation } from './sendMail.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { isEmailBanned } from '../middleware/banned.js';
@@ -113,11 +112,13 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (!await doEmailFormatChecks(email, req, res)) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
-	const generationResult = await generateAccount({ username, email, password });
-
-	if (!generationResult.success) {
-		// If we failed to create the account, send the reason.
-		res.status(409).json({ 'conflict': "Could not generate account. " + generationResult.reason});
+	try {
+		await generateAccount({ username, email, password });
+	} catch (error: unknown) {
+		let message = error instanceof Error ? error.message : "An unexpected error occurred.";
+		// Detect the specific constraint error message that can be thrown
+		if (message === SQLITE_CONSTRAINT_ERROR) message = 'The username or email has just been taken.';
+		res.status(500).json({ 'error': "Could not generate account. " + message });
 		return;
 	}
 
@@ -131,7 +132,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
  * Regex tests are skipped.
  * @returns If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
  */
-async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<{ success: true, user_id: number } | { success: false, reason: string }> {
+async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<number> {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
 	
@@ -145,19 +146,14 @@ async function generateAccount({ username, email, password, autoVerify = false }
 		is_verification_notified: 0 as 0 | 1,
 	};
 
-	const creationResult = addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified);
-	if (!creationResult.success) {
-		// Failure to create (username or email taken)
-		logEventsAndPrint(`Failed to create new member "${username}": ${creationResult.reason}`, 'errLog.txt');
-		return creationResult;
-	}
+	const user_id = addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified);
 
 	logEventsAndPrint(`Created new member: ${username}`, 'newMemberLog.txt');
 
 	// SEND EMAIL CONFIRMATION
-	if (!autoVerify) sendEmailConfirmation(creationResult.user_id);
+	if (!autoVerify) sendEmailConfirmation(user_id);
 
-	return creationResult;
+	return user_id;
 }
 
 /**

@@ -18,7 +18,6 @@ import { getMultipleGameData } from "../../database/gamesManager.js";
 import timeutil from "../../../shared/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
 import winconutil from "../../../shared/chess/util/winconutil.js";
-// @ts-ignore
 import { getMultipleMemberDataByCriteria } from "../../database/memberManager.js";
 
 

@@ -7,7 +7,6 @@
 
 import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getEloOfPlayerInLeaderboard } from "../database/leaderboardsManager.js";
 import { Leaderboard } from "../../shared/chess/variants/validleaderboard.js";
-// @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
 
@@ -65,7 +64,7 @@ const getLeaderboardData = async(req: IdentifiedRequest, res: Response): Promise
 	let running_rank = start_rank;
 	const leaderboardData: Object[] = [];
 	for (const player of top_players) {
-		const username = getMemberDataByCriteria(['username'], 'user_id', player.user_id!, { skipErrorLogging: true }).username;
+		const username = getMemberDataByCriteria(['username'], 'user_id', player.user_id!, true).username;
 		if (username === undefined) {
 			logEventsAndPrint(`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`, 'errLog.txt');
 			continue;
@@ -83,7 +82,7 @@ const getLeaderboardData = async(req: IdentifiedRequest, res: Response): Promise
 	// If there is a requester_username, but requester_rank is still undefined, we need another database query
 	let rank_string: string | undefined = undefined;
 	rank_string_constructor: if (requester_username !== undefined && requester_rank === undefined) {
-		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, { skipErrorLogging: true })?.user_id;
+		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, true)?.user_id;
 		if (requester_userid === undefined) break rank_string_constructor;
 
 		const requester_rank = getPlayerRankInLeaderboard(requester_userid, leaderboard_id);

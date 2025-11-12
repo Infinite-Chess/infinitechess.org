@@ -108,7 +108,7 @@ function deletePreferencesCookie(res) {
  * @returns {Object|undefined} - Returns the preferences object if found, otherwise undefined.
  */
 function getPrefs(userId) {
-	const { preferences } = getMemberDataByCriteria(['preferences'], 'user_id', userId, { skipErrorLogging: true });
+	const { preferences } = getMemberDataByCriteria(['preferences'], 'user_id', userId, true);
 	if (preferences === undefined) return;
 	const prefs = JSON.parse(preferences);
 	if (prefs === null) return;

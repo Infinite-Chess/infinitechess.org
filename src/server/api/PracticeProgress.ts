@@ -6,7 +6,6 @@
 import validcheckmates from "../../shared/chess/util/validcheckmates.js";
 import jsutil from "../../shared/util/jsutil.js";
 import { logEventsAndPrint } from "../middleware/logEvents.js";
-// @ts-ignore
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 
@@ -102,7 +101,7 @@ function deletePracticeProgressCookie(res: Response): void {
  * @returns - Returns the checkmates_beaten string if found, otherwise undefined. (e.g. "2Q-1k,3R-1k,1Q1R1B-1k")
  */
 function getCheckmatesBeaten(userId: number): string {
-	const { checkmates_beaten } = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId, { skipErrorLogging: true });
+	const { checkmates_beaten } = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId, true);
 	return checkmates_beaten ?? ''; // Could be undefined if no match is found
 }
 

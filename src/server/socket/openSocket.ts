@@ -11,7 +11,6 @@ import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessi
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
-// @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
 import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
@@ -82,7 +81,7 @@ function onConnectionRequest(socket: WebSocket, req: Request): void {
 
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
 	if (ws.metadata.memberInfo.signedIn) {
-		const member = getMemberDataByCriteria(['is_verified'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true }) as { is_verified: 0 | 1 };
+		const member = getMemberDataByCriteria(['is_verified'], 'user_id', ws.metadata.memberInfo.user_id, true) as { is_verified: 0 | 1 };
 		// Set the verified status. 1 means true.
 		if (member.is_verified === 1) ws.metadata.verified = true;
 	}
