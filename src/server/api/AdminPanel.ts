@@ -127,9 +127,14 @@ function deleteCommand(command: string, commandAndArgs: string[], req: Identifie
 	const rolesOfAffectedUser = JSON.parse(roles!);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) return sendAndLogResponse(res, 403, "Forbidden to delete " + username + ".");
-	const result = deleteAccount(user_id, reason); // { success, reason (if failed) }
-	if (!result.success) return sendAndLogResponse(res, 500, `Failed to delete user ${username} for reason: ${result.reason}`);
-	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
+
+	try {
+		deleteAccount(user_id, reason);
+		sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		sendAndLogResponse(res, 500, `Failed to delete user (${username}): ${errorMessage}`);
+	}
 }
 
 function usernameCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {

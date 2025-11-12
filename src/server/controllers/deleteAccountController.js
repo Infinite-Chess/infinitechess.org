@@ -11,6 +11,23 @@ import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 import { isMemberInSomeActiveGame } from "../game/gamemanager/gamemanager.js";
 
 
+// Constants -------------------------------------------------------------------------
+
+
+/**
+ * A list of all valid reasons to delete an account.
+ * These reasons are stored in the deleted_members table in the database.
+ */
+const validDeleteReasons = [
+	'unverified', // They failed to verify after 3 days
+	'user request', // They deleted their own account, or requested it to be deleted.
+	'security', // A choice by server admins, for security purpose.
+	'rating abuse', // Unfairly boosted their own elo with a throwaway account
+];
+
+
+// Functions -------------------------------------------------------------------------
+
 
 /**
  * Route that removes a user account if they request to delete it.
@@ -51,12 +68,14 @@ async function removeAccount(req, res) {
 	revokeSession(res);
 
 	const reason_deleted = "user request";
-	const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
-	if (result.success) { // Success!!
-		logEventsAndPrint(`Deleted account "${username}" for reason "${reason_deleted}".`, "deletedAccounts.txt");
+
+	try {
+		deleteAccount(user_id, reason_deleted);
+		logEventsAndPrint(`Deleted account of user_id (${user_id}) for reason (${reason_deleted}).`, "deletedAccounts.txt");
 		return res.send('OK'); // 200 is default code
-	} else { // Failure
-		logEventsAndPrint(`Can't delete ${username}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt');
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Can't delete account of user_id (${user_id}) after a correct password entered: ${errorMessage}`, 'errLog.txt');
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}
 }
@@ -67,16 +86,16 @@ async function removeAccount(req, res) {
  * and closes all their open websockets.
  * @param {number} user_id 
  * @param {string} reason_deleted - Must be one of memberManager.validDeleteReasons
- * @returns {object} A result object: { success (boolean), reason (string, if failed) }
+ * 
+ * @throws If the delete reason is invalid, or if a database error occurs during the deletion process.
  */
 function deleteAccount(user_id, reason_deleted) {
+	if (!validDeleteReasons.includes(reason_deleted)) throw Error(`Delete reason (${reason_deleted}) is invalid.`);
 	
-	const result = deleteUser(user_id, reason_deleted); // { success, result (if failed) }
+	deleteUser(user_id, reason_deleted);
 
-	// Close their sockets, delete their invites, delete their session cookies...
-	if (result.success) closeAllSocketsOfMember(user_id, 1008, "Logged out");
-
-	return result;
+	// Close their sockets, delete their invites...
+	closeAllSocketsOfMember(user_id, 1008, "Logged out");
 
 	// Account deleting automatically invalidates all their sessions,
 	// because their refresh tokens are deleted.

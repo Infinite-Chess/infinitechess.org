@@ -38,19 +38,11 @@ export interface MemberRecord {
 // Constants ----------------------------------------------------------
 
 
-/**
- * A list of all valid reasons to delete an account.
- * These reasons are stored in the deleted_members table in the database.
- */
-const validDeleteReasons = [
-	'unverified', // They failed to verify after 3 days
-	'user request', // They deleted their own account, or requested it to be deleted.
-	'security', // A choice by server admins, for security purpose.
-	'rating abuse', // Unfairly boosted their own elo with a throwaway account
-];
-
 /** SQLite constraint error code constant */
 const SQLITE_CONSTRAINT_ERROR = 'SQLITE_CONSTRAINT';
+
+/** Custom error message for user not found during deletion */
+const USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
 
 
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
@@ -124,13 +116,10 @@ function addUser(username: string, email: string, hashedPassword: string, is_ver
  * @param user_id - The ID of the user to delete.
  * @param reason_deleted - The reason the user is being deleted.
  * @returns A result object: { success: true } on success, or { success: false, reason: string } on failure.
+ * 
+ * @throws If a database error occurs during the deletion process.
  */
-function deleteUser(user_id: number, reason_deleted: string): { success: true } | { success: false, reason: string } {
-	if (!validDeleteReasons.includes(reason_deleted)) {
-		const reason = `Cannot delete user of ID "${user_id}". Delete reason "${reason_deleted}" is invalid.`;
-		logEventsAndPrint(reason, 'errLog.txt');
-		return { success: false, reason };
-	}
+function deleteUser(user_id: number, reason_deleted: string): void {
 
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
@@ -141,9 +130,7 @@ function deleteUser(user_id: number, reason_deleted: string): { success: true } 
 
 		// If no user was deleted, they didn't exist. Throw an error to
 		// abort the transaction and prevent any further action.
-		if (deleteResult.changes === 0) {
-			throw new Error('USER_NOT_FOUND');
-		}
+		if (deleteResult.changes === 0) throw new Error(USER_NOT_FOUND_ERROR);
 
 		// Step 2: Add their user_id to the 'deleted_members' table
 		// If this fails (e.g., UNIQUE constraint), it will also throw an error
@@ -155,27 +142,23 @@ function deleteUser(user_id: number, reason_deleted: string): { success: true } 
 	try {
 		// Execute the transaction
 		deleteTransaction(user_id, reason_deleted);
-		return { success: true }; // Transaction was successful (committed)
-
 	} catch (error: unknown) {
 		// The transaction was rolled back due to an error inside it.
-		
-		// Handle our custom "user not found" error
-		if (error instanceof Error && error.message === 'USER_NOT_FOUND') {
-			const reason = `Cannot delete user of ID "${user_id}", they were not found.`;
-			logEventsAndPrint(reason, 'errLog.txt');
-			return { success: false, reason };
-		}
-		
-		// Handle any other unexpected database errors (like UNIQUE constraint)
-		let reason = `Failed to delete user of ID "${user_id}", an internal error occurred.`;
-		if (error instanceof SqliteError && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-			reason = `Failed to delete user of ID "${user_id}" because they already exist in the deleted_members tables. But the user was not deleted from the members table.`;
-		}
+		const errorMessage = error instanceof Error ? error.message : String(error);
 
-		const stack = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`User deletion transaction for ID "${user_id}" failed and was rolled back: ${stack}`, 'errLog.txt');
-		return { success: false, reason };
+		// Detailed error for logging
+		let detailedError = `Delete user transaction for ID (${user_id}) for reason (${reason_deleted}) failed and was rolled back: ${errorMessage}`;
+		// Handle any other unexpected database errors (like UNIQUE constraint)
+		if (error instanceof SqliteError && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+			detailedError = `Delete user transaction for ID (${user_id}) for reason (${reason_deleted}) failed and was rolled back because they already exist in the deleted_members tables, but the user was not deleted from the members table.`;
+		}
+		logEventsAndPrint(detailedError, 'errLog.txt');
+
+		// Generic error message for return value
+		let genericError = 'A database error occurred.';
+		// Handle our custom "user not found" error
+		if (error instanceof Error && error.message === USER_NOT_FOUND_ERROR) genericError = USER_NOT_FOUND_ERROR;
+		throw Error(genericError); // Rethrow with the generic error message
 	}
 }
 // console.log(deleteUser(3887110, 'security'));

@@ -122,11 +122,12 @@ function removeOldUnverifiedMembers(): void {
 
 		// Iterate through the IDs and delete each account.
 		for (const member of membersToDelete) {
-			const result = deleteAccount(member.user_id, reason_deleted);
-			if (result.success) {
+			try {
+				deleteAccount(member.user_id, reason_deleted);
 				logEventsAndPrint(`Removed old unverified account with ID: ${member.user_id}`, 'deletedAccounts.txt');
-			} else {
-				logEventsAndPrint(`FAILED to remove old unverified account with ID: ${member.user_id}. Reason: ${result.reason}`, 'errLog.txt');
+			} catch (error: unknown) {
+				const message = error instanceof Error ? error.message : String(error);
+				logEventsAndPrint(`FAILED to remove old unverified account with ID (${member.user_id}): ${message}`, 'errLog.txt');
 			}
 		}
 	} catch (error: unknown) {
