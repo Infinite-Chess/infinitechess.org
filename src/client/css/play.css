@@ -46,12 +46,23 @@ button {
 .editor-menu {
     position: relative;
     height: 100%;
+    overflow-x: clip;
+    overflow-y: auto;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
     background-color: #ffffff;
     z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
 	/* Controls the size of all its children. */
 	font-size: min(16px, 2.2vw);
 	width: 15em;
+}
+
+/* 
+ * Overwrite the tooltip font size and max-width in the editor menu only.
+ * This ensures that the editor tooltips do not get clipped on very small screens.
+ */
+.editor-menu .tooltip-dl::before, .editor-menu .tooltip-d::before, .editor-menu .tooltip-dr::before {
+    font-size: calc(1em * 12 / 16);
+    max-width: calc(1em * 150 / 16);
 }
 
 .editor-header {
