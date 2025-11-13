@@ -191,7 +191,7 @@ async function initUI(): Promise<void> {
 			const pieceContainer = document.createElement("div");
 
 			if (i % 4 === 0) pieceContainer.classList.add("tooltip-dr");
-			else if (i % 4 === 3) pieceContainer.classList.add("tooltip-d");
+			else if (i % 4 === 3) pieceContainer.classList.add("tooltip-dl");
 			else pieceContainer.classList.add("tooltip-d");
 			const localized_piece_name = translations['piecenames'][typeutil.getRawTypeStr(coloredTypes[i]!)!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
