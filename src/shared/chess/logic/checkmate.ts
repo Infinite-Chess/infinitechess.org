@@ -17,6 +17,8 @@ import { players, rawTypes } from '../util/typeutil.js';
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
 const pieceCountToDisableCheckmate = 50_000;
 
+/** The maximum number of royal pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
+const royalCountToDisableCheckmate = 6;
 
 /**
  * Calculates if the provided gamefile is over by checkmate or stalemate
@@ -55,5 +57,6 @@ function detectCheckmateOrStalemate(gamefile: FullGame): string | undefined {
 
 export {
 	pieceCountToDisableCheckmate,
+	royalCountToDisableCheckmate,
 	detectCheckmateOrStalemate,
 };
