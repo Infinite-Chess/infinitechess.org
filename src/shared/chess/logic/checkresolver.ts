@@ -105,7 +105,7 @@ function removeCheckInvalidMoves_Sliding(gamefile: FullGame, moves: LegalMoves, 
 	if (!moves.sliding) return; // No sliding moves to remove
 
 	/** List of coordinates of all our royal jumping pieces */
-	const royalCoords: Coords[] = boardutil.getJumpingRoyalCoordsOfColor(gamefile.boardsim.pieces, color);
+	const royalCoords: Coords[] = boardutil.getRoyalCoordsOfColor(gamefile.boardsim.pieces, color);
 	if (royalCoords.length === 0) return; // No royals, no open discoveries, don't remove any sliding moves
 
 	// There are 3 ways a sliding move can put you in check...
