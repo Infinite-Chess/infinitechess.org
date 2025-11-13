@@ -307,8 +307,8 @@ export type {
 
 export default {
 	getPieceCountOfGame,
-	getPieceCountOfColor,
 	getRoyalCountOfGame,
+	getPieceCountOfColor,
 	getPieceCountOfType,
 	getPieceCountOfTypeRange,
 	getPieceCount_IncludingUndefineds,
