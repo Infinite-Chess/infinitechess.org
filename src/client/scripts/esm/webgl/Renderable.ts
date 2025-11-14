@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/game/rendering/buffermodel.ts
+// src/client/scripts/esm/webgl/Renderable.ts
 
 /**
  * This script contains all the functions used to generate renderable buffer models of the
