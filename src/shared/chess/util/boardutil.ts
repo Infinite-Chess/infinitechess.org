@@ -57,6 +57,23 @@ function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreRawTypes 
 }
 
 /**
+ * Counts the total number of royal pieces (jumping + sliding) in the game.
+ * @param o - The organized pieces data
+ * @returns The total number of royal pieces on the board
+ */
+function getRoyalCountOfGame(o: OrganizedPieces): number {
+	let royalCount = 0;
+
+	for (const [type, range] of o.typeRanges) {
+		if (!typeutil.royals.includes(typeutil.getRawType(type))) continue; // Not a royal
+
+		royalCount += getPieceCountOfTypeRange(range);
+	}
+
+	return royalCount;
+}
+
+/**
  * Returns the number of pieces of a SPECIFIC color in a game,
  * EXCLUDING undefined placeholders
  */
@@ -290,6 +307,7 @@ export type {
 
 export default {
 	getPieceCountOfGame,
+	getRoyalCountOfGame,
 	getPieceCountOfColor,
 	getPieceCountOfType,
 	getPieceCountOfTypeRange,

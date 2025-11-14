@@ -14,7 +14,7 @@ import moveutil from '../util/moveutil.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
-import { detectCheckmateOrStalemate, pieceCountToDisableCheckmate } from './checkmate.js';
+import { detectCheckmateOrStalemate, pieceCountToDisableCheckmate, royalCountToDisableCheckmate } from './checkmate.js';
 import { players, rawTypes, Player } from '../util/typeutil.js';
 
 
@@ -164,10 +164,11 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
  */
 function isCheckmateCompatibleWithGame({ boardsim, basegame }: FullGame): boolean {
 	if (boardsim.editor) return false; // This prevents legal move calculation respecting check in the editor.
-	if (boardutil.getPieceCountOfGame(boardsim.pieces) >= pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+	if (boardutil.getPieceCountOfGame(boardsim.pieces) > pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefileutility.getPlayerCount(basegame) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(basegame)) return false; // This also allows the capture of the king.
+	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > royalCountToDisableCheckmate) return false; // Too many royals (check & checkmate algorithm takes too long)
 	return true; // Checkmate compatible!
 }
 
