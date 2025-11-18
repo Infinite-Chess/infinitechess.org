@@ -76,6 +76,13 @@ function log2(bigint: bigint): number {
 	return bitLength_bisection(bigint) - 1;
 }
 
+/** [CONTINUOUS] Calculates the base-10 logarithm of a BigInt. */
+function log10(bigint: bigint): number {
+	// Use the change of base formula for logarithms: log_b(x) = log_a(x) / log_a(b)
+	// log10(n) = ln(n) / ln(10)
+	return ln(bigint) / Math.LN10;
+}
+
 /** [CONTINUOUS] Calculates the natural logarithm (base e) of a BigInt. */
 function ln(bigint: bigint): number {
 	if (bigint < ZERO) return NaN;
@@ -479,6 +486,7 @@ function LCM(array: bigint[]): bigint {
 export default {
 	abs,
 	log2,
+	log10,
 	ln,
 	// getLeastSignificantBits,
 	// getBitAtPositionFromRight,

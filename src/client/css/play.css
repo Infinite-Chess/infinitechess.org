@@ -1521,7 +1521,7 @@ svg.collapse {
 
 /* Distance display for video footage */
 
-#debug {
+#distance-display {
     position: absolute;
     top: 0;
     width: 33%;
@@ -1533,13 +1533,17 @@ svg.collapse {
     word-wrap: break-word;
 }
 
-#scale, #width, #velocity, #acceleration {
+#scale, #width, #velocity, #acceleration, #xx, #yy {
     font-family: monospace;
     white-space: pre; /* This is the magic property! */
 }
 
-#debug p:not(:last-child) {
+#distance-display p:not(:last-child) {
     margin-bottom: 0.25em;
+}
+
+#desc {
+	text-align: center;
 }
 
 
