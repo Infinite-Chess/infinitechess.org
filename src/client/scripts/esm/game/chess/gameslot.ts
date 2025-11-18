@@ -276,7 +276,7 @@ function startStartingTransition() {
 	// guinavigation.recenter();
 	// transition.eraseTelHist();
 
-	boardpos.setBoardScale(1 * 10 ** -308); // FOR VIDEO
+	// boardpos.setBoardScale(1 * 10 ** -308); // FOR VIDEO
 	// boardpos.setBoardScale(1 * 10 ** -155); // FOR VIDEO
 	// boardpos.setBoardScale(1 * 1000 ** -102); // FOR VIDEO
 	// setTimeout(() => {
