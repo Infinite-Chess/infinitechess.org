@@ -392,7 +392,7 @@ function sendFeatureNotSupported(description) {
  * @param {Event} event - The 'close' event fired.
  */
 function onclose(event) {
-	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
+	// if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
 	const wasFullyOpen = socket !== undefined; // Socket is only defined when it FULLY opens (and not immediatly closes from no network)
 
 	socket = undefined;

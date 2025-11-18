@@ -103,7 +103,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  */
 function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 	if (!mesh) return;
-	console.log("Regenerating all piece type meshes.");
+	// console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
 	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
@@ -261,7 +261,7 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
  * Faster than {@link regenAll}.
  */
 function shiftAll(boardsim: Board, mesh: Mesh): void {
-	console.log("Shifting all piece meshes.");
+	// console.log("Shifting all piece meshes.");
 
 	const newOffset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 

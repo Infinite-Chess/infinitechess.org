@@ -58,6 +58,7 @@ import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
+import { updateDebugStats } from '../gui/distancedisplay.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -151,6 +152,8 @@ function update(): void {
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
+
+	updateDebugStats();
 	
 	// Update the effect zone manager (after board variables are recalculated).
 	effectZoneManager!.update(getFurthestTileVisible());
