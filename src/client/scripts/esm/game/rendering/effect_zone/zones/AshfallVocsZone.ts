@@ -9,6 +9,7 @@ import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGr
 import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 import { HeatWavePass } from "../../../../webgl/post_processing/passes/HeatWavePass";
 import { VignettePass } from "../../../../webgl/post_processing/passes/VignettePass";
+import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
 
 export class AshfallVocsZone implements Zone {
@@ -65,13 +66,42 @@ export class AshfallVocsZone implements Zone {
 
 		// Load the ambience...
 
-		const soundConfig: SoundscapeConfig = {
-			masterVolume: 1.0,
-			layers: []
+		const noiseConfig: SoundscapeConfig = {
+			masterVolume: 0.018,
+			layers: [
+				...UndercurrentSoundscape.config.layers,
+				{
+					volume: {
+						base: 1,
+						lfo: {
+							wave: "perlin",
+							rate: 0.22,
+							depth: 0.4
+						}
+					},
+					source: {
+						type: "noise"
+					},
+					filters: [
+						{
+							type: "bandpass",
+							frequency: {
+								base: 7458
+							},
+							Q: {
+								base: 0.9601
+							},
+							gain: {
+								base: 0
+							}
+						}
+					]
+				}
+			]
 		};
 
 		// Initialize the player with the config.
-		this.ambience = new SoundscapePlayer(soundConfig);
+		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
 
 
