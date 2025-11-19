@@ -10,7 +10,7 @@ import { ProgramManager } from "../../../webgl/ProgramManager";
 import { TheBeginningZone } from "./zones/TheBeginningZone";
 import { UndercurrentZone } from "./zones/UndercurrentZone";
 import { DustyWastesZone } from "./zones/DustyWastesZone";
-import { SearingDunesZone } from "./zones/SearingDunesZone";
+// import { SearingDunesZone } from "./zones/SearingDunesZone";
 import { ContortionFieldZone } from "./zones/ContortionFieldZone";
 import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { StaticZone } from "./zones/StaticZone";
@@ -19,6 +19,7 @@ import { IridescenceZone } from "./zones/IridescenceZone";
 import { SpectralEdgeZone } from "./zones/SpectralEdgeZone";
 import { AshfallVocsZone } from "./zones/AshfallVocsZone";
 import { OceanZone } from "./zones/OceanZone";
+import { EmberVergeZone } from "./zones/EmberVergeZone";
 
 
 /**
@@ -77,15 +78,15 @@ export class EffectZoneManager {
 		// { name: 'Echo Rift',        start: 10n ** 780n, advancedEffect: true }, // 8
 		// [TESTING] Much shorter distances:
 		{ name: 'Undercurrent',     start: 20n, advancedEffect: false }, // 1
-		{ name: 'Searing Dunes',    start: 40n, advancedEffect: true }, // 2
-		{ name: 'Contortion Field', start: 60n, advancedEffect: true }, // 3
+		{ name: 'Contortion Field', start: 40n, advancedEffect: true }, // 3
+		{ name: 'Ocean',        start: 60n, advancedEffect: true }, // 10
 		{ name: 'Spectral Edge',   start: 80n, advancedEffect: true }, // 4
 		{ name: 'Iridescence',   start: 100n, advancedEffect: true }, // 5
-		{ name: 'Dusty Wastes',     start: 120n, advancedEffect: true }, // 6
-		{ name: 'Static',           start: 140n, advancedEffect: true }, // 7
-		{ name: 'Echo Rift',        start: 160n, advancedEffect: true }, // 8
-		{ name: 'Ashfall Vocs',        start: 180n, advancedEffect: true }, // 9
-		{ name: 'Ocean',        start: 200n, advancedEffect: true }, // 10
+		{ name: 'Ember Verge',   start: 120n, advancedEffect: true }, // 11
+		{ name: 'Ashfall Vocs',        start: 200n, advancedEffect: true }, // 9
+		{ name: 'Dusty Wastes',     start: 140n, advancedEffect: true }, // 6
+		{ name: 'Static',           start: 160n, advancedEffect: true }, // 7
+		{ name: 'Echo Rift',        start: 180n, advancedEffect: true }, // 8
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -137,15 +138,16 @@ export class EffectZoneManager {
 		this.zones = {
 			'The Beginning': new TheBeginningZone(),
 			'Undercurrent': new UndercurrentZone(),
-			'Searing Dunes': new SearingDunesZone(programManager, noiseTexture),
+			// 'Searing Dunes': new SearingDunesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
+			'Ocean': new OceanZone(programManager),
 			'Spectral Edge': new SpectralEdgeZone(),
 			'Iridescence': new IridescenceZone(),
+			'Ember Verge': new EmberVergeZone(),
+			'Ashfall Vocs': new AshfallVocsZone(programManager, noiseTexture),
 			'Dusty Wastes': new DustyWastesZone(programManager),
 			'Static': new StaticZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),
-			'Ashfall Vocs': new AshfallVocsZone(programManager, noiseTexture),
-			'Ocean': new OceanZone(programManager),
 		};
 
 		this.currentZone = this.zones['The Beginning'];
