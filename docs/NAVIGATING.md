@@ -15,23 +15,24 @@ After starting up the server via `npm run dev`, there are a few different proces
 
 ## Project Structure ##
 
+```
+src/
+├── client/     # Frontend code and assets
+├── server/     # Backend Node.js server
+└── shared/     # Common logic between client and server
+```
 
-The entire source code of the project is located in [src](../src/). This contains all code that is ever run by either the server or client, and contains assets that are served to the client. 
+The entire source code of the project is located in [src](../src/). This contains all code that is ever run by either the server or client, and contains assets that are served to the client.
 
-[src/client/](../src/client/) contains all clientside files and resources of the website, whether script, image, sound, etc. Any file inside here may be requested by and served to the client. No client-side code is ever imported by server-side scripts.
-
-[src/server](../src/server/) contains all server-side files. The server begins running from [server.js](../src/server/server.js). This configures and starts our http, https, and websocket servers, and cleans up on closing.
-
-[src/shared/](../src/client/) contains all shared scripts between the server and client. This includes lots of chess logic that both need. No shared script should **ever** reference environment variables in the Node.js or browser environment. A couple examples are `document` or `window` in the browser.
-
-
-[src/client/views](../src/client/views) contains our EJS documents, which are converted to HTMLs on startup. Modify these to change the content on the website pages. In order to support multiple languages, these documents reference many of the translations in [en-US.toml](../translation/en-US.toml). Any changes to the toml file requires you increment the version number at the top of it, and record the change you made inside [changes.json](../translation/changes.json). Additional information on working other languages of the website is in [TRANSLATIONS.md](./TRANSLATIONS.md).
-
-[src/client/scripts/esm/game](../src/client/scripts/esm/game/) contains all our code for running the game on the play page of the website! It starts inside [main.js](../src/client/scripts/esm/game/main.js), which contains our game loop. Most scripts includes a basic description at the top. Feel free to ask for greater details on what a specific script does, or for help finding the code that does a specific task!
-
-[src/server/game](../src/server/game/) contains the server-side code for running online play, including the invites manager and game manager. Both of these use websocket messaging to broadcast changes out to the clients in real-time.
-
-`database.db` is automatically generated at the root level of the project. This stores all user accounts, login sessions, games, etc. You can view the contents of the database via the SQLite VSCode extension.
+| Directory | Description |
+|-----------|-------------|
+| **[src/client/](../src/client/)** | Contains all clientside files and resources of the website, whether script, image, sound, etc. Any file inside here may be requested by and served to the client. No client-side code is ever imported by server-side scripts. |
+| **[src/server](../src/server/)** | Contains all server-side files. The server begins running from [server.js](../src/server/server.js). This configures and starts our http, https, and websocket servers, and cleans up on closing. |
+| **[src/shared/](../src/shared/)** | Contains all shared scripts between the server and client. This includes lots of chess logic that both need. No shared script should **ever** reference environment variables in the Node.js or browser environment. A couple examples are `document` or `window` in the browser. |
+| **[src/client/views](../src/client/views)** | Contains our EJS documents, which are converted to HTMLs on startup. Modify these to change the content on the website pages. In order to support multiple languages, these documents reference many of the translations in [en-US.toml](../translation/en-US.toml). Any changes to the toml file requires you increment the version number at the top of it, and record the change you made inside [changes.json](../translation/changes.json). Additional information on working other languages of the website is in [TRANSLATIONS.md](./TRANSLATIONS.md). |
+| **[src/client/scripts/esm/game](../src/client/scripts/esm/game/)** | Contains all our code for running the game on the play page of the website! It starts inside [main.js](../src/client/scripts/esm/game/main.js), which contains our game loop. Most scripts includes a basic description at the top. Feel free to ask for greater details on what a specific script does, or for help finding the code that does a specific task! |
+| **[src/server/game](../src/server/game/)** | Contains the server-side code for running online play, including the invites manager and game manager. Both of these use websocket messaging to broadcast changes out to the clients in real-time. |
+| **`database.db`** | Automatically generated at the root level of the project. This stores all user accounts, login sessions, games, etc. You can view the contents of the database via the SQLite VSCode extension. |
 
 
 ## Accounts ##
