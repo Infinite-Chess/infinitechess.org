@@ -33,7 +33,7 @@ export class EchoRiftZone implements Zone {
 
 	
 	/** The base brightness level around which the brightness will vary. */
-	private baseBrightness: number = -0.39;
+	private baseBrightness: number = -0.42;
 	/** How much the brightness will vary above and below the base brightness. */
 	private brightnessVariation: number = 0.07;
 
