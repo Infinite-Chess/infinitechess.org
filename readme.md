@@ -8,7 +8,7 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 ## Contributing
 
-This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)!
+This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)! For an overview of the codebase refer to [Navigation Guide](./docs/NAVIGATING.md).
 
 ```
 src/
