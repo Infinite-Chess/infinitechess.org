@@ -10,13 +10,6 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)! For an overview of the codebase refer to [Navigation Guide](./docs/NAVIGATING.md).
 
-```
-src/
-├── client/     # Frontend (JS/TS, CSS, assets)
-├── server/     # Backend (Node.js, API, websockets)
-└── shared/     # Common logic & types
-```
-
 In case you want to help with translating the website to other languages, please read the [Translation Guide](./docs/TRANSLATIONS.md).
 
 ## Roadmap
