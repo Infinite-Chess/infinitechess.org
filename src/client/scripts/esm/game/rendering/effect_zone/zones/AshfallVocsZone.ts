@@ -67,12 +67,12 @@ export class AshfallVocsZone implements Zone {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
-			masterVolume: 0.018,
+			masterVolume: 0.36,
 			layers: [
 				...UndercurrentSoundscape.config.layers,
 				{
 					volume: {
-						base: 1,
+						base: 0.5,
 						lfo: {
 							wave: "perlin",
 							rate: 0.22,
