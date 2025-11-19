@@ -10,7 +10,8 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)! For an overview of the codebase refer to [Navigation Guide](./docs/NAVIGATING.md).
 
-> [!NOTE] Please seek approval in the discord server before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project.
+> [!NOTE]
+> Please seek approval in the discord server before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project.
 
 In case you want to help with translating the website to other languages, please read the [Translation Guide](./docs/TRANSLATIONS.md).
 
