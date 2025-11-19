@@ -103,8 +103,11 @@ function init(): void {
 
 function onScreenResize(): void {
 	camera.onScreenResize();
+
 	pipeline.resize(gl.canvas.width, gl.canvas.height);
-	WaterRipples.onScreenResize(gl.canvas.width, gl.canvas.height);
+	
+	const detail = { width: gl.canvas.width, height: gl.canvas.height };
+	document.dispatchEvent(new CustomEvent("canvas_resize", { detail }));
 }
 
 // Update the game every single frame

@@ -68,7 +68,7 @@ let applied: boolean = true;
 
 /** Event listener for when we change the Premoves toggle */
 document.addEventListener('premoves-toggle', (_e: CustomEvent) => {
-	// const enabled: boolean = e.detail;
+	// const enabled: boolean = _e.detail;
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
