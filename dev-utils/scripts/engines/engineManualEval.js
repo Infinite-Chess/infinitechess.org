@@ -291,11 +291,10 @@ const engineManualEval = (function() {
 	 * @param {number} depth - how much moves deep the search will go
 	 * @returns {Promise<Move>} - promise to the move with the highest score or a random move if checkmate is forced
 	 */
-    async function calculate(gamefile, depth) {
-        // let the the board render while we are calculating
-        const moves = getBlackKingLegalMoves(gamefile);
-        let bestScore = -Infinity;
-        let bestMove = null;
+    	async function calculate(gamefile, depth) {
+    		// let the board render while we are calculating
+    		const moves = getBlackKingLegalMoves(gamefile);
+    		let bestScore = -Infinity;        let bestMove = null;
         for (const move of moves) {
             movepiece.makeMove(gamefile, move, {
                 pushClock: false,
