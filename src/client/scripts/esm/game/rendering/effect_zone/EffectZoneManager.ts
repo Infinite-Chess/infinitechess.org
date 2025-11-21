@@ -83,10 +83,10 @@ export class EffectZoneManager {
 		{ name: 'Spectral Edge',   start: 80n, advancedEffect: true }, // 4
 		{ name: 'Iridescence',   start: 100n, advancedEffect: true }, // 5
 		{ name: 'Ember Verge',   start: 120n, advancedEffect: true }, // 11
-		{ name: 'Ashfall Vocs',        start: 200n, advancedEffect: true }, // 9
-		{ name: 'Dusty Wastes',     start: 140n, advancedEffect: true }, // 6
-		{ name: 'Static',           start: 160n, advancedEffect: true }, // 7
-		{ name: 'Echo Rift',        start: 180n, advancedEffect: true }, // 8
+		{ name: 'Ashfall Vocs',        start: 140n, advancedEffect: true }, // 9
+		{ name: 'Dusty Wastes',     start: 160n, advancedEffect: true }, // 6
+		{ name: 'Static',           start: 180n, advancedEffect: true }, // 7
+		{ name: 'Echo Rift',        start: 200n, advancedEffect: true }, // 8
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */

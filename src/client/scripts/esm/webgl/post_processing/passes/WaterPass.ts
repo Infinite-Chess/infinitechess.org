@@ -26,7 +26,7 @@ export class WaterPass implements PostProcessPass {
 
 	/** The overall strength and visibility of the distortion. */
 	public strength: number = 0.01;
-	/** How fast the waves oscillate or "bob" up and down. */
+	/** How fast the waves oscillate or "bob" up and down, in cycles per second. */
 	public oscillationSpeed: number = 5.0;
 	/** The density of the rings in the ripple, in waves per UV unit. */
 	public frequency: number = 40.0;
@@ -91,10 +91,9 @@ export class WaterPass implements PostProcessPass {
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1i(this.program.getUniformLocation('u_sourceCount'), sourceCount);
-		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
+		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time / 1000); // Convert ms to seconds
 		gl.uniform2fv(this.program.getUniformLocation('u_resolution'), this.resolution);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);
-		gl.uniform1f(this.program.getUniformLocation('u_oscillationSpeed'), this.oscillationSpeed);
 		gl.uniform1f(this.program.getUniformLocation('u_frequency'), this.frequency);
 
 		if (sourceCount > 0) {

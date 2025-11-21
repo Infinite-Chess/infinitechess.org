@@ -102,12 +102,6 @@ export class OceanZone implements Zone {
 		const screenWidthWorld = screenBox.right - screenBox.left;
 		const screenHeightWorld = screenBox.top - screenBox.bottom;
 
-		// If the screen dimensions are invalid, do not attempt to update.
-		if (screenWidthWorld <= 0 || screenHeightWorld <= 0) {
-			this.waterPass.updateSources([]);
-			return;
-		}
-
 		// Calculate the final UV for each ripple and update its source's center.
 		for (let i = 0; i < worldPositions.length; i++) {
 			const pos = worldPositions[i]!;

@@ -34,30 +34,29 @@ export class AshfallVocsZone implements Zone {
 
 	
 	/** The base brightness level around which the brightness will periodically go BELOW. */
-	private baseBrightness: number = -0.1;
+	private baseBrightness: number = 0;
 	/** How much the brightness will vary above and below the base brightness. */
-	private brightnessVariation: number = 0.25;
+	private brightnessVariation: number = 0.3;
 	/** The higher this is, the less percentage of the period the brightness actually lowers, as the change is capped at 0. MUST BE < brightnessVariation! */
 	private brightnessYOffset: number = 0.1;
 	/** The period of the varying brightness, in seconds. */
-	private brightnessPeriod: number = 3.0;
+	private brightnessPeriod: number = 3.5;
 
 	/** The base vignette effect intensity. */
 	private baseVignetteIntensity = 0.6;
 	/** The vignette intensity variation. */
 	private variationVignetteIntensity = 0.2;
 	/** The vignette oscillation period, in seconds. */
-	private vignettePeriod = 0.2;
+	private vignettePeriod = 5;
 
 
 	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {
 		noise.then(texture => this.heatWavePass = new HeatWavePass(programManager, texture));
 
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 1.2;
+		this.colorGradePass.saturation = 2;
 		this.colorGradePass.contrast = 1.4;
-		this.colorGradePass.brightness = -0.1;
-		this.colorGradePass.tint = [1.0, 0.4, 0.1];
+		this.colorGradePass.tint = [1.0, 0.5, 0.4];
 
 		this.vignettePass = new VignettePass(programManager);
 		this.vignettePass.radius = 0.3;
@@ -72,11 +71,11 @@ export class AshfallVocsZone implements Zone {
 				...UndercurrentSoundscape.config.layers,
 				{
 					volume: {
-						base: 0.5,
+						base: 0.025,
 						lfo: {
 							wave: "perlin",
 							rate: 0.22,
-							depth: 0.4
+							depth: 0.01
 						}
 					},
 					source: {
@@ -86,7 +85,7 @@ export class AshfallVocsZone implements Zone {
 						{
 							type: "bandpass",
 							frequency: {
-								base: 7458
+								base: 10000
 							},
 							Q: {
 								base: 0.9601
@@ -124,8 +123,9 @@ export class AshfallVocsZone implements Zone {
 	}
 
 	public getPasses(): PostProcessPass[] {
-		if (this.heatWavePass) return [this.colorGradePass, this.heatWavePass];
-		return [this.colorGradePass];
+		const passes: PostProcessPass[] = [this.colorGradePass, this.vignettePass];
+		if (this.heatWavePass) passes.push(this.heatWavePass);
+		return passes;
 	}
 	
 	public fadeInAmbience(transitionDurationMillis: number): void {
