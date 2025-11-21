@@ -15,14 +15,14 @@ After starting up the server via `npm run dev`, there are a few different proces
 
 ## Project Structure ##
 
+The entire source code of the project is located in [`src`](../src/). This contains all code that is ever run by either the server or client, and contains assets that are served to the client.
+
 ```
 src/
 ├── client/     # Frontend code and assets
 ├── server/     # Backend Node.js server
 └── shared/     # Common logic between client and server
 ```
-
-The entire source code of the project is located in [`src`](../src/). This contains all code that is ever run by either the server or client, and contains assets that are served to the client.
 
 | Directory | Description |
 |-----------|-------------|
