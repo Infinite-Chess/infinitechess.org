@@ -33,8 +33,8 @@ const engineRandomRoyalMoves = (function() {
     }
 
     /**
-     * Calculates a random legal move for a player
-     * Only works if that player has a lone king or royal centaur
+     * Calculates a random legal move for a player.
+     * Only works if that player has a lone king or royal centaur.
      * @param {gamefile} gamefile - The gamefile
      * @param {string} color - "white" or "black": The color of the player to move
      * @returns {Move} random legalmove
