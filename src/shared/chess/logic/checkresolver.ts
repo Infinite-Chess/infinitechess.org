@@ -244,8 +244,9 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: FullGame, moves: LegalMo
 			for (const attacker of checkResults.attackers!) {
 
 				if (!attacker.slidingCheck) { // This attacker is giving a check via a special individual move with a `path` (such as the Rose piece).
+					if (!attacker.path) throw Error(`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a jumping check, unless the check was preexisting! Perhaps color ${typeutil.strcolors[color]} has an existing check? That would be an illegal position. Please enable royalcapture! removeSlidingMovesThatOpenDiscovered() should not be called if the specific color is already in check.`);
 					// Delete all sliding moves and append legal blocking moves
-					appendPathBlockingMoves(gamefile, attacker.path!, moves, pieceSelected.coords, color);
+					appendPathBlockingMoves(gamefile, attacker.path, moves, pieceSelected.coords, color);
 					// Also append the capturing move if it's legal
 					if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker.coords, color, { ignoreIndividualMoves: true })) {
 						moves.individual.push(attacker.coords);
