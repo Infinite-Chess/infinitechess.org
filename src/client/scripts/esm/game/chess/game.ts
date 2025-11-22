@@ -58,7 +58,6 @@ import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
-import { ColorFlowRenderer } from '../rendering/ColorFlowRenderer.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -78,11 +77,11 @@ let pipeline: PostProcessingPipeline;
 /** Manager of Effect Zones */
 let effectZoneManager: EffectZoneManager | undefined;
 
-/**
- * Replaces the starfield with a gradient color flow inside void.
- * Used for creating video footage.
- */
-let _colorFlowRenderer: ColorFlowRenderer;
+// /**
+//  * Replaces the starfield with a gradient color flow inside void.
+//  * Used for creating video footage.
+//  */
+// let colorFlowRenderer: ColorFlowRenderer;
 
 
 
@@ -95,7 +94,7 @@ function init(): void {
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
-	_colorFlowRenderer = new ColorFlowRenderer(gl);
+	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
 	boardtiles.init();
 	
