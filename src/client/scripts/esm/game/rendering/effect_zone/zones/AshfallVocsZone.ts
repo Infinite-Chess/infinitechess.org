@@ -71,11 +71,11 @@ export class AshfallVocsZone implements Zone {
 				...UndercurrentSoundscape.config.layers,
 				{
 					volume: {
-						base: 0.025,
+						base: 0.005,
 						lfo: {
 							wave: "perlin",
 							rate: 0.22,
-							depth: 0.01
+							depth: 0.0003
 						}
 					},
 					source: {

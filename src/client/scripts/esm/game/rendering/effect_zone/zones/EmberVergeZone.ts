@@ -21,16 +21,16 @@ export class EmberVergeZone implements Zone {
 	// --- Configurable Properties ---
 
 	private readonly colors: [number, number, number][] = [
-		[0.92, 0.82, 0.62], // Faded Gold — washed-out warmth from rainbow land
-		[0.82, 0.65, 0.50], // Dusty Amber — dryness and subtle heat
-		[0.72, 0.50, 0.38], // Smolder Clay — earthy warmth increasing
-		[0.82, 0.38, 0.22], // Emberflare Orange — glowing ember tones
-		[0.88, 0.22, 0.15], // Molten Orange-Red — heat intensifies sharply
-		[0.78, 0.05, 0.05], // Ashfall Core Red — near-lava transition
+		[0.92, 0.82, 0.62], // Faded Gold
+		[0.6, 0.8, 0.6],    // Muted Green
+		[0.5, 0.7, 0.9],    // Muted Blue
+		[0.8, 0.5, 0.8],    // Muted Purple
+		[0.88, 0.22, 0.15], // Molten Orange-Red
+		[0.78, 0.05, 0.05], // Ashfall Core Red
 	];
 
 	/** Determines how strongly the gradient colors are blended with the original board tile colors. */
-	private strength: number = 0.7;
+	private strength: number = 0.4;
 
 	/** The base speed at which the gradient texture scrolls across the screen. */
 	private flowSpeed: number = 0.07; // Default: 0.07
