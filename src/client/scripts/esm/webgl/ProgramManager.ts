@@ -34,6 +34,7 @@ import fsSource_water from '../../../shaders/water/fragment.glsl';
 import fsSource_waterRipple from '../../../shaders/water_ripple/fragment.glsl';
 import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
 import fsSource_voronoiDistortion from '../../../shaders/voronoi_distortion/fragment.glsl';
+import fsSource_glitch from '../../../shaders/glitch/fragment.glsl'; // Import the new glitch fragment shader
 
 
 // =============================== Type Definitions ===============================
@@ -99,10 +100,12 @@ type Attributes_HeatWave = never;
 type Uniforms_HeatWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_noiseTexture' | 'u_time' | 'u_strength' | 'u_resolution';
 type Attributes_VoronoiDistortion = never;
 type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_masterStrength' | 'u_time' | 'u_density' | 'u_strength' | 'u_ridgeThickness' | 'u_ridgeStrength' | 'u_resolution';
+type Attributes_Glitch = never; // Glitch pass does not use attributes
+type Uniforms_Glitch = 'u_sceneTexture' | 'u_masterStrength' | 'u_aberrationStrength' | 'u_aberrationOffset' | 'u_tearStrength' | 'u_tearResolution' | 'u_tearMaxDisplacement' | 'u_time' | 'u_resolution';
 
 
 /** The Super Union of all possible attributes. */
-export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_BoardUberShader | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_Water | Attributes_WaterRipple | Attributes_HeatWave | Attributes_VoronoiDistortion;
+export type Attributes_All = Attributes_Color | Attributes_ColorInstanced | Attributes_Texture | Attributes_TextureInstanced | Attributes_ColorTexture | Attributes_MiniImages | Attributes_Highlights | Attributes_Arrows | Attributes_ArrowImages | Attributes_Starfield | Attributes_BoardUberShader | Attributes_PostPass | Attributes_ColorGrade | Attributes_Posterize | Attributes_Vignette | Attributes_SineWave | Attributes_Water | Attributes_WaterRipple | Attributes_HeatWave | Attributes_VoronoiDistortion | Attributes_Glitch;
 
 
 // Each ShaderProgram type
@@ -131,6 +134,7 @@ type Program_Water = ShaderProgram<Attributes_Water, Uniforms_Water>;
 type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterRipple>;
 type Program_HeatWave = ShaderProgram<Attributes_HeatWave, Uniforms_HeatWave>;
 type Program_VoronoiDistortion = ShaderProgram<Attributes_VoronoiDistortion, Uniforms_VoronoiDistortion>;
+type Program_Glitch = ShaderProgram<Attributes_Glitch, Uniforms_Glitch>; // New Glitch Program type
 
 
 export interface ProgramMap {
@@ -185,6 +189,8 @@ export interface ProgramMap {
     heat_wave: Program_HeatWave;
     /** Post Processing Voronoi Cellular Noise Distortion Effect. */
     voronoi_distortion: Program_VoronoiDistortion;
+	/** Post Processing Glitch Effect, combining horizontal tearing and chromatic aberration. */
+	glitch: Program_Glitch;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -225,6 +231,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	water_ripple: { vertex: vsSource_postPass, fragment: fsSource_waterRipple },
 	heat_wave: { vertex: vsSource_postPass, fragment: fsSource_heatWave },
 	voronoi_distortion: { vertex: vsSource_postPass, fragment: fsSource_voronoiDistortion },
+	glitch: { vertex: vsSource_postPass, fragment: fsSource_glitch }, // Add the glitch shader source
 };
 
 
