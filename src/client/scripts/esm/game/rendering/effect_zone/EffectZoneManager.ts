@@ -67,24 +67,27 @@ export class EffectZoneManager {
 		// Define zones in ascending order of their start distance.
 		{ name: 'The Beginning', start: 0n, advancedEffect: false }, // 0
 		// [PRODUCTION] Default distances:
-		// { name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false }, // 1
-		// { name: 'Contortion Field', start: 10n ** 80n, advancedEffect: true }, // 3
-		// { name: 'Spectral Edge',   start: 10n ** 120n, advancedEffect: true }, // 4
-		// { name: 'Iridescence',   start: 10n ** 180n, advancedEffect: true }, // 5
-		// { name: 'Dusty Wastes',     start: 10n ** 330n, advancedEffect: true }, // 6
-		// { name: 'Static',           start: 10n ** 480n, advancedEffect: true }, // 7
-		// { name: 'Echo Rift',        start: 10n ** 780n, advancedEffect: true }, // 8
+		{ name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false }, // 1
+		{ name: 'Contortion Field', start: 10n ** 40n, advancedEffect: true }, // 3
+		{ name: 'Ocean',            start: 10n ** 80n, advancedEffect: true }, // 10
+		{ name: 'Spectral Edge',    start: 10n ** 120n, advancedEffect: true }, // 4
+		{ name: 'Iridescence',      start: 10n ** 180n, advancedEffect: true }, // 5
+		{ name: 'Ember Verge',      start: 10n ** 330n, advancedEffect: true }, // 11
+		{ name: 'Ashfall Vocs',     start: 10n ** 390n, advancedEffect: true }, // 9
+		{ name: 'Dusty Wastes',     start: 10n ** 540n, advancedEffect: true }, // 6
+		{ name: 'Static',           start: 10n ** 690n, advancedEffect: true }, // 7
+		{ name: 'Echo Rift',        start: 10n ** 940n, advancedEffect: true }, // 8
 		// [TESTING] Much shorter distances:
-		{ name: 'Undercurrent',     start: 20n, advancedEffect: false }, // 1
-		{ name: 'Contortion Field', start: 40n, advancedEffect: true }, // 3
-		{ name: 'Ocean',            start: 60n, advancedEffect: true }, // 10
-		{ name: 'Spectral Edge',    start: 80n, advancedEffect: true }, // 4
-		{ name: 'Iridescence',      start: 100n, advancedEffect: true }, // 5
-		{ name: 'Ember Verge',      start: 120n, advancedEffect: true }, // 11
-		{ name: 'Ashfall Vocs',     start: 140n, advancedEffect: true }, // 9
-		{ name: 'Dusty Wastes',     start: 160n, advancedEffect: true }, // 6
-		{ name: 'Static',           start: 180n, advancedEffect: true }, // 7
-		{ name: 'Echo Rift',        start: 200n, advancedEffect: true }, // 8
+		// { name: 'Undercurrent',     start: 20n, advancedEffect: false }, // 1
+		// { name: 'Contortion Field', start: 40n, advancedEffect: true }, // 3
+		// { name: 'Ocean',            start: 60n, advancedEffect: true }, // 10
+		// { name: 'Spectral Edge',    start: 80n, advancedEffect: true }, // 4
+		// { name: 'Iridescence',      start: 100n, advancedEffect: true }, // 5
+		// { name: 'Ember Verge',      start: 120n, advancedEffect: true }, // 11
+		// { name: 'Ashfall Vocs',     start: 140n, advancedEffect: true }, // 9
+		// { name: 'Dusty Wastes',     start: 160n, advancedEffect: true }, // 6
+		// { name: 'Static',           start: 180n, advancedEffect: true }, // 7
+		// { name: 'Echo Rift',        start: 200n, advancedEffect: true }, // 8
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
