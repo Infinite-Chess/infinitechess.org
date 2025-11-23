@@ -30,7 +30,7 @@ export class EmberVergeZone implements Zone {
 	];
 
 	/** Determines how strongly the gradient colors are blended with the original board tile colors. */
-	private strength: number = 0.4;
+	private strength: number = 0.5;
 
 	/** The base speed at which the gradient texture scrolls across the screen. */
 	private flowSpeed: number = 0.07; // Default: 0.07

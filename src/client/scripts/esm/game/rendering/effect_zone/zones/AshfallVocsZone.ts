@@ -1,7 +1,6 @@
 
 // src/client/scripts/esm/game/rendering/effect_zone/zones/AshfallVocsZone.ts
 
-import AudioManager from "../../../../audio/AudioManager";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";
@@ -32,35 +31,20 @@ export class AshfallVocsZone implements Zone {
 	/** The speed of the moving heat waves. Default: 0.5 (strength 0.04) */
 	private heatWaveSpeed: number = 2.0;
 
-	
-	/** The base brightness level around which the brightness will periodically go BELOW. */
-	private baseBrightness: number = 0;
-	/** How much the brightness will vary above and below the base brightness. */
-	private brightnessVariation: number = 0.3;
-	/** The higher this is, the less percentage of the period the brightness actually lowers, as the change is capped at 0. MUST BE < brightnessVariation! */
-	private brightnessYOffset: number = 0.1;
-	/** The period of the varying brightness, in seconds. */
-	private brightnessPeriod: number = 3.5;
-
-	/** The base vignette effect intensity. */
-	private baseVignetteIntensity = 0.6;
-	/** The vignette intensity variation. */
-	private variationVignetteIntensity = 0.2;
-	/** The vignette oscillation period, in seconds. */
-	private vignettePeriod = 5;
-
 
 	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {
 		noise.then(texture => this.heatWavePass = new HeatWavePass(programManager, texture));
 
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 2;
-		this.colorGradePass.contrast = 1.4;
-		this.colorGradePass.tint = [1.0, 0.5, 0.4];
+		this.colorGradePass.contrast = 1.4; // Set contrast to constant value
+		this.colorGradePass.brightness = -0.35; // Set brightness to constant value
+		this.colorGradePass.tint = [1.0, 0.4, 0.4];
 
 		this.vignettePass = new VignettePass(programManager);
 		this.vignettePass.radius = 0.3;
 		this.vignettePass.softness = 0.5;
+		this.vignettePass.intensity = 0.7;
 
 
 		// Load the ambience...
@@ -75,7 +59,7 @@ export class AshfallVocsZone implements Zone {
 						lfo: {
 							wave: "perlin",
 							rate: 0.22,
-							depth: 0.0003
+							depth: 0.002
 						}
 					},
 					source: {
@@ -106,16 +90,6 @@ export class AshfallVocsZone implements Zone {
 
 	public update(): void {
 		if (this.heatWavePass) this.heatWavePass.time = performance.now() / 1000 * this.heatWaveSpeed;
-
-		// Periodically lower the brightness, to make it appear as if the biome is breathing.
-		// Capped at 0 so half the time the brightness doesn't change, and the other 
-		const currentVariation = Math.min(Math.sin(performance.now() / 1000 / this.brightnessPeriod * Math.PI * 2) * this.brightnessVariation + this.brightnessYOffset, 0);
-		const currentBrightness = this.baseBrightness + currentVariation;
-		this.colorGradePass.brightness = currentBrightness;
-
-		// Vary the vignette intensity periodically as well.
-		const currentVignetteVariation = Math.sin(performance.now() / 1000 / this.vignettePeriod * Math.PI * 2) * this.variationVignetteIntensity;
-		this.vignettePass.intensity = this.baseVignetteIntensity + currentVignetteVariation;
 	}
 
 	public getUniforms(): Record<string, any> {

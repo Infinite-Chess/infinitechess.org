@@ -22,7 +22,7 @@ export class DustyWastesZone implements Zone {
 
 
 	/** The strength of the effect. */
-	private strength: number = 0.35; // Default: 0.35
+	private strength: number = 0.4; // Default: 0.35
 
 	/** How many times the noise texture should tile the screen. */
 	private noiseTiling: number = 1.25;
@@ -57,8 +57,8 @@ export class DustyWastesZone implements Zone {
 
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 0.6; // Default: 0.7
-		
+		this.colorGradePass.brightness = -0.2; // Default: 0.7
+		this.colorGradePass.tint = [1.0, 0.75, 0.7];
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
