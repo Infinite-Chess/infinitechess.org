@@ -24,9 +24,9 @@ export class GlitchPass implements PostProcessPass {
 	/** The strength of the horizontal tearing. */
 	public tearStrength: number = 0.0;
 	/** The height of individual tear lines in virtual CSS pixels. */
-	public tearResolution: number = 5.0; // e.g., 5 pixels high tear lines
+	public tearResolution: number = 16.0;
 	/** The maximum horizontal displacement for a tear in virtual CSS pixels. */
-	public tearMaxDisplacement: number = 20.0; // e.g., 20 pixels max displacement
+	public tearMaxDisplacement: number = 20.0;
 
 	/** The current time, used to animate the glitch patterns. Increment this each frame. */
 	public time: number = 0.0;

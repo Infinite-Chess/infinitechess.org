@@ -3,6 +3,9 @@ precision highp float;
 
 uniform sampler2D u_sceneTexture;
 
+// --- Master Strength ---
+uniform float u_masterStrength; // 0.0 = no effect, 1.0 = full effect
+
 // --- Chromatic Aberration Uniforms ---
 uniform float u_aberrationStrength;
 uniform vec2 u_aberrationOffset; // Direction and magnitude of the color channel separation
@@ -25,22 +28,27 @@ void main() {
     // Calculate a unique tear offset for this scanline based on its Y coordinate and time
     // Convert u_tearResolution (pixels) to UV space height of a tear line
     // Convert u_tearMaxDisplacement (pixels) to UV space horizontal displacement
-    float tearLineHeightUV = u_tearResolution / u_resolution.y;
+    float tearLineHeightUV = u_tearResolution / u_resolution.y; 
     float tearMaxDisplacementUV = u_tearMaxDisplacement / u_resolution.x;
 
     // Determine which "tear line" this pixel belongs to
-    float lineIndex = floor(v_uv.y / tearLineHeightUV);
+    float lineIndex = floor(v_uv.y / tearLineHeightUV); 
 
-    // Calculate a pseudo-random offset for this tear line
-    // Using sine with lineIndex and time for a wavy or randomized offset pattern
-    float tearOffset = sin(lineIndex * 123.456 + u_time * 10.0) * tearMaxDisplacementUV;
-    
-    // Mix the tear offset with a more randomized per-pixel noise
-    // Using a texture sample to introduce some per-pixel variation within the tear line
-    tearOffset += (texture(u_sceneTexture, v_uv * 5.0 + u_time * 0.1).r - 0.5) * tearMaxDisplacementUV * 0.5;
+    // Use a quantized time for a less fluid, more 'jerky' animation
+    float quantizedTime = floor(u_time * 20.0) / 20.0; // Adjust 20.0 for desired 'steps' per second
 
-    // Apply the tear offset, scaled by tearStrength
-    texCoord.x += tearOffset * u_tearStrength;
+    // Generate a pseudo-random value for displacement per line, varying with quantized time
+    // This replaces drawing from a noise texture
+    float randomOffset = fract(sin(lineIndex * 123.456 + quantizedTime * 789.0) * 4567.89); // Example magic numbers
+
+    // Map randomOffset (0-1) to desired displacement range (-tearMaxDisplacementUV to +tearMaxDisplacementUV)
+    float tearOffset = (randomOffset * 2.0 - 1.0) * tearMaxDisplacementUV;
+
+    // Determine direction based on lineIndex: every other line shifts opposite
+    float direction = mix(1.0, -1.0, mod(lineIndex, 2.0)); 
+
+    // Apply the tear offset, scaled by tearStrength and direction
+    texCoord.x += tearOffset * direction * u_tearStrength;
 
     // --- Chromatic Aberration ---
     // Sample the red, green, and blue channels with different offsets

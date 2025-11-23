@@ -20,6 +20,7 @@ import { SpectralEdgeZone } from "./zones/SpectralEdgeZone";
 import { AshfallVocsZone } from "./zones/AshfallVocsZone";
 import { OceanZone } from "./zones/OceanZone";
 import { EmberVergeZone } from "./zones/EmberVergeZone";
+import { GlitchZone } from "./zones/GlitchZone";
 
 
 /**
@@ -85,8 +86,9 @@ export class EffectZoneManager {
 		{ name: 'Ember Verge',   start: 120n, advancedEffect: true }, // 11
 		{ name: 'Ashfall Vocs',        start: 140n, advancedEffect: true }, // 9
 		{ name: 'Dusty Wastes',     start: 160n, advancedEffect: true }, // 6
-		{ name: 'Static',           start: 180n, advancedEffect: true }, // 7
-		{ name: 'Echo Rift',        start: 200n, advancedEffect: true }, // 8
+		{ name: 'Glitch',           start: 180n, advancedEffect: true }, // 12
+		{ name: 'Static',           start: 200n, advancedEffect: true }, // 7
+		{ name: 'Echo Rift',        start: 220n, advancedEffect: true }, // 8
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -146,6 +148,7 @@ export class EffectZoneManager {
 			'Ember Verge': new EmberVergeZone(),
 			'Ashfall Vocs': new AshfallVocsZone(programManager, noiseTexture),
 			'Dusty Wastes': new DustyWastesZone(programManager),
+			'Glitch': new GlitchZone(programManager),
 			'Static': new StaticZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),
 		};
