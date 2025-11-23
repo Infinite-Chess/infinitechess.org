@@ -14,7 +14,7 @@ declare global {
 
     // Our Custom Events
 	interface DocumentEventMap {
-		ping: CustomEvent<number>;
+		'ping': CustomEvent<number>;
 		'socket-closed': CustomEvent<void>;
 		'premoves-toggle': CustomEvent<boolean>;
 		'lingering-annotations-toggle': CustomEvent<boolean>;
@@ -22,6 +22,7 @@ declare global {
 		'master-volume-change': CustomEvent<number>;
 		'ambience-toggle': CustomEvent<boolean>;
 		'ray-count-change': CustomEvent<number>;
+		'canvas_resize': CustomEvent<{ width: number; height: number }>;
 	}
 
 	// Add an optional 'memberInfo' to the global Express Request interface

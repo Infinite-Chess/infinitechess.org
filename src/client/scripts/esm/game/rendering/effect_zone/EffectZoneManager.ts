@@ -10,13 +10,15 @@ import { ProgramManager } from "../../../webgl/ProgramManager";
 import { TheBeginningZone } from "./zones/TheBeginningZone";
 import { UndercurrentZone } from "./zones/UndercurrentZone";
 import { DustyWastesZone } from "./zones/DustyWastesZone";
-import { SearingDunesZone } from "./zones/SearingDunesZone";
 import { ContortionFieldZone } from "./zones/ContortionFieldZone";
 import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { StaticZone } from "./zones/StaticZone";
 import { PostProcessPass } from "../../../webgl/post_processing/PostProcessingPipeline";
 import { IridescenceZone } from "./zones/IridescenceZone";
 import { SpectralEdgeZone } from "./zones/SpectralEdgeZone";
+import { AshfallVocsZone } from "./zones/AshfallVocsZone";
+import { OceanZone } from "./zones/OceanZone";
+import { EmberVergeZone } from "./zones/EmberVergeZone";
 
 
 /**
@@ -66,22 +68,26 @@ export class EffectZoneManager {
 		{ name: 'The Beginning', start: 0n, advancedEffect: false }, // 0
 		// [PRODUCTION] Default distances:
 		{ name: 'Undercurrent',     start: 10n ** 3n, advancedEffect: false }, // 1
-		{ name: 'Searing Dunes',   start: 10n ** 40n, advancedEffect: true }, // 2
-		{ name: 'Contortion Field', start: 10n ** 80n, advancedEffect: true }, // 3
-		{ name: 'Spectral Edge',   start: 10n ** 120n, advancedEffect: true }, // 4
-		{ name: 'Iridescence',   start: 10n ** 180n, advancedEffect: true }, // 5
-		{ name: 'Dusty Wastes',     start: 10n ** 330n, advancedEffect: true }, // 6
-		{ name: 'Static',           start: 10n ** 480n, advancedEffect: true }, // 7
-		{ name: 'Echo Rift',        start: 10n ** 780n, advancedEffect: true }, // 8
+		{ name: 'Contortion Field', start: 10n ** 40n, advancedEffect: true }, // 3
+		{ name: 'Ocean',            start: 10n ** 80n, advancedEffect: true }, // 10
+		{ name: 'Spectral Edge',    start: 10n ** 120n, advancedEffect: true }, // 4
+		{ name: 'Iridescence',      start: 10n ** 180n, advancedEffect: true }, // 5
+		{ name: 'Ember Verge',      start: 10n ** 330n, advancedEffect: true }, // 11
+		{ name: 'Ashfall Vocs',     start: 10n ** 390n, advancedEffect: true }, // 9
+		{ name: 'Dusty Wastes',     start: 10n ** 540n, advancedEffect: true }, // 6
+		{ name: 'Static',           start: 10n ** 690n, advancedEffect: true }, // 7
+		{ name: 'Echo Rift',        start: 10n ** 940n, advancedEffect: true }, // 8
 		// [TESTING] Much shorter distances:
 		// { name: 'Undercurrent',     start: 20n, advancedEffect: false }, // 1
-		// { name: 'Searing Dunes',    start: 40n, advancedEffect: true }, // 2
-		// { name: 'Contortion Field', start: 60n, advancedEffect: true }, // 3
-		// { name: 'Spectral Edge',   start: 80n, advancedEffect: true }, // 4
-		// { name: 'Iridescence',   start: 100n, advancedEffect: true }, // 5
-		// { name: 'Dusty Wastes',     start: 120n, advancedEffect: true }, // 6
-		// { name: 'Static',           start: 140n, advancedEffect: true }, // 7
-		// { name: 'Echo Rift',        start: 160n, advancedEffect: true }, // 8
+		// { name: 'Contortion Field', start: 40n, advancedEffect: true }, // 3
+		// { name: 'Ocean',            start: 60n, advancedEffect: true }, // 10
+		// { name: 'Spectral Edge',    start: 80n, advancedEffect: true }, // 4
+		// { name: 'Iridescence',      start: 100n, advancedEffect: true }, // 5
+		// { name: 'Ember Verge',      start: 120n, advancedEffect: true }, // 11
+		// { name: 'Ashfall Vocs',     start: 140n, advancedEffect: true }, // 9
+		// { name: 'Dusty Wastes',     start: 160n, advancedEffect: true }, // 6
+		// { name: 'Static',           start: 180n, advancedEffect: true }, // 7
+		// { name: 'Echo Rift',        start: 200n, advancedEffect: true }, // 8
 	] as const satisfies Readonly<EffectZone>[];
 
 	/** A reference to the WebGL rendering context. */
@@ -133,10 +139,12 @@ export class EffectZoneManager {
 		this.zones = {
 			'The Beginning': new TheBeginningZone(),
 			'Undercurrent': new UndercurrentZone(),
-			'Searing Dunes': new SearingDunesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
+			'Ocean': new OceanZone(programManager),
 			'Spectral Edge': new SpectralEdgeZone(),
 			'Iridescence': new IridescenceZone(),
+			'Ember Verge': new EmberVergeZone(),
+			'Ashfall Vocs': new AshfallVocsZone(programManager, noiseTexture),
 			'Dusty Wastes': new DustyWastesZone(programManager),
 			'Static': new StaticZone(programManager),
 			'Echo Rift': new EchoRiftZone(programManager),

@@ -45,6 +45,19 @@ uniform vec3 u5_color4;
 uniform vec3 u5_color5;
 uniform vec3 u5_color6;
 
+// Ember Verge Uniforms (Effect Type 11)
+uniform float u11_flowDistance;
+uniform vec2 u11_flowDirectionVec;
+uniform float u11_gradientRepeat;
+uniform float u11_maskOffset;
+uniform float u11_strength;
+uniform vec3 u11_color1;
+uniform vec3 u11_color2;
+uniform vec3 u11_color3;
+uniform vec3 u11_color4;
+uniform vec3 u11_color5;
+uniform vec3 u11_color6;
+
 // Dusty Wastes Uniforms (Effect Type 6)
 uniform float u6_strength; // The opacity of the scrolling noise texture
 uniform float u6_noiseTiling; // How many times the noise texture repeats across the screen
@@ -201,6 +214,25 @@ vec3 calculateEffectColor(
 			u5_color4,
 			u5_color5,
 			u5_color6
+		);
+	} else if (effectType == 11.0) {
+		return ColorFlow(
+			baseColor,
+			screenUV,
+			maskValue,
+            // Pass effect-specific uniforms
+            u11_flowDistance,
+            u11_flowDirectionVec,
+            u11_gradientRepeat,
+            u11_maskOffset,
+            u11_strength,
+			// Color stops
+			u11_color1,
+			u11_color2,
+			u11_color3,
+			u11_color4,
+			u11_color5,
+			u11_color6
 		);
 	} else if (effectType == 6.0) {
 		return DustyWastes(

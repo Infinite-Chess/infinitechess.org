@@ -80,7 +80,7 @@ export class WaterRipplePass implements PostProcessPass {
 	 */
 	public setResolution(width: number, height: number): void {
 		this.resolution[0] = width;
-		this.resolution[1] = height > 0 ? height : 1; // Avoid division by zero
+		this.resolution[1] = height;
 	}
 
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
