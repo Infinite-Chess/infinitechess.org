@@ -33,10 +33,10 @@ export class EmberVergeZone implements Zone {
 	private strength: number = 0.5;
 
 	/** The base speed at which the gradient texture scrolls across the screen. */
-	private flowSpeed: number = 0.07; // Default: 0.07
+	private flowSpeed: number = 0.07;
 
 	/** The speed at which the flow direction changes over time, in radians per second. */
-	private flowRotationSpeed: number = 0.0025; // Default: 0.0025
+	private flowRotationSpeed: number = 0.0025;
 
 	/** How many times the full gradient repeats across the screen along the direction of flow. */
 	private gradientRepeat: number = 0.7;
@@ -51,14 +51,8 @@ export class EmberVergeZone implements Zone {
 	private flowDirection: number = Math.random() * Math.PI * 2;
 
 
-
 	constructor() {
-		// Load the ambience...
-
-		const noiseConfig: SoundscapeConfig = UndercurrentSoundscape.config;
-
-		// Initialize the player with the config.
-		this.ambience = new SoundscapePlayer(noiseConfig);
+		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 	}
 
 

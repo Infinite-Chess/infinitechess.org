@@ -28,7 +28,7 @@ export class AshfallVocsZone implements Zone {
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
 	
-	/** The speed of the moving heat waves. Default: 0.5 (strength 0.04) */
+	/** The speed of the moving heat waves. */
 	private heatWaveSpeed: number = 2.0;
 
 
@@ -37,8 +37,8 @@ export class AshfallVocsZone implements Zone {
 
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 2;
-		this.colorGradePass.contrast = 1.4; // Set contrast to constant value
-		this.colorGradePass.brightness = -0.35; // Set brightness to constant value
+		this.colorGradePass.contrast = 1.4;
+		this.colorGradePass.brightness = -0.35;
 		this.colorGradePass.tint = [1.0, 0.4, 0.4];
 
 		this.vignettePass = new VignettePass(programManager);
@@ -46,14 +46,13 @@ export class AshfallVocsZone implements Zone {
 		this.vignettePass.softness = 0.5;
 		this.vignettePass.intensity = 0.7;
 
-
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
 			masterVolume: 0.36,
 			layers: [
 				...UndercurrentSoundscape.config.layers,
-				{
+				{ // High pitched sizzling
 					volume: {
 						base: 0.005,
 						lfo: {

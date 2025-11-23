@@ -58,7 +58,7 @@ export class DustyWastesZone implements Zone {
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.brightness = -0.2; // Default: 0.7
-		this.colorGradePass.tint = [1.0, 0.75, 0.7];
+		this.colorGradePass.tint = [1.0, 0.75, 0.7]; // Slight red tint
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {

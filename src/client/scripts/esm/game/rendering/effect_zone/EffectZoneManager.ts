@@ -10,7 +10,6 @@ import { ProgramManager } from "../../../webgl/ProgramManager";
 import { TheBeginningZone } from "./zones/TheBeginningZone";
 import { UndercurrentZone } from "./zones/UndercurrentZone";
 import { DustyWastesZone } from "./zones/DustyWastesZone";
-// import { SearingDunesZone } from "./zones/SearingDunesZone";
 import { ContortionFieldZone } from "./zones/ContortionFieldZone";
 import { EchoRiftZone } from "./zones/EchoRiftZone";
 import { StaticZone } from "./zones/StaticZone";
@@ -79,11 +78,11 @@ export class EffectZoneManager {
 		// [TESTING] Much shorter distances:
 		{ name: 'Undercurrent',     start: 20n, advancedEffect: false }, // 1
 		{ name: 'Contortion Field', start: 40n, advancedEffect: true }, // 3
-		{ name: 'Ocean',        start: 60n, advancedEffect: true }, // 10
-		{ name: 'Spectral Edge',   start: 80n, advancedEffect: true }, // 4
-		{ name: 'Iridescence',   start: 100n, advancedEffect: true }, // 5
-		{ name: 'Ember Verge',   start: 120n, advancedEffect: true }, // 11
-		{ name: 'Ashfall Vocs',        start: 140n, advancedEffect: true }, // 9
+		{ name: 'Ocean',            start: 60n, advancedEffect: true }, // 10
+		{ name: 'Spectral Edge',    start: 80n, advancedEffect: true }, // 4
+		{ name: 'Iridescence',      start: 100n, advancedEffect: true }, // 5
+		{ name: 'Ember Verge',      start: 120n, advancedEffect: true }, // 11
+		{ name: 'Ashfall Vocs',     start: 140n, advancedEffect: true }, // 9
 		{ name: 'Dusty Wastes',     start: 160n, advancedEffect: true }, // 6
 		{ name: 'Static',           start: 180n, advancedEffect: true }, // 7
 		{ name: 'Echo Rift',        start: 200n, advancedEffect: true }, // 8
@@ -138,7 +137,6 @@ export class EffectZoneManager {
 		this.zones = {
 			'The Beginning': new TheBeginningZone(),
 			'Undercurrent': new UndercurrentZone(),
-			// 'Searing Dunes': new SearingDunesZone(programManager, noiseTexture),
 			'Contortion Field': new ContortionFieldZone(programManager),
 			'Ocean': new OceanZone(programManager),
 			'Spectral Edge': new SpectralEdgeZone(),
