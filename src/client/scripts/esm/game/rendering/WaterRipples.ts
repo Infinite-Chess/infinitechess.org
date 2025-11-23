@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/game/rendering/WaterRipples.ts
+
 /**
  * This scripts managers the animated water ripple effect for extremely large moves.
  */
@@ -61,6 +63,14 @@ function init(programManager: ProgramManager, width: number, height: number): vo
 	waterRipplePass = new WaterRipplePass(programManager, width, height);
 
 	updateRippleLifetime(width, height);
+
+	// The post processing effect relies on the dimensions of the canvas.
+	// Init listener for screen resize
+	document.addEventListener("canvas_resize", (event: CustomEvent) => {
+		const { width, height } = event.detail as { width: number, height: number };
+		waterRipplePass.setResolution(width, height);
+		updateRippleLifetime(width, height);
+	});
 }
 
 function updateRippleLifetime(width: number, height: number): void {
@@ -169,17 +179,10 @@ function getPass(): PostProcessPass[] {
 	return [waterRipplePass];
 }
 
-/** The post processing effect relies on the dimensions of the canvas. */
-function onScreenResize(width: number, height: number): void {
-	waterRipplePass.setResolution(width, height);
-	updateRippleLifetime(width, height);
-}
-
 
 export default {
 	init,
 	addRipple,
 	update,
 	getPass,
-	onScreenResize,
 };

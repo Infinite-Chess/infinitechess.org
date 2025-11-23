@@ -1,6 +1,11 @@
 
 // src/client/scripts/esm/game/rendering/effect_zone/zones/SearingDunesZone.ts
 
+/**
+ * THIS IS A DEPRICATED ZONE, REPLACED BY Ashfall Vocs!!!
+ * This one only has the heat waves effect and no other color changes.
+ */
+
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
 import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { Zone } from "../EffectZoneManager";

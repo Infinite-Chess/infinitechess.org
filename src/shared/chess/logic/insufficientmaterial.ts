@@ -27,7 +27,7 @@ type Scenario = TypeGroup<PieceCount>;
 
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
-// so that bishops on different colored squares are treated seperately
+// so that bishops on different colored squares are treated separately
 
 // Checkmate one black king with one white king for help
 // The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list

@@ -944,7 +944,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	/**
 	 * Position
 	 * 
-	 * SPECAIL HANDLING FOR THE POSITION (It can be too long to regex match all at once)
+	 * SPECIAL HANDLING FOR THE POSITION (It can be too long to regex match all at once)
 	 * MUST BE TESTED AFTER THE MOVES, as this may wrongfully interpret the
 	 * start of the moves section as the start of the position, if the position isn't present.
 	 */

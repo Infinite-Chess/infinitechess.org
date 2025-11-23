@@ -1,7 +1,7 @@
 
 import type { LayerConfig } from "../../../../audio/SoundLayer";
 
-/** The first two layers of the Iridescence soundscape. */
+/** The first two layers of the Iridescence soundscape (lower pitch). */
 const layers12: LayerConfig[] = [
 	{
 		volume: {
@@ -73,7 +73,7 @@ const layers12: LayerConfig[] = [
 	}
 ];
 
-/** The third and fourth layers of the Iridescence soundscape. */
+/** The third and fourth layers of the Iridescence soundscape (higher pitch). */
 const layers34: LayerConfig[] = [
 	{
 		volume: {
