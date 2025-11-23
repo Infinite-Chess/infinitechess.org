@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "73"
+version = "75"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -262,6 +262,7 @@ Classical_Plus = "Klassisch+"
 CoaIP = "Schach auf einer unendlichen Ebene"
 Pawndard = "Pawndard"
 Knighted_Chess = "Springer-Schach"
+Palace = "Palast"
 Knightline = "Springerschnur"
 Core = "Kern"
 Standarch = "Standard"
@@ -278,6 +279,8 @@ Chess = "Schach"
 Classical_KOTH = "Experimentell: Klassisch - KOTH"
 CoaIP_KOTH = "Experimentell: CoaIP - KOTH"
 CoaIP_HO = "Schach auf einer unendlichen Ebene - Huygens Option"
+CoaIP_RO = "Schach auf einer unendlichen Ebene - Rosen Option"
+CoaIP_NO = "Schach auf einer unendlichen Ebene - Rösselsprinter Option"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
@@ -314,8 +317,8 @@ erase = "Anmerkungen löschen"
 collapse = "Anmerkungen einklappen"
 rewind_move = "Zug zurückspulen"
 forward_move = "Zug vorspulen"
-undo_edit = "Rückgängig" # Board editor
-redo_edit = "Wiederherstellen" # Board editor
+undo_edit = "Rückgängig (Ctrl+Z)" # Board editor
+redo_edit = "Wiederherstellen (Ctrl+Y)" # Board editor
 pause = "Pause"
 undo = "Zug rückgängig machen" # Checkmate practice game
 restart = "Spiel neu starten" # Checkmate practice game
