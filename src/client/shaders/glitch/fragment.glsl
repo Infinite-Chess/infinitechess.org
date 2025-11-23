@@ -1,6 +1,8 @@
 #version 300 es
 precision highp float;
 
+// src/client/shaders/glitch/fragment.glsl
+
 uniform sampler2D u_sceneTexture;
 
 // --- Master Strength ---

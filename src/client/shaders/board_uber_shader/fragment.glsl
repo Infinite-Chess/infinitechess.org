@@ -215,7 +215,7 @@ vec3 calculateEffectColor(
 			u5_color5,
 			u5_color6
 		);
-	} else if (effectType == 11.0) { // Ember Verge
+	} else if (effectType == 11.0) {
 		return ColorFlow(
 			baseColor,
 			screenUV,

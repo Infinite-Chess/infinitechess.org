@@ -44,7 +44,7 @@ export class WaterPass implements PostProcessPass {
 	 * Creates a new PondPass.
 	 * @param programManager - The ProgramManager instance to retrieve the shader program.
 	 * @param width - The current width of the canvas.
-	param height - The current height of the canvas.
+	 * @param height - The current height of the canvas.
 	 */
 	constructor(programManager: ProgramManager, width: number, height: number) {
 		this.program = programManager.get('water');

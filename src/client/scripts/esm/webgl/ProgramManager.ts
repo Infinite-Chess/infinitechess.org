@@ -134,7 +134,7 @@ type Program_Water = ShaderProgram<Attributes_Water, Uniforms_Water>;
 type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterRipple>;
 type Program_HeatWave = ShaderProgram<Attributes_HeatWave, Uniforms_HeatWave>;
 type Program_VoronoiDistortion = ShaderProgram<Attributes_VoronoiDistortion, Uniforms_VoronoiDistortion>;
-type Program_Glitch = ShaderProgram<Attributes_Glitch, Uniforms_Glitch>; // New Glitch Program type
+type Program_Glitch = ShaderProgram<Attributes_Glitch, Uniforms_Glitch>;
 
 
 export interface ProgramMap {
@@ -189,7 +189,7 @@ export interface ProgramMap {
     heat_wave: Program_HeatWave;
     /** Post Processing Voronoi Cellular Noise Distortion Effect. */
     voronoi_distortion: Program_VoronoiDistortion;
-	/** Post Processing Glitch Effect, combining horizontal tearing and chromatic aberration. */
+	/** Post Processing Glitch Effect. */
 	glitch: Program_Glitch;
 }
 
@@ -231,7 +231,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	water_ripple: { vertex: vsSource_postPass, fragment: fsSource_waterRipple },
 	heat_wave: { vertex: vsSource_postPass, fragment: fsSource_heatWave },
 	voronoi_distortion: { vertex: vsSource_postPass, fragment: fsSource_voronoiDistortion },
-	glitch: { vertex: vsSource_postPass, fragment: fsSource_glitch }, // Add the glitch shader source
+	glitch: { vertex: vsSource_postPass, fragment: fsSource_glitch },
 };
 
 
