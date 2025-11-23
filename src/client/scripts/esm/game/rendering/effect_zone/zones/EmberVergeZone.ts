@@ -7,7 +7,7 @@ import type { Zone } from "../EffectZoneManager";
 import loadbalancer from "../../../misc/loadbalancer";
 import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
 
 
 export class EmberVergeZone implements Zone {
