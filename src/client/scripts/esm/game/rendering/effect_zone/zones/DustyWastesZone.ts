@@ -23,6 +23,7 @@ export class DustyWastesZone implements Zone {
 	private ambience: SoundscapePlayer;
 
 
+	// --- Wind Effect Properties ---
 	/** The opacity of the wind effect. */
 	private windOpacity: number = 0.4; // Default: 0.35
 
@@ -45,7 +46,7 @@ export class DustyWastesZone implements Zone {
 	private windRotationSpeed: number = 0.0025;
 
 
-	// --- Glitch Effect Properties (from GlitchZone) ---
+	// --- Glitch Effect Properties ---
 	/** A multiplier for the chromatic aberration strength. */
 	private aberrationStrengthMultiplier: number = 1.3;
 	/** Minimum amount of trauma to add per glitch burst. */
@@ -64,6 +65,7 @@ export class DustyWastesZone implements Zone {
 
 	// ============ State ============
 
+	// --- Wind Animation State ---
 	/** The wind direction in radians. 0 is to the right. */
 	private windDirection: number = Math.random() * Math.PI * 2;
 

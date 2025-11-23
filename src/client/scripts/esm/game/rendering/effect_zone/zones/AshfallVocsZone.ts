@@ -17,11 +17,7 @@ export class AshfallVocsZone implements Zone {
 	readonly effectType: number = 9;
 
 	private colorGradePass: ColorGradePass;
-
-	/** Post processing vignette effect. */
 	private vignettePass: VignettePass;
-	
-	/** Post processing effect creating heat waves. */
 	private heatWavePass: HeatWavePass | undefined = undefined;
 
 
