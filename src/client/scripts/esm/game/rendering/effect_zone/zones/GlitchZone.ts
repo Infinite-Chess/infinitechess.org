@@ -4,6 +4,7 @@ import { ProgramManager } from "../../../../webgl/ProgramManager";
 import { GlitchPass } from "../../../../webgl/post_processing/passes/GlitchPass";
 import { Zone } from "../EffectZoneManager";
 import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import AudioManager from "../../../../audio/AudioManager";
 // @ts-ignore
 import loadbalancer from "../../../misc/loadbalancer";
 
@@ -86,9 +87,11 @@ export class GlitchZone implements Zone {
 
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
+		AudioManager.fadeInDownsampler(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeOut(transitionDurationMillis);
+		AudioManager.fadeOutDownsampler(transitionDurationMillis);
 	}
 }

@@ -130,11 +130,9 @@ export class AshfallVocsZone implements Zone {
 	
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
-		AudioManager.fadeInDownsampler(transitionDurationMillis);
 	}
 
 	public fadeOutAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeOut(transitionDurationMillis);
-		AudioManager.fadeOutDownsampler(transitionDurationMillis);
 	}
 }
