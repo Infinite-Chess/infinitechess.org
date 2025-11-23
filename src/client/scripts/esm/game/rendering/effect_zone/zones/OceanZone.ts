@@ -10,6 +10,7 @@ import { RippleSource, WaterPass } from "../../../../webgl/post_processing/passe
 import camera from "../../camera";
 import { Zone } from "../EffectZoneManager";
 import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
+import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
 
 
 export class OceanZone implements Zone {
@@ -64,11 +65,7 @@ export class OceanZone implements Zone {
 		// Determine the rotation direction randomly.
 		this.rotationDirection = Math.random() < 0.5 ? 1 : -1;
 
-		// TODO: Configure an appropriate ocean soundscape.
-		this.ambience = new SoundscapePlayer({
-			masterVolume: 1.0,
-			layers: []
-		});
+		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 
 		// Create event listener for screen resize to update water pass resolution.
 		document.addEventListener("canvas_resize", (event: CustomEvent) => {
@@ -115,6 +112,7 @@ export class OceanZone implements Zone {
 
 		// --- 4. Feed the updated ripple source locations to the pass ---
 		this.waterPass.updateSources(this.sources);
+		this.waterPass.time = performance.now();
 	}
 
 	public getUniforms(): Record<string, any> {
