@@ -21,6 +21,6 @@ There are still MANY more items I have planned for this project. Just a few of t
 - Engine play
 - Games with infinitely many pieces
 - 4 Player
-- Massive Multiplayer Online
+- Massive Multiplayer Onlin
 
 Because I want Infinite Chess to grow to as big of an audience as possible, it's licensed with a goal of keeping this game free forever! Check out [Copying](./docs/COPYING.md) for more details.
