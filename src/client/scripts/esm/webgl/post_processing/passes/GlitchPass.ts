@@ -57,5 +57,6 @@ export class GlitchPass implements PostProcessPass {
 		gl.uniform1f(this.program.getUniformLocation('u_tearMaxDisplacement'), this.tearMaxDisplacement);
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time);
 		gl.uniform2f(this.program.getUniformLocation('u_resolution'), gl.canvas.width, gl.canvas.height);
+		gl.uniform1f(this.program.getUniformLocation('u_devicePixelRatio'), window.devicePixelRatio);
 	}
 }
