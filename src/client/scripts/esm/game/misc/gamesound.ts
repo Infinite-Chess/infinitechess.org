@@ -1,6 +1,14 @@
 
 // src/client/scripts/esm/game/misc/gamesound.ts
 
+/**
+ * This script is in charge of storing our audio
+ * spritesheet, and playing game sound effects.
+ * It takes variables such as distances pieces moved
+ * so it can deduce the correct sound play options when
+ * calling {@link AudioManager.playAudio}.
+ */
+
 import type { EffectConfig } from "../../audio/AudioEffects.js";
 import type { Coords } from "../../../../../shared/chess/util/coordutil.js";
 
@@ -9,13 +17,6 @@ import math from "../../../../../shared/util/math/math.js";
 import WaterRipples from "../rendering/WaterRipples.js";
 import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
 import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
-
-/**
- * This script is in charge of playing game sound effects.
- * It takes variables such as distances pieces moved
- * so it can deduce the correct sound play options when
- * calling {@link AudioManager.playAudio}.
- */
 
 
 // Constants --------------------------------------------------------------------------
@@ -130,6 +131,7 @@ const PREMOVE_CONFIG = {
 // Initiation Variables --------------------------------------------------------------------------
 
 
+/** The decoded buffer of the fetched game sound spritesheet. */
 let spritesheetDecodedBuffer: AudioBuffer | undefined = undefined;
 
 
