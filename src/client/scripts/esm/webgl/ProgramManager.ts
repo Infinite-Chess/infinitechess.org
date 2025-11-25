@@ -101,7 +101,7 @@ type Uniforms_HeatWave = 'u_sceneTexture' | 'u_masterStrength' | 'u_noiseTexture
 type Attributes_VoronoiDistortion = never;
 type Uniforms_VoronoiDistortion = 'u_sceneTexture' | 'u_masterStrength' | 'u_time' | 'u_density' | 'u_strength' | 'u_ridgeThickness' | 'u_ridgeStrength' | 'u_resolution';
 type Attributes_Glitch = never; // Glitch pass does not use attributes
-type Uniforms_Glitch = 'u_sceneTexture' | 'u_masterStrength' | 'u_aberrationStrength' | 'u_aberrationOffset' | 'u_tearStrength' | 'u_tearResolution' | 'u_tearMaxDisplacement' | 'u_time' | 'u_resolution';
+type Uniforms_Glitch = 'u_sceneTexture' | 'u_masterStrength' | 'u_aberrationStrength' | 'u_aberrationOffset' | 'u_tearStrength' | 'u_tearResolution' | 'u_tearMaxDisplacement' | 'u_time' | 'u_resolution' | 'u_devicePixelRatio';
 
 
 /** The Super Union of all possible attributes. */
