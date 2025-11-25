@@ -18,8 +18,9 @@ export class GlitchPass implements PostProcessPass {
 
 	/** The strength of the chromatic aberration. */
 	public aberrationStrength: number = 0.0;
-	/** The direction and magnitude of the color channel separation for chromatic aberration. */
-	public aberrationOffset: [number, number] = [0.005, 0.0]; // e.g., horizontal offset
+	/** The direction and magnitude of the color channel separation for chromatic aberration in virtual CSS pixels. */
+	public aberrationOffsetPixels: [number, number] = [10.0, 0.0];
+
 
 	/** The strength of the horizontal tearing. */
 	public tearStrength: number = 0.0;
@@ -49,7 +50,13 @@ export class GlitchPass implements PostProcessPass {
 
 		// Chromatic Aberration Uniforms
 		gl.uniform1f(this.program.getUniformLocation('u_aberrationStrength'), this.aberrationStrength);
-		gl.uniform2fv(this.program.getUniformLocation('u_aberrationOffset'), this.aberrationOffset);
+		
+		// Convert the aberration offset to UV space
+		const uvAberrationOffset: [number, number] = [
+			this.aberrationOffsetPixels[0] * window.devicePixelRatio / gl.canvas.width,
+			this.aberrationOffsetPixels[1] * window.devicePixelRatio / gl.canvas.height,
+		];
+		gl.uniform2fv(this.program.getUniformLocation('u_aberrationOffset'), uvAberrationOffset);
 
 		// Horizontal Tearing Uniforms
 		gl.uniform1f(this.program.getUniformLocation('u_tearStrength'), this.tearStrength);
