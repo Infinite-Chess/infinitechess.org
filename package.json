@@ -70,7 +70,7 @@
 		"wait-on": "^9.0.0"
 	},
 	"scripts": {
-		"clean": "npx rimraf dist",
+		"clean": "rimraf dist",
 		"prod": "npm run build && tsc --noEmit && npm run start",
 		"build": "npm run clean && npm run prod:assets && npm run prod:assets-cjs && node build.js",
 		"start": "node dist/server/server.js",
