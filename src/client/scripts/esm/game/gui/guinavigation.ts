@@ -473,7 +473,7 @@ function callback__Collapse(): void {
 	annotations.Collapse();
 }
 
-document.addEventListener('ray-count-change', (e: CustomEvent) => {
+document.addEventListener('ray-count-change', (e) => {
 	const rayCount = e.detail;
 	if (rayCount > 0) {
 		element_EraseContainer.classList.add('hidden');

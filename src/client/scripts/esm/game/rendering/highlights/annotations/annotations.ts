@@ -105,7 +105,7 @@ function getRelevantAnnotes(): Annotes {
 }
 
 /** Event listener for when we change the Lingering Annotations mode */
-document.addEventListener('lingering-annotations-toggle', (e: CustomEvent) => {
+document.addEventListener('lingering-annotations-toggle', (e) => {
 	if (!gameloader.areInAGame()) return;
 	const enabled: boolean = e.detail;
 	const ply = gameslot.getGamefile()!.boardsim.state.local.moveIndex + 1; // Change -1 based to 0 based index

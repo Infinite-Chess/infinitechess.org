@@ -68,8 +68,8 @@ export class OceanZone implements Zone {
 		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 
 		// Create event listener for screen resize to update water pass resolution.
-		document.addEventListener("canvas_resize", (event: CustomEvent) => {
-			const { width, height } = event.detail as { width: number, height: number };
+		document.addEventListener("canvas_resize", (event) => {
+			const { width, height } = event.detail;
 			this.waterPass.setResolution(width, height);
 		});
 	}
