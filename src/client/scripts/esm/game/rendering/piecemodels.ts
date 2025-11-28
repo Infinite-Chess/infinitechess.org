@@ -438,7 +438,7 @@ function renderVoids(mesh: Mesh | undefined): void {
 }
 
 /**
- * Tests if the board position is atleast REGEN_RANGE-distance away from the current offset.
+ * Tests if the board position is at least REGEN_RANGE-distance away from the current offset.
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
 function isOffsetOutOfRangeOfRegenRange(offset: Coords): boolean { // offset: [x,y]

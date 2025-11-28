@@ -10,7 +10,7 @@
  * 2. Run the command:
  *    npm run optimize-images
  *
- * Any images that already have atleast one version .webp, .png, or .avif
+ * Any images that already have at least one version .webp, .png, or .avif
  * in `src/client/img/` will be skipped. This is because sometimes we only need one format.
  */
 
@@ -85,7 +85,7 @@ const imagesToProcess = allSourceImages.filter(sourceImagePath => {
 	const pngExists = existsSync(`${destBasePath}.png`);
 	const avifExists = existsSync(`${destBasePath}.avif`);
 
-	// If atleast one exists, we can skip it. Otherwise, it needs processing.
+	// If at least one exists, we can skip it. Otherwise, it needs processing.
 	return !(webpExists || pngExists || avifExists);
 });
 

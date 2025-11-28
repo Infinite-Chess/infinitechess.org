@@ -166,7 +166,7 @@ function dropSelection(): void {
 
 // /**
 //  * Whether we are currently dragging the selection, AND
-//  * we have dragged it atleast 1 square away from the anchor.
+//  * we have dragged it at least 1 square away from the anchor.
 //  */
 // function isDragTranslationPositive(): boolean {
 // 	if (!areDragging || !anchorCoords) return false;

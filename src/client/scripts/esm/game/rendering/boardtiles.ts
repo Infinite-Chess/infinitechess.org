@@ -218,7 +218,7 @@ function gboundingBoxFloat(): BoundingBoxBD {
  * this is effected by the camera's scale (zoom) property.
  * 
  * Returns in float form. To round away from the origin to encapsulate
- * the whole of all tiles atleast partially visible, further use {@link roundAwayBoundingBox}
+ * the whole of all tiles at least partially visible, further use {@link roundAwayBoundingBox}
  * @param [position] The position of the camera.
  * @param [scale] The scale (zoom) of the camera.
  * @param debugMode - Whether developer mode is enabled.

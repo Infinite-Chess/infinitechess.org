@@ -48,7 +48,7 @@ function doesColorHaveExtendedDrawOffer(game: Game, color: Player): boolean {
  */
 function hasColorOfferedDrawTooFast(game: Game, color: Player): boolean {
 	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(game, color); // number | undefined
-	if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
+	if (lastPlyDrawOffered !== undefined) { // They have made at least 1 offer this game
 		// console.log("Last ply offered:", lastPlyDrawOffered);
 		const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
 		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;

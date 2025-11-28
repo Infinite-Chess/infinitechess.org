@@ -53,8 +53,8 @@ try {
 async function logGame(game: Game): Promise<void> {
 	if (!game) return console.error("Cannot log a null game!");
 
-	// Only log the game if atleast 2 moves were played! (resignable)
-	// Black-moves-first games are logged if atleast 1 move is played!
+	// Only log the game if at least 2 moves were played! (resignable)
+	// Black-moves-first games are logged if at least 1 move is played!
 	if (game.moves.length < 2) return;
 
 	// What is the current month?

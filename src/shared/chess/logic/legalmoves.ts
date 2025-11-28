@@ -636,7 +636,7 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 	}
 
 	function doesSlideHaveWidth(slide: SlideLimits): boolean {
-		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in atleast one direction
+		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in at least one direction
 		return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
 
 		// In the future: If the `brute` flag is present, and there isn't

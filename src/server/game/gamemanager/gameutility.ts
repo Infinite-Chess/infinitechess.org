@@ -808,7 +808,7 @@ function cancelDeleteGameTimer(game: Game): void {
 }
 
 /**
- * Tests if the game is resignable (atleast 2 moves have been played).
+ * Tests if the game is resignable (at least 2 moves have been played).
  * If not, then the game is abortable.
  * @param game - The game
  * @returns *true* if the game is resignable.

@@ -8,7 +8,7 @@ const statusText = document.getElementById('statustext');
 
 const fadeTimer = 1000; // In milliseconds. UPDATE with the document!
 
-const stapleLength = 900; // How many ms each status message atleast lasts! Can be shortened by the multiplier.
+const stapleLength = 900; // How many ms each status message at least lasts! Can be shortened by the multiplier.
 const length = 45; // This is multiplied by the messages character count to add to it's life span.
 
 let layers = 0;

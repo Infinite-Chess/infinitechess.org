@@ -48,7 +48,7 @@ let inTimeout = false; // true when the server tells us too many requests. Don't
 /** The time our websocket will remain open for, if we're not subscribed to anything, in milliseconds. */
 const cushionBeforeAutoCloseMillis = 10000;
 /** The timeout ID that can be used to cancel the timer to auto-close
- * the websocket when we're not subscribed to anything for atleast {@link cushionBeforeAutoCloseMillis} */
+ * the websocket when we're not subscribed to anything for at least {@link cushionBeforeAutoCloseMillis} */
 let timeoutIDToAutoClose;
 
 const validSubs = ["invites", "game"];
