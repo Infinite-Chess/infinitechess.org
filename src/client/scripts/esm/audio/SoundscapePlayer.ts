@@ -3,6 +3,9 @@
 
 /**
  * This module implements a soundscape player that can play complex, layered ambient sounds.
+ * 
+ * For creating of soundscape configs, use the Interactive Soundscape Generator tool:
+ * dev-utils/sounds/SoundscapeGenerator.html
  */
 
 
