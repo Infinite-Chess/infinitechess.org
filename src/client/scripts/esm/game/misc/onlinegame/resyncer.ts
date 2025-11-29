@@ -29,6 +29,7 @@ import icnconverter from "../../../../../../shared/chess/logic/icn/icnconverter.
 import legalmoves from "../../../../../../shared/chess/logic/legalmoves.js";
 import animation from "../../rendering/animation.js";
 import guiclock from "../../gui/guiclock.js";
+import premoves from "../../chess/premoves.js";
 import { animateMove } from "../../chess/graphicalchanges.js";
 
 
@@ -103,7 +104,8 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 	movesequence.viewFront(gamefile, mesh);
 	let aChangeWasMade = false;
 	
-	while (boardsim.moves.length > moves.length) { // While we have more moves than what the server does..
+	while (boardsim.moves.length > moves.length) { // While we have more moves than what the server does.. (usually only happens if we move RIGHT before they resign)
+		premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 		// Terminate all current animations to avoid a crash when undoing moves.
 		// Technically this only needs to be done once if rewinding at all.
 		animation.clearAnimations();
@@ -119,6 +121,7 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 		if (thisGamefileMove) { // The move is defined
 			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
+			premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 			// Terminate all current animations to avoid a crash when undoing moves.
 			// Technically this only needs to be done once if rewinding at all.
 			animation.clearAnimations();
@@ -134,6 +137,9 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 	const ourColor = onlinegame.getOurColor();
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
+
+		premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
+
 		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 		const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
 
@@ -160,6 +166,8 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
+	
+	// Basically, the ONLY TIME that premoves aren't canceled, is if no moves were changed at all, we are already PERFECTLY in sync.
 
 	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
