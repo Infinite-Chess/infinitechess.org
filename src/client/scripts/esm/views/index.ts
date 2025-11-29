@@ -44,7 +44,8 @@ interface Contributor {
 
 			const paragraph = document.createElement("p");
 			paragraph.classList.add("contribution-count");
-			paragraph.innerText = `${translations['contribution_count']?.[0] || ""}${contributor.contributionCount}${translations['contribution_count']?.[1] || ""}`;
+			const contributionCountTranslationName = contributor.contributionCount === 1 ? 'contribution_count_singular' : 'contribution_count';
+			paragraph.innerText = `${translations[contributionCountTranslationName]?.[0] || ""}${contributor.contributionCount}${translations[contributionCountTranslationName]?.[1] || ""}`;
 
 			githubStatsContainer.appendChild(name);
 			githubStatsContainer.appendChild(paragraph);

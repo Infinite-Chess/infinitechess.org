@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "75"
+version = "76"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -73,6 +73,7 @@ github_title = "Github Mitwirkende"
 
 [index.javascript]
 contribution_count = ["", " Beiträge"] # A number is inserted between these 2 strings.
+contribution_count_singular = ["", " Beitrag"]
 
 [credits]
 title = "Credits"
