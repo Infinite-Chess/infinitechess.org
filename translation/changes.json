@@ -1,6 +1,6 @@
 {
 	"76": {
-		"note": "Added contribution_count_singular on line 76.",
+		"note": "Added contribution_count_singular and renamed contribution_count to contribution_count_plural.",
 		"changes": []
 	},
 	"75": {
