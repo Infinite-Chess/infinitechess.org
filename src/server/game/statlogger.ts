@@ -40,7 +40,7 @@ let stats: {
 try {
 	stats = await readFile('database/stats.json');
 } catch (e) {
-	if (process.env.VITEST) {
+	if (process.env['VITEST']) {
 		console.warn('Mocking stats for test environment');
 		stats = {
 			moveCount: {},
