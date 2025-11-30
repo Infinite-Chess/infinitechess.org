@@ -1,7 +1,7 @@
 name = "Русский" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "76"
-maintainer = "Функция f(x)"
+maintainer = "Function f(x)"
 
 [header]
 home = "Бесконечные Шахматы"
