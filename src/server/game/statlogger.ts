@@ -40,8 +40,20 @@ let stats: {
 try {
 	stats = await readFile('database/stats.json');
 } catch (e) {
-	const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
-	throw new Error(errMsg);
+	if (process.env['VITEST']) {
+		console.warn('Mocking stats for test environment');
+		stats = {
+			moveCount: {},
+			gamesPlayed: {
+				byDay: {},
+				byMonth: {},
+				allTime: {}
+			}
+		};
+	} else {
+		const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
+		throw new Error(errMsg);
+	}
 }
 
 
@@ -69,7 +81,7 @@ async function logGame(game: Game): Promise<void> {
 
 	// Now record the number of moves played
 
-	const plyCount = game.moves.length; 
+	const plyCount = game.moves.length;
 	if (stats.moveCount['all'] === undefined) stats.moveCount['all'] = 0;
 	stats.moveCount['all'] += plyCount;
 	if (stats.moveCount[variant] === undefined) stats.moveCount[variant] = 0;
@@ -113,7 +125,7 @@ async function saveStats(): Promise<void> {
 		);
 	} catch (e) {
 		const errMsg = `Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` + (e instanceof Error ? e.message : String(e));
-		logEventsAndPrint(errMsg, 'errLog.txt');	
+		logEventsAndPrint(errMsg, 'errLog.txt');
 	}
 
 }
