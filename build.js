@@ -10,6 +10,8 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
@@ -29,6 +31,103 @@ import { DEV_BUILD } from './src/server/config/config.js';
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
 const cssTargets = browserslistToTargets(browserslist('defaults'));
+
+// Absolute path to the HydroChess WASM engine submodule (if present)
+const HYDROCHESS_WASM_DIR = path.join(
+	process.cwd(),
+	'src',
+	'client',
+	'scripts',
+	'esm',
+	'game',
+	'chess',
+	'engines',
+	'hydrochess-wasm',
+);
+
+function hasCommand(cmd) {
+	try {
+		const res = spawnSync(cmd, ['--version'], { stdio: 'ignore' });
+		return res.status === 0;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Ensure the hydrochess-wasm submodule (if present) has a built web WASM in pkg/.
+ * - If the directory is missing or empty: log info about initializing the submodule.
+ * - If pkg/hydrochess_wasm_bg.wasm is missing: try to build with wasm-pack.
+ *   If cargo/wasm-pack are missing, log guidance.
+ * This never throws; it only logs and returns so normal JS builds still work.
+ */
+function ensureHydroChessWasmBuilt() {
+	const label = '[hydrochess-wasm]';
+
+	if (!fs.existsSync(HYDROCHESS_WASM_DIR)) {
+		console.warn(`${label} Engine submodule directory not found at ${HYDROCHESS_WASM_DIR}`);
+		console.warn(`${label} If you want the Rust WASM engine, run:`);
+		console.warn(`${label}   git submodule update --init --remote`);
+		console.warn(`${label} Then restart the dev server or rebuild.`);
+		console.warn(`${label} Alternatively, you can download a prebuilt 'pkg' directory from:`);
+		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
+		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
+		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
+		return;
+	}
+
+	const entries = fs.readdirSync(HYDROCHESS_WASM_DIR).filter((name) => !name.startsWith('.'));
+	if (entries.length === 0) {
+		console.warn(`${label} Engine submodule directory is empty.`);
+		console.warn(`${label} If you cloned without submodules, run:`);
+		console.warn(`${label}   git submodule update --init --remote`);
+		console.warn(`${label} Then restart the dev server or rebuild.`);
+		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
+		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
+		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
+		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
+		return;
+	}
+
+	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
+	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
+	if (fs.existsSync(wasmFile)) {
+		// Already built; nothing to do.
+		return;
+	}
+
+	if (!hasCommand('cargo')) {
+		console.warn(`${label} 'cargo' was not found on PATH.`);
+		console.warn(`${label} Install Rust (which includes cargo) from https://rustup.rs, then rerun the build.`);
+		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
+		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
+		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
+		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
+		return;
+	}
+
+	if (!hasCommand('wasm-pack')) {
+		console.warn(`${label} 'wasm-pack' was not found on PATH.`);
+		console.warn(`${label} Install it with: cargo install wasm-pack`);
+		console.warn(`${label} Then rerun the build.`);
+		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
+		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
+		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
+		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
+		return;
+	}
+
+	console.log(`${label} Building WASM engine with wasm-pack (target=web -> pkg)...`);
+	const result = spawnSync('wasm-pack', ['build', '--target', 'web', '--out-dir', 'pkg'], {
+		cwd: HYDROCHESS_WASM_DIR,
+		stdio: 'inherit',
+	});
+	if (result.status !== 0) {
+		console.error(`${label} wasm-pack build failed with exit code ${result.status}. See output above.`);
+	} else {
+		console.log(`${label} Build complete (pkg/).`);
+	}
+}
 
 
 /**
@@ -53,6 +152,7 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/guide.js',
 	'src/client/scripts/esm/views/admin.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+	'src/client/scripts/esm/game/chess/engines/hydrochess.js',
 ];
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
 	ignore: ['**/*.test.{ts,js}']
@@ -80,7 +180,7 @@ const GLSLMinifyPlugin = {
 	name: 'glsl-minify',
 	setup(build) {
 		// Intercept .glsl files and minify them
-		build.onLoad({ filter: /\.glsl$/ }, async(args) => {
+		build.onLoad({ filter: /\.glsl$/ }, async (args) => {
 			try {
 				// Read the GLSL file
 				const source = await readFile(args.path, 'utf8');
@@ -115,17 +215,18 @@ const esbuildClientOptions = {
 	 * If this is false, multiple copies of the same code may be loaded onto a page,
 	 * each belonging to a separate entry point module.
 	 */
-	splitting: true, 
+	splitting: true,
 	format: 'esm', // or 'cjs' for Common JS
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// allowOverwrite: true, // Not needed?
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	plugins: [esbuildClientRebuildPlugin, GLSLMinifyPlugin],
+	loader: { '.wasm': 'file' },
 };
 
 const esbuildServerOptions = {
 	// Transpile all TS files from BOTH directories
-	entryPoints: serverEntryPoints, 
+	entryPoints: serverEntryPoints,
 	platform: 'node',
 	bundle: false, // No bundling for the server. Just transpile each file individually
 	outdir: 'dist',
@@ -198,7 +299,7 @@ async function buildServer(isDev) {
  */
 async function minifyScriptDirectory(inputDir, outputDir, isModule) {
 	const files = await getAllFilesInDirectoryWithExtension(inputDir, '.js');
-		
+
 	for (const file of files) {
 		const inputFilePath = path.join(inputDir, file);
 		const outputFilePath = path.join(outputDir, file);
@@ -210,7 +311,7 @@ async function minifyScriptDirectory(inputDir, outputDir, isModule) {
 			sourceMap: false,
 			module: isModule, // Include if we're minifying ES Modules instead of Common JS
 		});
-		
+
 		// Write the minified file to the output directory
 		writeFile_ensureDirectory(outputFilePath, minified.code);
 		// console.log(`Minified: ${outputFilePath}`);
@@ -245,10 +346,14 @@ async function minifyCSSFiles() {
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 if (USE_DEVELOPMENT_BUILD && !DEV_BUILD) throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
 
+// Optionally build the HydroChess Rust WASM engine submodule if available.
+// This is best-effort and will only emit warnings if tools/submodule are missing.
+ensureHydroChessWasmBuilt();
+
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([
-    buildClient(USE_DEVELOPMENT_BUILD),
-    buildServer(USE_DEVELOPMENT_BUILD)
+	buildClient(USE_DEVELOPMENT_BUILD),
+	buildServer(USE_DEVELOPMENT_BUILD)
 ]);
 
 // console.log('Build process finished.');

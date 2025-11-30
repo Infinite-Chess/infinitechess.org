@@ -75,7 +75,7 @@ function configureMiddleware(app) {
 		contentSecurityPolicy: {
 			directives: {
 				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'"],  // Allows inline scripts
+				scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"],  // Allows inline scripts
 				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
 				objectSrc: ["'none'"],
 				frameSrc: ["'self'", 'https://www.youtube.com'],
@@ -88,7 +88,7 @@ function configureMiddleware(app) {
 	app.use((req, res, next) => {
 		try {
 			const decoded = decodeURIComponent(req.url);
-			
+
 			// Check 1: Raw encoded patterns (before decoding)
 			const encodedPatterns = /(%2e%2e|%252e|%%32%65)/gi;
 			if (encodedPatterns.test(req.url)) {
@@ -108,7 +108,7 @@ function configureMiddleware(app) {
 
 			next();
 		} catch (_err) {
-			console.warn('Blocked invalid URL encoding:', req.url); 
+			console.warn('Blocked invalid URL encoding:', req.url);
 			res.status(400).send('Invalid URL encoding');
 		}
 	});
@@ -119,23 +119,23 @@ function configureMiddleware(app) {
 	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
 
 	/**
-     * Cross Origin Resource Sharing
-     * 
-     * This allows 3rd party middleware. Without this, other sites will get an
-     * error when retreiving data on your site to serve to their customers.
-     * Be careful, incorrectly setting will block our own customers.
-     * For many applications though, you don't want it open to the public,
-     * but perhaps you do want search engines to have access?
-     * 
-     * Does this create a 'Access-Control-Allow-Origin' header?
-     */
+	 * Cross Origin Resource Sharing
+	 * 
+	 * This allows 3rd party middleware. Without this, other sites will get an
+	 * error when retreiving data on your site to serve to their customers.
+	 * Be careful, incorrectly setting will block our own customers.
+	 * For many applications though, you don't want it open to the public,
+	 * but perhaps you do want search engines to have access?
+	 * 
+	 * Does this create a 'Access-Control-Allow-Origin' header?
+	 */
 	const options = useOriginWhitelist ? corsOptions : undefined;
 	app.use(cors(options));
 
 	/**
-     * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
-     * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
-     */
+	 * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
+	 * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
+	 */
 	app.use(express.urlencoded({ limit: '10kb', extended: false })); // Limit the size to avoid parsing excessively large objects
 
 	// Sets the req.cookies property
@@ -187,13 +187,13 @@ function configureMiddleware(app) {
 	// Token Authenticator -------------------------------------------------------
 
 	/**
-     * Sets the req.memberInfo properties if they have an authorization
-     * header (contains access token) or refresh cookie (contains refresh token).
-     * Don't send unauthorized people private stuff without the proper role.
+	 * Sets the req.memberInfo properties if they have an authorization
+	 * header (contains access token) or refresh cookie (contains refresh token).
+	 * Don't send unauthorized people private stuff without the proper role.
 	 * 
 	 * PLACE AS LOW AS YOU CAN, BUT ABOVE ALL ROUTES THAT NEED AUTHENTICATION!!
 	 * This requires database requests.
-     */
+	 */
 	app.use(verifyJWT);
 
 	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------

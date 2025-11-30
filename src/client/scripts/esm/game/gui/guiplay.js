@@ -133,8 +133,7 @@ function initListeners() {
 	element_playBack.addEventListener('click', callback_playBack);
 	element_online.addEventListener('click', callback_online);
 	element_local.addEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
-	// element_computer.addEventListener('click', callback_computer);
+	element_computer.addEventListener('click', callback_computer);
 	element_createInvite.addEventListener('click', callback_createInvite);
 	element_optionVariant.addEventListener('change', callback_updateOptions);
 	element_optionColor.addEventListener('change', callback_updateOptions);
@@ -150,8 +149,7 @@ function closeListeners() {
 	element_playBack.removeEventListener('click', callback_playBack);
 	element_online.removeEventListener('click', callback_online);
 	element_local.removeEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
-	// element_computer.removeEventListener('click', callback_computer);
+	element_computer.removeEventListener('click', callback_computer);
 	element_createInvite.removeEventListener('click', callback_createInvite);
 	element_optionVariant.removeEventListener('change', callback_updateOptions);
 	element_optionColor.removeEventListener('change', callback_updateOptions);
@@ -244,9 +242,9 @@ function callback_local() {
 	changePlayMode('local');
 }
 
-// function callback_computer() {
-// 	changePlayMode('computer');
-// }
+function callback_computer() {
+	changePlayMode('computer');
+}
 
 // Also starts local games
 function callback_createInvite() {
@@ -271,9 +269,8 @@ function callback_createInvite() {
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
 			youAreColor: ourColor,
-			currentEngine: "engineCheckmatePractice",
-			// engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
-			engineConfig: { engineTimeLimitPerMoveMillis: 500 }, // Half a second for dev testing
+			currentEngine: "hydrochess",
+			engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
 		});
 	}
 }

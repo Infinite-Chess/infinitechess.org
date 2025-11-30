@@ -18,7 +18,6 @@ In case you want to help with translating the website to other languages, please
 There are still MANY more items I have planned for this project. Just a few of them are:
 
 - Board Editor
-- Engine play
 - Games with infinitely many pieces
 - 4 Player
 - Massive Multiplayer Online
