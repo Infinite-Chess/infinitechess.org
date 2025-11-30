@@ -12,7 +12,6 @@
  * @param voidList - The list of coordinates where all the voids are
  * @returns An array of rectangles that look like: `{ left, right, bottom, top }`.
  */
-// eslint-disable-next-line no-unused-vars
 function simplifyMesh(voidList: PooledArray<Coords>): BoundingBox[] { // array of coordinates
 
 	// console.log("Simplifying void mesh..")

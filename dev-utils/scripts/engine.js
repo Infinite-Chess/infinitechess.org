@@ -1,12 +1,5 @@
 import gamefileutility from "../../src/client/scripts/esm/chess/util/gamefileutility";
-import math from "../../src/shared/util/math/math";
-import legalmoves from "../../src/shared/chess/logic/legalmoves";
-import specialdetect from "../../src/shared/chess/logic/specialdetect";
-import pieces from "../../src/client/scripts/esm/game/rendering/pieces";
-import wincondition from "../../src/shared/chess/logic/wincondition";
-import movepiece from "../../src/shared/chess/logic/movepiece";
 
-// eslint-disable-next-line no-unused-vars
 const engine = (function() {
 	/**
 	 * returns all intersections of diagonal, horizontal and vertical lines emitting from all pieces.
@@ -105,7 +98,7 @@ const engine = (function() {
 		// add a point to the evaluation for each piece the king is attacking.
 		for (let x = -1; x <= 1; x++) {
 			for (let y = -1; y <= 1; y++) {
-				if (x === 0 && y === 0) continue;
+				if (x == 0 && y == 0) continue;
 				if (gamefileutility.getPieceAtCoords(gamefile, [kingCoords[0] + x, kingCoords[1] + y])) evaluation += 1;
 			}
 		}
@@ -171,15 +164,15 @@ const engine = (function() {
 		// multiply those two by color to make them fit which color's turn it is
 		// put this here instead of evaluation function to end search immediately
 		const gameConclusion = wincondition.getGameConclusion(gamefile);
-		if (gameConclusion === 'white checkmate') return colorNum * -Infinity;
+		if (gameConclusion == 'white checkmate') return colorNum * -Infinity;
 		if (gameConclusion && gameConclusion.startsWith('draw')) return colorNum * Infinity;
 
 		// return evaluation if depth is zero
-		if (depth === 0) return colorNum * loneBlackKingEval(gamefile);
+		if (depth == 0) return colorNum * loneBlackKingEval(gamefile);
 
 		// if its black's turn get all king legal moves
 		// if its white's turn get the considered moves. aka moves that move into an intersection
-		const moves = colorNum === 1 ? getBlackKingLegalMoves(gamefile) : getConsideredMoves(gamefile);
+		const moves = colorNum == 1 ? getBlackKingLegalMoves(gamefile) : getConsideredMoves(gamefile);
 		for (const move of moves) {
 			movepiece.makeMove(gamefile, move, {
 				pushClock: false,

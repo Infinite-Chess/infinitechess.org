@@ -2,9 +2,6 @@
 // DEPRECATED ENGINE FORMAT!!! PLEASE REFER TO engineCheckmatePractice.js
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-// Disable eslint errors here, since the above comment says its deprecated
-/* eslint-disable */
-
 /**
  * This script runs a very basic chess engine for enginegames that just computes a random move for the black royal piece.
  * runEngine(gamefile) is the only function that is called from the outside.

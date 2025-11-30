@@ -6,7 +6,7 @@ import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default [
 	{
-		ignores: ["dist"], // Ignore all files in the distribution directory
+		ignores: ["dist", "dev-utils"], // Ignore all files in the distribution directory and dev-utils
 	},
 	pluginJs.configs.recommended,
 	{

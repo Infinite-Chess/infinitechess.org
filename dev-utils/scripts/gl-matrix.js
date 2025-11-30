@@ -28,7 +28,6 @@ THE SOFTWARE.
 */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  // eslint-disable-next-line no-undef
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.glMatrix = {}));
 })(this, (function (exports) { 'use strict';
@@ -38,10 +37,10 @@ THE SOFTWARE.
    * @module glMatrix
    */
   // Configuration Constants
-  const EPSILON = 0.000001;
-  let ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
-  const RANDOM = Math.random;
-  const ANGLE_ORDER = "zyx";
+  var EPSILON = 0.000001;
+  var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
+  var RANDOM = Math.random;
+  var ANGLE_ORDER = "zyx";
   /**
    * Sets the type of array used when creating new vectors and matrices
    *
@@ -51,7 +50,7 @@ THE SOFTWARE.
   function setMatrixArrayType(type) {
     ARRAY_TYPE = type;
   }
-  const degree = Math.PI / 180;
+  var degree = Math.PI / 180;
   /**
    * Convert Degree To Radian
    *
@@ -75,7 +74,7 @@ THE SOFTWARE.
     return Math.abs(a - b) <= EPSILON * Math.max(1.0, Math.abs(a), Math.abs(b));
   }
   if (!Math.hypot) Math.hypot = function () {
-    let y = 0,
+    var y = 0,
         i = arguments.length;
 
     while (i--) {
@@ -85,7 +84,7 @@ THE SOFTWARE.
     return Math.sqrt(y);
   };
 
-  const common = /*#__PURE__*/Object.freeze({
+  var common = /*#__PURE__*/Object.freeze({
     __proto__: null,
     EPSILON: EPSILON,
     get ARRAY_TYPE () { return ARRAY_TYPE; },
@@ -108,9 +107,9 @@ THE SOFTWARE.
    */
 
   function create$8() {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[1] = 0;
       out[2] = 0;
     }
@@ -127,7 +126,7 @@ THE SOFTWARE.
    */
 
   function clone$8(a) {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -174,7 +173,7 @@ THE SOFTWARE.
    */
 
   function fromValues$8(m00, m01, m10, m11) {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
     out[0] = m00;
     out[1] = m01;
     out[2] = m10;
@@ -211,7 +210,7 @@ THE SOFTWARE.
     // If we are transposing ourselves we can skip a few steps but have to cache
     // some values
     if (out === a) {
-      const a1 = a[1];
+      var a1 = a[1];
       out[1] = a[2];
       out[2] = a1;
     } else {
@@ -232,12 +231,12 @@ THE SOFTWARE.
    */
 
   function invert$5(out, a) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3]; // Calculate the determinant
 
-    let det = a0 * a3 - a2 * a1;
+    var det = a0 * a3 - a2 * a1;
 
     if (!det) {
       return null;
@@ -260,7 +259,7 @@ THE SOFTWARE.
 
   function adjoint$2(out, a) {
     // Caching this value is necessary if out == a
-    const a0 = a[0];
+    var a0 = a[0];
     out[0] = a[3];
     out[1] = -a[1];
     out[2] = -a[2];
@@ -287,11 +286,11 @@ THE SOFTWARE.
    */
 
   function multiply$8(out, a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3];
@@ -311,12 +310,12 @@ THE SOFTWARE.
    */
 
   function rotate$4(out, a, rad) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
     out[0] = a0 * c + a2 * s;
     out[1] = a1 * c + a3 * s;
     out[2] = a0 * -s + a2 * c;
@@ -333,11 +332,11 @@ THE SOFTWARE.
    **/
 
   function scale$8(out, a, v) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const v0 = v[0],
+    var v0 = v[0],
         v1 = v[1];
     out[0] = a0 * v0;
     out[1] = a1 * v0;
@@ -358,8 +357,8 @@ THE SOFTWARE.
    */
 
   function fromRotation$4(out, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
     out[0] = c;
     out[1] = s;
     out[2] = -s;
@@ -472,11 +471,11 @@ THE SOFTWARE.
    */
 
   function equals$8(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3];
@@ -520,15 +519,15 @@ THE SOFTWARE.
    * @function
    */
 
-  const mul$8 = multiply$8;
+  var mul$8 = multiply$8;
   /**
    * Alias for {@link mat2.subtract}
    * @function
    */
 
-  const sub$6 = subtract$6;
+  var sub$6 = subtract$6;
 
-  const mat2 = /*#__PURE__*/Object.freeze({
+  var mat2 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$8,
     clone: clone$8,
@@ -584,9 +583,9 @@ THE SOFTWARE.
    */
 
   function create$7() {
-    const out = new ARRAY_TYPE(6);
+    var out = new ARRAY_TYPE(6);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[1] = 0;
       out[2] = 0;
       out[4] = 0;
@@ -605,7 +604,7 @@ THE SOFTWARE.
    */
 
   function clone$7(a) {
-    const out = new ARRAY_TYPE(6);
+    var out = new ARRAY_TYPE(6);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -660,7 +659,7 @@ THE SOFTWARE.
    */
 
   function fromValues$7(a, b, c, d, tx, ty) {
-    const out = new ARRAY_TYPE(6);
+    var out = new ARRAY_TYPE(6);
     out[0] = a;
     out[1] = b;
     out[2] = c;
@@ -700,13 +699,13 @@ THE SOFTWARE.
    */
 
   function invert$4(out, a) {
-    const aa = a[0],
+    var aa = a[0],
         ab = a[1],
         ac = a[2],
         ad = a[3];
-    const atx = a[4],
+    var atx = a[4],
         aty = a[5];
-    let det = aa * ad - ab * ac;
+    var det = aa * ad - ab * ac;
 
     if (!det) {
       return null;
@@ -741,13 +740,13 @@ THE SOFTWARE.
    */
 
   function multiply$7(out, a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
         a4 = a[4],
         a5 = a[5];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3],
@@ -771,14 +770,14 @@ THE SOFTWARE.
    */
 
   function rotate$3(out, a, rad) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
         a4 = a[4],
         a5 = a[5];
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
     out[0] = a0 * c + a2 * s;
     out[1] = a1 * c + a3 * s;
     out[2] = a0 * -s + a2 * c;
@@ -797,13 +796,13 @@ THE SOFTWARE.
    **/
 
   function scale$7(out, a, v) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
         a4 = a[4],
         a5 = a[5];
-    const v0 = v[0],
+    var v0 = v[0],
         v1 = v[1];
     out[0] = a0 * v0;
     out[1] = a1 * v0;
@@ -823,13 +822,13 @@ THE SOFTWARE.
    **/
 
   function translate$3(out, a, v) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
         a4 = a[4],
         a5 = a[5];
-    const v0 = v[0],
+    var v0 = v[0],
         v1 = v[1];
     out[0] = a0;
     out[1] = a1;
@@ -852,7 +851,7 @@ THE SOFTWARE.
    */
 
   function fromRotation$3(out, rad) {
-    const s = Math.sin(rad),
+    var s = Math.sin(rad),
         c = Math.cos(rad);
     out[0] = c;
     out[1] = s;
@@ -1017,13 +1016,13 @@ THE SOFTWARE.
    */
 
   function equals$7(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
         a4 = a[4],
         a5 = a[5];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3],
@@ -1036,15 +1035,15 @@ THE SOFTWARE.
    * @function
    */
 
-  const mul$7 = multiply$7;
+  var mul$7 = multiply$7;
   /**
    * Alias for {@link mat2d.subtract}
    * @function
    */
 
-  const sub$5 = subtract$5;
+  var sub$5 = subtract$5;
 
-  const mat2d = /*#__PURE__*/Object.freeze({
+  var mat2d = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$7,
     clone: clone$7,
@@ -1085,9 +1084,9 @@ THE SOFTWARE.
    */
 
   function create$6() {
-    const out = new ARRAY_TYPE(9);
+    var out = new ARRAY_TYPE(9);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[1] = 0;
       out[2] = 0;
       out[3] = 0;
@@ -1129,7 +1128,7 @@ THE SOFTWARE.
    */
 
   function clone$6(a) {
-    const out = new ARRAY_TYPE(9);
+    var out = new ARRAY_TYPE(9);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -1177,7 +1176,7 @@ THE SOFTWARE.
    */
 
   function fromValues$6(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
-    const out = new ARRAY_TYPE(9);
+    var out = new ARRAY_TYPE(9);
     out[0] = m00;
     out[1] = m01;
     out[2] = m02;
@@ -1247,7 +1246,7 @@ THE SOFTWARE.
   function transpose$1(out, a) {
     // If we are transposing ourselves we can skip a few steps but have to cache some values
     if (out === a) {
-      const a01 = a[1],
+      var a01 = a[1],
           a02 = a[2],
           a12 = a[5];
       out[1] = a[3];
@@ -1279,20 +1278,20 @@ THE SOFTWARE.
    */
 
   function invert$3(out, a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2];
-    const a10 = a[3],
+    var a10 = a[3],
         a11 = a[4],
         a12 = a[5];
-    const a20 = a[6],
+    var a20 = a[6],
         a21 = a[7],
         a22 = a[8];
-    const b01 = a22 * a11 - a12 * a21;
-    const b11 = -a22 * a10 + a12 * a20;
-    const b21 = a21 * a10 - a11 * a20; // Calculate the determinant
+    var b01 = a22 * a11 - a12 * a21;
+    var b11 = -a22 * a10 + a12 * a20;
+    var b21 = a21 * a10 - a11 * a20; // Calculate the determinant
 
-    let det = a00 * b01 + a01 * b11 + a02 * b21;
+    var det = a00 * b01 + a01 * b11 + a02 * b21;
 
     if (!det) {
       return null;
@@ -1319,13 +1318,13 @@ THE SOFTWARE.
    */
 
   function adjoint$1(out, a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2];
-    const a10 = a[3],
+    var a10 = a[3],
         a11 = a[4],
         a12 = a[5];
-    const a20 = a[6],
+    var a20 = a[6],
         a21 = a[7],
         a22 = a[8];
     out[0] = a11 * a22 - a12 * a21;
@@ -1347,13 +1346,13 @@ THE SOFTWARE.
    */
 
   function determinant$1(a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2];
-    const a10 = a[3],
+    var a10 = a[3],
         a11 = a[4],
         a12 = a[5];
-    const a20 = a[6],
+    var a20 = a[6],
         a21 = a[7],
         a22 = a[8];
     return a00 * (a22 * a11 - a12 * a21) + a01 * (-a22 * a10 + a12 * a20) + a02 * (a21 * a10 - a11 * a20);
@@ -1368,22 +1367,22 @@ THE SOFTWARE.
    */
 
   function multiply$6(out, a, b) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2];
-    const a10 = a[3],
+    var a10 = a[3],
         a11 = a[4],
         a12 = a[5];
-    const a20 = a[6],
+    var a20 = a[6],
         a21 = a[7],
         a22 = a[8];
-    const b00 = b[0],
+    var b00 = b[0],
         b01 = b[1],
         b02 = b[2];
-    const b10 = b[3],
+    var b10 = b[3],
         b11 = b[4],
         b12 = b[5];
-    const b20 = b[6],
+    var b20 = b[6],
         b21 = b[7],
         b22 = b[8];
     out[0] = b00 * a00 + b01 * a10 + b02 * a20;
@@ -1407,7 +1406,7 @@ THE SOFTWARE.
    */
 
   function translate$2(out, a, v) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a10 = a[3],
@@ -1439,7 +1438,7 @@ THE SOFTWARE.
    */
 
   function rotate$2(out, a, rad) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a10 = a[3],
@@ -1471,7 +1470,7 @@ THE SOFTWARE.
    **/
 
   function scale$6(out, a, v) {
-    const x = v[0],
+    var x = v[0],
         y = v[1];
     out[0] = x * a[0];
     out[1] = x * a[1];
@@ -1521,7 +1520,7 @@ THE SOFTWARE.
    */
 
   function fromRotation$2(out, rad) {
-    const s = Math.sin(rad),
+    var s = Math.sin(rad),
         c = Math.cos(rad);
     out[0] = c;
     out[1] = s;
@@ -1588,22 +1587,22 @@ THE SOFTWARE.
    */
 
   function fromQuat$1(out, q) {
-    const x = q[0],
+    var x = q[0],
         y = q[1],
         z = q[2],
         w = q[3];
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const yx = y * x2;
-    const yy = y * y2;
-    const zx = z * x2;
-    const zy = z * y2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var yx = y * x2;
+    var yy = y * y2;
+    var zx = z * x2;
+    var zy = z * y2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
     out[0] = 1 - yy - zz;
     out[3] = yx - wz;
     out[6] = zx + wy;
@@ -1625,36 +1624,36 @@ THE SOFTWARE.
    */
 
   function normalFromMat4(out, a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a03 = a[3];
-    const a10 = a[4],
+    var a10 = a[4],
         a11 = a[5],
         a12 = a[6],
         a13 = a[7];
-    const a20 = a[8],
+    var a20 = a[8],
         a21 = a[9],
         a22 = a[10],
         a23 = a[11];
-    const a30 = a[12],
+    var a30 = a[12],
         a31 = a[13],
         a32 = a[14],
         a33 = a[15];
-    const b00 = a00 * a11 - a01 * a10;
-    const b01 = a00 * a12 - a02 * a10;
-    const b02 = a00 * a13 - a03 * a10;
-    const b03 = a01 * a12 - a02 * a11;
-    const b04 = a01 * a13 - a03 * a11;
-    const b05 = a02 * a13 - a03 * a12;
-    const b06 = a20 * a31 - a21 * a30;
-    const b07 = a20 * a32 - a22 * a30;
-    const b08 = a20 * a33 - a23 * a30;
-    const b09 = a21 * a32 - a22 * a31;
-    const b10 = a21 * a33 - a23 * a31;
-    const b11 = a22 * a33 - a23 * a32; // Calculate the determinant
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32; // Calculate the determinant
 
-    let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
     if (!det) {
       return null;
@@ -1818,7 +1817,7 @@ THE SOFTWARE.
    */
 
   function equals$6(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
@@ -1827,7 +1826,7 @@ THE SOFTWARE.
         a6 = a[6],
         a7 = a[7],
         a8 = a[8];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3],
@@ -1843,15 +1842,15 @@ THE SOFTWARE.
    * @function
    */
 
-  const mul$6 = multiply$6;
+  var mul$6 = multiply$6;
   /**
    * Alias for {@link mat3.subtract}
    * @function
    */
 
-  const sub$4 = subtract$4;
+  var sub$4 = subtract$4;
 
-  const mat3 = /*#__PURE__*/Object.freeze({
+  var mat3 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$6,
     fromMat4: fromMat4$1,
@@ -1899,9 +1898,9 @@ THE SOFTWARE.
    */
 
   function create$5() {
-    const out = new ARRAY_TYPE(16);
+    var out = new ARRAY_TYPE(16);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[1] = 0;
       out[2] = 0;
       out[3] = 0;
@@ -1930,7 +1929,7 @@ THE SOFTWARE.
    */
 
   function clone$5(a) {
-    const out = new ARRAY_TYPE(16);
+    var out = new ARRAY_TYPE(16);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -1999,7 +1998,7 @@ THE SOFTWARE.
    */
 
   function fromValues$5(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
-    const out = new ARRAY_TYPE(16);
+    var out = new ARRAY_TYPE(16);
     out[0] = m00;
     out[1] = m01;
     out[2] = m02;
@@ -2097,12 +2096,12 @@ THE SOFTWARE.
   function transpose(out, a) {
     // If we are transposing ourselves we can skip a few steps but have to cache some values
     if (out === a) {
-      const a01 = a[1],
+      var a01 = a[1],
           a02 = a[2],
           a03 = a[3];
-      const a12 = a[6],
+      var a12 = a[6],
           a13 = a[7];
-      const a23 = a[11];
+      var a23 = a[11];
       out[1] = a[4];
       out[2] = a[8];
       out[3] = a[12];
@@ -2145,36 +2144,36 @@ THE SOFTWARE.
    */
 
   function invert$2(out, a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a03 = a[3];
-    const a10 = a[4],
+    var a10 = a[4],
         a11 = a[5],
         a12 = a[6],
         a13 = a[7];
-    const a20 = a[8],
+    var a20 = a[8],
         a21 = a[9],
         a22 = a[10],
         a23 = a[11];
-    const a30 = a[12],
+    var a30 = a[12],
         a31 = a[13],
         a32 = a[14],
         a33 = a[15];
-    const b00 = a00 * a11 - a01 * a10;
-    const b01 = a00 * a12 - a02 * a10;
-    const b02 = a00 * a13 - a03 * a10;
-    const b03 = a01 * a12 - a02 * a11;
-    const b04 = a01 * a13 - a03 * a11;
-    const b05 = a02 * a13 - a03 * a12;
-    const b06 = a20 * a31 - a21 * a30;
-    const b07 = a20 * a32 - a22 * a30;
-    const b08 = a20 * a33 - a23 * a30;
-    const b09 = a21 * a32 - a22 * a31;
-    const b10 = a21 * a33 - a23 * a31;
-    const b11 = a22 * a33 - a23 * a32; // Calculate the determinant
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32; // Calculate the determinant
 
-    let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
     if (!det) {
       return null;
@@ -2208,34 +2207,34 @@ THE SOFTWARE.
    */
 
   function adjoint(out, a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a03 = a[3];
-    const a10 = a[4],
+    var a10 = a[4],
         a11 = a[5],
         a12 = a[6],
         a13 = a[7];
-    const a20 = a[8],
+    var a20 = a[8],
         a21 = a[9],
         a22 = a[10],
         a23 = a[11];
-    const a30 = a[12],
+    var a30 = a[12],
         a31 = a[13],
         a32 = a[14],
         a33 = a[15];
-    const b00 = a00 * a11 - a01 * a10;
-    const b01 = a00 * a12 - a02 * a10;
-    const b02 = a00 * a13 - a03 * a10;
-    const b03 = a01 * a12 - a02 * a11;
-    const b04 = a01 * a13 - a03 * a11;
-    const b05 = a02 * a13 - a03 * a12;
-    const b06 = a20 * a31 - a21 * a30;
-    const b07 = a20 * a32 - a22 * a30;
-    const b08 = a20 * a33 - a23 * a30;
-    const b09 = a21 * a32 - a22 * a31;
-    const b10 = a21 * a33 - a23 * a31;
-    const b11 = a22 * a33 - a23 * a32;
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32;
     out[0] = a11 * b11 - a12 * b10 + a13 * b09;
     out[1] = a02 * b10 - a01 * b11 - a03 * b09;
     out[2] = a31 * b05 - a32 * b04 + a33 * b03;
@@ -2262,32 +2261,32 @@ THE SOFTWARE.
    */
 
   function determinant(a) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a03 = a[3];
-    const a10 = a[4],
+    var a10 = a[4],
         a11 = a[5],
         a12 = a[6],
         a13 = a[7];
-    const a20 = a[8],
+    var a20 = a[8],
         a21 = a[9],
         a22 = a[10],
         a23 = a[11];
-    const a30 = a[12],
+    var a30 = a[12],
         a31 = a[13],
         a32 = a[14],
         a33 = a[15];
-    const b0 = a00 * a11 - a01 * a10;
-    const b1 = a00 * a12 - a02 * a10;
-    const b2 = a01 * a12 - a02 * a11;
-    const b3 = a20 * a31 - a21 * a30;
-    const b4 = a20 * a32 - a22 * a30;
-    const b5 = a21 * a32 - a22 * a31;
-    const b6 = a00 * b5 - a01 * b4 + a02 * b3;
-    const b7 = a10 * b5 - a11 * b4 + a12 * b3;
-    const b8 = a20 * b2 - a21 * b1 + a22 * b0;
-    const b9 = a30 * b2 - a31 * b1 + a32 * b0; // Calculate the determinant
+    var b0 = a00 * a11 - a01 * a10;
+    var b1 = a00 * a12 - a02 * a10;
+    var b2 = a01 * a12 - a02 * a11;
+    var b3 = a20 * a31 - a21 * a30;
+    var b4 = a20 * a32 - a22 * a30;
+    var b5 = a21 * a32 - a22 * a31;
+    var b6 = a00 * b5 - a01 * b4 + a02 * b3;
+    var b7 = a10 * b5 - a11 * b4 + a12 * b3;
+    var b8 = a20 * b2 - a21 * b1 + a22 * b0;
+    var b9 = a30 * b2 - a31 * b1 + a32 * b0; // Calculate the determinant
 
     return a13 * b6 - a03 * b7 + a33 * b8 - a23 * b9;
   }
@@ -2301,24 +2300,24 @@ THE SOFTWARE.
    */
 
   function multiply$5(out, a, b) {
-    const a00 = a[0],
+    var a00 = a[0],
         a01 = a[1],
         a02 = a[2],
         a03 = a[3];
-    const a10 = a[4],
+    var a10 = a[4],
         a11 = a[5],
         a12 = a[6],
         a13 = a[7];
-    const a20 = a[8],
+    var a20 = a[8],
         a21 = a[9],
         a22 = a[10],
         a23 = a[11];
-    const a30 = a[12],
+    var a30 = a[12],
         a31 = a[13],
         a32 = a[14],
         a33 = a[15]; // Cache only the current line of the second matrix
 
-    let b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3];
@@ -2362,12 +2361,12 @@ THE SOFTWARE.
    */
 
   function translate$1(out, a, v) {
-    const x = v[0],
+    var x = v[0],
         y = v[1],
         z = v[2];
-    let a00, a01, a02, a03;
-    let a10, a11, a12, a13;
-    let a20, a21, a22, a23;
+    var a00, a01, a02, a03;
+    var a10, a11, a12, a13;
+    var a20, a21, a22, a23;
 
     if (a === out) {
       out[12] = a[0] * x + a[4] * y + a[8] * z + a[12];
@@ -2417,7 +2416,7 @@ THE SOFTWARE.
    **/
 
   function scale$5(out, a, v) {
-    const x = v[0],
+    var x = v[0],
         y = v[1],
         z = v[2];
     out[0] = a[0] * x;
@@ -2449,10 +2448,17 @@ THE SOFTWARE.
    */
 
   function rotate$1(out, a, rad, axis) {
-    let x = axis[0],
+    var x = axis[0],
         y = axis[1],
         z = axis[2];
-    let len = Math.hypot(x, y, z);
+    var len = Math.hypot(x, y, z);
+    var s, c, t;
+    var a00, a01, a02, a03;
+    var a10, a11, a12, a13;
+    var a20, a21, a22, a23;
+    var b00, b01, b02;
+    var b10, b11, b12;
+    var b20, b21, b22;
 
     if (len < EPSILON) {
       return null;
@@ -2462,31 +2468,31 @@ THE SOFTWARE.
     x *= len;
     y *= len;
     z *= len;
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
-    const t = 1 - c;
-    const a00 = a[0];
-    const a01 = a[1];
-    const a02 = a[2];
-    const a03 = a[3];
-    const a10 = a[4];
-    const a11 = a[5];
-    const a12 = a[6];
-    const a13 = a[7];
-    const a20 = a[8];
-    const a21 = a[9];
-    const a22 = a[10];
-    const a23 = a[11]; // Construct the elements of the rotation matrix
+    s = Math.sin(rad);
+    c = Math.cos(rad);
+    t = 1 - c;
+    a00 = a[0];
+    a01 = a[1];
+    a02 = a[2];
+    a03 = a[3];
+    a10 = a[4];
+    a11 = a[5];
+    a12 = a[6];
+    a13 = a[7];
+    a20 = a[8];
+    a21 = a[9];
+    a22 = a[10];
+    a23 = a[11]; // Construct the elements of the rotation matrix
 
-    const b00 = x * x * t + c;
-    const b01 = y * x * t + z * s;
-    const b02 = z * x * t - y * s;
-    const b10 = x * y * t - z * s;
-    const b11 = y * y * t + c;
-    const b12 = z * y * t + x * s;
-    const b20 = x * z * t + y * s;
-    const b21 = y * z * t - x * s;
-    const b22 = z * z * t + c; // Perform rotation-specific matrix multiplication
+    b00 = x * x * t + c;
+    b01 = y * x * t + z * s;
+    b02 = z * x * t - y * s;
+    b10 = x * y * t - z * s;
+    b11 = y * y * t + c;
+    b12 = z * y * t + x * s;
+    b20 = x * z * t + y * s;
+    b21 = y * z * t - x * s;
+    b22 = z * z * t + c; // Perform rotation-specific matrix multiplication
 
     out[0] = a00 * b00 + a10 * b01 + a20 * b02;
     out[1] = a01 * b00 + a11 * b01 + a21 * b02;
@@ -2521,16 +2527,16 @@ THE SOFTWARE.
    */
 
   function rotateX$3(out, a, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
-    const a10 = a[4];
-    const a11 = a[5];
-    const a12 = a[6];
-    const a13 = a[7];
-    const a20 = a[8];
-    const a21 = a[9];
-    const a22 = a[10];
-    const a23 = a[11];
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    var a10 = a[4];
+    var a11 = a[5];
+    var a12 = a[6];
+    var a13 = a[7];
+    var a20 = a[8];
+    var a21 = a[9];
+    var a22 = a[10];
+    var a23 = a[11];
 
     if (a !== out) {
       // If the source and destination differ, copy the unchanged rows
@@ -2565,16 +2571,16 @@ THE SOFTWARE.
    */
 
   function rotateY$3(out, a, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
-    const a00 = a[0];
-    const a01 = a[1];
-    const a02 = a[2];
-    const a03 = a[3];
-    const a20 = a[8];
-    const a21 = a[9];
-    const a22 = a[10];
-    const a23 = a[11];
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    var a00 = a[0];
+    var a01 = a[1];
+    var a02 = a[2];
+    var a03 = a[3];
+    var a20 = a[8];
+    var a21 = a[9];
+    var a22 = a[10];
+    var a23 = a[11];
 
     if (a !== out) {
       // If the source and destination differ, copy the unchanged rows
@@ -2609,16 +2615,16 @@ THE SOFTWARE.
    */
 
   function rotateZ$3(out, a, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
-    const a00 = a[0];
-    const a01 = a[1];
-    const a02 = a[2];
-    const a03 = a[3];
-    const a10 = a[4];
-    const a11 = a[5];
-    const a12 = a[6];
-    const a13 = a[7];
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    var a00 = a[0];
+    var a01 = a[1];
+    var a02 = a[2];
+    var a03 = a[3];
+    var a10 = a[4];
+    var a11 = a[5];
+    var a12 = a[6];
+    var a13 = a[7];
 
     if (a !== out) {
       // If the source and destination differ, copy the unchanged last row
@@ -2719,10 +2725,11 @@ THE SOFTWARE.
    */
 
   function fromRotation$1(out, rad, axis) {
-    let x = axis[0],
+    var x = axis[0],
         y = axis[1],
         z = axis[2];
-    let len = Math.hypot(x, y, z);
+    var len = Math.hypot(x, y, z);
+    var s, c, t;
 
     if (len < EPSILON) {
       return null;
@@ -2732,9 +2739,9 @@ THE SOFTWARE.
     x *= len;
     y *= len;
     z *= len;
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
-    const t = 1 - c; // Perform rotation-specific matrix multiplication
+    s = Math.sin(rad);
+    c = Math.cos(rad);
+    t = 1 - c; // Perform rotation-specific matrix multiplication
 
     out[0] = x * x * t + c;
     out[1] = y * x * t + z * s;
@@ -2767,8 +2774,8 @@ THE SOFTWARE.
    */
 
   function fromXRotation(out, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad); // Perform axis-specific matrix multiplication
+    var s = Math.sin(rad);
+    var c = Math.cos(rad); // Perform axis-specific matrix multiplication
 
     out[0] = 1;
     out[1] = 0;
@@ -2801,8 +2808,8 @@ THE SOFTWARE.
    */
 
   function fromYRotation(out, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad); // Perform axis-specific matrix multiplication
+    var s = Math.sin(rad);
+    var c = Math.cos(rad); // Perform axis-specific matrix multiplication
 
     out[0] = c;
     out[1] = 0;
@@ -2835,8 +2842,8 @@ THE SOFTWARE.
    */
 
   function fromZRotation(out, rad) {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad); // Perform axis-specific matrix multiplication
+    var s = Math.sin(rad);
+    var c = Math.cos(rad); // Perform axis-specific matrix multiplication
 
     out[0] = c;
     out[1] = s;
@@ -2874,22 +2881,22 @@ THE SOFTWARE.
 
   function fromRotationTranslation$1(out, q, v) {
     // Quaternion math
-    const x = q[0],
+    var x = q[0],
         y = q[1],
         z = q[2],
         w = q[3];
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const xy = x * y2;
-    const xz = x * z2;
-    const yy = y * y2;
-    const yz = y * z2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
     out[0] = 1 - (yy + zz);
     out[1] = xy + wz;
     out[2] = xz - wy;
@@ -2917,8 +2924,8 @@ THE SOFTWARE.
    */
 
   function fromQuat2(out, a) {
-    const translation = new ARRAY_TYPE(3);
-    const bx = -a[0],
+    var translation = new ARRAY_TYPE(3);
+    var bx = -a[0],
         by = -a[1],
         bz = -a[2],
         bw = a[3],
@@ -2926,7 +2933,7 @@ THE SOFTWARE.
         ay = a[5],
         az = a[6],
         aw = a[7];
-    const magnitude = bx * bx + by * by + bz * bz + bw * bw; //Only scale if it makes sense
+    var magnitude = bx * bx + by * by + bz * bz + bw * bw; //Only scale if it makes sense
 
     if (magnitude > 0) {
       translation[0] = (ax * bw + aw * bx + ay * bz - az * by) * 2 / magnitude;
@@ -2969,15 +2976,15 @@ THE SOFTWARE.
    */
 
   function getScaling(out, mat) {
-    const m11 = mat[0];
-    const m12 = mat[1];
-    const m13 = mat[2];
-    const m21 = mat[4];
-    const m22 = mat[5];
-    const m23 = mat[6];
-    const m31 = mat[8];
-    const m32 = mat[9];
-    const m33 = mat[10];
+    var m11 = mat[0];
+    var m12 = mat[1];
+    var m13 = mat[2];
+    var m21 = mat[4];
+    var m22 = mat[5];
+    var m23 = mat[6];
+    var m31 = mat[8];
+    var m32 = mat[9];
+    var m33 = mat[10];
     out[0] = Math.hypot(m11, m12, m13);
     out[1] = Math.hypot(m21, m22, m23);
     out[2] = Math.hypot(m31, m32, m33);
@@ -2994,22 +3001,22 @@ THE SOFTWARE.
    */
 
   function getRotation(out, mat) {
-    const scaling = new ARRAY_TYPE(3);
+    var scaling = new ARRAY_TYPE(3);
     getScaling(scaling, mat);
-    const is1 = 1 / scaling[0];
-    const is2 = 1 / scaling[1];
-    const is3 = 1 / scaling[2];
-    const sm11 = mat[0] * is1;
-    const sm12 = mat[1] * is2;
-    const sm13 = mat[2] * is3;
-    const sm21 = mat[4] * is1;
-    const sm22 = mat[5] * is2;
-    const sm23 = mat[6] * is3;
-    const sm31 = mat[8] * is1;
-    const sm32 = mat[9] * is2;
-    const sm33 = mat[10] * is3;
-    const trace = sm11 + sm22 + sm33;
-    let S = 0;
+    var is1 = 1 / scaling[0];
+    var is2 = 1 / scaling[1];
+    var is3 = 1 / scaling[2];
+    var sm11 = mat[0] * is1;
+    var sm12 = mat[1] * is2;
+    var sm13 = mat[2] * is3;
+    var sm21 = mat[4] * is1;
+    var sm22 = mat[5] * is2;
+    var sm23 = mat[6] * is3;
+    var sm31 = mat[8] * is1;
+    var sm32 = mat[9] * is2;
+    var sm33 = mat[10] * is3;
+    var trace = sm11 + sm22 + sm33;
+    var S = 0;
 
     if (trace > 0) {
       S = Math.sqrt(trace + 1.0) * 2;
@@ -3053,32 +3060,32 @@ THE SOFTWARE.
     out_t[0] = mat[12];
     out_t[1] = mat[13];
     out_t[2] = mat[14];
-    const m11 = mat[0];
-    const m12 = mat[1];
-    const m13 = mat[2];
-    const m21 = mat[4];
-    const m22 = mat[5];
-    const m23 = mat[6];
-    const m31 = mat[8];
-    const m32 = mat[9];
-    const m33 = mat[10];
+    var m11 = mat[0];
+    var m12 = mat[1];
+    var m13 = mat[2];
+    var m21 = mat[4];
+    var m22 = mat[5];
+    var m23 = mat[6];
+    var m31 = mat[8];
+    var m32 = mat[9];
+    var m33 = mat[10];
     out_s[0] = Math.hypot(m11, m12, m13);
     out_s[1] = Math.hypot(m21, m22, m23);
     out_s[2] = Math.hypot(m31, m32, m33);
-    const is1 = 1 / out_s[0];
-    const is2 = 1 / out_s[1];
-    const is3 = 1 / out_s[2];
-    const sm11 = m11 * is1;
-    const sm12 = m12 * is2;
-    const sm13 = m13 * is3;
-    const sm21 = m21 * is1;
-    const sm22 = m22 * is2;
-    const sm23 = m23 * is3;
-    const sm31 = m31 * is1;
-    const sm32 = m32 * is2;
-    const sm33 = m33 * is3;
-    const trace = sm11 + sm22 + sm33;
-    let S = 0;
+    var is1 = 1 / out_s[0];
+    var is2 = 1 / out_s[1];
+    var is3 = 1 / out_s[2];
+    var sm11 = m11 * is1;
+    var sm12 = m12 * is2;
+    var sm13 = m13 * is3;
+    var sm21 = m21 * is1;
+    var sm22 = m22 * is2;
+    var sm23 = m23 * is3;
+    var sm31 = m31 * is1;
+    var sm32 = m32 * is2;
+    var sm33 = m33 * is3;
+    var trace = sm11 + sm22 + sm33;
+    var S = 0;
 
     if (trace > 0) {
       S = Math.sqrt(trace + 1.0) * 2;
@@ -3128,25 +3135,25 @@ THE SOFTWARE.
 
   function fromRotationTranslationScale(out, q, v, s) {
     // Quaternion math
-    const x = q[0],
+    var x = q[0],
         y = q[1],
         z = q[2],
         w = q[3];
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const xy = x * y2;
-    const xz = x * z2;
-    const yy = y * y2;
-    const yz = y * z2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
-    const sx = s[0];
-    const sy = s[1];
-    const sz = s[2];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    var sx = s[0];
+    var sy = s[1];
+    var sz = s[2];
     out[0] = (1 - (yy + zz)) * sx;
     out[1] = (xy + wz) * sx;
     out[2] = (xz - wy) * sx;
@@ -3188,37 +3195,37 @@ THE SOFTWARE.
 
   function fromRotationTranslationScaleOrigin(out, q, v, s, o) {
     // Quaternion math
-    const x = q[0],
+    var x = q[0],
         y = q[1],
         z = q[2],
         w = q[3];
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const xy = x * y2;
-    const xz = x * z2;
-    const yy = y * y2;
-    const yz = y * z2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
-    const sx = s[0];
-    const sy = s[1];
-    const sz = s[2];
-    const ox = o[0];
-    const oy = o[1];
-    const oz = o[2];
-    const out0 = (1 - (yy + zz)) * sx;
-    const out1 = (xy + wz) * sx;
-    const out2 = (xz - wy) * sx;
-    const out4 = (xy - wz) * sy;
-    const out5 = (1 - (xx + zz)) * sy;
-    const out6 = (yz + wx) * sy;
-    const out8 = (xz + wy) * sz;
-    const out9 = (yz - wx) * sz;
-    const out10 = (1 - (xx + yy)) * sz;
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    var sx = s[0];
+    var sy = s[1];
+    var sz = s[2];
+    var ox = o[0];
+    var oy = o[1];
+    var oz = o[2];
+    var out0 = (1 - (yy + zz)) * sx;
+    var out1 = (xy + wz) * sx;
+    var out2 = (xz - wy) * sx;
+    var out4 = (xy - wz) * sy;
+    var out5 = (1 - (xx + zz)) * sy;
+    var out6 = (yz + wx) * sy;
+    var out8 = (xz + wy) * sz;
+    var out9 = (yz - wx) * sz;
+    var out10 = (1 - (xx + yy)) * sz;
     out[0] = out0;
     out[1] = out1;
     out[2] = out2;
@@ -3247,22 +3254,22 @@ THE SOFTWARE.
    */
 
   function fromQuat(out, q) {
-    const x = q[0],
+    var x = q[0],
         y = q[1],
         z = q[2],
         w = q[3];
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const yx = y * x2;
-    const yy = y * y2;
-    const zx = z * x2;
-    const zy = z * y2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var yx = y * x2;
+    var yy = y * y2;
+    var zx = z * x2;
+    var zy = z * y2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
     out[0] = 1 - yy - zz;
     out[1] = yx + wz;
     out[2] = zx - wy;
@@ -3295,9 +3302,9 @@ THE SOFTWARE.
    */
 
   function frustum(out, left, right, bottom, top, near, far) {
-    const rl = 1 / (right - left);
-    const tb = 1 / (top - bottom);
-    const nf = 1 / (near - far);
+    var rl = 1 / (right - left);
+    var tb = 1 / (top - bottom);
+    var nf = 1 / (near - far);
     out[0] = near * 2 * rl;
     out[1] = 0;
     out[2] = 0;
@@ -3331,7 +3338,7 @@ THE SOFTWARE.
    */
 
   function perspectiveNO(out, fovy, aspect, near, far) {
-    const f = 1.0 / Math.tan(fovy / 2);
+    var f = 1.0 / Math.tan(fovy / 2);
     out[0] = f / aspect;
     out[1] = 0;
     out[2] = 0;
@@ -3347,8 +3354,8 @@ THE SOFTWARE.
     out[13] = 0;
     out[15] = 0;
 
-    if (far !== null && far !== Infinity) {
-      const nf = 1 / (near - far);
+    if (far != null && far !== Infinity) {
+      var nf = 1 / (near - far);
       out[10] = (far + near) * nf;
       out[14] = 2 * far * near * nf;
     } else {
@@ -3363,7 +3370,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const perspective = perspectiveNO;
+  var perspective = perspectiveNO;
   /**
    * Generates a perspective projection matrix suitable for WebGPU with the given bounds.
    * The near/far clip planes correspond to a normalized device coordinate Z range of [0, 1],
@@ -3379,7 +3386,7 @@ THE SOFTWARE.
    */
 
   function perspectiveZO(out, fovy, aspect, near, far) {
-    const f = 1.0 / Math.tan(fovy / 2);
+    var f = 1.0 / Math.tan(fovy / 2);
     out[0] = f / aspect;
     out[1] = 0;
     out[2] = 0;
@@ -3395,8 +3402,8 @@ THE SOFTWARE.
     out[13] = 0;
     out[15] = 0;
 
-    if (far !== null && far !== Infinity) {
-      const nf = 1 / (near - far);
+    if (far != null && far !== Infinity) {
+      var nf = 1 / (near - far);
       out[10] = far * nf;
       out[14] = far * near * nf;
     } else {
@@ -3419,12 +3426,12 @@ THE SOFTWARE.
    */
 
   function perspectiveFromFieldOfView(out, fov, near, far) {
-    const upTan = Math.tan(fov.upDegrees * Math.PI / 180.0);
-    const downTan = Math.tan(fov.downDegrees * Math.PI / 180.0);
-    const leftTan = Math.tan(fov.leftDegrees * Math.PI / 180.0);
-    const rightTan = Math.tan(fov.rightDegrees * Math.PI / 180.0);
-    const xScale = 2.0 / (leftTan + rightTan);
-    const yScale = 2.0 / (upTan + downTan);
+    var upTan = Math.tan(fov.upDegrees * Math.PI / 180.0);
+    var downTan = Math.tan(fov.downDegrees * Math.PI / 180.0);
+    var leftTan = Math.tan(fov.leftDegrees * Math.PI / 180.0);
+    var rightTan = Math.tan(fov.rightDegrees * Math.PI / 180.0);
+    var xScale = 2.0 / (leftTan + rightTan);
+    var yScale = 2.0 / (upTan + downTan);
     out[0] = xScale;
     out[1] = 0.0;
     out[2] = 0.0;
@@ -3459,9 +3466,9 @@ THE SOFTWARE.
    */
 
   function orthoNO(out, left, right, bottom, top, near, far) {
-    const lr = 1 / (left - right);
-    const bt = 1 / (bottom - top);
-    const nf = 1 / (near - far);
+    var lr = 1 / (left - right);
+    var bt = 1 / (bottom - top);
+    var nf = 1 / (near - far);
     out[0] = -2 * lr;
     out[1] = 0;
     out[2] = 0;
@@ -3485,7 +3492,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const ortho = orthoNO;
+  var ortho = orthoNO;
   /**
    * Generates a orthogonal projection matrix with the given bounds.
    * The near/far clip planes correspond to a normalized device coordinate Z range of [0, 1],
@@ -3502,9 +3509,9 @@ THE SOFTWARE.
    */
 
   function orthoZO(out, left, right, bottom, top, near, far) {
-    const lr = 1 / (left - right);
-    const bt = 1 / (bottom - top);
-    const nf = 1 / (near - far);
+    var lr = 1 / (left - right);
+    var bt = 1 / (bottom - top);
+    var nf = 1 / (near - far);
     out[0] = -2 * lr;
     out[1] = 0;
     out[2] = 0;
@@ -3535,16 +3542,16 @@ THE SOFTWARE.
    */
 
   function lookAt(out, eye, center, up) {
-    let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
-    const eyex = eye[0];
-    const eyey = eye[1];
-    const eyez = eye[2];
-    const upx = up[0];
-    const upy = up[1];
-    const upz = up[2];
-    const centerx = center[0];
-    const centery = center[1];
-    const centerz = center[2];
+    var x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+    var eyex = eye[0];
+    var eyey = eye[1];
+    var eyez = eye[2];
+    var upx = up[0];
+    var upy = up[1];
+    var upz = up[2];
+    var centerx = center[0];
+    var centery = center[1];
+    var centerz = center[2];
 
     if (Math.abs(eyex - centerx) < EPSILON && Math.abs(eyey - centery) < EPSILON && Math.abs(eyez - centerz) < EPSILON) {
       return identity$2(out);
@@ -3618,16 +3625,16 @@ THE SOFTWARE.
    */
 
   function targetTo(out, eye, target, up) {
-    const eyex = eye[0],
+    var eyex = eye[0],
         eyey = eye[1],
         eyez = eye[2],
         upx = up[0],
         upy = up[1],
         upz = up[2];
-    let z0 = eyex - target[0],
+    var z0 = eyex - target[0],
         z1 = eyey - target[1],
         z2 = eyez - target[2];
-    let len = z0 * z0 + z1 * z1 + z2 * z2;
+    var len = z0 * z0 + z1 * z1 + z2 * z2;
 
     if (len > 0) {
       len = 1 / Math.sqrt(len);
@@ -3636,7 +3643,7 @@ THE SOFTWARE.
       z2 *= len;
     }
 
-    let x0 = upy * z2 - upz * z1,
+    var x0 = upy * z2 - upz * z1,
         x1 = upz * z0 - upx * z2,
         x2 = upx * z1 - upy * z0;
     len = x0 * x0 + x1 * x1 + x2 * x2;
@@ -3819,35 +3826,35 @@ THE SOFTWARE.
    */
 
   function equals$5(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const a4 = a[4],
+    var a4 = a[4],
         a5 = a[5],
         a6 = a[6],
         a7 = a[7];
-    const a8 = a[8],
+    var a8 = a[8],
         a9 = a[9],
         a10 = a[10],
         a11 = a[11];
-    const a12 = a[12],
+    var a12 = a[12],
         a13 = a[13],
         a14 = a[14],
         a15 = a[15];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3];
-    const b4 = b[4],
+    var b4 = b[4],
         b5 = b[5],
         b6 = b[6],
         b7 = b[7];
-    const b8 = b[8],
+    var b8 = b[8],
         b9 = b[9],
         b10 = b[10],
         b11 = b[11];
-    const b12 = b[12],
+    var b12 = b[12],
         b13 = b[13],
         b14 = b[14],
         b15 = b[15];
@@ -3858,15 +3865,15 @@ THE SOFTWARE.
    * @function
    */
 
-  const mul$5 = multiply$5;
+  var mul$5 = multiply$5;
   /**
    * Alias for {@link mat4.subtract}
    * @function
    */
 
-  const sub$3 = subtract$3;
+  var sub$3 = subtract$3;
 
-  const mat4 = /*#__PURE__*/Object.freeze({
+  var mat4 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$5,
     clone: clone$5,
@@ -3934,9 +3941,9 @@ THE SOFTWARE.
    */
 
   function create$4() {
-    const out = new ARRAY_TYPE(3);
+    var out = new ARRAY_TYPE(3);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[0] = 0;
       out[1] = 0;
       out[2] = 0;
@@ -3952,7 +3959,7 @@ THE SOFTWARE.
    */
 
   function clone$4(a) {
-    const out = new ARRAY_TYPE(3);
+    var out = new ARRAY_TYPE(3);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -3966,9 +3973,9 @@ THE SOFTWARE.
    */
 
   function length$4(a) {
-    const x = a[0];
-    const y = a[1];
-    const z = a[2];
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
     return Math.hypot(x, y, z);
   }
   /**
@@ -3981,7 +3988,7 @@ THE SOFTWARE.
    */
 
   function fromValues$4(x, y, z) {
-    const out = new ARRAY_TYPE(3);
+    var out = new ARRAY_TYPE(3);
     out[0] = x;
     out[1] = y;
     out[2] = z;
@@ -4189,9 +4196,9 @@ THE SOFTWARE.
    */
 
   function distance$2(a, b) {
-    const x = b[0] - a[0];
-    const y = b[1] - a[1];
-    const z = b[2] - a[2];
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
     return Math.hypot(x, y, z);
   }
   /**
@@ -4203,9 +4210,9 @@ THE SOFTWARE.
    */
 
   function squaredDistance$2(a, b) {
-    const x = b[0] - a[0];
-    const y = b[1] - a[1];
-    const z = b[2] - a[2];
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
     return x * x + y * y + z * z;
   }
   /**
@@ -4216,9 +4223,9 @@ THE SOFTWARE.
    */
 
   function squaredLength$4(a) {
-    const x = a[0];
-    const y = a[1];
-    const z = a[2];
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
     return x * x + y * y + z * z;
   }
   /**
@@ -4258,10 +4265,10 @@ THE SOFTWARE.
    */
 
   function normalize$4(out, a) {
-    const x = a[0];
-    const y = a[1];
-    const z = a[2];
-    let len = x * x + y * y + z * z;
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var len = x * x + y * y + z * z;
 
     if (len > 0) {
       //TODO: evaluate use of glm_invsqrt here?
@@ -4294,10 +4301,10 @@ THE SOFTWARE.
    */
 
   function cross$2(out, a, b) {
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2];
-    const bx = b[0],
+    var bx = b[0],
         by = b[1],
         bz = b[2];
     out[0] = ay * bz - az * by;
@@ -4316,9 +4323,9 @@ THE SOFTWARE.
    */
 
   function lerp$4(out, a, b, t) {
-    const ax = a[0];
-    const ay = a[1];
-    const az = a[2];
+    var ax = a[0];
+    var ay = a[1];
+    var az = a[2];
     out[0] = ax + t * (b[0] - ax);
     out[1] = ay + t * (b[1] - ay);
     out[2] = az + t * (b[2] - az);
@@ -4335,10 +4342,10 @@ THE SOFTWARE.
    */
 
   function slerp$1(out, a, b, t) {
-    const angle = Math.acos(Math.min(Math.max(dot$4(a, b), -1), 1));
-    const sinTotal = Math.sin(angle);
-    const ratioA = Math.sin((1 - t) * angle) / sinTotal;
-    const ratioB = Math.sin(t * angle) / sinTotal;
+    var angle = Math.acos(Math.min(Math.max(dot$4(a, b), -1), 1));
+    var sinTotal = Math.sin(angle);
+    var ratioA = Math.sin((1 - t) * angle) / sinTotal;
+    var ratioB = Math.sin(t * angle) / sinTotal;
     out[0] = ratioA * a[0] + ratioB * b[0];
     out[1] = ratioA * a[1] + ratioB * b[1];
     out[2] = ratioA * a[2] + ratioB * b[2];
@@ -4357,11 +4364,11 @@ THE SOFTWARE.
    */
 
   function hermite(out, a, b, c, d, t) {
-    const factorTimes2 = t * t;
-    const factor1 = factorTimes2 * (2 * t - 3) + 1;
-    const factor2 = factorTimes2 * (t - 2) + t;
-    const factor3 = factorTimes2 * (t - 1);
-    const factor4 = factorTimes2 * (3 - 2 * t);
+    var factorTimes2 = t * t;
+    var factor1 = factorTimes2 * (2 * t - 3) + 1;
+    var factor2 = factorTimes2 * (t - 2) + t;
+    var factor3 = factorTimes2 * (t - 1);
+    var factor4 = factorTimes2 * (3 - 2 * t);
     out[0] = a[0] * factor1 + b[0] * factor2 + c[0] * factor3 + d[0] * factor4;
     out[1] = a[1] * factor1 + b[1] * factor2 + c[1] * factor3 + d[1] * factor4;
     out[2] = a[2] * factor1 + b[2] * factor2 + c[2] * factor3 + d[2] * factor4;
@@ -4380,13 +4387,13 @@ THE SOFTWARE.
    */
 
   function bezier(out, a, b, c, d, t) {
-    const inverseFactor = 1 - t;
-    const inverseFactorTimesTwo = inverseFactor * inverseFactor;
-    const factorTimes2 = t * t;
-    const factor1 = inverseFactorTimesTwo * inverseFactor;
-    const factor2 = 3 * t * inverseFactorTimesTwo;
-    const factor3 = 3 * factorTimes2 * inverseFactor;
-    const factor4 = factorTimes2 * t;
+    var inverseFactor = 1 - t;
+    var inverseFactorTimesTwo = inverseFactor * inverseFactor;
+    var factorTimes2 = t * t;
+    var factor1 = inverseFactorTimesTwo * inverseFactor;
+    var factor2 = 3 * t * inverseFactorTimesTwo;
+    var factor3 = 3 * factorTimes2 * inverseFactor;
+    var factor4 = factorTimes2 * t;
     out[0] = a[0] * factor1 + b[0] * factor2 + c[0] * factor3 + d[0] * factor4;
     out[1] = a[1] * factor1 + b[1] * factor2 + c[1] * factor3 + d[1] * factor4;
     out[2] = a[2] * factor1 + b[2] * factor2 + c[2] * factor3 + d[2] * factor4;
@@ -4402,9 +4409,9 @@ THE SOFTWARE.
 
   function random$3(out, scale) {
     scale = scale === undefined ? 1.0 : scale;
-    const r = RANDOM() * 2.0 * Math.PI;
-    const z = RANDOM() * 2.0 - 1.0;
-    const zScale = Math.sqrt(1.0 - z * z) * scale;
+    var r = RANDOM() * 2.0 * Math.PI;
+    var z = RANDOM() * 2.0 - 1.0;
+    var zScale = Math.sqrt(1.0 - z * z) * scale;
     out[0] = Math.cos(r) * zScale;
     out[1] = Math.sin(r) * zScale;
     out[2] = z * scale;
@@ -4421,10 +4428,10 @@ THE SOFTWARE.
    */
 
   function transformMat4$2(out, a, m) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2];
-    let w = m[3] * x + m[7] * y + m[11] * z + m[15];
+    var w = m[3] * x + m[7] * y + m[11] * z + m[15];
     w = w || 1.0;
     out[0] = (m[0] * x + m[4] * y + m[8] * z + m[12]) / w;
     out[1] = (m[1] * x + m[5] * y + m[9] * z + m[13]) / w;
@@ -4441,7 +4448,7 @@ THE SOFTWARE.
    */
 
   function transformMat3$1(out, a, m) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2];
     out[0] = x * m[0] + y * m[3] + z * m[6];
@@ -4461,24 +4468,24 @@ THE SOFTWARE.
 
   function transformQuat$1(out, a, q) {
     // benchmarks: https://jsperf.com/quaternion-transform-vec3-implementations-fixed
-    const qx = q[0],
+    var qx = q[0],
         qy = q[1],
         qz = q[2],
         qw = q[3];
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2]; // var qvec = [qx, qy, qz];
     // var uv = vec3.cross([], qvec, a);
 
-    let uvx = qy * z - qz * y,
+    var uvx = qy * z - qz * y,
         uvy = qz * x - qx * z,
         uvz = qx * y - qy * x; // var uuv = vec3.cross([], qvec, uv);
 
-    let uuvx = qy * uvz - qz * uvy,
+    var uuvx = qy * uvz - qz * uvy,
         uuvy = qz * uvx - qx * uvz,
         uuvz = qx * uvy - qy * uvx; // vec3.scale(uv, uv, 2 * w);
 
-    const w2 = qw * 2;
+    var w2 = qw * 2;
     uvx *= w2;
     uvy *= w2;
     uvz *= w2; // vec3.scale(uuv, uuv, 2);
@@ -4502,7 +4509,7 @@ THE SOFTWARE.
    */
 
   function rotateX$2(out, a, b, rad) {
-    const p = [],
+    var p = [],
         r = []; //Translate point to the origin
 
     p[0] = a[0] - b[0];
@@ -4528,7 +4535,7 @@ THE SOFTWARE.
    */
 
   function rotateY$2(out, a, b, rad) {
-    const p = [],
+    var p = [],
         r = []; //Translate point to the origin
 
     p[0] = a[0] - b[0];
@@ -4554,7 +4561,7 @@ THE SOFTWARE.
    */
 
   function rotateZ$2(out, a, b, rad) {
-    const p = [],
+    var p = [],
         r = []; //Translate point to the origin
 
     p[0] = a[0] - b[0];
@@ -4578,7 +4585,7 @@ THE SOFTWARE.
    */
 
   function angle$1(a, b) {
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2],
         bx = b[0],
@@ -4631,10 +4638,10 @@ THE SOFTWARE.
    */
 
   function equals$4(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2];
     return Math.abs(a0 - b0) <= EPSILON * Math.max(1.0, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= EPSILON * Math.max(1.0, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= EPSILON * Math.max(1.0, Math.abs(a2), Math.abs(b2));
@@ -4644,43 +4651,43 @@ THE SOFTWARE.
    * @function
    */
 
-  const sub$2 = subtract$2;
+  var sub$2 = subtract$2;
   /**
    * Alias for {@link vec3.multiply}
    * @function
    */
 
-  const mul$4 = multiply$4;
+  var mul$4 = multiply$4;
   /**
    * Alias for {@link vec3.divide}
    * @function
    */
 
-  const div$2 = divide$2;
+  var div$2 = divide$2;
   /**
    * Alias for {@link vec3.distance}
    * @function
    */
 
-  const dist$2 = distance$2;
+  var dist$2 = distance$2;
   /**
    * Alias for {@link vec3.squaredDistance}
    * @function
    */
 
-  const sqrDist$2 = squaredDistance$2;
+  var sqrDist$2 = squaredDistance$2;
   /**
    * Alias for {@link vec3.length}
    * @function
    */
 
-  const len$4 = length$4;
+  var len$4 = length$4;
   /**
    * Alias for {@link vec3.squaredLength}
    * @function
    */
 
-  const sqrLen$4 = squaredLength$4;
+  var sqrLen$4 = squaredLength$4;
   /**
    * Perform some operation over an array of vec3s.
    *
@@ -4694,10 +4701,10 @@ THE SOFTWARE.
    * @function
    */
 
-  const forEach$2 = function () {
-    const vec = create$4();
+  var forEach$2 = function () {
+    var vec = create$4();
     return function (a, stride, offset, count, fn, arg) {
-      let i, l;
+      var i, l;
 
       if (!stride) {
         stride = 3;
@@ -4727,7 +4734,7 @@ THE SOFTWARE.
     };
   }();
 
-  const vec3 = /*#__PURE__*/Object.freeze({
+  var vec3 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$4,
     clone: clone$4,
@@ -4792,9 +4799,9 @@ THE SOFTWARE.
    */
 
   function create$3() {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[0] = 0;
       out[1] = 0;
       out[2] = 0;
@@ -4811,7 +4818,7 @@ THE SOFTWARE.
    */
 
   function clone$3(a) {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -4829,7 +4836,7 @@ THE SOFTWARE.
    */
 
   function fromValues$3(x, y, z, w) {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
     out[0] = x;
     out[1] = y;
     out[2] = z;
@@ -5052,10 +5059,10 @@ THE SOFTWARE.
    */
 
   function distance$1(a, b) {
-    const x = b[0] - a[0];
-    const y = b[1] - a[1];
-    const z = b[2] - a[2];
-    const w = b[3] - a[3];
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
+    var w = b[3] - a[3];
     return Math.hypot(x, y, z, w);
   }
   /**
@@ -5067,10 +5074,10 @@ THE SOFTWARE.
    */
 
   function squaredDistance$1(a, b) {
-    const x = b[0] - a[0];
-    const y = b[1] - a[1];
-    const z = b[2] - a[2];
-    const w = b[3] - a[3];
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
+    var w = b[3] - a[3];
     return x * x + y * y + z * z + w * w;
   }
   /**
@@ -5081,10 +5088,10 @@ THE SOFTWARE.
    */
 
   function length$3(a) {
-    const x = a[0];
-    const y = a[1];
-    const z = a[2];
-    const w = a[3];
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var w = a[3];
     return Math.hypot(x, y, z, w);
   }
   /**
@@ -5095,10 +5102,10 @@ THE SOFTWARE.
    */
 
   function squaredLength$3(a) {
-    const x = a[0];
-    const y = a[1];
-    const z = a[2];
-    const w = a[3];
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var w = a[3];
     return x * x + y * y + z * z + w * w;
   }
   /**
@@ -5140,11 +5147,11 @@ THE SOFTWARE.
    */
 
   function normalize$3(out, a) {
-    const x = a[0];
-    const y = a[1];
-    const z = a[2];
-    const w = a[3];
-    let len = x * x + y * y + z * z + w * w;
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var w = a[3];
+    var len = x * x + y * y + z * z + w * w;
 
     if (len > 0) {
       len = 1 / Math.sqrt(len);
@@ -5178,16 +5185,16 @@ THE SOFTWARE.
    */
 
   function cross$1(out, u, v, w) {
-    const A = v[0] * w[1] - v[1] * w[0],
+    var A = v[0] * w[1] - v[1] * w[0],
         B = v[0] * w[2] - v[2] * w[0],
         C = v[0] * w[3] - v[3] * w[0],
         D = v[1] * w[2] - v[2] * w[1],
         E = v[1] * w[3] - v[3] * w[1],
         F = v[2] * w[3] - v[3] * w[2];
-    const G = u[0];
-    const H = u[1];
-    const I = u[2];
-    const J = u[3];
+    var G = u[0];
+    var H = u[1];
+    var I = u[2];
+    var J = u[3];
     out[0] = H * F - I * E + J * D;
     out[1] = -(G * F) + I * C - J * B;
     out[2] = G * E - H * C + J * A;
@@ -5205,10 +5212,10 @@ THE SOFTWARE.
    */
 
   function lerp$3(out, a, b, t) {
-    const ax = a[0];
-    const ay = a[1];
-    const az = a[2];
-    const aw = a[3];
+    var ax = a[0];
+    var ay = a[1];
+    var az = a[2];
+    var aw = a[3];
     out[0] = ax + t * (b[0] - ax);
     out[1] = ay + t * (b[1] - ay);
     out[2] = az + t * (b[2] - az);
@@ -5228,8 +5235,8 @@ THE SOFTWARE.
     // Sphere. Ann. Math. Statist. 43 (1972), no. 2, 645--646.
     // http://projecteuclid.org/euclid.aoms/1177692644;
 
-    let v1, v2, v3, v4;
-    let s1, s2;
+    var v1, v2, v3, v4;
+    var s1, s2;
 
     do {
       v1 = RANDOM() * 2 - 1;
@@ -5243,7 +5250,7 @@ THE SOFTWARE.
       s2 = v3 * v3 + v4 * v4;
     } while (s2 >= 1);
 
-    const d = Math.sqrt((1 - s1) / s2);
+    var d = Math.sqrt((1 - s1) / s2);
     out[0] = scale * v1;
     out[1] = scale * v2;
     out[2] = scale * v3 * d;
@@ -5260,7 +5267,7 @@ THE SOFTWARE.
    */
 
   function transformMat4$1(out, a, m) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2],
         w = a[3];
@@ -5280,18 +5287,18 @@ THE SOFTWARE.
    */
 
   function transformQuat(out, a, q) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2];
-    const qx = q[0],
+    var qx = q[0],
         qy = q[1],
         qz = q[2],
         qw = q[3]; // calculate quat * vec
 
-    const ix = qw * x + qy * z - qz * y;
-    const iy = qw * y + qz * x - qx * z;
-    const iz = qw * z + qx * y - qy * x;
-    const iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
+    var ix = qw * x + qy * z - qz * y;
+    var iy = qw * y + qz * x - qx * z;
+    var iz = qw * z + qx * y - qy * x;
+    var iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
 
     out[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
     out[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
@@ -5343,11 +5350,11 @@ THE SOFTWARE.
    */
 
   function equals$3(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3];
@@ -5358,43 +5365,43 @@ THE SOFTWARE.
    * @function
    */
 
-  const sub$1 = subtract$1;
+  var sub$1 = subtract$1;
   /**
    * Alias for {@link vec4.multiply}
    * @function
    */
 
-  const mul$3 = multiply$3;
+  var mul$3 = multiply$3;
   /**
    * Alias for {@link vec4.divide}
    * @function
    */
 
-  const div$1 = divide$1;
+  var div$1 = divide$1;
   /**
    * Alias for {@link vec4.distance}
    * @function
    */
 
-  const dist$1 = distance$1;
+  var dist$1 = distance$1;
   /**
    * Alias for {@link vec4.squaredDistance}
    * @function
    */
 
-  const sqrDist$1 = squaredDistance$1;
+  var sqrDist$1 = squaredDistance$1;
   /**
    * Alias for {@link vec4.length}
    * @function
    */
 
-  const len$3 = length$3;
+  var len$3 = length$3;
   /**
    * Alias for {@link vec4.squaredLength}
    * @function
    */
 
-  const sqrLen$3 = squaredLength$3;
+  var sqrLen$3 = squaredLength$3;
   /**
    * Perform some operation over an array of vec4s.
    *
@@ -5408,10 +5415,10 @@ THE SOFTWARE.
    * @function
    */
 
-  const forEach$1 = function () {
-    const vec = create$3();
+  var forEach$1 = function () {
+    var vec = create$3();
     return function (a, stride, offset, count, fn, arg) {
-      let i, l;
+      var i, l;
 
       if (!stride) {
         stride = 4;
@@ -5443,7 +5450,7 @@ THE SOFTWARE.
     };
   }();
 
-  const vec4 = /*#__PURE__*/Object.freeze({
+  var vec4 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$3,
     clone: clone$3,
@@ -5500,9 +5507,9 @@ THE SOFTWARE.
    */
 
   function create$2() {
-    const out = new ARRAY_TYPE(4);
+    var out = new ARRAY_TYPE(4);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[0] = 0;
       out[1] = 0;
       out[2] = 0;
@@ -5537,7 +5544,7 @@ THE SOFTWARE.
 
   function setAxisAngle(out, axis, rad) {
     rad = rad * 0.5;
-    const s = Math.sin(rad);
+    var s = Math.sin(rad);
     out[0] = s * axis[0];
     out[1] = s * axis[1];
     out[2] = s * axis[2];
@@ -5559,8 +5566,8 @@ THE SOFTWARE.
    */
 
   function getAxisAngle(out_axis, q) {
-    const rad = Math.acos(q[3]) * 2.0;
-    const s = Math.sin(rad / 2.0);
+    var rad = Math.acos(q[3]) * 2.0;
+    var s = Math.sin(rad / 2.0);
 
     if (s > EPSILON) {
       out_axis[0] = q[0] / s;
@@ -5584,7 +5591,7 @@ THE SOFTWARE.
    */
 
   function getAngle(a, b) {
-    const dotproduct = dot$2(a, b);
+    var dotproduct = dot$2(a, b);
     return Math.acos(2 * dotproduct * dotproduct - 1);
   }
   /**
@@ -5597,11 +5604,11 @@ THE SOFTWARE.
    */
 
   function multiply$2(out, a, b) {
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2],
         aw = a[3];
-    const bx = b[0],
+    var bx = b[0],
         by = b[1],
         bz = b[2],
         bw = b[3];
@@ -5622,11 +5629,11 @@ THE SOFTWARE.
 
   function rotateX$1(out, a, rad) {
     rad *= 0.5;
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2],
         aw = a[3];
-    const bx = Math.sin(rad),
+    var bx = Math.sin(rad),
         bw = Math.cos(rad);
     out[0] = ax * bw + aw * bx;
     out[1] = ay * bw + az * bx;
@@ -5645,11 +5652,11 @@ THE SOFTWARE.
 
   function rotateY$1(out, a, rad) {
     rad *= 0.5;
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2],
         aw = a[3];
-    const by = Math.sin(rad),
+    var by = Math.sin(rad),
         bw = Math.cos(rad);
     out[0] = ax * bw - az * by;
     out[1] = ay * bw + aw * by;
@@ -5668,11 +5675,11 @@ THE SOFTWARE.
 
   function rotateZ$1(out, a, rad) {
     rad *= 0.5;
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2],
         aw = a[3];
-    const bz = Math.sin(rad),
+    var bz = Math.sin(rad),
         bw = Math.cos(rad);
     out[0] = ax * bw + ay * bz;
     out[1] = ay * bw - ax * bz;
@@ -5691,7 +5698,7 @@ THE SOFTWARE.
    */
 
   function calculateW(out, a) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2];
     out[0] = x;
@@ -5709,13 +5716,13 @@ THE SOFTWARE.
    */
 
   function exp(out, a) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2],
         w = a[3];
-    const r = Math.sqrt(x * x + y * y + z * z);
-    const et = Math.exp(w);
-    const s = r > 0 ? et * Math.sin(r) / r : 0;
+    var r = Math.sqrt(x * x + y * y + z * z);
+    var et = Math.exp(w);
+    var s = r > 0 ? et * Math.sin(r) / r : 0;
     out[0] = x * s;
     out[1] = y * s;
     out[2] = z * s;
@@ -5731,12 +5738,12 @@ THE SOFTWARE.
    */
 
   function ln(out, a) {
-    const x = a[0],
+    var x = a[0],
         y = a[1],
         z = a[2],
         w = a[3];
-    const r = Math.sqrt(x * x + y * y + z * z);
-    const t = r > 0 ? Math.atan2(r, w) / r : 0;
+    var r = Math.sqrt(x * x + y * y + z * z);
+    var t = r > 0 ? Math.atan2(r, w) / r : 0;
     out[0] = x * t;
     out[1] = y * t;
     out[2] = z * t;
@@ -5771,15 +5778,15 @@ THE SOFTWARE.
   function slerp(out, a, b, t) {
     // benchmarks:
     //    http://jsperf.com/quaternion-slerp-implementations
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1],
         az = a[2],
         aw = a[3];
-    let bx = b[0],
+    var bx = b[0],
         by = b[1],
         bz = b[2],
         bw = b[3];
-    let omega, cosom, sinom, scale0, scale1; // calc cosine
+    var omega, cosom, sinom, scale0, scale1; // calc cosine
 
     cosom = ax * bx + ay * by + az * bz + aw * bw; // adjust signs (if necessary)
 
@@ -5822,11 +5829,11 @@ THE SOFTWARE.
   function random$1(out) {
     // Implementation of http://planning.cs.uiuc.edu/node198.html
     // TODO: Calling random 3 times is probably not the fastest solution
-    const u1 = RANDOM();
-    const u2 = RANDOM();
-    const u3 = RANDOM();
-    const sqrt1MinusU1 = Math.sqrt(1 - u1);
-    const sqrtU1 = Math.sqrt(u1);
+    var u1 = RANDOM();
+    var u2 = RANDOM();
+    var u3 = RANDOM();
+    var sqrt1MinusU1 = Math.sqrt(1 - u1);
+    var sqrtU1 = Math.sqrt(u1);
     out[0] = sqrt1MinusU1 * Math.sin(2.0 * Math.PI * u2);
     out[1] = sqrt1MinusU1 * Math.cos(2.0 * Math.PI * u2);
     out[2] = sqrtU1 * Math.sin(2.0 * Math.PI * u3);
@@ -5842,12 +5849,12 @@ THE SOFTWARE.
    */
 
   function invert$1(out, a) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3];
-    const dot = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
-    const invDot = dot ? 1.0 / dot : 0; // TODO: Would be faster to return [0,0,0,0] immediately if dot == 0
+    var dot = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+    var invDot = dot ? 1.0 / dot : 0; // TODO: Would be faster to return [0,0,0,0] immediately if dot == 0
 
     out[0] = -a0 * invDot;
     out[1] = -a1 * invDot;
@@ -5886,8 +5893,8 @@ THE SOFTWARE.
   function fromMat3(out, m) {
     // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
     // article "Quaternion Calculus and Fast Animation".
-    const fTrace = m[0] + m[4] + m[8];
-    let fRoot;
+    var fTrace = m[0] + m[4] + m[8];
+    var fRoot;
 
     if (fTrace > 0.0) {
       // |w| > 1/2, may as well choose w > 1/2
@@ -5901,11 +5908,11 @@ THE SOFTWARE.
       out[2] = (m[1] - m[3]) * fRoot;
     } else {
       // |w| <= 1/2
-      let i = 0;
+      var i = 0;
       if (m[4] > m[0]) i = 1;
       if (m[8] > m[i * 3 + i]) i = 2;
-      const j = (i + 1) % 3;
-      const k = (i + 2) % 3;
+      var j = (i + 1) % 3;
+      var k = (i + 2) % 3;
       fRoot = Math.sqrt(m[i * 3 + i] - m[j * 3 + j] - m[k * 3 + k] + 1.0);
       out[i] = 0.5 * fRoot;
       fRoot = 0.5 / fRoot;
@@ -5929,17 +5936,17 @@ THE SOFTWARE.
    */
 
   function fromEuler(out, x, y, z) {
-    const order = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : ANGLE_ORDER;
-    const halfToRad = Math.PI / 360;
+    var order = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : ANGLE_ORDER;
+    var halfToRad = Math.PI / 360;
     x *= halfToRad;
     z *= halfToRad;
     y *= halfToRad;
-    const sx = Math.sin(x);
-    const cx = Math.cos(x);
-    const sy = Math.sin(y);
-    const cy = Math.cos(y);
-    const sz = Math.sin(z);
-    const cz = Math.cos(z);
+    var sx = Math.sin(x);
+    var cx = Math.cos(x);
+    var sy = Math.sin(y);
+    var cy = Math.cos(y);
+    var sz = Math.sin(z);
+    var cz = Math.cos(z);
 
     switch (order) {
       case "xyz":
@@ -6008,7 +6015,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const clone$2 = clone$3;
+  var clone$2 = clone$3;
   /**
    * Creates a new quat initialized with the given values
    *
@@ -6020,7 +6027,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const fromValues$2 = fromValues$3;
+  var fromValues$2 = fromValues$3;
   /**
    * Copy the values from one quat to another
    *
@@ -6030,7 +6037,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const copy$2 = copy$3;
+  var copy$2 = copy$3;
   /**
    * Set the components of a quat to the given values
    *
@@ -6043,7 +6050,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const set$2 = set$3;
+  var set$2 = set$3;
   /**
    * Adds two quat's
    *
@@ -6054,13 +6061,13 @@ THE SOFTWARE.
    * @function
    */
 
-  const add$2 = add$3;
+  var add$2 = add$3;
   /**
    * Alias for {@link quat.multiply}
    * @function
    */
 
-  const mul$2 = multiply$2;
+  var mul$2 = multiply$2;
   /**
    * Scales a quat by a scalar number
    *
@@ -6071,7 +6078,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const scale$2 = scale$3;
+  var scale$2 = scale$3;
   /**
    * Calculates the dot product of two quat's
    *
@@ -6081,7 +6088,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const dot$2 = dot$3;
+  var dot$2 = dot$3;
   /**
    * Performs a linear interpolation between two quat's
    *
@@ -6093,7 +6100,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const lerp$2 = lerp$3;
+  var lerp$2 = lerp$3;
   /**
    * Calculates the length of a quat
    *
@@ -6101,13 +6108,13 @@ THE SOFTWARE.
    * @returns {Number} length of a
    */
 
-  const length$2 = length$3;
+  var length$2 = length$3;
   /**
    * Alias for {@link quat.length}
    * @function
    */
 
-  const len$2 = length$2;
+  var len$2 = length$2;
   /**
    * Calculates the squared length of a quat
    *
@@ -6116,13 +6123,13 @@ THE SOFTWARE.
    * @function
    */
 
-  const squaredLength$2 = squaredLength$3;
+  var squaredLength$2 = squaredLength$3;
   /**
    * Alias for {@link quat.squaredLength}
    * @function
    */
 
-  const sqrLen$2 = squaredLength$2;
+  var sqrLen$2 = squaredLength$2;
   /**
    * Normalize a quat
    *
@@ -6132,7 +6139,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const normalize$2 = normalize$3;
+  var normalize$2 = normalize$3;
   /**
    * Returns whether the quaternions have exactly the same elements in the same position (when compared with ===)
    *
@@ -6141,7 +6148,7 @@ THE SOFTWARE.
    * @returns {Boolean} True if the vectors are equal, false otherwise.
    */
 
-  const exactEquals$2 = exactEquals$3;
+  var exactEquals$2 = exactEquals$3;
   /**
    * Returns whether the quaternions point approximately to the same direction.
    *
@@ -6167,12 +6174,12 @@ THE SOFTWARE.
    * @returns {quat} out
    */
 
-  const rotationTo = function () {
-    const tmpvec3 = create$4();
-    const xUnitVec3 = fromValues$4(1, 0, 0);
-    const yUnitVec3 = fromValues$4(0, 1, 0);
+  var rotationTo = function () {
+    var tmpvec3 = create$4();
+    var xUnitVec3 = fromValues$4(1, 0, 0);
+    var yUnitVec3 = fromValues$4(0, 1, 0);
     return function (out, a, b) {
-      const dot = dot$4(a, b);
+      var dot = dot$4(a, b);
 
       if (dot < -0.999999) {
         cross$2(tmpvec3, xUnitVec3, a);
@@ -6208,9 +6215,9 @@ THE SOFTWARE.
    * @returns {quat} out
    */
 
-  const sqlerp = function () {
-    const temp1 = create$2();
-    const temp2 = create$2();
+  var sqlerp = function () {
+    var temp1 = create$2();
+    var temp2 = create$2();
     return function (out, a, b, c, d, t) {
       slerp(temp1, a, d, t);
       slerp(temp2, b, c, t);
@@ -6229,8 +6236,8 @@ THE SOFTWARE.
    * @returns {quat} out
    */
 
-  const setAxes = function () {
-    const matr = create$6();
+  var setAxes = function () {
+    var matr = create$6();
     return function (out, view, right, up) {
       matr[0] = right[0];
       matr[3] = right[1];
@@ -6245,7 +6252,7 @@ THE SOFTWARE.
     };
   }();
 
-  const quat = /*#__PURE__*/Object.freeze({
+  var quat = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$2,
     identity: identity$1,
@@ -6303,9 +6310,9 @@ THE SOFTWARE.
    */
 
   function create$1() {
-    const dq = new ARRAY_TYPE(8);
+    var dq = new ARRAY_TYPE(8);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       dq[0] = 0;
       dq[1] = 0;
       dq[2] = 0;
@@ -6327,7 +6334,7 @@ THE SOFTWARE.
    */
 
   function clone$1(a) {
-    const dq = new ARRAY_TYPE(8);
+    var dq = new ARRAY_TYPE(8);
     dq[0] = a[0];
     dq[1] = a[1];
     dq[2] = a[2];
@@ -6354,7 +6361,7 @@ THE SOFTWARE.
    */
 
   function fromValues$1(x1, y1, z1, w1, x2, y2, z2, w2) {
-    const dq = new ARRAY_TYPE(8);
+    var dq = new ARRAY_TYPE(8);
     dq[0] = x1;
     dq[1] = y1;
     dq[2] = z1;
@@ -6380,12 +6387,12 @@ THE SOFTWARE.
    */
 
   function fromRotationTranslationValues(x1, y1, z1, w1, x2, y2, z2) {
-    const dq = new ARRAY_TYPE(8);
+    var dq = new ARRAY_TYPE(8);
     dq[0] = x1;
     dq[1] = y1;
     dq[2] = z1;
     dq[3] = w1;
-    const ax = x2 * 0.5,
+    var ax = x2 * 0.5,
         ay = y2 * 0.5,
         az = z2 * 0.5;
     dq[4] = ax * w1 + ay * z1 - az * y1;
@@ -6405,7 +6412,7 @@ THE SOFTWARE.
    */
 
   function fromRotationTranslation(out, q, t) {
-    const ax = t[0] * 0.5,
+    var ax = t[0] * 0.5,
         ay = t[1] * 0.5,
         az = t[2] * 0.5,
         bx = q[0],
@@ -6473,9 +6480,9 @@ THE SOFTWARE.
 
   function fromMat4(out, a) {
     //TODO Optimize this
-    const outer = create$2();
+    var outer = create$2();
     getRotation(outer, a);
-    const t = new ARRAY_TYPE(3);
+    var t = new ARRAY_TYPE(3);
     getTranslation$1(t, a);
     fromRotationTranslation(out, outer, t);
     return out;
@@ -6552,7 +6559,7 @@ THE SOFTWARE.
    * @return {quat} real part
    */
 
-  const getReal = copy$2;
+  var getReal = copy$2;
   /**
    * Gets the dual part of a dual quat
    * @param  {quat} out dual part
@@ -6576,7 +6583,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const setReal = copy$2;
+  var setReal = copy$2;
   /**
    * Set the dual component of a dual quat to the given quaternion
    *
@@ -6601,7 +6608,7 @@ THE SOFTWARE.
    */
 
   function getTranslation(out, a) {
-    const ax = a[4],
+    var ax = a[4],
         ay = a[5],
         az = a[6],
         aw = a[7],
@@ -6624,7 +6631,7 @@ THE SOFTWARE.
    */
 
   function translate(out, a, v) {
-    const ax1 = a[0],
+    var ax1 = a[0],
         ay1 = a[1],
         az1 = a[2],
         aw1 = a[3],
@@ -6655,18 +6662,18 @@ THE SOFTWARE.
    */
 
   function rotateX(out, a, rad) {
-    let bx = -a[0],
+    var bx = -a[0],
         by = -a[1],
         bz = -a[2],
-        bw = a[3];
-    const ax = a[4],
-          ay = a[5],
-          az = a[6],
-          aw = a[7],
-          ax1 = ax * bw + aw * bx + ay * bz - az * by,
-          ay1 = ay * bw + aw * by + az * bx - ax * bz,
-          az1 = az * bw + aw * bz + ax * by - ay * bx,
-          aw1 = aw * bw - ax * bx - ay * by - az * bz;
+        bw = a[3],
+        ax = a[4],
+        ay = a[5],
+        az = a[6],
+        aw = a[7],
+        ax1 = ax * bw + aw * bx + ay * bz - az * by,
+        ay1 = ay * bw + aw * by + az * bx - ax * bz,
+        az1 = az * bw + aw * bz + ax * by - ay * bx,
+        aw1 = aw * bw - ax * bx - ay * by - az * bz;
     rotateX$1(out, a, rad);
     bx = out[0];
     by = out[1];
@@ -6688,18 +6695,18 @@ THE SOFTWARE.
    */
 
   function rotateY(out, a, rad) {
-    let bx = -a[0],
+    var bx = -a[0],
         by = -a[1],
         bz = -a[2],
-        bw = a[3];
-    const ax = a[4],
-          ay = a[5],
-          az = a[6],
-          aw = a[7],
-          ax1 = ax * bw + aw * bx + ay * bz - az * by,
-          ay1 = ay * bw + aw * by + az * bx - ax * bz,
-          az1 = az * bw + aw * bz + ax * by - ay * bx,
-          aw1 = aw * bw - ax * bx - ay * by - az * bz;
+        bw = a[3],
+        ax = a[4],
+        ay = a[5],
+        az = a[6],
+        aw = a[7],
+        ax1 = ax * bw + aw * bx + ay * bz - az * by,
+        ay1 = ay * bw + aw * by + az * bx - ax * bz,
+        az1 = az * bw + aw * bz + ax * by - ay * bx,
+        aw1 = aw * bw - ax * bx - ay * by - az * bz;
     rotateY$1(out, a, rad);
     bx = out[0];
     by = out[1];
@@ -6721,18 +6728,18 @@ THE SOFTWARE.
    */
 
   function rotateZ(out, a, rad) {
-    let bx = -a[0],
+    var bx = -a[0],
         by = -a[1],
         bz = -a[2],
-        bw = a[3];
-    const ax = a[4],
-          ay = a[5],
-          az = a[6],
-          aw = a[7],
-          ax1 = ax * bw + aw * bx + ay * bz - az * by,
-          ay1 = ay * bw + aw * by + az * bx - ax * bz,
-          az1 = az * bw + aw * bz + ax * by - ay * bx,
-          aw1 = aw * bw - ax * bx - ay * by - az * bz;
+        bw = a[3],
+        ax = a[4],
+        ay = a[5],
+        az = a[6],
+        aw = a[7],
+        ax1 = ax * bw + aw * bx + ay * bz - az * by,
+        ay1 = ay * bw + aw * by + az * bx - ax * bz,
+        az1 = az * bw + aw * bz + ax * by - ay * bx,
+        aw1 = aw * bw - ax * bx - ay * by - az * bz;
     rotateZ$1(out, a, rad);
     bx = out[0];
     by = out[1];
@@ -6754,11 +6761,11 @@ THE SOFTWARE.
    */
 
   function rotateByQuatAppend(out, a, q) {
-    const qx = q[0],
-          qy = q[1],
-          qz = q[2],
-          qw = q[3];
-    let ax = a[0],
+    var qx = q[0],
+        qy = q[1],
+        qz = q[2],
+        qw = q[3],
+        ax = a[0],
         ay = a[1],
         az = a[2],
         aw = a[3];
@@ -6786,11 +6793,11 @@ THE SOFTWARE.
    */
 
   function rotateByQuatPrepend(out, q, a) {
-    const qx = q[0],
-          qy = q[1],
-          qz = q[2],
-          qw = q[3];
-    let bx = a[0],
+    var qx = q[0],
+        qy = q[1],
+        qz = q[2],
+        qw = q[3],
+        bx = a[0],
         by = a[1],
         bz = a[2],
         bw = a[3];
@@ -6824,14 +6831,14 @@ THE SOFTWARE.
       return copy$1(out, a);
     }
 
-    const axisLength = Math.hypot(axis[0], axis[1], axis[2]);
+    var axisLength = Math.hypot(axis[0], axis[1], axis[2]);
     rad = rad * 0.5;
-    const s = Math.sin(rad);
-    const bx = s * axis[0] / axisLength;
-    const by = s * axis[1] / axisLength;
-    const bz = s * axis[2] / axisLength;
-    const bw = Math.cos(rad);
-    const ax1 = a[0],
+    var s = Math.sin(rad);
+    var bx = s * axis[0] / axisLength;
+    var by = s * axis[1] / axisLength;
+    var bz = s * axis[2] / axisLength;
+    var bw = Math.cos(rad);
+    var ax1 = a[0],
         ay1 = a[1],
         az1 = a[2],
         aw1 = a[3];
@@ -6839,7 +6846,7 @@ THE SOFTWARE.
     out[1] = ay1 * bw + aw1 * by + az1 * bx - ax1 * bz;
     out[2] = az1 * bw + aw1 * bz + ax1 * by - ay1 * bx;
     out[3] = aw1 * bw - ax1 * bx - ay1 * by - az1 * bz;
-    const ax = a[4],
+    var ax = a[4],
         ay = a[5],
         az = a[6],
         aw = a[7];
@@ -6880,7 +6887,7 @@ THE SOFTWARE.
    */
 
   function multiply$1(out, a, b) {
-    const ax0 = a[0],
+    var ax0 = a[0],
         ay0 = a[1],
         az0 = a[2],
         aw0 = a[3],
@@ -6911,7 +6918,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const mul$1 = multiply$1;
+  var mul$1 = multiply$1;
   /**
    * Scales a dual quat by a scalar number
    *
@@ -6942,7 +6949,7 @@ THE SOFTWARE.
    * @function
    */
 
-  const dot$1 = dot$2;
+  var dot$1 = dot$2;
   /**
    * Performs a linear interpolation between two dual quats's
    * NOTE: The resulting dual quaternions won't always be normalized (The error is most noticeable when t = 0.5)
@@ -6955,7 +6962,7 @@ THE SOFTWARE.
    */
 
   function lerp$1(out, a, b, t) {
-    const mt = 1 - t;
+    var mt = 1 - t;
     if (dot$1(a, b) < 0) t = -t;
     out[0] = a[0] * mt + b[0] * t;
     out[1] = a[1] * mt + b[1] * t;
@@ -6976,7 +6983,7 @@ THE SOFTWARE.
    */
 
   function invert(out, a) {
-    const sqlen = squaredLength$1(a);
+    var sqlen = squaredLength$1(a);
     out[0] = -a[0] / sqlen;
     out[1] = -a[1] / sqlen;
     out[2] = -a[2] / sqlen;
@@ -7015,13 +7022,13 @@ THE SOFTWARE.
    * @function
    */
 
-  const length$1 = length$2;
+  var length$1 = length$2;
   /**
    * Alias for {@link quat2.length}
    * @function
    */
 
-  const len$1 = length$1;
+  var len$1 = length$1;
   /**
    * Calculates the squared length of a dual quat
    *
@@ -7030,13 +7037,13 @@ THE SOFTWARE.
    * @function
    */
 
-  const squaredLength$1 = squaredLength$2;
+  var squaredLength$1 = squaredLength$2;
   /**
    * Alias for {@link quat2.squaredLength}
    * @function
    */
 
-  const sqrLen$1 = squaredLength$1;
+  var sqrLen$1 = squaredLength$1;
   /**
    * Normalize a dual quat
    *
@@ -7047,19 +7054,19 @@ THE SOFTWARE.
    */
 
   function normalize$1(out, a) {
-    let magnitude = squaredLength$1(a);
+    var magnitude = squaredLength$1(a);
 
     if (magnitude > 0) {
       magnitude = Math.sqrt(magnitude);
-      const a0 = a[0] / magnitude;
-      const a1 = a[1] / magnitude;
-      const a2 = a[2] / magnitude;
-      const a3 = a[3] / magnitude;
-      const b0 = a[4];
-      const b1 = a[5];
-      const b2 = a[6];
-      const b3 = a[7];
-      const a_dot_b = a0 * b0 + a1 * b1 + a2 * b2 + a3 * b3;
+      var a0 = a[0] / magnitude;
+      var a1 = a[1] / magnitude;
+      var a2 = a[2] / magnitude;
+      var a3 = a[3] / magnitude;
+      var b0 = a[4];
+      var b1 = a[5];
+      var b2 = a[6];
+      var b3 = a[7];
+      var a_dot_b = a0 * b0 + a1 * b1 + a2 * b2 + a3 * b3;
       out[0] = a0;
       out[1] = a1;
       out[2] = a2;
@@ -7102,7 +7109,7 @@ THE SOFTWARE.
    */
 
   function equals$1(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1],
         a2 = a[2],
         a3 = a[3],
@@ -7110,7 +7117,7 @@ THE SOFTWARE.
         a5 = a[5],
         a6 = a[6],
         a7 = a[7];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1],
         b2 = b[2],
         b3 = b[3],
@@ -7121,7 +7128,7 @@ THE SOFTWARE.
     return Math.abs(a0 - b0) <= EPSILON * Math.max(1.0, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= EPSILON * Math.max(1.0, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= EPSILON * Math.max(1.0, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= EPSILON * Math.max(1.0, Math.abs(a3), Math.abs(b3)) && Math.abs(a4 - b4) <= EPSILON * Math.max(1.0, Math.abs(a4), Math.abs(b4)) && Math.abs(a5 - b5) <= EPSILON * Math.max(1.0, Math.abs(a5), Math.abs(b5)) && Math.abs(a6 - b6) <= EPSILON * Math.max(1.0, Math.abs(a6), Math.abs(b6)) && Math.abs(a7 - b7) <= EPSILON * Math.max(1.0, Math.abs(a7), Math.abs(b7));
   }
 
-  const quat2 = /*#__PURE__*/Object.freeze({
+  var quat2 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$1,
     clone: clone$1,
@@ -7176,9 +7183,9 @@ THE SOFTWARE.
    */
 
   function create() {
-    const out = new ARRAY_TYPE(2);
+    var out = new ARRAY_TYPE(2);
 
-    if (ARRAY_TYPE !== Float32Array) {
+    if (ARRAY_TYPE != Float32Array) {
       out[0] = 0;
       out[1] = 0;
     }
@@ -7193,7 +7200,7 @@ THE SOFTWARE.
    */
 
   function clone(a) {
-    const out = new ARRAY_TYPE(2);
+    var out = new ARRAY_TYPE(2);
     out[0] = a[0];
     out[1] = a[1];
     return out;
@@ -7207,7 +7214,7 @@ THE SOFTWARE.
    */
 
   function fromValues(x, y) {
-    const out = new ARRAY_TYPE(2);
+    var out = new ARRAY_TYPE(2);
     out[0] = x;
     out[1] = y;
     return out;
@@ -7400,7 +7407,7 @@ THE SOFTWARE.
    */
 
   function distance(a, b) {
-    const x = b[0] - a[0],
+    var x = b[0] - a[0],
         y = b[1] - a[1];
     return Math.hypot(x, y);
   }
@@ -7413,7 +7420,7 @@ THE SOFTWARE.
    */
 
   function squaredDistance(a, b) {
-    const x = b[0] - a[0],
+    var x = b[0] - a[0],
         y = b[1] - a[1];
     return x * x + y * y;
   }
@@ -7425,7 +7432,7 @@ THE SOFTWARE.
    */
 
   function length(a) {
-    const x = a[0],
+    var x = a[0],
         y = a[1];
     return Math.hypot(x, y);
   }
@@ -7437,7 +7444,7 @@ THE SOFTWARE.
    */
 
   function squaredLength(a) {
-    const x = a[0],
+    var x = a[0],
         y = a[1];
     return x * x + y * y;
   }
@@ -7476,9 +7483,9 @@ THE SOFTWARE.
    */
 
   function normalize(out, a) {
-    const x = a[0],
+    var x = a[0],
         y = a[1];
-    let len = x * x + y * y;
+    var len = x * x + y * y;
 
     if (len > 0) {
       //TODO: evaluate use of glm_invsqrt here?
@@ -7511,7 +7518,7 @@ THE SOFTWARE.
    */
 
   function cross(out, a, b) {
-    const z = a[0] * b[1] - a[1] * b[0];
+    var z = a[0] * b[1] - a[1] * b[0];
     out[0] = out[1] = 0;
     out[2] = z;
     return out;
@@ -7527,7 +7534,7 @@ THE SOFTWARE.
    */
 
   function lerp(out, a, b, t) {
-    const ax = a[0],
+    var ax = a[0],
         ay = a[1];
     out[0] = ax + t * (b[0] - ax);
     out[1] = ay + t * (b[1] - ay);
@@ -7543,7 +7550,7 @@ THE SOFTWARE.
 
   function random(out, scale) {
     scale = scale === undefined ? 1.0 : scale;
-    const r = RANDOM() * 2.0 * Math.PI;
+    var r = RANDOM() * 2.0 * Math.PI;
     out[0] = Math.cos(r) * scale;
     out[1] = Math.sin(r) * scale;
     return out;
@@ -7558,7 +7565,7 @@ THE SOFTWARE.
    */
 
   function transformMat2(out, a, m) {
-    const x = a[0],
+    var x = a[0],
         y = a[1];
     out[0] = m[0] * x + m[2] * y;
     out[1] = m[1] * x + m[3] * y;
@@ -7574,7 +7581,7 @@ THE SOFTWARE.
    */
 
   function transformMat2d(out, a, m) {
-    const x = a[0],
+    var x = a[0],
         y = a[1];
     out[0] = m[0] * x + m[2] * y + m[4];
     out[1] = m[1] * x + m[3] * y + m[5];
@@ -7591,7 +7598,7 @@ THE SOFTWARE.
    */
 
   function transformMat3(out, a, m) {
-    const x = a[0],
+    var x = a[0],
         y = a[1];
     out[0] = m[0] * x + m[3] * y + m[6];
     out[1] = m[1] * x + m[4] * y + m[7];
@@ -7609,8 +7616,8 @@ THE SOFTWARE.
    */
 
   function transformMat4(out, a, m) {
-    const x = a[0];
-    const y = a[1];
+    var x = a[0];
+    var y = a[1];
     out[0] = m[0] * x + m[4] * y + m[12];
     out[1] = m[1] * x + m[5] * y + m[13];
     return out;
@@ -7626,7 +7633,7 @@ THE SOFTWARE.
 
   function rotate(out, a, b, rad) {
     //Translate point to the origin
-    const p0 = a[0] - b[0],
+    var p0 = a[0] - b[0],
         p1 = a[1] - b[1],
         sinC = Math.sin(rad),
         cosC = Math.cos(rad); //perform rotation and translate to correct position
@@ -7643,7 +7650,7 @@ THE SOFTWARE.
    */
 
   function angle(a, b) {
-    const x1 = a[0],
+    var x1 = a[0],
         y1 = a[1],
         x2 = b[0],
         y2 = b[1],
@@ -7696,9 +7703,9 @@ THE SOFTWARE.
    */
 
   function equals(a, b) {
-    const a0 = a[0],
+    var a0 = a[0],
         a1 = a[1];
-    const b0 = b[0],
+    var b0 = b[0],
         b1 = b[1];
     return Math.abs(a0 - b0) <= EPSILON * Math.max(1.0, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= EPSILON * Math.max(1.0, Math.abs(a1), Math.abs(b1));
   }
@@ -7707,43 +7714,43 @@ THE SOFTWARE.
    * @function
    */
 
-  const len = length;
+  var len = length;
   /**
    * Alias for {@link vec2.subtract}
    * @function
    */
 
-  const sub = subtract;
+  var sub = subtract;
   /**
    * Alias for {@link vec2.multiply}
    * @function
    */
 
-  const mul = multiply;
+  var mul = multiply;
   /**
    * Alias for {@link vec2.divide}
    * @function
    */
 
-  const div = divide;
+  var div = divide;
   /**
    * Alias for {@link vec2.distance}
    * @function
    */
 
-  const dist = distance;
+  var dist = distance;
   /**
    * Alias for {@link vec2.squaredDistance}
    * @function
    */
 
-  const sqrDist = squaredDistance;
+  var sqrDist = squaredDistance;
   /**
    * Alias for {@link vec2.squaredLength}
    * @function
    */
 
-  const sqrLen = squaredLength;
+  var sqrLen = squaredLength;
   /**
    * Perform some operation over an array of vec2s.
    *
@@ -7757,10 +7764,10 @@ THE SOFTWARE.
    * @function
    */
 
-  const forEach = function () {
-    const vec = create();
+  var forEach = function () {
+    var vec = create();
     return function (a, stride, offset, count, fn, arg) {
-      let i, l;
+      var i, l;
 
       if (!stride) {
         stride = 2;
@@ -7788,7 +7795,7 @@ THE SOFTWARE.
     };
   }();
 
-  const vec2 = /*#__PURE__*/Object.freeze({
+  var vec2 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create,
     clone: clone,

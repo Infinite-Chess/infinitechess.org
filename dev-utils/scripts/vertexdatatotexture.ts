@@ -58,7 +58,6 @@ function convertVertexDataToTexture(gl: WebGL2RenderingContext, vertexData: numb
 		throw new Error("Framebuffer is not complete");
 	}
 
-	// eslint-disable-next-line no-unused-vars
 	const vbo = createBufferFromData(new Float32Array(vertexData));
 
 	// Assume shaders and program are already set up
