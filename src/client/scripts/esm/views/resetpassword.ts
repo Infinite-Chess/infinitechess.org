@@ -6,7 +6,7 @@
  */
 
 // Import the shared password validation utility.
-import { validatePassword } from '../util/password-validation.js';
+import validators from '../../../../shared/util/validators.js';
 
 // --- Type Definitions for Clarity ---
 type FormElements = {
@@ -84,9 +84,16 @@ function initializeForm(elements: FormElements): void {
 		const password = newPasswordInput.value;
 		const confirmPassword = confirmPasswordInput.value;
 
-		const validationResult = validatePassword(password);
-		if (!validationResult.isValid && validationResult.errorKey) {
-			messageElement = createErrorMessageElement(translations[validationResult.errorKey]);
+		const validationResult = validators.validatePassword(password);
+		if (validationResult !== validators.PasswordValidationResult.Ok) {
+			// I found it to be less bloated by using a Map here, but ideally the validator should already return a translation string to be used
+			const errorKeys: Map<number, string> = new Map();
+			errorKeys.set(validators.PasswordValidationResult.InvalidFormat, "js-pwd_incorrect_format");
+			errorKeys.set(validators.PasswordValidationResult.PasswordTooShort, "js-pwd_too_short");
+			errorKeys.set(validators.PasswordValidationResult.PasswordTooLong, "js-pwd_too_long");
+			errorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, "js-pwd_not_pwd");
+			
+			messageElement = createErrorMessageElement(translations[errorKeys.get(validationResult) ?? "js-pwd_incorrect_format"]);
 			newPasswordInput.focus();
 			return false;
 		}

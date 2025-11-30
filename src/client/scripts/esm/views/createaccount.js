@@ -3,8 +3,8 @@
 // The script on the createaccount page
 
 
+import validators from "../../../../shared/util/validators.js";
 import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
-import { validatePassword } from '../util/password-validation.js';
 
 const element_usernameInput = document.getElementById('username');
 const element_emailInput = document.getElementById('email');
@@ -30,11 +30,10 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 
 	let usernameError = document.getElementById("usernameerror"); // Does an error already exist?
 
-	const lengthError = element_usernameInput.value.length < 3;
-	const formatError = !onlyLettersAndNumbers(element_usernameInput.value);
+	const error = validators.validateUsername(element_usernameInput.value);
 
 	// If ANY error, make sure errorElement is created
-	if (lengthError || formatError) {
+	if (error !== validators.UsernameValidationResult.Ok) {
 		if (!usernameError) { // Create empty errorElement
 			usernameHasError = true;
 			createErrorElement('usernameerror', "username-input-line");
@@ -48,13 +47,20 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 		usernameError.remove();
 		element_usernameInput.removeAttribute('style');
 	}
-    
-	if (lengthError && formatError) { // Change error message
-		usernameError.textContent = translations["js-username_specs"];
-	} else if (lengthError) {
-		usernameError.textContent = translations["js-username_tooshort"];
-	} else if (formatError) {
-		usernameError.textContent = translations["js-username_wrongenc"];
+
+	if (error !== validators.UsernameValidationResult.Ok) {
+		switch (error) {
+			// TODO: add translation for both of the cases, too long and too short
+			case validators.UsernameValidationResult.UsernameTooShort:
+				usernameError.textContent = translations["js-username_tooshort"];
+				break;
+			case validators.UsernameValidationResult.OnlyLettersAndNumbers:
+				usernameError.textContent = translations["js-username_wrongenc"];
+				break;
+			default:
+				// ignoring some other errors the validator might return, this could be changed in the future
+				break;
+		}
 	}
 
 	updateSubmitButton();
@@ -95,10 +101,10 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 
 	let emailError = document.getElementById("emailerror"); // Does an error already exist?
 
-	const error = !validEmail(element_emailInput.value);
+	const error = validators.validateEmail(element_emailInput.value); //!validEmail(element_emailInput.value);
 
 	// If ANY error, make sure errorElement is created
-	if (error) {
+	if (error !== validators.EmailValidationResult.Ok) {
 		if (!emailError) { // Create empty errorElement
 			emailHasError = true;
 			createErrorElement('emailerror', 'emailinputline');
@@ -113,8 +119,18 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 		element_emailInput.removeAttribute('style');
 	}
     
-	if (error) {
-		emailError.textContent = translations["js-email_invalid"];
+	if (error !== validators.EmailValidationResult.Ok) {
+		switch (error) {
+			case validators.EmailValidationResult.EmailTooLong:
+				emailError.textContent = translations["js-email_too_long"];
+				break;
+			case validators.EmailValidationResult.InvalidFormat:
+				emailError.textContent = translations["js-email_invalid"];
+				break;
+			default:
+				emailError.textContent = translations["js-email_invalid"];
+				break;
+		}
 	}
 
 	updateSubmitButton();
@@ -158,16 +174,25 @@ let passwordHasError = false;
 element_passwordInput.addEventListener('input', () => { // When password field changes...
 	let passwordError = document.getElementById("passworderror");
 	
-	const validationResult = validatePassword(element_passwordInput.value);
+	const validationResult = validators.validatePassword(element_passwordInput.value);
 
-	if (!validationResult.isValid) {
+	if (validationResult !== validators.PasswordValidationResult.Ok) {
 		passwordHasError = true;
 		if (!passwordError) {
 			passwordError = createErrorElement('passworderror', 'password-input-line');
 			element_passwordInput.style.outline = 'solid 1px red';
 		}
-		// Use the error key from the result to get the correct translation
-		passwordError.textContent = translations[validationResult.errorKey];
+		// I found it to be less bloated by using a Map here, but ideally the validator should already return a translation string to be used
+		/**
+		 * @type Map<validators["PasswordValidationResult"], string>
+		 */
+		const errorKeys = new Map();
+		errorKeys.set(validators.PasswordValidationResult.InvalidFormat, "js-pwd_incorrect_format");
+		errorKeys.set(validators.PasswordValidationResult.PasswordTooShort, "js-pwd_too_short");
+		errorKeys.set(validators.PasswordValidationResult.PasswordTooLong, "js-pwd_too_long");
+		errorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, "js-pwd_not_pwd");
+		
+		passwordError.textContent = translations[errorKeys.get(validationResult) ?? "js-pwd_incorrect_format"];
 	} else {
 		passwordHasError = false;
 		if (passwordError) {
@@ -254,17 +279,4 @@ function updateSubmitButton() {
 	} else { // No Errors
 		element_submitButton.className = 'ready';
 	}
-}
-
-function onlyLettersAndNumbers(string) {
-	if (!string) return true;
-	return /^[a-zA-Z0-9]+$/.test(string);
-}
-
-function validEmail(string) {
-	// Credit for the regex: https://stackoverflow.com/a/201378
-	// eslint-disable-next-line no-control-regex
-	const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-	if (regex.test(string) === true) return true;
-	return false;
 }
