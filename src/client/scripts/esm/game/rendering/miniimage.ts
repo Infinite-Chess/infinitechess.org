@@ -239,7 +239,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 			index: -1
 		});
 		// Add the captured pieces being shown
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, pieces => pieces.forEach((p) => pushPieceNoDuplicatesOrVoids(p)));
 		// Construct the hidden pieces for below
 		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
