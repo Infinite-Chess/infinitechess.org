@@ -272,6 +272,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const nextMove = boardsim.moves[moveIndex + 1];
 	if (nextMove && !animation.animations.some(a => coordutil.areCoordsEqual(nextMove.startCoords, a.path[a.path.length - 1]!))) { // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;
+		if (!nextToMovePiece) throw new Error("Could not find next to move piece at its starting coords: " + nextMove.startCoords);
 		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
 	}
 	
