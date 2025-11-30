@@ -14,74 +14,6 @@ const element_style = document.getElementById('style'); // The in-html-doc style
 // * The navigation bar, when the theme changes.
 let navigationStyle;
 
-// Add and remove classes
-
-function addClass(element, className) {
-	element.classList.add(className);
-}
-
-function removeClass(element, className) {
-	element.classList.remove(className);
-}
-
-// Removes the class, THEN adds it back! This starts over animations
-function reinstateClass(element, className) {
-	removeClass(element, className);
-	addClass(element, className);
-}
-
-// Hide and show elements...
-
-/**
- * Hides the provided document element by giving it a class with the property "display: none".
- * @param {HTMLElement} element - The document element
- */
-function hideElement(element) {
-	addClass(element, "hidden");
-}
-
-/**
- * Reveals the provided document element by **removing** the class with the property "display: none".
- * @param {HTMLElement} element - The document element
- */
-function revealElement(element) {
-	removeClass(element, "hidden");
-}
-
-// Animate elements
-
-// Fades in the element over the span of 1 second
-function fadeIn1s(element) {
-	revealElement(element); // Make sure the element no longer has the 'display: none' property.
-	reinstateClass(element, 'fade-in-2_3s'); // This class contain the fade-in animation that begins immediately upon receiving this property
-
-	if (!element.fadeIn1sLayers) element.fadeIn1sLayers = 1;
-	else element.fadeIn1sLayers++;
-
-	setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
-		element.fadeIn1sLayers--;
-		if (element.fadeIn1sLayers > 0) return; // The fade-in-1s animation was RENEWED
-		delete element.fadeIn1sLayers;
-		removeClass(element, 'fade-in-2_3s');
-	}, 1000);
-}
-
-// Fades out the element over the span of 1 second
-function fadeOut1s(element) {
-	revealElement(element);
-	reinstateClass(element,'fade-out-2_3s'); // This class contain the fade-out animation that begins immediately upon receiving this property.
-    
-	if (!element.fadeOut1sLayers) element.fadeOut1sLayers = 1;
-	else element.fadeOut1sLayers++;
-
-	setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
-		element.fadeOut1sLayers--;
-		if (element.fadeOut1sLayers > 0) return; // The fade-in-1s animation was RENEWED
-		delete element.fadeOut1sLayers;
-		removeClass(element, 'fade-out-2_3s');
-		hideElement(element);
-	}, 1000);
-}
 
 // Other operations
 
@@ -99,23 +31,34 @@ function updateJavascriptStyling() {
 }
 
 /**
- * Gets all children of an element and returns an array of their text contents.
- * @param {HTMLElement} parentElement - The parent element.
- * @returns {string[]} An array of text contents of the child elements.
+ * Finds the index of an element within its parent.
+ * @param {Element} element - The element to find the index of.
+ * @returns {number} - The index of the element within its parent, or -1 if not found.
  */
-function getChildrenTextContents(parentElement) {
-	// Get all child elements
-	const children = parentElement.children;
-    
-	// Create an array to hold the text contents
-	const textContents = [];
-
-	// Loop through the child elements and extract their text content
-	for (let i = 0; i < children.length; i++) {
-		textContents.push(children[i].textContent);
+function getElementIndexWithinItsParent(element) {
+	if (!element || !element.parentNode) {
+		return -1;
 	}
 
-	return textContents;
+	// Get the parent node
+	const parent = element.parentNode;
+
+	// Convert the parent's children to an array and find the index of the element
+	const children = Array.prototype.slice.call(parent.children);
+	return children.indexOf(element);
+}
+
+/**
+ * Gets the child element at the specified index of a parent element.
+ * @param {Element} parent - The parent element.
+ * @param {number} index - The index of the child element.
+ * @returns {Element|null} - The child element at the specified index, or null if not found.
+ */
+function getChildByIndexInParent(parent, index) {
+	if (parent && parent.children && index >= 0 && index < parent.children.length) {
+		return parent.children[index];
+	}
+	return null;
 }
 
 /**
@@ -141,11 +84,8 @@ function arrayToCssColor(colorArray) {
 
 
 export default {
-	hideElement,
-	revealElement,
 	setNavStyle,
-	fadeIn1s,
-	fadeOut1s,
-	getChildrenTextContents,
 	arrayToCssColor,
+	getElementIndexWithinItsParent,
+	getChildByIndexInParent,
 };

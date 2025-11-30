@@ -32,6 +32,8 @@ main {
     bottom: 0;
     left: 0;
     right: 0;
+    display: flex;
+    flex-direction: row;
 }
 
 button {
@@ -39,10 +41,235 @@ button {
 }
 
 
+/* Left vertical bar of Board Editor */
+
+.editor-menu {
+    position: relative;
+    height: 100%;
+    overflow-x: clip;
+    overflow-y: auto;
+    box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+    background-color: #ffffff;
+    z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
+	/* Controls the size of all its children. */
+	font-size: min(16px, 2.2vw);
+	width: 15em;
+}
+
+/* 
+ * Overwrite the tooltip font size and max-width in the editor menu only.
+ * This ensures that the editor tooltips do not get clipped on very small screens.
+ */
+.editor-menu .tooltip-dl::before, .editor-menu .tooltip-d::before, .editor-menu .tooltip-dr::before {
+    font-size: calc(1em * 12 / 16);
+    max-width: calc(1em * 150 / 16);
+}
+
+.editor-header {
+    text-align: center;
+    font-weight: bold;
+    margin: 0.5em 0;
+    color: #333;
+}
+
+.editor-separator {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 0.2em 0.2em;
+}
+
+/* SVG resizings */
+
+.svg-reset {
+    transform: scale(0.85) translate(2%, 0%);
+}
+
+.svg-clearall {
+	transform: scale(0.8);
+}
+
+.svg-saved-positions {
+	transform: scale(0.75);
+}
+
+.svg-copy-notation {
+	transform: scale(-0.75);
+}
+
+.svg-paste-notation {
+	transform: scale(0.75);
+}
+
+.svg-gamerules {
+	transform: scale(0.75);
+}
+
+.svg-start-game {
+	transform: scale(0.9);
+}
+
+.svg-normal {
+    transform: scale(0.65) translate(3%, 0%);
+}
+
+.svg-eraser {
+	transform: scale(0.85);
+}
+
+.svg-selection-tool {
+    transform: scale(0.9) translate(-1%, -1%);
+}
+
+.svg-select-all {
+	transform: scale(0.8);
+}
+
+.svg-delete-selection {
+	transform: scale(1.0);
+}
+
+.svg-copy-selection {
+	transform: scale(0.8);
+}
+
+.svg-paste-selection {
+	transform: scale(0.75);
+}
+
+.svg-flip-selection-horizontally {
+	transform: scale(0.8);
+}
+
+.svg-flip-selection-vertically {
+	transform: scale(0.8);
+}
+
+.svg-rotate-selection-left {
+	transform: scale(0.85);
+}
+
+.svg-rotate-selection-right {
+	transform: scale(-0.85, 0.85);
+}
+
+.svg-invert-selection-color {
+	transform: scale(0.8);
+}
+
+/* Specific section stylings... */
+
+.position-actions, .selection-actions {
+    display: grid;
+	grid-template-columns: repeat(5, 1fr);
+}
+
+/* Buttons that can't receive the .active class (only 1 state): Give them an active state */
+.position-actions .instant:active, .selection-actions div:active {
+	background-color: var(--background-theme-color);
+}
+
+.position-actions div, .editor-tools div, .selection-actions div, .editor-types .piece {
+    cursor: pointer;
+}
+
+.editor-tools {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.selection-actions div.disabled {
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+/* Palette */
+
+.color-select {
+    border: 0.2em solid black;
+    border-radius: 1.5em;
+    margin: 0.5em;
+    height: 2.8em;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.color-select:hover {
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
+	cursor: pointer;
+}
+
+/* Text with this class takes the opposite color of the background beneath. */
+.opposite-color-text {
+	color: white; /* base color to difference from */
+	mix-blend-mode: difference;
+}
+
+/* The grid of piece types in the Palette section */
+.editor-types {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.editor-types .piece, .editor-tools div, .position-actions div, .selection-actions div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.2em;
+}
+
+.editor-types .piece {
+    margin: 0.1em;
+}
+
+.editor-tools div, .position-actions div, .selection-actions div {
+    margin: 0.2em;
+}
+
+.editor-types .piece:hover, .editor-tools div:hover, .position-actions div:hover, .selection-actions div:hover {
+	outline: 0.25em solid black;
+	outline-offset: -0.125em;
+}
+
+.active {
+    outline-offset: -0.125em;
+    outline: 0.25em solid black;
+	background-color: var(--background-theme-color);
+}
+
+.void {
+    background-color: black;
+    margin: 5px;
+}
+
+.editor-types .void:hover {
+    outline: 0.25em solid #757575;
+}
+
+.editor-types .void.active {
+    outline: 0.25em solid #6d6d6d;
+}
+
+
+
+/* Entire board UI, including loading screen, canvas and overlay */
+
+#boardUI {
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+}
+
 
 /* Loading Page. A COUPLE OF THSEE CLASSES are also used for the game's loading animation page! */
 
 .animation-container {
+    transition: opacity 0.4s;
+    z-index: 1;
+    pointer-events: none;
     display: flex;
     background-color: black;
     justify-content: center; /* Center horizontally */
@@ -52,7 +279,6 @@ button {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: -1;
     overflow: hidden;
 }
 
@@ -183,6 +409,7 @@ canvas {
     position: absolute;
     width: 100%;
     height: 100%;
+    container-type: inline-size; /* Enables container queries on this element */
 }
 
 
@@ -250,7 +477,7 @@ canvas {
     left: 0;
     right: 0;
     display: grid;
-    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(3, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
+    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(4, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
     gap: min(2vw, 22px, calc(var(--vh-sub-nav) * 0.023));
     padding-bottom: min(10vw, 108px, calc(var(--vh-sub-nav) * 0.115));
     justify-content: center;
@@ -293,223 +520,259 @@ canvas {
 }
 
 
+/* Practice Page: Practice selection screen */
 
-/* Guide */
-
-.guide {
+.practice-selection {
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
     display: grid;
-    grid-template-rows: calc((var(--vh-sub-nav) - var(--gap)) * 0.85) min(calc(var(--vw-capped) * 0.08), var(--vh-sub-nav) * 0.08);
-    grid-template-columns: calc(var(--vwh) * 0.86);
-    --gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
-    gap: var(--gap);
+    grid-template: min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) min(58vw, 628px, calc(var(--vh-sub-nav) * 0.667)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
+    gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
     justify-content: center;
     align-content: center;
+    margin-bottom: 8vh;
 }
 
-.guide .guide-contents {
-    padding: 5%;
-    overflow-y: scroll;
+.practice-selection button {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
 }
 
-.guide button {
-    font-size: calc(var(--vwh) * 0.03);
-}
-
-.guide button:hover {
+.practice-selection button:hover {
     background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
 }
 
-.guide button:active {
+.practice-selection button:active {
     background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
 }
 
-.guide h1 {
-    margin: 0 0 1em;
-    font-weight: normal;
-    --edge-color: rgb(249, 249, 249);
-    background: linear-gradient(to right, var(--edge-color), rgb(228, 228, 228), var(--edge-color));
-    border-radius: 0.25em;
-    padding: 0.25em;
+.practice-selection .practice-name {
+    grid-column: 1 / 7;
+    align-self: center;
+    justify-self: center;
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
 }
 
-.guide h2 {
-    margin: 2.25em 0 0;
-    font-weight: normal;
+.practice-selection .checkmate-practice {
+    grid-column: 1 / 4;
 }
 
-.guide .line-break {
-    border: 0;
-    border-top: 1px solid #adadad; /* Adjust the color as needed */
-    margin: 0.5em 0 1em; /* Adjust the spacing as needed */
+.practice-selection .tactics-practice {
+    grid-column: 4 / 7;
 }
 
-.guide p {
-    margin: 1.5em 0;
+.practice-selection .practice-play {
+    grid-column: 1 / 4;
+    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
 }
 
-.guide li {
-    margin: 0.75em 0 0.5em 0.5em;
+.practice-selection .practice-back {
+    grid-column: 4 / 7;
 }
 
-.guide .clear-float {
-    clear: both;
+.practice-selection .selected {
+    box-shadow: none;
 }
 
-.guide img {
-    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.157);
-    border-radius: 0.7em;
-    border: 2px solid rgb(101, 101, 101);
-    box-sizing: content-box;
-}
-
-.guide .img-promotionlines {
-    margin: 0.75em 0 0.75em 1.5em;
-    width: 50%;
-    aspect-ratio: 1.789 / 1; /* width / height */
-    float: right;
-}
-
-.guide .img-kingrookfork {
-    margin: 0.75em 1.5em 0.75em 0;
-    float: left;
-    width: 42%;
-    aspect-ratio: 1.077 / 1; /* width / height */
-}
-
-.guide .img-arrowindicators {
-    margin: 0.75em 0 0.75em 1.5em;
-    width: 25%;
-    float: right;
-    aspect-ratio: 1 / 1; /* width / height */
-}
-
-.guide .fairy-pieces {
-    display: flex;
-    height: min(var(--vwh) * 0.35);
-    align-items: stretch;
-    justify-content: center;
-}
-
-.img-fairymoveset img {
-    width: 100%;
-}
-
-.guide .img-fairymoveset {
-    box-sizing: border-box;
-    margin: 0 1em 0 0;
-    height: 100%;
-    aspect-ratio: 1 / 1; /* width / height */
-}
-
-.guide .fairy-card-container {
-    font-size: min(var(--vwh) * 0.02);
-    display: flex;
-    box-sizing: border-box;
-}
-
-.guide .left-arrow, .guide .right-arrow {
-    display: flex;
-    width: 13%;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
-.guide svg {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 5%;
-    border-radius: 0.5em;
-    /* margin: 0.75em 0; */
-}
-
-.guide svg:hover {
-    background-color: rgb(224, 224, 224);
-}
-
-.guide svg:active {
-    background-color: rgb(218, 218, 218);
-}
-
-.guide .fairy-card {
-    margin: 0 1em;
+.practice-box {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+    grid-column: 1 / 7;
     display: flex;
     flex-direction: column;
 }
 
-.guide .space-1 {
+.practice-head {
+    font-family: Verdana;
+    background: linear-gradient(to bottom, white, rgb(229, 229, 229), white);
+    border-bottom: 2px solid rgb(168, 168, 168);
+    border-radius: min(1.3vw, 30px, calc(var(--vh-sub-nav) * 0.015));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-content: center;
+    padding: 0.5em 2em;
+    height: 4em;
+}
+
+.difficulty-title {
+    font-size: 0.8em;
+}
+
+.checkmate-list {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
 }
 
-.guide .fairy-card-title {
-    text-align: center;
-    font-size: 1.6em;
-    font-weight: bold;
-    margin: 0 0 1em;
-    text-shadow: 0 0.12em 0.2em rgba(0, 0, 0, 0.203);
-    flex-grow: 0;
+.checkmate {
+    display: flex;
+    align-items: center;
+    font-size: min(1.7vw, 18px, calc(var(--vh-sub-nav) * 0.020));
+    justify-content: center; /* OR: space-between */
+    margin: 0.3em;
+    border-radius: 0.3em;
+    border-width: 0em;
+    height: 3em;
 }
 
-.guide .fairy-card-description {
-    margin: 0;
+.checkmate {
+    background-color: rgba(199, 199, 199, 1);
+}
+
+.checkmate.selected {
+    outline-style: solid;
+    outline-width: 0.25em;
+    outline-offset: -0.15em;
+}
+
+.checkmate.beaten {
+    background-color: rgba(0, 128, 0, 0.3);
+}
+
+.checkmate:hover {
+    background-color: rgba(168, 168, 168, 0.8);
+    cursor: pointer;
+}
+
+.checkmate:active {
+    background-color: rgba(157, 156, 156, 0.8);
+}
+
+.checkmate.beaten:hover {
+    background-color: rgba(0, 128, 0, 0.2);
+}
+
+.checkmate-child {
+    padding: 0 0.3em;
+    margin: 0.8em;
+}
+
+.completion-mark {
+    width: 10%;
+    height: 100%;
+}
+
+/* Add the checkmark */
+.checkmate.beaten .completion-mark {
+    background-image: url('/img/game/checkmatepractice/checkmark.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.piecelistW {
+    display: flex;
+    justify-content: center;
+    width: 40%;
+    height: 100%;
+    margin-right: 5%;
+}
+
+.checkmate-child.versus {
+    width: 5%;
+}
+
+.piecelistB {
+    display: flex;
+    justify-content: center;
+    width: 10%;
+    height: 100%;
+}
+
+.checkmate-difficulty {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    width: 20%;
+}
+
+.checkmate-progress {
+    width: 15%;
     font-size: 1em;
-    flex-grow: 0;
 }
 
-.guide .space-2 {
-    flex-grow: 2;
+.checkmate-progress-bar {
+    position: relative;
+    width: 60%;
+    height: 1.2em;
+    outline-style: solid;
+    outline-width: 0.1em;
+    border-radius: 0.25em;
+    font-size: 0.8em;
 }
 
-@media only screen and (max-width: 700px) {
-    .guide .img-promotionlines, .guide .img-kingrookfork {
-        float: none;
-        width: 95%;
-        margin: 0 auto;
-        display: block; /* Ensures the image is a block element */
-    }
+/* Badges */
+
+.badge {
+    position: absolute;
+    height: 2.6em;
+    user-select: none;
 }
 
-@media only screen and (max-width: 500px) {
-    .guide .img-arrowindicators {
-        width: 96px;
-    }
+.badge img {
+    height: 100%;
 }
 
-@media only screen and (max-width: 600px), (max-height: 648px) {
-    .guide .img-fairymoveset {
-        width: 95%;
-        height: unset;
-        margin: 0 0 0.75em;
-    }
-
-    .guide .fairy-card-container {
-        padding-bottom: 0.75em;
-        min-height: 18em;
-    }
-
-    .guide .left-arrow, .guide .right-arrow {
-        display: flex;
-        max-width: 50px;
-    }
-
-    .guide .fairy-pieces {
-        flex-wrap: wrap;
-        height: unset;
-    }
-
-    .guide .fairy-card-title {
-        font-size: 2.4em;
-    }
-    
-    .guide .fairy-card-description {
-        font-size: 1.5em;
-    }
+.badge:hover img {
+    transition: transform 0.4s ease;
+    transform: scale(1.1);
 }
 
+.unearned {
+    filter: contrast(calc(1/3)) brightness(1.5);
+}
+
+#checkmate-badge-bronze {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#checkmate-badge-silver {
+    left: 75%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#checkmate-badge-gold {
+    left: 100%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Badge shine properties are in header.css since they are shared with badges on play page */
+
+
+
+.checkmatepiececontainer {
+    align-self: center;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-size: 0;
+    padding: 0.02em;
+    margin: 0.25em;
+    border-radius: 1em;
+}
+
+.checkmatepiececontainer.collated {
+    margin-left: -0.65em;
+}
+
+.checkmatepiececontainer.collated-strong {
+    margin-left: -1.75em;
+}
+
+.checkmatepiece {
+    width: 3em;
+    height: 3em;
+    background-image: inherit;
+    background-repeat: no-repeat;
+    /* NEEDS TO BE as many times greater than 100% as there are pieces in a row in the spritesheet! 8 pieces => 800% */
+    background-size: 800%; 
+}
 
 
 /* Play Page: Invite creation screen */
@@ -746,13 +1009,15 @@ button.join-button, button.copy-button {
 
 /* Top Navigation: Zoom buttons, coordinates, rewind/forward game, pause */
 
-.navigation {
+.navigation-bar {
     position: absolute;
     top: 0;
+    left: 0;
     width: 100%;
     font-size: 84px; /* Update with doc!! */
     height: 1em;
     display: flex;
+    justify-content: space-between;
     box-shadow: 0px 1px 7px 0px rgba(0, 0, 0, 0.659);
     background: linear-gradient(to top, rgba(255, 255, 255, 0.104), rgba(255, 255, 255, 0.552), rgba(255, 255, 255, 0.216));
     -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
@@ -826,7 +1091,7 @@ button.join-button, button.copy-button {
 	margin: 0;
 }
 
-.navigation .button {
+.navigation-bar .button {
     position: relative;
     width: 0.74em;
     height: 0.74em;
@@ -839,49 +1104,96 @@ button.join-button, button.copy-button {
     -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
 }
 
-.navigation .button:hover {
+.navigation-bar .button:hover {
     transform: scale(1.07);
 }
 
-.navigation .button:active {
+.navigation-bar .button:active {
     transform: scale(1);
 }
 
-.navigation svg {
+.navigation-bar svg {
     position: absolute;
 }
 
-/* Start shrinking top navigation bar */
-@media only screen and (max-width: 700px) { /* 700px needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
-        font-size: 12vw; /* Update with doc!! */
-    }
+svg.pencil {
+    transform: scale(0.7) translate(0.02em, 0);
+}
+svg.erase {
+    transform: scale(0.75) translate(-0.015em, 0);
+}
+svg.collapse {
+    transform: scale(0.75) translate(0, 0.02em)
 }
 
-/* Small screens. HIDE the coords and make the buttons bigger! */
-@media only screen and (max-width: 550px) {  /* 550 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
-        justify-content: space-between;
-        font-size: 66px; /* Update with doc!! */
-    }
+/* Color annotations button bright blue when enabled */
+#annotations.enabled {
+    background: radial-gradient(rgb(255, 100, 0), rgb(255, 100, 0), rgb(255, 100, 100), rgb(255,170,170), rgb(255, 255, 255))
+}
 
-    .coords {
+/* Annotation buttons aren't visible on desktop */
+@media only screen and (pointer: fine) { /* Desktop */
+    .buttoncontainer.annotations {
+        display: none;
+    }
+    .buttoncontainer.erase {
+        display: none;
+    }
+    .buttoncontainer.collapse {
         display: none;
     }
 }
 
-/* Mobile screen, start shrinking the size again */
-@media only screen and (max-width: 368px) {  /* 368 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
-        font-size: 17.9vw; /* Update with doc!! */
+
+
+/* Start shrinking top navigation bar */
+@container (max-width: 700px) { @media only screen and (pointer: fine) { /* Desktop */
+    .navigation-bar {
+        font-size: 12cqw; /* Update with doc!! */
     }
-}
+}}
+@container (max-width: 803px) { @media only screen and (pointer: coarse) { /* Mobile */
+    .navigation-bar {
+        font-size: 10.5cqw; /* Update with doc!! */
+    }
+}}
+
+/* Small screens. HIDE the coords and make the buttons size constant! */
+@container (max-width: 550px) { @media only screen and (pointer: fine) { /* Desktop */
+    .navigation-bar {
+        justify-content: space-between;
+        font-size: 66px; /* Update with doc!! */
+    }
+    .coords {
+        display: none;
+    }
+}}
+@container (max-width: 625px) { @media only screen and (pointer: coarse) { /* Mobile */
+    .navigation-bar {
+        font-size: 66px; /* Update with doc!! */
+    }
+    .coords {
+        display: none;
+    }
+}}
+
+/* Mobile screen, start shrinking the size again */
+@container (max-width: 368px) { @media only screen and (pointer: fine) { /* Desktop */
+    .navigation-bar {
+        font-size: 17.9cqw; /* Update with doc!! */
+    }
+}}
+@container (max-width: 483px) { @media only screen and (pointer: coarse) { /* Mobile */
+    .navigation-bar {
+        font-size: 13.7cqw; /* Update with doc!! */
+    }
+}}
 
 
 
 /* Bottom Navigation: Color to move, clocks, player names, draw offer UI */
 
-.footer {
+.game-info-bar {
     position: absolute;
     bottom: 0;
     width: 100%;
@@ -893,129 +1205,70 @@ button.join-button, button.copy-button {
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
 }
 
-.timerwhitecontainer, .timerblackcontainer {
-    display: flex;
-    align-items: center;
+/* Stores their username container and timer */
+.player-container {
+    align-content: center;
+    padding: 0 10px;
+    width: fit-content;
+    /* Capping the width to a percentage of the gameinfo bar prevents them overflowing & black's clock pushed off the screen. */
+    max-width: 35%;
 }
 
-.timerwhitecontainer {
-    padding: 25px 0 25px 25px;
-}
-
-.timerblackcontainer {
-    padding: 25px 25px 25px 0;
-}
-
-.timerwhite, .timerblack {
-    background-color: rgba(121, 121, 121, 0.474);
-    padding: 15px;
-    font-size: 20px;
-    border-radius: 10px;
-    z-index: 1;
-}
-
-.timerwhite {
-    background-color: rgb(255, 255, 255);
-    color: rgb(0, 0, 0);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.878);
-}
-
-.timerblack {
-    background-color: rgb(0, 0, 0);
-    color: white;
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.571);
-}
-
+/* Stores the username containers */
 .playerwhite, .playerblack {
     display: flex;
-    align-items: center;
-    font-size: 18px;
 }
-
 .playerwhite {
-    padding: 0 10px 0 25px;
+    justify-content: left;
+}
+.playerblack {
+    /* Don't need to justify here since the spacing is specially handled by guigameinfo.ts */
 }
 
-.playerblack {
-    text-align: right;
-    padding: 0 25px 0 10px;
+/* Stores the timer */
+.timer-container {
+    display: flex;
+    align-items: center;
+    padding-top: 5px;
 }
+.timer-container.left {
+    justify-content: left;
+}
+.timer-container.right {
+    justify-content: right;
+}
+
+.timer {
+    padding: 6px 9px;
+    font-size: 18px;
+    border-radius: 4px;
+    border: 1px solid black;
+}
+.timer.white {
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+}
+.timer.black {
+    background-color: rgb(0, 0, 0);
+    color: white;
+}
+
 
 .whosturn {
-    min-width: 0;
-    max-width: 100%;
     flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 30px;
-    font-family: "Open Sans";
+    font-size: 20px;
     font-weight: bold;
-}
-
-.dotwhite, .dotblack {
-    border: 1px solid black;
-    width: 22px;
-    height: 22px;
-    border-radius: 100%;
-    margin: 12px;
-    transition: 0.25s;
-    flex-shrink: 0;
-}
-
-.dotwhite {
-    background-color: white;
-    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.491);
-}
-
-.dotblack {
-    background-color: black;
-    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.259);
-}
-
-@media only screen and (max-width: 850px) {
-    .dotwhite, .dotblack {
-        display: none;
-    }
-    .whosturn {
-        font-size: 24px;
-    }
-    .playerwhite, .playerblack {
-        font-size: 16px;
-    }
-    .playerwhite {
-        padding-left: 20px;
-    }
-    .playerblack {
-        padding-right: 20px;
-    }
-    .timerwhitecontainer {
-        padding: 20px 0 20px 20px;
-    }
-    
-    .timerblackcontainer {
-        padding: 20px 20px 20px 0;
-    }
-    .timerwhite, .timerblack {
-        padding: 14px 12px;
-        font-size: 18px;
-        border-radius: 9px;
-    }
-    .draw_offer_ui {
-        padding: 0 0.5em;
-    }
-}
-
-@media only screen and (max-width: 502px) {
-    .playerwhite, .playerblack {
-        display: none;
-    }
+    padding: 0 8px;
+    min-width: 0px; /* Prevents the minimum width fitting the longest word */
 }
 
 /* Draw Offer UI (in the bottom nav bar) */
 
-.draw_offer_ui {
+.draw_offer_ui, .practice-engine-buttons {
     display: flex;
     align-items: center;
     gap: 0.3em;
@@ -1026,7 +1279,7 @@ button.join-button, button.copy-button {
     font-size: 0.9em;
 }
 
-.draw_offer_ui button {
+.draw_offer_ui button, .practice-engine-buttons button {
     background-color: white;
     border-radius: 1em;
     width: 4em;
@@ -1042,14 +1295,36 @@ button.join-button, button.copy-button {
     height: 90%;
 }
 
-.draw_offer_ui button:hover {
+.draw_offer_ui button:hover, .practice-engine-buttons button:hover {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
-.draw_offer_ui button:active {
+.draw_offer_ui button:active, .practice-engine-buttons button:active {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
+/* Game Control Buttons (in the bottom nav bar) */
+
+.practice-engine-buttons {
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    height: 100%;
+    margin: 0 0.5em;
+    -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
+}
+
+.practice-engine-buttons .svg-undo {
+    width: 72%;
+    transform-origin: 53% 55%;
+}
+
+.practice-engine-buttons .svg-restart {
+    aspect-ratio: 1;
+    width: 84%;
+    transform: translate(0.5px, 0.5px);
+}
 
 
 /* Promotion UI */
@@ -1089,6 +1364,158 @@ button.join-button, button.copy-button {
     background-color: rgba(0, 0, 0, 0.158);
 }
 
+
+/* Game Rules UI */
+#game-rules {
+    max-width: min(220px, 50vw);
+    max-height: 80vh;
+    overflow: auto;        /* enable vertical scrolling */
+    padding: 0 18px 16px 18px;
+    border-radius: 12px;
+    position: absolute;
+    left: 1%;
+    top: 11%;
+    background-color: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.75);
+    font-family: "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    color: #222;
+}
+
+/* Header (draggable area + close button) */
+#game-rules-header {
+    cursor: move;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#close-rules {
+    background: none;
+    border: none;
+    color: #616161;
+    font-size: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#close-rules:hover {
+    color: #000000;
+	transform: scale(1.1);
+}
+
+.divider {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    margin: 0 0 12px 0;
+}
+
+.rules-section {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.rules-section label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+#game-rules .invalid-input { /* Higher specificity to override default border-color */
+    background-color: #f8d7da; /* light red */
+    border-color: #f5c2c7;    /* optional border */
+}
+
+.input-pair {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%; /* make the container take full width */
+}
+
+.input-pair input {
+    flex: 1;              /* allow inputs to expand equally */
+    min-width: 0;         /* ensures proper shrinking in flex layouts */
+    padding: 4px 8px;     /* adjust padding as needed */
+    text-align: center;   /* keep numbers/letters centered */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border 0.2s;
+}
+
+.rules-section input[type="text"] {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 5px 8px;
+    transition: border 0.2s;
+}
+
+.rules-section input:focus {
+    border-color: #4285f4;
+    outline: none;
+}
+
+.toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-group label {
+    cursor: pointer;
+}
+
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* space between items */
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* space between checkbox and label */
+    line-height: 1.2;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #4285f4; /* optional for modern browsers */
+    vertical-align: middle;
+    position: relative;
+    top: -2px; /* fine-tune to align checkbox center with label text */
+}
+
+/* Tri-state (indeterminate) style enhancement */
+.checkbox-item input[type="checkbox"]:indeterminate {
+    background-color: #ddd;
+    border: 1px solid #888;
+    appearance: none;
+    display: inline-block;
+    position: relative;
+}
+
+.checkbox-item input[type="checkbox"]:indeterminate::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 2px;
+    background-color: #333;
+    transform: translate(-50%, -50%);
+    border-radius: 1px;
+}
+
+#game-rules input::placeholder {
+    color: #999;
+}
 
 
 /* Pause UI */
@@ -1136,7 +1563,7 @@ button.join-button, button.copy-button {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
-.pauseUI p.paused, button.paused, button.resume, button.mainmenu, button.offerdraw {
+.pauseUI p.paused, button.paused, button.resume, button.mainmenu, button.offerdraw, button.practicemenu {
     grid-column: 1 / 3;
 }
 
@@ -1188,6 +1615,9 @@ button.join-button, button.copy-button {
     top: 0;
     width: 100%;
     font-size: 22px;
+    /* Allows clicks to pass through to the elements underneath.
+     FIXES A BUG that doesn't let you click arrows along the top of the screen while the move count is visible!! */
+    pointer-events: none;
 }
 
 .status {
@@ -1208,14 +1638,6 @@ a {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
 }
 
-.unavailable {
-    color: rgb(190, 190, 190);
-}
-
-.flex {
-    display: flex;
-}
-
 .hidden {
     display: none;
 }
@@ -1230,20 +1652,6 @@ a {
 
 .rotate-180 {
     transform: rotate(180deg);
-}
-
-.unselectable {
-    user-select: none; /* Makes the whole div unselectable (would ruin the experience)  */
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-}
-
-.selectable {
-    user-select: text;
-    -moz-user-select: text;
-    -webkit-user-select: text;
-    -ms-user-select: text;
 }
 
 
@@ -1282,100 +1690,4 @@ a {
 
 .fade-out-2_3s {
     animation: fade-out 0.67s; /* UPDATE 1s within the document in the statustext module! */
-}
-
-
-
-/* Tooltips */
-
-.tooltip-dl, .tooltip-d, .tooltip-dr {
-    position: relative;
-}
-
-/* The main tooltip black box */
-.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before {
-    content: attr(data-tooltip);
-    position: absolute;
-    top: calc(100% + 8px);
-    background-color: black;
-    color: rgb(236, 236, 236);
-    text-align: center;
-    border-radius: 6px;
-    font-size: 12px;
-    width: max-content; /* Width based on content size */
-    max-width: 100px;
-    padding: 5px 5px;
-    visibility: hidden; /* Hidden by default */
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out;
-    /* Hovering over the tooltip won't count as hovering over its parent */
-    pointer-events: none;
-}
-
-/* down-left */
-.tooltip-dl::before {
-    right: 0;
-}
-
-/* down */
-.tooltip-d::before {
-    left: 50%;
-    transform: translateX(-50%); /* Shift it left by half of its width */
-}
-
-/* down-right */
-.tooltip-dr::before {
-    left: 0;
-}
-
-/* The arrow on the top of the tooltip box */
-.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after {
-    content: "";
-    position: absolute;
-    top: calc(100% + 8.5px);; /* Position right below the tooltip */
-    left: 50%;
-    border-width: 5px;
-    border-style: solid;
-    border-color:  transparent transparent black transparent;
-    transform: translate(-50%, -100%);
-    visibility: hidden; /* Hidden by default */
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out;
-    z-index: 1;
-    /* Hovering over the tooltip won't count as hovering over its parent */
-    pointer-events: none;
-}
-
-/* After 1s of hovering, the tooltip becomes visible */
-.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before,
-.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after {
-    visibility: visible;
-    opacity: 1;
-    transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
-    z-index: 1;
-}
-
-/* Overwriting styles after you've already started hovering (no delay) */
-.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before,
-.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after {
-    transition-delay: 0s; /* Delay the tooltip appearance */
-}
-
-/* Mobile devices should NOT show the tooltips on hover.. perhaps on active though? */
-@media not (pointer: fine) {
-    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before,
-    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after {
-        visibility: hidden;
-        opacity: 0;
-        transition-delay: 0; /* Delay the tooltip appearance */
-        z-index: 0;
-    }
-  
-    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before,
-    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after {
-        visibility: visible;
-        opacity: 1;
-        transition-delay: 0.5s; /* Delay the tooltip appearance */
-        z-index: 1;
-    }
 }

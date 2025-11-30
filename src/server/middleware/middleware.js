@@ -1,4 +1,6 @@
 
+// src/server/middleware/middleware.js
+
 /**
  * This module configures the middleware waterfall of our server
  */
@@ -6,13 +8,14 @@
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
+import helmet from 'helmet';
 
 // Middleware
 import cookieParser from 'cookie-parser';
 import credentials from './credentials.js';
 import secureRedirect from './secureRedirect.js';
 import errorHandler from './errorHandler.js';
-import { logger } from './logEvents.js';
+import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 
@@ -30,15 +33,20 @@ import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { requestConfirmEmail } from '../controllers/sendMail.js';
-import { getMemberData } from '../api/Member.js';
+import { getMemberData } from '../api/MemberAPI.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { handleLogin } from '../controllers/loginController.js';
-import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
+import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
 import { getContributors } from '../api/GitHub.js';
+import { getLeaderboardData } from '../api/LeaderboardAPI.js';
+import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
+import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
+// import EditorSavesAPI from '../api/EditorSavesAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -59,9 +67,51 @@ function configureMiddleware(app) {
 	// The logger can't log the request body without this
 	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
-	app.use(logger); // Log the request
+	app.use(reqLogger); // Log the request
 
+	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
+	app.use(helmet({
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'unsafe-inline'"],  // Allows inline scripts
+				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
+				objectSrc: ["'none'"],
+				frameSrc: ["'self'", 'https://www.youtube.com'],
+				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "blob:"]
+			},
+		},
+	}));
+
+	// Path Traversal Protection, and error protection from malformed URLs
+	app.use((req, res, next) => {
+		try {
+			const decoded = decodeURIComponent(req.url);
+			
+			// Check 1: Raw encoded patterns (before decoding)
+			const encodedPatterns = /(%2e%2e|%252e|%%32%65)/gi;
+			if (encodedPatterns.test(req.url)) {
+				console.warn('Blocked traversal:', req.url);
+				console.warn('Decoded URL:', decoded);
+				return res.status(403).send('Forbidden');
+			}
+
+			// Check 2: Decoded path segments
+			const segments = decoded.split(/[\\/]/);
+			if (segments.includes('..')) {
+				// Console warn both the decoded and the original URL
+				console.warn('Blocked traversal:', req.url);
+				console.warn('Decoded URL:', decoded);
+				return res.status(403).send('Forbidden');
+			}
+
+			next();
+		} catch (_err) {
+			console.warn('Blocked invalid URL encoding:', req.url); 
+			res.status(400).send('Invalid URL encoding');
+		}
+	});
 
 	app.use(credentials); // Handle credentials check. Must be before CORS.
 
@@ -104,6 +154,8 @@ function configureMiddleware(app) {
 	app.use(assignOrRenewBrowserID);
 	// This sets the user 'preferences' cookie on every request for an HTML file
 	app.use(setPrefsCookie);
+	// This sets the user 'checkmates_beaten' cookie on every request for an HTML file
+	app.use(setPracticeProgressCookie);
 
 	// Provide a route
 
@@ -113,11 +165,10 @@ function configureMiddleware(app) {
 	// Account router
 	app.post('/createaccount', createNewMember); // "/createaccount" POST request
 	app.get('/createaccount/username/:username', checkUsernameAvailable);
-	app.get('/createaccount/email/:email', checkEmailAssociated);
+	app.get('/createaccount/email/:email', checkEmailValidity);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
-
 
 	// API --------------------------------------------------------------------
 
@@ -151,6 +202,20 @@ function configureMiddleware(app) {
 
 	app.post('/api/set-preferences', postPrefs);
 
+	app.post('/api/update-checkmatelist', postCheckmateBeaten);
+
+	// News routes
+	app.get('/api/news/unread-count', getUnreadNewsCount);
+	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
+	app.post('/api/news/mark-read', markNewsAsRead);
+
+	// Editor saves routes
+	// app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
+	// app.post('/api/editor-saves', EditorSavesAPI.savePosition);
+	// app.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
+	// app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
+	// app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
+
 	app.get("/logout", handleLogout);
 
 	app.get("/command/:command", processCommand);
@@ -159,6 +224,12 @@ function configureMiddleware(app) {
 	app.get('/member/:member/data', getMemberData);
 	app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get("/verify/:member/:code", verifyAccount);
+
+	// Leaderboard router
+	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
+
+	app.post('/forgot-password', handleForgotPasswordRequest);
+	app.post('/reset-password', handleResetPassword);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

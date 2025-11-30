@@ -4,19 +4,23 @@
  * spritesheet, also returning the textue locations of each image.
  */
 
-// @ts-ignore
-import math from "../../util/math.js";
 
-// @ts-ignore
-import type { Coords } from "../logic/movesets.js";
+import type { DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
 
+
+
+type SpritesheetData =  {
+	/** A fraction 0-1 representing what percentage of the total spritesheet's width one piece takes up. */
+	pieceWidth: number;
+	texLocs: { [key: number]: DoubleCoords; };
+}
 
 /**
  * The preferred image width each pieces image in a spreadsheet should be.
  * This may be a little higher, in order to make the spritesheet's total width a POWER OF 2.
  * BUT, the spritesheet's width will NEVER exceed WebGL's capacity!
  */
-const preferredImgSize = 512;
+const PREFERRED_IMG_SIZE = 512;
 
 /**
  * Generates a spritesheet from an array of HTMLImageElement objects.
@@ -26,7 +30,7 @@ const preferredImgSize = 512;
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A promise that resolves with the generated spritesheet as an HTMLImageElement.
  */
-async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]) {
+async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]): Promise<{ spritesheet: HTMLImageElement; spritesheetData: SpritesheetData; }> {
 	// Ensure there are images provided
 	if (images.length === 0) throw new Error('No images provided when generating spritesheet.');
   
@@ -42,7 +46,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	 */
 	const maxImgSizePerMaxTextureSize = maxTextureSize / gridSize;
 
-	const spritesheetSizeIfPreferredImgSizeUsed = math.roundUpToPowerOf2(preferredImgSize * gridSize); // Round up to nearest power of 2
+	const spritesheetSizeIfPreferredImgSizeUsed = roundUpToNextPowerOf2(PREFERRED_IMG_SIZE * gridSize); // Round up to nearest power of 2
 	const actualImgSizeIfUsingPreferredImgSize = spritesheetSizeIfPreferredImgSizeUsed / gridSize; 
 
 	/** Whichever is smaller of the two */
@@ -82,7 +86,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	// Create an HTMLImageElement from the canvas
 	const spritesheetImage = new Image();
 	spritesheetImage.src = canvas.toDataURL();
-  
+
 	// Return a promise that resolves when the image is loaded
 	await spritesheetImage.decode();
 	const spritesheetData = generateSpriteSheetData(images, gridSize);
@@ -96,9 +100,9 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param gridSize - How many images fit one-way.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): SpritesheetData {  
 	const pieceWidth = 1 / gridSize;
-	const texLocs: { [key: string]: Coords } = {};
+	const texLocs: { [key: number]: DoubleCoords } = {};
 
 	// Positioning variables
 	let x = 0;
@@ -111,8 +115,8 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 
 		// Store the texture coordinates
 		// Use the image id as the key for the data object
-		texLocs[image.id] = [texX, texY];
-    
+		texLocs[Number(image.id)] = [texX, texY];
+
 		// Update the position for the next image
 		x++;
 		if (x === gridSize) {
@@ -125,6 +129,24 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 		pieceWidth,
 		texLocs
 	};
+}
+
+/**
+ * Rounds up the given number to the next lowest power of two.
+ * 
+ * Time complexity O(1), because bitwise operations are extremely fast.
+ * @param num - The number to round up.
+ * @returns The nearest power of two greater than or equal to the given number.
+ */
+function roundUpToNextPowerOf2(num: number): number {
+	if (num <= 1) return 1; // Handle edge case for numbers 0 and 1
+	num--; // Step 1: Decrease by 1 to handle numbers like 8
+	num |= num >> 1; // Step 2: Propagate the most significant bit to the right
+	num |= num >> 2;
+	num |= num >> 4;
+	num |= num >> 8;
+	num |= num >> 16; // Additional shift for 32-bit numbers
+	return num + 1; // Step 3: Add 1 to get the next power of 2
 }
 
 

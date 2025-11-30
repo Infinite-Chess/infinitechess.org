@@ -4,10 +4,10 @@
  * And it has an API for setting your preferences in the database.
  */
 
-import themes from "../../client/scripts/esm/components/header/themes.js";
+import themes from "../../shared/components/header/themes.js";
+import jsutil from "../../shared/util/jsutil.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { logEvents } from "../middleware/logEvents.js";
-import { ensureJSONString } from "../utility/JSONUtils.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 
 // Variables -------------------------------------------------------------
@@ -15,7 +15,7 @@ import { ensureJSONString } from "../utility/JSONUtils.js";
 
 const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
-const validPrefs = ['theme', 'legal_moves'];
+const validPrefs = ['theme', 'legal_moves', 'animations', 'lingering_annotations', 'premove_enabled'];
 const legal_move_shapes = ['squares', 'dots'];
 
 
@@ -34,11 +34,6 @@ const legal_move_shapes = ['squares', 'dots'];
  * @param {Function} next - The Express next middleware function.
  */
 function setPrefsCookie(req, res, next) {
-	if (!req.cookies) {
-		logEvents("req.cookies must be parsed before setting preferences cookie!", 'errLog.txt', { print: true });
-		return next();
-	}
-
 	// We don't have to worry about the request being for a resource because those have already been served.
 	// The only scenario this request could be for now is an HTML or fetch API request
 	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
@@ -47,25 +42,26 @@ function setPrefsCookie(req, res, next) {
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab preferences of other users this way, but there's no harm in that.
-	const memberInfoCookieStringified = req.cookies.memberInfo;
+	const cookies = req.cookies;
+	const memberInfoCookieStringified = cookies.memberInfo;
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
 	let memberInfoCookie; // { user_id, username }
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt');
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	if (typeof memberInfoCookie !== "object") {
-		logEvents(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	const user_id = memberInfoCookie.user_id;
 	if (typeof user_id !== 'number') {
-		logEvents(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
@@ -112,7 +108,7 @@ function deletePreferencesCookie(res) {
  * @returns {Object|undefined} - Returns the preferences object if found, otherwise undefined.
  */
 function getPrefs(userId) {
-	const { preferences } = getMemberDataByCriteria(['preferences'], 'user_id', userId, { skipErrorLogging: true });
+	const { preferences } = getMemberDataByCriteria(['preferences'], 'user_id', userId, true);
 	if (preferences === undefined) return;
 	const prefs = JSON.parse(preferences);
 	if (prefs === null) return;
@@ -121,17 +117,12 @@ function getPrefs(userId) {
 
 /**
  * Route that Handles a POST request to update user preferences in the database.
- * @param {Object} req - Express request object
+ * @param {import("../types.js").IdentifiedRequest} req - Express request object
  * @param {Object} res - Express response object
  */
-async function postPrefs(req, res) {
-	if (!req.memberInfo) { // { user_id, username, roles }
-		logEvents("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt', { print: true });
-		return res.status(500).json({ message: "Server Error: No Authorization"});
-	}
-
+function postPrefs(req, res) {
 	if (!req.memberInfo.signedIn) {
-		logEvents("User tried to save preferences when they weren't signed in!", 'errLog.txt', { print: true });
+		logEventsAndPrint("User tried to save preferences when they weren't signed in!", 'errLog.txt');
 		return res.status(401).json({ message: "Can't save preferences, not signed in."});
 	}
 
@@ -140,7 +131,7 @@ async function postPrefs(req, res) {
 	const preferences = req.body.preferences;
 
 	if (!arePrefsValid(preferences)) {
-		logEvents(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`, 'errLog.txt');
 		return res.status(400).json({ message: "Preferences not valid, cannot save on the server."});
 	}
 
@@ -152,7 +143,7 @@ async function postPrefs(req, res) {
 		console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`);
 		res.status(200).json({ message: 'Preferences updated successfully' });
 	} else {
-		logEvents(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt');
 		res.status(500).json({ message: 'Failed to update preferences: user_id not found' });
 	}
 }
@@ -167,15 +158,24 @@ function arePrefsValid(preferences) {
 	if (preferences === undefined || typeof preferences !== 'object' || Array.isArray(preferences)) return false;
 	if (preferences === null) return true; // We can save null values.
 
-	for (const key in preferences) {
+	for (const [key, value] of Object.entries(preferences)) {
 		// 2. Validate that all keys are valid preferences
 		if (!validPrefs.includes(key)) return false;
 
 		// 3. Check if the theme property is valid
-		if (key === 'theme' && !themes.isThemeValid(preferences[key])) return false;
+		if (key === 'theme' && !themes.isThemeValid(value)) return false;
 
 		// 4. Validate legal_moves property
-		if (key === 'legal_moves' && !legal_move_shapes.includes(preferences[key])) return false;
+		if (key === 'legal_moves' && !legal_move_shapes.includes(value)) return false;
+
+		// 5. Check the animations property is a boolean
+		if (key === 'animations' && typeof value !== 'boolean') return false;
+
+		// 6. Check the lingering_annotations property is a boolean
+		if (key === 'lingering_annotations' && typeof value !== 'boolean') return false;
+
+		// 7. Check the premove_enabled property is a boolean
+		if (key === 'premove_enabled' && typeof value !== 'boolean') return false;
 	}
 
 	// If all checks pass, preferences are valid

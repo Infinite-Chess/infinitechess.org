@@ -1,12 +1,11 @@
 
 // Import Start
-import websocket from '../websocket.js';
 import invites from './invites.js';
 import stats from '../gui/stats.js';
-import input from '../input.js';
-import onlinegame from './onlinegame.js';
-import jsutil from '../../util/jsutil.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import config from '../config.js';
+import tabnameflash from './onlinegame/tabnameflash.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 // Import End
 
 'use strict';
@@ -22,7 +21,8 @@ import config from '../config.js';
  */
 
 let runTime; // In millis since the start of the program (updated at the beginning of each frame)
-let deltaTime; // Time in millis since last animation frame
+/** Time in seconds since last animation frame */
+let deltaTime;
 let lastFrameTime = 0;
 
 let lastAnimationLength = 0; // Time in millis last frame loop took to execute (Should be LESS than deltaTime if computer is able to keep up with monitor frefresh rate)
@@ -58,10 +58,6 @@ const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
 // const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
 let timeToDeleteInviteTimeoutID;
 
-// Set to true when you need to force-calculate the mesh or legal move searching.
-// This will stop spreading it accross multiple frames and instead do it as fast as possible.
-let forceCalc = false;
-
 
 
 // Millis since the start of the program
@@ -69,6 +65,7 @@ function getRunTime() {
 	return runTime;
 }
 
+/** Returns the amount of seconds that have passed since last frame. */
 function getDeltaTime() {
 	return deltaTime;
 }
@@ -108,13 +105,13 @@ function updateDeltaTime(runtime) {
 	lastFrameTime = runTime;
 }
 
-// Deletes frame timestamps from out list over 1 second ago
+// Deletes frame timestamps from our list over 1 second ago
 function trimFrames() {
 	// What time was it 1 second ago
 	const splitPoint = runTime - fpsWindow;
 
 	// Use binary search to find the split point.
-	const indexToSplit = jsutil.binarySearch_findValue(frames, splitPoint);
+	const indexToSplit = jsutil.findIndexOfPointInOrganizedArray(frames, splitPoint);
 
 	// This will not delete a timestamp if it falls exactly on the split point.
 	frames.splice(0, indexToSplit);
@@ -154,7 +151,7 @@ function updateTimeForLongTasks() {
 	// How much time should we dedicate to long tasks?
 
 	// What I WANT to do, is try to obtain 60fps (or our refresh rate),
-	// but make sure we're atleast spending as much time on long tasks as we are rendering!
+	// but make sure we're at least spending as much time on long tasks as we are rendering!
 
 	// How much time do we have left this frame after rendering until the next animation frame?
 	timeForLongTasks = idealTimePerFrame - lastAnimationLength - damping;
@@ -169,12 +166,7 @@ function updateTimeForLongTasks() {
 }
 
 function updateAFK() {
-	if (activityThisFrame()) onReturnFromAFK();
-}
-
-// Returns true if there's been an user input this frame
-function activityThisFrame() {
-	return input.atleast1InputThisFrame();
+	if (listener_overlay.atleastOneInput() || listener_document.atleastOneInput()) onReturnFromAFK();
 }
 
 function onReturnFromAFK() {
@@ -210,7 +202,7 @@ function onHibernate() {
 	//console.log("Set hibernating to true!")
 
 	// Unsub from invites list
-	websocket.unsubFromInvites();
+	invites.unsubFromInvites();
 }
 
 
@@ -245,7 +237,7 @@ document.addEventListener("visibilitychange", function() {
 		// Cancel the timer to delete our invite after not returning to the page
 		cancelTimerToDeleteInviteAfterLeavingPage();
 
-		onlinegame.cancelMoveSound();
+		tabnameflash.cancelMoveSound();
 	}
 });
 
@@ -253,14 +245,6 @@ document.addEventListener("visibilitychange", function() {
 function cancelTimerToDeleteInviteAfterLeavingPage() {
 	clearTimeout(timeToDeleteInviteTimeoutID);
 	timeToDeleteInviteTimeoutID = undefined;
-}
-
-function getForceCalc() {
-	return forceCalc;
-}
-
-function setForceCalc(value) {
-	forceCalc = value;
 }
 
 export default {
@@ -275,6 +259,5 @@ export default {
 	gisAFK,
 	gisHibernating,
 	isPageHidden,
-	getForceCalc,
-	setForceCalc,
+	restartAFKTimer,
 };

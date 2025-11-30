@@ -13,6 +13,7 @@ import spacing from './spacing.js';
 import currpage_greyer from './currpage-greyer.js';
 import settings from './settings.js';
 import tooltips from '../../util/tooltips.js'; // This should be imported on EVERY page!
+import newsNotification from './news-notification.js'; // Handles unread news badge
 /* eslint-enable no-unused-vars */
 
 
@@ -78,4 +79,24 @@ function updateNavigationLinks() {
 	// Manually dispatch a window resize event so that our javascript knows to
 	// recalc the spacing/compactness of the header, as the items have changed their content.
 	document.dispatchEvent(new CustomEvent('resize'));
+}
+
+// For every '.badge img' in the document, prevent long-press context menu
+document.querySelectorAll('.badge img').forEach((img) => {
+	img.addEventListener('contextmenu', e => {
+		// Only prevent default if the context menu is triggered by touch or pen
+		if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+		console.log("Preventing context menu for badge image.");
+		e.preventDefault();
+	});
+});
+
+
+// OVERRIDE the viewport height variable in header.css based on how
+// much screen space the home button bar takes up on mobile devices!
+// Just using 100vh is incorrect as the home button bar doesn't affect that.
+updateViewportHeight();
+window.addEventListener('resize', () => updateViewportHeight());
+function updateViewportHeight() {
+	document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`);
 }

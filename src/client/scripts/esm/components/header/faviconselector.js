@@ -8,8 +8,8 @@ const element_favicon = document.getElementById('favicon');
  * @param {string} theme "dark"/"light"
  */
 function switchFavicon(theme) {
-	if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
-	else element_favicon.href = '/img/favicon-light.png';
+	if (theme === 'dark') element_favicon.href = '/img/favicon/favicon-dark.png';
+	else element_favicon.href = '/img/favicon/favicon-light.png';
 }
 
 // Don't create a theme-change event listener if matchMedia isn't supported.

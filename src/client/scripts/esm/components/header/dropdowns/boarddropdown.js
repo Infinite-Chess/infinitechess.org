@@ -1,7 +1,7 @@
 import style from "../../../game/gui/style.js";
 import preferences from "../preferences.js";
 import checkerboardgenerator from "../../../chess/rendering/checkerboardgenerator.js";
-import themes from "../themes.js";
+import themes from "../../../../../../shared/components/header/themes.js";
 
 
 // Document Elements -------------------------------------------------------------------------
@@ -11,15 +11,23 @@ const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-tit
 const boardDropdown = document.querySelector('.board-dropdown');
 const themeList = document.querySelector('.theme-list'); // Get the theme list div
 
+const starfieldCheckbox = document.querySelector('.boolean-option.starfield input');
+const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced-effects input');
 
 
 // Functions ---------------------------------------------------------------------------------
 
 
 (function init() {
+	showCheckmarkOnSelectedOptions();
 	addThemesToThemesDropdown();
 })();
 
+
+function showCheckmarkOnSelectedOptions() {
+	starfieldCheckbox.checked = preferences.getStarfieldMode();
+	advancedEffectsCheckbox.checked = preferences.getAdvancedEffectsMode();
+}
 
 async function addThemesToThemesDropdown() {
 
@@ -45,7 +53,6 @@ async function addThemesToThemesDropdown() {
 	}
 
 	updateThemeSelectedStyling();
-
 }
 
 
@@ -61,10 +68,18 @@ function close() {
 function initListeners() {
 	boardDropdownTitle.addEventListener('click', close);
 	initThemeChangeListeners();
+	// Starfield toggle
+	starfieldCheckbox.addEventListener('click', toggleStarfield);
+	// Advanced Effects toggle
+	advancedEffectsCheckbox.addEventListener('click', toggleAdvancedEffects);
 }
 function closeListeners() {
 	boardDropdownTitle.removeEventListener('click', close);
 	closeThemeChangeListeners();
+	// Starfield toggle
+	starfieldCheckbox.removeEventListener('click', toggleStarfield);
+	// Advanced Effects toggle
+	advancedEffectsCheckbox.removeEventListener('click', toggleAdvancedEffects);
 }
 function initThemeChangeListeners() {
 	for (let i = 0; i < themeList.children.length; i++) {
@@ -89,9 +104,7 @@ function selectTheme(event) {
 	updateThemeSelectedStyling();
 	
 	// Dispatch a custom event for theme change so that any game code present can pick it up.
-	const detail = selectedTheme;
-	const themeChangeEvent = new CustomEvent('theme-change', { detail });
-	document.dispatchEvent(themeChangeEvent);
+	document.dispatchEvent(new Event('theme-change'));
 }
 /** Outlines in black the current theme selection */
 function updateThemeSelectedStyling() {
@@ -101,6 +114,14 @@ function updateThemeSelectedStyling() {
 		if (selectTheme && theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');
 		else theme.classList.remove('selected');
 	}
+}
+
+function toggleStarfield() {
+	preferences.setStarfieldMode(starfieldCheckbox.checked);
+}
+
+function toggleAdvancedEffects() {
+	preferences.setAdvancedEffectsMode(advancedEffectsCheckbox.checked);
 }
 
 export default {

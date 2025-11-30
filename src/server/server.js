@@ -1,5 +1,5 @@
 
-import { initDatabase } from './database/databaseSetup.js';
+import { initDatabase } from './database/databaseTables.js';
 initDatabase();
 // Ensure our workspace is ready for the dev environment
 import { initDevEnvironment } from './config/setupDev.js';
@@ -44,10 +44,11 @@ socketServer.start(httpsServer);
 let cleanupDone = false;
 process.on('SIGUSR2', async() => { await handleCleanup('SIGUSR2'); }); // A file was saved (nodemon auto restarts)
 process.on('SIGINT', async() => { await handleCleanup('SIGINT'); }); // Ctrl>C was pressed (force terminates nodemon)
-async function handleCleanup(signal) {
+async function handleCleanup(_signal) {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;
-	console.log(`\nReceived ${signal}. Cleaning up...`);
+	// console.log(`\nReceived ${signal}. Cleaning up...`);
+	console.log("Closing...");
 
 	await logAllGames();
 

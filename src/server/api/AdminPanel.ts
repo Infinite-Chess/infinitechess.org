@@ -5,20 +5,17 @@
  */
 
 import { manuallyVerifyUser } from "../controllers/verifyAccountController.js";
-// @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
-import { logEvents } from "../middleware/logEvents.js";
-// @ts-ignore
 import { deleteAccount } from "../controllers/deleteAccountController.js";
-// @ts-ignore
-import { deleteAllSessionsOfUser } from "../controllers/authenticationTokens/sessionManager.js";
 // @ts-ignore
 import { refreshGitHubContributorsList } from "./GitHub.js";
 // @ts-ignore
 import { areRolesHigherInPriority } from "../controllers/roles.js";
+import { deleteAllRefreshTokensForUser } from "../database/refreshTokenManager.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 
-import type { CustomRequest } from "../../types.js";
+import type { IdentifiedRequest } from "../types.js";
 import type { Response } from "express";
 
 
@@ -37,7 +34,7 @@ const validCommands = [
 	"help",
 ];
 
-function processCommand(req: CustomRequest, res: Response): void {
+function processCommand(req: IdentifiedRequest, res: Response): void {
 	const command = req.params["command"]!;
 
 	const commandAndArgs = parseArgumentsFromCommand(command);
@@ -114,7 +111,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 	return commandAndArgs;
 }
 
-function deleteCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function deleteCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 3) {
 		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -122,20 +119,25 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 	// Valid Syntax
 	logCommand(command, req);
 	const reason = commandAndArgs[2];
-	const usernameArgument = commandAndArgs[1];
-	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument, { skipErrorLogging: true });
+	const usernameArgument = commandAndArgs[1]!;
+	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument, true);
 	if (user_id === undefined) return sendAndLogResponse(res, 404, "User " + usernameArgument + " does not exist.");
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
-	const rolesOfAffectedUser = JSON.parse(roles);
+	const rolesOfAffectedUser = JSON.parse(roles!);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) return sendAndLogResponse(res, 403, "Forbidden to delete " + username + ".");
-	const result = deleteAccount(user_id, reason); // { success, reason (if failed) }
-	if (!result.success) return sendAndLogResponse(res, 500, `Failed to delete user ${username} for reason: ${result.reason}`);
-	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
+
+	try {
+		deleteAccount(user_id, reason);
+		sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		sendAndLogResponse(res, 500, `Failed to delete user (${username}): ${errorMessage}`);
+	}
 }
 
-function usernameCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function usernameCommand(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs[1] === "get") {
 		if (commandAndArgs.length < 3) {
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
@@ -148,7 +150,7 @@ function usernameCommand(command: string, commandAndArgs: string[], req: CustomR
 		}
 		// Valid Syntax
 		logCommand(command, req);
-		const { username } = getMemberDataByCriteria(["username"], "user_id", parsedId, { skipErrorLogging: true });
+		const { username } = getMemberDataByCriteria(["username"], "user_id", parsedId, true);
 		if (username === undefined) sendAndLogResponse(res, 404, "User with id " + parsedId + " does not exist.");
 		else sendAndLogResponse(res, 200, username);
 	}
@@ -168,17 +170,25 @@ function usernameCommand(command: string, commandAndArgs: string[], req: CustomR
 	}
 }
 
-function logoutUser(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function logoutUser(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const usernameArgument = commandAndArgs[1];
-	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument, { skipErrorLogging: true });
+	const usernameArgument = commandAndArgs[1]!;
+	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument, true);
 	if (user_id !== undefined) {
-		deleteAllSessionsOfUser(user_id);
+		try {
+			// Effectively terminates all login sessions of the user
+			deleteAllRefreshTokensForUser(user_id);
+		} catch (e) {
+			const errorMessage = e instanceof Error ? e.stack : String(e);
+			logEventsAndPrint(`Error during admin-manual-logout of user "${username}": ${errorMessage}`, "errLog.txt");
+			sendAndLogResponse(res, 500, `Failed to log out user "${username}" due to internal error.`);
+			return;
+		}
 		sendAndLogResponse(res, 200, "User " + username + " successfully logged out."); // Use their case-sensitive username
 	}
 	else {
@@ -186,7 +196,7 @@ function logoutUser(command: string, commandAndArgs: string[], req: CustomReques
 	}
 }
 
-function verify(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function verify(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -200,15 +210,15 @@ function verify(command: string, commandAndArgs: string[], req: CustomRequest, r
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
-function getUserInfo(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function getUserInfo(command: string, commandAndArgs: string[], req: IdentifiedRequest, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const username = commandAndArgs[1];
-	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username, { skipErrorLogging: true });
+	const username = commandAndArgs[1]!;
+	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "is_verified", "is_verification_notified", "username_history", "checkmates_beaten"], "username", username, true);
 	if (Object.keys(memberData).length === 0) { // Empty (member not found)
 		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}
@@ -217,13 +227,13 @@ function getUserInfo(command: string, commandAndArgs: string[], req: CustomReque
 	}
 }
 
-function updateContributorsCommand(command: string, req: CustomRequest, res: Response) {
+function updateContributorsCommand(command: string, req: IdentifiedRequest, res: Response): void {
 	logCommand(command, req);
 	refreshGitHubContributorsList();
 	sendAndLogResponse(res, 200, "Contributors should now be updated!");
 }
 
-function helpCommand(commandAndArgs: string[], res: Response) {
+function helpCommand(commandAndArgs: string[], res: Response): void {
 	if (commandAndArgs.length === 1) {
 		res.status(200).send("Commands: " + validCommands.join(", ") + "\nUse help <command> to get more information about a command.");
 		return;
@@ -268,16 +278,16 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 	}
 }
 
-function logCommand(command: string, req: CustomRequest) {
+function logCommand(command: string, req: IdentifiedRequest): void {
 	if (req.memberInfo.signedIn) {
-		logEvents(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt", { print: true });
+		logEventsAndPrint(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt");
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
 
-function sendAndLogResponse(res: Response, code: number, message: any) {
+function sendAndLogResponse(res: Response, code: number, message: any): void {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEvents("Result:   " + message + "\n", "adminCommands.txt", { print: true });
+	logEventsAndPrint("Result:   " + message + "\n", "adminCommands.txt");
 }
 
 export {

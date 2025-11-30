@@ -8,13 +8,19 @@
         <link rel='stylesheet' href='/css/header.css'>
         <link rel='stylesheet' href='/css/index.css'>
         <link rel='stylesheet' href='/css/footer.css'>
-        <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
-        <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <link rel="icon" href="/img/favicon/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('index.javascript', {returnObjects: true})
+            })%>;
+        </script>
+        <script defer src="/scripts/esm/views/index.js" type="module"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
-            <div id="content">
+            <div class="content">
                 <div class="logo">
                     <picture>
                         <source srcset="/img/king_w.avif" type="image/avif" />
@@ -30,37 +36,49 @@
                     <p class="center"><%=t('index.secondary_title')%></p>
                 </div>
                 <div class="center">
-                    <iframe class="" src="https://www.youtube.com/embed/rav29N0-h2c" title="YouTube video: I Made Chess, but It's Infinite" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    <a href="/play?lng=<%= language %>" class="play-button unselectable"><%=t('header.play')%></a>
+                </div>
+                <div class="center">
+                    <iframe src="https://www.youtube.com/embed/rav29N0-h2c?si=iFIw70CDr9dILX1O" title="YouTube video: I Made Chess, but It's Infinite" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
                 </div>
                 <h2><%=t('index.what_is_it_title')%></h2>
                 <p><%-t('index.what_is_it_pargaraphs', { joinArrays: '</p><p>' })%></p>
                     <h3><%=t('index.how_to_title')%></h3>
-                    <p><%=t('index.how_to_paragraph.0')%><a href='/play'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
+                    <p><%=t('index.how_to_paragraph.0')%><a href='/play?lng=<%= language %>'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
                     
                     <br>
                     <h3 class="center"><%=t('index.about_title')%></h3>
                     <!-- <h3>About the Project</h3> -->
                     <p><%=t('index.about_paragraphs.0')%></p>
-                    <p><%=t('index.about_paragraphs.1.0')%> <a target='_blank' href='https://www.patreon.com/Naviary'><%=t('index.about_paragraphs.1.1')%></a>.</p>
+                    <p><%=t('index.about_paragraphs.1.0')%><a target='_blank' href='https://www.patreon.com/Naviary'><%=t('index.about_paragraphs.1.1')%></a><%=t('index.about_paragraphs.1.2')%></p>
 
                     <br>
                     <h3 class="center"><%=t('index.patreon_title')%></h3>
                     <div class="patreon-container">
                         <p>Andreas</p>
-                        <p>Lebarb</p>
                         <p>Mauer01</p>
-                        <p>Levon</p>
-                        <p><spam class="IM">IM</spam> Luke Harmon-Vellotti</p>
                         <p>Uncle Dave</p>
-                        <!-- LJ -->
-                        <p>KnightBeforeLast</p>
-                        <p>SuperGamersGames</p>
+                        <p><spam class="IM">IM</spam> Luke Harmon-Vellotti</p>
+                        <p>KnightBeforeLast</p> <!-- Poryhedron -->
+                        <p>AbyssalCryptid</p>
+                        <p>Marsgreekgod</p>
                     </div>
                     <div class="patreon-container">
                         <p>EmmaBellHelium</p>
                         <p>Meni</p>
-                        <p>Settemio</p>
                         <p>Mark Wiemer</p>
+                        <p>Tommy Nordman</p>
+                    </div>
+                    <h3 class="center"><%=t('index.github_title')%></h3>
+                    <div class="github-container">
+                        <!-- Example contributor, appended by javascript -->
+                        <!-- <a href="https://github.com/Naviary2">
+                            <img src="https://avatars.githubusercontent.com/u/163621561?v=4">
+                            <div class="github-stats">
+                                <p class="name">Naviary2</p>
+                                <p class="contribution-count">1568 contributions</p>
+                            </div>
+                        </a> -->
                     </div>
             </div>
         </main>

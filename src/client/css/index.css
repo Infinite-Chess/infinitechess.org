@@ -29,7 +29,7 @@ main {
     margin-top: 40px;
 }
 
-#content {
+.content {
     background-color: rgba(255, 255, 255, 0.805);
     margin: auto;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
@@ -66,17 +66,17 @@ iframe {
     height: calc(var(--videoWidth) * 9/16);
 }
 
-#content h2 {
+.content h2 {
     font-size: 30px;
     margin: 35px 0 20px;
 }
 
-#content h3 {
+.content h3 {
     font-size: 25px;
     margin: 35px 0 20px;
 }
 
-#content p {
+.content p {
     line-height: 1.5;
     font-size: 17px;
     margin: 20px 0px;
@@ -88,7 +88,7 @@ iframe {
     justify-content: center;
 }
 
-#content .patreon-container p {
+.content .patreon-container p {
     font-size: 18px;
     background-color: rgb(244, 244, 244);
     padding: 0.5em 0.8em;
@@ -100,7 +100,7 @@ iframe {
     cursor: default;
 }
 
-#content .patreon-container p:hover {
+.content .patreon-container p:hover {
     transform: translate(0%, 0%) scale(1.1);
     box-shadow: 0 0 18px rgba(0, 0, 0, 0.54);
 }
@@ -111,6 +111,118 @@ iframe {
     font-size: 0.9em;
     text-shadow: -2px 0px 0.6em rgba(0, 38, 255, 0.2);
 }
+
+/* Play button */
+
+.play-button {
+    position: relative;
+    display: inline-block;
+    padding: 0.6em 1.5em;
+    font-size: 2em;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+    background-color: rgb(233, 233, 233);
+    border: 2px solid #2e2e2e;
+    border-radius: 0.5em;
+    margin-bottom: 50px;
+    overflow: hidden;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 0 50px rgb(0 0 0 / 25%);
+}
+
+.play-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.4) 100%
+    );
+    transform: skewX(-20deg);
+}
+
+.play-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgb(0 0 0 / 45%);
+}
+
+.play-button:hover::before {
+    animation: shine 0.75s ease-in-out;
+}
+
+@keyframes shine {
+    from {
+    left: -75%;
+    }
+    to {
+    left: 125%;
+    }
+}
+
+/* GitHub Contributors */
+
+.github-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1em;
+}
+
+.github-container a {
+    position: relative;
+    box-shadow: 0px 0px 15px 0 #0000003d;
+}
+
+.github-container a, .github-container img {
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+}
+
+.github-container .github-stats {
+    display: flex;
+    position: absolute;
+    top: 0;
+    justify-content: center;
+    flex-direction: column;
+    border-radius: 50%;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    background-color: rgb(33, 33, 33);
+    color: #fff;
+    transition: opacity 200ms;
+}
+
+.github-container a:hover .github-stats {
+    opacity: 0.7;
+}
+
+.github-container .github-stats p {
+    padding: 0 4px;
+    word-wrap: break-word; /* Allows words to break onto the next line */
+    line-height: 1;
+    text-align: center;
+    margin: 0;
+}
+
+.github-container .github-stats p.name {
+    font-weight: bold;
+    font-size: 10px;
+    margin: 0 0 5px 0;
+}
+
+.github-container .github-stats p.contribution-count {
+    font-size: 9px;
+}
+
+
 
 .grey {
     color:rgba(0, 0, 0, 0.345)
@@ -144,7 +256,7 @@ a {
 
 /* Cap content width size */
 @media only screen and (min-width: 810px) {
-    #content {
+    .content {
         max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
         padding: 40px 30px 100px;
         min-height: 800px;

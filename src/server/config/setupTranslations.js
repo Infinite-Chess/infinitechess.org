@@ -8,6 +8,7 @@ import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
+import deDE from 'date-fns/locale/de/index.js';
 import enUS from 'date-fns/locale/en-US/index.js';
 import frFR from 'date-fns/locale/fr/index.js';
 import ptBR from 'date-fns/locale/pt-BR/index.js';
@@ -15,7 +16,10 @@ import zhTW from 'date-fns/locale/zh-TW/index.js';
 import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
-import { BUNDLE_FILES } from "./config.js";
+import { fileURLToPath } from 'node:url';
+import { insertScriptIntoHTML } from "../utility/HTMLScriptInjector.js";
+import { readFileSync, writeFileSync } from "node:fs";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * This dictionary tells use what code the date-fns package uses
@@ -24,6 +28,7 @@ import { BUNDLE_FILES } from "./config.js";
  * Update when we support a new language.
  */
 const localeMap = {
+	'de-DE': deDE,
 	'en-US': enUS,
 	'fr-FR': frFR,
 	'pt-BR': ptBR,
@@ -54,8 +59,6 @@ const languageNames = {
 	'tr-TR': 'Turkish',
 };
 
-import { fileURLToPath } from 'node:url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = "./translation";
 
@@ -66,12 +69,15 @@ const translationsFolder = "./translation";
 const staticTranslatedTemplates = [
 	"createaccount",
 	"credits",
+	"guide",
 	"index",
 	"login",
 	"member",
 	"news",
+	"leaderboard",
 	"play",
 	"termsofservice",
+	"resetpassword",
 	"errors/400",
 	"errors/401",
 	"errors/404",
@@ -85,12 +91,13 @@ const link_white_list = [
   "/",
   "/login",
   "/news",
+  "/leaderboard",
   "/play",
   "/credits",
   "/termsofservice",
   "/createaccount",
   "https://github.com/pychess/pychess/blob/master/LICENSE",
-  "mailto:infinitechess.org@gmail.com",
+  "mailto:support@infinitechess.org",
   "https://www.patreon.com/Naviary",
   "https://math.colgate.edu/~integers/og2/og2.pdf",
   "https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces",
@@ -126,14 +133,14 @@ const xss_options = {
 		sub: [],
 		sup: [],
 	},
-	onTagAttr: function(tag, name, value, isWhiteAttr) {
+	onTagAttr: function(_tag, _name, _value, _isWhiteAttr) {
 		/*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
 	  console.warn(
 		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
 	  );
 	}*/
 	},
-	safeAttrValue: function(tag, name, value) {
+	safeAttrValue: function(_tag, _name, _value) {
 		/*if (
 	  tag === "a" &&
 		name === "href" &&
@@ -244,7 +251,8 @@ function loadTranslationsFolder(folder) {
 		fs.readFileSync(path.join(folder, "changes.json")).toString(),
 	);
 	const supportedLanguages = [];
-	const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
+	// Filtering out '.DS_Store' is required because sometimes on the machine running the website, that mac inserts a .DS_Store file in the news directory.
+	const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).filter(n => n !== '.DS_Store').sort((a, b) => {
 		const dateA = new Date(a.replace('.md', ''));
 		const dateB = new Date(b.replace('.md', ''));
 		return dateB - dateA;
@@ -267,12 +275,13 @@ function loadTranslationsFolder(folder) {
 					const parsedHTML = marked.parse((fs.existsSync(fullPath)
                         ? fs.readFileSync(fullPath)
                         : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-					const date = format(parseISO(filePath.replace('.md','')), 'PP', { // Change the number of P's to change how the date is phrased
+					const dateISO = filePath.replace('.md',''); // Store the ISO date (YYYY-MM-DD)
+					const date = format(parseISO(dateISO), 'PP', { // Change the number of P's to change how the date is phrased
 						timeZone: 'UTC-6', 
 						locale: localeMap[languageCode] 
 					});
 
-					return `<div class='news-post'>
+					return `<div class='news-post' data-date='${dateISO}'>
                                 <span class='news-post-date'>${date}</span>
                                 <div class='news-post-markdown'>${parsedHTML}</div>
                             </div>`;
@@ -338,7 +347,6 @@ function translateStaticTemplates(translations) {
 						language: language,
 						newsHTML: translations[language].news,
 						viewsfolder: path.join(__dirname, '../../client/views'),
-						// BUNDLE_FILES, // EJS can read this to insert different attributes to elements if desired.
 					},
 				),
 			);
@@ -351,6 +359,9 @@ function translateStaticTemplates(translations) {
  * **Should be ran only once**.
  */
 function initTranslations() {
+	// NEEDS TO BE BEFORE EJS RENDERING as it copies play.ejs into every language!
+	injectHTMLScriptIntoPlayEJS(); // Inject htmlscript.js into play.ejs
+
 	const translations = loadTranslationsFolder(translationsFolder);
 
 	i18next.use(middleware.LanguageDetector).init({
@@ -363,6 +374,15 @@ function initTranslations() {
 	});
 
 	translateStaticTemplates(translations); // Compiles static files
+}
+
+function injectHTMLScriptIntoPlayEJS() {
+	// Overwrite play.ejs, directly inserting htmlscript.js into it.
+	/** The relative path to play.ejs */
+	const playEJS = readFileSync(path.join(__dirname, "../../../src/client/views/play.ejs"));
+	const htmlscriptJS = readFileSync(path.join(__dirname, '../../client/scripts/cjs/game/htmlscript.js'));
+	const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
+	writeFileSync(path.join(__dirname, "../../client/views/play.ejs"), newPlayEJS);
 }
 
 export {

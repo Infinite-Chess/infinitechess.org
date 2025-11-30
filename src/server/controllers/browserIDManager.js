@@ -1,8 +1,8 @@
 
 
-import uuid from "../../client/scripts/esm/util/uuid.js";
+import uuid from "../../shared/util/uuid.js";
 import { isBrowserIDBanned } from "../middleware/banned.js";
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 
 
@@ -19,17 +19,13 @@ const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
  * @param {Function} next - The Express next middleware function.
  */
 function assignOrRenewBrowserID(req, res, next) {
-	if (!req.cookies) {
-		logEvents("req.cookies must be parsed before setting browser-id cookie!", 'errLog.txt', { print: true });
-		return next();
-	}
-
 	// We don't have to worry about the request being for a resource because those have already been served.
 	// The only scenario this request could be for now is an HTML or fetch API request
 	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
 	if (req.headers['is-fetch-request'] === 'true' || !req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
 
-	if (!req.cookies['browser-id']) giveBrowserID(req, res);
+	const cookies = req.cookies;
+	if (!cookies['browser-id']) giveBrowserID(req, res);
 	else refreshBrowserID(req, res);
 
 	next();
@@ -49,7 +45,8 @@ function giveBrowserID(req, res) {
 function refreshBrowserID(req, res) {
 
 	const cookieName = 'browser-id';
-	const id = req.cookies[cookieName];
+	const cookies = req.cookies;
+	const id = cookies[cookieName];
 
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
@@ -64,7 +61,7 @@ function makeBrowserIDPermanent(req, res, browserID) {
 	res.cookie('browser-id', browserID, { httpOnly: true, sameSite: 'None', secure: true, maxAge: Number.MAX_SAFE_INTEGER /* FOREVER!! */ });
 
 	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!!!!!!!!!!!!!!!!!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-	logEvents(logThis, 'bannedIPLog.txt', { print: true });
+	logEventsAndPrint(logThis, 'bannedIPLog.txt');
 }
 
 export {

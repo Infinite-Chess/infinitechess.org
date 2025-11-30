@@ -1,23 +1,21 @@
 
 // This script contains generalized methods for working with websocket objects.
 
-// @ts-ignore
-import { ensureJSONString } from '../utility/JSONUtils.js';
-// @ts-ignore
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
-
+import jsutil from '../../shared/util/jsutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
-
 import type WebSocket from 'ws';
+import type { AuthMemberInfo, ParsedCookies } from '../types.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
+
+
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
 interface CustomWebSocket extends WebSocket {
-	/** Our custom-entered information about this websocket.
-     * To my knowledge (Naviary), the `metadata` property isn't already in use. */
+	/** Our custom-entered information about this websocket. */
 	metadata: {
 		/** What subscription lists they are subscribed to. Possible: "invites" / "game" */
 		subscriptions: {
@@ -25,41 +23,30 @@ interface CustomWebSocket extends WebSocket {
 			invites?: boolean;
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
-				/** The id of the game they're in. @type {string} */
-				id: string;
-				/** The color they are playing as. @type {string} */
-				color: string;
+				/** The id of the game they're in. */
+				id: number;
+				/** The color they are playing as. */
+				color: Player;
 			};
 		};
-		/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
-		cookies: {
-			/** This is ALWAYS present, even if signed in! */
-			'browser-id'?: string;
-			/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
-			i18next?: string;
-			/** Their refresh/session token, if they are signed in. */
-			jwt?: string;
-		};
+		/** The parsed cookie object */
+		cookies: ParsedCookies
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent?: string;
-		memberInfo: {
-			/** True if they are signed in, if not they MUST have a browser-id cookie! */
-			signedIn: boolean;
-			user_id?: string;
-			username?: string;
-			roles?: string[];
-		};
+		memberInfo: AuthMemberInfo
+		/** The account verification status of the user */
+		verified: boolean;
 		/** The id of their websocket. */
 		id: string;
 		/** The socket's IP address. */
 		IP: string;
 		/** The timeout ID that can be used to cancel the timer that will
-         * expire the socket connection. This is useful if it closes early. */
+		 * expire the socket connection. This is useful if it closes early. */
 		clearafter?: NodeJS.Timeout;
 		/** The timeout ID to cancel the timer that will send an empty
-         * message to this socket just to verify they are alive and thinking. */
+		 * message to this socket just to verify they are alive and thinking. */
 		renewConnectionTimeoutID?: NodeJS.Timeout;
-	};
+	}
 }
 
 
@@ -70,7 +57,7 @@ interface CustomWebSocket extends WebSocket {
  * Prints the websocket to the console, temporarily removing self-referencing first.
  * @param ws - The websocket
  */
-function printSocket(ws: CustomWebSocket) { console.log(stringifySocketMetadata(ws)); }
+function printSocket(ws: CustomWebSocket): void { console.log(stringifySocketMetadata(ws)); }
 
 /**
  * Simplifies the websocket's metadata and stringifies it.
@@ -80,7 +67,7 @@ function printSocket(ws: CustomWebSocket) { console.log(stringifySocketMetadata(
 function stringifySocketMetadata(ws: CustomWebSocket): string {
 	// Removes the recursion from the metadata, making it safe to stringify.
 	const simplifiedMetadata = getSimplifiedMetadata(ws);
-	return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
+	return jsutil.ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
 }
 
 /**
@@ -92,29 +79,19 @@ function stringifySocketMetadata(ws: CustomWebSocket): string {
  * @param ws - The websocket object
  * @returns A new object containing simplified metadata.
  */
-function getSimplifiedMetadata(ws: CustomWebSocket) {
+function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['metadata']> {
 	const metadata = ws.metadata;
 	// Using Partial takes an existing type and makes all of its properties optional
 	const metadataCopy: Partial<typeof metadata> = {
 		memberInfo: jsutil.deepCopyObject(metadata.memberInfo),
 		cookies: { "browser-id": ws.metadata.cookies['browser-id'], "i18next": ws.metadata.cookies["i18next"]}, // Only copy these 2 cookies, NOT their refresh token!!!
+		verified: metadata.verified,
 		id: metadata.id,
 		IP: metadata.IP,
 		subscriptions: jsutil.deepCopyObject(metadata.subscriptions),
 	};
 
 	return metadataCopy;
-}
-
-/**
- * Returns the owner of the websocket.
- * @param ws - The websocket
- * @returns An object that contains either the `member` or `browser` property.
- */
-function getOwnerFromSocket(ws: CustomWebSocket): { member: string } | { browser: string } {
-	const metadata = ws.metadata;
-	if (metadata.memberInfo.signedIn) return { member: ws.metadata.memberInfo.username! };
-	else return { browser: metadata.cookies['browser-id']! };
 }
 
 /**
@@ -161,26 +138,11 @@ function getIPFromWebsocketUpgradeRequest(req: IncomingMessage): string | undefi
 	return clientIP;
 }
 
-/**
- * Extracts the signed-in status and identifier (username or browser ID) from the provided socket.
- * @param ws - The socket to extract the data from.
- * @returns An object containing the `signedIn` status and `identifier` (either username or browser ID).
- */
-function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
-	const signedIn = ws.metadata.memberInfo.signedIn;
-	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id'];
-	return { signedIn, identifier };
-}
-
-
-
 export default {
 	printSocket,
 	stringifySocketMetadata,
-	getOwnerFromSocket,
 	getCookiesFromWebsocket,
 	getIPFromWebsocketUpgradeRequest,
-	getSignedInAndIdentifierOfSocket,
 };
 
 export type {

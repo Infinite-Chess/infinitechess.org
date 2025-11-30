@@ -15,9 +15,9 @@
  * 
  * This function returns a promise that resolves after the specified number of milliseconds.
  * @param ms - The number of milliseconds to sleep before continuing execution.
- * @returns {Promise<void>} A promise that resolves after the specified delay.
+ * @returns A promise that resolves after the specified delay.
  */
-function sleep(ms: number) {
+function sleep(ms: number): Promise<void> {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 

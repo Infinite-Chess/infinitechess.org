@@ -1,15 +1,17 @@
 
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
-import { deleteRefreshTokenFromMemberData } from '../database/refreshTokenManager.js';
+import { deleteRefreshToken } from '../database/refreshTokenManager.js';
+import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
+/**
+ * 
+ * @param {import('../types.js').IdentifiedRequest} req 
+ * @param {*} res 
+ * @returns 
+ */
 async function handleLogout(req, res) {
-	if (!req.memberInfo) {
-		logEvents("req.memberInfo must be defined for us to log out!", 'errLog.txt', { print: true });
-		return res.status(500).json({'message' : "Server Error" });
-	}
-
 	// Delete the refresh token cookie...
 	// On client, also delete the accessToken
 
@@ -23,14 +25,19 @@ async function handleLogout(req, res) {
 
 	if (!req.memberInfo.signedIn) return res.redirect('/'); // Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
 
-	const { user_id, username } = req.memberInfo;
-	
-	// Now invalidate the refresh token from the database by deleting it.
-	deleteRefreshTokenFromMemberData(user_id, refreshToken);
+	try {
+		// Now invalidate the refresh token from the database by deleting it.
+		deleteRefreshToken(refreshToken);
+	} catch (e) {
+		logEventsAndPrint(`Critical error when logging out member "${req.memberInfo.username}": ${e.message}`, 'errLog.txt');
+		return res.status(500).json({ message: "Server Error" });
+	}
 
+	closeAllSocketsOfSession(refreshToken, 1008, "Logged out");
+	
 	res.redirect('/');
 
-	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
+	logEventsAndPrint(`Logged out member "${req.memberInfo.username}".`, "loginAttempts.txt");
 };
 
 export {

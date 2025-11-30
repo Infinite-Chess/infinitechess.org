@@ -1,19 +1,19 @@
 
 /*
- * This script generates the dependancy tree graph of the project.
+ * This script generates the dependency tree graph of the project.
  * To use it, enter the command:
  * 
- * npm run generate-dependancy-graph
+ * npm run generate-dependency-graph
  */
 
 import madge from 'madge';
 
-const pathOfFileToGenerateDependancyGraphFor = 'dist/server/server.js'; // Enable for the server-side code
-// const pathOfFileToGenerateDependancyGraphFor = 'dist/client/scripts/esm/game/main.js'; // Enable for the client-side code
-const nameToGiveDependancyGraph = 'dependancyGraph.svg';
+const pathOfFileToGenerateDependencyGraphFor = 'dist/server/server.js'; // Enable for the server-side code
+// const pathOfFileToGenerateDependencyGraphFor = 'dist/client/scripts/esm/game/main.js'; // Enable for the client-side code
+const nameToGiveDependencyGraph = 'dependencyGraph.svg';
 
-madge(pathOfFileToGenerateDependancyGraphFor)
-	.then((res) => res.image(nameToGiveDependancyGraph))
+madge(pathOfFileToGenerateDependencyGraphFor)
+	.then((res) => res.image(nameToGiveDependencyGraph))
 	.then((writtenImagePath) => {
-		console.log('Dependancy graph image written to ' + writtenImagePath);
+		console.log('Dependency graph image written to ' + writtenImagePath);
 	});

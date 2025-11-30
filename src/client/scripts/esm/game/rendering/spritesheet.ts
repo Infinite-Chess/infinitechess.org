@@ -6,25 +6,26 @@
  * If no game is loaded, no spritesheet is loaded.
  */
 
-import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
+
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import imagecache from '../../chess/rendering/imagecache.js';
+import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
-// @ts-ignore
-import typeutil from '../../chess/util/typeutil.js';
-// @ts-ignore
-import jsutil from '../../util/jsutil.js';
-// @ts-ignore
-import texture from './texture.js';
-// @ts-ignore
-import colorutil from '../../chess/util/colorutil.js';
 
 
-// Type Definitions ----------------------------------------------------------
+// Type Definitions ---------------------------------------------------------------------
 
 
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
-import type { Coords } from '../../chess/logic/movesets.js';
+/** A bounding box storing texture coords info. */
+interface TextureData {
+	texleft: number;
+	texbottom: number;
+	texright: number;
+	textop: number;
+}
 
 
 // Variables ---------------------------------------------------------------------------
@@ -36,7 +37,7 @@ import type { Coords } from '../../chess/logic/movesets.js';
  * Using a spritesheet instead of 1 texture for each piece allows us to
  * render all the pieces with a single mesh, and a single texture.
  */
-let spritesheet: WebGLTexture | undefined; // Texture. 8x8 containing every texture of every piece, black and white.
+let spritesheet: WebGLTexture | undefined; // Texture. Grid containing every texture of every piece, black and white.
 /**
  * Contains where each piece is located in the spritesheet (texture coord).
  * Texture coords of a piece range from 0-1, where (0,0) is the bottom-left corner.
@@ -49,72 +50,39 @@ let spritesheetData: {
 	 * where (0,0) is the bottom-left corner of the spritesheet,
 	 * and the coordinates provided are the bottom-left corner of the corresponding type.
 	 */
-	texLocs: { [type: string]: Coords }
+	texLocs: { [type: number]: DoubleCoords
+	 }
 } | undefined;
-
-
-/**
- * These SIX types are all grouped together into one server resource!
- * If we request one, we request them ALL!
- */
-const piecesInTheClassicalSVGGroup = ['pawn','knight','bishop','rook','king','queen'];
-/** Piece types that don't need, nor have, an SVG */
-const typesThatDontNeedAnSVG = ['voids'];
-
-/**
- * Piece types, in singular form, that we have cached their SVG up to this point.
- * In the form: ['pawn','obstacle']
- */
-const cachedPieceTypes: string[] = [];
-/**
- * Piece SVG Elements that we have fetch-requested from the server, up to this point.
- * In the form: { 'pawnsW': SVGElement }
- */
-const cachedPieceSVGs: { [svgID: string]: SVGElement } = {};
-
 
 
 // Functions ---------------------------------------------------------------------------
 
 
-function getSpritesheet() {
+function getSpritesheet(): WebGLTexture {
 	if (!spritesheet) throw new Error("Should not be getting the spritesheet when not loaded!");
-	return spritesheet!;
+	return spritesheet;
 }
 
-function getSpritesheetDataPieceWidth() {
+function getSpritesheetDataPieceWidth(): number {
 	if (!spritesheetData) throw new Error("Should not be getting piece width when the spritesheet is not loaded!");
-	return spritesheetData!.pieceWidth;
+	return spritesheetData.pieceWidth;
 }
 
-function getSpritesheetDataTexLocation(type: number) {
+function getSpritesheetDataTexLocation(type: number): DoubleCoords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
-	return spritesheetData!.texLocs[type]!;
+	if (!spritesheetData!.texLocs[type]) throw new Error("No texture location for piece type: " + type);
+	return spritesheetData!.texLocs[type];
 }
 
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
-async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
+async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Board): Promise<void> {
 
-	/** All piece types in the game. */
-	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes);
-	// Remove the pieces that don't need/have an SVG, such as VOIDS
-	existingTypes = existingTypes.filter(type => !typesThatDontNeedAnSVG.includes(type));
-
-	/** Makes all the types in the game singular instead of plural */
-	const typesNeeded = existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end
-	/** A list of svg IDs we need for the game @type {string[]} */
-	const svgIDs: string[] = getSVG_IDsFromPieceTypes(typesNeeded);
-
-	// This is what may take a while, waiting for the fetch requests to return.
-	await fetchMissingPieceSVGs(typesNeeded);
-
-	console.log("Finished acquiring all piece SVGs!");
-
-	/** The SVG elements we will use in the game to construct our spritesheet */
-	const svgElements = getCachedSVGElements(svgIDs);
+	// Filter our voids from all types in the game.
+	// @ts-ignore
+	const types: number[] = boardsim.existingTypes.filter(type => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type)));
 
 	// Convert each SVG element to an Image
-	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
+	const readyImages: HTMLImageElement[] = types.map(t => imagecache.getPieceImage(t));
 
 	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
 	// console.log(spritesheetAndSpritesheetData.spritesheetData);
@@ -125,116 +93,68 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 
 	// Load the texture into webgl and initiate our spritesheet
 	// data that contains the texture coordinates of each piece!
-	spritesheet = texture.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { useMipmaps: true });
+	spritesheet = TextureLoader.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { mipmaps: true });
 	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
 }
 
-function deleteSpritesheet() {
+/**
+ * Call when the gameslot unloads the gamefile.
+ * The spritesheet and data is no longer needed.
+ */
+function deleteSpritesheet(): void {
 	spritesheet = undefined;
 	spritesheetData = undefined;
 }
 
+
+// Generating Texture Data For Going Into A Mesh ----------------------------------------------------
+
+
 /**
- * Tests what of the provided types we don't have yet,
- * fetches them, and appends them to our cache.
+ * Returns the texture data of a piece type.
  */
-async function fetchMissingPieceSVGs(typesNeeded: string[]) {
-	let typesMissing = jsutil.getMissingStringsFromArray(cachedPieceTypes, typesNeeded);
-	// Remove the classical pieces, are they are being fetched already by fetchAndCacheClassicalPieceSVGs()
-	typesMissing = typesMissing.filter((type: string) => !piecesInTheClassicalSVGGroup.includes(type));
-
-	if (typesMissing.length === 0) return console.log("All piece SVGs for the game are present! No need to fetch more.");
-	else console.log(`Fetching missing piece types: ${JSON.stringify(typesMissing)}`);
-
-	return await fetchAllPieceSVGs(typesMissing);
+function getTexDataOfType(type: number, rotation: number = 1): TextureData {
+	const texLocation: DoubleCoords = getSpritesheetDataTexLocation(type);
+	const texWidth: number = getSpritesheetDataPieceWidth();
+	return getTexDataFromLocationAndWidth(texLocation, texWidth, rotation);
 }
 
 /**
- * Fetches the SVGs of the provided piece types from the server.
- * @param types - ['archbishop','chancellor']
+ * Returns the texture data of a a single instance with texcoords [0,0].
+ * THE INSTANCE-SPECIFIC data needs to further contain texcoord offsets!
  */
-async function fetchAllPieceSVGs(types: string[]) {
-	// Map over the missing types and create promises for each fetch
-	const fetchPromises = types.map(async pieceType => {
-		const svgIDs = getSVG_IDs_From_PieceType(pieceType);
-		return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
-			.then(pieceSVGs => {
-				console.log(`Fetched ${pieceType}!`);
-				// cachedPieceTypes.push(pieceType);
-				if (!cachedPieceTypes.includes(pieceType)) cachedPieceTypes.push(pieceType);
-				pieceSVGs.forEach(svg => {
-					if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
-					else cachedPieceSVGs[svg.id] = svg;
-				});
-			})
-			.catch(error => {
-				console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
-				// Propagate the error so that Promise.all() can reject
-				throw error;
-			});
-	});
-
-	// Wait for all fetches to complete
-	await Promise.all(fetchPromises);
-
-	console.log("All fetched pieces have been cached!");
+function getTexDataGeneric(rotation = 1): TextureData {
+	const texLocation: DoubleCoords = [0,0];
+	const texWidth: number = getSpritesheetDataPieceWidth();
+	return getTexDataFromLocationAndWidth(texLocation, texWidth, rotation);
 }
 
 /**
- * Returns a string of the ids of the svgs of
- * each color that makes up all of the provided types.
- * `['pawn','obstacle'] => ['pawnsW','pawnsB','obstaclesN']
+ * Returns the texture data from a given texture location and width.
  */
-function getSVG_IDsFromPieceTypes(pieceTypes: string[]) { // In singular form
-	const svgIDs: string[] = [];
-	pieceTypes.forEach(type => svgIDs.push(...getSVG_IDs_From_PieceType(type)) );
-	return svgIDs;
-}
+function getTexDataFromLocationAndWidth(texLocation: DoubleCoords, texWidth: number, rotation = 1): TextureData {
+	const texleft = texLocation[0];
+	const texbottom = texLocation[1];
 
-/**
- * Returns a string of the ids of the
- * svgs of each color that makes up a type.
- * 'pawn' => ['pawnsW','pawnsB']
- */
-function getSVG_IDs_From_PieceType(type: string): string[] {
-	const svgIDs: string[] = [];
-
-	const pieceInPluralForm = type + 's';
-	const isNeutral = typeutil.neutralTypes.includes(pieceInPluralForm);
-
-	if (isNeutral) {
-		svgIDs.push(pieceInPluralForm + colorutil.getColorExtensionFromColor('neutral'));
-	} else {
-		svgIDs.push(pieceInPluralForm + colorutil.getColorExtensionFromColor('white'));
-		svgIDs.push(pieceInPluralForm + colorutil.getColorExtensionFromColor('black'));
+	if (rotation === 1) { // Regular rotation
+		return { 
+			texleft,
+			texbottom,
+			texright: texleft + texWidth,
+			textop: texbottom + texWidth
+		};
+	} else { // Inverted rotation
+		return { 
+			texleft: texleft + texWidth,
+			texbottom: texbottom + texWidth,
+			texright: texleft,
+			textop: texbottom
+		};
 	}
-
-	return svgIDs;
 }
 
-// Do this by default whenever we load the page, as EVERY variant requires most of these pieces!
-(async function fetchAndCacheClassicalPieceSVGs() {
-	console.log("Fetching all Classical SVGs...");
-	const svgIDs = getSVG_IDsFromPieceTypes(piecesInTheClassicalSVGGroup);
-	const classicalSVGElements = await fetchPieceSVGs('classical.svg', svgIDs);
-	// cachedPieceTypes.push(...piecesInTheClassicalSVGGroup);
-	piecesInTheClassicalSVGGroup.forEach(pieceInClassicalGroup => { if (!cachedPieceTypes.includes(pieceInClassicalGroup)) cachedPieceTypes.push(pieceInClassicalGroup); } );
-	classicalSVGElements.forEach(svg => {
-		if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
-		else cachedPieceSVGs[svg.id] = svg;
-	});
-	console.log("Fetched all Classical SVGs!");
-})();
 
-function getCachedSVGElements(svgIDs: string[]) {
-	/** The SVG elements we will use in the game to construct our spritesheet */
-	return svgIDs.map(id => {
-		const cachedSVG = cachedPieceSVGs[id];
-		if (cachedSVG === undefined) throw new Error(`Piece SVG of ID "${id}" required for game wasn't cached!`);
-		return cachedSVG;
-	});
-}
-
+// Exports -------------------------------------------------------------------
 
 
 export default {
@@ -243,5 +163,7 @@ export default {
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,
 	deleteSpritesheet,
-	getCachedSVGElements,
+	// Texture Data
+	getTexDataOfType,
+	getTexDataGeneric
 };

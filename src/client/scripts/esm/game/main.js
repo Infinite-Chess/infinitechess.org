@@ -9,14 +9,9 @@
 // Import Start
 import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
-import input from './input.js';
-import onlinegame from './misc/onlinegame.js';
 import localstorage from '../util/localstorage.js';
 import game from './chess/game.js';
-import shaders from './rendering/shaders.js';
-import browsersupport from './misc/browsersupport.js';
 import camera from './rendering/camera.js';
-import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
@@ -30,33 +25,27 @@ import frametracker from './rendering/frametracker.js';
 function start() {
 	guiloading.closeAnimation(); // Stops the loading screen animation
 	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
-	shaders.initPrograms(); // Initiates the few shader programs we will be using. The most common we'll be using is the textureProgram, but we also create a shader program for color, and another for tinted textures.
-	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
+	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
 
-	browsersupport.checkBrowserSupport();
-
-	game.init(); // Initiates textures, buffer models for rendering, and the title screen.
+	game.init();
 
 	initListeners();
 
-	onlinegame.askServerIfWeAreInGame();
-
-	localstorage.eraseExpiredItems();
+	// Immediately asks the server if we are in a game.
+	// If so, it will send the info to join it.
+	websocket.sendmessage('game', 'joingame', undefined, true);
 
 	gameLoop(); // Update & draw the scene repeatedly
 }
 
 function initListeners() {
-	input.initListeners(); // Mouse, touch, & key event listeners
-
-	window.addEventListener('beforeunload', (event) => {
+	window.addEventListener('beforeunload', (_event) => {
 		// console.log('Detecting unload');
 
 		// This allows us to control the reason why the socket was closed.
 		// "1000 Closed by client" instead of "1001 Endpoint left"
 		websocket.closeSocket();
         
-		invites.deleteInviteTagInLocalStorage();
 		localstorage.eraseExpiredItems();
 	});
 }
@@ -70,7 +59,8 @@ function gameLoop() {
 
 		render(); // Render everything
         
-		input.update(); // Key events should be reset as soon as possible after updating, so we don't miss any. Then again, all events are fired at the end of the animation frame anyway.
+		// Reset all event listeners states so we can catch any new events that happen for the next frame.
+		document.dispatchEvent(new Event('reset-listener-events'));
 
 		loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 
@@ -84,7 +74,7 @@ function gameLoop() {
 function render() {
 	if (!frametracker.doWeRenderNextFrame()) return; // Only render the world though if any visual on the screen changed! This is to save cpu when there's no page interaction or we're afk.
 
-	// console.log("Rendering this frame")
+	// console.log("Rendering this frame");
 
 	webgl.clearScreen(); // Clear the color buffer and depth buffers
 	game.render();

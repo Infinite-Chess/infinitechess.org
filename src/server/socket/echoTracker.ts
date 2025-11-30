@@ -27,7 +27,7 @@ const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've
 // Functions ---------------------------------------------------------------------------
 
 
-function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number) {
+function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number): void {
 	echoTimers[messageID] = timeout;
 }
 
@@ -35,9 +35,7 @@ function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | num
  * Cancel the timer that will close the socket when we don't hear an expected echo from a sent socket message.
  * If there was no timer, this will return false, meaning it was an invalid echo.
  */
-function deleteEchoTimerForMessageID(messageIDEchoIsFor: any): boolean {
-	if (typeof messageIDEchoIsFor !== 'number') return false; // Invalid echo (incoming socket message didn't include an echo ID)
-
+function deleteEchoTimerForMessageID(messageIDEchoIsFor: number): boolean {
 	const timeout: NodeJS.Timeout | number | undefined = echoTimers[messageIDEchoIsFor];
 	if (timeout === undefined) return false; // Invalid echo (message ID wasn't from any recently sent socket message)
 

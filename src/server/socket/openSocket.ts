@@ -1,4 +1,6 @@
 
+// src/server/socket/openSocket.ts
+
 /**
  * This script handles socket upgrade connection requests, and creating new sockets.
  */
@@ -8,14 +10,14 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessionHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
+import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
-import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
+import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
-import { logEvents, logWebsocketStart } from '../middleware/logEvents.js';
-// @ts-ignore
-import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
+import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 
@@ -23,9 +25,9 @@ import { executeSafely } from '../utility/errorGuard.js';
 // Type Definitions ---------------------------------------------------------------------------
 
 
-import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
+import type { Request } from "express";
 
 
 // Variables ---------------------------------------------------------------------------
@@ -37,7 +39,7 @@ import type { CustomWebSocket } from './socketUtility.js';
 // Functions ---------------------------------------------------------------------------
 
 
-function onConnectionRequest(socket: WebSocket, req: IncomingMessage) { 
+function onConnectionRequest(socket: WebSocket, req: Request): void { 
 
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
@@ -65,7 +67,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	if (!ws.metadata.memberInfo.signedIn && ws.metadata.cookies['browser-id'] === undefined) { // Terminate web socket connection request, they NEED authentication!
+	if (!ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.browser_id === undefined) { // Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
 		socketUtility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
@@ -77,23 +79,30 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 
 	addListenersToSocket(req, ws);
 
+	// If user is signed in, use the database to correctly set the property ws.metadata.verified
+	if (ws.metadata.memberInfo.signedIn) {
+		const member = getMemberDataByCriteria(['is_verified'], 'user_id', ws.metadata.memberInfo.user_id, true) as { is_verified: 0 | 1 };
+		// Set the verified status. 1 means true.
+		if (member.is_verified === 1) ws.metadata.verified = true;
+	}
+
 	// Send the current game vesion, so they will know whether to refresh.
 	sendSocketMessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
 
-function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): CustomWebSocket | undefined {
+function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWebSocket | undefined {
 	
 	// Make sure the connection is secure https
 	const origin = req.headers.origin;
 	if (origin === undefined || !origin.startsWith('https')) {
-		logEvents(`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`, 'hackLog.txt');
+		console.error(`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`);
 		socket.close(1009, "Not Secure");
 		return;
 	}
 
 	// Make sure the origin is our website
-	if (!DEV_BUILD && origin !== `https://${HOST_NAME}`) { // In DEV_BUILD, allow all origins.
-		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "https://${HOST_NAME}"`, 'hackLog.txt');
+	if (!DEV_BUILD && origin !== process.env['APP_BASE_URL']) { // In DEV_BUILD, allow all origins.
+		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`, 'hackLog.txt');
 		socket.close(1009, "Origin Error");
 		return;
 	}
@@ -105,14 +114,23 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 		return;
 	}
 
+	const cookies = socketUtility.getCookiesFromWebsocket(req);
+	if (cookies['browser-id'] === undefined) {
+		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
+		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
+		return;
+	}
+
 	// Initialize the metadata and cast to a custom websocket object
 	const ws = socket as CustomWebSocket; // Cast WebSocket to CustomWebSocket
+	
 	ws.metadata = {
 		// Parse cookies from the Upgrade http headers
-		cookies: socketUtility.getCookiesFromWebsocket(req),
+		cookies,
 		subscriptions: {},
 		userAgent: req.headers['user-agent'],
-		memberInfo: { signedIn: false },
+		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
+		verified: false,
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,
 	};
@@ -123,15 +141,15 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 /**
  * Adds the 'message', 'close', and 'error' event listeners to the socket
  */
-function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket) {
+function addListenersToSocket(req: Request, ws: CustomWebSocket): void {
 	ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message); });
 	ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason); });
 	ws.on('error', (error) => { executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error); });
 }
 
-function onerror(ws: CustomWebSocket, error: Error) {
+function onerror(ws: CustomWebSocket, error: Error): void {
 	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
-	logEvents(errText, 'errLog.txt', { print: true });
+	logEventsAndPrint(errText, 'errLog.txt');
 }
 
 

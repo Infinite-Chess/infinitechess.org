@@ -4,7 +4,7 @@
  * catching any errors that may occur, logging them to the error log.
  */
 
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 /**
@@ -19,7 +19,7 @@ function executeSafely(callback, errorMessage, ...args) {
 		callback(...args);
 	} catch (e) {
 		const errText = `${errorMessage}\n${e.stack}`;
-		logEvents(errText, 'errLog.txt', { print: true });
+		logEventsAndPrint(errText, 'errLog.txt');
 		return false; // Yes error
 	}
 	return true; // No error
@@ -39,7 +39,7 @@ async function executeSafely_async(callback, errorMessage, ...args) {
 		await callback(...args);
 	} catch (e) {
 		const errText = `${errorMessage}\n${e.stack}`;
-		await logEvents(errText, 'errLog.txt', { print: true });
+		await logEventsAndPrint(errText, 'errLog.txt');
 		return false; // Yes error
 	}
 	return true; // No error

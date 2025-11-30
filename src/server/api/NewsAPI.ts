@@ -1,0 +1,99 @@
+// src/server/api/NewsAPI.ts
+
+/**
+ * API endpoints for news-related functionality.
+ */
+
+import type { IdentifiedRequest } from '../types.js';
+import type { Response } from 'express';
+
+import { getMemberDataByCriteria, MemberRecord, updateMemberColumns } from '../database/memberManager.js';
+import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
+
+/**
+ * API endpoint to get the count of unread news posts for the current user.
+ * Returns { count: number } or { count: 0 } if not logged in.
+ */
+function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
+	// Check if user is authenticated
+	if (!req.memberInfo || !req.memberInfo.signedIn) {
+		// Not logged in - return 0 unread
+		res.json({ count: 0 });
+		return;
+	}
+
+	const userId = req.memberInfo.user_id;
+
+	// Get user's last read news date
+	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId, false);
+
+	const lastReadDate = memberData.last_read_news_date;
+
+	if (!lastReadDate) {
+		// For some reason the cell was null or undefined
+		res.json({ count: 0 });
+		return;
+	}
+	
+	// Count unread news posts
+	const unreadCount = countUnreadNews(lastReadDate);
+	
+	res.json({ count: unreadCount });
+}
+
+/**
+ * Gets the list of unread news dates for the current user.
+ * Returns { dates: string[] } with dates in YYYY-MM-DD format.
+ */
+function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void {
+	if (!req.memberInfo || !req.memberInfo.signedIn) {
+		// Not logged in - no unread news
+		res.json({ dates: [] });
+		return;
+	}
+
+	const userId = req.memberInfo.user_id;
+
+	// Get user's last read news date
+	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId, false);
+
+	const lastReadDate = memberData.last_read_news_date;
+
+	if (!lastReadDate) {
+		// For some reason the cell was null or undefined
+		res.json({ dates: [] });
+		return;
+	}
+	
+	// Get unread news dates
+	const unreadDates = getUnreadNewsDates(lastReadDate);
+	
+	res.json({ dates: unreadDates });
+}
+
+/**
+ * Updates the user's last read news date to the current latest news post.
+ * This should be called when the user visits the news page.
+ */
+function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
+	if (!req.memberInfo || !req.memberInfo.signedIn) {
+		// Not logged in - nothing to update
+		res.status(200).json({ success: true });
+		return;
+	}
+
+	const userId = req.memberInfo.user_id;
+
+	const latestNewsDate = getLatestNewsDate();
+	
+	const success = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
+	
+	if (success) res.status(200).json({ success: true });
+	else res.status(500).json({ success: false, message: 'Failed to update last read news date.' });
+}
+
+export {
+	getUnreadNewsCount,
+	getUnreadNewsDatesEndpoint,
+	markNewsAsRead,
+};

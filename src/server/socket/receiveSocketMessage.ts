@@ -1,20 +1,28 @@
 
+// src/server/socket/receiveSocketMessage.ts
+
 /**
  * This script receives incoming socket messages, rate limits them, logs them,
  * cancels their echo timer, sends an echo, then sends the message to our router.
  */
 
+import * as z from 'zod';
 
+// @ts-ignore
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+// @ts-ignore
+import { logEvents, logEventsAndPrint, logReqWebsocketIn } from '../middleware/logEvents.js';
+// @ts-ignore
+import { printIncomingAndOutgoingMessages } from '../config/config.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import socketUtility from './socketUtility.js';
-// @ts-ignore
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-// @ts-ignore
-import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
-// @ts-ignore
-import { printIncomingAndOutgoingMessages } from '../config/config.js';
+
+// Zod schemas
+import { InvitesSchema } from '../game/invitesmanager/invitesrouter.js';
+import { GameSchema } from '../game/gamemanager/gamerouter.js';
+import { GeneralSchema } from './generalrouter.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -22,7 +30,34 @@ import { printIncomingAndOutgoingMessages } from '../config/config.js';
 
 import type { CustomWebSocket } from './socketUtility.js';
 import type { IncomingMessage } from 'http';
-import type { WebsocketInMessage } from './socketRouter.js';
+
+
+/** The schema for validating all non-echo incoming websocket messages. */
+const MasterSchema = z.discriminatedUnion('route', [
+	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
+	z.strictObject({ id: z.int(), route: z.literal('invites'), contents: InvitesSchema }),
+	z.strictObject({ id: z.int(), route: z.literal('game'),    contents: GameSchema })
+]);
+/** Represents all possible types a non-echo incoming websocket message could be! */
+type WebsocketInMessage = z.infer<typeof MasterSchema>;
+
+
+/** This is the id of the message being replied to. */
+const EchoSchema = z.int();
+type EchoMessage = z.infer<typeof EchoSchema>;
+
+/** The schema for validating all incoming websocket messages, including echos. */
+const MasterSchemaWithEchos = z.discriminatedUnion('route', [
+	z.strictObject({
+		/** The route to forward the message to (e.g., "general", "invites", "game"). */
+		route: z.literal('echo'),
+		/** The contents of the message, for the router to read. */
+		contents: EchoSchema
+	}),
+	MasterSchema
+]);
+/** Represents all possible types an incoming websocket message could be, including echos! */
+type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
 
 
 // Functions ---------------------------------------------------------------------------
@@ -33,51 +68,68 @@ import type { WebsocketInMessage } from './socketRouter.js';
  * Sends an echo (unless this message itself **is** an echo), rate limits,
  * logs the message, then routes the message where it needs to go.
  */
-function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
-	let message: WebsocketInMessage;
+function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer): void {
+	const messageStr = rawMessage.toString('utf8');
+
+	let parsedUnvalidatedMessage: any;
 	try {
 		// Parse the stringified JSON message.
 		// Incoming message is in binary data, which can also be parsed into JSON
-		message = JSON.parse(rawMessage);
+		parsedUnvalidatedMessage = JSON.parse(messageStr);
 	} catch (error) {
-		if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
+		if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt');
 		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
 		return;
 	}
 
-	// Validate that the parsed object matches the expected structure
-	if (!isValidWebsocketInMessage(message)) {
-		sendSocketMessage(ws, "general", "printerror", "Invalid websocket message structure.");
+	const zod_result = MasterSchemaWithEchos.safeParse(parsedUnvalidatedMessage);
+	if (!zod_result.success) {
+		sendSocketMessage(ws, "general", "notifyerror", "Invalid websocket message parameters. This is a bug, please report it!");
+		const logText = `INVALID PARAMETERS - Message contents:
+${JSON.stringify(parsedUnvalidatedMessage, null, 2)}
+
+Zod treeified errors:
+${zod_result.error instanceof z.ZodError ? JSON.stringify(z.treeifyError(zod_result.error), null, 2) : String(zod_result.error)}
+
+Websocket metadata:
+${socketUtility.stringifySocketMetadata(ws)}
+
+===================================================================
+
+`;
+		logEvents(logText, 'wsInMalformedLog.txt');
+		logEventsAndPrint(`Received malformed websocket in-message. Check wsInMalformedLog.txt for details.`, 'errLog.txt');
 		return;
 	}
 
-	// Valid...
+	// Validation was a success! Message contains valid parameters.
 
-	const isEcho = message.action === "echo";
-	if (isEcho) {
-		const validEcho = deleteEchoTimerForMessageID(message.value); // Cancel timer to assume they've disconnected
+	const message: WebsocketInMessageOrEcho = zod_result.data;
+
+	if (message.route === "echo") {
+		const incomingEcho: EchoMessage = message.contents;
+		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
-			if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
-			const errText = `User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${socketUtility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'errLog.txt', { print: true });
+			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
+			console.error(`User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadataction: ${socketUtility.stringifySocketMetadata(ws)}`);
 		}
 		return;
 	}
 
 	// Not an echo...
 
-	if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
+	if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 
 	// Send our echo here! We always send an echo to every message except echos themselves.
 	sendSocketMessage(ws, "general", "echo", message.id);
 
-	if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + rawMessage);
+	if (printIncomingAndOutgoingMessages) console.log("Received message: " + rawMessage);
 
 	rescheduleRenewConnection(ws); // We know they are connected, so reset this
 
-	routeIncomingSocketMessage(ws, message, rawMessage);
+	routeIncomingSocketMessage(ws, message);
 }
 
 /**
@@ -91,22 +143,11 @@ function rateLimitAndLogMessage(req: IncomingMessage, ws: CustomWebSocket, rawMe
 	return true;
 }
 
-/**
- * Type guard to validate if an object is a WebsocketInMessage.
- */
-function isValidWebsocketInMessage(parsedIncomingMessage: WebsocketInMessage): boolean {
-	return (
-		typeof parsedIncomingMessage === 'object' &&
-		parsedIncomingMessage !== null &&
-		typeof parsedIncomingMessage.route === 'string' &&
-		typeof parsedIncomingMessage.action === 'string' &&
-		// Allow `value` to be any type, no validation needed for it.
-		(parsedIncomingMessage.id === undefined || typeof parsedIncomingMessage.id === 'number')
-	);
-}
-
-
 
 export {
 	onmessage,
+};
+
+export type {
+	WebsocketInMessage,
 };

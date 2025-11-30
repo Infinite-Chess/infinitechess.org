@@ -1,10 +1,9 @@
-import { logEvents } from './logEvents.js';
+import { logEvents, logEventsAndPrint } from './logEvents.js';
 import { getClientIP } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
-import { getTranslationForReq } from '../utility/translate.js';
-import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import jsutil from '../../shared/util/jsutil.js';
 
 /** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
 
@@ -61,8 +60,14 @@ const recentRequests = []; // List of times of recent connections
 /**
  * The maximum size of an incoming websocket message, in bytes.
  * Above this will be rejected, and an error sent to the client.
+ * 
+ * DIRECTLY CONTROLS THE maximum distance players can move in online games!
+ * 500 KB allows moves up to 1e100000 squares away, with some padding.
+ * On mobile it would take 6 hours of zooming out at
+ * MAXIMUM speed to reach that distance, without rest.
+ * It would take WAYYYY longer on desktop!
  */
-const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
+const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
 
 
 
@@ -96,14 +101,14 @@ function rateLimit(req, res, next) {
 
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address when rate limiting!', 'hackLog.txt');
-		return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
+		logEvents('Unable to identify client IP address when rate limiting!', 'reqLogRateLimited.txt');
+		return res.status(500).json({ message: "Unable to identify client IP address" });
 	}
 
 	if (isIPBanned(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 		logEvents(logThis, 'bannedIPLog.txt');
-		return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
+		return res.status(403).json({ message: "You are banned" });
 	}
 
 	const userKey = getIpBrowserAgentKey(req); // By this point their IP is defined so this will be defined.
@@ -112,8 +117,8 @@ function rateLimit(req, res, next) {
 	incrementClientConnectionCount(userKey);
 
 	if (rateLimitHash[userKey].length > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
-		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
-		return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
+		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
+		return res.status(429).json({ message: "Too Many Requests. Try again soon." });
 	}
 
 	next(); // Continue the middleware waterfall
@@ -138,7 +143,7 @@ function rateLimitWebSocket(req, ws) {
 	incrementClientConnectionCount(userKey);
 
 	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
-		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
+		logEvents(`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
 		ws.close(1009, 'Too Many Requests. Try again soon.');
 		return false;
 	}
@@ -148,7 +153,7 @@ function rateLimitWebSocket(req, ws) {
 	// Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
 	const messageSize = ws._socket.bytesRead;
 	if (messageSize > maxWebsocketMessageSizeBytes) {
-		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'hackLog.txt');
+		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'reqLogRateLimited.txt');
 		ws.close(1009, 'Message Too Big');
 		return false;
 	}
@@ -183,7 +188,7 @@ setInterval(() => {
 		// Check if there are no timestamps
 		if (timestamps.length === 0) {
 			const logMessage = "Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.";
-			logEvents(logMessage, 'errLog.txt', { print: true });
+			logEventsAndPrint(logMessage, 'errLog.txt');
 			delete rateLimitHash[key];
 			continue;
 		}
@@ -200,7 +205,7 @@ setInterval(() => {
 		}
 
 		// Use binary search to find the index to split at
-		const indexToSplitAt = jsutil.binarySearch_findValue(timestamps, currentTimeMillis - minuteInMillis);
+		const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(timestamps, currentTimeMillis - minuteInMillis);
 
 		// Remove all timestamps to the left of the found index
 		timestamps.splice(0, indexToSplitAt);
@@ -231,7 +236,7 @@ function countRecentRequests() {
 setInterval(() => {
 	// Delete recent requests longer than 2 seconds ago
 	const twoSecondsAgo = Date.now() - requestWindowToToggleAttackModeMillis;
-	const indexToSplitAt = jsutil.binarySearch_findValue(recentRequests, twoSecondsAgo);
+	const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(recentRequests, twoSecondsAgo);
 	recentRequests.splice(0, indexToSplitAt + 1);
 
 	if (recentRequests.length > requestCapToToggleAttackMode) {
@@ -247,12 +252,14 @@ setInterval(() => {
 
 function logAttackBegin() {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
-	logEvents(logText, 'hackLog.txt', { print: true });
+	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
+	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
 function logAttackEnd() {
 	const logText = `DDOS attack has ended.`;
-	logEvents(logText, 'hackLog.txt', { print: true });
+	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
+	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
 export {

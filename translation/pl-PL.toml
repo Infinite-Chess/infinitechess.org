@@ -44,11 +44,11 @@ what_is_it_pargaraphs = [
 "Łatwo się domyślić, że istnieje nieskończona liczba możliwości dla otwarć szachowych, z których, wiele, jest w stanie zapewnić szybką przewagę w partii! Finalnie, cel jest then sam, dać mata przeciwnemu królowi. Ten warinat wymaga jednak nowych strategii, zważywszy na to, że plansza nie ma ścian, które mogą pomóc w złapaniu króla w pułapkę. Partie zazwyczaj trwają tyle co w oryginalnych szachach. Promocja pionów, również zachodzi na wierszach 1. oraz 8.",
 ]
 how_to_title = "Jak zagrać?"
-how_to_paragraph = ["Obecna wersja 1.4 jest dostępna na stronie ","Graj","!"]
+how_to_paragraph = ["Obecna wersja 1.8 jest dostępna na stronie ","Graj","!"]
 about_title = "O projekcie"
 about_paragraphs = [
 "Jestem Naviary. Gdy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewiele osób było w stanie zagrać w Nieskończone Szachy, a sam wariant gry nie był popularny.",
-["Moim celem było stworzenie sposobu aby Nieskończone Szachy były łatwo grywalne dla każdego, a także stworzenie społeczności. Spędziłem niezliczone godziny nad tą stroną, aktualizowaniem i tworzeniem gry. Mam wiele innych pomysłów, które będą zajmować sporo mojego czasu. O ile chciałbym, żeby ta gra była darmowa, nic w życiu nie jest za darmo, aby wesprzeć mnie finansowo rozważ dołączenie na mój", "Patreon"]
+["Moim celem było stworzenie sposobu aby Nieskończone Szachy były łatwo grywalne dla każdego, a także stworzenie społeczności. Spędziłem niezliczone godziny nad tą stroną, aktualizowaniem i tworzeniem gry. Mam wiele innych pomysłów, które będą zajmować sporo mojego czasu. O ile chciałbym, żeby ta gra była darmowa, nic w życiu nie jest za darmo, aby wesprzeć mnie finansowo rozważ dołączenie na mój ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Wspierający"
 
@@ -60,7 +60,7 @@ variants_credits = [
 "Core stworzony przez Andreas Tsevas.",
 "Space stworzony przez Andreas Tsevas.",
 "Space Classic stworzony przez Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) stworzony przez Vickalan.",
+"Coaip (Chess on an Infinite Plane) stworzony przez V. Reinhart.",
 "Pawn Horde stworzony przez Inaccessible Cardinal.",
 "Abundance stworzony przez Clicktuck Suskriberz.",
 "Pawndard przez SexyLexi.",
@@ -328,7 +328,6 @@ on = "Włączona"
 off = "Wyłączona"
 icon_rendering_off = "Wyłączono wyświetlanie ikon."
 icon_rendering_on = "Włączono wyświetlanie ikon."
-toggled_debug = "Przełączono tryb debugowania:"
 toggled_edit = "Przełączono tryb edytowania:"
 perspective = "Perspektywa"
 perspective_mode_on_desktop = "Tryb perspektywy dostępny na komputerze!"

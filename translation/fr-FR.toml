@@ -36,11 +36,11 @@ what_is_it_pargaraphs = [
 "Comme vous pouvez l'imaginer, il y a une infinité de positions de départ possibles dont beaucoup que vous pouvez jouer de façon compétitive ! Le but final reste de faire un échec et mat, il est donc nécessaire de développer des nouvelles techniques vu qu'il n'y pas de murs pour coincer le roi ennemi. Normalement, les parties ne durent pas plus longtemps que dans un jeu d'échec classique. Les pions font leur promotions sur les lignes 1 et 8 respectivement !",
 ]
 how_to_title = "Comment Jouer ?"
-how_to_paragraph = ["Le jeu est actuellement en version 1.4 sur la page ","Jouer","!"]
+how_to_paragraph = ["Le jeu est actuellement en version 1.8 sur la page ","Jouer","!"]
 about_title = "À Propos"
 about_paragraphs = [
 "Je m'apelle Naviary. Dès que j'ai découvert Infinite Chess (le concept existait bien avant ce site), J'ai été très intrigué par ce jeu et par les possibilités qu'il débloque ! Jusqu'à aujourd'hui, y jouer était plutôt difficile, les membres de chess.com devaient créer des images du plateau eux même et se les envoyer à chaque coup. À cause de ça, peu de gens connaissent cette variante.",
-["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour du jeu. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu et j'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder ce site gratuit, la vie a un coût et pour aider à me supporter financiérement vous pouvez rejoindre mon", "Patreon"]
+["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour du jeu. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu et j'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder ce site gratuit, la vie a un coût et pour aider à me supporter financiérement vous pouvez rejoindre mon ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Contributeurs Patreons"
 
@@ -52,17 +52,17 @@ variants_credits = [
 "Core crée par Andreas Tsevas.",
 "Space crée crée par Andreas Tsevas.",
 "Space Classic crée par Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) crée par Vickalan.",
+"Coaip (Chess on an Infinite Plane) crée par V. Reinhart.",
 "Pawn Horde crée par Inaccessible Cardinal.",
 "Abundance crée par Clicktuck Suskriberz.",
 "Pawndard crée par SexyLexi.",
 "Classical+ crée par SexyLexi.",
 "Knightline crée par Inaccessible Cardinal.",
 "Knighted Chess crée par cycy98.",
-"crée par Cory Evans and Joel Hamkins.",
+"crée par Cory Evans et Joel Hamkins.",
 "crée par Andreas Tsevas.",
-"crée par Cory Evans and Joel Hamkins.",
-"crée par Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+"crée par Cory Evans et Joel Hamkins.",
+"crée par Cory Evans, Joel Hamkins, et Norman Lewis Perlmutter.",
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures sous la licence"
@@ -295,7 +295,7 @@ cannot_paste_in_public = "Vous ne pouvez pas coller une position dans une partie
 cannot_paste_after_moves = "Vous ne pouvez pas coller une position après que des coups aient été joués !"
 clipboard_denied = "Erreur de permission avec le presse-papier. Ceci pourrait être du à votre navigateur."
 clipboard_invalid = "Le presse-papier ne contient pas de notation ICN valide."
-game_needs_to_specify = "La partie doit spécifier la metadata 'Variant' ou la propriété 'startingPosition'."
+game_needs_to_specify = "La partie doit spécifier la metadata 'Variant' ou la propriété 'position'."
 invalid_wincon_white = "Les Blancs ont une condition de victoire invalide"
 invalid_wincon_black = "Les Noirs ont une condition de victoire invalide"
 pasting_game = "Collage de la position..."
@@ -312,7 +312,6 @@ on = "On"
 off = "Off"
 icon_rendering_off = "L'affichage des icones a été désactivé."
 icon_rendering_on = "L'affichage des icones a été activé."
-toggled_debug = "Le debug mode a été activé:"
 toggled_edit = "Le mode d'édition a été activé:"
 perspective = "Perspective"
 perspective_mode_on_desktop = "Le mode perspective n'est pas disponible sur téléphone !"

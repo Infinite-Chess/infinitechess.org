@@ -1,18 +1,23 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
-// import pluginTypescript from "@typescript-eslint/eslint-plugin";
+import pluginTypescript from "@typescript-eslint/eslint-plugin";
 import parserTypescript from "@typescript-eslint/parser";
 
 export default [
+	{
+		ignores: ["dist"], // Ignore all files in the distribution directory
+	},
 	pluginJs.configs.recommended,
 	{
 		files: ["**/*.js","**/*.ts"], // Apply the following rule overrides to both js and ts files...
 		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??
-		// FOR SOME REASON this doesn't work????????
-		// ignores: ["dist/"], // Ignore all files in the distribution directory
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
-			'no-unused-vars': 'warn', // Unused variables give a warning
+			'no-unused-vars': ['warn', { // Unused variables give a warning
+				argsIgnorePattern: '^_',
+				varsIgnorePattern: '^_',
+				caughtErrorsIgnorePattern: '^_',
+			}],
 			'semi': ['error', 'always'], // Enforces semicolons be present at the end of every line.
 			'semi-spacing': ['error', { // Enforces semicolons have a space after them if they are proceeded by other statements.
 				before: false,
@@ -34,7 +39,7 @@ export default [
 			}],
 			"prefer-const": "error", // "let" variables that are never redeclared must be declared as "const"
 			"no-var": "error", // Disallows declaring variables with "var", as they are function-scoped (not block), so hoisting is very confusing.
-			"max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
+			// "max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
 			"eqeqeq": ["error", "always"], // Disallows "!=" and "==" to remove type coercion bugs. Use "!==" and "===" instead.
 			'dot-notation': 'error', // Forces dot notation `.` instead of bracket notation `[""]` wherever possible
 			'no-empty': 'off',	// Disable the no-empty rule so blocks aren't entirely red just as we create them
@@ -55,14 +60,25 @@ export default [
 				translations: "readonly", // Injected into the html through ejs
 				header: "readonly",
 				htmlscript: "readonly",
+				EventListener: "readonly",
 			}
 		}
 	},
 	{ // TYPESCRIPT SETTINGS THAT OVERWRITE THE ABOVE
 		files: ["**/*.ts"],
+		// Required for us to use the @typescript-eslint/explicit-function-return-type rule below
+		plugins: { "@typescript-eslint": pluginTypescript },
 		rules: {
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off', 
+			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined
+			// "@typescript-eslint/explicit-function-return-type": "error",
+			"@typescript-eslint/explicit-function-return-type": [ // Enforces all functions to declare their return type
+				"error",
+				{
+					"allowExpressions": true // Adds arrow functions as exceptions, as their return types are usually inferred
+				}
+			]
 		},
 	},
 ];

@@ -1,8 +1,9 @@
 import { DEV_BUILD } from './config.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
-import { doesMemberOfUsernameExist } from '../database/memberManager.js';
+import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { giveRole } from '../controllers/roles.js';
+import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return; // Production
@@ -15,19 +16,42 @@ function initDevEnvironment() {
 }
 
 async function createDevelopmentAccounts() {
-	if (!doesMemberOfUsernameExist("owner")) {
+	if (!isUsernameTaken("owner")) {
 		const user_id = await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true });
 		giveRole(user_id, "owner");
 		giveRole(user_id, "admin");
+
+		// Give Owner checkmate progression for debugging purposes
+		// Bronze
+		// const checkmates_beaten = Object.values(validcheckmates.validCheckmates.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.validCheckmates.medium).toString();
+		// Silver
+		// const checkmates_beaten = Object.values(validcheckmates.validCheckmates.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.validCheckmates.medium).toString()
+		// 	+ "," + Object.values(validcheckmates.validCheckmates.hard).toString();
+		// Gold
+		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().join(',');
+		updateMemberColumns(user_id, { checkmates_beaten });
 	}
-	if (!doesMemberOfUsernameExist("patron")) {
+	if (!isUsernameTaken("admin")) {
+		const user_id = await generateAccount({ username: "Admin", email: "email5", password: "1", autoVerify: true });
+		giveRole(user_id, "admin");
+	}
+	if (!isUsernameTaken("patron")) {
 		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
 		giveRole(user_id, "patron");
 	}
-	if (!doesMemberOfUsernameExist("member")) {
-		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
+	if (!isUsernameTaken("member")) {
+		await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
-	// generateAccount({ username: "Member23", email: "email@teste3mail.com", password: "1", autoVerify: false });
+
+	// for (let i = 0; i < 230; i++) {
+	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
+	// 		const user_id = (await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true })).user_id;
+	// 		addUserToLeaderboard(user_id, Leaderboards.INFINITY);
+	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1800 - 10 * i, 100 + i);
+	// 	}
+	// }
 }
 
 

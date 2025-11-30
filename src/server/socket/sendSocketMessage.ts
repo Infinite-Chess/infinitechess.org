@@ -8,14 +8,12 @@ import { WebSocket } from "ws";
 
 import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis } from "./echoTracker.js";
 import socketUtility from "./socketUtility.js";
+import uuid from "../../shared/util/uuid.js";
+import jsutil from "../../shared/util/jsutil.js";
 // @ts-ignore
-import uuid from "../../client/scripts/esm/util/uuid.js";
+import { printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore
-import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
-// @ts-ignore
-import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
-// @ts-ignore
-import { ensureJSONString } from "../utility/JSONUtils.js";
+import { logEventsAndPrint, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
 
@@ -29,9 +27,9 @@ import { getTranslation } from "../utility/translate.js";
  */
 interface WebsocketOutMessage {
 	/** The subscription to forward the message to (e.g., "general", "invites", "game"). */
-	sub: string;
+	sub?: string;
 	/** The action to perform with the message's data (e.g., "sub", "unsub", "joingame", "opponentmove"). */
-	action: string;
+	action?: string;
 	/** The contents of the message. */
 	value: any;
 	/** The ID of the message to echo, indicating the connection is still active.
@@ -65,7 +63,7 @@ const timeOfInactivityToRenewConnection = 10000;
  * @param [options] - Additional options for sending the message.
  * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+function sendSocketMessage(ws: CustomWebSocket, sub: string | undefined, action: string | undefined, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}): void { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(sendSocketMessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
@@ -73,8 +71,8 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 	}
 
 	if (ws.readyState === WebSocket.CLOSED) {
-		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errText, 'errLog.txt', { print: true });
+		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		logEventsAndPrint(errText, 'errLog.txt');
 		return;
 	}
     
@@ -97,7 +95,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 		// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
 		const timeout = setTimeout(() => {
 			ws.close(1014, "No echo heard");
-			deleteEchoTimerForMessageID(payload.id);
+			deleteEchoTimerForMessageID(payload.id!);
 		}, timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
 		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
@@ -114,7 +112,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
  * @param [options.replyto] - The ID of the incoming WebSocket message to which this message is replying.
  * @param [options.customNumber] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
-function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, customNumber }: { replyto?: number, customNumber?: number } = {}) {
+function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, customNumber }: { replyto?: number, customNumber?: number } = {}): void {
 	const i18next = ws.metadata.cookies.i18next;
 	let text = getTranslation(translationCode, i18next);
 	// Special case: number of minutes to be displayed upon server restart
@@ -131,16 +129,8 @@ function sendNotify(ws: CustomWebSocket, translationCode: string, { replyto, cus
  * @param ws - The socket
  * @param translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
-function sendNotifyError(ws: CustomWebSocket, translationCode: string) {
+function sendNotifyError(ws: CustomWebSocket, translationCode: string): void {
 	sendSocketMessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
-}
-
-/**
- * Tell them to hard-refresh the page, there's a new update.
- */
-function informSocketToHardRefresh(ws: CustomWebSocket) {
-	console.log(`Informing socket to hard refresh! ${socketUtility.stringifySocketMetadata(ws)}`);
-	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
 
@@ -151,15 +141,15 @@ function informSocketToHardRefresh(ws: CustomWebSocket) {
  * Reschedule the timer to send an empty message to the client
  * to verify they are still connected and responding.
  */
-function rescheduleRenewConnection(ws: CustomWebSocket) {
+function rescheduleRenewConnection(ws: CustomWebSocket): void {
 	cancelRenewConnectionTimer(ws);
-	// Only reset the timer if they have atleast one subscription!
+	// Only reset the timer if they have at least one subscription!
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
 	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
 }
 
-function cancelRenewConnectionTimer(ws: CustomWebSocket) {
+function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
 	clearTimeout(ws.metadata.renewConnectionTimeoutID);
 	ws.metadata.renewConnectionTimeoutID = undefined;
 }
@@ -168,7 +158,7 @@ function cancelRenewConnectionTimer(ws: CustomWebSocket) {
  * Send an empty message to the client, expecting an echo
  * within five seconds to make sure they are still connected.
  */
-function renewConnection(ws: CustomWebSocket) {
+function renewConnection(ws: CustomWebSocket): void {
 	sendSocketMessage(ws, 'general', 'renewconnection');
 }
 

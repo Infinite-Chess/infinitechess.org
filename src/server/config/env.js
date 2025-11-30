@@ -10,9 +10,12 @@ ensureEnvFile();
 // This needs to be as early as possible
 dotenv.config(); 
 
-/** The environment variable. @type {'development'|'production'} */
+/**
+ * The environment variable. @type {'development'|'production'|'test'}
+ * 'test' only appears during Vitest unit testing.
+ */
 const NODE_ENV = process.env.NODE_ENV;
-if (NODE_ENV !== 'development' && NODE_ENV !== 'production') throw new Error(`NODE_ENV environment variable must be either "development" or "production", received "${NODE_ENV}".`);
+if (NODE_ENV !== 'development' && NODE_ENV !== 'production' && NODE_ENV !== 'test') throw new Error(`NODE_ENV environment variable must be either "development", "production", or "test", received "${NODE_ENV}".`);
 
 
 
@@ -32,12 +35,14 @@ REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
 CERT_PATH=
 EMAIL_USERNAME=
 EMAIL_APP_PASSWORD=
+EMAIL_SEND_AS=
 HTTPPORT=80
 HTTPSPORT=443
 HTTPPORT_LOCAL=3000
 HTTPSPORT_LOCAL=3443
 GITHUB_API_KEY=
-GITHUB_REPO=
+GITHUB_REPO=Infinite-Chess/infinitechess.org
+APP_BASE_URL=https://www.infinitechess.org
     `;
 	fs.writeFileSync(envPath, content.trim());
 	console.log('Generated .env file');

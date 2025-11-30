@@ -1,4 +1,11 @@
 
+/**
+ * This script contains various server configuration settings.
+ * 
+ * IT MUST remain javascript since build.js imports it, and that must remain javascript
+ * as it's what compiles all typescript files into javascript.
+ */
+
 import { NODE_ENV } from './env.js';
 
 
@@ -12,13 +19,6 @@ import { NODE_ENV } from './env.js';
  */
 const DEV_BUILD = NODE_ENV === 'development';
 
-/** 
- * Whether we bundle and minify files to send to the client
- * Only disable for debugging and development
- */
-const BUNDLE_FILES = !DEV_BUILD || false; // Change false to true to always enable.
-if (!DEV_BUILD && !BUNDLE_FILES) throw new Error("BUNDLE_FILES must be true in production!!");
-
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
 const ARE_RATE_LIMITING = !DEV_BUILD || false; // Set to false to temporarily get around it, during development.
@@ -29,11 +29,9 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) throw new Error("ARE_RATE_LIMITING must be
  * I recommend 2 seconds of latency for testing slow networks.
  */
 const simulatedWebsocketLatencyMillis = 0;
+// const simulatedWebsocketLatencyMillis = 1000; // 1 Second
 // const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
-
-/** The domain name of the production website. */
-const HOST_NAME = 'www.infinitechess.org';
 
 /**
  * The latest version of the game.
@@ -41,7 +39,7 @@ const HOST_NAME = 'www.infinitechess.org';
  * 
  * THIS SHOULD ALWAYS MATCH src/client/scripts/game/config.GAME_VERSION
  */
-const GAME_VERSION = "1.5";
+const GAME_VERSION = "1.8";
 
 /** Whether we are currently using a whitelist for connections from other origins.
  * If we are getting unwanted origins, this can be enabled. */
@@ -52,21 +50,10 @@ const allowedOrigins = [ // Allowed sites
     'https://www.google.com'
 ];
 
-// Session tokens expiry times ------------------------------------------------------
-
-const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
-const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
-const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-
-const intervalForRefreshTokenCleanupMillis = 1000 * 60 * 60 * 24; // 1 day
-// const intervalForRefreshTokenCleanupMillis = 1000 * 30; // 30s
-
 /**
  * The maximum number of logging sessions a user can have at
  * one time before creating new sessions will terminate old sessions.
- * */
+ */
 const sessionCap = 10;
 
 
@@ -94,17 +81,11 @@ const printIncomingAndOutgoingMessages = false;
 
 export {
 	DEV_BUILD,
-	BUNDLE_FILES,
 	ARE_RATE_LIMITING,
 	simulatedWebsocketLatencyMillis,
-	HOST_NAME,
 	GAME_VERSION,
 	useOriginWhitelist,
 	allowedOrigins,
-	refreshTokenExpiryMillis,
-	minTimeToWaitToRenewRefreshTokensMillis,
-	accessTokenExpiryMillis,
-	intervalForRefreshTokenCleanupMillis,
 	sessionCap,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,

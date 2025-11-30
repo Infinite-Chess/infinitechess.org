@@ -54,6 +54,12 @@
             <symbol id="svg-selection" fill="none" viewBox="0 0 24 24">
               <path d="M7.92098 2.29951C6.93571 1.5331 5.5 2.23523 5.5 3.48349V20.4923C5.5 21.9145 7.2945 22.5382 8.17661 21.4226L12.3676 16.1224C12.6806 15.7267 13.1574 15.4958 13.6619 15.4958H20.5143C21.9425 15.4958 22.5626 13.6887 21.4353 12.8119L7.92098 2.29951Z" stroke="#555" stroke-linecap="round" stroke-width="3"/>
             </symbol>
+        </svg>
+        <!-- Sound svg -->
+        <svg>
+            <symbol id="svg-sound" fill="none" viewBox="0 0 240 240">
+                <g fill="#555" stroke="none"><path d="M183.6 193.6a10 10 0 01-7-2.9 10 10 0 01 0-14.1 80 80 0 00 0-113.2 10 10 0 01 14.1-14.1 100 100 0 01 0 141.4 10 10 0 01-7.1 2.9Z"/><path d="M155.4 165.4a10 10 0 01-7.1-3 10 10 0 01 0-14.1 40 40 0 00 0-56.6 10 10 0 01 14-14.1 60 60 0 01 0 84.8 10 10 0 01-7 3ZM113.8 40.8a10 10 0 00-10.9 2.1L65.7 80h-26a20 20 0 00-20 20v40a20 20 0 00 20 20h25.9l37 37.1A10 10 0 00 110 200a8.4 8.4 0 00 3.8-.8A10 10 0 00 120 190V50a10 10 0 00-6.2-9.2Z"/></g>
+            </symbol>
         </svg>          
         <!-- Undo arrow for resetting to default -->
         <svg>
@@ -62,7 +68,7 @@
             </symbol>
         </svg>
     </div>
-    <a class="home compact-1" href="/">
+    <a class="home compact-1" href="/?lng=<%= language %>">
         <!-- <img class="headerlogo" src="img/logo/light-theme.png"/> -->
         <picture class="headerlogo" >
             <source srcset="/img/logo/light-theme.avif" type="image/avif" />
@@ -72,21 +78,25 @@
         <p><%=t('header.home')%></p>
     </a>
     <nav class="compact-3">
-        <a href="/play">
+        <a href="/play?lng=<%= language %>">
             <span><%=t('header.play')%></span>
             <svg class="svg-pawn"><use href="#svg-pawn"></use></svg>
         </a>
-        <a href="/news">
+        <a href="/news?lng=<%= language %>">
             <span><%=t('header.news')%></span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" id="svg-news" viewBox="0 0 240 240"><g fill="#555"><path d="M110 50a10 10 0 10 0 20h70a10 10 0 10 0-20h-70Zm-10 50c0-6 4-10 10-10h20a10 10 0 11 0 20h-20a10 10 0 01-10-10Zm10 30a10 10 0 10 0 20h20a10 10 0 00 0-20h-20Zm-10 50c0-6 4-10 10-10h20a10 10 0 11 0 20h-20a10 10 0 01-10-10Zm60-90a10 10 0 10 0 20h20a10 10 0 00 0-20h-20Zm-10 50c0-6 4-10 10-10h20a10 10 0 11 0 20h-20a10 10 0 01-10-10Zm10 30a10 10 0 10 0 20h20a10 10 0 00 0-20h-20Z"/><path d="M45 230H190a40 40 0 00 23-6c6-4 10-10 12-15A47 47 0 00 230 190V40a30 30 0 00-30-30H90a30 30 0 00-30 30v90H40a30 30 0 00-30 30v30c0 18 8 30 17 35a37 37 0 00 18 5ZM210 40c0-6-4-10-10-10H90a10 10 0 00-10 10v150c0 8-2 15-4 20H190c6 0 10-1 12-3l5-6c2-4 3-7 3-11V40ZM40 150h20v40c0 12-5 16-8 18-4 3-10 2-14 0-3-2-8-6-8-18v-30c0-6 4-10 10-10Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>
         </a>
-        <a id="login-link" href="/login">
+        <a href="/leaderboard?lng=<%= language %>">
+            <span><%=t('header.leaderboard')%></span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" id="svg-leaderboard" viewBox="0 0 24 24"><path d="M12 11 8 3H4l4.5 9.46M12 11l4-8h4l-4.5 9.46M12 11c1.34 0 2.58.56 3.5 1.46M12 11c-1.34 0-2.58.56-3.5 1.46m7 0A4.99 4.99 0 1 1 7 16a5 5 0 0 1 1.5-3.54" stroke="#555" stroke-linejoin="round" stroke-width="2"/></svg>
+        </a>
+        <a id="login-link" href="/login?lng=<%= language %>">
             <span id="login" class="login"><%=t('header.login')%></span>
             <span id="profile" class="hidden"><%=t('header.profile')%></span>
             <svg id="svg-login" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="M150 165V190a20 20 0 01-20 20H60a20 20 0 01-20-20V50c0-11 9-20 20-20h70a20 20 0 01 20 20v30m50 40H90m0 0 25 25M90 120l25-25" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
             <svg id="svg-profile" class="hidden" xmlns="http://www.w3.org/2000/svg" fill="#000" stroke="#000" version="1.1" viewBox="0 0 2000 2000"><path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="#555" fill-rule="evenodd" stroke="none"/></svg>
         </a>
-        <a id="createaccount-link" href="/createaccount">
+        <a id="createaccount-link" href="/createaccount?lng=<%= language %>">
             <span id="createaccount"><%=t('header.createaccount')%></span>
             <span id="logout" class="hidden"><%=t('header.logout')%></span>
             <svg id="svg-createaccount" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" fill="#555" stroke="#555" version="1.1" viewBox="0 0 3100 3100"><path d="m3006 1597-453-453a150 150 0 00-212 0l-91 90V150a150 150 0 00-150-150H200A150 150 0 00 50 150v2400a150 150 0 00 150 150h850v250a150 150 0 00 150 150h453c40 0 78-16 106-44L3006 1810a150 150 0 00 0-212zM350 300h1600v1235L1094 2390l-9 10H350V300zm1241 2500H1350v-241l1097-1097 240 241L1592 2800"/></svg>
@@ -99,27 +109,32 @@
         <div class="settings-dropdown dropdown visibility-hidden">
             <div id="language-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
-                <span class="text"><%=t('header.settings.language')%></span>
+                <p class="text"><%=t('header.settings.language')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="board-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <span class="text"><%=t('header.settings.board')%></span>
+                <p class="text"><%=t('header.settings.appearance')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                <span class="text"><%=t('header.settings.legalmoves')%></span>
+                <p class="text"><%=t('header.settings.legalmoves')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="selection-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-selection"><use href="#svg-selection"></use></svg>
-                <span class="text"><%=t('header.settings.selection')%></span>
+                <p class="text"><%=t('header.settings.selection')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
-                <span class="text"><%=t('header.settings.perspective')%></span>
+                <p class="text"><%=t('header.settings.perspective')%></p>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="sound-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-sound"><use href="#svg-sound"></use></svg>
+                <p class="text"><%=t('header.settings.sound')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div class="ping-meter hidden">
@@ -138,77 +153,115 @@
                 <svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
             </div>
         </div>
+        <!-- Language -->
         <div class="language-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
-                <span class="text"><%=t('header.settings.language')%></span>
+                <p class="text"><%=t('header.settings.language')%></p>
             </div>
-            <% for(let i = 0; i < languages.length; i++) { %>
-                <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
-                    <div class="language-names">
-                        <p class="name"><%= languages[i].name %></p>
-                        <p class="englishName"><%= languages[i].englishName %></p>
+            <div class="dropdown-scrollable">
+                <% for(let i = 0; i < languages.length; i++) { %>
+                    <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
+                        <div class="language-names">
+                            <p class="name"><%= languages[i].name %></p>
+                            <p class="englishName"><%= languages[i].englishName %></p>
+                        </div>
+                        <%- languages[i].code === language ? '<svg class="checkmark"><use href="#checkmark"></use></svg>' : '' %>
                     </div>
-                    <%- languages[i].code === language ? '<svg class="checkmark"><use href="#checkmark"></use></svg>' : '' %>
-                </div>
-            <% } %>
+                <% } %>
+            </div>
         </div>
+        <!-- Board Theme -->
         <div class="board-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <span class="text"><%=t('header.settings.board')%></span>
+                <p class="text"><%=t('header.settings.appearance')%></p>
             </div>
-            <div class="theme-list"></div>
-        </div>
-        <div class="legalmove-dropdown dropdown visibility-hidden">
-            <div class="dropdown-title">
-                <span class="arrow-head-left"></span>
-                <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                <span class="text"><%=t('header.settings.legalmoves')%></span>
-            </div>
-            <div class="legalmove-options">
-                <div class="legalmove-option squares">
-                    <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
-                    <span class="text"><%=t('header.settings.legalmoves-squares')%></span>
-                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
-                </div>
-                <div class="legalmove-option dots">
-                    <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                    <span class="text"><%=t('header.settings.legalmoves-dots')%></span>
-                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
-                </div>
-            </div>
-        </div>
-        <div class="selection-dropdown dropdown visibility-hidden">
-            <div class="dropdown-title">
-                <span class="arrow-head-left"></span>
-                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
-                <span class="text"><%=t('header.settings.selection')%></span>
-            </div>
-            <div class="selection-options">
-                <label class="selection-option drag">
-                    <span class="text"><%=t('header.settings.selection-drag')%></span>
+            <div class="dropdown-scrollable">
+                <p class="theme-title"><%=t('header.settings.appearance-theme')%></p>
+                <div class="theme-list"></div>
+                <!-- Board Boolean Options -->
+                <label class="boolean-option starfield">
+                    <p class="text"><%=t('header.settings.appearance-starfield')%></p>
                     <div class="switch">
                         <input type="checkbox">
                         <span></span>
                     </div>
                 </label>
-                <label class="selection-option premove">
-                    <span class="text"><%=t('header.settings.selection-premove')%></span>
+                <label class="boolean-option advanced-effects">
+                    <p class="text"><%=t('header.settings.appearance-advanced-effects')%></p>
                     <div class="switch">
-                        <input type="checkbox" disabled>
+                        <input type="checkbox">
                         <span></span>
                     </div>
                 </label>
             </div>
         </div>
+        <!-- Legal Move Shape -->
+        <div class="legalmove-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
+                <p class="text"><%=t('header.settings.legalmoves')%></p>
+            </div>
+            <div class="legalmove-options">
+                <div class="legalmove-option squares">
+                    <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
+                    <p class="text"><%=t('header.settings.legalmoves-squares')%></p>
+                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
+                </div>
+                <div class="legalmove-option dots">
+                    <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
+                    <p class="text"><%=t('header.settings.legalmoves-dots')%></p>
+                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
+                </div>
+            </div>
+        </div>
+        <!-- Selection Presets -->
+        <div class="selection-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <p class="text"><%=t('header.settings.selection')%></p>
+            </div>
+            <!-- Selection Boolean Options -->
+            <label class="boolean-option drag">
+                <p class="text"><%=t('header.settings.selection-drag')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option premove">
+                <p class="text"><%=t('header.settings.selection-premove')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option animations">
+                <p class="text"><%=t('header.settings.selection-animations')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option lingering-annotations">
+                <p class="text"><%=t('header.settings.selection-lingering_annotations')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+        </div>
+        <!-- Perspective -->
         <div class="perspective-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
-                <span class="text"><%=t('header.settings.perspective')%></span>
+                <p class="text"><%=t('header.settings.perspective')%></p>
             </div>
             <div class="perspective-options">
                 <div class="perspective-option mouse-sensitivity">   
@@ -237,6 +290,32 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <!-- Sound -->
+        <div class="sound-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-sound"><use href="#svg-sound"></use></svg>
+                <p class="text"><%=t('header.settings.sound')%></p>
+            </div>
+            <div class="sound-options">
+                <div class="sound-option master-volume">
+                    <div class="sound-option-title">
+                        <p><%=t('header.settings.sound-master-volume')%></p>
+                    </div>
+                    <div class="slider-container">
+                        <input class="slider" type="range" min="0" max="100" value="100">
+                        <span class="value"></span>
+                    </div>
+                </div>
+				<label class="boolean-option ambience">
+					<p class="text"><%=t('header.settings.sound-ambience')%></p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
             </div>
         </div>
     </div>

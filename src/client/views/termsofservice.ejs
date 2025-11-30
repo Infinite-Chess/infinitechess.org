@@ -8,8 +8,8 @@
         <link rel='stylesheet' href='/css/header.css'>
         <link rel='stylesheet' href='/css/termsofservice.css'>
         <link rel='stylesheet' href='/css/footer.css'>
-        <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
-        <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <link rel="icon" href="/img/favicon/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
@@ -26,12 +26,13 @@
                 <p><%=t('terms.parents_paragraphs.1')%></p>
 
                 <h2><%=t('terms.fair_play_header')%></h2>
-                <p><%=t('terms.fair_play_paragraph1.0')%><a href='mailto:infinitechess.org@gmail.com'><%=t('terms.fair_play_paragraph1.1')%></a></p>
+                <p><%=t('terms.fair_play_paragraph1.0')%></p>
                 <p><%=t('terms.fair_play_paragraph2')%></p>
                 <ul>
                     <li><p><%=t('terms.fair_play_rules.0')%></p></li>
                     <li><p><%=t('terms.fair_play_rules.1')%></p></li>
                     <li><p><%=t('terms.fair_play_rules.2')%></p></li>
+                    <li><p><%=t('terms.fair_play_rules.3')%></p></li>
                 </ul>
 
                 <h2><%=t('terms.cleanliness_header')%></h2>
@@ -57,9 +58,8 @@
                 <p><%=t('terms.conclusion_paragraphs.2.0')%> <a href='https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md' target='_blank'><%=t('terms.conclusion_paragraphs.2.1')%></a><%=t('terms.conclusion_paragraphs.2.2')%></p>
                 <p><%=t('terms.conclusion_paragraphs.3')%></p>
                 <p><%=t('terms.conclusion_paragraphs.4')%></p>
-                <p><%=t('terms.conclusion_paragraphs.5.0')%> <a href='mailto:infinitechess.org@gmail.com'><%=t('terms.conclusion_paragraphs.5.1')%></a></p>
+                <p><%=t('terms.conclusion_paragraphs.5.0')%> <a href='mailto:support@infinitechess.org'><%=t('terms.conclusion_paragraphs.5.1')%></a></p>
                 
-                <p class="grey"><%=t('terms.update')%></p>
                 <h3><%=t('terms.thanks')%></h3>
             </div>
         </main>
