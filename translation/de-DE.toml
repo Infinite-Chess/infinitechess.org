@@ -72,8 +72,8 @@ patreon_title = "Patreon Unterstützer"
 github_title = "Github Mitwirkende"
 
 [index.javascript]
-contribution_count_singular = ["", " Beitrag"]
-contribution_count_plural = ["", " Beiträge"] # A number is inserted between these 2 strings.
+contribution_count_singular = ["", " Beitrag"] # A number is inserted between these 2 strings.
+contribution_count_plural = ["", " Beiträge"]
 
 [credits]
 title = "Credits"
