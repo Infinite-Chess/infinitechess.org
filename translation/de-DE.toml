@@ -156,6 +156,7 @@ js-username_specs = "Der Benutzername muss mindestens 3 Zeichen lang sein und da
 js-username_tooshort = "Der Benutzername muss mindestens 3 Zeichen lang sein"
 js-username_wrongenc = "Der Benutzername darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
 js-email_invalid = "Dies ist keine gültige E-Mail"
+js-email_too_long = "Die E-Mail ist zu lang"
 js-email_inuse = "Diese E-Mail ist bereits in Verwendung"
 
 [reset-password.javascript]

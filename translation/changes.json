@@ -1,4 +1,8 @@
 {
+	"77": {
+		"note": "Added js-email_too_long on line 159.",
+		"changes": []
+	},
 	"76": {
 		"note": "Added contribution_count_singular and renamed contribution_count to contribution_count_plural (lines 75-76).",
 		"changes": []
