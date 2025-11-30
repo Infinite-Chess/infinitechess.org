@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "75"
+version = "76"
 maintainer = "Naviary"
 
 [header]
@@ -72,7 +72,8 @@ patreon_title = "Patreon Supporters"
 github_title = "Github Contributors"
 
 [index.javascript]
-contribution_count = ["", " contributions"] # A number is inserted between these 2 strings.
+contribution_count_singular = ["", " contribution"] # A number is inserted between these 2 strings.
+contribution_count_plural = ["", " contributions"]
 
 [credits]
 title = "Credits"
