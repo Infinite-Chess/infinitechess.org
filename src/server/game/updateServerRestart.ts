@@ -154,7 +154,7 @@ async function initServerRestart(newAllowInvitesValue: AllowInvites): Promise<vo
 		);
 	} catch (e) {
 		const errMsg = 
-		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created. `
+		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after at least 5 seconds when the next invite created. `
 		+ (e instanceof Error ? e.message : String(e));
 		logEventsAndPrint(errMsg, 'errLog.txt');
 	}

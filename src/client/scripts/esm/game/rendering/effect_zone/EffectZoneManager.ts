@@ -153,9 +153,9 @@ export class EffectZoneManager {
 		this.currentZone = this.zones['The Beginning'];
 
 		// Set up a listener for the ambience-enabled preference changing.
-		document.addEventListener('ambience-toggle', (event: CustomEvent) => {
+		document.addEventListener('ambience-toggle', (event) => {
 			// Turn on/off the ambience of the current zone (and transition target zone, if applicable).
-			const enabled = event.detail;
+			const enabled: boolean = event.detail;
 			if (!enabled) {
 				// Fade out any currently playing ambience.
 				this.currentZone.fadeOutAmbience(this.transitionDuration);

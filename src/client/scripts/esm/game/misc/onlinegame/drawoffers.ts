@@ -53,7 +53,7 @@ let isAcceptingDraw: boolean = false;
 function isOfferingDrawLegal(): boolean {
 	const gamefile = gameslot.getGamefile()!;
 	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
-	if (!moveutil.isGameResignable(gamefile.basegame)) return false; // Not atleast 2+ moves
+	if (!moveutil.isGameResignable(gamefile.basegame)) return false; // Not at least 2+ moves
 	if (onlinegame.hasServerConcludedGame()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND

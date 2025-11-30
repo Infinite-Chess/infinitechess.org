@@ -144,7 +144,7 @@ function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOr
 function getPlyCount(moves: Move[]): number { return moves.length; }
 
 /**
- * Tests if the piece on the provided coordinates at moved atleast once in the gamefile.
+ * Tests if the piece on the provided coordinates at moved at least once in the gamefile.
  * @param boardsim
  * @param coords - The current coordinates of the piece.
  */
@@ -203,7 +203,7 @@ function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], t
 }
 
 /**
- * Returns whether the game is resignable (atleast 2 moves have been played).
+ * Returns whether the game is resignable (at least 2 moves have been played).
  * If not, then the game is considered abortable.
  */
 function isGameResignable(game: Game | Board): boolean { return game.moves.length > 1; }

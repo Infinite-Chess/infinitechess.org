@@ -918,7 +918,7 @@ function executeArrowShifts(): void {
 				bottom: bd.subtract(boundingBoxFloat!.bottom, ONE),
 				top: bd.add(boundingBoxFloat!.top, ONE),
 			};
-			// True if its square is atleast PARTIALLY visible on screen.
+			// True if its square is at least PARTIALLY visible on screen.
 			// We need no arrows for the animated piece, no matter the vector!
 			if (bounds.boxContainsSquareBD(expandedFloatingBox!, shift.end)) return;
 

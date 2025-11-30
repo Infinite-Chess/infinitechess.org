@@ -151,7 +151,7 @@ function updateTimeForLongTasks() {
 	// How much time should we dedicate to long tasks?
 
 	// What I WANT to do, is try to obtain 60fps (or our refresh rate),
-	// but make sure we're atleast spending as much time on long tasks as we are rendering!
+	// but make sure we're at least spending as much time on long tasks as we are rendering!
 
 	// How much time do we have left this frame after rendering until the next animation frame?
 	timeForLongTasks = idealTimePerFrame - lastAnimationLength - damping;

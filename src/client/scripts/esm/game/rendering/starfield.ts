@@ -133,7 +133,7 @@ let desiredNumStars: number = 0;
 
 
 /** Event listener for when we toggle Starfield in the settings dropdown. */
-document.addEventListener('starfield-toggle', (e: CustomEvent) => {
+document.addEventListener('starfield-toggle', (e) => {
 	if (!gameloader.areInAGame()) return; // Not in a game => Starfield should not be initiated or terminated.
 	const enabled: boolean = e.detail;
 	if (enabled) init();

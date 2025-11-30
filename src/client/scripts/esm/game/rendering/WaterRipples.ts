@@ -66,8 +66,8 @@ function init(programManager: ProgramManager, width: number, height: number): vo
 
 	// The post processing effect relies on the dimensions of the canvas.
 	// Init listener for screen resize
-	document.addEventListener("canvas_resize", (event: CustomEvent) => {
-		const { width, height } = event.detail as { width: number, height: number };
+	document.addEventListener("canvas_resize", (event) => {
+		const { width, height } = event.detail;
 		waterRipplePass.setResolution(width, height);
 		updateRippleLifetime(width, height);
 	});

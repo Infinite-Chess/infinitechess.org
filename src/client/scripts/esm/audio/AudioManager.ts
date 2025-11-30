@@ -94,7 +94,7 @@ downsamplerWetGain.gain.value = 0; // Default to 0% wet signal
 const masterGain = audioContext.createGain();
 masterGain.gain.value = preferences.getMasterVolume(); // Initialize to saved preference
 // Listen for changes to the master volume preference
-document.addEventListener('master-volume-change', (event: CustomEvent) => {
+document.addEventListener('master-volume-change', (event) => {
 	const newVolume = event.detail;
 	masterGain.gain.setValueAtTime(newVolume, audioContext.currentTime);
 });

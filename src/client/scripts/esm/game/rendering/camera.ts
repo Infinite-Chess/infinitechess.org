@@ -53,7 +53,7 @@ let fieldOfView: number;
 // The closer near & far limits are in terms of orders of magnitude, the more accurate
 // and less often things appear out of order. Should be within 5-6 magnitude orders.
 const zNear: number = 1;
-const zFar: number = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.distToRenderBoard * sqrt(2)
+const zFar: number = 1500 * Math.SQRT2; // Default 1500. Has to at least be  perspective.distToRenderBoard * sqrt(2)
 
 /** The canvas document element that WebGL renders the game onto. */
 const canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;

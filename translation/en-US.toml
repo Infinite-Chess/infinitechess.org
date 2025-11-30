@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "75"
+version = "76"
 maintainer = "Naviary"
 
 [header]
@@ -72,7 +72,8 @@ patreon_title = "Patreon Supporters"
 github_title = "Github Contributors"
 
 [index.javascript]
-contribution_count = ["", " contributions"] # A number is inserted between these 2 strings.
+contribution_count_singular = ["", " contribution"] # A number is inserted between these 2 strings.
+contribution_count_plural = ["", " contributions"]
 
 [credits]
 title = "Credits"
@@ -151,7 +152,7 @@ create_button = "Create Account"
 agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
-js-username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
+js-username_specs = "Username must be at least 3 characters long, and only contain letters A-Z and numbers 0-9"
 js-username_tooshort = "Username must be at least 3 characters long"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"

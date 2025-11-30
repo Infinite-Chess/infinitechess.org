@@ -143,7 +143,7 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: string): void {
  */
 function rescheduleRenewConnection(ws: CustomWebSocket): void {
 	cancelRenewConnectionTimer(ws);
-	// Only reset the timer if they have atleast one subscription!
+	// Only reset the timer if they have at least one subscription!
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
 	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);

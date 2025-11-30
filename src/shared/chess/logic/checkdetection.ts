@@ -93,7 +93,7 @@ function isSquareBeingAttacked(gamefile: FullGame, coord: Coords, colorOfFriendl
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
  * @param [attackers] If provided, any opponent jumper attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
- * @returns true if the square is being attacked by atleast one opponent jumper with an individual move (discounting special movers).
+ * @returns true if the square is being attacked by at least one opponent jumper with an individual move (discounting special movers).
  */
 function doesVicinityAttackSquare(boardsim: Board, square: Coords, friendlyColor: Player, attackers?: Attacker[]): boolean {
 	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.vicinity)) {
@@ -125,7 +125,7 @@ function doesVicinityAttackSquare(boardsim: Board, square: Coords, friendlyColor
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
  * @param [attackers] If provided, any opponent jumper attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
- * @returns true if the square is being attacked by atleast one piece via a special individual move.
+ * @returns true if the square is being attacked by at least one piece via a special individual move.
  */
 function doesSpecialAttackSquare(gamefile: FullGame, square: CoordsSpecial, friendlyColor: Player, attackers?: Attacker[]): boolean {
 	const { boardsim } = gamefile;
@@ -180,7 +180,7 @@ function doesSpecialAttackSquare(gamefile: FullGame, square: CoordsSpecial, frie
  * @param square - The square to check if any opponent sliders are attacking.
  * @param friendlyColor - The friendly player color
  * @param [attackers] If provided, any opponent slider attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one slider attacker is discovered.
- * @returns true if the square is being attacked by atleast one opponent slider.
+ * @returns true if the square is being attacked by at least one opponent slider.
  */
 function doesSlideAttackSquare(boardsim: Board, square: Coords, friendlyColor: Player, attackers?: Attacker[]): boolean {
 

@@ -95,14 +95,14 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 
 	/**
 	 * Returns whether the piece at the given coordinates is castleable:
-	 * * Its distance from the king is atleast 3 squares
+	 * * Its distance from the king is at least 3 squares
 	 * * It has its special rights
 	 * * It is a friendly piece
 	 * * It is not a pawn or jumping royal
 	 */
 	function isPieceCastleable(pieceCoords: Coords): boolean {
 
-		// Distance should be atleast 3 squares away.
+		// Distance should be at least 3 squares away.
 		const dist = bimath.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
 		if (dist < 3) return false; // Piece is too close, can't castle with it
 

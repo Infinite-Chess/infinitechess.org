@@ -34,18 +34,24 @@ function copyToClipboard(text: string): void {
 
 /**
  * Returns true if the current device has a mouse pointer.
- * Equivalent to whether the current device is a desktop device.
  */
 function isMouseSupported(): boolean {
-	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
-	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
-	return window.matchMedia("(pointer: fine)").matches;
+	// Check if ANY connected input is capable of fine pointing (Mouse/Trackpad)
+	const hasFinePointer = window.matchMedia("(any-pointer: fine)").matches;
+
+	// Safety net in case the driver reports the mouse weirdly:
+	// Check if ANY connected input can hover
+	const hasHover = window.matchMedia("(any-hover: hover)").matches;
+
+	// If either is true, the user has hardware capable of acting like a mouse.
+	return hasFinePointer || hasHover;
 }
 
 /**
  * Returns true if the current device supports touch events.
  */
 function isTouchSupported(): boolean {
+	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
 	return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
 }
 

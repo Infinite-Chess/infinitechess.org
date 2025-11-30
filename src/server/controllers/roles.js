@@ -55,7 +55,7 @@ function giveRole(userId, role) {
 // removeAllRoles(11784992);
 
 /**
- * Returns true if roles1 contains atleast one role that is higher in priority than the highest role in roles2.
+ * Returns true if roles1 contains at least one role that is higher in priority than the highest role in roles2.
  * 
  * If so, the user with roles1 would be able to perform destructive commands on user with roles2.
  * @param {string[] | null} roles1 

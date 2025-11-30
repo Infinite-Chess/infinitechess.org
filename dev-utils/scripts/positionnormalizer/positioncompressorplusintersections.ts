@@ -211,7 +211,7 @@ const INTERSECTION_TYPE = -1;
  *     - FUTURE: 'hipppogonal' require all pieces to remain in the same hexadecant relative to other pieces.
  */
 function compressPosition(position: Map<CoordsKey, number>, orthogonals: boolean, diagonals: boolean, hippogonals: boolean, numIntersections: number): CompressionInfo {
-	if (!orthogonals && !diagonals && !hippogonals) throw Error("Position to compress must have atleast one axis mode enabled.");
+	if (!orthogonals && !diagonals && !hippogonals) throw Error("Position to compress must have at least one axis mode enabled.");
 	if (numIntersections > 0 && !hippogonals && orthogonals !== diagonals) throw Error("numIntersections has no effect when only one axis is enabled.");
 
 	// List all pieces with their bigint arbitrary coordinates.

@@ -46,7 +46,7 @@ interface KeyDownInfo {
 }
 
 interface InputListener {
-	/** Whether this input listener has experience atleast one input event the past frame. */
+	/** Whether this input listener has experience at least one input event the past frame. */
 	atleastOneInput: () => boolean;
 	/** Whether the given mouse button experienced a click-down this frame. */
     isMouseDown(_button: MouseButton): boolean;
@@ -398,7 +398,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		// Update double click draw ----------
 		const DOUBLE_CLICK_TIME_MILLIS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MILLIS : CLICK_THRESHOLDS.TOUCH.DOUBLE_CLICK_TIME_MILLIS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 		if (previousTimeDown && now - previousTimeDown < DOUBLE_CLICK_TIME_MILLIS) {
-			// Mouse has been down atleast once before.
+			// Mouse has been down at least once before.
 			// Now we now posDown will be defined, so we can calculate the distance to that last click down.
 			// Works for 2D mode, desktop & mobile
 			const posDown = targetButtonInfo.posDown;

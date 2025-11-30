@@ -132,7 +132,7 @@ const MOVE_ANIMATION_DURATION = {
 	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
 	multiplierMillis: 6,
-	/** The multiplierMillis when there's atleast 3+ waypoints */
+	/** The multiplierMillis when there's at least 3+ waypoints */
 	multiplierMillis_Curved: 12, // Default: 12
 	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,

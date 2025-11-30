@@ -40,8 +40,20 @@ let stats: {
 try {
 	stats = await readFile('database/stats.json');
 } catch (e) {
-	const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
-	throw new Error(errMsg);
+	if (process.env['VITEST']) {
+		console.warn('Mocking stats for test environment');
+		stats = {
+			moveCount: {},
+			gamesPlayed: {
+				byDay: {},
+				byMonth: {},
+				allTime: {}
+			}
+		};
+	} else {
+		const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
+		throw new Error(errMsg);
+	}
 }
 
 
@@ -53,8 +65,8 @@ try {
 async function logGame(game: Game): Promise<void> {
 	if (!game) return console.error("Cannot log a null game!");
 
-	// Only log the game if atleast 2 moves were played! (resignable)
-	// Black-moves-first games are logged if atleast 1 move is played!
+	// Only log the game if at least 2 moves were played! (resignable)
+	// Black-moves-first games are logged if at least 1 move is played!
 	if (game.moves.length < 2) return;
 
 	// What is the current month?
@@ -69,7 +81,7 @@ async function logGame(game: Game): Promise<void> {
 
 	// Now record the number of moves played
 
-	const plyCount = game.moves.length; 
+	const plyCount = game.moves.length;
 	if (stats.moveCount['all'] === undefined) stats.moveCount['all'] = 0;
 	stats.moveCount['all'] += plyCount;
 	if (stats.moveCount[variant] === undefined) stats.moveCount[variant] = 0;
@@ -113,7 +125,7 @@ async function saveStats(): Promise<void> {
 		);
 	} catch (e) {
 		const errMsg = `Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` + (e instanceof Error ? e.message : String(e));
-		logEventsAndPrint(errMsg, 'errLog.txt');	
+		logEventsAndPrint(errMsg, 'errLog.txt');
 	}
 
 }

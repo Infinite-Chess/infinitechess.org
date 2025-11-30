@@ -18,6 +18,7 @@ uniform float u_tearResolution; // Height of tear lines in virtual CSS pixels (e
 uniform float u_tearMaxDisplacement; // Max horizontal shift for a tear in virtual CSS pixels
 uniform float u_time; // For animating tear patterns
 uniform vec2 u_resolution; // Viewport resolution (width, height) in pixels
+uniform float u_devicePixelRatio;
 
 in vec2 v_uv;
 out vec4 out_color;
@@ -30,8 +31,8 @@ void main() {
     // Calculate a unique tear offset for this scanline based on its Y coordinate and time
     // Convert u_tearResolution (pixels) to UV space height of a tear line
     // Convert u_tearMaxDisplacement (pixels) to UV space horizontal displacement
-    float tearLineHeightUV = u_tearResolution / u_resolution.y; 
-    float tearMaxDisplacementUV = u_tearMaxDisplacement / u_resolution.x;
+    float tearLineHeightUV = u_tearResolution * u_devicePixelRatio / u_resolution.y; 
+    float tearMaxDisplacementUV = u_tearMaxDisplacement * u_devicePixelRatio / u_resolution.x;
 
     // Determine which "tear line" this pixel belongs to
     float lineIndex = floor(v_uv.y / tearLineHeightUV); 

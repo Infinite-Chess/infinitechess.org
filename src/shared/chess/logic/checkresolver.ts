@@ -168,7 +168,7 @@ function addressExistingChecks(gamefile: FullGame, legalMoves: LegalMoves, royal
 
 	/**
 	 * If it's a jumping check,
-	 * AND it doesn't have the `path` special flag with atleast 3 waypoints (blockable),
+	 * AND it doesn't have the `path` special flag with at least 3 waypoints (blockable),
 	 * 
 	 * or its a sliding move,
 	 * AND one square away from the checked piece,
@@ -351,7 +351,7 @@ function appendBlockingMoves(gamefile: FullGame, square1: Coords, square2: Coord
  * Takes a `path` special flag of a checking attacker piece, and appends any legal individual
  * blocking moves our selected piece can land on.
  * @param gamefile
- * @param path - Individual move's `path` special move flag, with guaranteed atleast 3 waypoints within it.
+ * @param path - Individual move's `path` special move flag, with guaranteed at least 3 waypoints within it.
  * @param legalMoves - The precalculated legal moves of the selected piece
  * @param selectedPieceCoords 
  * @param color - The color of friendlies
