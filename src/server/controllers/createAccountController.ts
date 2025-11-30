@@ -74,7 +74,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 
 	// First we make checks on the username...
 	// These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
-	if (!doUsernameChecks(username, req, res)) return;
+	if (!doUsernameValidation(username, req, res)) return;
 	if (!await doEmailValidation(email, req, res)) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
@@ -174,7 +174,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 }
 
 /** Returns true if the username passes all the checks required before account generation. */
-function doUsernameChecks(username: string, req: Request, res: Response): boolean {
+function doUsernameValidation(username: string, req: Request, res: Response): boolean {
 	const validatorResult = validators.validateUsername(username);
 	if (validatorResult !== validators.UsernameValidationResult.Ok) {
 		switch (validatorResult) {
