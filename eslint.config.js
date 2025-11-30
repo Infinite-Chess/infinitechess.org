@@ -5,9 +5,6 @@ import parserTypescript from "@typescript-eslint/parser";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default [
-	{
-		ignores: ["dist", "dev-utils"], // Ignore all files in the distribution directory and dev-utils
-	},
 	pluginJs.configs.recommended,
 	{
 		files: ["**/*.js","**/*.ts"], // Apply the following rule overrides to both js and ts files...
