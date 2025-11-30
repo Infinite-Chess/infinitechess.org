@@ -7,7 +7,6 @@
 // ================================ Testing Usage ================================
 
 import icnconverter, { _Move_Compact } from "../icn/icnconverter";
-import moveexpander from "./moveexpander";
 import positioncompressor from "./positioncompressor";
 
 

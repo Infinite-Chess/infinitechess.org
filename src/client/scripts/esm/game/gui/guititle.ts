@@ -73,6 +73,7 @@ function callback_Guide(_event: Event): void {
 	window.location.href = '/guide';
 }
 
+// eslint-disable-next-line no-unused-vars
 function callback_BoardEditor(_event: Event): void {
 	close();
 	guiboardeditor.open();

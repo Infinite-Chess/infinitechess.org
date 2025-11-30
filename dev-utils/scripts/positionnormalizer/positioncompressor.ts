@@ -77,6 +77,7 @@ type AxisGroup = {
  * Takes a pair of coordinates and returns a single
  * value that is unique to the axis line that piece is on.
  */
+// eslint-disable-next-line no-unused-vars
 type AxisDeterminer = (_coords: Coords) => bigint;
 
 /** All orthogonal axes. */
@@ -120,6 +121,7 @@ type Column = {
  * Actually it actually might be smarter to always normalize positions so engines
  * have more floating point precision to work with.
  */
+// eslint-disable-next-line no-unused-vars
 const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
 // const UNSAFE_BOUND_BIGINT = 1000n;
 
@@ -344,7 +346,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	}
 
 	/** Helper for constructing {@link pieceToVarNames}. */
-	function populatePieceVarNames(axis: '0,1' | '1,0') {
+	function populatePieceVarNames(axis: '0,1' | '1,0'): void {
 		OrderedPieces[axis].forEach((piece, index) => {
 			const varName = getVariableName(axis, index);
 			if (!pieceToVarNames.has(piece)) pieceToVarNames.set(piece, {});
@@ -356,7 +358,7 @@ function compressPosition(position: Map<CoordsKey, number>, mode: 'orthogonals' 
 	 * Helper for creating and adding the constraints between each
 	 * adjacent piece on one specific axis to the linear programming model.
 	 */
-	function createConstraintsForAxis(axis: Axis) {
+	function createConstraintsForAxis(axis: Axis): void {
 		const axisDeterminer = AXIS_DETERMINERS[axis];
 		const sortedPieces = OrderedPieces[axis];
 
@@ -554,7 +556,7 @@ function getVariableName(axis: Axis, index: number): VariableName {
 	return `${axisLetter}-${index}`;
 }
 
-function getConstraintName(varName: VariableName) {
+function getConstraintName(varName: VariableName): string {
 	return `${varName}_constraint`;
 }
 
@@ -590,7 +592,8 @@ function addConstraintToModel(model: Model, constraint_name: string, columns: Co
  * @param allPieces The list of all transformed pieces.
  * @param allAxisOrders The AxisOrders object containing all axis groups of the transformed position.
  */
-function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders: AxisOrders) {
+// eslint-disable-next-line no-unused-vars
+function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders: AxisOrders): void {
 	// Define the type for a White King (you may need to import typeutil and players)
 	const whiteKingType = typeutil.buildType(r.KING, p.WHITE);
 

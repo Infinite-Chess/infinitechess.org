@@ -53,6 +53,7 @@ console.log("ICNRegex:", ICNRegex);
  * 
  * Throws an error if it's in an invalid format, or if required sections are missing.
  */
+// eslint-disable-next-line no-unused-vars
 function ShortToLong_Format(icn: string): LongFormatOut {
 	console.log("Start match...");
 	const matches = icn.match(ICNRegex);

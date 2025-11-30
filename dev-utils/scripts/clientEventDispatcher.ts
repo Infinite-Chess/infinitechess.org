@@ -28,7 +28,7 @@ function dispatch(eventName: string, data?: any): void {
  * @param eventName The name of the event to listen for.
  * @param callback The callback function to invoke when the event occurs.
  */
-function listen(eventName: string, callback: (event: CustomEvent) => void): void {
+function listen(eventName: string, callback: (_event: CustomEvent) => void): void {
 	if (!isBrowser) return;
 	target.addEventListener(eventName, callback as EventListener);
 }
@@ -38,7 +38,7 @@ function listen(eventName: string, callback: (event: CustomEvent) => void): void
  * @param eventName The name of the event.
  * @param callback The callback function to remove.
  */
-function removeListener(eventName: string, callback: (event: CustomEvent) => void): void {
+function removeListener(eventName: string, callback: (_event: CustomEvent) => void): void {
 	if (!isBrowser) return;
 	target.removeEventListener(eventName, callback as EventListener);
 }

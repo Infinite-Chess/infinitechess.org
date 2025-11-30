@@ -2,6 +2,9 @@
 // DEPRECATED ENGINE FORMAT!!! PLEASE REFER TO engineCheckmatePractice.js
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+// Disable eslint errors here, since the above comment says its deprecated
+/* eslint-disable */
+
 /**
  * This script runs the chess engine for enginegames.
  * It is modular and may be replaced by any other engine script to test a different engine.

@@ -95,7 +95,7 @@ function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransf
 	 * Determines if the moved piece is interested in any group in the given axis.
 	 * If so, its final destination will still be relative to that group.
 	 */
-	function determineIfMovedPieceInterestedInAxis(axis: '1,0' | '0,1') {
+	function determineIfMovedPieceInterestedInAxis(axis: '1,0' | '0,1'): void {
 		if (originalEndCoords) {
 			console.log(`Moved piece already has end coords determined. Skipping axis ${axis}.`);
 			return; // We already found the original end coords, no need to continue
