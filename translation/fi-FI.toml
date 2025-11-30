@@ -1,6 +1,6 @@
 name = "Finnish" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "22"
+version = "76"
 maintainer = "ThisIsNotAvailable"
 
 [header]
@@ -11,19 +11,28 @@ login = "Kirjaudu"
 profile = "Profiili"
 createaccount = "Luo Tili"
 logout = "Kirjaudu Ulos"
+leaderboard = "Leaderboard"
 
 [header.settings]
 language = "Kieli"
-board = "Värit" # Board color/theme
+appearance = "Ulkonäkö" # Board color/theme and visual effects
+appearance-theme = "Theme"
+appearance-starfield = "Starfield" # The Starfield space animation underneath void
+appearance-advanced-effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
 legalmoves = "Sallitut siirrot" # Legal moves shape
 legalmoves-squares = "Neliöt"
 legalmoves-dots = "Pisteet" # Dots and 4 corner triangles
 selection = "Valitseminen"
 selection-drag = "Vetämällä"
 selection-premove = "Aikaissiirrot"
+selection-animations = "Animations"
+selection-lingering_annotations = "Lingering Annotations"
 perspective = "Perspectiivi" # Perspective-mode
 perspective-mouse-sensitivity = "Hiiren Herkkyys"
 perspective-fov = "Field of View"
+sound = "Ääni"
+sound-master-volume = "Master Volume"
+sound-ambience = "Ambience"
 ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
 reset-to-default = "Reset to default"
 
@@ -37,6 +46,12 @@ language = "Kieli"
 js-confirm_delete = "Oletko varma, että haluat poistaa tilisi? Tätä EI VOI peruuttaa! Paina OK syöttääksesi salasanasi."
 js-enter_password = "Syötä salasanasi poistaakesi PYSYVÄSTI sinun tilisi:"
 
+[leaderboard.javascript]
+supported_variants = "This leaderboard is used for the following variants:"
+rank = "Rank"
+player = "Player"
+rating = "Rating"
+
 [index]
 title = "Infinite Chess | Koti - Virallinen Nettisivu" # The tab title
 secondary_title = "Virallinen nettisivu livenä pelaamiseen!"
@@ -47,13 +62,18 @@ what_is_it_pargaraphs = [
 "Kuten voit kuvitella, on olemassa loputtomasti mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, joka tarvitsee uusia taktiikoita, koska ei ole olemassa seiniä, joihin vastustajan kuninkaan voisi lukita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakki pelit. Sotilaat edelleen ylentyvät riveillä 1 ja 8!",
 ]
 how_to_title = "Miten voin pelata?"
-how_to_paragraph = ["Tämän hetkinen versio on 1.4 ","Pelaa"," sivulla!"]
+how_to_paragraph = ["Tämän hetkinen versio on 1.8 ","Pelaa"," sivulla!"]
 about_title = "Tietoa Projektista"
 about_paragraphs = [
 "Minä olen Naviary. Siitä lähtien, kun löysin loputtoman shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut aika vaikeaa, vaatien chess.com jäsenien luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Sen takia harva tietää tai on pelannut tätä.",
-["Minun tavoitteeni on luoda tapa, joka tekee tästä helposti saavutettavan kaikille, ja kasvattaa yleisöä sen ympärille. Olen käyttänyt lukemattomia tunteja omasta ajastani tämän nettisivun ylläpitämiseen, ja sen kehittämiseen. Minulla on monen monta ideaa, jotka ovat pitäneet minut kiireellisinä. Vaikka haluankin pitää tämän ilmaisena, elämällä on vaatimuksensa, tukeaksesi minuta taloudellisesti harkitse liityväsi minun", "Patreoniin"]
+["Minun tavoitteeni on luoda tapa, joka tekee tästä helposti saavutettavan kaikille, ja kasvattaa yleisöä sen ympärille. Olen käyttänyt lukemattomia tunteja omasta ajastani tämän nettisivun ylläpitämiseen, ja sen kehittämiseen. Minulla on monen monta ideaa, jotka ovat pitäneet minut kiireellisinä. Vaikka haluankin pitää tämän ilmaisena, elämällä on vaatimuksensa. Tukeaksesi minua taloudellisesti harkitse liityväsi minun", "Patreoniin"] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Patreon Tukijat"
+github_title = "Github Tekijät"
+
+[index.javascript]
+contribution_count_singular = ["", " lahjoitus"] # A number is inserted between these 2 strings.
+contribution_count_plural = ["", " lahjoitukset"]
 
 [credits]
 title = "Krediitit"
@@ -74,12 +94,13 @@ variants_credits = [
 "suunnitteli Andreas Tsevas.",
 "suunnitteli Cory Evans ja Joel Hamkins.",
 "suunnitteli Cory Evans, Joel Hamkins, ja Norman Lewis Perlmutter.",
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
+"Confined Classical by Andreas Tsevas.",
+"4x4x4x4 Chess by Andreas Tsevas.",
+"5D Chess by Jace.",
 ]
 textures_heading = "Tekstuurit"
 textures_licensed_under = "tekstuurit on lisentoitu"
-textures_credits = [
-"Kultakolikko Quoltelta.",
-]
 sounds_heading = "Äänet"
 sounds_credits = [
 ["Jotkin äänet tarjoaa ", "projekti lisenssillä"],
@@ -96,9 +117,9 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Helpoitetun kiinan käänsi ", "Heinrich Xiao", ".",
 	"Perinteisen kiinan käänsi ", "Heinrich Xiao", ".",
 	"Puolan käänsi ", "Tymon Becella", ".", # Apsurt
-	"Portugalin käänsi ", "The_Skeleton", ".",
+	"Portugalin käänsi ", "The_Skeleton", ".", # The_Skeleton on discord
 	"Espanja käänsi ", "xa31er", ".",
-	"Suomen käänsi ", "ThisIsNotAvailable", "."
+	"Saksan käänsi ", "Estetique", "."
 ]
 
 [member]
@@ -108,11 +129,19 @@ resend_message = ["Etkö saanut postia? Tarkista roskapostisi. Jos et löydä si
 verify_confirm = "Kiitos! Tilisi on todennettu."
 joined = "Liityi:"
 seen = ["Nähty:", " sitten"]
+practice_progress = "Practice Mode Progress:"
+ranked_elo = "Rating:"
+infinity_leaderboard_position = "Global Ranking:"
+infinity_leaderboard_rating_deviation = "Rating Deviation:"
 reveal_info = "Näytä Tilitiedot"
 account_info_heading = "Tilitiedot"
 email = "Sähköpostiosoite:"
 delete_account = "Poista tili"
-password_reset_message = ["Vaihtaaksesi nimesi, sähköpostisi tai salasanasi, ", "ota meihin yhteyttä."]
+
+[member.badge-tooltips]
+checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
+checkmate_silver = "Checkmate Pro: Complete 75% of all practice checkmates."
+checkmate_gold = "Checkmate Master: Complete 100% of all practice checkmates."
 
 [create-account]
 title = "Luo Tili" # The tab name
@@ -128,10 +157,24 @@ js-username_tooshort = "Käyttäjänimen pitää olla vähintään 3 kirjainta p
 js-username_wrongenc = "Käyttäjänimessä saa olla vain kirjaimia A-Z ja numeroita 0-9"
 js-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
 js-email_inuse = "Sähköposti on jo käytössä"
+
+[reset-password.javascript]
+js-pwd_no_match = "Passwords do not match."
+reset-password = "Reset Password"
+processing = "Processing..."
+network-error = "A network error occurred. Please try again."
+
+[password-validation]
 js-pwd_incorrect_format = "Salasana on väärässä muodossa"
 js-pwd_too_short = "Salasana ei saa olla alle 6 kirjainta pitkä"
 js-pwd_too_long = "Salasana ei saa olla yli 72 kirjainta pitkä"
 js-pwd_not_pwd = "Salasana ei saa olla 'password'"
+
+[leaderboard]
+title = "Leaderboard"
+inactive_players = "Inactive players with a high rating uncertainty are excluded from the leaderboard."
+your_global_ranking = "Your Global Ranking:"
+show_more = "Show more..."
 
 [play]
 title = "Infinite Chess - Pelaa" # The tab title
@@ -141,8 +184,9 @@ error = "VIRHE"
 [play.main-menu]
 credits = "Krediitit"
 play = "Pelaa"
+practice = "Practice"
 guide = "Opas"
-editor = "Lauta Editori"
+editor = "Board Editor"
 
 [play.guide]
 title = "Opas"
@@ -165,7 +209,8 @@ keybinds = [
 " liikkuaksesi ympäriinsä.",
 ["Välilyönti", " ja ", "Vaihto", " zoomataksesi sisään ja ulos."],
 ["Escape", " pysäyttääksesi pelin."],
-["Tabulaattori", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
+["Tabulaattori", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which displays arrows pointing to all pieces that can move to your screen along their direction of movement. But ", "Tab", " can switch this mode to \"All\", or \"Off\"; \"All\" displays arrows for all pieces, regardless of if they can move to your screen. This setting can also be toggled in the pause menu. Clicking an arrow will teleport you to the piece it points to."],
+["Control", " will force-drag the board instead of dragging a piece, if dragging is enabled in the settings."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
@@ -194,8 +239,16 @@ guard = {name="Guard", description="Moves like a king, except it is not suscepti
 hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
 centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
 knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
+huygen = {name="Huygen", description="Hops infinitely in one of the four cardinal directions, visiting only squares with a prime numbered distance from its start square, until obstructed."}
+rose = {name="Rose", description="Circular knightrider. It moves along clockwise and anticlockwise circular trajectories by hopping like a knight and turning 45 degrees after every hop. It can be blocked by other pieces, which is why the red square in the image is unreachable for the rose."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
+
+[play.practice-menu]
+title = "Practice - Checkmates"
+play = "Play"
+back = "Back"
+difficulty = "Difficulty"
 
 [play.play-menu]
 title = "Pelaa - Verkossa"
@@ -205,10 +258,12 @@ local = "Paikallinen"
 computer = "Tietokone"
 variant = "Variantti"
 Classical = "Klassinen"
+Confined_Classical = "Confined Classical"
 Classical_Plus = "Klassinen+"
 CoaIP = "Shakkia Loputtomalla Alustalla"
 Pawndard = "Panttimies"
 Knighted_Chess = "Hepoittetu Shakki"
+Palace = "Palace"
 Knightline = "Heppalinja"
 Core = "Ydin"
 Standarch = "Standarch"
@@ -224,10 +279,14 @@ CoaIP_Limit_7 = "Coaip - 7 rajoitus"
 Chess = "Shakki"
 Classical_KOTH = "Kokeellinen: Klassinen - KOTH"
 CoaIP_KOTH = "Kokeellinen: Coaip - KOTH"
+CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
+CoaIP_RO = "Chess on an Infinite Plane - Roses Option"
+CoaIP_NO = "Chess on an Infinite Plane - Knightriders Option"
 Omega = "Näyte: Omega"
 Omega_Squared = "Näyte: Omega^2"
 Omega_Cubed = "Näyte: Omega^3"
 Omega_Fourth = "Näyte: Omega^4"
+4x4x4x4_Chess = "4×4×4×4 Chess"
 5D_Chess = "5D Shakki"
 no_clock = "Ei Kelloa"
 clock = "Kello"
@@ -254,14 +313,16 @@ code = "Koodi"
 undo_transition = "Kumoa siirtymä"
 expand_fit_all = "Laajenna nähdäksesi kaiken"
 recenter = "Keskitä"
+annotations = "Draw annotations"
+erase = "Erase annotations"
+collapse = "Collapse annotations"
 rewind_move = "Kelaa taaksepäin siirto"
 forward_move = "Eteenpäin siirto"
+undo_edit = "Undo edit (Ctrl+Z)" # Board editor
+redo_edit = "Redo edit (Ctrl+Y)" # Board editor
 pause = "Pysäytä"
-
-[play.footer]
-white_to_move = "Valkoisen vuoro"
-player_white = "Valkoisen pelaaja"
-player_black = "Mustan pelaaja"
+undo = "Undo move" # Checkmate practice game
+restart = "Restart game" # Checkmate practice game
 
 [play.pause]
 title = "Pysäytetty"
@@ -271,6 +332,7 @@ perspective = "Perspektiivi: Pois"
 copy = "Kopioi Peli"
 paste = "Liitä Peli"
 offer_draw = "Ehdota Tasapeliä"
+practice_menu = "Practice Menu"
 main_menu = "Päävalikkoon"
 
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
@@ -279,6 +341,9 @@ question = "Hyväksystö tasapelin?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Vieras)"
 you_indicator = "(Sinä)"
+engine_indicator = "Engine"
+player_name_white_generic = "Valkoinen"
+player_name_black_generic = "Musta"
 white_to_move = "Valkoisen vuoro"
 black_to_move = "Mustan vuoro"
 your_move = "Sinun siirto"
@@ -294,6 +359,7 @@ accept_draw = "Hyväksy Tasapeli" # Offer draw button text in the pause menu
 arrows_off = "Nuolet: Pois"
 arrows_defense = "Nuolet: Puolustus"
 arrows_all = "Nuolet: Kaikki"
+arrows_all_hippogonals = "Arrows: All (with hippogonals)"
 toggled = "Vaihdettu"
 menu_online = "Pelaa - Verkossa"
 menu_local = "Play - Paikallinen"
@@ -304,35 +370,74 @@ constructing_mesh = "Rakennetaan meshiä"
 rotating_mesh = "Käännetään meshiä"
 lost_connection = "Yhteys menetetty."
 please_wait = "Odoto hetki suorittaaksesi tämän."
-webgl_unsupported = "Sinun nettiselain ei tue WebGLää. Tämä peli tarvitsee sitä toimiakseeen. Päivitä nettiselaimesi."
+webgl_unsupported = "Sinun nettiselain ei tue WebGL2:ta. Päivitä nettiselaimesi!"
 bigints_unsupported = "BigInts ei ole tuettu. Päivitä nettiselaimesi.\nBigIntsiä tarvitaan, jotta lauta olisi loputon."
-shaders_failed = "Varjostin ohjelmaa ei pystytty alustamaan:"
-failed_compiling_shaders = "Virhe tapahtui varjostimien kokoamisessa:"
+# Checkmate Practice
+versus = "vs"
+easy = "Helppo"
+medium = "Keskitaso"
+hard = "Vaikea"
+insane = "Hullu"
+checkmate_logged_out = "Sinun tulee olla kirjautunut ansaitaksesi merkkejä."
+checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
+checkmate_silver = "Checkmate Pro: Complete 75% of all practice checkmates."
+checkmate_gold = "Checkmate Master: Complete 100% of all practice checkmates."
+checkmate_bronze_unearned = "Complete 50% of all practice checkmates to earn this badge."
+checkmate_silver_unearned = "Complete 75% of all practice checkmates to earn this badge."
+checkmate_gold_unearned = "Complete 100% of all practice checkmates to earn this badge."
+coords-invalid = "Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4)."
+coords-exceeded = "You can't teleport that far! That would be too easy ;)"
+
+[play.javascript.piecenames] # The string representations of each raw piece type, as found in typeutil.strtypes
+void = "Void"
+obstacle = "Obstacle"
+king = "King"
+giraffe = "Giraffe"
+camel = "Camel"
+zebra = "Zebra"
+knightrider = "Knightrider"
+amazon = "Amazon"
+queen = "Queen"
+royalQueen = "Royal queen"
+hawk = "Hawk"
+chancellor = "Chancellor"
+archbishop = "Archbishop"
+centaur = "Centaur"
+royalCentaur = "Royal centaur"
+rose = "Rose"
+knight = "Knight"
+guard = "Guard"
+huygen = "Huygen"
+rook = "Rook"
+bishop = "Bishop"
+pawn = "Pawn"
 
 [play.javascript.copypaste]
 copied_game = "Peli kopioitu leikepöydälle!"
 cannot_paste_in_public = "Peliä ei voi liittää julkisessa pelissä!"
+cannot_paste_in_rated = "Peliä ei voi liittää arvioitussa pelissä!"
+cannot_paste_in_engine = "Peliä ei voi liittää engine-pelissä!"
 cannot_paste_after_moves = "Peliä ei voi liittää siirror jälkeen!"
-clipboard_denied = "Liittämisoikeus evätty. Tämä saattaa olla nettiselaimesi."
+clipboard_denied = "Leikepöytä-oikeus evätty. Tämä saattaa olla nettiselaimesi."
 clipboard_invalid = "Leikepöytä ei ole oikeassa ICN merkinnässä."
-game_needs_to_specify = "Pelin täytyy määritellä joko 'Variant' metadata, tai 'startingPosition' ominaisuus."
-invalid_wincon_white = "Valkoisella on virheellinen voittoehto"
-invalid_wincon_black = "Mustalla on virheellinen voittoehto"
+game_needs_to_specify = "Pelin täytyy määritellä joko 'Variant' metadata, tai 'position' ominaisuus."
+invalid_wincon = "Pelaajalla on virheellinen voittoehto"
 pasting_game = "Liitetään peliä..."
 pasting_in_private = "Pasting a game in a private match will cause a desync if your opponent doesn't do the same!"
 piece_count = "Nappuloiden määrä"
 exceeded = "ylitettiin"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Peli ladattu leikepöydältä!"
-slidelimit_not_number = "slideLimit pelisääntö täytyy olla numero. Saatiin"
+copied_position = "Kopioitu asema leikepöydälle!"
+loaded_position_from_clipboard = "Ladattu asema leikepöydältä!"
+reset_position = "Asema asetettiin oletukseen!"
+clear_position = "Asema tyhjennettiin!"
 
 [play.javascript.rendering]
 on = "Päällä"
 off = "Pois"
 icon_rendering_off = "Vaihdettu pois kuvake renderöinti."
 icon_rendering_on = "Vaihdettu päälle kuvake renderöinti."
-toggled_debug = "Vaihdettu Debug Moodi:"
-toggled_edit = "Vaihdettu Edit Moodi:"
 perspective = "Perspektiivi"
 perspective_mode_on_desktop = "Perspektiivi on saatavilla tietokoneella!"
 movement_tutorial = "WASD liikkuaksesi. Välilyönti ja vaihto zoomataksesi."
@@ -340,10 +445,7 @@ regenerated_pieces = "Uudelleenluotiin nappulat."
 
 [play.javascript.invites]
 move_mouse = "Move the mouse to reconnect."
-unknown_action_received_1 = "Unknown action"
-unknown_action_received_2 = "received from the server in the invites subscription!"
 cannot_cancel = "Cannot cancel invite of undefined ID."
-you_indicator = "(Sinä)"
 you_are_white = "Olet: Valkoinen"
 you_are_black = "Olet: Musta"
 random = "Satunnainen"
@@ -390,13 +492,12 @@ insuffmat = "Ei tarpeeksi materiaalia"
 royalcapture = "Kuninkaallinen kaappaus"
 allroyalscaptured = "Kaikki kuninkaaliset kaapattu"
 allpiecescaptured = "Kaikki nappulat kaapattu"
-threecheck = "Kolmen shakki"
 koth = "Kukkulan kuningas"
-resignation = "Eroaminen"
-agreement = "Yhteisymmärrys" 
+resignation = "Resignation"
+agreement = "Agreement" 
 time = "Aika menetetty"
 aborted = "Keskeytetty" # Game was cancelled (no elo exchanged)
-disconnect = "Hylätty" # A player left
+disconnect = "Abandoned" # A player left
 
 [play.javascript.results]
 you_checkmate = "Sinä voitit shakkimatilla!"
@@ -406,7 +507,6 @@ you_disconnect = "Sinä voitit hyläyksellä!"
 you_royalcapture = "Sinä voitit kaappaamalla kuninkaalisen!"
 you_allroyalscaptured = "Sinä voitit kaappaamalla kaikki kuninkaaliset!"
 you_allpiecescaptured = "Sinä voitit kaappaamalla kaikki nappulat!"
-you_threecheck = "Sinä voitit kolmen shakilla!"
 you_koth = "Sinä voitit olemalla kukkulan kuningas!"
 you_generic = "Sinä voitit!"
 draw_stalemate = "Tasapeli umpikujasta!"
@@ -423,30 +523,24 @@ opponent_disconnect = "Sinä hävisit hyläyksellä!"
 opponent_royalcapture = "Sinä hävisit kuninkaalisen kaappaamisella!"
 opponent_allroyalscaptured = "Sinä hävisit kaikkien kuninkaalisten kaappaamisella!"
 opponent_allpiecescaptured = "Sinä hävisit kaikkien nappuloiden kaappaamisella!"
-opponent_threecheck = "Sinä hävisit kolmen shakilla!"
 opponent_koth = "Sinä hävisit kukkulan kuninkaalle!"
 opponent_generic = "Sinä hävisit!"
 white_checkmate = "Valkoinen voittaa shakkimatilla!"
 black_checkmate = "Musta voittaa shakkimatilla!"
-bug_checkmate = "Tämä on bugi, ilmoittele. Peli päättyi shakkimatilla."
 white_time = "Valkoinen voittaa ajassa!"
 black_time = "Musta voittaa ajassa!"
-bug_time = "Tämä on bugi, ilmoittele. Peli päättyi ajassa"
+white_resignation = "Valkoinen vetäytyminen"
+black_resignation = "Mustan vetäytyminen"
+white_disconnect = "Valkoisen yhteyden katkaiseminen"
+black_disconnect = "Mustan yhteyden katkaiseminen"
 white_royalcapture = "Valkoinen voittaa kaappaamalla kuninkaalisen!"
 black_royalcapture = "Musta voittaa kaappaamalla kuninkaalisen!"
-bug_royalcapture = "Tämä on bugi, ilmoittele. Peli päättyi kaappaamalla kuninkaalisen."
 white_allroyalscaptured = "Valkoinen voittaa kaappaamalla kaikki kuninkaaliset!"
 black_allroyalscaptured = "Musta voittaa by kaappaamalla kaikki kuninkaaliset!"
-bug_allroyalscaptured = "Tämä on bugi, ilmoittele. kaappaamalla kaikki kuninkaaliset."
 white_allpiecescaptured = "Valkoinen voittaa kaappaamalla kaikki nappulat!"
 black_allpiecescaptured = "Musta voittaa kaappaamalla kaikki nappulat!"
-bug_allpiecescaptured = "Tämä on bugi, ilmoittele. Peli päättyi kaappaamalla kaikki nappulat."
-white_threecheck = "Valkoinen voittaa kolmen shakilla!"
-black_threecheck = "Musta voittaa kolmen shakilla"
-bug_threecheck = "Tämä on bugi, ilmoittele. Peli päättyi kolmen shakilla."
 white_koth = "Valkoinen voittaa olemalla kukkulan kuningas!"
 black_koth = "Musta voittaa olemalla kukkulan kuningas!"
-bug_koth = "Tämä on bugi, ilmoittele. Peli päättyi olemalla kukkulan kuningas."
 bug_generic = "Tämä on bugi, ystävällisesti ilmoita!"
 
 [terms]
@@ -464,6 +558,7 @@ fair_play_paragraph1 = ["You cannot create more than 1 account. If you would lik
 fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
 fair_play_rules = [
 "Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
+"Abuse bugs or glitches in order to abort the game, give you an advantantage, or make the game otherwise unplayable. This can include moving a piece to extreme distances, such as 10^15 away from the origin.",
 "In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated, casual, games)",
 "Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
 ]
@@ -496,15 +591,27 @@ conclusion_paragraphs = [
 "You may not perform any illegal activity on the site.",
 ["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
 ]
-update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
 thanks = "Kiitos!"
 
 [login]
 title = "Kirjaudu Sisään" # The tab name
 username = "Käyttäjänimi:"
 password = "Salasana:"
-forgot_password = ["Unohditko? ", "Lähetä meille sähköpostia."]
 login_button = "Kirjaudu Sisään"
+send_reset_link = "Send reset link"
+forgot_question = "Unohditko Salasanasi?"
+back_to_login = "Takaisin kirjautumaan"
+forgot_instruction = "Forgot your password? Enter your username and we'll send you a reset link."
+
+[login.javascript]
+network-error = "A network error occurred. Please try again."
+
+[reset_password]
+title = "Reset Your Password"
+instruction = "Please enter and confirm your new password."
+new_password = "New Password"
+confirm_password = "Confirm Password"
+submit_button = "Reset Password"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Väärä pyyntö oli vastaanotettu."
@@ -518,8 +625,6 @@ more_dev_logs = ["Enemmän kehittäjälogeja on ", "discord-kanavalla", ", ja ",
 [server.javascript]
 ws-invalid_username = "Käyttäjänimi on väärä"
 ws-incorrect_password = "Salasana on väärä"
-ws-username_and_password_required = "Käyttäjänimi ja salasana ovat pakollisia."
-ws-username_and_password_string = "Käyttäjänimen ja salasanan täytyy olla merkkijono."
 ws-login_failure_retry_in = "Sisäänkirjautuminen epäonnistui, yritä uudelleen"
 ws-seconds = "sekunnissa" # unit of time
 ws-second = "sekunnissa" # unit of time
@@ -531,18 +636,18 @@ ws-username_reserved = "Käyttäjänimi on varattu"
 ws-email_too_long = "Sinun sähköpostiosoitteesi on liian piiitkä."
 ws-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
 ws-email_in_use = "Sähköposti on jo käytössä"
+ws-email_domain_invalid = "Invalid domain."
 ws-you_are_banned = "Sinut on kielletty."
 ws-password_length = "Salasanan tulee olla 6-72 kirjaimen pitkä"
 ws-password_format = "Salasana on väärässä muodossa"
 ws-password_password = "Salasana ei saa olla 'password'"
-ws-member_not_found = "Jäsentä ei löydetty"
+ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."
+ws-password-change-success = "Password has been reset successfully. You will be redirected to the login page shortly."
+ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
 ws-forbidden_wrong_account = "Kielletty. Tämä ei ole sinun tilisi."
 ws-deleting_account_not_found = "Tilin poisto epäonnistui. Tiliä ei löydetty."
+ws-deleting_account_in_game = "Et voi poistaa tiliäsi kun olet vielä pelissä."
 ws-server_error = "Anteeksi, palvelinvirhe tapahtui! Mene takaisin."
-ws-unable_to_identify_client_ip = "IP osoitetta ei tunnistettu"
-ws-you_are_banned_by_server = "Sinut on kielletty"
-ws-too_many_requests_to_server = "Liian Monta Pyyntöä. Yritä myöhemmin uudelleen."
-ws-bad_request = "Huono Pyyntö"
 ws-not_found = "404 Ei Löydetty"
 ws-forbidden = "Kielletty."
 ws-already_in_game = "Olet jo pelissä."
@@ -550,9 +655,8 @@ ws-server_restarting = "Palvelin uudelleenkäynnistyy" # The server inserts a nu
 ws-server_under_maintenance = "Palvelin on huollossa. Tule pian takaisin!" # Can be changed at will to change the display message.
 ws-minutes = "minuuttia" # unit of time
 ws-minute = "minuutti" # unit of time
-ws-no_abort_game_over = "Peliä ei voi keskeyttää, se on jo ohi."
-ws-no_abort_after_moves = "Peliä ei voi keskeyttää, vähintään 2 siirtoa on jo tehty."
 ws-game_aborted_cheating = "Peli keskeytettiin todennäköisestä huijaamisesta."
 ws-cannot_resign_finished_game = "Peliä ei voi erota, se on jo ohi."
 ws-invalid_code = "Vääränlainen koodi!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Peli keskeytettiin." # Invite was cancelled as you clicked on it
+ws-rated_invite_verification_needed = "To play ranked, you need to be signed in with a verified account."
