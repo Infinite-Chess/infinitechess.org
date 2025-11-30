@@ -61,6 +61,7 @@
 		"glsl-strip-comments": "^1.0.0",
 		"madge": "^8.0.0",
 		"nodemon": "^3.1.10",
+		"prettier": "^3.7.3",
 		"rimraf": "^6.0.1",
 		"supertest": "^7.1.4",
 		"tsx": "^4.20.6",
@@ -86,6 +87,8 @@
 		"optimize-images": "node optimize-images.js",
 		"generate-dependency-graph": "node src/server/utility/generateDependancyGraph.js",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"format": "prettier . --write",
+		"format:check": "prettier . --check"
 	}
 }

@@ -1,0 +1,12 @@
+.github
+.vscode
+cert
+database
+dist
+docs
+logs
+node_modules
+.env
+database.db
+package-lock.json
+translation
