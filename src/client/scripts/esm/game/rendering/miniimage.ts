@@ -26,6 +26,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import boardtiles from './boardtiles.js';
 import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
+import premoves from '../chess/premoves.js';
 import { Color } from '../../../../../shared/util/math/math.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -222,8 +223,10 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		}
 	}
 	
-	const boardsim = gameslot.getGamefile()!.boardsim;
+	const gamefile = gameslot.getGamefile()!;
+	const boardsim = gamefile.boardsim;
 	const pieces = boardsim.pieces;
+	const mesh = gameslot.getMesh();
 
 	// 1. Process all animations and add pieces relevant to the current move
 	const maxDistB4Teleport = bd.divide_floating(MAX_ANIM_DIST_VPIXELS, boardtiles.gtileWidth_Pixels());
@@ -244,6 +247,9 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
+	// Queued premoves must be rewound BEFORE reading the pieces, so they are in the expected locations as the last and next move!
+	premoves.rewindPremoves(gamefile, mesh);
+
 	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
 	const annotePoints: Coords[] = snapping.getAnnoteSnapPoints(true).map(bd.coordsToBigInt);
 	annotePoints.forEach(ap => {
@@ -256,9 +262,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 
 	// 3. Add the selected piece, if any
 	const pieceSelected = selection.getPieceSelected();
-	if (pieceSelected) {
-		pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
-	}
+	if (pieceSelected) pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
 
 	// 4. Add pieces from the last and next moves
 	const moveIndex = boardsim.state.local.moveIndex;
@@ -276,6 +280,8 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		if (!nextToMovePiece) throw new Error("Could not find next to move piece at its starting coords: " + nextMove.startCoords);
 		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
 	}
+
+	premoves.applyPremoves(gamefile, mesh);
 	
 	return piecesToRender;
 }
