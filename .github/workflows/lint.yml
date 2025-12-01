@@ -17,3 +17,5 @@ jobs:
               run: npm ci
             - name: 'Checking linter rules'
               run: npm run lint
+            - name: 'Checking formatting'
+              run: npm run format:check
