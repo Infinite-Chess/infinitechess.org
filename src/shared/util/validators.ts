@@ -72,8 +72,7 @@ const reservedUsernames: string[] = [
 function validatePassword(password: string): PasswordValidationResult {
 	if (password.length < 6) return PasswordValidationResult.PasswordTooShort;
 	if (password.length > 72) return PasswordValidationResult.PasswordTooLong;
-	// eslint-disable-next-line no-useless-escape
-	const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
+	const regex = /^[a-zA-Z0-9!@#$%^&*?]+$/;
 	if (!regex.test(password)) return PasswordValidationResult.InvalidFormat;
 	if (password.toLowerCase() === "password") return PasswordValidationResult.PasswordIsPassword;
 	return PasswordValidationResult.Ok;
