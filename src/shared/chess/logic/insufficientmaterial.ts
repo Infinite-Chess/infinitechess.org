@@ -21,6 +21,9 @@ type PieceCount = number | [number, number];
 /** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
 type Scenario = TypeGroup<PieceCount>;
 
+// If the world border exists and is closer than this number in any direction, then do not make insuffmat check
+const playableRegionUpperBoundForDisablingInsuffmat = 1_000_000n;
+
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
 // so that bishops on different colored squares are treated separately
@@ -175,6 +178,29 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	if (
 		gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 ||
 		gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1
+	)
+		return undefined;
+
+	// Do not make the draw check if the world border is closer than
+	// playableRegionUpperBoundForDisablingInsuffmat in any direction
+	if (
+		boardsim.playableRegion?.bottom !== undefined &&
+		-boardsim.playableRegion.bottom <= playableRegionUpperBoundForDisablingInsuffmat
+	)
+		return undefined;
+	if (
+		boardsim.playableRegion?.left !== undefined &&
+		-boardsim.playableRegion.left <= playableRegionUpperBoundForDisablingInsuffmat
+	)
+		return undefined;
+	if (
+		boardsim.playableRegion?.right !== undefined &&
+		boardsim.playableRegion.right <= playableRegionUpperBoundForDisablingInsuffmat
+	)
+		return undefined;
+	if (
+		boardsim.playableRegion?.top !== undefined &&
+		boardsim.playableRegion.top <= playableRegionUpperBoundForDisablingInsuffmat
 	)
 		return undefined;
 
