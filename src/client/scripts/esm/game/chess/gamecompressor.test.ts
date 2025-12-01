@@ -1,4 +1,3 @@
-
 import { describe, it, expect } from 'vitest';
 import gamecompressor from './gamecompressor.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
@@ -17,7 +16,7 @@ describe('gamecompressor', () => {
 				UTCTime: '12:00:00',
 				Variant: 'standard',
 				White: 'Rick',
-				Black: 'Waterman'
+				Black: 'Waterman',
 			} as const;
 
 			const mockGame: FullGame = {
@@ -30,7 +29,7 @@ describe('gamecompressor', () => {
 					moves: [],
 					whosTurn: players.WHITE,
 					untimed: true,
-					clocks: undefined
+					clocks: undefined,
 				},
 				boardsim: {
 					startSnapshot: {
@@ -38,15 +37,15 @@ describe('gamecompressor', () => {
 						fullMove: 1,
 						state_global: {
 							specialRights: new Set(),
-						}
+						},
 					},
 					moves: [],
 					state: {
 						local: {
-							moveIndex: -1
-						}
-					}
-				} as any
+							moveIndex: -1,
+						},
+					},
+				} as any,
 			};
 
 			const result = gamecompressor.compressGamefile(mockGame);
@@ -64,8 +63,8 @@ describe('gamecompressor', () => {
 				turnOrder: [players.WHITE, players.BLACK],
 				fullMove: 1,
 				state_global: {
-					specialRights: new Set()
-				}
+					specialRights: new Set(),
+				},
 			};
 
 			const result = gamecompressor.GameToPosition(initialState, [], 0);

@@ -49,11 +49,12 @@ try {
 			gamesPlayed: {
 				byDay: {},
 				byMonth: {},
-				allTime: {}
-			}
+				allTime: {},
+			},
 		};
 	} else {
-		const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
+		const errMsg =
+			'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
 		throw new Error(errMsg);
 	}
 }
