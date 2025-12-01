@@ -348,7 +348,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 				return false;
 			default:
 				res.status(400).json({
-					message: 'Email is not valid, but the server could not determine why.',
+					message: 'Password is not valid, but the server could not determine why.',
 				});
 				return false;
 		}
