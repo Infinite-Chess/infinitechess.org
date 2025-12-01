@@ -1,38 +1,37 @@
-
 /**
  * This script allows the user to draw rays on the board.
- * 
+ *
  * Helpful for analysis.
  */
 
+import type { Color } from '../../../../../../../shared/util/math/math.js';
 
-import type { Color } from "../../../../../../../shared/util/math/math.js";
-
-import preferences from "../../../../components/header/preferences.js";
-import snapping from "../snapping.js";
-import space from "../../../misc/space.js";
-import gameslot from "../../../chess/gameslot.js";
-import boardpos from "../../boardpos.js";
-import mouse from "../../../../util/mouse.js";
-import annotations from "./annotations.js";
-import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
-import variant from "../../../../../../../shared/chess/variants/variant.js";
-import geometry, { BaseRay } from "../../../../../../../shared/util/math/geometry.js";
-import bd from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
-import legalmovemodel from "../legalmovemodel.js";
-import meshes from "../../meshes.js";
-import highlightline, { Line } from "../highlightline.js";
-import { Mouse } from "../../../input.js";
-import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
-import vectors, { Ray, Vec3 } from "../../../../../../../shared/util/math/vectors.js";
-
+import preferences from '../../../../components/header/preferences.js';
+import snapping from '../snapping.js';
+import space from '../../../misc/space.js';
+import gameslot from '../../../chess/gameslot.js';
+import boardpos from '../../boardpos.js';
+import mouse from '../../../../util/mouse.js';
+import annotations from './annotations.js';
+import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
+import variant from '../../../../../../../shared/chess/variants/variant.js';
+import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
+import bd from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
+import legalmovemodel from '../legalmovemodel.js';
+import meshes from '../../meshes.js';
+import highlightline, { Line } from '../highlightline.js';
+import { Mouse } from '../../../input.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../../shared/chess/util/coordutil.js';
+import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
 
 // Variables -----------------------------------------------------------------
 
-
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
-
 
 /**
  * The preset ray overrides if provided from the ICN.
@@ -47,9 +46,7 @@ let pointerId: string | undefined;
 /** The last known position of the pointer drawing a ray. */
 let pointerWorld: DoubleCoords | undefined;
 
-
 // Getters -------------------------------------------------------------------
-
 
 /** Whether a ray is currently being drawn. */
 function areDrawing(): boolean {
@@ -58,20 +55,19 @@ function areDrawing(): boolean {
 
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
-	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.basegame.metadata.Variant);
+	const baseRays =
+		preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
-	return baseRays.map(r => {
+	return baseRays.map((r) => {
 		return {
 			start: r.start,
 			vector: r.vector,
-			line: vectors.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
+			line: vectors.getLineGeneralFormFromCoordsAndVec(r.start, r.vector),
 		};
 	});
 }
 
-
 // Updating -----------------------------------------------------------------
-
 
 /**
  * Tests if the user has started/finished drawing new rays,
@@ -82,8 +78,10 @@ function getPresetRays(): Ray[] {
 function update(rays: Ray[]): void {
 	const respectiveListener = mouse.getRelevantListener();
 
-	if (!drag_start) { // Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
+	if (!drag_start) {
+		// Not currently drawing a ray
+		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
+			// Double click drag this frame
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
@@ -92,49 +90,58 @@ function update(rays: Ray[]): void {
 			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
 
-			if (boardpos.areZoomedOut() && closestEntityToWorld || snapCoords) {
+			if ((boardpos.areZoomedOut() && closestEntityToWorld) || snapCoords) {
 				if (snapCoords) drag_start = coordutil.copyCoords(snapCoords);
 				else if (closestEntityToWorld) {
 					// Snap to nearest hovered entity
 					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
-				} else throw Error("How did we get here?");
+				} else throw Error('How did we get here?');
 			} else {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			}
 			// console.log("Ray drag start:", drag_start);
 		}
-	} else { // Currently drawing a ray
+	} else {
+		// Currently drawing a ray
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
-		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
-		if (respectiveListener.isPointerHeld(pointerId!)) { // Pointer is still holding
+		if (respectiveListener.pointerExists(pointerId!))
+			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
+		if (respectiveListener.isPointerHeld(pointerId!)) {
+			// Pointer is still holding
 			if (!pointerWorld) return; // Maybe we're looking into sky?
 			const pointerCoords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
 			if (!coordutil.areCoordsEqual(pointerCoords, drag_start!)) {
 				const squares = annotations.getSquares();
-				const index = squares.findIndex(coords => coordutil.areCoordsEqual(coords, drag_start!));
+				const index = squares.findIndex((coords) =>
+					coordutil.areCoordsEqual(coords, drag_start!),
+				);
 				if (index !== -1) {
 					squares.splice(index, 1); // Remove the square highlight
 					// console.log("Removed square highlight.");
 				}
 			}
-		} else { // The pointer is no longer being held
+		} else {
+			// The pointer is no longer being held
 			// Prevents accidentally ray drawing if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) {
 				addDrawnRay(rays); // Finalize the ray
 				dispatchRayCountEvent(rays);
-      		}
+			}
 			stopDrawing();
 		}
 	}
 }
 
 function getPointerId(): string {
-	if (!pointerId) throw Error("Pointer ID is undefined. Don't call drawrays.getPointerId() if not drawing a ray.");
+	if (!pointerId)
+		throw Error(
+			"Pointer ID is undefined. Don't call drawrays.getPointerId() if not drawing a ray.",
+		);
 	return pointerId;
 }
 
@@ -159,11 +166,21 @@ function getLines(rays: Ray[], color: Color): Line[] {
 		const rayStartBD = bd.FromCoords(ray.start);
 
 		// Find the points it intersects the screen
-		const intersectionPoints = geometry.findLineBoxIntersectionsBD(rayStartBD, ray.vector, boundingBox);
+		const intersectionPoints = geometry.findLineBoxIntersectionsBD(
+			rayStartBD,
+			ray.vector,
+			boundingBox,
+		);
 		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
-		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
+		if (
+			!intersectionPoints[0]!.positiveDotProduct &&
+			!intersectionPoints[1]!.positiveDotProduct
+		)
+			continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
 
-		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : rayStartBD;
+		const start = intersectionPoints[0]!.positiveDotProduct
+			? intersectionPoints[0]!.coords
+			: rayStartBD;
 
 		lines.push({
 			start,
@@ -183,7 +200,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
  * @param rays - All rays currently visible on the board.
  * @returns An object containing the results, such as whether the ray was added, and what rays were deleted if any.
  */
-function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
+function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	if (!pointerWorld) return { added: false }; // Probably stopped drawing while looking into sky?
 
 	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
@@ -193,14 +210,21 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 
 	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
 	const mouseTileCoords = space.convertWorldSpaceToCoords(pointerWorld);
-	const vector_unnormalized = coordutil.subtractBDCoords(mouseTileCoords, bd.FromCoords(drag_start!));
-	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
+	const vector_unnormalized = coordutil.subtractBDCoords(
+		mouseTileCoords,
+		bd.FromCoords(drag_start!),
+	);
+	const vector = findClosestPredefinedVector(
+		vector_unnormalized,
+		gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent,
+	);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
 	const deletedRays: Ray[] = [];
 
 	// If any existing rays are coincident, remove those.
-	for (let i = rays.length - 1; i >= 0; i--) { // Iterate backwards since we're modifying the list as we go
+	for (let i = rays.length - 1; i >= 0; i--) {
+		// Iterate backwards since we're modifying the list as we go
 		const ray = rays[i]!;
 		if (!coordutil.areCoordsEqual(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
 		if (coordutil.areCoordsEqual(ray.start, drag_start!)) {
@@ -211,27 +235,35 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 			return { added: false, deletedRays };
 		}
 		const line2 = ray.line;
-		if (vectors.areLinesInGeneralFormEqual(line, line2)) { // Coincident
+		if (vectors.areLinesInGeneralFormEqual(line, line2)) {
+			// Coincident
 			// Calculate the dot product the ray's vectors.
 			// If it's positive, they point in the same direction, otherwise opposite.
 			const dotProd = vectors.dotProduct(vector, ray.vector);
-			if (dotProd > 0) { // Positive, they point in same direction
+			if (dotProd > 0) {
+				// Positive, they point in same direction
 				// Which one is contained in the other?
 				const vecToComparingRayStart = coordutil.subtractCoords(ray.start, drag_start!);
 				const dotProd2 = vectors.dotProduct(vector, vecToComparingRayStart);
-				if (dotProd2 > 0) { // Positive = comparing ray is contained within the new ray
+				if (dotProd2 > 0) {
+					// Positive = comparing ray is contained within the new ray
 					// Remove this comparing ray in favor of the new one
 					rays.splice(i, 1);
 					deletedRays.push(ray);
 					// console.log("Removed ray in favor of new.");
-				} else { // Skip adding the new one (it already exists contained in this comparing one)
+				} else {
+					// Skip adding the new one (it already exists contained in this comparing one)
 					// console.log("Ray is already contained in another.");
-					if (deletedRays.length > 0) throw Error("Should not be any rays deleted if ray to be added is contained within another!");
+					if (deletedRays.length > 0)
+						throw Error(
+							'Should not be any rays deleted if ray to be added is contained within another!',
+						);
 					return { added: false };
 				}
-			} else { // Negative, they point in opposite directions
+			} else {
+				// Negative, they point in opposite directions
 				// Keep both
-				console.log("Rays point in opposite directions.");
+				console.log('Rays point in opposite directions.');
 			}
 		}
 	}
@@ -255,6 +287,7 @@ function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: 
 	// Now we can use small numbers
 	const targetAngle = Math.atan2(normalizedVector[1], normalizedVector[0]); // Y value first
 
+	// prettier-ignore
 	const searchVectors: Coords[] = searchHippogonals ? [
 		...vectors.VECTORS_ORTHOGONAL,
 		...vectors.VECTORS_DIAGONAL,
@@ -273,7 +306,8 @@ function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: 
 	let closestVector: Coords = searchVectors[0]!;
 
 	for (const predefinedVector of searchVectors) {
-		const predifinedVectorDouble: DoubleCoords = vectors.convertVectorToDoubles(predefinedVector);
+		const predifinedVectorDouble: DoubleCoords =
+			vectors.convertVectorToDoubles(predefinedVector);
 		const angle = Math.atan2(predifinedVectorDouble[1], predifinedVectorDouble[0]);
 		// Calculate the difference in angles
 		let angleDifferenceRad = targetAngle - angle;
@@ -282,8 +316,9 @@ function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: 
 		// This ensures that angles like -179 deg and 179 deg are considered close (2 deg diff), not far (358 deg diff).
 		// Example: diff = 350 deg (almost 2PI). Normalized: -10 deg.
 		//          diff = -350 deg. Normalized: 10 deg.
-		angleDifferenceRad = angleDifferenceRad - (2 * Math.PI) * Math.round(angleDifferenceRad / (2 * Math.PI));
-        
+		angleDifferenceRad =
+			angleDifferenceRad - 2 * Math.PI * Math.round(angleDifferenceRad / (2 * Math.PI));
+
 		const currentAbsoluteAngleDifference = Math.abs(angleDifferenceRad);
 
 		if (currentAbsoluteAngleDifference < minAbsoluteAngleDifference) {
@@ -297,7 +332,7 @@ function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: 
 
 /**
  * Collapses all existing rays into a list of intersection coords points.
- * 
+ *
  * This includes all drawn ray starts, all intersections between drawn & all rays,
  * and all intersections between drawn rays and the selected piece's legal move rays/segments.
  */
@@ -317,7 +352,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 		const ray1 = rays_drawn[a]!; // Gauranteed drawn ray
 		for (let b = a + 1; b < rays_all.length; b++) {
 			const ray2 = rays_all[b]!; // Could be drawn or preset ray
-			
+
 			// Calculate where they intersect
 			const intsect = geometry.intersectRays(ray1, ray2);
 			if (intsect === undefined) continue; // No intersection, skip.
@@ -331,11 +366,12 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 			addSquare_NoDuplicates(intsect);
 		}
 	}
-	
+
 	// Add all the intersection points of the drawn rays with all
 	// the components of the selected piece's legal move lines.
 
-	const { rays: selectedPieceRays, segments: selectedPieceSegments } = selectedpiecehighlightline.getLineComponents();
+	const { rays: selectedPieceRays, segments: selectedPieceSegments } =
+		selectedpiecehighlightline.getLineComponents();
 
 	for (const ray of rays_all) {
 		// Selected piece legal move RAYS
@@ -363,7 +399,8 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 	}
 
 	function addSquare_NoDuplicates(coords: BDCoords): void {
-		if (intersections.every(coords2 => !coordutil.areBDCoordsEqual(coords, coords2))) intersections.push(coords);
+		if (intersections.every((coords2) => !coordutil.areBDCoordsEqual(coords, coords2)))
+			intersections.push(coords);
 	}
 
 	return intersections;
@@ -378,7 +415,8 @@ function dispatchRayCountEvent(rays: Ray[]): void {
  * These override the variant's preset rays.
  */
 function setPresetOverrides(prs: BaseRay[]): void {
-	if (preset_rays) throw Error("Preset rays already initialized. Did you forget to clearPresetOverrides()?");
+	if (preset_rays)
+		throw Error('Preset rays already initialized. Did you forget to clearPresetOverrides()?');
 	preset_rays = prs;
 }
 
@@ -392,9 +430,7 @@ function clearPresetOverrides(): void {
 	preset_rays = undefined;
 }
 
-
 // Rendering -----------------------------------------------------------------
-
 
 /** Renders all existing rays, including preset rays. */
 function render(rays: Ray[]): void {
@@ -405,7 +441,7 @@ function render(rays: Ray[]): void {
 
 	const drawnRaysColor = preferences.getAnnoteSquareColor();
 	const presetRaysColor: Color = [...PRESET_RAY_COLOR];
-	
+
 	genAndRenderRays(rays, drawnRaysColor);
 	genAndRenderRays(presetRays, presetRaysColor);
 
@@ -419,11 +455,13 @@ function render(rays: Ray[]): void {
 function genAndRenderRays(rays: Ray[], color: Color): void {
 	if (rays.length === 0) return; // Nothing to render
 
-	if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
+	if (boardpos.areZoomedOut()) {
+		// Zoomed out, render rays as highlight lines
 		color[3] = 1; // Highlightlines are fully opaque
 		const lines = getLines(rays, color);
 		highlightline.genLinesModel(lines).render();
-	} else { // Zoomed in, render rays as infinite legal move highlights
+	} else {
+		// Zoomed in, render rays as infinite legal move highlights
 		const boardPos: BDCoords = boardpos.getBoardPos();
 		const model_Offset: Coords = legalmovemodel.getOffset();
 		const position = meshes.getModelPosition(boardPos, model_Offset, 0);
@@ -434,9 +472,7 @@ function genAndRenderRays(rays: Ray[], color: Color): void {
 	}
 }
 
-
 // Exports -------------------------------------------------------------------
-
 
 export default {
 	PRESET_RAY_COLOR,

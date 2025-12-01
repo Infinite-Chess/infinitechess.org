@@ -1,8 +1,6 @@
-
 /**
  * This script calculates legal moves
  */
-
 
 import specialdetect from './specialdetect.js';
 import winconutil from '../util/winconutil.js';
@@ -32,41 +30,39 @@ import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
-
 // Type Definitions ----------------------------------------------------------------
-
 
 /**
  * The negative/positive vector step-limit of a sliding direction.
- * 
+ *
  * NULL === INFINITY
  * [-2,null] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
  * For knightriders, one [2,1] hop is considered 1 step.
  */
-type SlideLimits = [bigint | null, bigint | null]
+type SlideLimits = [bigint | null, bigint | null];
 
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
-	individual: CoordsSpecial[],
+	individual: CoordsSpecial[];
 	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
-	sliding: Record<Vec2Key, SlideLimits>,
+	sliding: Record<Vec2Key, SlideLimits>;
 	/** If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen. */
-	brute?: boolean,
+	brute?: boolean;
 	/** The ignore function of the piece, to skip over moves. */
-	ignoreFunc: IgnoreFunction
+	ignoreFunc: IgnoreFunction;
 }
 
 /**
  * A dictionary of vector distances from an origin square containing
  * a list of raw piece types, typically that can capture from that distance.
  */
-type Vicinity = Record<CoordsKey, RawType[]>
+type Vicinity = Record<CoordsKey, RawType[]>;
 
 /**
  * Calculates the area around you in which jumping pieces can land on you from that distance.
  * This is used for efficient calculating if a king move would put you in check.
- * Must be called after the piece movesets are initialized. 
+ * Must be called after the piece movesets are initialized.
  * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
  * DOES NOT include pawn moves.
  * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
@@ -74,12 +70,12 @@ type Vicinity = Record<CoordsKey, RawType[]>
  */
 function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity {
 	const vicinity: Record<CoordsKey, RawType[]> = {};
-	
+
 	// For every type in the game...
 	for (const [rawTypeString, movesetFunc] of Object.entries(pieceMovesets)) {
 		const rawType = Number(rawTypeString) as RawType;
 		const individualMoves = movesetFunc().individual ?? [];
-		individualMoves.forEach(coords => {
+		individualMoves.forEach((coords) => {
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
 			vicinity[coordsKey]!.push(rawType); // Make sure the key contains the piece type that can capture from that distance
@@ -108,7 +104,7 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
 		const rawType = Number(rawTypeString) as RawType;
 		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
-		pieceVicinity.forEach(coords => {
+		pieceVicinity.forEach((coords) => {
 			const coordsKey = coordutil.getKeyFromCoords(coords as Coords);
 			// typescript doesn't realize vicinity[coordsKey] is gauranteed to be defined
 			// after this statement if we use (coordsKey in vicinity) for some reason
@@ -137,7 +133,6 @@ function getBlockingFuncFromPieceMoveset(pieceMoveset: PieceMoveset): BlockingFu
 	return pieceMoveset.blocking || movesets.defaultBlockingFunction;
 }
 
-
 /**
  * Return the piece move ignore function if it is specified, or the default otherwise.
  */
@@ -155,7 +150,7 @@ function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
 	return {
 		individual: [],
 		sliding: {},
-		ignoreFunc: getIgnoreFuncFromPieceMoveset(moveset)
+		ignoreFunc: getIgnoreFuncFromPieceMoveset(moveset),
 	};
 }
 
@@ -190,39 +185,58 @@ function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords:
 
 /**
  * Adds any of the pieces movesets applicable special moves
- * @param gamefile 
- * @param piece 
- * @param moveset 
- * @param legalmoves 
+ * @param gamefile
+ * @param piece
+ * @param moveset
+ * @param legalmoves
  * @param premove - Default: false. SET TO TRUE when you need to calculate premoves, which allow all possible moves!
  */
-function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, premove: boolean): void {
+function appendSpecialMoves(
+	gamefile: FullGame,
+	piece: Piece,
+	moveset: PieceMoveset,
+	legalmoves: LegalMoves,
+	premove: boolean,
+): void {
 	const color = typeutil.getColorFromType(piece.type);
-	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color, premove));
+	if (moveset.special)
+		legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color, premove));
 }
 
 /**
  * Removes moves that either land on a friendly or void,
  * and adjusts slide limits based on the provided moveset's blocking function
  * and what pieces are in the way.
- * 
+ *
  * Call BEFORE appending special moves.
  */
-function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, premove: boolean): void {
+function removeObstructedMoves(
+	boardsim: Board,
+	piece: Piece,
+	moveset: PieceMoveset,
+	legalmoves: LegalMoves,
+	premove: boolean,
+): void {
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Remove obstructed jumping/individual moves
 	removeInvalidIndividualMoves(boardsim, legalmoves.individual, color, premove);
 
 	// Block sliding moves according to obstructions
-	if (moveset.sliding) removeObstructedSlidingMoves(boardsim, piece, moveset, legalmoves.sliding, color, premove);
+	if (moveset.sliding)
+		removeObstructedSlidingMoves(boardsim, piece, moveset, legalmoves.sliding, color, premove);
 }
 
 /**
  * Accepts array of moves, returns new array with illegal moves removed due to pieces occupying.
  * MUTATES original array.
  */
-function removeInvalidIndividualMoves(boardsim: Board, individualMoves: Coords[], color: Player, premove: boolean): Coords[] {
+function removeInvalidIndividualMoves(
+	boardsim: Board,
+	individualMoves: Coords[],
+	color: Player,
+	premove: boolean,
+): Coords[] {
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		const thisMove = individualMoves[i]!;
 		const moveValidity = testSquareValidity(boardsim, thisMove, color, premove, false);
@@ -235,31 +249,58 @@ function removeInvalidIndividualMoves(boardsim: Board, individualMoves: Coords[]
 /**
  * @param premove - If true, then only voids and world borders block movement.
  */
-function removeObstructedSlidingMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, slidingMoves: Record<Vec2Key, SlideLimits>, color: Player, premove: boolean): void {
+function removeObstructedSlidingMoves(
+	boardsim: Board,
+	piece: Piece,
+	moveset: PieceMoveset,
+	slidingMoves: Record<Vec2Key, SlideLimits>,
+	color: Player,
+	premove: boolean,
+): void {
 	const blockingFunc = getBlockingFuncFromPieceMoveset(moveset);
 	for (const [linekey, limits] of Object.entries(slidingMoves)) {
 		const lines = boardsim.pieces.lines.get(linekey as Vec2Key);
 		if (lines === undefined) continue;
 		const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 		const key = organizedpieces.getKeyFromLine(line, piece.coords);
-		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color, premove);
-	};
+		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(
+			boardsim,
+			blockingFunc,
+			boardsim.pieces,
+			lines.get(key)!,
+			line,
+			limits,
+			piece.coords,
+			color,
+			premove,
+		);
+	}
 }
 
 /**
  * Tests whether the provided coordinates can POSSIBLY be landed on
  * (bar legality check), and whether they should block further movement.
- * 
+ *
  * 0 => Allowed, and doesn't block further movement (empty square, or premove)
  * 1 => Allowed, but BLOCKS further movement (enemy piece)
  * 2 => Blocked, and BLOCKS further movement (friendly piece or void or outside border)
- * 
+ *
  * @param premove - Exempts the `capturing` requirement from being fulfilled, and allows capturing friendlies.
  * @param capturing - Whether the move is required to be a capture (pawn diagonal move). Default: false. Setting this to false DOES NOT require the move to be non-capturing.
  */
-function testSquareValidity(boardsim: Board, coords: Coords, friendlyColor: Player, premove: boolean, capturing: boolean): 0 | 1 | 2 {
+function testSquareValidity(
+	boardsim: Board,
+	coords: Coords,
+	friendlyColor: Player,
+	premove: boolean,
+	capturing: boolean,
+): 0 | 1 | 2 {
 	// Test whether the given square lies out of bounds of the position.
-	if (boardsim.playableRegion !== undefined && !bounds.boxContainsSquare(boardsim.playableRegion, coords)) return 2;
+	if (
+		boardsim.playableRegion !== undefined &&
+		!bounds.boxContainsSquare(boardsim.playableRegion, coords)
+	)
+		return 2;
 
 	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, coords);
 
@@ -275,14 +316,18 @@ function testSquareValidity(boardsim: Board, coords: Coords, friendlyColor: Play
 /**
  * Tests whether the provided piece type can POSSIBLY be captured
  * (bar legality check), and whether they should block further movement.
- * 
+ *
  * 0 => Allowed, and doesn't block further movement (premove)
  * 1 => Allowed, but BLOCKS further movement (enemy piece)
  * 2 => Blocked, and BLOCKS further movement (friendly piece or void)
- * 
+ *
  * @param premove - Allows capturing friendlies.
  */
-function testCaptureValidity(friendlyColor: Player, typeOnSquare: number, premove: boolean): 0 | 1 | 2 {
+function testCaptureValidity(
+	friendlyColor: Player,
+	typeOnSquare: number,
+	premove: boolean,
+): 0 | 1 | 2 {
 	const rawType = typeutil.getRawType(typeOnSquare);
 	if (rawType === rawTypes.VOID) return 2; // Void, NEVER legal
 
@@ -296,8 +341,8 @@ function testCaptureValidity(friendlyColor: Player, typeOnSquare: number, premov
 
 /**
  * Calculates and generates all legal moves of a piece in the provided gamefile.
- * @param gamefile 
- * @param piece 
+ * @param gamefile
+ * @param piece
  * @returns The legal moves of that piece
  */
 function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
@@ -331,22 +376,29 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  * Shortens the moveset by pieces that block it's path.
  * @param blockingFunc - The function that will check if each piece on the same line needs to block the piece
  * @param o
- * @param line - The list of pieces on this line 
- * @param step - The direction of the line: `[dx,dy]` 
+ * @param line - The list of pieces on this line
+ * @param step - The direction of the line: `[dx,dy]`
  * @param slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
  * @param coords - The coordinates of the piece with the specified slideMoveset.
  * @param color - The color of friendlies
  */
 function slide_CalcLegalLimit(
-	boardsim: Board, blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[],
-	step: Vec2, slideMoveset: SlideLimits, coords: Coords, color: Player, premove: boolean
+	boardsim: Board,
+	blockingFunc: BlockingFunction,
+	o: OrganizedPieces,
+	line: number[],
+	step: Vec2,
+	slideMoveset: SlideLimits,
+	coords: Coords,
+	color: Player,
+	premove: boolean,
 ): SlideLimits {
 	// The default slide is [null, null] (Infinity in both directions),
 	// change that if there are any pieces blocking our path!
 	// The first index is always negative if it's not null (Infinity)
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
-	const axis = step[0] === 0n ? 1 : 0; 
+	const axis = step[0] === 0n ? 1 : 0;
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
@@ -355,7 +407,6 @@ function slide_CalcLegalLimit(
 
 	// Iterate through all pieces on same line
 	for (const idx of line) {
-
 		const thisPiece = boardutil.getPieceFromIdx(o, idx)!; // { type, coords }
 
 		/**
@@ -364,35 +415,44 @@ function slide_CalcLegalLimit(
 		 * 2 => Blocked 1 before the square (friendly piece or void)
 		 */
 		const blockResult = blockingFunc(color, thisPiece, coords, premove);
-		if (blockResult !== 0 && blockResult !== 1 && blockResult !== 2) throw new Error(`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`);
+		if (blockResult !== 0 && blockResult !== 1 && blockResult !== 2)
+			throw new Error(
+				`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`,
+			);
 
-		if (blockResult === 0) continue; // Not blocked. 
+		if (blockResult === 0) continue; // Not blocked.
 
 		// It blocks movement...
 
 		// Is the piece to the left of us or right of us?
 		const thisPieceSteps = (thisPiece.coords[axis] - coords[axis]) / step[axis]; // Can be negative
-		if (thisPieceSteps < 0) { // To our left
+		if (thisPieceSteps < 0) {
+			// To our left
 
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
 			const newLeftSlideLimit = blockResult === 2 ? thisPieceSteps + 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
 			if (limit[0] === null || newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
-
-		} else if (thisPieceSteps > 0) { // To our right
+		} else if (thisPieceSteps > 0) {
+			// To our right
 
 			// What would our new right slide limit be? If it's an opponent, it's legal to capture it.
 			const newRightSlideLimit = blockResult === 2 ? thisPieceSteps - 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
 			if (limit[1] === null || newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
-
 		} // else this is us, don't do anything.
 	}
 	return limit;
 }
 
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
-function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coords: Coords, step: Vec2, axis: 0 | 1): void {
+function enforceWorldBorderOnSlideLimit(
+	boardsim: Board,
+	limit: SlideLimits,
+	coords: Coords,
+	step: Vec2,
+	axis: 0 | 1,
+): void {
 	if (boardsim.playableRegion === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
@@ -401,25 +461,33 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
 	const negatedStepBD = vectors.negateBDVector(stepBD);
 
 	// These are in order of ascending dot product.
-	const intersections = geometry.findLineBoxIntersections(coords, step, boardsim.playableRegion).map(i => i.coords);
-	if (intersections.length < 1) throw Error("Slide direction made zero intersections with border!"); // Would happen if the piece somehow gets outside the border
+	const intersections = geometry
+		.findLineBoxIntersections(coords, step, boardsim.playableRegion)
+		.map((i) => i.coords);
+	if (intersections.length < 1)
+		throw Error('Slide direction made zero intersections with border!'); // Would happen if the piece somehow gets outside the border
 	// eslint-disable-next-line prefer-const
 	let [intsect1, intsect2] = intersections;
 	if (!intsect2) intsect2 = intsect1; // If there's only one intersection (corner), use it for both
 
 	const stepsToIntsect1 = getStepsToReachPoint(coordsBD, intsect1!, negatedStepBD, axis); // Always positive
-	const stepsToIntsect2 = getStepsToReachPoint(coordsBD, intsect2!, stepBD,        axis); // Always positive
+	const stepsToIntsect2 = getStepsToReachPoint(coordsBD, intsect2!, stepBD, axis); // Always positive
 
 	/**
 	 * Calculates the minimum number of steps to reach the destination
 	 * coords (inclusive), or immediately before, but not after.
-	 * @param origin 
-	 * @param destination 
+	 * @param origin
+	 * @param destination
 	 * @param step - Can be negated. MUST BE IN THE direction towards the destination!
 	 * @param axis - Whether to use the x or y axis in arithmetic (can't use x if x step is 0)
 	 * @returns A number of steps (always positive) it would take to reach the destination from the origin using the step provided.
 	 */
-	function getStepsToReachPoint(origin: BDCoords, destination: BDCoords, step: BDCoords, axis: 0 | 1): bigint {
+	function getStepsToReachPoint(
+		origin: BDCoords,
+		destination: BDCoords,
+		step: BDCoords,
+		axis: 0 | 1,
+	): bigint {
 		// How many steps would it take to reach this point?
 		const distanceToPoint: BigDecimal = bd.subtract(destination[axis], origin[axis]);
 		// The maximum number of steps we can take before exceeding the point (inclusive to the point)
@@ -428,7 +496,7 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
 
 	// Shorten our slide limit to not exceed the world border
 	if (limit[0] === null || -stepsToIntsect1 > limit[0]) limit[0] = -stepsToIntsect1;
-	if (limit[1] === null ||  stepsToIntsect2 < limit[1]) limit[1] =  stepsToIntsect2;
+	if (limit[1] === null || stepsToIntsect2 < limit[1]) limit[1] = stepsToIntsect2;
 
 	// console.log("New limit after blocked by world border:", limit);
 }
@@ -442,7 +510,13 @@ function enforceWorldBorderOnSlideLimit(boardsim: Board, limit: SlideLimits, coo
  * @param slideKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param organizedLine - The organized line of the above key that our piece is on
  */
-function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]): SlideLimits | undefined {
+function calcPiecesLegalSlideLimitOnSpecificLine(
+	boardsim: Board,
+	piece: Piece,
+	slide: Vec2,
+	slideKey: Vec2Key,
+	organizedLine: number[],
+): SlideLimits | undefined {
 	const thisPieceMoveset = getPieceMoveset(boardsim, piece.type); // Default piece moveset
 	if (!thisPieceMoveset.sliding) return; // This piece can't slide at all
 	if (!thisPieceMoveset.sliding[slideKey]) return; // This piece can't slide ALONG the provided line
@@ -450,13 +524,23 @@ function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, 
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
-	return slide_CalcLegalLimit(boardsim, blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor, false);
+	return slide_CalcLegalLimit(
+		boardsim,
+		blockingFunc,
+		boardsim.pieces,
+		organizedLine,
+		slide,
+		thisPieceMoveset.sliding[slideKey],
+		piece.coords,
+		friendlyColor,
+		false,
+	);
 }
 
 /**
  * Checks if the provided move start and end coords is one of the
  * legal moves in the provided legalMoves object.
- * 
+ *
  * **This will modify** the provided endCoords to attach any special move flags.
  * @param gamefile
  * @param legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
@@ -467,7 +551,14 @@ function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, 
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns *true* if the provided legalMoves object contains the provided endCoords.
  */
-function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoords: Coords, endCoords: Coords, colorOfFriendly: Player, { ignoreIndividualMoves = false } = {}): boolean {
+function checkIfMoveLegal(
+	gamefile: FullGame,
+	legalMoves: LegalMoves,
+	startCoords: Coords,
+	endCoords: Coords,
+	colorOfFriendly: Player,
+	{ ignoreIndividualMoves = false } = {},
+): boolean {
 	// Return if it's the same exact square
 	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
@@ -491,10 +582,21 @@ function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoord
 		const clickedCoordsLine = organizedpieces.getKeyFromLine(line, endCoords);
 		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
-		if (legalMoves.brute) { // Don't allow the slide if it results in check
+		if (
+			!doesSlidingMovesetContainSquare(
+				limits,
+				line,
+				startCoords,
+				endCoords,
+				legalMoves.ignoreFunc,
+			)
+		)
+			continue; // Sliding this direction
+		if (legalMoves.brute) {
+			// Don't allow the slide if it results in check
 			const moveDraft = { startCoords: startCoords, endCoords };
-			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
+			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check)
+				return false; // The move results in check => not legal
 		}
 		return true; // Move is legal
 	}
@@ -504,17 +606,23 @@ function checkIfMoveLegal(gamefile: FullGame, legalMoves: LegalMoves, startCoord
 /**
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
- * 
+ *
  * MODIFIES THE MOVE DRAFT to attach any special move flags it needs!
  * @param gamefile - The gamefile
  * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
  * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
  */
-function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedGameConclusion: string | undefined): string | true {
-	const {boardsim, basegame} = gamefile;
-	
+function isOpponentsMoveLegal(
+	gamefile: FullGame,
+	moveDraft: MoveDraft,
+	claimedGameConclusion: string | undefined,
+): string | true {
+	const { boardsim, basegame } = gamefile;
+
 	if (!moveDraft) {
-		console.log("Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.");
+		console.log(
+			'Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.',
+		);
 		return 'Move is not defined. Probably an error in converting it to long format.';
 	}
 	// Don't modify the original move. This is because while it's simulated,
@@ -525,41 +633,56 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 
 	const originalMoveIndex = boardsim.state.local.moveIndex; // Used to return to this move after we're done simulating
 	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
-	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
+	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
+		movepiece.applyMove(gamefile, move, true),
+	);
 
 	// Make sure a piece exists on the start coords
 	const piecemoved = boardutil.getPieceFromCoords(boardsim.pieces, moveDraftCopy.startCoords); // { type, index, coords }
 	if (!piecemoved) {
-		console.log(`Opponent's move is illegal because no piece exists at the startCoords: ${String(moveDraftCopy.startCoords)}`);
+		console.log(
+			`Opponent's move is illegal because no piece exists at the startCoords: ${String(moveDraftCopy.startCoords)}`,
+		);
 		return rewindGameAndReturnReason('No piece exists at start coords.');
 	}
 
 	// Make sure it's the same color as your opponent.
 	const colorOfPieceMoved = typeutil.getColorFromType(piecemoved.type);
 	if (colorOfPieceMoved !== basegame.whosTurn) {
-		console.log(`Opponent's move is illegal because you can't move a non-friendly piece: ${String(moveDraftCopy.startCoords)}`);
+		console.log(
+			`Opponent's move is illegal because you can't move a non-friendly piece: ${String(moveDraftCopy.startCoords)}`,
+		);
 		return rewindGameAndReturnReason("Can't move a non-friendly piece.");
 	}
 
 	// If there is a promotion, make sure that's legal
 	if (moveDraftCopy.promotion !== undefined) {
 		if (typeutil.getRawType(piecemoved.type) !== r.PAWN) {
-			console.log(`Opponent's move is illegal because you can't promote a non-pawn: ${String(moveDraftCopy.startCoords)}`);
+			console.log(
+				`Opponent's move is illegal because you can't promote a non-pawn: ${String(moveDraftCopy.startCoords)}`,
+			);
 			return rewindGameAndReturnReason("Can't promote a non-pawn.");
 		}
 		const colorPromotedTo = typeutil.getColorFromType(moveDraftCopy.promotion);
 		if (basegame.whosTurn !== colorPromotedTo) {
-			console.log(`Opponent's move is illegal because they promoted to the opposite color: ${typeutil.debugType(moveDraftCopy.promotion)}`);
+			console.log(
+				`Opponent's move is illegal because they promoted to the opposite color: ${typeutil.debugType(moveDraftCopy.promotion)}`,
+			);
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
 		const rawPromotion = typeutil.getRawType(moveDraftCopy.promotion);
 		if (!basegame.gameRules.promotionsAllowed![basegame.whosTurn]!.includes(rawPromotion)) {
-			console.log(`Opponent's move is illegal because the specified promotion is illegal: ${typeutil.debugType(moveDraftCopy.promotion)}`);
+			console.log(
+				`Opponent's move is illegal because the specified promotion is illegal: ${typeutil.debugType(moveDraftCopy.promotion)}`,
+			);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}
-	} else { // No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
+	} else {
+		// No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
 		if (specialdetect.isPawnPromotion(basegame, piecemoved.type, moveDraftCopy.endCoords)) {
-			console.log(`Opponent's move is illegal because they didn't promote at the promotion line: ${String(moveDraftCopy.endCoords)}`);
+			console.log(
+				`Opponent's move is illegal because they didn't promote at the promotion line: ${String(moveDraftCopy.endCoords)}`,
+			);
 			return rewindGameAndReturnReason("Didn't promote when moved to promotion line.");
 		}
 	}
@@ -568,10 +691,25 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 	const legalMoves = calculateAll(gamefile, piecemoved);
 
 	// This should pass on any special moves tags at the same time.
-	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveDraftCopy.endCoords);
-	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, endCoordsToAppendSpecialsTo, colorOfPieceMoved)) { // Illegal move
-		console.log(`Opponent's move is illegal because the destination coords are illegal: ${String(moveDraftCopy.endCoords)}`);
-		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${String(boardsim.state.local.inCheck)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}`);
+	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(
+		moveDraftCopy.endCoords,
+	);
+	if (
+		!checkIfMoveLegal(
+			gamefile,
+			legalMoves,
+			piecemoved.coords,
+			endCoordsToAppendSpecialsTo,
+			colorOfPieceMoved,
+		)
+	) {
+		// Illegal move
+		console.log(
+			`Opponent's move is illegal because the destination coords are illegal: ${String(moveDraftCopy.endCoords)}`,
+		);
+		return rewindGameAndReturnReason(
+			`Destination coordinates are illegal. inCheck: ${String(boardsim.state.local.inCheck)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}`,
+		);
 	}
 	// Transfer the special move flag to the moveDraftCopy
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveDraft);
@@ -579,11 +717,18 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 	// Check the resulting game conclusion from the move and if that lines up with the opponents claim.
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
 	// such as time, aborted, resignation, disconnect)
-	if (claimedGameConclusion === undefined || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
+	if (
+		claimedGameConclusion === undefined ||
+		winconutil.isGameConclusionDecisive(claimedGameConclusion)
+	) {
 		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
 		if (simulatedConclusion !== claimedGameConclusion) {
-			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}"`);
-			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`);
+			console.log(
+				`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}"`,
+			);
+			return rewindGameAndReturnReason(
+				`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`,
+			);
 		}
 	}
 
@@ -595,13 +740,17 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.goToMove(boardsim, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
+	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
+		movepiece.applyMove(gamefile, move, false),
+	);
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal: string): string {
 		// Rewind the game back to the index we were originally on
-		movepiece.goToMove(boardsim, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
+		movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
+			movepiece.applyMove(gamefile, move, false),
+		);
 		return reasonIllegal;
 	}
 }
@@ -616,20 +765,31 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
  * @param ignoreFunc - The ignore function.
  * @returns true if the piece is able to slide to the coordinates
  */
-function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: Vec2, pieceCoords: Coords, coords: Coords, ignoreFunc: IgnoreFunction): boolean {
+function doesSlidingMovesetContainSquare(
+	slideMoveset: SlideLimits,
+	direction: Vec2,
+	pieceCoords: Coords,
+	coords: Coords,
+	ignoreFunc: IgnoreFunction,
+): boolean {
 	const axis = direction[0] === 0n ? 1 : 0;
 	const coord = coords[axis];
-	const min: bigint | null = slideMoveset[0] === null ? null : pieceCoords[axis] + direction[axis] * slideMoveset[0]; // No need to negate direction because slideMoveset[0] is always negative
-	const max: bigint | null = slideMoveset[1] === null ? null : pieceCoords[axis] + direction[axis] * slideMoveset[1];
-	return (min === null || coord >= min) && (max === null || coord <= max) && ignoreFunc(pieceCoords, coords);
+	const min: bigint | null =
+		slideMoveset[0] === null ? null : pieceCoords[axis] + direction[axis] * slideMoveset[0]; // No need to negate direction because slideMoveset[0] is always negative
+	const max: bigint | null =
+		slideMoveset[1] === null ? null : pieceCoords[axis] + direction[axis] * slideMoveset[1];
+	return (
+		(min === null || coord >= min) &&
+		(max === null || coord <= max) &&
+		ignoreFunc(pieceCoords, coords)
+	);
 }
 
 /**
  * Accepts the calculated legal moves, tests to see if there are any
- * @param moves 
+ * @param moves
  */
 function hasAtleast1Move(moves: LegalMoves): boolean {
-    
 	if (moves.individual.length > 0) return true;
 	for (const limits of Object.values(moves.sliding)) {
 		if (doesSlideHaveWidth(limits)) return true;
@@ -648,15 +808,9 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 	return false;
 }
 
-
 // Exports ----------------------------------------------------------------
 
-
-export type {
-	LegalMoves,
-	Vicinity,
-	SlideLimits,
-};
+export type { LegalMoves, Vicinity, SlideLimits };
 
 export default {
 	genVicinity,
@@ -665,7 +819,6 @@ export default {
 
 	getBlockingFuncFromPieceMoveset,
 	getIgnoreFuncFromPieceMoveset,
-
 
 	getEmptyLegalMoves,
 	appendPotentialMoves,

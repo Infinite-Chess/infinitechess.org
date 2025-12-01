@@ -1,19 +1,15 @@
-
 /**
  * This script only stores the number of active games,
  * that is games that are not over (falsey gameConclusion).
- * 
+ *
  * Games that have ended are retained for a short period of time
  * to allow disconnected players to reconnect and see the results.
  */
 
-
 import { broadcastToAllInviteSubs } from '../invitesmanager/invitessubscribers.js';
-
 
 /** The number of currently active (not over) games. */
 let activeGameCount = 0;
-
 
 /** Call when a game is created. */
 function incrementActiveGameCount(): void {
@@ -30,7 +26,7 @@ function decrementActiveGameCount(): void {
 
 /** Broadcasts the current game count to all sockets subscribed to the invites list. */
 function broadcastGameCountToInviteSubs(): void {
-	broadcastToAllInviteSubs("gamecount", activeGameCount);
+	broadcastToAllInviteSubs('gamecount', activeGameCount);
 }
 
 /**
@@ -48,7 +44,6 @@ function printActiveGameCount(): void {
 	const activeGameCount = getActiveGameCount();
 	console.log(`Active games: ${activeGameCount} ===========================================`);
 }
-
 
 export {
 	incrementActiveGameCount,

@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/util/bigdecimal/bimath.ts
 
 /**
@@ -6,16 +5,13 @@
  * for working with bigints.
  */
 
-
 // Constants =========================================================
-
 
 // const LOG_TWO: number = Math.log(2);
 const NEGONE: bigint = -1n;
 const ZERO: bigint = 0n;
 const ONE: bigint = 1n;
 // const TWO: bigint = 2n;
-
 
 // Mathematical Operations ===========================================
 
@@ -100,7 +96,7 @@ function ln(bigint: bigint): number {
 	const mantissaInt = Number(bigint >> shift);
 
 	// 3. Normalize the integer mantissa to the range [1.0, 2.0).
-	const mantissa = mantissaInt / (2 ** (precisionBits - 1));
+	const mantissa = mantissaInt / 2 ** (precisionBits - 1);
 
 	// 4. Apply the logarithm formula.
 	return Math.log(mantissa) + exponent * Math.LN2;
@@ -170,7 +166,7 @@ function countDigits(bigint: bigint): number {
 //  */
 // function getBitAtPositionFromRight(bigint: bigint, position: number): 1 | 0 {
 //     if (position < 1 || !Number.isInteger(position)) throw new Error(`Position must be a positive integer. Received: ${position}`);
-    
+
 //     // Create a mask where there is a single 1 at the position.
 //     // For example, if our position is 5, the resulting bitmask is '10000'.
 //     let bitmask: bigint = ONE << (BigInt(position) - ONE);
@@ -186,7 +182,7 @@ function countDigits(bigint: bigint): number {
 //  * Returns the bigint in binary form, **exactly** like how computers store them,
 //  * in two's complement notation. Negative values have all their bits flipped, and then added 1.
 //  * To multiply by -1, reverse all the bits, and add 1. This works both ways.
-//  * 
+//  *
 //  * For readability, if the number is negative, a space will be added after the leading '1' sign.
 //  * @param bigint - The BigDecimal
 //  * @returns The binary string. If it is negative, the leading `1` sign will have a space after it for readability.
@@ -227,19 +223,21 @@ function countDigits(bigint: bigint): number {
  */
 function toDebugBinaryString(bigint: bigint): string {
 	// 1. Handle the zero case cleanly.
-	if (bigint === ZERO) return "0b_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000 (1-chunk, 8 bytes, 64 bits)";
+	if (bigint === ZERO)
+		return '0b_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000 (1-chunk, 8 bytes, 64 bits)';
 
 	// 2. Calculate the minimum number of bits required for two's complement.
 	let minBits: number;
 	if (bigint > ZERO) {
 		minBits = bitLength_bisection(bigint);
-	} else { // bigint < ZERO
+	} else {
+		// bigint < ZERO
 		// For a negative number -N, the bits required are one more than the bits
 		// for N-1. e.g. -8 (1000) needs 4 bits, same as 7 (0111).
 		// A simple, reliable way is to find the bit length of its positive counterpart and add 1 for the sign.
 		// For -8, this becomes (-(-8n)) - 1n = 7n. The bit length of 7 (111) is 3. Add 1 for the sign bit = 4.
 		// For -10, this is 9n. Bit length of 9 (1001) is 4. Add 1 for sign bit = 5.
-		minBits = ((bigint * NEGONE) - ONE).toString(2).length + 1;
+		minBits = (bigint * NEGONE - ONE).toString(2).length + 1;
 	}
 
 	// Each chunk is 64 bits (8 bytes) on a 64-bit engine.
@@ -247,9 +245,10 @@ function toDebugBinaryString(bigint: bigint): string {
 	const CHUNK_BYTES = CHUNK_BITS / 8;
 
 	// 3. Determine how many 64-bit chunks we need, then total display bits
-	const effectiveBits = bigint >= 0n
-		? minBits + 1      // reserve sign-bit = 0
-		: minBits;         // negatives still need exactly minBits
+	const effectiveBits =
+		bigint >= 0n
+			? minBits + 1 // reserve sign-bit = 0
+			: minBits; // negatives still need exactly minBits
 	const chunkCount = Math.ceil(effectiveBits / CHUNK_BITS);
 	const displayBits = chunkCount * CHUNK_BITS;
 
@@ -261,9 +260,9 @@ function toDebugBinaryString(bigint: bigint): string {
 	const binaryString = displayValue.toString(2).padStart(displayBits, '0');
 
 	// 6. Add separators for readability (e.g., "1111_0110").
-	let formattedString = "0b";
+	let formattedString = '0b';
 	for (let i = 0; i < binaryString.length; i++) {
-		if (i > 0 && i % 4 === 0) formattedString += "_";
+		if (i > 0 && i % 4 === 0) formattedString += '_';
 		formattedString += binaryString[i];
 	}
 
@@ -273,10 +272,7 @@ function toDebugBinaryString(bigint: bigint): string {
 	return `${formattedString} ${annotation}`;
 }
 
-
-
 // Big Length Algorithms =============================================================
-
 
 // Global state for the bisection algorithm so it's not re-computed every call
 const testersCoeff: number[] = [];
@@ -336,7 +332,6 @@ function bitLength_bisection(x: bigint): number {
 // 	return i + (32 - Math.clz32(Number(n >> BigInt(i))));
 // }
 
-
 // /**
 //  * Calculates the bit length of a bigint using the simple `toString(2)` method.
 //  * This is the most readable but least performant method.
@@ -346,7 +341,6 @@ function bitLength_bisection(x: bigint): number {
 // 	if (n < ZERO) n = -n;
 // 	return n.toString(2).length;
 // }
-
 
 /**
  * Estimate the memory footprint of a BigInt in bytes, assuming a 64‑bit JavaScript engine
@@ -383,7 +377,7 @@ function estimateBigIntSize(bi: bigint): number {
  * @returns The positive remainder of the division as a BigInt.
  */
 function posMod(a: bigint, b: bigint): bigint {
-	return (a % b + b) % b;
+	return ((a % b) + b) % b;
 }
 
 /** Finds the smaller of two BigInts. */
@@ -411,9 +405,7 @@ function clamp(value: bigint, min: bigint, max: bigint): bigint {
 	return value < min ? min : value > max ? max : value;
 }
 
-
 // Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
-
 
 /**
  * Calculates the gcd of two bigints using the binary GCD (or Stein's) algorithm.
@@ -458,12 +450,12 @@ function GCD(a: bigint, b: bigint): bigint {
  * @returns The LCM of the numbers in the array.
  */
 function LCM(array: bigint[]): bigint {
-	if (array.length === 0) throw new Error('Array must contain at least one number to calculate the LCM.');
+	if (array.length === 0)
+		throw new Error('Array must contain at least one number to calculate the LCM.');
 
 	let answer: bigint = array[0]!;
 	for (let i = 1; i < array.length; i++) {
 		const currentNumber = array[i]!;
-
 
 		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
 		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
@@ -472,9 +464,7 @@ function LCM(array: bigint[]): bigint {
 	return answer;
 }
 
-
 // Exports ============================================================
-
 
 export default {
 	abs,

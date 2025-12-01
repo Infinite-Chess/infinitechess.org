@@ -1,4 +1,3 @@
-
 // Spacing: This script handles the spacing of our header elements at various screen widths
 
 const header = document.querySelector('header');
@@ -6,8 +5,12 @@ const home = document.querySelector('.home'); // "Infinite Chess" text
 const nav = document.querySelector('nav');
 const links = document.querySelectorAll('nav a');
 // Paddings allowed between each of our header links (right of logo & left of gear)
-const maxPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'));
-const minPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'));
+const maxPadding = parseInt(
+	getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'),
+);
+const minPadding = parseInt(
+	getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'),
+);
 // const gear = document.querySelector('.settings');
 
 // These things are hidden in our stylesheet off the bat to give our javascript
@@ -46,13 +49,13 @@ function updatePadding() {
 	// If the space is less than 100px, reduce padding gradually
 	if (spaceBetween >= 100) {
 		// Reset to max padding when space is larger than 100px
-		links.forEach(link => {
+		links.forEach((link) => {
 			link.style.paddingLeft = `${maxPadding}px`;
 			link.style.paddingRight = `${maxPadding}px`;
 		});
 	} else {
 		const newPadding = Math.max(minPadding, maxPadding * (spaceBetween / 100));
-		links.forEach(link => {
+		links.forEach((link) => {
 			link.style.paddingLeft = `${newPadding}px`;
 			link.style.paddingRight = `${newPadding}px`;
 		});

@@ -1,4 +1,3 @@
-
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 import camera from './camera.js';
@@ -7,8 +6,6 @@ import camera from './camera.js';
  * This script stores our global WebGL rendering context,
  * and other utility methods.
  */
-
-
 
 /** The WebGL rendering context. This is our web-based render engine. */
 let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in initGL()
@@ -23,12 +20,12 @@ let clearColor: Vec3 = [0.5, 0.5, 0.5]; // Grey
  * Specifies the condition under which a fragment passes the depth test,
  * determining whether it should be drawn based on its depth value
  * relative to the existing depth buffer values.
- * 
+ *
  * By default, we want objects rendered to only be visible if they are closer
  * (less than) or equal to other objects already rendered this frame. The gl
  * depth function can be changed throughout the run, but we always reset it
  * back to this default afterward.
- * 
+ *
  * Accepted values: `NEVER`, `LESS`, `EQUAL`, `LEQUAL`, `GREATER`, `NOTEQUAL`, `GEQUAL`, `ALWAYS`
  */
 const defaultDepthFuncParam = 'LEQUAL';
@@ -36,7 +33,7 @@ const defaultDepthFuncParam = 'LEQUAL';
 /**
  * Whether to cull (skip) rendering back faces.
  * We can prevent the rasteurizer from calculating pixels on faces facing AWAY from us with backface culling.
- * 
+ *
  * IF WE AREN'T CAREFUL about all vertices going into the same clockwise/counterclockwise
  * direction, then some objects will be invisible!
  */
@@ -47,10 +44,9 @@ const culling = false;
  */
 const frontFaceVerticesAreClockwise = true;
 
-
 /**
  * Sets the color the screen will be cleared to every frame.
- * 
+ *
  * This is useful for changing the sky color.
  * @param newClearColor - The new clear color: `[r,g,b]`
  */
@@ -64,9 +60,10 @@ function setClearColor(newClearColor: Vec3): void {
 function init(): void {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
-	if (!newContext) { // WebGL2 not supported
+	if (!newContext) {
+		// WebGL2 not supported
 		alert(translations['webgl_unsupported']);
-		throw new Error("WebGL2 not supported by browser.");
+		throw new Error('WebGL2 not supported by browser.');
 		// gl = camera.canvas.getContext('webgl', { alpha: false });
 	}
 	// if (!gl) { // Init WebGL experimental
@@ -114,16 +111,18 @@ function clearScreen(): void {
  */
 function toggleNormalBlending(): void {
 	// Non-premultiplied alpha blending mode. (Pre-multiplied would be gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 }
 
 /**
  * Toggles inverse blending mode, which will negate any color currently in the buffer.
- * 
+ *
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function enableBlending_Inverse(): void { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ZERO); }
+function enableBlending_Inverse(): void {
+	gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ZERO);
+}
 
 /**
  * Executes a function (typically a render function) while the depth function paramter
@@ -140,7 +139,7 @@ function executeWithDepthFunc_ALWAYS(func: Function): void {
 /**
  * Executes a function (typically a render function) while inverse blending is enabled.
  * Objects rendered will take the opposite color of what's currently in the buffer.
- * 
+ *
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
@@ -149,7 +148,6 @@ function executeWithInverseBlending(func: Function): void {
 	func();
 	toggleNormalBlending();
 }
-
 
 /**
  * Renders content using a flexible stencil mask.
@@ -162,8 +160,14 @@ function executeWithInverseBlending(func: Function): void {
  * 							'or' => Main scene will be drawn inside the inclusion mask and inversion of the exclusion mask.
  * 							Has no effect if only one mask type is provided.
  */
-function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExclusionMaskFunc: Function | undefined, drawContentFunc: Function, intersectionMode: 'and' | 'or'): void {
-	if (!drawExclusionMaskFunc && !drawInclusionMaskFunc) throw Error("No mask functions provided.");
+function executeMaskedDraw(
+	drawInclusionMaskFunc: Function | undefined,
+	drawExclusionMaskFunc: Function | undefined,
+	drawContentFunc: Function,
+	intersectionMode: 'and' | 'or',
+): void {
+	if (!drawExclusionMaskFunc && !drawInclusionMaskFunc)
+		throw Error('No mask functions provided.');
 
 	// Enable the stencil test.
 	gl.enable(gl.STENCIL_TEST);
@@ -175,7 +179,7 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 	try {
 		// We want to write to the stencil buffer, but make the mask itself invisible.
 		gl.colorMask(false, false, false, false); // Disable writing to the color buffer
-		gl.depthMask(false);                      // Disable writing to the depth buffer
+		gl.depthMask(false); // Disable writing to the depth buffer
 
 		// Draw the Masks
 
@@ -190,14 +194,14 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 		function drawInclusion(): void {
 			if (!drawInclusionMaskFunc) return;
 			// Inclusion mask writes with '2'.
-			gl.stencilFunc(gl.ALWAYS, 2, 0xFF);
+			gl.stencilFunc(gl.ALWAYS, 2, 0xff);
 			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 			drawInclusionMaskFunc();
 		}
 		function drawExclusion(): void {
 			if (!drawExclusionMaskFunc) return;
 			// Exclusion mask writes with '1'.
-			gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
+			gl.stencilFunc(gl.ALWAYS, 1, 0xff);
 			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 			drawExclusionMaskFunc();
 		}
@@ -215,30 +219,28 @@ function executeMaskedDraw(drawInclusionMaskFunc: Function | undefined, drawExcl
 			// The buffer now has 0s, 1s, and 2s.
 			if (intersectionMode === 'or') {
 				// We want to draw where it's 0 or 2 (not 1).
-				gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
+				gl.stencilFunc(gl.NOTEQUAL, 1, 0xff);
 			} else {
 				// We want to draw where it's 2 (exclusion mask would have overwritten some 2's with 1's).
-				gl.stencilFunc(gl.EQUAL, 2, 0xFF);
+				gl.stencilFunc(gl.EQUAL, 2, 0xff);
 			}
 		} else if (drawExclusionMaskFunc) {
 			// Case: EXCLUSION ONLY.
 			// The buffer has 0s and 1s. We want to draw ONLY where the value is 0 (not 1).
-			gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
+			gl.stencilFunc(gl.NOTEQUAL, 1, 0xff);
 		} else if (drawInclusionMaskFunc) {
 			// Case: INCLUSION ONLY.
 			// The buffer has 0s and 2s. We want to draw ONLY where the value is 2 (not 0).
-			gl.stencilFunc(gl.EQUAL, 2, 0xFF);
-		} else throw Error("Unexpected!");
-		
-		drawContentFunc();
+			gl.stencilFunc(gl.EQUAL, 2, 0xff);
+		} else throw Error('Unexpected!');
 
+		drawContentFunc();
 	} finally {
 		// Return to a normal state.
 		gl.disable(gl.STENCIL_TEST);
 		gl.enable(gl.DEPTH_TEST);
 	}
 }
-
 
 // /**
 //  * Queries common WebGL context values and logs them to the console.
@@ -350,7 +352,6 @@ function enableDepthTest(): void {
 function disableDepthTest(): void {
 	gl.disable(gl.DEPTH_TEST);
 }
-
 
 export default {
 	init,

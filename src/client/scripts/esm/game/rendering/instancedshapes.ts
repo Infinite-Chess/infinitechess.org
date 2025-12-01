@@ -1,28 +1,24 @@
-
 // src/client/scripts/esm/game/rendering/instancedshapes.ts
 
 /**
  * This script calculates the vertex data of a single instance
  * of several different kinds of shapes.
- * 
+ *
  * Many are used for rendering legal moves, like the square, dot, or corner triangles.
  * The plus sign is used for special rights highlighting.
- * 
+ *
  * The vertex data returned from any shape in this script
  * ALWAYS has a stride length of 6 (x,y, r,g,b,a)
  */
 
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
-import type { DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
-import type { Color } from "../../../../../shared/util/math/math.js";
-
-import board from "./boardtiles.js";
-import primitives from "./primitives.js";
-import meshes from "./meshes.js";
-
+import board from './boardtiles.js';
+import primitives from './primitives.js';
+import meshes from './meshes.js';
 
 // Variables ------------------------------------------------------------------------------
-
 
 /**
  * Properties for the dots that are rendered on legal squares without an occupying piece.
@@ -37,7 +33,7 @@ const DOTS = {
 	 * as dots are a little less noticeable than big squares,
 	 * so increasing their opacity helps.
 	 */
-	OPACITY_OFFSET: 0.2
+	OPACITY_OFFSET: 0.2,
 };
 
 /**
@@ -52,7 +48,7 @@ const CORNER_TRIS = {
 	 * as the triangles are a little less noticeable than big squares,
 	 * so increasing their opacity helps.
 	 */
-	OPACITY_OFFSET: 0.2
+	OPACITY_OFFSET: 0.2,
 };
 
 /**
@@ -67,12 +63,10 @@ const PLUS_SIGN = {
 	/** Width of the plus sign arms */
 	EDGE_WIDTH: 0.12, // Default: 0.12
 	/** Added to color alpha for better visibility */
-	OPACITY_OFFSET: 0.2 // Default: 0.2
+	OPACITY_OFFSET: 0.2, // Default: 0.2
 };
 
-
 // Functions ------------------------------------------------------------------------------
-
 
 /**
  * Generates the legal move square instance mesh, centered on [0,0]
@@ -80,7 +74,7 @@ const PLUS_SIGN = {
  * @returns The vertex data for the legal move square.
  */
 function getDataLegalMoveSquare(color: Color): number[] {
-	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
+	const coords: DoubleCoords = [0, 0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
 	return meshes.QuadModel_Color(coords, color);
@@ -96,7 +90,7 @@ function getDataLegalMoveDot(color: Color): number[] {
 	colorCopy[3] += DOTS.OPACITY_OFFSET; // Add the offset
 	colorCopy[3] = Math.min(colorCopy[3], 1); // Cap it
 
-	const coords: DoubleCoords = [0,0]; // The instance is going to be at [0,0]
+	const coords: DoubleCoords = [0, 0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
 	const x = coords[0] + (1 - board.getSquareCenterAsNumber()) - 0.5;
 	const y = coords[1] + (1 - board.getSquareCenterAsNumber()) - 0.5;
@@ -118,7 +112,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	a = Math.min(a + CORNER_TRIS.OPACITY_OFFSET, 1);
 
 	// Calculate visual center position (original [0,0] instance adjusted for board centering)
-	const boardCenterAdjust = (1 - board.getSquareCenterAsNumber()) - 0.5;
+	const boardCenterAdjust = 1 - board.getSquareCenterAsNumber() - 0.5;
 	const centerX = boardCenterAdjust;
 	const centerY = boardCenterAdjust;
 
@@ -128,6 +122,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 
 	// Helper to add a single corner triangle
 	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number): void => {
+		// prettier-ignore
 		vertices.push(
 			cornerX, cornerY, r, g, b, a,
 			cornerX + dx, cornerY, r, g, b, a,
@@ -136,10 +131,10 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	};
 
 	// Generate all four corners
-	addTriangle(centerX - squareHalfSize, centerY + squareHalfSize, triHalfWidth, -triHalfWidth);  // Top-left
+	addTriangle(centerX - squareHalfSize, centerY + squareHalfSize, triHalfWidth, -triHalfWidth); // Top-left
 	addTriangle(centerX + squareHalfSize, centerY + squareHalfSize, -triHalfWidth, -triHalfWidth); // Top-right
-	addTriangle(centerX - squareHalfSize, centerY - squareHalfSize, triHalfWidth, triHalfWidth);   // Bottom-left
-	addTriangle(centerX + squareHalfSize, centerY - squareHalfSize, -triHalfWidth, triHalfWidth);  // Bottom-right
+	addTriangle(centerX - squareHalfSize, centerY - squareHalfSize, triHalfWidth, triHalfWidth); // Bottom-left
+	addTriangle(centerX + squareHalfSize, centerY - squareHalfSize, -triHalfWidth, triHalfWidth); // Bottom-right
 
 	return vertices;
 }
@@ -151,14 +146,15 @@ function getDataPlusSign(color: Color): number[] {
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
 	a = Math.min(a + PLUS_SIGN.OPACITY_OFFSET, 1);
-	
+
 	const halfEdge = PLUS_SIGN.EDGE_WIDTH / 2;
 	const armLength = PLUS_SIGN.ARM_LENGTH;
 	const [posX, posY] = PLUS_SIGN.POSITION;
-	
+
 	const vertices: number[] = [];
-	
+
 	// Helper to add quad vertices (2 triangles)
+	// prettier-ignore
 	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void => {
 		// Triangle 1
 		vertices.push(x1, y1, r, g, b, a);
@@ -172,38 +168,58 @@ function getDataPlusSign(color: Color): number[] {
 
 	// Vertical arm (top segment)
 	addQuad(
-		posX - halfEdge, posY + armLength / 2,  // top-left
-		posX + halfEdge, posY + armLength / 2,  // top-right
-		posX + halfEdge, posY + halfEdge,      // bottom-right
-		posX - halfEdge, posY + halfEdge       // bottom-left
+		posX - halfEdge,
+		posY + armLength / 2, // top-left
+		posX + halfEdge,
+		posY + armLength / 2, // top-right
+		posX + halfEdge,
+		posY + halfEdge, // bottom-right
+		posX - halfEdge,
+		posY + halfEdge, // bottom-left
 	);
 	// Vertical arm (bottom segment)
 	addQuad(
-		posX - halfEdge, posY - halfEdge,      // top-left
-		posX + halfEdge, posY - halfEdge,      // top-right
-		posX + halfEdge, posY - armLength / 2,  // bottom-right
-		posX - halfEdge, posY - armLength / 2   // bottom-left
+		posX - halfEdge,
+		posY - halfEdge, // top-left
+		posX + halfEdge,
+		posY - halfEdge, // top-right
+		posX + halfEdge,
+		posY - armLength / 2, // bottom-right
+		posX - halfEdge,
+		posY - armLength / 2, // bottom-left
 	);
 	// Horizontal arm (left segment)
 	addQuad(
-		posX - armLength / 2, posY + halfEdge,  // top-left
-		posX - halfEdge, posY + halfEdge,      // top-right
-		posX - halfEdge, posY - halfEdge,      // bottom-right
-		posX - armLength / 2, posY - halfEdge   // bottom-left
+		posX - armLength / 2,
+		posY + halfEdge, // top-left
+		posX - halfEdge,
+		posY + halfEdge, // top-right
+		posX - halfEdge,
+		posY - halfEdge, // bottom-right
+		posX - armLength / 2,
+		posY - halfEdge, // bottom-left
 	);
 	// Horizontal arm (right segment)
 	addQuad(
-		posX + halfEdge, posY + halfEdge,      // top-left
-		posX + armLength / 2, posY + halfEdge,  // top-right
-		posX + armLength / 2, posY - halfEdge,  // bottom-right
-		posX + halfEdge, posY - halfEdge       // bottom-left
+		posX + halfEdge,
+		posY + halfEdge, // top-left
+		posX + armLength / 2,
+		posY + halfEdge, // top-right
+		posX + armLength / 2,
+		posY - halfEdge, // bottom-right
+		posX + halfEdge,
+		posY - halfEdge, // bottom-left
 	);
 	// Center square
 	addQuad(
-		posX - halfEdge, posY + halfEdge,  // top-left
-		posX + halfEdge, posY + halfEdge,  // top-right
-		posX + halfEdge, posY - halfEdge,  // bottom-right
-		posX - halfEdge, posY - halfEdge   // bottom-left
+		posX - halfEdge,
+		posY + halfEdge, // top-left
+		posX + halfEdge,
+		posY + halfEdge, // top-right
+		posX + halfEdge,
+		posY - halfEdge, // bottom-right
+		posX - halfEdge,
+		posY - halfEdge, // bottom-left
 	);
 
 	return vertices;
@@ -214,7 +230,7 @@ function getDataPlusSign(color: Color): number[] {
  * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
  */
 function getDataTexture(inverted: boolean): number[] {
-	let { left, right, bottom, top } = meshes.getCoordBoxModel([0,0]);
+	let { left, right, bottom, top } = meshes.getCoordBoxModel([0, 0]);
 	if (inverted) {
 		[left, right] = [right, left]; // Swap left and right
 		[bottom, top] = [top, bottom]; // Swap bottom and top

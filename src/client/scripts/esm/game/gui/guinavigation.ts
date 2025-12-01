@@ -1,4 +1,3 @@
-
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 // @ts-ignore
@@ -26,7 +25,6 @@ import space from '../misc/space.js';
 import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
-
 
 /**
  * This script handles the navigation bar, in a game,
@@ -57,21 +55,19 @@ const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 const element_pause = document.getElementById('pause')!;
 
-
 /**
  * A limit posed against teleporting too far.
- * 
+ *
  * Don't want players to discover new zones quickly
  * without doing the work of zooming out :)
  * That would decrease the reward.
- * 
+ *
  * FUTURE: I could allow teleporting up to 1e10000.
  * I roughly determined 1e75000 to be the bound for
  * no noticeable lag in websocket message size.
  * That would still prevent instantly exceeding that.
  */
 const TELEPORT_LIMIT: bigint = 10n ** 30n; // 10^30 squares
-
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
@@ -98,7 +94,6 @@ let navigationOpen = true;
  */
 let annotationsEnabled: boolean = false;
 
-
 // Functions
 
 function isOpen(): boolean {
@@ -115,17 +110,19 @@ function toggle(): void {
 
 function open({ allowEditCoords = true }: { allowEditCoords?: boolean }): void {
 	element_Navigation.classList.remove('hidden');
-	if (!guiboardeditor.isOpen()) { // Normal game => Show navigate move buttons
-		element_moveRewind.classList.remove("hidden");
-		element_moveForward.classList.remove("hidden");
-		element_undoEdit.classList.add("hidden");
-		element_redoEdit.classList.add("hidden");
+	if (!guiboardeditor.isOpen()) {
+		// Normal game => Show navigate move buttons
+		element_moveRewind.classList.remove('hidden');
+		element_moveForward.classList.remove('hidden');
+		element_undoEdit.classList.add('hidden');
+		element_redoEdit.classList.add('hidden');
 		update_MoveButtons();
-	} else { // Board editor => Show undo/redo edit buttons
-		element_moveRewind.classList.add("hidden");
-		element_moveForward.classList.add("hidden");
-		element_undoEdit.classList.remove("hidden");
-		element_redoEdit.classList.remove("hidden");
+	} else {
+		// Board editor => Show undo/redo edit buttons
+		element_moveRewind.classList.add('hidden');
+		element_moveForward.classList.add('hidden');
+		element_undoEdit.classList.remove('hidden');
+		element_redoEdit.classList.remove('hidden');
 		update_EditButtons();
 	}
 	initListeners_Navigation();
@@ -160,9 +157,7 @@ function close(): void {
 	element_Annotations.classList.remove('enabled');
 }
 
-
 // =============================== Coordinate Fields ===============================
-
 
 // Update the division on the screen displaying your current coordinates
 function updateElement_Coords(): void {
@@ -204,7 +199,7 @@ function formatBigIntExponential(bigint: bigint, precision: number): string {
 		// If precision is 1, no decimal point is needed
 		mantissa = mantissaDigits;
 	}
-	
+
 	// Re-attach the negative sign if needed and combine the parts
 	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
 }
@@ -216,12 +211,17 @@ function formatBigIntExponential(bigint: bigint, precision: number): string {
  * @param bigint The BigInt value to display.
  * @param precision The precision for the exponential notation.
  */
-function displayBigIntInInput(inputElement: HTMLInputElement, bigint: bigint, precision: number): void {
+function displayBigIntInInput(
+	inputElement: HTMLInputElement,
+	bigint: bigint,
+	precision: number,
+): void {
 	// First, try to display the full number by setting the .value
 	inputElement.value = bigint.toString();
 
 	// Check for overflow.
-	if (inputElement.scrollWidth > inputElement.clientWidth + 1) { // Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
+	if (inputElement.scrollWidth > inputElement.clientWidth + 1) {
+		// Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
 		// Format it and set the .value again.
 		inputElement.value = formatBigIntExponential(bigint, precision);
 	}
@@ -248,17 +248,17 @@ function parseStringToBigInt(value: string): bigint {
 	const exponentStr = trimmedValue.substring(eIndex + 1);
 
 	if (mantissaStr === '' || exponentStr === '') throw Error(); // Malformed e-notation: missing mantissa or exponent
-	
+
 	const exponent = parseInt(exponentStr, 10);
 	// Check if exponent is a valid integer number
 	if (isNaN(exponent) || !Number.isInteger(exponent)) throw Error();
 
 	// Since BigInts are whole numbers, a negative exponent would result in a fraction.
 	if (exponent < 0) throw Error();
-	
+
 	const isNegative = mantissaStr.startsWith('-');
 	const absMantissaStr = isNegative ? mantissaStr.substring(1) : mantissaStr;
-	
+
 	const decimalIndex = absMantissaStr.indexOf('.');
 	let allDigits: string;
 	let fractionalDigitsCount = 0;
@@ -270,7 +270,7 @@ function parseStringToBigInt(value: string): bigint {
 		// e.g., "1.23" -> allDigits = "123", fractionalDigitsCount = 2
 		const integerPart = absMantissaStr.substring(0, decimalIndex);
 		const fractionalPart = absMantissaStr.substring(decimalIndex + 1);
-		
+
 		allDigits = integerPart + fractionalPart;
 		fractionalDigitsCount = fractionalPart.length;
 	}
@@ -278,16 +278,14 @@ function parseStringToBigInt(value: string): bigint {
 	// The number of zeros to append is the exponent minus the number of digits
 	// we already have after the decimal point.
 	const zerosToAppend = exponent - fractionalDigitsCount;
-	
+
 	const zeros = '0'.repeat(zerosToAppend);
 	const finalNumberString = `${isNegative ? '-' : ''}${allDigits}${zeros}`;
-	
+
 	return BigInt(finalNumberString);
 }
 
-
 // =================================================================================
-
 
 /**
  * Returns true if one of the coordinate fields is active (currently editing)
@@ -445,10 +443,12 @@ function callback_Expand(): void {
 
 	// THIS ROUNDS RAY intersections to the nearest integer coordinate, so the resulting area may be imperfect!!!!!
 	// I don't think it matters to much.
-	const annoteSnapPoints = snapping.getAnnoteSnapPoints(false).map(point => bd.coordsToBigInt(point));
+	const annoteSnapPoints = snapping
+		.getAnnoteSnapPoints(false)
+		.map((point) => bd.coordsToBigInt(point));
 
 	allCoords.push(...annoteSnapPoints);
-	if (allCoords.length === 0) allCoords.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
+	if (allCoords.length === 0) allCoords.push([1n, 1n], [8n, 8n]); // use the [1,1]-[8,8] area as a fallback
 	Transition.zoomToCoordsList(allCoords);
 }
 
@@ -478,12 +478,12 @@ document.addEventListener('ray-count-change', (e) => {
 	if (rayCount > 0) {
 		element_EraseContainer.classList.add('hidden');
 		element_CollapseContainer.classList.remove('hidden');
-	} else { // Zero rays
+	} else {
+		// Zero rays
 		element_EraseContainer.classList.remove('hidden');
 		element_CollapseContainer.classList.add('hidden');
 	}
 });
-
 
 // =====================================================================
 
@@ -513,12 +513,9 @@ function update(): void {
 		testIfUndoEdit();
 		testIfRedoEdit();
 	}
-	
 }
 
-
 // Move Buttons =====================================================
-
 
 function callback_MoveRewind(): void {
 	if (rewindIsLocked) return;
@@ -608,10 +605,13 @@ function callback_MoveRewindTouchMove(event: TouchEvent): void {
 	if (!touchIsInsideLeft) return;
 	const touch = event.touches[0]!;
 	const rect = element_moveRewind.getBoundingClientRect();
-	if (touch.clientX > rect.left &&
-        touch.clientX < rect.right &&
-        touch.clientY > rect.top &&
-        touch.clientY < rect.bottom) return;
+	if (
+		touch.clientX > rect.left &&
+		touch.clientX < rect.right &&
+		touch.clientY > rect.top &&
+		touch.clientY < rect.bottom
+	)
+		return;
 
 	touchIsInsideLeft = false;
 	clearTimeout(leftArrowTimeoutID);
@@ -639,10 +639,13 @@ function callback_MoveForwardTouchMove(event: TouchEvent): void {
 	if (!touchIsInsideRight) return;
 	const touch = event.touches[0]!;
 	const rect = element_moveForward.getBoundingClientRect();
-	if (touch.clientX > rect.left &&
-        touch.clientX < rect.right &&
-        touch.clientY > rect.top &&
-        touch.clientY < rect.bottom) return;
+	if (
+		touch.clientX > rect.left &&
+		touch.clientX < rect.right &&
+		touch.clientY > rect.top &&
+		touch.clientY < rect.bottom
+	)
+		return;
 
 	touchIsInsideRight = false;
 	clearTimeout(rightArrowTimeoutID);
@@ -666,7 +669,7 @@ function lockRewind(): void {
 		lockLayers--;
 		if (lockLayers > 0) return;
 		rewindIsLocked = false;
-	}, durationToLockRewindAfterMoveForwardingMillis); 
+	}, durationToLockRewindAfterMoveForwardingMillis);
 }
 let lockLayers = 0;
 
@@ -698,7 +701,7 @@ function rewindMove(): void {
 	frametracker.onVisualChange();
 
 	movesequence.navigateMove(gamefile, mesh, false);
-    
+
 	selection.unselectPiece();
 }
 
@@ -708,7 +711,7 @@ function forwardMove(): void {
 	const mesh = gameslot.getMesh();
 
 	premoves.cancelPremoves(gamefile, mesh);
-	
+
 	if (!moveutil.isIncrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
 	movesequence.navigateMove(gamefile, mesh, true);
@@ -787,10 +790,13 @@ function callback_UndoEditTouchMove(event: TouchEvent): void {
 	if (!touchIsInsideLeft) return;
 	const touch = event.touches[0]!;
 	const rect = element_moveRewind.getBoundingClientRect();
-	if (touch.clientX > rect.left &&
-        touch.clientX < rect.right &&
-        touch.clientY > rect.top &&
-        touch.clientY < rect.bottom) return;
+	if (
+		touch.clientX > rect.left &&
+		touch.clientX < rect.right &&
+		touch.clientY > rect.top &&
+		touch.clientY < rect.bottom
+	)
+		return;
 
 	touchIsInsideLeft = false;
 	clearTimeout(leftArrowTimeoutID);
@@ -818,10 +824,13 @@ function callback_RedoEditTouchMove(event: TouchEvent): void {
 	if (!touchIsInsideRight) return;
 	const touch = event.touches[0]!;
 	const rect = element_moveForward.getBoundingClientRect();
-	if (touch.clientX > rect.left &&
-        touch.clientX < rect.right &&
-        touch.clientY > rect.top &&
-        touch.clientY < rect.bottom) return;
+	if (
+		touch.clientX > rect.left &&
+		touch.clientX < rect.right &&
+		touch.clientY > rect.top &&
+		touch.clientY < rect.bottom
+	)
+		return;
 
 	touchIsInsideRight = false;
 	clearTimeout(rightArrowTimeoutID);

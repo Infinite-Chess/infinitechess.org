@@ -2,11 +2,9 @@ import globals from "globals";
 import pluginJs from "@eslint/js";
 import pluginTypescript from "@typescript-eslint/eslint-plugin";
 import parserTypescript from "@typescript-eslint/parser";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default [
-	{
-		ignores: ["dist"], // Ignore all files in the distribution directory
-	},
 	pluginJs.configs.recommended,
 	{
 		files: ["**/*.js","**/*.ts"], // Apply the following rule overrides to both js and ts files...
@@ -81,4 +79,5 @@ export default [
 			]
 		},
 	},
+	eslintConfigPrettier,
 ];

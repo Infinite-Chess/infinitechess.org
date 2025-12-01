@@ -1,11 +1,9 @@
-
 /**
  * This module contains methods for safely executing functions,
  * catching any errors that may occur, logging them to the error log.
  */
 
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-
 
 /**
  * Executes a callback function with provided arguments and catches any errors that occur.
@@ -27,7 +25,7 @@ function executeSafely(callback, errorMessage, ...args) {
 
 /**
  * A variant of {@link executeSafely} that works with an async function.
- * 
+ *
  * Executes a callback function with provided arguments and catches any errors that occur.
  * @param {Function} callback - The function to execute safely.
  * @param {string} errorMessage - A custom error message to log if an error occurs.
@@ -45,7 +43,4 @@ async function executeSafely_async(callback, errorMessage, ...args) {
 	return true; // No error
 }
 
-export {
-	executeSafely,
-	executeSafely_async
-};
+export { executeSafely, executeSafely_async };

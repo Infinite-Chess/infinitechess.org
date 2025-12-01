@@ -35,7 +35,7 @@ function createErrorMessageElement(errorMessage: string): HTMLElement {
 
 	const existingEl = document.getElementById(id);
 	if (existingEl) existingEl.remove();
-	
+
 	const el = document.createElement('div');
 	el.id = id;
 	el.className = 'error';
@@ -51,7 +51,7 @@ function createErrorMessageElement(errorMessage: string): HTMLElement {
  */
 function initializeForm(elements: FormElements): void {
 	const { form, newPasswordInput, confirmPasswordInput, submitButton } = elements;
-	
+
 	let messageElement: HTMLElement | null = null;
 	let isSubmitting: boolean = false;
 	const token = getTokenFromUrl();
@@ -116,18 +116,21 @@ function initializeForm(elements: FormElements): void {
 					'Content-Type': 'application/json',
 					'is-fetch-request': 'true', // Custom header
 				},
-				body: JSON.stringify({ token, password: newPasswordInput.value }) 
+				body: JSON.stringify({ token, password: newPasswordInput.value }),
 			});
 
 			const result = await response.json();
-			if (response.ok) { // SUCCESS
+			if (response.ok) {
+				// SUCCESS
 				form.innerHTML = `<div class="success">${result.message}</div>`;
 				// Redirect to login after a delay
-				setTimeout(() => { window.location.href = '/login'; }, 4000);
-			} else { // NOT OKAY => ERROR
+				setTimeout(() => (window.location.href = '/login'), 4000);
+			} else {
+				// NOT OKAY => ERROR
 				onFetchError(result.message || 'An unknown error occurred.');
 			}
-		} catch (error: unknown) { // Likely a network error
+		} catch (error: unknown) {
+			// Likely a network error
 			console.log(error instanceof Error ? error.message : String(error));
 			onFetchError(translations['network-error']);
 		}
@@ -136,14 +139,13 @@ function initializeForm(elements: FormElements): void {
 	/** Called when the fetch request errors, either NOT okay or network error */
 	function onFetchError(errorMessage: string): void {
 		messageElement = createErrorMessageElement(errorMessage);
-		
-		isSubmitting = false; 
+
+		isSubmitting = false;
 		submitButton.disabled = false;
 		submitButton.className = 'ready';
 		submitButton.value = translations['reset-password'];
 	}
 }
-
 
 // --- Script Entry Point ---
 // [FIX] Use instanceof for safe type checking instead of unsafe 'as' casting.
@@ -166,5 +168,7 @@ if (
 		submitButton: submitButtonEl,
 	});
 } else {
-	console.error('One or more required elements for the reset password form are missing or of the wrong type.');
+	console.error(
+		'One or more required elements for the reset password form are missing or of the wrong type.',
+	);
 }

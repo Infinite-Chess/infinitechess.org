@@ -1,10 +1,9 @@
-
 // src/server/socket/socketRouter.ts
 
 /**
  * This script receives routes incoming socket messages them where they need to go.
- * 
- * 
+ *
+ *
  * It also handles subbing to subscription lists.
  */
 
@@ -15,9 +14,7 @@ import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
 import type { CustomWebSocket } from './socketUtility.js';
 import type { WebsocketInMessage } from './receiveSocketMessage.js';
 
-
 // Functions ---------------------------------------------------------------------------
-
 
 function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMessage): void {
 	// Route them to their specified location
@@ -37,11 +34,6 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 	}
 }
 
+export { routeIncomingSocketMessage };
 
-export {
-	routeIncomingSocketMessage,
-};
-
-export type {
-	WebsocketInMessage,
-};
+export type { WebsocketInMessage };

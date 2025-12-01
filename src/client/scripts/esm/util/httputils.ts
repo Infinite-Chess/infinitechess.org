@@ -1,25 +1,24 @@
-
 /**
  * This script contains http/fetch utility methods.
  */
 
 /** Options for {@link retryFetch} */
 interface RetryFetchOptions {
-    /**
-     * Maximum number of fetch attempts (e.g., 1 means one attempt, no retries).
-     * Assumed to be 1 or greater. Defaults to 3.
-     */
-    maxAttempts?: number;
-    /**
-     * Initial delay in milliseconds *before the first retry* (i.e., after the first attempt fails).
-     * Defaults to 1000ms.
-     */
-    initialDelayMs?: number;
-    /**
-     * Factor by which the delay increases after each retry (e.g., 2 for exponential, 1 for linear).
-     * Defaults to 2.
-     */
-    backoffFactor?: number;
+	/**
+	 * Maximum number of fetch attempts (e.g., 1 means one attempt, no retries).
+	 * Assumed to be 1 or greater. Defaults to 3.
+	 */
+	maxAttempts?: number;
+	/**
+	 * Initial delay in milliseconds *before the first retry* (i.e., after the first attempt fails).
+	 * Defaults to 1000ms.
+	 */
+	initialDelayMs?: number;
+	/**
+	 * Factor by which the delay increases after each retry (e.g., 2 for exponential, 1 for linear).
+	 * Defaults to 2.
+	 */
+	backoffFactor?: number;
 }
 
 /** Default options for {@link retryFetch} */
@@ -46,7 +45,7 @@ const defaultRetryFetchOptions: Required<RetryFetchOptions> = {
 async function retryFetch(
 	url: string | URL | Request,
 	fetchInit?: RequestInit,
-	retryOptions?: RetryFetchOptions
+	retryOptions?: RetryFetchOptions,
 ): Promise<Response> {
 	const options: Required<RetryFetchOptions> = {
 		...defaultRetryFetchOptions,
@@ -63,9 +62,8 @@ async function retryFetch(
 	};
 	const urlString = getUrlString(url);
 
-
 	for (let attempt = 1; attempt <= options.maxAttempts; attempt++) {
-		const isLastAttempt = (attempt === options.maxAttempts);
+		const isLastAttempt = attempt === options.maxAttempts;
 
 		try {
 			// console.log(`retryFetch: Attempt ${attempt}/${options.maxAttempts} for ${urlString}...`);
@@ -85,7 +83,8 @@ async function retryFetch(
 				// No retry for these based on the hardcoded logic.
 				return response;
 			}
-		} catch (error) { // Network error occurred
+		} catch (error) {
+			// Network error occurred
 			if (isLastAttempt) {
 				// console.error(`retryFetch: Max attempts reached. Last attempt for ${urlString} failed with network error:`, error);
 				throw error; // Re-throw the final network error
@@ -96,20 +95,18 @@ async function retryFetch(
 		}
 
 		// If we reach here, a retry is scheduled (and it's not the last attempt)
-		await new Promise(resolve => setTimeout(resolve, currentDelayMs));
+		await new Promise((resolve) => setTimeout(resolve, currentDelayMs));
 		currentDelayMs *= options.backoffFactor;
 	}
 
 	// This line should be theoretically unreachable if options.maxAttempts >= 1,
 	// as the loop will always return or throw on its final iteration.
 	// It's included for defensive programming in case of unexpected state.
-	throw new Error(`retryFetch: Exited retry loop unexpectedly for ${urlString}. This should not happen if maxAttempts >= 1.`);
+	throw new Error(
+		`retryFetch: Exited retry loop unexpectedly for ${urlString}. This should not happen if maxAttempts >= 1.`,
+	);
 }
 
-export {
-	retryFetch,
-};
+export { retryFetch };
 
-export type {
-	RetryFetchOptions,
-};
+export type { RetryFetchOptions };

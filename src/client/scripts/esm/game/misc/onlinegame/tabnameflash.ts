@@ -1,17 +1,15 @@
-
 /**
  * This script controls the flashing of the tab name "YOUR MOVE"
  * when it is your turn and your in another tab.
  */
 
-import gameslot from "../../chess/gameslot.js";
-import afk from "./afk.js";
-import moveutil from "../../../../../../shared/chess/util/moveutil.js";
-import gamesound from "../gamesound.js";
-import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
+import gameslot from '../../chess/gameslot.js';
+import afk from './afk.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import gamesound from '../gamesound.js';
+import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 // @ts-ignore
-import loadbalancer from "../loadbalancer.js";
-
+import loadbalancer from '../loadbalancer.js';
 
 /** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */
 const originalDocumentTitle: string = document.title;
@@ -24,8 +22,6 @@ let timeoutID: ReturnType<typeof setTimeout> | undefined;
 
 /** The ID of the timeout that can be used to cancel the timer that will play a move sound effect to help you realize it's your move. Typically about 20 seconds. */
 let moveSound_timeoutID: ReturnType<typeof setTimeout> | undefined;
-
-
 
 function onGameStart({ isOurMove }: { isOurMove: boolean }): void {
 	// This will already flash the tab name
@@ -43,7 +39,8 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 		// Flash the tab name
 		flashTabNameYOUR_MOVE(true);
 		scheduleMoveSound_timeoutID();
-	} else { // our move
+	} else {
+		// our move
 		// Stop flashing the tab name
 		cancelFlashTabTimer();
 	}
@@ -62,7 +59,7 @@ function flashTabNameYOUR_MOVE(parity: boolean): void {
 		return;
 	}
 
-	document.title = parity ? "YOUR MOVE" : originalDocumentTitle;
+	document.title = parity ? 'YOUR MOVE' : originalDocumentTitle;
 	// Set a timer for the next toggle
 	timeoutID = setTimeout(flashTabNameYOUR_MOVE, periodicityMillis, !parity);
 }
@@ -78,15 +75,16 @@ function scheduleMoveSound_timeoutID(): void {
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!.basegame)) return;
 	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
 	const ZERO = bd.FromBigInt(0n);
-	moveSound_timeoutID = setTimeout(() => gamesound.playMove(ZERO, false, false), timeNextSoundFromNow);
+	moveSound_timeoutID = setTimeout(
+		() => gamesound.playMove(ZERO, false, false),
+		timeNextSoundFromNow,
+	);
 }
 
 function cancelMoveSound(): void {
 	clearTimeout(moveSound_timeoutID);
 	moveSound_timeoutID = undefined;
 }
-
-
 
 export default {
 	onGameStart,

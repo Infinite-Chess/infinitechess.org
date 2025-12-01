@@ -1,4 +1,3 @@
-
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
@@ -30,7 +29,14 @@ import type { Player } from '../util/typeutil.js';
  */
 
 /** All types of special moves that exist, for iterating through. */
-const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion','castle','path'];
+const allSpecials = [
+	'enpassantCreate',
+	'enpassant',
+	'promoteTrigger',
+	'promotion',
+	'castle',
+	'path',
+];
 
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
@@ -42,7 +48,12 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * @param color - The color of the king selected
  * @param premove - Whether we should return all possible moves (premoving)
  */
-function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
+function kings(
+	gamefile: FullGame,
+	coords: Coords,
+	color: Player,
+	premove: boolean,
+): CoordsSpecial[] {
 	const individualMoves: CoordsSpecial[] = [];
 
 	const { boardsim, basegame } = gamefile;
@@ -53,7 +64,7 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 	const kingX = coords[0];
 	const kingY = coords[1];
 	const oppositeColor = typeutil.invertPlayer(color);
-	const key = organizedpieces.getKeyFromLine([1n,0n],coords);
+	const key = organizedpieces.getKeyFromLine([1n, 0n], coords);
 	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
 
 	// Add legal Castling...
@@ -63,29 +74,32 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 
 	// If premoving, skip obstruction and check checks.
 	if (premove) {
-
 		// Find the closest CASTLEABLE piece on each side of the king.
 		for (const idx of row) {
 			const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 
 			if (!isPieceCastleable(pieceCoords)) continue; // Piece is not castleable, skip it
 
-			if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left)) left = pieceCoords[0];
-			else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right)) right = pieceCoords[0];
+			if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left))
+				left = pieceCoords[0];
+			else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right))
+				right = pieceCoords[0];
 		}
 
 		// THEN append the castling moves to the individual moves.
 		processSide(left, -1n, premove); // Castling left
 		processSide(right, 1n, premove); // Castling right
-
-	} else { // Not premoving. Perform obsctruction and check checks as normal.
+	} else {
+		// Not premoving. Perform obsctruction and check checks as normal.
 
 		// Find the CLOSEST piece on each side of the king.
 		for (const idx of row) {
 			const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 
-			if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left)) left = pieceCoords[0];
-			else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right)) right = pieceCoords[0];
+			if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left))
+				left = pieceCoords[0];
+			else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right))
+				right = pieceCoords[0];
 		}
 
 		// THEN check if the piece is castleable.
@@ -101,7 +115,6 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 	 * * It is not a pawn or jumping royal
 	 */
 	function isPieceCastleable(pieceCoords: Coords): boolean {
-
 		// Distance should be at least 3 squares away.
 		const dist = bimath.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
 		if (dist < 3) return false; // Piece is too close, can't castle with it
@@ -127,17 +140,18 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 	 * @param premove - PREMOVING: Whether we should ignore checks.
 	 */
 	function processSide(pieceX: bigint | null, dir: 1n | -1n, premove: boolean): void {
-
 		if (pieceX === null) return; // No piece on this side, can't castle with it
 
 		const pieceCoord: Coords = [pieceX, kingY]; // The coordinates of the piece that the king is castling with.
 
 		if (!isPieceCastleable(pieceCoord)) return; // Piece is not castleable, skip it
-		
+
 		// Check checks: Only need if opponent is using checkmate as a win condition.
 		// Can skip if we're premoving, as we can't predict if we will be in check.
-		if (gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate') && !premove) { 
-
+		if (
+			gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate') &&
+			!premove
+		) {
 			// Can't currently be in check
 			if (gamefileutility.isCurrentViewedPositionInCheck(boardsim)) return; // Not legal if in check
 
@@ -149,8 +163,8 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 		}
 
 		// All checks passed, this side is legal to castle with. Add the move!
-		
-		const specialMove: CoordsSpecial = [coords[0] + (2n * dir), coords[1]];
+
+		const specialMove: CoordsSpecial = [coords[0] + 2n * dir, coords[1]];
 		specialMove.castle = { dir, coord: pieceCoord }; // The special move flag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
 		individualMoves.push(specialMove);
 	}
@@ -167,7 +181,12 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
  * @param color - The color of the pawn selected
  * @param premove - Whether we should return all possible moves (premoving)
  */
-function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
+function pawns(
+	gamefile: FullGame,
+	coords: Coords,
+	color: Player,
+	premove: boolean,
+): CoordsSpecial[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === players.WHITE ? 1n : -1n;
@@ -178,31 +197,59 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 
 	// Is there a piece in front of it?
 	const singlePushCoord: Coords = [coords[0], coords[1] + yOneorNegOne];
-	let moveValidity = legalmoves.testSquareValidity(boardsim, singlePushCoord, color, premove, false);
+	let moveValidity = legalmoves.testSquareValidity(
+		boardsim,
+		singlePushCoord,
+		color,
+		premove,
+		false,
+	);
 
-	if (moveValidity === 0) { // Pawns forward-motion validity check must be 0, as they can't capture forward.
+	if (moveValidity === 0) {
+		// Pawns forward-motion validity check must be 0, as they can't capture forward.
 		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
 
 		// Further... Is the double push legal?
-		const doublePushCoord: CoordsSpecial = [singlePushCoord[0], singlePushCoord[1] + yOneorNegOne];
-		moveValidity = legalmoves.testSquareValidity(boardsim, doublePushCoord, color, premove, false);
+		const doublePushCoord: CoordsSpecial = [
+			singlePushCoord[0],
+			singlePushCoord[1] + yOneorNegOne,
+		];
+		moveValidity = legalmoves.testSquareValidity(
+			boardsim,
+			doublePushCoord,
+			color,
+			premove,
+			false,
+		);
 
-		if (doesPieceHaveSpecialRight(boardsim, coords) && moveValidity === 0) { // Add the double push!
+		if (doesPieceHaveSpecialRight(boardsim, coords) && moveValidity === 0) {
+			// Add the double push!
 			// Only create the enpassantCreate flag if it's not a premove.
-			if (!premove) doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color); 
+			if (!premove)
+				doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(
+					coords,
+					doublePushCoord,
+				);
+			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color);
 		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
 
 	const coordsToCapture: Coords[] = [
-        [coords[0] - 1n, coords[1] + yOneorNegOne],
-        [coords[0] + 1n, coords[1] + yOneorNegOne]
-    ];
+		[coords[0] - 1n, coords[1] + yOneorNegOne],
+		[coords[0] + 1n, coords[1] + yOneorNegOne],
+	];
 	for (const captureCoords of coordsToCapture) {
-		const moveValidity = legalmoves.testSquareValidity(boardsim, captureCoords, color, premove, true); // true for capture is required
-		if (moveValidity <= 1) appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
+		const moveValidity = legalmoves.testSquareValidity(
+			boardsim,
+			captureCoords,
+			color,
+			premove,
+			true,
+		); // true for capture is required
+		if (moveValidity <= 1)
+			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -218,7 +265,10 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, premove: boole
  * @param moveEndCoords - The end coordinates of the move
  * @returns The coordinates en passant is allowed
  */
-function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Coords): enpassantCreate {
+function getEnPassantGamefileProperty(
+	moveStartCoords: Coords,
+	moveEndCoords: Coords,
+): enpassantCreate {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2n;
 	const enpassantSquare: Coords = [moveStartCoords[0], y];
 	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special flags
@@ -232,21 +282,32 @@ function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Co
  * @param color - The color of the pawn selected
  */
 // If it can capture en passant, the move is appended to  legalmoves
-function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves: Coords[], coords: Coords, color: Player): void {
+function addPossibleEnPassant(
+	{ boardsim, basegame }: FullGame,
+	individualMoves: Coords[],
+	coords: Coords,
+	color: Player,
+): void {
 	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawnType = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
+	const enpassantCapturedPawnType = boardutil.getTypeFromCoords(
+		boardsim.pieces,
+		boardsim.state.global.enpassant.pawn,
+	)!;
 	if (typeutil.getColorFromType(enpassantCapturedPawnType) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (bimath.abs(xDifference) !== 1n) return; // Not immediately left or right of us
+	// prettier-ignore
 	const yParity = color === players.WHITE ? 1n : color === players.BLACK ? -1n : (() => { throw new Error("Invalid color!"); })();
 	if (coords[1] + yParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(boardsim.state.global.enpassant.square);
+	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(
+		boardsim.state.global.enpassant.square,
+	);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
@@ -258,7 +319,12 @@ function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves:
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player): void {
+function appendPawnMoveAndAttachPromoteFlag(
+	basegame: Game,
+	individualMoves: CoordsSpecial[],
+	landCoords: CoordsSpecial,
+	color: Player,
+): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
 		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
 		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
@@ -275,7 +341,13 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
  * @param premove - Whether we should return all possible moves (premoving)
  * @returns
  */
-function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
+function roses(
+	{ boardsim }: FullGame,
+	coords: Coords,
+	color: Player,
+	premove: boolean,
+): CoordsSpecial[] {
+	// prettier-ignore
 	const movements: Coords[] = [[-2n, -1n], [-1n, -2n], [1n, -2n], [2n, -1n], [2n, 1n], [1n, 2n], [-1n, 2n], [-2n, 1n]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];
@@ -286,12 +358,19 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 			let currentCoord: CoordsSpecial = coordutil.copyCoords(coords);
 			let b = i;
 			const path = [coords]; // The running path of travel for the current spiral. Used for animating.
-			for (let c = 0; c < movements.length - 1; c++) { // Iterate 7 times, since we can't land on the square we started
+			for (let c = 0; c < movements.length - 1; c++) {
+				// Iterate 7 times, since we can't land on the square we started
 				const movement = movements[math.posMod(b, movements.length)]!;
 				currentCoord = coordutil.addCoords(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
 
-				const moveValidity = legalmoves.testSquareValidity(boardsim, currentCoord, color, premove, false);
+				const moveValidity = legalmoves.testSquareValidity(
+					boardsim,
+					currentCoord,
+					color,
+					premove,
+					false,
+				);
 				if (moveValidity <= 1) appendCoordToIndividuals(currentCoord, path); // Capture is legal
 				if (moveValidity >= 1) break; // Blocked, break the spiral
 
@@ -319,27 +398,44 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 			 * This coord has already been added to our individual moves!!!
 			 * Pick the one with the shortest path.
 			 */
-			if (coord.path!.length < newCoord.path.length) individualMoves[i] = coord; // First path shorter
-			else if (coord.path!.length > newCoord.path.length) individualMoves[i] = newCoord; // Second path shorter
-			else if (coord.path!.length === newCoord.path.length) { // Path are equal length
+			if (coord.path!.length < newCoord.path.length)
+				individualMoves[i] = coord; // First path shorter
+			else if (coord.path!.length > newCoord.path.length)
+				individualMoves[i] = newCoord; // Second path shorter
+			else if (coord.path!.length === newCoord.path.length) {
+				// Path are equal length
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
 				const coordsBD = bd.FromCoords(coords);
 				const coordPathBD = bd.FromCoords(coord.path![1]!);
 				const newCoordPathBD = bd.FromCoords(newCoord.path[1]!);
 
-				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(boardsim.startSnapshot.box);
+				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(
+					boardsim.startSnapshot.box,
+				);
 				const centerOfPlay = bounds.calcCenterOfBoundingBox(startingBoxBD);
 				const vectorToCenter = vectors.calculateVectorFromBDPoints(coordsBD, centerOfPlay);
-				const existingCoordVector = vectors.calculateVectorFromBDPoints(coordsBD, coordPathBD);
-				const newCoordVector = vectors.calculateVectorFromBDPoints(coordsBD, newCoordPathBD);
+				const existingCoordVector = vectors.calculateVectorFromBDPoints(
+					coordsBD,
+					coordPathBD,
+				);
+				const newCoordVector = vectors.calculateVectorFromBDPoints(
+					coordsBD,
+					newCoordPathBD,
+				);
 				// Whichever's dot product scores higher is the one that curves more towards the center
-				const existingCoordDotProd = vectors.dotProductBD(existingCoordVector, vectorToCenter);
+				const existingCoordDotProd = vectors.dotProductBD(
+					existingCoordVector,
+					vectorToCenter,
+				);
 				const newCoordDotProd = vectors.dotProductBD(newCoordVector, vectorToCenter);
 				const compareResult = bd.compare(existingCoordDotProd, newCoordDotProd);
-				if (compareResult > 0) individualMoves[i] = coord; // Existing move's path curves more towards the center
-				else if (compareResult < 0) individualMoves[i] = newCoord; // New move's path curves more towards the center
-				else { // BOTH point equally point towards the origin.
+				if (compareResult > 0)
+					individualMoves[i] = coord; // Existing move's path curves more towards the center
+				else if (compareResult < 0)
+					individualMoves[i] = newCoord; // New move's path curves more towards the center
+				else {
+					// BOTH point equally point towards the origin.
 					// JUST pick a random one!
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 				}
@@ -347,7 +443,7 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: b
 
 			return;
 		}
-		
+
 		// This coordinate has not been added yet. Let's do it now.
 		individualMoves.push(newCoord);
 	}
@@ -369,8 +465,8 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 /**
  * Returns true if a pawn moved onto a promotion line.
  * @param gamefile
- * @param type 
- * @param coordsClicked 
+ * @param type
+ * @param coordsClicked
  * @returns
  */
 function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): boolean {
@@ -415,10 +511,15 @@ function transferSpecialFlags_FromMoveToCoords(move: MoveDraft, coords: Coords):
  * @param srcCoords - The source coordinates
  * @param destCoords - The destination coordinates
  */
-function transferSpecialFlags_FromCoordsToCoords(srcCoords: CoordsSpecial, destCoords: CoordsSpecial): void {
+function transferSpecialFlags_FromCoordsToCoords(
+	srcCoords: CoordsSpecial,
+	destCoords: CoordsSpecial,
+): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
-		if (srcCoords[special] !== undefined) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
+		if (srcCoords[special] !== undefined)
+			// @ts-ignore
+			destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
 	}
 }
 

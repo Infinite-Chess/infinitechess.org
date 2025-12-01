@@ -1,13 +1,13 @@
-const commandInput = document.getElementById("commandInput")! as HTMLInputElement;
-const commandHistory = document.getElementById("commandHistory")! as HTMLTextAreaElement;
-const sendCommandButton = document.getElementById("sendButton")! as HTMLButtonElement;
+const commandInput = document.getElementById('commandInput')! as HTMLInputElement;
+const commandHistory = document.getElementById('commandHistory')! as HTMLTextAreaElement;
+const sendCommandButton = document.getElementById('sendButton')! as HTMLButtonElement;
 
 async function sendCommand(): Promise<void> {
 	const commandString: string = commandInput.value;
 	if (commandString.length === 0) return; // Don't send command if the input box is empty
-	commandInput.value = "";
-	const response = await fetch("command/" + commandString);
-	commandHistory.textContent += commandString + '\n' + await response.text() + "\n\n";
+	commandInput.value = '';
+	const response = await fetch('command/' + commandString);
+	commandHistory.textContent += commandString + '\n' + (await response.text()) + '\n\n';
 	scrollToBottom(commandHistory);
 }
 
@@ -27,5 +27,5 @@ function scrollToBottom(container: HTMLElement): void {
 	});
 }
 
-sendCommandButton.addEventListener("click", sendCommand);
+sendCommandButton.addEventListener('click', sendCommand);
 commandInput.addEventListener('keyup', clickSubmitIfReturnPressed);

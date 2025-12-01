@@ -11,9 +11,7 @@ import type { Request, Response } from 'express';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-
 // Constants ---------------------------------------------------------------------------------
-
 
 /** Maximum length for a position name */
 export const MAX_NAME_LENGTH = 100;
@@ -21,32 +19,43 @@ export const MAX_NAME_LENGTH = 100;
 /** Maximum length for ICN notation (also determines max size) */
 export const MAX_ICN_LENGTH = 1_000_000;
 
-
 // Zod Schemas -------------------------------------------------------------------------------
-
 
 /** Schema for validating the body of POST /api/editor-saves (save position) */
 const SavePositionBodySchema = z.strictObject({
-	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
-	icn: z.string().min(1, 'ICN is required').max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
+	name: z
+		.string()
+		.min(1, 'Name is required')
+		.max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
+	icn: z
+		.string()
+		.min(1, 'ICN is required')
+		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
 });
 
 /** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
 const RenamePositionBodySchema = z.strictObject({
-	name: z.string().min(1, 'Name is required').max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
+	name: z
+		.string()
+		.min(1, 'Name is required')
+		.max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
 });
 
 /** Schema for validating position_id in URL params */
 const PositionIdParamSchema = z.strictObject({
-	position_id: z.string().refine((val: string) => {
-		const num = Number(val);
-		return !isNaN(num) && num > 0;
-	}, { message: 'Invalid position_id' }).transform((val: string) => Number(val)),
+	position_id: z
+		.string()
+		.refine(
+			(val: string) => {
+				const num = Number(val);
+				return !isNaN(num) && num > 0;
+			},
+			{ message: 'Invalid position_id' },
+		)
+		.transform((val: string) => Number(val)),
 });
 
-
 // API Endpoints -----------------------------------------------------------------------------
-
 
 /**
  * API endpoint to get all saved positions for the current user.
@@ -73,7 +82,10 @@ function getSavedPositions(req: Request, res: Response): void {
 		res.json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error retrieving saved positions for user_id ${userId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error retrieving saved positions for user_id ${userId}: ${message}`,
+			'errLog.txt',
+		);
 		res.status(500).json({ error: 'Failed to retrieve saved positions' });
 	}
 }
@@ -117,7 +129,6 @@ function savePosition(req: Request, res: Response): void {
 		const result = editorSavesManager.addSavedPosition(userId, name, size, icn);
 
 		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
-
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
@@ -171,7 +182,10 @@ function getPosition(req: Request, res: Response): void {
 		res.json({ icn: position.icn });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error retrieving position for position_id ${positionId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error retrieving position for position_id ${positionId}: ${message}`,
+			'errLog.txt',
+		);
 		res.status(500).json({ error: 'Failed to retrieve position' });
 	}
 }
@@ -216,7 +230,10 @@ function deletePosition(req: Request, res: Response): void {
 		res.json({ success: true });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error deleting position for position_id ${positionId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error deleting position for position_id ${positionId}: ${message}`,
+			'errLog.txt',
+		);
 		res.status(500).json({ error: 'Failed to delete position' });
 	}
 }
@@ -273,14 +290,15 @@ function renamePosition(req: Request, res: Response): void {
 		res.json({ success: true });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error renaming position for position_id ${positionId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error renaming position for position_id ${positionId}: ${message}`,
+			'errLog.txt',
+		);
 		res.status(500).json({ error: 'Failed to rename position' });
 	}
 }
 
-
 // Exports -----------------------------------------------------------------------------------
-
 
 export default {
 	// Constants

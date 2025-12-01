@@ -1,9 +1,7 @@
-
 /*
  * This module, in the future, where be where we connect to Patreon's API
  * to dynamically refresh the list of Patreon-specific patrons on the webiste.
  */
-
 
 /** A list of patrons on Naviary's [patreon](https://www.patreon.com/Naviary) page.
  * This should be periodically refreshed. */
@@ -18,7 +16,7 @@ const replacementNames = {};
 // /**
 //  * Uses Patreon's API to fetch all patrons on Naviary's
 //  * [patreon](https://www.patreon.com/Naviary) page, and updates our list!
-//  * 
+//  *
 //  * STILL TO BE WRITTEN
 //  */
 // function refreshPatreonPatronList() {
@@ -39,7 +37,4 @@ function getPatreonPatrons() {
 	return patronsWithReplacedNames;
 }
 
-
-export {
-	getPatreonPatrons
-};
+export { getPatreonPatrons };

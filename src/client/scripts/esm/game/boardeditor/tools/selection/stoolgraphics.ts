@@ -1,36 +1,32 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/selection/stoolgraphics.ts
 
 /**
  * Selection Tool Graphics
- * 
+ *
  * Contains the methods for rendering the graphics
  * of the Selection Tool in the Board Editor
  */
 
-import type { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
-import type { DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
-import type { Color } from "../../../../../../../shared/util/math/math";
+import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
+import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
+import type { Color } from '../../../../../../../shared/util/math/math';
 
-import mouse from "../../../../util/mouse";
-import camera from "../../../rendering/camera";
-import meshes from "../../../rendering/meshes";
-import primitives from "../../../rendering/primitives";
-import space from "../../../misc/space";
-import { createRenderable } from "../../../../webgl/Renderable";
-
-
+import mouse from '../../../../util/mouse';
+import camera from '../../../rendering/camera';
+import meshes from '../../../rendering/meshes';
+import primitives from '../../../rendering/primitives';
+import space from '../../../misc/space';
+import { createRenderable } from '../../../../webgl/Renderable';
 
 // Constants ---------------------------------------------------
-
 
 /**
  * The color for the wireframe of the selection box, including the small square in the corner,
  * and the outline of the currently hovered square's rank & file, when there is no selection.
  */
-const OUTLINE_COLOR: Color = [0,0,0, 1]; // Black
+const OUTLINE_COLOR: Color = [0, 0, 0, 1]; // Black
 /** The fill color of the selection box. */
-const FILL_COLOR: Color = [0,0,0, 0.08]; // Transparent Black
+const FILL_COLOR: Color = [0, 0, 0, 0.08]; // Transparent Black
 
 /** How many virtual screen pixels wide the corner square is. */
 const CORNER_DOT_WIDTH = 6;
@@ -40,9 +36,7 @@ const DASHED_WIDTH = 1;
 /** How many virtual screen pixels long the dashes are. */
 const DASHED_LENGTH = 6;
 
-
 // Methods -----------------------------------------------------
-
 
 /**
  * Outlines the current rank and file of the square
@@ -60,6 +54,7 @@ function outlineRankAndFile(): void {
 
 	const screenBox = camera.getRespectiveScreenBox();
 
+	// prettier-ignore
 	data.push(
 		// Horizontal: Lower
 		screenBox.left, bottom,   ...OUTLINE_COLOR,
@@ -75,7 +70,7 @@ function outlineRankAndFile(): void {
 		right, screenBox.top,     ...OUTLINE_COLOR,
 	);
 
-	createRenderable(data, 2, "LINES", 'color', true).render();
+	createRenderable(data, 2, 'LINES', 'color', true).render();
 }
 
 /**
@@ -83,8 +78,14 @@ function outlineRankAndFile(): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
-	const data: number[] = primitives.Rect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, OUTLINE_COLOR);
-	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
+	const data: number[] = primitives.Rect(
+		worldBox.left,
+		worldBox.bottom,
+		worldBox.right,
+		worldBox.top,
+		OUTLINE_COLOR,
+	);
+	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
 /**
@@ -96,8 +97,17 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
 	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
 	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
 
-	const data: number[] = primitives.DashedRect(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, dashedWidth, dashedLength, dashedLength, OUTLINE_COLOR);
-	createRenderable(data, 2, "TRIANGLES", 'color', true).render();
+	const data: number[] = primitives.DashedRect(
+		worldBox.left,
+		worldBox.bottom,
+		worldBox.right,
+		worldBox.top,
+		dashedWidth,
+		dashedLength,
+		dashedLength,
+		OUTLINE_COLOR,
+	);
+	createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 }
 
 /**
@@ -105,8 +115,14 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
-	const fillData: number[] = primitives.Quad_Color(worldBox.left, worldBox.bottom, worldBox.right, worldBox.top, FILL_COLOR);
-	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
+	const fillData: number[] = primitives.Quad_Color(
+		worldBox.left,
+		worldBox.bottom,
+		worldBox.right,
+		worldBox.top,
+		FILL_COLOR,
+	);
+	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
 }
 
 /**
@@ -127,12 +143,10 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	const top = corner[1] + widthWorld / 2;
 
 	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
-	createRenderable(fillData, 2, "TRIANGLES", 'color', true).render();
+	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-
 // Exports ----------------------------------------------------------
-
 
 export default {
 	outlineRankAndFile,

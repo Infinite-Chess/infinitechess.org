@@ -1,194 +1,192 @@
 * {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana;
-    border: 0;
-    /* Enable temporarily during dev to see the borders of all elements */
-    /* outline: 1px solid rgba(0, 0, 0, 0.191); */
+	margin: 0;
+	padding: 0;
+	font-family: Verdana;
+	border: 0;
+	/* Enable temporarily during dev to see the borders of all elements */
+	/* outline: 1px solid rgba(0, 0, 0, 0.191); */
 }
 
 html {
-    height: 100%;
-    background-color: rgb(33, 33, 33);
+	height: 100%;
+	background-color: rgb(33, 33, 33);
 }
 
-
-
 main {
-    background-color: #fff;
-    /* Using PNG because it was the smallest after compression */
-    background-image: url('/img/blank_board.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-attachment: fixed;
+	background-color: #fff;
+	/* Using PNG because it was the smallest after compression */
+	background-image: url('/img/blank_board.png');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-attachment: fixed;
 
-    margin-top: 40px;
-    min-height: 450px;
+	margin-top: 40px;
+	min-height: 450px;
 }
 
 #content {
-    background-color: rgba(255, 255, 255, 0.805);
-    min-height: 450px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-    padding: 30px 20px;
+	background-color: rgba(255, 255, 255, 0.805);
+	min-height: 450px;
+	margin: auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+	padding: 30px 20px;
 }
 
 #content h1 {
-    font-size: 40px;
-    font-family: georgia;
-    margin-bottom: 60px;
+	font-size: 40px;
+	font-family: georgia;
+	margin-bottom: 60px;
 }
 
 .formfield {
-    width: fit-content;
-    text-align: center;
-    margin: auto;
+	width: fit-content;
+	text-align: center;
+	margin: auto;
 }
 
 #username-input-line {
-    text-align: center;
-    line-height: 2.2em;
+	text-align: center;
+	line-height: 2.2em;
 }
 
-#emailinputline, #password-input-line {
-    vertical-align: middle;
-    margin-top: 12px;
+#emailinputline,
+#password-input-line {
+	vertical-align: middle;
+	margin-top: 12px;
 }
 
 .line {
-    width: fit-content;
-    display: inline-block;
-    text-align: center;
-    line-height: 2.2em;
+	width: fit-content;
+	display: inline-block;
+	text-align: center;
+	line-height: 2.2em;
 }
 
 label {
-    font-size: 18px;
-    vertical-align: middle;
-    margin-right: 2px;
+	font-size: 18px;
+	vertical-align: middle;
+	margin-right: 2px;
 }
 
 form input {
-    border: 0;
-    border-radius: 4px;
-    padding: 0.4em;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.63);
-    font-size: 15px;
-    width: 180px; /* Must also change div.error width! */
+	border: 0;
+	border-radius: 4px;
+	padding: 0.4em;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.63);
+	font-size: 15px;
+	width: 180px; /* Must also change div.error width! */
 }
 
 form input:focus {
-    outline: solid 1px black;
+	outline: solid 1px black;
 }
 
-form input[type='text']:hover, form input[type='email']:hover, form input[type='password']:hover {
-    box-shadow: 0 0 8px rgb(0, 0, 0);
+form input[type='text']:hover,
+form input[type='email']:hover,
+form input[type='password']:hover {
+	box-shadow: 0 0 8px rgb(0, 0, 0);
 }
 
 div.error {
-    display: inline-block;
-    font-size: 12px;
-    text-align: left;
-    color: red;
-    width: 192px; /* Must be exactly 12 pixels more than input width! */
-    line-height: 1.2em;
+	display: inline-block;
+	font-size: 12px;
+	text-align: left;
+	color: red;
+	width: 192px; /* Must be exactly 12 pixels more than input width! */
+	line-height: 1.2em;
 }
 
 form input[type='submit'] {
-    height: 30px;
-    min-width: 0;
-    width: fit-content;
-    height: fit-content;
-    background-color: white;
-    font-size: 16px;
-    transition: 0.1s;
-    margin-top: 25px;
-    outline: 0;
+	height: 30px;
+	min-width: 0;
+	width: fit-content;
+	height: fit-content;
+	background-color: white;
+	font-size: 16px;
+	transition: 0.1s;
+	margin-top: 25px;
+	outline: 0;
 }
 
 form input[type='submit'].ready:hover {
-    transition: 0.1s;
-    font-size: 18px;
-    box-shadow: 0 0 8px rgb(0, 0, 0);
-    margin-top: 23px;
+	transition: 0.1s;
+	font-size: 18px;
+	box-shadow: 0 0 8px rgb(0, 0, 0);
+	margin-top: 23px;
 }
 
 form input[type='submit'].ready:focus {
-    outline: solid 1px black;
+	outline: solid 1px black;
 }
 
 .agreement {
-    margin: 1em 0 0 0;
-    font-size: 13px;
-    color: rgb(68, 68, 68);
-    line-height: 1.5;
-    margin: 20px 0px;
+	margin: 1em 0 0 0;
+	font-size: 13px;
+	color: rgb(68, 68, 68);
+	line-height: 1.5;
+	margin: 20px 0px;
 }
 
-
 .center {
-    text-align: center;
+	text-align: center;
 }
 
 a {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
 }
 
 .unavailable {
-    color: rgba(0, 0, 0, 0.199);
+	color: rgba(0, 0, 0, 0.199);
 }
-
-
 
 /* Right align error bars */
 @media only screen and (min-width: 345px) {
-    .formfield {
-        text-align: right;
-    }
+	.formfield {
+		text-align: right;
+	}
 }
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
+	#content h1 {
+		font-size: calc(40px + 0.027 * (100vw - 450px));
+	}
 
-    #content h1 {
-        font-size: calc(40px + 0.027 * (100vw - 450px));
-    }
+	form input {
+		width: calc(180px + 0.3 * (100vw - 450px)); /* Must also change div.error width! */
+	}
 
-    form input {
-        width: calc(180px + 0.3 * (100vw - 450px)); /* Must also change div.error width! */
-    }
-
-    div.error {
-        width: calc(192px + 0.3 * (100vw - 450px)); /* Must be exactly 12 pixels more than input width! */
-    }
+	div.error {
+		/* Must be exactly 12 pixels more than input width! */
+		width: calc(192px + 0.3 * (100vw - 450px));
+	}
 }
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
-    form input {
-        width: 260px; /* Must also change div.error width! */
-    }
+	form input {
+		width: 260px; /* Must also change div.error width! */
+	}
 
-    div.error {
-        width: 272px; /* Must be exactly 12 pixels more than input width! */
-    }
+	div.error {
+		width: 272px; /* Must be exactly 12 pixels more than input width! */
+	}
 }
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    #content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px;
-        min-height: 800px;
-    }
+	#content {
+		max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+		padding: 40px 30px;
+		min-height: 800px;
+	}
 
-    #content h1 {
-        font-size: 50px;
-        margin-bottom: 70px;
-    }
+	#content h1 {
+		font-size: 50px;
+		margin-bottom: 70px;
+	}
 }

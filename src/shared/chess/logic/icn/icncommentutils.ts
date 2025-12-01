@@ -1,22 +1,19 @@
-
 /**
  * This scripts creates and parses embeded command sequences
  * that go into the comments of moves in Infinite Chess Notation.
- * 
+ *
  * An example of a clock embeded sequence is '[%clk 0:01:57.3]'
- * 
+ *
  * More info on embeded command sequences:
  * https://www.enpassant.dk/chess/palview/enhancedpgn.htm
  */
 
-
 // Types ----------------------------------------------------------------------------
-
 
 /** All valid command sequences. */
 const validCommands = ['clk'] as const;
 
-type Command = typeof validCommands[number];
+type Command = (typeof validCommands)[number];
 
 /**
  * Represents a generic command ready to be embedded,
@@ -44,9 +41,7 @@ interface ExtractedCommentData {
 	commands: CommandObject[];
 }
 
-
 // General Command Functions --------------------------------------------------------------------
-
 
 /**
  * Combines a comment string and a list of command objects into a single
@@ -66,7 +61,7 @@ function combineCommentAndCommands(cmdObjs: CommandObject[], comment?: string): 
 /**
  * Takes a command object (containing a command name and its value)
  * and constructs the standard embedded command sequence string.
- * 
+ *
  * Example: { command: 'clk', value: '1:23:45.6' } => "[%clk 1:23:45.6]"
  * Example: { command: 'timestamp', value: '1678886400' } => "[%timestamp 1678886400]"
  */
@@ -95,7 +90,8 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 		const commandName = match[1]! as Command; // e.g., "clk"
 		const commandValue = match[2]!; // e.g., "0:09:56.7"
 		// Validate the command name
-		if (!validCommands.includes(commandName)) throw Error(`Invalid command sequence found in comment: [%${commandName} ...]`);
+		if (!validCommands.includes(commandName))
+			throw Error(`Invalid command sequence found in comment: [%${commandName} ...]`);
 		commands.push({ command: commandName, value: commandValue });
 	}
 
@@ -113,9 +109,7 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 	};
 }
 
-
 // Parsing 'clk' Command Sequences --------------------------------------------------------------------
-
 
 /**
  * Takes a time in milliseconds and creates a CommandObject containing
@@ -126,12 +120,16 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 function createClkCommandObject(timeMillis: number): CommandObject {
 	let formattedValue: string;
 
-	if (typeof timeMillis !== 'number') throw Error(`Invalid typeof for timeMillis when constructing clk comment embeded command sequence: expected number, got ${typeof timeMillis}`);
-	if (isNaN(timeMillis)) throw Error(`timeMillis is NaN when constructing clk comment embeded command sequence!`);
+	if (typeof timeMillis !== 'number')
+		throw Error(
+			`Invalid typeof for timeMillis when constructing clk comment embeded command sequence: expected number, got ${typeof timeMillis}`,
+		);
+	if (isNaN(timeMillis))
+		throw Error(`timeMillis is NaN when constructing clk comment embeded command sequence!`);
 
 	// Handle edge case: if time is 0 or less, return 0 time object.
 	if (timeMillis <= 0) {
-		formattedValue = "0:00:00.0";
+		formattedValue = '0:00:00.0';
 	} else {
 		// Round the total milliseconds UP to the nearest 100ms boundary.
 		const roundedUpMillis = Math.ceil(timeMillis / 100) * 100;
@@ -156,7 +154,7 @@ function createClkCommandObject(timeMillis: number): CommandObject {
 	// Return the command object conforming to CommandObject
 	return {
 		command: 'clk', // The specific command name for this function
-		value: formattedValue
+		value: formattedValue,
 	};
 }
 
@@ -172,7 +170,10 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 
 	const match = clkValueString.match(regex);
 
-	if (!match) throw new Error(`Clock time value string is not in the required H:MM:SS.D format! (${clkValueString})`);
+	if (!match)
+		throw new Error(
+			`Clock time value string is not in the required H:MM:SS.D format! (${clkValueString})`,
+		);
 
 	// Extract the captured groups. match[0] is the full string.
 	// Groups are 1-indexed.
@@ -188,18 +189,17 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 	const tenths = Number(tenthsStr);
 
 	// Calculate the total time in milliseconds.
+	// prettier-ignore
 	const totalMillis =
 		(hours * 3600 * 1000) +  // Hours to milliseconds
 		(minutes * 60 * 1000) +  // Minutes to milliseconds
 		(seconds * 1000) +       // Seconds to milliseconds
-		(tenths * 100);          // Tenths of a second to milliseconds
-		
+		(tenths * 100); // Tenths of a second to milliseconds
+
 	return totalMillis;
 }
 
-
 // Exports ----------------------------------------------------------------------------
-
 
 export default {
 	combineCommentAndCommands,
@@ -209,8 +209,4 @@ export default {
 	getMillisFromClkTimeValue,
 };
 
-export type {
-	Command,
-	CommandObject,
-	ExtractedCommentData,
-};
+export type { Command, CommandObject, ExtractedCommentData };

@@ -18,11 +18,11 @@ let notificationBadge: HTMLSpanElement | null = null;
 function createNotificationBadge(count: number): HTMLSpanElement {
 	const badge = document.createElement('span');
 	badge.className = 'news-notification-badge';
-	
+
 	// Display count as "9+" for 10 or more, otherwise show the number
 	const displayText = count >= 10 ? '9+' : count.toString();
 	badge.textContent = displayText;
-	
+
 	badge.style.cssText = `
 		position: absolute;
 		top: 2px;
@@ -52,16 +52,16 @@ async function fetchUnreadNewsCount(): Promise<number> {
 	try {
 		const response = await fetch('/api/news/unread-count', {
 			headers: {
-				'is-fetch-request': 'true'
-			}
+				'is-fetch-request': 'true',
+			},
 		});
-		
+
 		if (!response.ok) {
 			console.error('Failed to fetch unread news count');
 			return 0;
 		}
-		
-		const data = await response.json() as { count: number };
+
+		const data = (await response.json()) as { count: number };
 		return data.count || 0;
 	} catch (error) {
 		console.error('Error fetching unread news count:', error);
@@ -81,7 +81,7 @@ async function updateNotificationBadge(): Promise<void> {
 	}
 
 	const count = await fetchUnreadNewsCount();
-	
+
 	if (count > 0) {
 		showNotificationBadge(count);
 	} else {
@@ -97,7 +97,7 @@ function showNotificationBadge(count: number): void {
 	if (!newsLink) {
 		return;
 	}
-	
+
 	if (!notificationBadge) {
 		notificationBadge = createNotificationBadge(count);
 		newsLink.appendChild(notificationBadge);
@@ -126,14 +126,14 @@ function init(): void {
 		console.warn('News link not found in header');
 		return;
 	}
-	
+
 	// Update on page load
 	updateNotificationBadge();
-	
+
 	// Update when login state changes
 	document.addEventListener('login', updateNotificationBadge);
 	document.addEventListener('logout', () => removeNotificationBadge());
-	
+
 	// Listen for custom event when news is marked as read
 	document.addEventListener('news-marked-read', () => {
 		updateNotificationBadge();
@@ -144,5 +144,5 @@ init();
 
 export default {
 	updateNotificationBadge,
-	removeNotificationBadge
+	removeNotificationBadge,
 };

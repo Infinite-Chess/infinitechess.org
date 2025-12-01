@@ -1,9 +1,7 @@
-
 /*
  * This script stores utility methods for working
  * with single invites, not multiple
  */
-
 
 import jsutil from '../../../shared/util/jsutil.js';
 
@@ -12,14 +10,12 @@ import type { Game } from '../gamemanager/gameutility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
-
 // Type Definitions -------------------------------------------------------------------------------------------
-
 
 /** A lobby game invite. */
 interface Invite extends SafeInvite {
 	/** Contains the identifier of the owner of the invite, whether a member or browser. */
-	owner: AuthMemberInfo
+	owner: AuthMemberInfo;
 }
 
 /**
@@ -27,16 +23,15 @@ interface Invite extends SafeInvite {
  * Doesn't contain sensitive information such as browser-id cookies.
  */
 interface SafeInvite {
-	id: string // A unique identifier, containing lowercase letters a-z and numbers 0-9.
-	usernamecontainer: ServerUsernameContainer // The type of the owner (guest/player), their username, and elo if applicable.
-	tag: string // Used to verify if an invite is your own.
-	variant: Game['variant']
-	clock: Game['clock']
-	color: Player
-	rated: "casual" | "rated"
-	publicity: "public" | "private"
+	id: string; // A unique identifier, containing lowercase letters a-z and numbers 0-9.
+	usernamecontainer: ServerUsernameContainer; // The type of the owner (guest/player), their username, and elo if applicable.
+	tag: string; // Used to verify if an invite is your own.
+	variant: Game['variant'];
+	clock: Game['clock'];
+	color: Player;
+	rated: 'casual' | 'rated';
+	publicity: 'public' | 'private';
 }
-
 
 //-------------------------------------------------------------------------------------------
 
@@ -82,24 +77,16 @@ function safelyCopyInvite(invite: Invite): SafeInvite {
 
 /** Compares two MemberInfo objects to see if they are the same person or not. */
 function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
-	if (u1.signedIn) {  
-		if (!u2.signedIn) return false;  
-		return u1.user_id === u2.user_id;  
-	} else if (u2.signedIn) return false; // This ensures if they have the same browser-id, but mi2 is signed in, they are not equal.  
-	else return u1.browser_id === u2.browser_id;  
+	if (u1.signedIn) {
+		if (!u2.signedIn) return false;
+		return u1.user_id === u2.user_id;
+	} else if (u2.signedIn)
+		return false; // This ensures if they have the same browser-id, but mi2 is signed in, they are not equal.
+	else return u1.browser_id === u2.browser_id;
 }
 
 //-------------------------------------------------------------------------------------------
 
-export type {
-	Invite,
-	SafeInvite,
-};
+export type { Invite, SafeInvite };
 
-export {
-	isInvitePrivate,
-	isInvitePublic,
-	makeInviteSafe,
-	safelyCopyInvite,
-	memberInfoEq,
-};
+export { isInvitePrivate, isInvitePublic, makeInviteSafe, safelyCopyInvite, memberInfoEq };

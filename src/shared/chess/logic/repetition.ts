@@ -1,27 +1,26 @@
-
 /**
  * This script contains our algorithm for detecting draw by repetition.
- * 
+ *
  * It is compatible with the enpassant state, as if 2 positions differ only
  * by the enpassant state, they are considered different.
- * 
+ *
  * It also takes into account special rights.
  */
 
-import type { FullGame } from "./gamefile.js";
-import type { Move } from "./movepiece.js";
-import type { StateChange } from "./state.js";
+import type { FullGame } from './gamefile.js';
+import type { Move } from './movepiece.js';
+import type { StateChange } from './state.js';
 
-import boardchanges from "./boardchanges.js";
-import typeutil from "../util/typeutil.js";
-import { players, rawTypes } from "../util/typeutil.js";
+import boardchanges from './boardchanges.js';
+import typeutil from '../util/typeutil.js';
+import { players, rawTypes } from '../util/typeutil.js';
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
-type Flux = `${string},${string},${number|string}`; // `x,y,43` | `x,y,enpassant`
+type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassant`
 
 /**
  * Tests if the provided gamefile has had a repetition draw.
- * 
+ *
  * Complexity O(m) where m is the move count since the last pawn push or capture or special right loss!
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
@@ -34,22 +33,29 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 	const currentPlayerTurn = moveList.length % turnOrderLength;
 
 	/** When compared to our current position, this is a running set of surpluses of previous positions, preventing them from being equivalent to the current position. */
-	const surplus = new Set<Flux>;
+	const surplus = new Set<Flux>();
 	/** When compared to our current position, this is a running set of deficits of previous positions, preventing them from being equivalent to the current position. */
-	const deficit = new Set<Flux>; 
+	const deficit = new Set<Flux>();
 
 	let equalPositionsFound: number = 0;
 
 	const startIndex: number = moveList.length - 1;
 	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-	outer: for (let index = startIndex; index >= 0; index--) { // WILL BE -1 if we've reached the beginning of the game!
+	outer: for (let index = startIndex; index >= 0; index--) {
+		// WILL BE -1 if we've reached the beginning of the game!
 		const move = moveList[index]! as Move;
 
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.
 		// 'capture' move changes are handled lower down, they are one-way too.
 		if (typeutil.getRawType(move.type) === rawTypes.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
-		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === false)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
+		if (
+			move.state.global.some(
+				(stateChange: StateChange) =>
+					stateChange.type === 'specialrights' && stateChange.future === false,
+			)
+		)
+			break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
 
 		// Iterate through all move changes, adding the fluxes.
 		for (const change of move.changes) {
@@ -60,10 +66,14 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
 				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.piece.type}`);
 				// There would also be a SURPLUS on its startCoords
-				addSurplus(`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`);
+				addSurplus(
+					`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`,
+				);
 			} else if (change.action === 'add') {
 				// If this change was undo'd, there would be a DEFICIT on its coords
-				addDeficit(`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`);
+				addDeficit(
+					`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`,
+				);
 			}
 		}
 
@@ -74,13 +84,19 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 			 * If we reverse applied this enpassant state,
 			 * there would be a DEFICIT on the future value,
 			 * and a SURPLUS on the current value.
-			 * 
+			 *
 			 * The reason we should also specify in the flux the pawn's coords that double-pushed is because
 			 * in the 5D variant, you can't tell where the pawn is that double pushed. It could be 1 square away, or 10.
 			 * Which means the enpassant square is fundamentally different if the pawn to be captured is a different distance.
 			 */
-			if (state.future !== undefined) addDeficit(`${state.future.square[0]},${state.future.square[1]},${state.future.pawn[0]},${state.future.pawn[1]},enpassant`);
-			if (state.current !== undefined) addSurplus(`${state.current.square[0]},${state.current.square[1]},${state.current.pawn[0]},${state.current.pawn[1]},enpassant`);
+			if (state.future !== undefined)
+				addDeficit(
+					`${state.future.square[0]},${state.future.square[1]},${state.future.pawn[0]},${state.future.pawn[1]},enpassant`,
+				);
+			if (state.current !== undefined)
+				addSurplus(
+					`${state.current.square[0]},${state.current.square[1]},${state.current.pawn[0]},${state.current.pawn[1]},enpassant`,
+				);
 			return; // typescript needs this to not complain
 		});
 
@@ -120,7 +136,8 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 	}
 
 	// Loop is finished. How many equal positions did we find?
-	if (equalPositionsFound === 2) return `${players.NEUTRAL} repetition`; // Victor of player NEUTRAL means it was a draw.
+	if (equalPositionsFound === 2)
+		return `${players.NEUTRAL} repetition`; // Victor of player NEUTRAL means it was a draw.
 	else return undefined;
 }
 

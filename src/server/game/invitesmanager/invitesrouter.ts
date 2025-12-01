@@ -1,4 +1,3 @@
-
 // src/server/game/invitesmanager/invitesrouter.ts
 
 /*
@@ -14,47 +13,41 @@ import { acceptInvite, acceptinviteschem } from './acceptinvite.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-
 const InvitesSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createinvite'), value: createinviteschem }),
 	z.strictObject({ action: z.literal('cancelinvite'), value: cancelinviteschem }),
-	z.strictObject({ action: z.literal('acceptinvite'), value: acceptinviteschem })
+	z.strictObject({ action: z.literal('acceptinvite'), value: acceptinviteschem }),
 ]);
 type InvitesMessage = z.infer<typeof InvitesSchema>;
 
-
 /**
  * Routes all incoming websocket messages related to invites.
- * @param ws 
- * @param contents 
+ * @param ws
+ * @param contents
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
- * @returns 
+ * @returns
  */
-function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: number): void { // data: { route, action, value, id }
+function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: number): void {
+	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (contents.action) {
-		case "createinvite":
+		case 'createinvite':
 			createInvite(ws, contents.value, id);
 			break;
-		case "cancelinvite":
+		case 'cancelinvite':
 			cancelInvite(ws, contents.value, id);
 			break;
-		case "acceptinvite":
+		case 'acceptinvite':
 			acceptInvite(ws, contents.value, id);
 			break;
 		default:
-			// @ts-ignore
-			console.error(`UNKNOWN web socket action received in invites route! "${contents.action}"`);
+			console.error(
+				// @ts-ignore
+				`UNKNOWN web socket action received in invites route! "${contents.action}"`,
+			);
 	}
 }
 
+export { routeInvitesMessage, InvitesSchema };
 
-export {
-	routeInvitesMessage,
-
-	InvitesSchema,
-};
-
-export type {
-	
-};
+export type {};

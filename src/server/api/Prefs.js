@@ -1,31 +1,32 @@
-
 /**
  * This script sets the preferences cookie on any request to an HTML file.
  * And it has an API for setting your preferences in the database.
  */
 
-import themes from "../../shared/components/header/themes.js";
-import jsutil from "../../shared/util/jsutil.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
-
+import themes from '../../shared/components/header/themes.js';
+import jsutil from '../../shared/util/jsutil.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Variables -------------------------------------------------------------
 
-
 const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
-const validPrefs = ['theme', 'legal_moves', 'animations', 'lingering_annotations', 'premove_enabled'];
+const validPrefs = [
+	'theme',
+	'legal_moves',
+	'animations',
+	'lingering_annotations',
+	'premove_enabled',
+];
 const legal_move_shapes = ['squares', 'dots'];
 
-
 // Functions -------------------------------------------------------------
-
 
 /**
  * Middleware to set the preferences cookie for logged-in users based on their memberInfo cookie.
  * Only sets the preferences cookie on HTML requests (requests without an origin header).
- * 
+ *
  * It is possible for the memberInfo cookie to be tampered with, but preferences can be public information anyway.
  * We are reading the memberInfo cookie instead of verifying their session token
  * because that could take a little bit longer as it requires a database look up.
@@ -50,18 +51,27 @@ function setPrefsCookie(req, res, next) {
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEventsAndPrint(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt');
+		logEventsAndPrint(
+			`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`,
+			'errLog.txt',
+		);
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
-	if (typeof memberInfoCookie !== "object") {
-		logEventsAndPrint(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
+	if (typeof memberInfoCookie !== 'object') {
+		logEventsAndPrint(
+			`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
+			'errLog.txt',
+		);
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	const user_id = memberInfoCookie.user_id;
 	if (typeof user_id !== 'number') {
-		logEventsAndPrint(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
+		logEventsAndPrint(
+			`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
+			'errLog.txt',
+		);
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
@@ -69,7 +79,7 @@ function setPrefsCookie(req, res, next) {
 	if (!preferences) return next(); // No preferences set for this user, or the user doesn't exist.
 
 	createPrefsCookie(res, preferences);
-	
+
 	// console.log(`Set preferences cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
 
 	next();
@@ -122,8 +132,11 @@ function getPrefs(userId) {
  */
 function postPrefs(req, res) {
 	if (!req.memberInfo.signedIn) {
-		logEventsAndPrint("User tried to save preferences when they weren't signed in!", 'errLog.txt');
-		return res.status(401).json({ message: "Can't save preferences, not signed in."});
+		logEventsAndPrint(
+			"User tried to save preferences when they weren't signed in!",
+			'errLog.txt',
+		);
+		return res.status(401).json({ message: "Can't save preferences, not signed in." });
 	}
 
 	const { user_id, username } = req.memberInfo;
@@ -131,8 +144,13 @@ function postPrefs(req, res) {
 	const preferences = req.body.preferences;
 
 	if (!arePrefsValid(preferences)) {
-		logEventsAndPrint(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`, 'errLog.txt');
-		return res.status(400).json({ message: "Preferences not valid, cannot save on the server."});
+		logEventsAndPrint(
+			`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`,
+			'errLog.txt',
+		);
+		return res
+			.status(400)
+			.json({ message: 'Preferences not valid, cannot save on the server.' });
 	}
 
 	// Update the preferences column in the database
@@ -140,10 +158,15 @@ function postPrefs(req, res) {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`);
+		console.log(
+			`Successfully saved member "${username}" of id "${user_id}"s user preferences.`,
+		);
 		res.status(200).json({ message: 'Preferences updated successfully' });
 	} else {
-		logEventsAndPrint(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt');
+		logEventsAndPrint(
+			`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`,
+			'errLog.txt',
+		);
 		res.status(500).json({ message: 'Failed to update preferences: user_id not found' });
 	}
 }
@@ -155,7 +178,8 @@ function postPrefs(req, res) {
  */
 function arePrefsValid(preferences) {
 	// 1. Ensure preferences is defined, of type object, and not an array
-	if (preferences === undefined || typeof preferences !== 'object' || Array.isArray(preferences)) return false;
+	if (preferences === undefined || typeof preferences !== 'object' || Array.isArray(preferences))
+		return false;
 	if (preferences === null) return true; // We can save null values.
 
 	for (const [key, value] of Object.entries(preferences)) {
@@ -182,10 +206,4 @@ function arePrefsValid(preferences) {
 	return true;
 }
 
-
-
-export {
-	setPrefsCookie,
-	postPrefs,
-	deletePreferencesCookie,
-};
+export { setPrefsCookie, postPrefs, deletePreferencesCookie };

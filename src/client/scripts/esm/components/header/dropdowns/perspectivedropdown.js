@@ -1,44 +1,45 @@
-
 // This script allows us to adjust the mouse sensitivity in perspective mode
 
-import docutil from "../../../util/docutil.js";
-import preferences from "../preferences.js";
+import docutil from '../../../util/docutil.js';
+import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
 const settingsDropdown = document.querySelector('.settings-dropdown');
 
 // The option in the main settings menu
-const perspectiveSettingsDropdownItem = document.getElementById('perspective-settings-dropdown-item');
+const perspectiveSettingsDropdownItem = document.getElementById(
+	'perspective-settings-dropdown-item',
+);
 
 const perspectiveDropdown = document.querySelector('.perspective-dropdown');
 const perspectiveDropdownTitle = document.querySelector('.perspective-dropdown .dropdown-title');
 
-const mouseSensitivitySlider = document.querySelector('.perspective-options .mouse-sensitivity .slider');
+const mouseSensitivitySlider = document.querySelector(
+	'.perspective-options .mouse-sensitivity .slider',
+);
 /** The text that displays the value */
-const mouseSensitivityOutput = document.querySelector('.perspective-options .mouse-sensitivity .value');
+const mouseSensitivityOutput = document.querySelector(
+	'.perspective-options .mouse-sensitivity .value',
+);
 
 const fovSlider = document.querySelector('.perspective-dropdown .fov .slider');
 /** The text that displays the value */
 const fovOutput = document.querySelector('.perspective-dropdown .fov .value');
-const fovResetDefaultContainer = document.querySelector('.perspective-dropdown .fov .reset-default-container');
+const fovResetDefaultContainer = document.querySelector(
+	'.perspective-dropdown .fov .reset-default-container',
+);
 const fovResetDefault = document.querySelector('.perspective-dropdown .fov .reset-default');
-
-
 
 // Functions ---------------------------------------------------------------------------------
 
-
-
 (function init() {
-
-	if (docutil.isMouseSupported()) perspectiveSettingsDropdownItem.classList.remove('hidden'); // Enable (perspective mode can't be used on mobile)
+	if (docutil.isMouseSupported())
+		perspectiveSettingsDropdownItem.classList.remove('hidden'); // Enable (perspective mode can't be used on mobile)
 	else return;
 
 	setInitialValues();
-
 })();
-
 
 /** Update the sliders according to the already existing preferences */
 function setInitialValues() {
@@ -48,8 +49,6 @@ function setInitialValues() {
 	fovSlider.value = preferences.getPerspectiveFOV();
 	updateFOVOutput();
 }
-
-
 
 function open() {
 	perspectiveDropdown.classList.remove('visibility-hidden');
@@ -61,7 +60,6 @@ function close() {
 	closeListeners();
 	settingsDropdown.classList.remove('transparent');
 }
-
 
 function initListeners() {
 	perspectiveDropdownTitle.addEventListener('click', close);
@@ -76,8 +74,6 @@ function closeListeners() {
 	fovResetDefault.removeEventListener('click', resetFOVDefault);
 }
 
-
-
 function onMouseSensitivityChange(event) {
 	const value = Number(event.currentTarget.value);
 	// console.log(`Mouse sensitivity changed: ${value}`);
@@ -89,7 +85,6 @@ function onFOVChange(event) {
 	setFOV(value);
 }
 
-
 function setMouseSensitivity(value) {
 	preferences.setPerspectiveSensitivity(value);
 	updateMouseSensitivityOutput();
@@ -98,7 +93,6 @@ function setFOV(value) {
 	preferences.setPerspectiveFOV(value);
 	updateFOVOutput();
 }
-
 
 function updateMouseSensitivityOutput() {
 	const value = Number(mouseSensitivitySlider.value);
@@ -110,7 +104,8 @@ function updateFOVOutput() {
 	updateFOVResetDefaultButton(value);
 }
 function updateFOVResetDefaultButton(value) {
-	if (value === preferences.getDefaultPerspectiveFOV()) fovResetDefaultContainer.classList.add('hidden');
+	if (value === preferences.getDefaultPerspectiveFOV())
+		fovResetDefaultContainer.classList.add('hidden');
 	else fovResetDefaultContainer.classList.remove('hidden');
 }
 function resetFOVDefault() {
@@ -118,8 +113,6 @@ function resetFOVDefault() {
 	fovSlider.value = defaultFOV;
 	setFOV(defaultFOV);
 }
-
-
 
 export default {
 	initListeners,

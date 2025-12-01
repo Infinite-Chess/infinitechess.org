@@ -1,4 +1,3 @@
-
 /*
  * This script:
  *
@@ -6,19 +5,23 @@
  * so we can display that info.
  */
 
-import { Leaderboards, VariantLeaderboards } from "../../../../shared/chess/variants/validleaderboard.js";
-import usernamecontainer from "../util/usernamecontainer.js";
-import validatorama from "../util/validatorama.js";
+import {
+	Leaderboards,
+	VariantLeaderboards,
+} from '../../../../shared/chess/variants/validleaderboard.js';
+import usernamecontainer from '../util/usernamecontainer.js';
+import validatorama from '../util/validatorama.js';
 
 import type { UsernameItem } from '../util/usernamecontainer.js';
 
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
-const element_ShowMoreButton: HTMLButtonElement = document.getElementById('show_more_button')! as HTMLButtonElement;
+const element_ShowMoreButton: HTMLButtonElement = document.getElementById(
+	'show_more_button',
+)! as HTMLButtonElement;
 const element_UserRankingText = document.getElementById('user_ranking_text')!;
 const element_UserRanking = document.getElementById('user_ranking')!;
-
 
 // --- Variables ---
 
@@ -41,12 +44,9 @@ let loggedInAs: string | undefined;
 /** Whether the page has already been initialized once */
 let initialized = false;
 
-
 // --- Initialization ---
 
-
 (async function loadLeaderboardData(): Promise<void> {
-
 	setSupportedVariantsDisplay();
 	createEmptyLeaderboardTable();
 
@@ -61,43 +61,40 @@ let initialized = false;
 	element_ShowMoreButton.addEventListener('click', showMorePlayers);
 })();
 
-
-
 // --- Functions ---
-
 
 /**
  * Set the text below the leaderboard table, explaining which variants belong to it
  */
-function setSupportedVariantsDisplay(): void {;
+function setSupportedVariantsDisplay(): void {
 	const valid_variants = Object.keys(VariantLeaderboards);
 	const variantslist: string[] = [];
 	valid_variants.forEach((variant: string | null) => {
 		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
-		variantslist.push( variant in translations ? translations[variant] : variant );
+		variantslist.push(variant in translations ? translations[variant] : variant);
 	});
-	element_supportedVariants.textContent = `${translations["supported_variants"]} ${variantslist.join(", ")}.`;
-};
+	element_supportedVariants.textContent = `${translations['supported_variants']} ${variantslist.join(', ')}.`;
+}
 
 /**
  * Create an empty leaderboard table upon page initialization
  */
 function createEmptyLeaderboardTable(): void {
 	// Create table
-	const table = document.createElement("table");
+	const table = document.createElement('table');
 	// Create header of table
-	const thead = document.createElement("thead");
+	const thead = document.createElement('thead');
 	thead.innerHTML = `
 		<tr>
-		<th>${translations["rank"]}</th>
-		<th>${translations["player"]}</th>
-		<th>${translations["rating"]}</th>
+		<th>${translations['rank']}</th>
+		<th>${translations['player']}</th>
+		<th>${translations['rating']}</th>
 		</tr>
 	`;
 	table.appendChild(thead);
 
 	// Create body of table
-	element_LeaderboardTableBody = document.createElement("tbody");
+	element_LeaderboardTableBody = document.createElement('tbody');
 	table.appendChild(element_LeaderboardTableBody);
 	element_LeaderboardContainer.appendChild(table);
 }
@@ -112,7 +109,7 @@ async function populateTable(n_players: number): Promise<void> {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
+			'is-fetch-request': 'true', // Custom header
 		},
 	};
 
@@ -120,11 +117,18 @@ async function populateTable(n_players: number): Promise<void> {
 		// Make server request
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
 		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
-		const find_requester_rank = (!initialized && loggedInAs !== undefined ? 1 : 0);
-		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`, config);
+		const find_requester_rank = !initialized && loggedInAs !== undefined ? 1 : 0;
+		const response = await fetch(
+			`/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`,
+			config,
+		);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
-			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
+			console.error(
+				'Failed to fetch leaderboard data:',
+				response.status,
+				response.statusText,
+			);
 			return;
 		}
 
@@ -133,31 +137,37 @@ async function populateTable(n_players: number): Promise<void> {
 
 		// Now populate the "your global rank" text at the top if possible
 		if (!initialized && results.requesterData?.rank_string !== undefined) {
-			element_UserRankingText.classList.remove("hidden");
+			element_UserRankingText.classList.remove('hidden');
 			element_UserRanking.textContent = results.requesterData.rank_string;
 		}
-		
+
 		// Iterate through all results.leaderboardData and add a row to the table body for each of them
 		let rank = running_start_rank;
 		results.leaderboardData.forEach((player: { username: string; elo: string }) => {
 			if (rank >= running_start_rank + n_players) return;
-			const row = document.createElement("tr");
+			const row = document.createElement('tr');
 
 			// Create and append <td> for rank
-			const rankCell = document.createElement("td");
+			const rankCell = document.createElement('td');
 			rankCell.textContent = `${rank}`;
 			row.appendChild(rankCell);
 
 			// Create and append <td> for username
-			const usernameCell = document.createElement("td");
+			const usernameCell = document.createElement('td');
 			const username_item: UsernameItem = { value: player.username, openInNewWindow: false };
-			const usernameContainer = usernamecontainer.createUsernameContainer('player', username_item);
-			usernamecontainer.embedUsernameContainerDisplayIntoParent(usernameContainer.element, usernameCell);
+			const usernameContainer = usernamecontainer.createUsernameContainer(
+				'player',
+				username_item,
+			);
+			usernamecontainer.embedUsernameContainerDisplayIntoParent(
+				usernameContainer.element,
+				usernameCell,
+			);
 			usernameCell.classList.add('fade-element'); // Usernames fade out instead of overflowing their container
 			row.appendChild(usernameCell);
 
 			// Create and append <td> for elo
-			const eloCell = document.createElement("td");
+			const eloCell = document.createElement('td');
 			eloCell.textContent = player.elo;
 			row.appendChild(eloCell);
 
@@ -165,7 +175,7 @@ async function populateTable(n_players: number): Promise<void> {
 			element_LeaderboardTableBody.appendChild(row);
 
 			// Color row of logged in user
-			if (loggedInAs === player.username) row.classList.add("logged_in_user_entry");
+			if (loggedInAs === player.username) row.classList.add('logged_in_user_entry');
 
 			rank++;
 		});
@@ -174,11 +184,11 @@ async function populateTable(n_players: number): Promise<void> {
 		running_start_rank += n_players;
 
 		// Hide "show more" button if not enough players were returned by server
-		if (results.leaderboardData.length < n_players + 1) element_ShowMoreButton.classList.add("hidden");
-		else element_ShowMoreButton.classList.remove("hidden");
-
+		if (results.leaderboardData.length < n_players + 1)
+			element_ShowMoreButton.classList.add('hidden');
+		else element_ShowMoreButton.classList.remove('hidden');
 	} catch (error) {
-		console.error("Error loading leaderboard data:", error);
+		console.error('Error loading leaderboard data:', error);
 	}
 }
 

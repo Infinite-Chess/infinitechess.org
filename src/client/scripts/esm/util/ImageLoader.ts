@@ -1,10 +1,9 @@
-
-import { retryFetch, RetryFetchOptions } from "./httputils";
+import { retryFetch, RetryFetchOptions } from './httputils';
 
 class ImageLoader {
 	/** Default retry options if none are provided. */
 	private static defaultRetryOptions: RetryFetchOptions = { maxAttempts: 1 }; // No retries by default
-	
+
 	/**
 	 * Requests an image from the server with retry logic and returns a promise
 	 * that resolves to an HTMLImageElement.
@@ -12,14 +11,17 @@ class ImageLoader {
 	 * @param retryOptions Optional configuration for the retry behavior.
 	 * @returns A promise that resolves with the loaded HTMLImageElement.
 	 */
-	public static loadImage(url: string, retryOptions: RetryFetchOptions = this.defaultRetryOptions): Promise<HTMLImageElement> {
+	public static loadImage(
+		url: string,
+		retryOptions: RetryFetchOptions = this.defaultRetryOptions,
+	): Promise<HTMLImageElement> {
 		return new Promise((resolve, reject) => {
 			retryFetch(url, undefined, retryOptions)
-				.then(response => {
+				.then((response) => {
 					if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 					return response.blob();
 				})
-				.then(blob => {
+				.then((blob) => {
 					const image = new Image();
 					const objectURL = URL.createObjectURL(blob);
 
@@ -37,7 +39,7 @@ class ImageLoader {
 
 					image.src = objectURL;
 				})
-				.catch(error => {
+				.catch((error) => {
 					reject(error);
 				});
 		});

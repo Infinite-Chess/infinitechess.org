@@ -1,7 +1,5 @@
-
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
-
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /**
  * A post-processing pass for applying a full suite of color grading effects.
@@ -35,18 +33,17 @@ export class ColorGradePass implements PostProcessPass {
 	/** Rotates all colors. 0.0 is no change, wraps at 1.0. */
 	public hueOffset: number = 0.0;
 
-
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('color_grade');
 	}
 
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		this.program.use();
-		
+
 		// Bind the input texture to texture unit 0
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-		
+
 		// Set all the uniforms
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);

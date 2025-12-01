@@ -1,12 +1,14 @@
-
 /**
  * This script handles the compression of a gamefile into a more simple json format,
  * suitable for the icnconverter to turn it into ICN (Infinite Chess Notation).
  */
 
-
 import jsutil from '../../../../../shared/util/jsutil.js';
-import { _Move_In, LongFormatIn, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import {
+	_Move_In,
+	LongFormatIn,
+	PresetAnnotes,
+} from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import state from '../../../../../shared/chess/logic/state.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 
@@ -16,30 +18,28 @@ import type { EnPassant } from '../../../../../shared/chess/logic/state.js';
 import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
-
 /**
  * This is the bare minimum gamefile you need to keep track of STATE,
  * or, properties of a gamefile that may change from making moves,
  * and you don't record the moves list so second-handedly keep track
  * of states like whosTurn and fullMove number.
- * 
+ *
  * This is used in {@link GameToPosition} when converting a gamefile to a single position.
  */
 interface SimplifiedGameState {
 	// The pieces
-	position: Map<CoordsKey, number>,
+	position: Map<CoordsKey, number>;
 	// The turnOrder rotating essentially keeps track of whos turn it is in the position.
-	turnOrder: GameRules['turnOrder'],
+	turnOrder: GameRules['turnOrder'];
 	// The fullMove number increments with every turn cycle
-	fullMove: number,
+	fullMove: number;
 	// For state.ts, the 3 global game states
 	state_global: {
-		specialRights: Set<CoordsKey>,
-		enpassant?: EnPassant,
-		moveRuleState?: number,
-	}
+		specialRights: Set<CoordsKey>;
+		enpassant?: EnPassant;
+		moveRuleState?: number;
+	};
 }
-
 
 /**
  * Primes the provided gamefile to for the icnconverter to turn it into an ICN
@@ -48,8 +48,11 @@ interface SimplifiedGameState {
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
-
+function compressGamefile(
+	{ basegame, boardsim }: FullGame,
+	copySinglePosition?: boolean,
+	presetAnnotes?: PresetAnnotes,
+): LongFormatIn {
 	// console.log("Compressing gamefile for ICN conversion...");
 	// console.log("Basegame:", jsutil.deepCopyObject(basegame));
 	// console.log("Boardsim:", jsutil.deepCopyObject(boardsim));
@@ -67,7 +70,8 @@ function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?:
 	};
 
 	// Modify the state if we're applying moves to match a single position
-	if (copySinglePosition) gamestate = GameToPosition(gamestate, boardsim.moves, boardsim.state.local.moveIndex + 1); // Convert -1 based to 0 based
+	if (copySinglePosition)
+		gamestate = GameToPosition(gamestate, boardsim.moves, boardsim.state.local.moveIndex + 1); // Convert -1 based to 0 based
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
@@ -78,7 +82,7 @@ function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?:
 		state_global: gamestate.state_global,
 		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(boardsim.moves),
 	};
-	
+
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	if (presetAnnotes) long_format_in.presetAnnotes = presetAnnotes;
 
@@ -88,7 +92,7 @@ function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?:
 }
 
 function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
-	const mappedMoves = moves.map((move: Move ) => {
+	const mappedMoves = moves.map((move: Move) => {
 		const move_in: _Move_In = {
 			type: move.type,
 			startCoords: move.startCoords,
@@ -106,10 +110,7 @@ function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
 	return jsutil.deepCopyObject(mappedMoves);
 }
 
-
-
 // Converting a Game to Single Position ---------------------------------------------------------------------------------
-
 
 /**
  * Takes a simple game state and applies the desired moves to it, modifying it.
@@ -117,9 +118,16 @@ function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
  * @param moves - The moves of the original gamefile to apply to the state
  * @param [halfmoves] - Number of halfmoves from starting position to apply to the state (Infinity: final position of game)
  */
-function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves: number = 0): SimplifiedGameState {
+function GameToPosition(
+	longform: SimplifiedGameState,
+	moves: Move[],
+	halfmoves: number = 0,
+): SimplifiedGameState {
 	if (halfmoves === Infinity) halfmoves = moves.length; // If we want the final position, set halfmoves to the length of the moves array
-	if (moves.length < halfmoves) throw Error(`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`);
+	if (moves.length < halfmoves)
+		throw Error(
+			`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`,
+		);
 	if (halfmoves === 0) return longform; // No changes needed
 
 	// console.log('Before converting gamestate to single position:', jsutil.deepCopyObject(longform));
@@ -147,15 +155,11 @@ function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves:
 	return longform;
 }
 
-
 // Exports --------------------------------------------------------------------------------------------------------------
-
 
 export default {
 	compressGamefile,
 	GameToPosition,
 };
 
-export type {
-	SimplifiedGameState,
-};
+export type { SimplifiedGameState };

@@ -1,13 +1,10 @@
-
 // src/client/scripts/esm/audio/AudioEffects.ts
 
 /**
  * This module is responsible for creating and managing audio effects using the Web Audio API.
  */
 
-
 // Type Definitions ----------------------------------------------------------------------------------
-
 
 /** A wrapper containing the input and output nodes of an effect graph. */
 export interface NodeChain {
@@ -29,11 +26,9 @@ interface EffectConfigBase {
 }
 
 /** The configuration for a single effect in the effects chain. */
-export type EffectConfig = EffectConfigBase & (
-	| { type: 'reverb', durationSecs: number }
-	// Future effects will be added here, e.g.:
-	// | { type: 'filter', filterType: BiquadFilterType, frequency: number }
-)
+export type EffectConfig = EffectConfigBase & { type: 'reverb'; durationSecs: number };
+// Future effects will be added here, e.g.:
+// | { type: 'filter', filterType: BiquadFilterType, frequency: number }
 
 // Effect Creation ---------------------------------------------------------------------------------
 
@@ -85,23 +80,23 @@ export function createEffectNode(audioContext: AudioContext, config: EffectConfi
 	return { input, output };
 }
 
-
 // Internal Helpers --------------------------------------------------------------------------------
-
 
 /** Generates a reverb effect node. */
 function generateConvolverNode(audioContext: AudioContext, durationSecs: number): ConvolverNode {
 	const impulse = impulseResponse(audioContext, durationSecs);
-	return new ConvolverNode(audioContext, {buffer:impulse});
+	return new ConvolverNode(audioContext, { buffer: impulse });
 }
 
 /** The mathematical function used by the convolver (reverb) node used to calculate the reverb effect! */
-function impulseResponse(audioContext: AudioContext, duration: number): AudioBuffer { // Duration in seconds, decay
+function impulseResponse(audioContext: AudioContext, duration: number): AudioBuffer {
+	// Duration in seconds, decay
 	const decay = 2;
 	const sampleRate = audioContext.sampleRate;
 	const length = sampleRate * duration;
 	const impulse = audioContext.createBuffer(1, length, sampleRate);
 	const IR = impulse.getChannelData(0);
-	for (let i = 0; i < length; i++) IR[i] = (2 * Math.random() - 1) * Math.pow(1 - i / length,decay);
+	for (let i = 0; i < length; i++)
+		IR[i] = (2 * Math.random() - 1) * Math.pow(1 - i / length, decay);
 	return impulse;
 }

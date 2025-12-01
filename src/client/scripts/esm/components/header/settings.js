@@ -1,21 +1,18 @@
-
 // This script opens and closes our settings drop-down menu when it is clicked.
 
-import languagedropdown from "./dropdowns/languagedropdown.js";
-import boarddropdown from "./dropdowns/boarddropdown.js";
-import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
-import perspectivedropdown from "./dropdowns/perspectivedropdown.js";
-import selectiondropdown from "./dropdowns/selectiondropdown.js";
-import sounddropdown from "./dropdowns/sounddropdown.js";
-import preferences from "./preferences.js";
-import themes from "../../../../../shared/components/header/themes.js";
+import languagedropdown from './dropdowns/languagedropdown.js';
+import boarddropdown from './dropdowns/boarddropdown.js';
+import legalmovedropdown from './dropdowns/legalmovedropdown.js';
+import perspectivedropdown from './dropdowns/perspectivedropdown.js';
+import selectiondropdown from './dropdowns/selectiondropdown.js';
+import sounddropdown from './dropdowns/sounddropdown.js';
+import preferences from './preferences.js';
+import themes from '../../../../../shared/components/header/themes.js';
 // Only imported so its code runs
 // eslint-disable-next-line no-unused-vars
-import pingmeter from "./pingmeter.js";
-
+import pingmeter from './pingmeter.js';
 
 // Document Elements -------------------------------------------------------------------------
-
 
 // Main settings dropdown
 const settings = document.getElementById('settings');
@@ -36,21 +33,24 @@ const legalmoveDropdown = document.querySelector('.legalmove-dropdown');
 const perspectiveDropdown = document.querySelector('.perspective-dropdown');
 const selectionDropdown = document.querySelector('.selection-dropdown');
 const soundDropdown = document.querySelector('.sound-dropdown');
-const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown, perspectiveDropdown, selectionDropdown, soundDropdown];
-
+const allSettingsDropdownsExceptMainOne = [
+	languageDropdown,
+	boardDropdown,
+	legalmoveDropdown,
+	perspectiveDropdown,
+	selectionDropdown,
+	soundDropdown,
+];
 
 // Variables ---------------------------------------------------------------------------------
 
 const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
 let settingsIsOpen = settings.classList.contains('open');
 
-
-
 // Functions ---------------------------------------------------------------------------------
 
-
 (function init() {
-	settings.addEventListener('click', event => {
+	settings.addEventListener('click', (event) => {
 		if (didEventClickAnyDropdown(event)) return; // We clicked any dropdown, don't toggle it off
 		toggleSettingsDropdown();
 	});
@@ -66,18 +66,19 @@ let settingsIsOpen = settings.classList.contains('open');
 	// openSettingsDropdown();
 })();
 
-
 function toggleSettingsDropdown() {
 	if (settingsIsOpen) closeAllSettingsDropdowns();
 	else openSettingsDropdown();
 }
-function openSettingsDropdown() { // Opens the initial settings dropdown
+function openSettingsDropdown() {
+	// Opens the initial settings dropdown
 	settings.classList.add('open');
 	settingsDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initSettingsListeners();
 	settingsIsOpen = true;
 }
-function closeAllSettingsDropdowns() { // Closes all dropdowns that may be open
+function closeAllSettingsDropdowns() {
+	// Closes all dropdowns that may be open
 	settings.classList.remove('open');
 	closeMainSettingsDropdown();
 	closeAllSettingsDropdownsExceptMainOne();
@@ -96,7 +97,6 @@ function closeAllSettingsDropdownsExceptMainOne() {
 	perspectivedropdown.close();
 	sounddropdown.close();
 }
-
 
 function initSettingsListeners() {
 	languageDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
@@ -127,30 +127,29 @@ function closeSettingsListeners() {
 	soundDropdownSelection.removeEventListener('click', sounddropdown.open);
 }
 
-
 function closeSettingsDropdownIfClickedAway(event) {
-	if (!settings.contains(event.target) && !didEventClickAnyDropdown(event)) closeAllSettingsDropdowns();
+	if (!settings.contains(event.target) && !didEventClickAnyDropdown(event))
+		closeAllSettingsDropdowns();
 }
 function didEventClickAnyDropdown(event) {
 	// Check if the click was outside the dropdown
 	let clickedDropdown = false;
-	allSettingsDropdowns.forEach(dropdown => {
+	allSettingsDropdowns.forEach((dropdown) => {
 		if (dropdown.contains(event.target)) clickedDropdown = true;
 	});
 	return clickedDropdown;
 }
 
-
 /** Updates the color of all boolean switches on the settings menu, depending on the current theme. */
 function updateSwitchColor() {
 	const theme = preferences.getTheme();
-	const lightTiles = themes.getPropertyOfTheme(theme, "lightTiles");
-	const darkTiles = themes.getPropertyOfTheme(theme, "darkTiles");
-	
+	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles');
+	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles');
+
 	const AvgR = (lightTiles[0] + darkTiles[0]) / 2;
 	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
 	const AvgB = (lightTiles[2] + darkTiles[2]) / 2;
-	
+
 	const switchR = AvgR * 255;
 	const switchG = AvgG * 255;
 	const switchB = AvgB * 255;
@@ -173,6 +172,5 @@ function updateSwitchColor() {
 	root.style.setProperty('--switch-on-color', cssSwitch);
 	root.style.setProperty('--background-theme-color', cssBackground);
 }
-
 
 export default {};

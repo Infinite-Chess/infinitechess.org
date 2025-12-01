@@ -1,9 +1,9 @@
-import i18next from "i18next";
+import i18next from 'i18next';
 import { parse } from 'smol-toml';
-import fs from "fs";
-import path from "path";
-import ejs from "ejs";
-import middleware from "i18next-http-middleware";
+import fs from 'fs';
+import path from 'path';
+import ejs from 'ejs';
+import middleware from 'i18next-http-middleware';
 import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
@@ -17,14 +17,14 @@ import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
 import { fileURLToPath } from 'node:url';
-import { insertScriptIntoHTML } from "../utility/HTMLScriptInjector.js";
-import { readFileSync, writeFileSync } from "node:fs";
+import { insertScriptIntoHTML } from '../utility/HTMLScriptInjector.js';
+import { readFileSync, writeFileSync } from 'node:fs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * This dictionary tells use what code the date-fns package uses
  * to provide language-correct dates.
- * 
+ *
  * Update when we support a new language.
  */
 const localeMap = {
@@ -34,7 +34,7 @@ const localeMap = {
 	'pt-BR': ptBR,
 	'zh-TW': zhTW,
 	'zh-CN': zhCN,
-	'pl-PL': pl
+	'pl-PL': pl,
 };
 
 /**
@@ -59,30 +59,29 @@ const languageNames = {
 	'tr-TR': 'Turkish',
 };
 
-
-const translationsFolder = "./translation";
+const translationsFolder = './translation';
 
 /**
  * Templates without any external data other than translations.
  * Don't insert names with file extensions.
  */
 const staticTranslatedTemplates = [
-	"createaccount",
-	"credits",
-	"guide",
-	"index",
-	"login",
-	"member",
-	"news",
-	"leaderboard",
-	"play",
-	"termsofservice",
-	"resetpassword",
-	"errors/400",
-	"errors/401",
-	"errors/404",
-	"errors/409",
-	"errors/500",
+	'createaccount',
+	'credits',
+	'guide',
+	'index',
+	'login',
+	'member',
+	'news',
+	'leaderboard',
+	'play',
+	'termsofservice',
+	'resetpassword',
+	'errors/400',
+	'errors/401',
+	'errors/404',
+	'errors/409',
+	'errors/500',
 ];
 
 // Removed because <a> tags are no longer in whitelist
@@ -133,14 +132,14 @@ const xss_options = {
 		sub: [],
 		sup: [],
 	},
-	onTagAttr: function(_tag, _name, _value, _isWhiteAttr) {
+	onTagAttr: function (_tag, _name, _value, _isWhiteAttr) {
 		/*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
 	  console.warn(
 		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
 	  );
 	}*/
 	},
-	safeAttrValue: function(_tag, _name, _value) {
+	safeAttrValue: function (_tag, _name, _value) {
 		/*if (
 	  tag === "a" &&
 		name === "href" &&
@@ -177,20 +176,20 @@ function html_escape_object(object) {
  */
 function html_escape(value) {
 	switch (typeof value) {
-		case "object":
+		case 'object':
 			if (value.constructor.name === 'Object') {
 				return html_escape_object(value);
 			} else if (value.constructor.name === 'Array') {
 				return html_escape_array(value);
 			} else {
-				throw "Unhandled object type while escaping";
+				throw 'Unhandled object type while escaping';
 			}
-		case "string":
+		case 'string':
 			return custom_xss.process(value); // Html escape strings
-		case "number":
+		case 'number':
 			return value;
 		default:
-			throw "Unhandled type while escaping";
+			throw 'Unhandled type while escaping';
 	}
 }
 
@@ -201,7 +200,7 @@ function html_escape(value) {
  * @returns {Object} Copy of `object` with deleted values
  */
 function remove_key(key_string, object) {
-	const keys = key_string.split(".");
+	const keys = key_string.split('.');
 
 	let currentObj = object;
 	for (let i = 0; i < keys.length - 1; i++) {
@@ -247,22 +246,23 @@ function removeOutdated(object, changelog) {
 function loadTranslationsFolder(folder) {
 	const resources = {};
 	const files = fs.readdirSync(folder);
-	const changelog = JSON.parse(
-		fs.readFileSync(path.join(folder, "changes.json")).toString(),
-	);
+	const changelog = JSON.parse(fs.readFileSync(path.join(folder, 'changes.json')).toString());
 	const supportedLanguages = [];
 	// Filtering out '.DS_Store' is required because sometimes on the machine running the website, that mac inserts a .DS_Store file in the news directory.
-	const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).filter(n => n !== '.DS_Store').sort((a, b) => {
-		const dateA = new Date(a.replace('.md', ''));
-		const dateB = new Date(b.replace('.md', ''));
-		return dateB - dateA;
-	}); // ['2024-09-11.md', '2024-08-01.md'...]
+	const newsFiles = fs
+		.readdirSync(path.join(folder, 'news', getDefaultLanguage()))
+		.filter((n) => n !== '.DS_Store')
+		.sort((a, b) => {
+			const dateA = new Date(a.replace('.md', ''));
+			const dateB = new Date(b.replace('.md', ''));
+			return dateB - dateA;
+		}); // ['2024-09-11.md', '2024-08-01.md'...]
 	files
 		.filter(function y(x) {
-			return x.endsWith(".toml");
+			return x.endsWith('.toml');
 		})
 		.forEach((file) => {
-			const languageCode = file.replace(".toml", "");
+			const languageCode = file.replace('.toml', '');
 			resources[languageCode] = {
 				default: html_escape(
 					removeOutdated(
@@ -270,22 +270,30 @@ function loadTranslationsFolder(folder) {
 						changelog,
 					),
 				),
-				news: newsFiles.map(filePath => {
-					const fullPath = path.join(folder, 'news', languageCode, filePath);
-					const parsedHTML = marked.parse((fs.existsSync(fullPath)
-                        ? fs.readFileSync(fullPath)
-                        : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-					const dateISO = filePath.replace('.md',''); // Store the ISO date (YYYY-MM-DD)
-					const date = format(parseISO(dateISO), 'PP', { // Change the number of P's to change how the date is phrased
-						timeZone: 'UTC-6', 
-						locale: localeMap[languageCode] 
-					});
+				news: newsFiles
+					.map((filePath) => {
+						const fullPath = path.join(folder, 'news', languageCode, filePath);
+						const parsedHTML = marked.parse(
+							(fs.existsSync(fullPath)
+								? fs.readFileSync(fullPath)
+								: fs.readFileSync(
+										path.join(folder, 'news', getDefaultLanguage(), filePath),
+									)
+							).toString(),
+						); // parsedHTML should be safe to be rendered
+						const dateISO = filePath.replace('.md', ''); // Store the ISO date (YYYY-MM-DD)
+						const date = format(parseISO(dateISO), 'PP', {
+							// Change the number of P's to change how the date is phrased
+							timeZone: 'UTC-6',
+							locale: localeMap[languageCode],
+						});
 
-					return `<div class='news-post' data-date='${dateISO}'>
+						return `<div class='news-post' data-date='${dateISO}'>
                                 <span class='news-post-date'>${date}</span>
                                 <div class='news-post-markdown'>${parsedHTML}</div>
                             </div>`;
-				}).join('\n<hr>\n')
+					})
+					.join('\n<hr>\n'),
 			};
 			supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
 		});
@@ -301,14 +309,14 @@ function loadTranslationsFolder(folder) {
  */
 function createFileOrDir(filePath) {
 	if (!fs.existsSync(filePath)) {
-		if (path.extname(filePath) === "") {
+		if (path.extname(filePath) === '') {
 			fs.mkdirSync(filePath, { recursive: true });
 		} else {
 			const dirPath = path.dirname(filePath);
 			if (!fs.existsSync(dirPath)) {
 				fs.mkdirSync(dirPath, { recursive: true });
 			}
-			fs.writeFileSync(filePath, "");
+			fs.writeFileSync(filePath, '');
 		}
 	}
 }
@@ -318,28 +326,29 @@ function createFileOrDir(filePath) {
  */
 function translateStaticTemplates(translations) {
 	const languages = Object.keys(translations);
-  
-	const languages_list = languages.map(language => {
+
+	const languages_list = languages.map((language) => {
 		const name = translations[language].default.name;
 		const englishName = languageNames[language];
-		if (!englishName) throw new Error(`English name not found for language code: ${language} Name: ${translations[language].default.name}`);
+		if (!englishName)
+			throw new Error(
+				`English name not found for language code: ${language} Name: ${translations[language].default.name}`,
+			);
 		return { code: language, name, englishName };
 	});
-  
-	const templatesPath = path.join(__dirname, "../../client/views");
+
+	const templatesPath = path.join(__dirname, '../../client/views');
 	for (const language of languages) {
 		for (const template of staticTranslatedTemplates) {
-			createFileOrDir(path.join(templatesPath, language, template + ".html")); // Make sure it exists
+			createFileOrDir(path.join(templatesPath, language, template + '.html')); // Make sure it exists
 			fs.writeFileSync(
-				path.join(templatesPath, language, template + ".html"),
+				path.join(templatesPath, language, template + '.html'),
 				ejs.render(
 					// Read EJS template
-					fs
-						.readFileSync(path.join(templatesPath, template + ".ejs"))
-						.toString(),
+					fs.readFileSync(path.join(templatesPath, template + '.ejs')).toString(),
 					{
 						// Function for translations
-						t: function(key, options = {}) {
+						t: function (key, options = {}) {
 							options.lng = language; // Make sure language is correct
 							return i18next.t(key, options);
 						},
@@ -368,7 +377,7 @@ function initTranslations() {
 		// debug: true,
 		preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
 		resources: translations,
-		defaultNS: "default",
+		defaultNS: 'default',
 		fallbackLng: getDefaultLanguage(),
 		// debug: true // Enable debug mode to see logs for missing keys and other details
 	});
@@ -379,12 +388,17 @@ function initTranslations() {
 function injectHTMLScriptIntoPlayEJS() {
 	// Overwrite play.ejs, directly inserting htmlscript.js into it.
 	/** The relative path to play.ejs */
-	const playEJS = readFileSync(path.join(__dirname, "../../../src/client/views/play.ejs"));
-	const htmlscriptJS = readFileSync(path.join(__dirname, '../../client/scripts/cjs/game/htmlscript.js'));
-	const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
-	writeFileSync(path.join(__dirname, "../../client/views/play.ejs"), newPlayEJS);
+	const playEJS = readFileSync(path.join(__dirname, '../../../src/client/views/play.ejs'));
+	const htmlscriptJS = readFileSync(
+		path.join(__dirname, '../../client/scripts/cjs/game/htmlscript.js'),
+	);
+	const newPlayEJS = insertScriptIntoHTML(
+		playEJS,
+		htmlscriptJS,
+		{},
+		'<!-- htmlscript inject here -->',
+	);
+	writeFileSync(path.join(__dirname, '../../client/views/play.ejs'), newPlayEJS);
 }
 
-export {
-	initTranslations,
-};
+export { initTranslations };

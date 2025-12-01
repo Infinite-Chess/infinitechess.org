@@ -55,10 +55,10 @@ function revealCurrentFairy() {
 
 function updateArrowTransparency() {
 	if (fairyIndex === 0) element_FairyBack.classList.add('opacity-0_25');
-	else                  element_FairyBack.classList.remove('opacity-0_25');
+	else element_FairyBack.classList.remove('opacity-0_25');
 
 	if (fairyIndex === maxFairyIndex) element_FairyForward.classList.add('opacity-0_25');
-	else                              element_FairyForward.classList.remove('opacity-0_25');
+	else element_FairyForward.classList.remove('opacity-0_25');
 }
 
 // Initialize on page load

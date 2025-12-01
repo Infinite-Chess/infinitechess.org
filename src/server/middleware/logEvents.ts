@@ -12,10 +12,9 @@ import { ensureDirectoryExists } from '../utility/fileUtils.js';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
 
 const giveLoggedItemsUUID = false;
-
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
@@ -23,13 +22,15 @@ const giveLoggedItemsUUID = false;
  * @param logName - The name of the log file.
  */
 async function logEvents(message: string, logName: string): Promise<void> {
-	if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
-	if (!logName) return console.trace("Log name MUST be provided when logging an event!");
+	if (typeof message !== 'string')
+		return console.trace('Cannot log message when it is not a string.');
+	if (!logName) return console.trace('Log name MUST be provided when logging an event!');
 
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
-	const logItem = giveLoggedItemsUUID ? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
-                                        : `${dateTime}   ${message}\n`;
-    
+	const logItem = giveLoggedItemsUUID
+		? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
+		: `${dateTime}   ${message}\n`;
+
 	try {
 		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
 		ensureDirectoryExists(logsPath);
@@ -38,7 +39,7 @@ async function logEvents(message: string, logName: string): Promise<void> {
 		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);
 		else console.error('Error logging event:', err);
 	}
-};
+}
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file,
@@ -60,7 +61,8 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
 	let logThis = `${origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 	// Delete passwords from incoming form data
 	let sensoredBody;
-	if (JSON.stringify(req.body) !== '{}') { // Not an empty object
+	if (JSON.stringify(req.body) !== '{}') {
+		// Not an empty object
 		sensoredBody = { ...req.body };
 		delete sensoredBody.password;
 		delete sensoredBody.username; // Since IP's are logged with each request, If you know a deleted account's username, it can be indirectly traced to their IP if we don't delete them here.
@@ -69,9 +71,9 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
 	}
 
 	logEvents(logThis, 'reqLog.txt');
-    
+
 	next(); // Continue to next middleware
-};
+}
 
 /**
  * Logs websocket connection upgrade requests into `wsInLog.txt`
@@ -115,5 +117,5 @@ export {
 	reqLogger,
 	logWebsocketStart,
 	logReqWebsocketIn,
-	logReqWebsocketOut
+	logReqWebsocketOut,
 };

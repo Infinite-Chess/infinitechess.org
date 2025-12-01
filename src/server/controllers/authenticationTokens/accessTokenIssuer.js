@@ -1,11 +1,8 @@
-
 // Route
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!
 
-import { signAccessToken } from "./tokenSigner.js";
-
-
+import { signAccessToken } from './tokenSigner.js';
 
 /**
  * How long until the cookie containing their new access token
@@ -14,18 +11,18 @@ import { signAccessToken } from "./tokenSigner.js";
  */
 const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
 
-
-
 /**
  * Called when the browser uses the /api/get-access-token API request. This reads any refresh token cookie present,
  * and gives them a new access token if they are signed in.
  * If they are not, it gives them a browser-id cookie to verify their identity.
- * @param {import("../../types.js").IdentifiedRequest} req 
- * @param {*} res 
+ * @param {import("../../types.js").IdentifiedRequest} req
+ * @param {*} res
  */
 function accessTokenIssuer(req, res) {
 	if (!req.memberInfo.signedIn) {
-		return res.status(403).json({'message': "Invalid or missing refresh token (logged out), cannot issue access token."}); // Forbidden
+		return res.status(403).json({
+			message: 'Invalid or missing refresh token (logged out), cannot issue access token.',
+		}); // Forbidden
 	}
 
 	// Token is valid! Send them new access token!
@@ -39,7 +36,6 @@ function accessTokenIssuer(req, res) {
 	console.log(`Issued access token for member "${username}" --------`);
 }
 
-
 /**
  * Creates and sets an HTTP-only cookie containing the refresh token.
  * @param {Object} res - The response object.
@@ -47,9 +43,11 @@ function accessTokenIssuer(req, res) {
  */
 function createAccessTokenCookie(res, accessToken) {
 	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
-	res.cookie('token', accessToken, { sameSite: 'None', secure: true, maxAge: expireTimeOfTokenCookieMillis }); // 10 second time limit. JavaScript needs to read it in that time!
+	res.cookie('token', accessToken, {
+		sameSite: 'None',
+		secure: true,
+		maxAge: expireTimeOfTokenCookieMillis, // 10 second time limit. JavaScript needs to read it in that time!
+	});
 }
 
-export {
-	accessTokenIssuer
-};
+export { accessTokenIssuer };

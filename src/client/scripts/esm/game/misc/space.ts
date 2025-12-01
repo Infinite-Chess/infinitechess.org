@@ -1,29 +1,25 @@
-
 // src/client/scripts/esm/game/misc/space.ts
 
 /**
  * This script converts world-space coordinates to square coordinates, and vice verca.
- * 
+ *
  * Where square coordinates are where the pieces are located,
  * world-space coordinates are where in space objects are actually rendered.
- * 
+ *
  * There is also pixel space, which is the [x,y] coordinate of virtual pixels on the screen.
- * 
+ *
  * Grid space: 1 unit = width of 1 square
  */
 
-
-import camera from "../rendering/camera.js";
+import camera from '../rendering/camera.js';
 import boardpos from '../rendering/boardpos.js';
-import bd from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import board from "../rendering/boardtiles.js";
+import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import board from '../rendering/boardtiles.js';
 
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
-
 const HALF: BigDecimal = bd.FromNumber(0.5);
-
 
 /**
  * Since the camera is fixed in place, with the board moving and scaling below it,
@@ -34,12 +30,16 @@ function convertWorldSpaceToCoords(worldCoords: DoubleCoords): BDCoords {
 	const boardScale: BigDecimal = boardpos.getBoardScale();
 	return [
 		convertWorldSpaceToCoords_Axis(worldCoords[0], boardScale, boardPos[0]),
-		convertWorldSpaceToCoords_Axis(worldCoords[1], boardScale, boardPos[1])
+		convertWorldSpaceToCoords_Axis(worldCoords[1], boardScale, boardPos[1]),
 	];
 }
 
 /** Converts a single axis' coordinates from world space to squares. */
-function convertWorldSpaceToCoords_Axis(worldCoords: number, boardScale: BigDecimal, boardPos: BigDecimal): BigDecimal {
+function convertWorldSpaceToCoords_Axis(
+	worldCoords: number,
+	boardScale: BigDecimal,
+	boardPos: BigDecimal,
+): BigDecimal {
 	const positionBD = bd.FromNumber(worldCoords);
 	return bd.add(bd.divide_floating(positionBD, boardScale), boardPos);
 }
@@ -62,7 +62,11 @@ function roundCoords(coords: BDCoords): Coords {
 }
 
 // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.getSquareCenter().
-function convertCoordToWorldSpace(coords: BDCoords, position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale()): DoubleCoords {
+function convertCoordToWorldSpace(
+	coords: BDCoords,
+	position: BDCoords = boardpos.getBoardPos(),
+	scale: BigDecimal = boardpos.getBoardScale(),
+): DoubleCoords {
 	const squareCenter = board.getSquareCenter();
 
 	const halfMinusSquareCenter = bd.subtract(HALF, squareCenter);
@@ -75,23 +79,21 @@ function convertCoordToWorldSpace(coords: BDCoords, position: BDCoords = boardpo
 	}
 
 	// (coords[0] - position[0] + 0.5 - squareCenter) * scale
-	return [
-		getAxis(coords[0], position[0]),
-		getAxis(coords[1], position[1])
-	];
+	return [getAxis(coords[0], position[0]), getAxis(coords[1], position[1])];
 }
 
-function convertCoordToWorldSpace_IgnoreSquareCenter(coords: BDCoords, position = boardpos.getBoardPos(), scale = boardpos.getBoardScale()): DoubleCoords {
+function convertCoordToWorldSpace_IgnoreSquareCenter(
+	coords: BDCoords,
+	position = boardpos.getBoardPos(),
+	scale = boardpos.getBoardScale(),
+): DoubleCoords {
 	function getAxis(coord: BigDecimal, position: BigDecimal): number {
 		const diff = bd.subtract(coord, position);
 		const scaled = bd.multiply_floating(diff, scale);
 		return bd.toNumber(scaled);
 	}
 	// (coords[0] - position[0]) * scale
-	return [
-		getAxis(coords[0], position[0]),
-		getAxis(coords[1], position[1])
-	];
+	return [getAxis(coords[0], position[0]), getAxis(coords[1], position[1])];
 }
 
 /** Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height. */
@@ -113,7 +115,6 @@ function convertWorldSpaceToGrid(value: number): BigDecimal {
 	// value / scale
 	return bd.divide_floating(valueBD, scale);
 }
-
 
 export default {
 	convertWorldSpaceToCoords,

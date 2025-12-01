@@ -1,9 +1,7 @@
-
 /**
  * This module handles fetching and caching of chess piece SVGs.
  * It won't request the same SVG twice.
  */
-
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { RawType, Player } from '../../../../../shared/chess/util/typeutil.js';
@@ -11,7 +9,6 @@ import type { RawType, Player } from '../../../../../shared/chess/util/typeutil.
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import preferences from '../../components/header/preferences.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
-
 
 // Variables -----------------------------------------------------------------
 
@@ -21,19 +18,20 @@ const cachedPieceSVGs: { [pieceType: string]: SVGElement } = {};
 /** Tracks promises for ongoing SVG file fetch requests, using the file URL as the key, to prevent duplicates. */
 const processingCache: { [key: string]: Promise<void> } = {};
 
-
 // Initialization: Cache classical pieces on load. EVERY SINGLE GAME USES THESE.
-fetchLocation("classical");
-
+fetchLocation('classical');
 
 // Core functionality --------------------------------------------------------
-
 
 /**
  * Fetches required SVG files if not cached, then returns the SVG elements for the requested piece types.
  * This is the main public function for retrieving piece SVGs.
  */
-async function getSVGElements(ids: number[], width?: number, height?: number): Promise<SVGElement[]> {
+async function getSVGElements(
+	ids: number[],
+	width?: number,
+	height?: number,
+): Promise<SVGElement[]> {
 	const locations = getNeededSVGLocations(ids);
 	if (locations.size > 0) await fetchMissingTypes(locations);
 	// At this point, all needed SVGs should be in the cache!
@@ -45,7 +43,7 @@ async function getSVGElements(ids: number[], width?: number, height?: number): P
  * @param locations - A set of unique SVG location names (e.g., "classical", "fairy/rose") to fetch.
  */
 async function fetchMissingTypes(locations: Set<string>): Promise<void> {
-	await Promise.all([...locations].map(async location => fetchLocation(location)));
+	await Promise.all([...locations].map(async (location) => fetchLocation(location)));
 }
 /**
  * Fetches an SVG file from a specific location, parses it, and caches the individual SVG elements found within.
@@ -57,14 +55,17 @@ async function fetchLocation(location: string): Promise<void> {
 	const url = `svg/pieces/${location}.svg`;
 
 	if (!processingCache[url]) {
-		processingCache[url] = (async(): Promise<void> => {
+		processingCache[url] = (async (): Promise<void> => {
 			try {
 				const response = await fetch(url);
-				if (!response.ok) throw new Error(`HTTP error when fetching piece svgs from location "${location}"! status: ${response.status}`);
+				if (!response.ok)
+					throw new Error(
+						`HTTP error when fetching piece svgs from location "${location}"! status: ${response.status}`,
+					);
 				const svgText = await response.text();
 				const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
-	
-				Array.from(doc.getElementsByTagName("svg")).forEach(svg => {
+
+				Array.from(doc.getElementsByTagName('svg')).forEach((svg) => {
 					cachedPieceSVGs[svg.id] = svg;
 					// console.log(`Fetched piece svg at location ${location}`);
 				});
@@ -90,7 +91,12 @@ async function fetchLocation(location: string): Promise<void> {
  */
 function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	// Ensure a <defs> element exists in the SVG
-	const defs = svgElement.querySelector('defs') ?? svgElement.insertBefore(document.createElementNS('http://www.w3.org/2000/svg', 'defs'), svgElement.firstChild);
+	const defs =
+		svgElement.querySelector('defs') ??
+		svgElement.insertBefore(
+			document.createElementNS('http://www.w3.org/2000/svg', 'defs'),
+			svgElement.firstChild,
+		);
 
 	// Create a unique filter
 	const filterId = `tint-${crypto.randomUUID()}`;
@@ -101,6 +107,7 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	const feColorMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
 	feColorMatrix.setAttribute('type', 'matrix');
 	// Construct the matrix values string, and multiply each color channel by them.
+	// prettier-ignore
 	const matrixValues = [
 		color[0], 0, 0, 0, 0,
 		0, color[1], 0, 0, 0,
@@ -115,7 +122,8 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 
 	// Apply the filter to the SVG element.
 	// svgElement.setAttribute('filter', `url(#${filterId})`);
-	{ // FIREFOX PATCH. Without this block, in firefox when converting the svg to an image, the filter is not applied.
+	{
+		// FIREFOX PATCH. Without this block, in firefox when converting the svg to an image, the filter is not applied.
 		// Create a <g> element to wrap all children (except <defs>)
 		const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 		group.setAttribute('filter', `url(#${filterId})`);
@@ -147,20 +155,20 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 function getSVGColorPriority(color: Player): string[] {
 	switch (color) {
 		case 0: // Neutral: prioritize neutral svg over white
-			return ['-neutral','-white'];
+			return ['-neutral', '-white'];
 		case 1: // White: prioritize white svg over black
-			return ['-white','-neutral'];
+			return ['-white', '-neutral'];
 		case 2: // Black: prioritize black svg over neutral
-			return ['-black','-neutral'];
+			return ['-black', '-neutral'];
 		// All higher player numbers are treated as tinted white pieces...
 		case 3: // Red: prioritize white svg over neutral
-			return ['-white','-neutral'];
+			return ['-white', '-neutral'];
 		case 4: // Blue: prioritize white svg over neutral
-			return ['-white','-neutral'];
+			return ['-white', '-neutral'];
 		case 5: // Yellow: prioritize white svg over neutral
-			return ['-white','-neutral'];
+			return ['-white', '-neutral'];
 		case 6: // Green: prioritize white svg over neutral
-			return ['-white','-neutral'];
+			return ['-white', '-neutral'];
 		default:
 			throw new Error(`Invalid color code: ${color}`);
 	}
@@ -186,7 +194,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 	}
 
 	return pieceThemes.getLocationsForTypes(locations);
-} 
+}
 
 /**
  * Retrieves and prepares cloned SVG elements for the specified piece types from the cache.
@@ -215,16 +223,18 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			// Set width and height if specified
 			if (width !== undefined) cloned.setAttribute('width', width.toString());
 			if (height !== undefined) cloned.setAttribute('height', height.toString());
-			
+
 			tintSVG(cloned, tint);
 
 			svgs.push(cloned);
 			continue l;
 		}
-		console.error(`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${checks} for ${baseId}`);
+		console.error(
+			`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${checks} for ${baseId}`,
+		);
 		failed = true;
 	}
-	if (failed) throw Error("SVG theme is missing ids for pieces");
+	if (failed) throw Error('SVG theme is missing ids for pieces');
 	return svgs;
 }
 
@@ -239,7 +249,6 @@ function showCache(): void {
 }
 
 // Exports -------------------------------------------------------------------
-
 
 export default {
 	getSVGElements,

@@ -1,10 +1,8 @@
-
 // src/client/scripts/esm/game/chess/copygame.ts
 
 /**
  * This script handles copying games
  */
-
 
 // @ts-ignore
 import statustext from '../gui/statustext.js';
@@ -16,9 +14,12 @@ import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 
-
-const variantsTooBigToCopyPositionToICN: string[] = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'];
-
+const variantsTooBigToCopyPositionToICN: string[] = [
+	'Omega_Squared',
+	'Omega_Cubed',
+	'Omega_Fourth',
+	'5D_Chess',
+];
 
 /**
  * Copies the current game to the clipboard in ICN notation.
@@ -42,19 +43,30 @@ function copyGame(copySinglePosition: boolean): void {
 		if (preset_rays) presetAnnotes.rays = preset_rays;
 	}
 
-	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, presetAnnotes);
+	const longformatIn = gamecompressor.compressGamefile(
+		gamefile,
+		copySinglePosition,
+		presetAnnotes,
+	);
 	// Convert the variant metadata code to spoken language if translation is available
-	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
-	
+	if (longformatIn.metadata.Variant)
+		longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
+
 	const largeGame: boolean = variantsTooBigToCopyPositionToICN.includes(Variant);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
 	const skipPosition: boolean = largeGame && !copySinglePosition;
-	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, { skipPosition, compact: false, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
-    
+	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, {
+		skipPosition,
+		compact: false,
+		spaces: false,
+		comments: false,
+		make_new_lines: false,
+		move_numbers: false,
+	});
+
 	docutil.copyToClipboard(shortformat);
 	statustext.showStatus(translations['copypaste'].copied_game);
 }
-
 
 export default {
 	copyGame,

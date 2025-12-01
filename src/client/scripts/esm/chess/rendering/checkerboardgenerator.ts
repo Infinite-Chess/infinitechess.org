@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/chess/rendering/checkerboardgenerator.js
 
 /**
@@ -13,7 +12,11 @@
  * @param imageSize - The size of the image (width and height). The final image will be imageSize x imageSize, split into 4 squares.
  * @returns A promise that resolves to the checkerboard image.
  */
-function createCheckerboardIMG(lightColor: string, darkColor: string, imageSize: number = 2): Promise<HTMLImageElement> {
+function createCheckerboardIMG(
+	lightColor: string,
+	darkColor: string,
+	imageSize: number = 2,
+): Promise<HTMLImageElement> {
 	const canvas = document.createElement('canvas');
 	canvas.width = imageSize;
 	canvas.height = imageSize;

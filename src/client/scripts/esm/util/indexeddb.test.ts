@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/util/indexeddb.test.ts
 
 /**
@@ -20,40 +19,40 @@ beforeEach(() => {
 });
 
 describe('IndexedDB storage functional behavior', () => {
-	it('getAllKeys returns [] initially', async() => {
+	it('getAllKeys returns [] initially', async () => {
 		expect(await indexeddb.getAllKeys()).toEqual([]);
 	});
 
-	it('saves and loads an item', async() => {
+	it('saves and loads an item', async () => {
 		await indexeddb.saveItem('pos:1', { fen: 'start' });
 		const value = await indexeddb.loadItem<{ fen: string }>('pos:1');
 		expect(value).toEqual({ fen: 'start' });
 	});
 
-	it('overwrites an existing item with the same key', async() => {
+	it('overwrites an existing item with the same key', async () => {
 		await indexeddb.saveItem('k', 'one');
 		await indexeddb.saveItem('k', 'two');
 		const value = await indexeddb.loadItem<string>('k');
 		expect(value).toBe('two');
 	});
 
-	it('returns undefined for a missing key', async() => {
+	it('returns undefined for a missing key', async () => {
 		const value = await indexeddb.loadItem('missing');
 		expect(value).toBeUndefined();
 	});
 
-	it('deletes an item', async() => {
+	it('deletes an item', async () => {
 		await indexeddb.saveItem('x', 123);
 		await indexeddb.deleteItem('x');
 		const value = await indexeddb.loadItem('x');
 		expect(value).toBeUndefined();
 	});
 
-	it('delete of a missing key resolves (no error)', async() => {
+	it('delete of a missing key resolves (no error)', async () => {
 		await expect(indexeddb.deleteItem('nope')).resolves.toBeUndefined();
 	});
 
-	it('getAllKeys returns the current keys only', async() => {
+	it('getAllKeys returns the current keys only', async () => {
 		await indexeddb.saveItem('a', 1);
 		await indexeddb.saveItem('b', 2);
 		await indexeddb.deleteItem('a');
@@ -61,26 +60,22 @@ describe('IndexedDB storage functional behavior', () => {
 		expect(keys.sort()).toEqual(['b']);
 	});
 
-	it('eraseAll clears all items', async() => {
+	it('eraseAll clears all items', async () => {
 		await indexeddb.saveItem('a', 1);
 		await indexeddb.saveItem('b', 2);
 		await indexeddb.eraseAll();
 		expect(await indexeddb.getAllKeys()).toEqual([]);
 	});
 
-	it('handles concurrent writes and reads', async() => {
-		const writes = Array.from({ length: 50 }, (_, i) =>
-			indexeddb.saveItem(`k${i}`, { v: i })
-		);
+	it('handles concurrent writes and reads', async () => {
+		const writes = Array.from({ length: 50 }, (_, i) => indexeddb.saveItem(`k${i}`, { v: i }));
 		await Promise.all(writes);
 
 		const keys = await indexeddb.getAllKeys();
 		const numericSorted = [...keys].sort(
-			(a, b) => parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10)
+			(a, b) => parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10),
 		);
-		expect(numericSorted).toEqual(
-			Array.from({ length: 50 }, (_, i) => `k${i}`)
-		);
+		expect(numericSorted).toEqual(Array.from({ length: 50 }, (_, i) => `k${i}`));
 
 		const reads = await Promise.all([
 			indexeddb.loadItem('k0'),
@@ -90,19 +85,21 @@ describe('IndexedDB storage functional behavior', () => {
 		expect(reads).toEqual([{ v: 0 }, { v: 25 }, { v: 49 }]);
 	});
 
-	it('rejects with a clear error when IndexedDB is not supported', async() => {
+	it('rejects with a clear error when IndexedDB is not supported', async () => {
 		// Remove IndexedDB and reset instance so next init fails
 		(globalThis as any).indexedDB = undefined;
 		indexeddb.resetDBInstance();
 
-		await expect(indexeddb.saveItem('a', 1))
-			.rejects.toThrow('IndexedDB is not supported in this browser');
+		await expect(indexeddb.saveItem('a', 1)).rejects.toThrow(
+			'IndexedDB is not supported in this browser',
+		);
 
-		await expect(indexeddb.loadItem('a'))
-			.rejects.toThrow('IndexedDB is not supported in this browser');
+		await expect(indexeddb.loadItem('a')).rejects.toThrow(
+			'IndexedDB is not supported in this browser',
+		);
 	});
 
-	it('resetDBInstance causes a fresh database (previous keys gone)', async() => {
+	it('resetDBInstance causes a fresh database (previous keys gone)', async () => {
 		await indexeddb.saveItem('temp', 42);
 		expect(await indexeddb.getAllKeys()).toEqual(['temp']);
 
