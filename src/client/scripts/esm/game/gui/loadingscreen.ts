@@ -1,16 +1,14 @@
-
 /**
  * This script manages the spinny pawn loading animation
  * while a game is loading both the LOGICAL and
  * GRAPHICAL (spritesheet) aspects.
  */
 
-import preferences from "../../components/header/preferences.js";
-import thread from "../../util/thread.js";
-import themes from "../../../../../shared/components/header/themes.js";
+import preferences from '../../components/header/preferences.js';
+import thread from '../../util/thread.js';
+import themes from '../../../../../shared/components/header/themes.js';
 // @ts-ignore
-import style from "./style.js";
-
+import style from './style.js';
 
 const loadingScreen: HTMLElement = document.querySelector('.game-loading-screen') as HTMLElement;
 
@@ -23,20 +21,20 @@ const element_spinnyPawn = document.querySelector('.game-loading-screen .spinny-
 const element_loadingError = document.querySelector('.game-loading-screen .loading-error');
 const element_loadingErrorText = document.querySelector('.game-loading-screen .loading-error-text');
 
-
 (function init(): void {
-
 	initColorOfLoadingBackground();
 	document.addEventListener('theme-change', initColorOfLoadingBackground);
-
 })();
 
 function initColorOfLoadingBackground(): void {
 	const theme = preferences.getTheme();
-	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles'); lightTiles[3] = 1;
-	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles'); darkTiles[3] = 1;
+	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles');
+	lightTiles[3] = 1;
+	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles');
+	darkTiles[3] = 1;
 
-	for (let i = 0; i < 3; i++) { // Darken the color
+	for (let i = 0; i < 3; i++) {
+		// Darken the color
 		lightTiles[i]! *= darknessLevel;
 		darkTiles[i]! *= darknessLevel;
 	}
@@ -80,7 +78,7 @@ async function onError(): Promise<void> {
 	// const lostNetwork = !navigator.onLine;
 	// element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
 	element_loadingErrorText!.textContent = translations['failed_to_load'];
-	
+
 	// This gives the document a chance to repaint, as otherwise our javascript
 	// will continue to run until the next animation frame, which could be a long time.
 	await thread.sleep(0);

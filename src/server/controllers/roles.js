@@ -3,8 +3,8 @@
  * and removal of roles from members.
  */
 
-import { logEventsAndPrint } from "../middleware/logEvents.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 /**
  * All possible roles, IN ORDER FROM LEAST TO MOST IMPORTANCE!
@@ -12,23 +12,35 @@ import { getMemberDataByCriteria, updateMemberColumns } from "../database/member
  */
 const validRoles = ['patron', 'admin', 'owner'];
 
-
 /**
  * Adds a specified role to a member's roles list.
  * @param {number} userId - The user ID of the member.
  * @param {string} role - The role to add (e.g., 'owner', 'patron').
  */
 function giveRole(userId, role) {
-	if (userId === undefined) return logEventsAndPrint(`Cannot give undefined user ID the role "${role}"!`, 'errLog.txt');
-	if (!validRoles.includes(role)) return logEventsAndPrint(`Cannot give INVALID role "${role}" to user of ID "${userId}"!`, 'errLog.txt');
+	if (userId === undefined)
+		return logEventsAndPrint(`Cannot give undefined user ID the role "${role}"!`, 'errLog.txt');
+	if (!validRoles.includes(role))
+		return logEventsAndPrint(
+			`Cannot give INVALID role "${role}" to user of ID "${userId}"!`,
+			'errLog.txt',
+		);
 
 	// Fetch the member's current roles from the database
 	let { roles } = getMemberDataByCriteria(['roles'], 'user_id', userId, false);
-	if (roles === undefined) return logEventsAndPrint(`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`, 'errLog.txt');
+	if (roles === undefined)
+		return logEventsAndPrint(
+			`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`,
+			'errLog.txt',
+		);
 	roles = roles === null ? [] : JSON.parse(roles); // ['role1','role2', ...]
 
 	// If the role already exists, return early
-	if (roles.includes(role)) return logEventsAndPrint(`Role "${role}" already exists for member with user ID "${userId}".`, 'errLog.txt');
+	if (roles.includes(role))
+		return logEventsAndPrint(
+			`Role "${role}" already exists for member with user ID "${userId}".`,
+			'errLog.txt',
+		);
 
 	// Add the new role to the roles array
 	roles.push(role);
@@ -36,8 +48,16 @@ function giveRole(userId, role) {
 	// Save the updated roles back to the database
 	const success = updateMemberColumns(userId, { roles });
 
-	if (success) logEventsAndPrint(`Added role "${role}" to member with user ID "${userId}".`, 'loginAttempts.txt');
-	else logEventsAndPrint(`Failed to add role "${role}" to member with user ID "${userId}".`, 'errLog.txt');
+	if (success)
+		logEventsAndPrint(
+			`Added role "${role}" to member with user ID "${userId}".`,
+			'loginAttempts.txt',
+		);
+	else
+		logEventsAndPrint(
+			`Failed to add role "${role}" to member with user ID "${userId}".`,
+			'errLog.txt',
+		);
 }
 
 // /**
@@ -56,10 +76,10 @@ function giveRole(userId, role) {
 
 /**
  * Returns true if roles1 contains at least one role that is higher in priority than the highest role in roles2.
- * 
+ *
  * If so, the user with roles1 would be able to perform destructive commands on user with roles2.
- * @param {string[] | null} roles1 
- * @param {string[] | null} roles2 
+ * @param {string[] | null} roles1
+ * @param {string[] | null} roles2
  */
 function areRolesHigherInPriority(roles1, roles2) {
 	// Make sure they are not null
@@ -67,13 +87,13 @@ function areRolesHigherInPriority(roles1, roles2) {
 	roles2 = roles2 || [];
 
 	let roles1HighestPriority = -1; // -1 is the same as someone with zero roles
-	roles1.forEach(role => {
+	roles1.forEach((role) => {
 		const priorityOfRole = validRoles.indexOf(role);
 		if (priorityOfRole > roles1HighestPriority) roles1HighestPriority = priorityOfRole;
 	});
 
 	let roles2HighestPriority = -1; // -1 is the same as someone with zero roles
-	roles2.forEach(role => {
+	roles2.forEach((role) => {
 		const priorityOfRole = validRoles.indexOf(role);
 		if (priorityOfRole > roles2HighestPriority) roles2HighestPriority = priorityOfRole;
 	});
@@ -84,9 +104,4 @@ function areRolesHigherInPriority(roles1, roles2) {
 	return roles1HighestPriority > roles2HighestPriority;
 }
 
-
-
-export {
-	giveRole,
-	areRolesHigherInPriority,
-};
+export { giveRole, areRolesHigherInPriority };

@@ -1,29 +1,25 @@
-
 /**
  * This script contains several wrappers for getting the
  * mouse position, world space, or coordinates,
  * reading the correct listener depending on whether we're in perspective mode or not.
  */
 
+import { listener_document, listener_overlay } from '../game/chess/game.js';
+import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
+import space from '../game/misc/space.js';
+import camera from '../game/rendering/camera.js';
+import perspective from '../game/rendering/perspective.js';
 
-import { listener_document, listener_overlay } from "../game/chess/game.js";
-import input, { InputListener, Mouse, MouseButton } from "../game/input.js";
-import space from "../game/misc/space.js";
-import camera from "../game/rendering/camera.js";
-import perspective from "../game/rendering/perspective.js";
-
-
-import type { BDCoords, Coords, DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
-
+import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 
 /**
  * This is capable of getting the mouse position, EVEN IF
  * it is off screen! Only the document's event listener is capable
  * of receiving 'mousemove' events when the mouse is off screen.
- * 
+ *
  * If another pointer id is used, such as a touch event, we cannot
  * detect the mouse position when it is off screen.
- * 
+ *
  * ONLY WORKS IF WE LEFT-CLICK-DRAG off the screen. NOT if we right-click-drag!
  */
 function getPhysicalPointerPosition_Offscreen(physicalPointerId: string): DoubleCoords | undefined {
@@ -93,23 +89,23 @@ function getCrossHairWorld(): DoubleCoords | undefined {
 
 	const rotX = (Math.PI / 180) * perspective.getRotX();
 	const rotZ = (Math.PI / 180) * perspective.getRotZ();
-	
+
 	// Calculate intersection point
 	const hyp = -Math.tan(rotX) * camera.getPosition()[2];
 
 	// x^2 + y^2 = hyp^2
 	// hyp = sqrt( x^2 + y^2 )
 
-	const mouseWorld: DoubleCoords = [
-		hyp * Math.sin(rotZ),
-		hyp * Math.cos(rotZ)
-	];
+	const mouseWorld: DoubleCoords = [hyp * Math.sin(rotZ), hyp * Math.cos(rotZ)];
 
 	// console.log(mouseWorld);
 	return mouseWorld;
 }
 
-function convertMousePositionToWorldSpace(mouse: DoubleCoords, element: HTMLElement | typeof document): DoubleCoords {
+function convertMousePositionToWorldSpace(
+	mouse: DoubleCoords,
+	element: HTMLElement | typeof document,
+): DoubleCoords {
 	const mouseCopy: DoubleCoords = [...mouse];
 	const screenBox = camera.getScreenBoundingBox();
 	const screenWidth = screenBox.right - screenBox.left;
@@ -117,14 +113,15 @@ function convertMousePositionToWorldSpace(mouse: DoubleCoords, element: HTMLElem
 	const clientWidth = element instanceof HTMLElement ? element.clientWidth : window.innerWidth;
 	const clientHeight = element instanceof HTMLElement ? element.clientHeight : window.innerHeight;
 	// The world space coordinates are sensitive to whether we're viewing white's or black's perspective.
+	// prettier-ignore
 	const mouseWorldSpace: DoubleCoords = perspective.getIsViewingBlackPerspective() ? [
 		screenBox.right - (mouseCopy[0] / clientWidth) * screenWidth,
 		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
-		screenBox.bottom + (mouseCopy[1] / clientHeight) * screenHeight
+		screenBox.bottom + (mouseCopy[1] / clientHeight) * screenHeight,
 	] : [
 		screenBox.left + (mouseCopy[0] / clientWidth) * screenWidth,
 		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
-		screenBox.top - (mouseCopy[1] / clientHeight) * screenHeight
+		screenBox.top - (mouseCopy[1] / clientHeight) * screenHeight,
 	];
 	return mouseWorldSpace;
 }
@@ -274,7 +271,6 @@ function getAllPointerWorlds(): DoubleCoords[] {
 	}
 	return pointerWorlds;
 }
-
 
 export default {
 	getMouseWorld,

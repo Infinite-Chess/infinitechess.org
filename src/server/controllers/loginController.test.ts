@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // @ts-ignore
 import { handleLogin } from './loginController.js';
@@ -23,13 +22,13 @@ describe('loginController', () => {
 		req = {
 			body: {
 				username: 'NeverGonnaGiveYouUp',
-				password: 'password123'
-			}
+				password: 'password123',
+			},
 		};
 		res = {
 			status: vi.fn().mockReturnThis(), // Allow chaining .status().json()
 			json: vi.fn(),
-			headersSent: false
+			headersSent: false,
 		};
 		vi.clearAllMocks();
 	});
@@ -38,7 +37,7 @@ describe('loginController', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('should login successfully with correct credentials', async() => {
+	it('should login successfully with correct credentials', async () => {
 		// Mock password check to pass
 		vi.mocked(authController.testPasswordForRequest).mockResolvedValue(true);
 
@@ -46,7 +45,7 @@ describe('loginController', () => {
 		vi.mocked(memberManager.getMemberDataByCriteria).mockReturnValue({
 			user_id: 1,
 			username: 'NeverGonnaGiveYouUp',
-			roles: JSON.stringify(['user'])
+			roles: JSON.stringify(['user']),
 		} as any);
 
 		await handleLogin(req, res);
@@ -56,10 +55,10 @@ describe('loginController', () => {
 
 		// Verify we tried to fetch the correct user
 		expect(memberManager.getMemberDataByCriteria).toHaveBeenCalledWith(
-            ['user_id', 'username', 'roles'],
-            'username',
-            'NeverGonnaGiveYouUp',
-            false
+			['user_id', 'username', 'roles'],
+			'username',
+			'NeverGonnaGiveYouUp',
+			false,
 		);
 
 		// Verify session creation with correct data
@@ -68,22 +67,22 @@ describe('loginController', () => {
 			res,
 			1,
 			'NeverGonnaGiveYouUp',
-            ['user']
+			['user'],
 		);
 
 		// Verify successful response
 		expect(res.status).toHaveBeenCalledWith(200);
-		expect(res.json).toHaveBeenCalledWith({ message: "Logged in successfully." });
+		expect(res.json).toHaveBeenCalledWith({ message: 'Logged in successfully.' });
 
 		// Verify side effects (stats updates and logging)
 		expect(memberManager.updateLoginCountAndLastSeen).toHaveBeenCalledWith(1);
 		expect(logEvents.logEventsAndPrint).toHaveBeenCalledWith(
 			expect.stringContaining('Logged in member "NeverGonnaGiveYouUp"'),
-			"loginAttempts.txt"
+			'loginAttempts.txt',
 		);
 	});
 
-	it('should return early if password check fails', async() => {
+	it('should return early if password check fails', async () => {
 		// Mock password check to fail
 		vi.mocked(authController.testPasswordForRequest).mockResolvedValue(false);
 
@@ -95,29 +94,31 @@ describe('loginController', () => {
 		expect(res.status).not.toHaveBeenCalled(); // testPasswordForRequest handles the response
 	});
 
-	it('should handle missing user after successful password check (integrity error)', async() => {
+	it('should handle missing user after successful password check (integrity error)', async () => {
 		vi.mocked(authController.testPasswordForRequest).mockResolvedValue(true);
 
 		// Mock user not found
 		vi.mocked(memberManager.getMemberDataByCriteria).mockReturnValue({
 			user_id: undefined,
 			username: undefined,
-			roles: undefined
+			roles: undefined,
 		} as any);
 
 		await handleLogin(req, res);
 
 		expect(logEvents.logEventsAndPrint).toHaveBeenCalledWith(
 			expect.stringContaining('not found by username'),
-			'errLog.txt'
+			'errLog.txt',
 		);
 		expect(res.status).toHaveBeenCalledWith(500);
-		expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-			message: expect.stringContaining('internal server error')
-		}));
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				message: expect.stringContaining('internal server error'),
+			}),
+		);
 	});
 
-	it('should handle unexpected errors', async() => {
+	it('should handle unexpected errors', async () => {
 		vi.mocked(authController.testPasswordForRequest).mockResolvedValue(true);
 
 		// Mock error during execution
@@ -129,11 +130,13 @@ describe('loginController', () => {
 
 		expect(logEvents.logEventsAndPrint).toHaveBeenCalledWith(
 			expect.stringContaining('Error during handleLogin'),
-			'errLog.txt'
+			'errLog.txt',
 		);
 		expect(res.status).toHaveBeenCalledWith(500);
-		expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-			message: expect.stringContaining('unexpected error')
-		}));
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				message: expect.stringContaining('unexpected error'),
+			}),
+		);
 	});
 });

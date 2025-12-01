@@ -1,15 +1,13 @@
-
 /**
  * This script handles the processing and execution of premoves
  * after the opponent's move.
- * 
+ *
  * Premoves are handled client-side, not server side.
  */
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-
 
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import movesequence from './movesequence.js';
@@ -27,23 +25,22 @@ import gameslot from './gameslot.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import animation from '../rendering/animation.js';
 import mouse from '../../util/mouse.js';
-import movepiece, { CoordsSpecial, Edit, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
+import movepiece, {
+	CoordsSpecial,
+	Edit,
+	MoveDraft,
+} from '../../../../../shared/chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
 import { Mouse } from '../input.js';
 
-
 // Type Definitions ---------------------------------------------
-
-
 
 interface Premove extends Edit, MoveDraft {
 	/** The type of piece moved */
-	type: number,
+	type: number;
 }
 
-
 // Variables ----------------------------------------------------
-
 
 /** The list of all premoves we currently have, in order. */
 let premoves: Premove[] = [];
@@ -52,19 +49,17 @@ let premoves: Premove[] = [];
  * Whether the premoves board and state changes have been applied to the board.
  * This is purely for DEBUGGING so you don't accidentally call these
  * methods at the wrong times.
- * 
+ *
  * When premove's changes have to be reapplied, we have to recalculate all
  * of their changes, since for all we know they could end up capturing a
  * piece when they didn't when we originally premoved, or vice versa.
- * 
+ *
  * THIS SHOULD ONLY TEMPORARILY ever be false!! If it is, it means we just
  * need to do something like calculating legal moves, then reapply the premoves.
  */
 let applied: boolean = true;
 
-
 // Processing Premoves ---------------------------------------------------------------------
-
 
 /** Event listener for when we change the Premoves toggle */
 document.addEventListener('premoves-toggle', (_e) => {
@@ -100,7 +95,12 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveD
 }
 
 /** Applies a premove's changes to the board. */
-function applyPremove(gamefile: FullGame, mesh: Mesh | undefined, premove: Premove, forward: boolean): void {
+function applyPremove(
+	gamefile: FullGame,
+	mesh: Mesh | undefined,
+	premove: Premove,
+	forward: boolean,
+): void {
 	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward, true); // forward & global are true
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, premove, forward);
@@ -109,7 +109,10 @@ function applyPremove(gamefile: FullGame, mesh: Mesh | undefined, premove: Premo
 /** Similar to {@link movepiece.generateMove}, but generates the edit for a Premove. */
 function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
 	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.startCoords);
-	if (!piece) throw Error(`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+	if (!piece)
+		throw Error(
+			`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`,
+		);
 
 	// Initialize the state, and change list, as empty for now.
 	const premove: Premove = {
@@ -125,9 +128,14 @@ function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
 	// The actual function will return whether a special move was actually made or not.
 	// If a special move IS made, we skip the normal move piece method.
 
-	if (rawType in gamefile.boardsim.specialMoves) specialMoveMade = gamefile.boardsim.specialMoves[rawType]!(gamefile.boardsim, piece, premove);
+	if (rawType in gamefile.boardsim.specialMoves)
+		specialMoveMade = gamefile.boardsim.specialMoves[rawType]!(
+			gamefile.boardsim,
+			piece,
+			premove,
+		);
 	if (!specialMoveMade) movepiece.calcMovesChanges(gamefile.boardsim, piece, moveDraft, premove); // Move piece regularly (no special tag)
-	
+
 	// Delete all special rights that should be revoked from the move.
 	movepiece.queueSpecialRightDeletionStateChanges(gamefile.boardsim, premove);
 
@@ -147,7 +155,7 @@ function clearPremoves(): void {
 function cancelPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	// console.log("Clearing premoves");
 	const hadAtleastOnePremove = hasAtleastOnePremove();
-	
+
 	rewindPremoves(gamefile, mesh);
 	clearPremoves();
 
@@ -168,9 +176,12 @@ function rewindPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	if (!applied) throw Error("Don't rewindPremoves when other premoves are not applied!");
 
 	// Reverse the original array so all changes are made in the reverse order they were added
-	premoves.slice().reverse().forEach(premove => {
-		applyPremove(gamefile, mesh, premove, false); // Apply the premove to the game state backwards
-	});
+	premoves
+		.slice()
+		.reverse()
+		.forEach((premove) => {
+			applyPremove(gamefile, mesh, premove, false); // Apply the premove to the game state backwards
+		});
 
 	// console.error("Setting applied to false.");
 	applied = false;
@@ -180,7 +191,7 @@ function rewindPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 /**
  * Reapplies all pending premoves' changes onto the board.
- * 
+ *
  * All premove's must be regenerated, as for all we know
  * their destination square could have a new piece, or lack thereof.
  */
@@ -202,7 +213,10 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 				endCoords: oldPremove.endCoords,
 				promotion: oldPremove.promotion,
 			};
-			specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsSpecial, premoveDraft);
+			specialdetect.transferSpecialFlags_FromCoordsToMove(
+				results.endCoordsSpecial,
+				premoveDraft,
+			);
 
 			// MUST RECALCULATE CHANGES
 			const premove = generatePremove(gamefile, premoveDraft);
@@ -214,7 +228,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 			// Premove is no longer legal to premove.
 			// This could happen if it was a castling premove, and the rook was captured,
 			// so there's no longer a valid rook to premove castle with.
-			
+
 			// Delete this premove and all following premoves
 			premoves.splice(i, premoves.length - i);
 			break;
@@ -234,7 +248,10 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	// console.error("Processing premoves");
 
-	if (applied) throw Error("Don't processPremoves when other premoves are still applied! rewindPremoves() first.");
+	if (applied)
+		throw Error(
+			"Don't processPremoves when other premoves are still applied! rewindPremoves() first.",
+		);
 
 	const premove: Premove | undefined = premoves[0];
 	// CAN'T EARLY EXIT if there are no premoves, as
@@ -245,7 +262,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 	if (premove && results.legal === true) {
 		// console.log("Premove is legal, applying it");
-		
+
 		// Legal, apply the premove to the real game state
 
 		const moveDraft: MoveDraft = {
@@ -279,12 +296,16 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 /**
  * Tests whether a given premove is legal to make on the board.
- * @param gamefile 
- * @param premove 
+ * @param gamefile
+ * @param premove
  * @param mode - Whether we should be testing if the premove is legal to make physically in the game, OR if it's still a valid premove to PREMOVE. A premove may no longer become a valid premove if for example the castling opportunity dissapears due to the opponent capturing the rook.
- * @returns 
+ * @returns
  */
-function premoveIsLegal(gamefile: FullGame, premove: Premove | undefined, mode: 'physical' | 'premove'): { legal: true, endCoordsSpecial: CoordsSpecial } | { legal: false } {
+function premoveIsLegal(
+	gamefile: FullGame,
+	premove: Premove | undefined,
+	mode: 'physical' | 'premove',
+): { legal: true; endCoordsSpecial: CoordsSpecial } | { legal: false } {
 	if (!premove) return { legal: false };
 
 	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
@@ -293,9 +314,10 @@ function premoveIsLegal(gamefile: FullGame, premove: Premove | undefined, mode: 
 	if (premove.type !== piece.type) return { legal: false }; // Our piece was probably captured, so it can't move anymore, thus the premove is illegal.
 
 	// Check if the move is legal
-	const premovedPieceLegalMoves = mode === 'physical' ?
-		legalmoves.calculateAll(gamefile, piece) :
-		legalmoves.calculateAllPremoves(gamefile, piece);
+	const premovedPieceLegalMoves =
+		mode === 'physical'
+			? legalmoves.calculateAll(gamefile, piece)
+			: legalmoves.calculateAllPremoves(gamefile, piece);
 	const color = typeutil.getColorFromType(piece.type);
 
 	// A copy of the end coords for applying the special flags too.
@@ -303,7 +325,13 @@ function premoveIsLegal(gamefile: FullGame, premove: Premove | undefined, mode: 
 	// generated for normal premoves
 	const endCoordsSpecial: CoordsSpecial = coordutil.copyCoords(premove.endCoords);
 
-	const isLegal = legalmoves.checkIfMoveLegal(gamefile, premovedPieceLegalMoves, premove.startCoords, endCoordsSpecial, color);
+	const isLegal = legalmoves.checkIfMoveLegal(
+		gamefile,
+		premovedPieceLegalMoves,
+		premove.startCoords,
+		endCoordsSpecial,
+		color,
+	);
 
 	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsSpecial };
 	else return { legal: false };
@@ -311,7 +339,7 @@ function premoveIsLegal(gamefile: FullGame, premove: Premove | undefined, mode: 
 
 /**
  * Called externally when its our move in the game.
- * 
+ *
  * Shouldn't care whether the game is over, as all premoves should have been cleared,
  * and not to mention we still need applied to be set to true.
  */
@@ -347,9 +375,7 @@ function onGameUnload(): void {
 	clearPremoves();
 }
 
-
 // Updating Premoves ------------------------------------------------
-
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
 function update(gamefile: FullGame, mesh?: Mesh): void {
@@ -365,19 +391,17 @@ function update(gamefile: FullGame, mesh?: Mesh): void {
 	}
 }
 
-
 // Rendering --------------------------------------------------------
-
 
 /** Renders the premoves */
 function render(): void {
 	if (premoves.length === 0) return; // No premoves to render
 
-	let premoveSquares = premoves.flatMap(p => [p.startCoords, p.endCoords]);
+	let premoveSquares = premoves.flatMap((p) => [p.startCoords, p.endCoords]);
 
 	// De-duplicate the squares
 	premoveSquares = premoveSquares.filter((coords, index, self) => {
-		return self.findIndex(c => coordutil.areCoordsEqual(c, coords)) === index;
+		return self.findIndex((c) => coordutil.areCoordsEqual(c, coords)) === index;
 	});
 
 	const u_size: number = boardpos.getBoardScaleAsNumber();
@@ -387,9 +411,7 @@ function render(): void {
 	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { u_size });
 }
 
-
 // Exports ------------------------------------------------
-
 
 export default {
 	hasAtleastOnePremove,

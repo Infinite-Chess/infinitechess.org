@@ -1,5 +1,4 @@
-
-"use strict";
+'use strict';
 
 /** This script handles the showing and hiding of status message at the bottom of the page */
 
@@ -33,9 +32,9 @@ function showStatus(text, isError, durationMultiplier = 1) {
  */
 function showStatusForDuration(text, durationMillis, isError) {
 	if (!text) return; // Not defined (can happen if translation unavailable)
-    
+
 	layers++;
-    
+
 	fadeAfter(durationMillis);
 
 	statusText.textContent = text;
@@ -53,7 +52,7 @@ function showStatusForDuration(text, durationMillis, isError) {
 }
 
 function fadeAfter(ms) {
-	setTimeout(function() {
+	setTimeout(function () {
 		if (layers === 1) {
 			statusText.classList.add('fade-out-1s');
 			hideAfter(fadeTimer);
@@ -62,7 +61,7 @@ function fadeAfter(ms) {
 }
 
 function hideAfter(ms) {
-	setTimeout(function() {
+	setTimeout(function () {
 		layers--;
 		if (layers > 0) return; // Only one left, hide!
 		statusMessage.classList.add('hidden');
@@ -89,5 +88,5 @@ export default {
 	lostConnection,
 	pleaseWaitForTask,
 	getLayerCount,
-	showStatusForDuration
+	showStatusForDuration,
 };

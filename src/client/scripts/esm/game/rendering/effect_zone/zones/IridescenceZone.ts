@@ -1,17 +1,14 @@
-
 // src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
 
-import type { Zone } from "../EffectZoneManager";
+import type { Zone } from '../EffectZoneManager';
 
 // @ts-ignore
-import loadbalancer from "../../../misc/loadbalancer";
-import IridescenceSoundscape from "../soundscapes/IridescenceSoundscape";
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
-
+import loadbalancer from '../../../misc/loadbalancer';
+import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class IridescenceZone implements Zone {
-
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 5;
 
@@ -45,29 +42,22 @@ export class IridescenceZone implements Zone {
 	/** The phase shift applied to the light tiles' gradient, as a percentage of the gradient's total length. */
 	private maskOffset: number = 0.06; // Default: 0.06
 
-
 	// --- State Properties ---
 
 	/** The current direction of the flow, in radians. */
 	private flowDirection: number = Math.random() * Math.PI * 2;
-
-
 
 	constructor() {
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
 			masterVolume: 0.33,
-			layers: [
-				...IridescenceSoundscape.layers12,
-				...IridescenceSoundscape.layers34
-			]
+			layers: [...IridescenceSoundscape.layers12, ...IridescenceSoundscape.layers34],
 		};
 
 		// Initialize the player with the config.
 		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
-
 
 	public update(): void {
 		const deltaTime = loadbalancer.getDeltaTime(); // In seconds
@@ -82,10 +72,10 @@ export class IridescenceZone implements Zone {
 		// Pre-calculate the direction vector.
 		const flowDirectionVec: [number, number] = [
 			Math.cos(this.flowDirection),
-			Math.sin(this.flowDirection)
+			Math.sin(this.flowDirection),
 		];
-		
-		const flowDistance = performance.now() / 1000 * this.flowSpeed;
+
+		const flowDistance = (performance.now() / 1000) * this.flowSpeed;
 
 		const uniforms: Record<string, any> = {
 			u5_flowDistance: flowDistance,
@@ -108,7 +98,7 @@ export class IridescenceZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [];
 	}
-    
+
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
 	}

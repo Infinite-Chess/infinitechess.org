@@ -1,9 +1,8 @@
-
 // src/client/scripts/esm/util/timeutil.ts
 
 /**
  * This script contains utility methods for working with dates and timestamps.
- * 
+ *
  * ZERO dependencies.
  */
 
@@ -29,7 +28,7 @@ function getCurrentUTCDate(): string {
 	const year = now.getUTCFullYear();
 	const month = String(now.getUTCMonth() + 1).padStart(2, '0');
 	const day = String(now.getUTCDate()).padStart(2, '0');
-    
+
 	return `${year}.${month}.${day}`;
 }
 
@@ -41,7 +40,7 @@ function getCurrentUTCTime(): string {
 	const hours = String(now.getUTCHours()).padStart(2, '0');
 	const minutes = String(now.getUTCMinutes()).padStart(2, '0');
 	const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-    
+
 	return `${hours}:${minutes}:${seconds}`;
 }
 
@@ -51,20 +50,20 @@ function getCurrentUTCTime(): string {
  * @param timestamp - The timestamp in milliseconds since the Unix Epoch.
  * @returns An object with the properties `UTCDate` and `UTCTime`.
  */
-function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string, UTCTime: string } {
+function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string; UTCTime: string } {
 	const date = new Date(timestamp);
-    
+
 	const year = date.getUTCFullYear();
 	const month = String(date.getUTCMonth() + 1).padStart(2, '0');
 	const day = String(date.getUTCDate()).padStart(2, '0');
-    
+
 	const hours = String(date.getUTCHours()).padStart(2, '0');
 	const minutes = String(date.getUTCMinutes()).padStart(2, '0');
 	const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-    
+
 	const UTCDate = `${year}.${month}.${day}`;
 	const UTCTime = `${hours}:${minutes}:${seconds}`;
-    
+
 	return { UTCDate, UTCTime };
 }
 
@@ -74,7 +73,7 @@ function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string,
  * @param [UTCTime] The time in the format "HH:MM:SS". Defaults to "00:00:00".
  * @returns The UTC timestamp in milliseconds since the Unix Epoch.
  */
-function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = "00:00:00"): number {
+function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = '00:00:00'): number {
 	const [year, month, day] = UTCDate.split('.').map(Number) as [number, number, number];
 	const [hours, minutes, seconds] = UTCTime.split(':').map(Number) as [number, number, number];
 
@@ -88,14 +87,14 @@ function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = "00
  * @returns The total milliseconds calculated from the provided options.
  */
 function getTotalMilliseconds(options: {
-    milliseconds?: number;
-    seconds?: number;
-    minutes?: number;
-    hours?: number;
-    days?: number;
-    weeks?: number;
-    months?: number;
-    years?: number;
+	milliseconds?: number;
+	seconds?: number;
+	minutes?: number;
+	hours?: number;
+	days?: number;
+	weeks?: number;
+	months?: number;
+	years?: number;
 }): number {
 	const millisecondsIn = {
 		milliseconds: 1,
@@ -112,7 +111,9 @@ function getTotalMilliseconds(options: {
 
 	for (const option in options) {
 		if (millisecondsIn[option as keyof typeof millisecondsIn]) {
-			totalMilliseconds += (options[option as keyof typeof options] || 0) * millisecondsIn[option as keyof typeof millisecondsIn];
+			totalMilliseconds +=
+				(options[option as keyof typeof options] || 0) *
+				millisecondsIn[option as keyof typeof millisecondsIn];
 		}
 	}
 
@@ -148,9 +149,18 @@ function getCurrentDay(): string {
  * @param endDay - The ending day of the range (1-31).
  * @returns True if the current date is within the specified range; otherwise, false.
  */
-function isCurrentDateWithinRange(startMonth: number, startDay: number, endMonth: number, endDay: number): boolean {
+function isCurrentDateWithinRange(
+	startMonth: number,
+	startDay: number,
+	endMonth: number,
+	endDay: number,
+): boolean {
 	const currentDate = new Date();
-	const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()); // Normalized current date
+	const today = new Date(
+		currentDate.getFullYear(),
+		currentDate.getMonth(),
+		currentDate.getDate(),
+	); // Normalized current date
 	const startDate = new Date(currentDate.getFullYear(), startMonth - 1, startDay);
 	const endDate = new Date(currentDate.getFullYear(), endMonth - 1, endDay);
 	return today >= startDate && today <= endDate;
@@ -198,8 +208,8 @@ function sqliteToISO(sqliteString: string): string {
  */
 function isoToSQLite(isoString: string): string {
 	const date = new Date(isoString);
-	if (isNaN(date.getTime())) throw new Error("Invalid ISO 8601 string provided.");
-    
+	if (isNaN(date.getTime())) throw new Error('Invalid ISO 8601 string provided.');
+
 	return date.toISOString().replace('T', ' ').split('.')[0]!;
 }
 
@@ -213,7 +223,7 @@ function timestampToSqlite(timestamp: number): string {
 	const date = new Date(timestamp);
 
 	// Check if the timestamp resulted in a valid date
-	if (isNaN(date.getTime())) throw new Error("Invalid timestamp provided.");
+	if (isNaN(date.getTime())) throw new Error('Invalid timestamp provided.');
 
 	// toISOString() returns in UTC format "YYYY-MM-DDTHH:MM:SS.sssZ"
 	// We need to format it to "YYYY-MM-DD HH:MM:SS"

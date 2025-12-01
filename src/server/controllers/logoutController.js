@@ -1,15 +1,13 @@
-
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
-
 /**
- * 
- * @param {import('../types.js').IdentifiedRequest} req 
- * @param {*} res 
- * @returns 
+ *
+ * @param {import('../types.js').IdentifiedRequest} req
+ * @param {*} res
+ * @returns
  */
 async function handleLogout(req, res) {
 	// Delete the refresh token cookie...
@@ -29,17 +27,18 @@ async function handleLogout(req, res) {
 		// Now invalidate the refresh token from the database by deleting it.
 		deleteRefreshToken(refreshToken);
 	} catch (e) {
-		logEventsAndPrint(`Critical error when logging out member "${req.memberInfo.username}": ${e.message}`, 'errLog.txt');
-		return res.status(500).json({ message: "Server Error" });
+		logEventsAndPrint(
+			`Critical error when logging out member "${req.memberInfo.username}": ${e.message}`,
+			'errLog.txt',
+		);
+		return res.status(500).json({ message: 'Server Error' });
 	}
 
-	closeAllSocketsOfSession(refreshToken, 1008, "Logged out");
-	
+	closeAllSocketsOfSession(refreshToken, 1008, 'Logged out');
+
 	res.redirect('/');
 
-	logEventsAndPrint(`Logged out member "${req.memberInfo.username}".`, "loginAttempts.txt");
-};
+	logEventsAndPrint(`Logged out member "${req.memberInfo.username}".`, 'loginAttempts.txt');
+}
 
-export {
-	handleLogout,
-};
+export { handleLogout };

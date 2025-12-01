@@ -1,4 +1,3 @@
-
 // src/controllers/passwordResetController.ts
 
 import { Request, Response } from 'express';
@@ -13,9 +12,7 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
-
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
-
 
 /** Route for when a user REQUESTS a password reset email. */
 async function handleForgotPasswordRequest(req: Request, res: Response): Promise<void> {
@@ -28,9 +25,13 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 	try {
 		// 1. Find user by email (case-insensitive)
-		const member = db.get<{ user_id: number }>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
+		const member = db.get<{ user_id: number }>(
+			'SELECT user_id FROM members WHERE email = ? COLLATE NOCASE',
+			[email],
+		);
 
-		if (member) { // User exists, proceed with password reset flow
+		if (member) {
+			// User exists, proceed with password reset flow
 			const userId: number = member.user_id;
 
 			// 2. Invalidate old tokens (Using database.run for DELETE)
@@ -41,14 +42,14 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 			// 4. Hash the plain token
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
-			
+
 			// 5. Set expiration (e.g., ~1 hour from now in milliseconds)
 			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
 
 			// 6. Store new token in the database
 			db.run(
 				'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
-                [userId, hashedTokenForDb, expiresAt]
+				[userId, hashedTokenForDb, expiresAt],
 			);
 
 			// 7. Construct reset URL using the utility
@@ -57,26 +58,33 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 			// 8. Send email
 			sendPasswordResetEmail(email, resetUrl);
-		
+
 			// 9. Log the email sent
-			logEventsAndPrint(`Sent password reset email to user_id (${userId})`, 'loginAttempts.txt');
+			logEventsAndPrint(
+				`Sent password reset email to user_id (${userId})`,
+				'loginAttempts.txt',
+			);
 		} else {
-			logEventsAndPrint(`No member exists with the email (${email}). Not sending password reset email.`, 'loginAttempts.txt');
+			logEventsAndPrint(
+				`No member exists with the email (${email}). Not sending password reset email.`,
+				'loginAttempts.txt',
+			);
 		}
 
 		// ALWAYS return a generic success message to prevent email enumeration.
 		res.status(200).json({
 			message: getTranslationForReq('server.javascript.ws-password-reset-link-sent', req),
 		});
-
 	} catch (error) {
-		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
+		const errorMessage: string =
+			'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
-		res.status(500).json({ message: 'An error occurred while processing your request. Please try again later.' });
+		res.status(500).json({
+			message: 'An error occurred while processing your request. Please try again later.',
+		});
 		return;
 	}
 }
-
 
 type TokenRecord = { user_id: number; hashed_token: string };
 
@@ -110,7 +118,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		const now = Date.now();
 		const potentialTokens = db.all<TokenRecord>(
 			'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
-			[now]
+			[now],
 		);
 
 		let validTokenRecord: TokenRecord | null = null;
@@ -124,8 +132,16 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
-			logEventsAndPrint(`Invalid or expired password reset token used: ${token}`, 'loginAttempts.txt');
-			res.status(400).json({ message: getTranslationForReq('server.javascript.ws-password-reset-token-invalid', req) });
+			logEventsAndPrint(
+				`Invalid or expired password reset token used: ${token}`,
+				'loginAttempts.txt',
+			);
+			res.status(400).json({
+				message: getTranslationForReq(
+					'server.javascript.ws-password-reset-token-invalid',
+					req,
+				),
+			});
 			return;
 		}
 
@@ -140,20 +156,19 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 			// Step 1: Update the User's Password
 			const updateResult = db.run(
 				'UPDATE members SET hashed_password = ? WHERE user_id = ?',
-				[hashedNewPassword, userId]
+				[hashedNewPassword, userId],
 			);
 
 			if (updateResult.changes === 0) {
 				// If the user doesn't exist, we must throw an error
 				// to force the transaction to roll back.
-				throw new Error(`Failed to update password for user_id ${userId}, user may not exist.`);
+				throw new Error(
+					`Failed to update password for user_id ${userId}, user may not exist.`,
+				);
 			}
 
 			// Step 2: Invalidate/Delete the used token
-			db.run(
-				'DELETE FROM password_reset_tokens WHERE hashed_token = ?',
-				[usedHashedToken]
-			);
+			db.run('DELETE FROM password_reset_tokens WHERE hashed_token = ?', [usedHashedToken]);
 		});
 
 		// Execute the transaction. If any part of it throws an error,
@@ -167,17 +182,18 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
 		// 7. Send Success Response
-		res.status(200).json({ message: getTranslationForReq('server.javascript.ws-password-change-success', req) });
+		res.status(200).json({
+			message: getTranslationForReq('server.javascript.ws-password-change-success', req),
+		});
 
 		// 8. Log the successful password reset
 		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');
-
 	} catch (error) {
-		const errorMessage: string = 'Reset password error: ' + (error instanceof Error ? error.message : String(error));
+		const errorMessage: string =
+			'Reset password error: ' + (error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({ message: 'An internal error occurred. Please try again later.' });
 	}
 }
-
 
 export { handleForgotPasswordRequest, handleResetPassword };

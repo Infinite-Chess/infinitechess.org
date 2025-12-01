@@ -1,49 +1,42 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/selection/stransformations.ts
 
 /**
  * Selection Tool Transformations
- * 
+ *
  * Contains transformation functions for the current
  * selection from the Selection Tool in the Board Editor
  */
 
-import type { BoundingBox } from "../../../../../../../shared/util/math/bounds";
-import type { FullGame } from "../../../../../../../shared/chess/logic/gamefile";
-import type { Mesh } from "../../../rendering/piecemodels";
+import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
+import type { FullGame } from '../../../../../../../shared/chess/logic/gamefile';
+import type { Mesh } from '../../../rendering/piecemodels';
 
-import boardutil, { LineKey, Piece } from "../../../../../../../shared/chess/util/boardutil";
-import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal";
-import coordutil, { BDCoords, Coords } from "../../../../../../../shared/chess/util/coordutil";
-import boardeditor, { Edit } from "../../boardeditor";
-import vectors, { Vec2 } from "../../../../../../../shared/util/math/vectors";
-import organizedpieces from "../../../../../../../shared/chess/logic/organizedpieces";
-import bounds from "../../../../../../../shared/util/math/bounds";
-import selectiontool from "./selectiontool";
-import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
-import typeutil from "../../../../../../../shared/chess/util/typeutil";
-
+import boardutil, { LineKey, Piece } from '../../../../../../../shared/chess/util/boardutil';
+import bd, { BigDecimal } from '../../../../../../../shared/util/bigdecimal/bigdecimal';
+import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
+import boardeditor, { Edit } from '../../boardeditor';
+import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
+import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
+import bounds from '../../../../../../../shared/util/math/bounds';
+import selectiontool from './selectiontool';
+import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import typeutil from '../../../../../../../shared/chess/util/typeutil';
 
 // Type Definitions ----------------------------------------------------------
-
 
 /** A Piece object that also remembers its specialrights state. */
 interface StatePiece extends Piece {
 	specialrights: boolean;
 }
 
-
 // Constants ------------------------------------------------------------------
-
 
 const NEGONE = bd.FromBigInt(-1n, 1);
 const HALF = bd.FromNumber(0.5, 1);
 const ONE = bd.FromBigInt(1n, 1);
 const TWO = bd.FromBigInt(2n, 1);
 
-
 // State ------------------------------------------------------------------------
-
 
 /** Whatever's copied to the clipboard via the "Copy selection" action button. */
 let clipboard: StatePiece[] | undefined;
@@ -57,30 +50,37 @@ let clipboardBox: BoundingBox | undefined;
  */
 let rotationParity: boolean = false;
 
-
 // Selection Box Transformations ------------------------------------------------
 
-
 /** Translates the selection by a given vector. */
-function Translate(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, translation: Coords): void {
+function Translate(
+	gamefile: FullGame,
+	mesh: Mesh,
+	selectionBox: BoundingBox,
+	translation: Coords,
+): void {
 	const destinationBox = bounds.translateBoundingBox(selectionBox, translation);
 	const newSelectionCorners: [Coords, Coords] = [
 		[destinationBox.left, destinationBox.top],
-		[destinationBox.right, destinationBox.bottom]
+		[destinationBox.right, destinationBox.bottom],
 	];
 	// A function controlling how each piece is transformed
 	const transformer = (piece: Piece): { coords: Coords; type: number } => ({
 		coords: coordutil.addCoords(piece.coords, translation),
-		type: piece.type
+		type: piece.type,
 	});
 
 	// Execute the transformation
 	Transform(gamefile, mesh, selectionBox, destinationBox, newSelectionCorners, transformer);
 }
 
-
 /** Extends the selection area by repeating its contents into the given fill box. */
-function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox: BoundingBox): void {
+function Fill(
+	gamefile: FullGame,
+	mesh: Mesh,
+	selectionBox: BoundingBox,
+	fillBox: BoundingBox,
+): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, selectionBox);
 	const piecesInPasteBox: Piece[] = getPiecesInBox(gamefile, fillBox);
 
@@ -103,14 +103,16 @@ function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox
 	let fillBoxAxisEnd: bigint;
 	/** The axis translation for the current iteration. */
 	let currentCopyStartAxis: bigint;
-	
-	if (isHorizontal) { // Horizontal fill
+
+	if (isHorizontal) {
+		// Horizontal fill
 		isPositiveDirection = fillBox.left > selectionBox.left;
 		axisIncrement = isPositiveDirection ? selectionWidth : -selectionWidth;
 		wholeCopies = fillBoxWidth / selectionWidth;
 		fillBoxAxisEnd = isPositiveDirection ? fillBox.right : fillBox.left;
 		currentCopyStartAxis = isPositiveDirection ? selectionBox.left : selectionBox.right;
-	} else { // Vertical fill
+	} else {
+		// Vertical fill
 		isPositiveDirection = fillBox.bottom > selectionBox.bottom;
 		axisIncrement = isPositiveDirection ? selectionHeight : -selectionHeight;
 		wholeCopies = fillBoxHeight / selectionHeight;
@@ -131,7 +133,7 @@ function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox
 	const getKey = coordutil.getKeyFromCoords;
 
 	// Iterate over each whole copy, plus one additional for a partial if needed
-	for (let i = 1n; i <= wholeCopies + 1n; i++) {	
+	for (let i = 1n; i <= wholeCopies + 1n; i++) {
 		currentCopyStartAxis += axisIncrement;
 
 		/** Whether this iteration can only fit a partial copy. */
@@ -141,14 +143,20 @@ function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox
 		// Add all the pieces from the selection box, translated to this copy's position
 		for (const piece of piecesInSelection) {
 			// Determine the translated coordinates for this piece in this copy
-			const translatedCoords: Coords = isHorizontal ?
-				[piece.coords[0] + axisIncrement * i, piece.coords[1]] :
-				[piece.coords[0], piece.coords[1] + axisIncrement * i];
+			const translatedCoords: Coords = isHorizontal
+				? [piece.coords[0] + axisIncrement * i, piece.coords[1]]
+				: [piece.coords[0], piece.coords[1] + axisIncrement * i];
 			// Only add if within fill box (only might exceed it on the final partial copy)
 			if (partial && !bounds.boxContainsSquare(fillBox, translatedCoords)) continue;
 			// Queue the addition of the piece at its new location
 			const hasSpecialRights = specialRights.has(getKey(piece.coords));
-			boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, hasSpecialRights);
+			boardeditor.queueAddPiece(
+				gamefile,
+				edit,
+				translatedCoords,
+				piece.type,
+				hasSpecialRights,
+			);
 		}
 	}
 
@@ -161,9 +169,7 @@ function Fill(gamefile: FullGame, mesh: Mesh, selectionBox: BoundingBox, fillBox
 	selectiontool.setSelection([newBox.left, newBox.top], [newBox.right, newBox.bottom]);
 }
 
-
 // Action Button Transformations ------------------------------------------------
-
 
 /** Deletes the given selection box. */
 function Delete(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
@@ -235,15 +241,21 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 		for (let y = 0n; y < copiesY; y++) {
 			// Determine translation for this copy
 			const thisTranslation: Coords = [
-				translation[0] + (clipboardWidth * x),
-				translation[1] + (clipboardHeight * -y),
+				translation[0] + clipboardWidth * x,
+				translation[1] + clipboardHeight * -y,
 			];
 
 			// Now, add all pieces from the clipboard, translated to this copy's position
 			for (const piece of clipboard) {
 				const translatedCoords = coordutil.addCoords(piece.coords, thisTranslation);
 				// Queue the addition of the piece at its new location
-				boardeditor.queueAddPiece(gamefile, edit, translatedCoords, piece.type, piece.specialrights);
+				boardeditor.queueAddPiece(
+					gamefile,
+					edit,
+					translatedCoords,
+					piece.type,
+					piece.specialrights,
+				);
 			}
 		}
 	}
@@ -253,14 +265,16 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 
 	// Update the selection area to the actual paste box
 
-	selectiontool.setSelection([actualPasteBox.left, actualPasteBox.top], [actualPasteBox.right, actualPasteBox.bottom]);
+	selectiontool.setSelection(
+		[actualPasteBox.left, actualPasteBox.top],
+		[actualPasteBox.right, actualPasteBox.bottom],
+	);
 }
 
 /** Flips the selection box horizontally. */
-function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {	
+function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	Reflect(gamefile, mesh, box, 0); // Reflect across the X-axis
 }
-
 
 /** Flips the selection box vertically. */
 function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
@@ -273,9 +287,7 @@ function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
  */
 function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
 	// Determine the bounds for calculating the reflection line based on the axis
-	const [bound1, bound2] = axis === 0
-		? [box.left, box.right]
-		: [box.bottom, box.top];
+	const [bound1, bound2] = axis === 0 ? [box.left, box.right] : [box.bottom, box.top];
 
 	// Calculate the reflection line with BigDecimals, for decimal precision.
 	// 1 precision is enough to perfectly represent 1/2 increments, which is the finest we need.
@@ -285,7 +297,10 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 	const reflectionLine: BigDecimal = bd.divide_fixed(sum, TWO, 0); // Working precision isn't needed because the quotient is rational
 
 	// These haven't changed from the original selection box
-	const selectionCorners: [Coords, Coords] = [[box.left, box.top], [box.right, box.bottom]];
+	const selectionCorners: [Coords, Coords] = [
+		[box.left, box.top],
+		[box.right, box.bottom],
+	];
 
 	// A function for controlling each piece's new state
 	const transformer = (piece: Piece): { coords: Coords; type: number } => {
@@ -300,14 +315,13 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 		// Create the new coordinates, modifying only the reflected axis
 		const reflectedCoords: Coords = [...piece.coords]; // Create a mutable copy
 		reflectedCoords[axis] = reflectedCoord;
-        
+
 		return { coords: reflectedCoords, type: piece.type };
 	};
 
 	// Execute the transformation
 	Transform(gamefile, mesh, box, box, selectionCorners, transformer);
 }
-
 
 /** Rotates the selection 90 degrees to the left (counter-clockwise). */
 function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
@@ -327,7 +341,7 @@ function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boo
 
 	const pivot: BDCoords = [
 		bd.divide_fixed(sumXEdgesBD, TWO, 0), // Working precision isn't needed because the quotient is rational
-		bd.divide_fixed(sumYEdgesBD, TWO, 0)
+		bd.divide_fixed(sumYEdgesBD, TWO, 0),
 	];
 
 	// Adjust pivot for unstable rotations.
@@ -366,7 +380,7 @@ function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boo
 	// A function controlling how each piece is transformed
 	const transformer = (piece: Piece): { coords: Coords; type: number } => ({
 		coords: rotatePoint(piece.coords, pivot, clockwise),
-		type: piece.type
+		type: piece.type,
 	});
 
 	// Execute the transformation
@@ -402,17 +416,16 @@ function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords
 	const finalX = bd.add(rotatedRelativeX, pivot[0]);
 	const finalY = bd.add(rotatedRelativeY, pivot[1]);
 
-	return [
-		bd.toBigInt(finalX),
-		bd.toBigInt(finalY),
-	];
+	return [bd.toBigInt(finalX), bd.toBigInt(finalY)];
 }
-
 
 /** Inverts the color of the pieces in the selection box. */
 function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	// These haven't changed from the original selection box
-	const selectionCorners: [Coords, Coords] = [[box.left, box.top], [box.right, box.bottom]];
+	const selectionCorners: [Coords, Coords] = [
+		[box.left, box.top],
+		[box.right, box.bottom],
+	];
 
 	// A function for controlling each piece's new state
 	const transformer = (piece: Piece): { coords: Coords; type: number } => {
@@ -424,9 +437,7 @@ function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 	Transform(gamefile, mesh, box, box, selectionCorners, transformer);
 }
 
-
 // Transformation Helpers -----------------------------------------------------
-
 
 /**
  * Executes a transformation, where pieces within the selection may be moved or modified.
@@ -434,13 +445,13 @@ function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
  * moving the pieces, and updating the selection area.
  */
 function Transform(
-	gamefile: FullGame, 
-	mesh: Mesh, 
+	gamefile: FullGame,
+	mesh: Mesh,
 	sourceBox: BoundingBox,
 	destinationBox: BoundingBox,
 	newSelectionCorners: [Coords, Coords],
 	/** A function to transform an individual piece's coordinates and type. */
-	transformer: (_piece: Piece) => { coords: Coords, type: number }
+	transformer: (_piece: Piece) => { coords: Coords; type: number },
 ): void {
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);
@@ -466,9 +477,15 @@ function Transform(
 		const transformed = transformer(piece);
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
-		boardeditor.queueAddPiece(gamefile, edit, transformed.coords, transformed.type, hasSpecialRights);
+		boardeditor.queueAddPiece(
+			gamefile,
+			edit,
+			transformed.coords,
+			transformed.type,
+			hasSpecialRights,
+		);
 	}
-    
+
 	// Apply the collective edit and add it to the history
 	applyEdit(gamefile, mesh, edit);
 
@@ -476,9 +493,7 @@ function Transform(
 	selectiontool.setSelection(newSelectionCorners[0], newSelectionCorners[1]);
 }
 
-
 // Utility ------------------------------------------------------------
-
 
 /** Queues all the pieces in the list to be removed in this Edit. */
 function removeAllPieces(gamefile: FullGame, edit: Edit, pieces: Piece[]): void {
@@ -518,9 +533,9 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 
 	// The start and end keys of those lines
 	const linesStart = axis === 0 ? intBox.bottom : intBox.left;
-	const linesEnd =   axis === 0 ? intBox.top : intBox.right;
+	const linesEnd = axis === 0 ? intBox.top : intBox.right;
 	const rangeStart = axis === 0 ? intBox.left : intBox.bottom;
-	const rangeEnd =   axis === 0 ? intBox.right : intBox.top;
+	const rangeEnd = axis === 0 ? intBox.right : intBox.top;
 
 	const numOfLines: bigint = linesEnd - linesStart + 1n;
 	const lineEntries: bigint = BigInt(lines.size);
@@ -560,9 +575,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	return piecesInSelection;
 }
 
-
 // API -------------------------------------------------------------------------
-
 
 /** Drops the reference to the clipboard contents. */
 function resetState(): void {
@@ -570,9 +583,7 @@ function resetState(): void {
 	clipboardBox = undefined;
 }
 
-
 // Exports --------------------------------------------------------------------
-
 
 export default {
 	// Selection Box Transformations

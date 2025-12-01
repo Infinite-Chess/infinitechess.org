@@ -1,15 +1,13 @@
-
 /**
  * This script stores an internal variable that keeps track of whether
  * anything visual has changed on-screen in the game this frame.
  * If nothing has, we can save compute by skipping rendering.
- * 
+ *
  * ZERO dependancies.
  */
 
 /** Whether there has been a visual change on-screen the past frame. */
 let hasBeenVisualChange: boolean = true;
-
 
 /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
 function onVisualChange(): void {
@@ -29,8 +27,6 @@ function doWeRenderNextFrame(): boolean {
 function onFrameRender(): void {
 	hasBeenVisualChange = false;
 }
-
-
 
 export default {
 	onVisualChange,

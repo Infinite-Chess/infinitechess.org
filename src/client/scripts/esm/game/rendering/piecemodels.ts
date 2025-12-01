@@ -1,8 +1,6 @@
-
 /**
  * This generates and renders the meshes of each individual piece type in the game.
  */
-
 
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
@@ -25,10 +23,14 @@ import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
-import { AttributeInfoInstanced, RenderableInstanced, createRenderable_Instanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
+import {
+	AttributeInfoInstanced,
+	RenderableInstanced,
+	createRenderable_Instanced,
+	createRenderable_Instanced_GivenInfo,
+} from '../../webgl/Renderable.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
-
 
 /**
  * Piece Mesh Instance Data.
@@ -40,9 +42,9 @@ type InstanceData = (bigint | null)[];
 /** Mesh data of a single piece type in mesh.types */
 interface MeshData {
 	/** Infinite precision BIGINT instance data for performing arithmetic. */
-	instanceData: InstanceData,
+	instanceData: InstanceData;
 	/** Buffer model for rendering. (This automatically stores the instanceData32 array going into the gpu) */
-	model: RenderableInstanced
+	model: RenderableInstanced;
 }
 
 /** An object that contains the buffer models to render the pieces in a game. */
@@ -50,19 +52,18 @@ interface Mesh {
 	/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
 	 * This helps require less severe uniform translations upon rendering when traveling massive distances.
 	 * The amount it is shifted depends on the nearest `REGEN_RANGE`. */
-	offset: Coords,
+	offset: Coords;
 	/** Whether the position data of each piece mesh is inverted. This will be true if we're viewing black's perspective. */
-	inverted: boolean,
+	inverted: boolean;
 	/** An object containing the mesh data for each type of piece in the game. One for every type in `pieces` */
-	types: TypeGroup<MeshData>
-};
+	types: TypeGroup<MeshData>;
+}
 
 // Variables ----------------------------------------------------------------------------------------
 
-
 /**
  * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
- * 
+ *
  * We can't solve that problem by using blending mode ALWAYS because we need animations
  * to be able to mask (block out) the currently-animated piece by rendering a transparent square
  * on the animated piece's destination that is higher in the depth buffer.
@@ -87,23 +88,24 @@ const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
 
 /** The attribute info of each of the piece type models, excluding voids. */
 const ATTRIBUTE_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_texturecoord', numComponents: 2 }],
-	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }]
+	vertexDataAttribInfo: [
+		{ name: 'a_position', numComponents: 2 },
+		{ name: 'a_texturecoord', numComponents: 2 },
+	],
+	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
 };
 
-
 // Generating Meshes ------------------------------------------------------------------------
-
 
 /**
  * Regenerates every single piece mesh in the gamefile.
  * Call when first loading a game.
- * 
+ *
  * SLOWEST. Minimize calling.
  */
 function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 	if (!mesh) return;
-	console.log("Regenerating all piece type meshes.");
+	console.log('Regenerating all piece type meshes.');
 
 	// Update the offset
 	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
@@ -111,8 +113,10 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 	mesh.inverted = perspective.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
-	for (const type of boardsim.existingTypes) { // [43] pawn(white)
-		if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
+	for (const type of boardsim.existingTypes) {
+		// [43] pawn(white)
+		if (typeutil.getRawType(type) === rawTypes.VOID)
+			mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
 		else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 	}
 
@@ -123,7 +127,7 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 
 /**
  * MIGHT BE UNUSED, SOON??
- * 
+ *
  * Regenerates the single model of the provided type.
  * Call externally after adding more undefined placeholders to a type list.
  * @param boardsim
@@ -133,7 +137,8 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 function regenType(boardsim: Board, mesh: Mesh, type: number): void {
 	console.log(`Regenerating mesh of type ${type}.`);
 
-	if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
+	if (typeutil.getRawType(type) === rawTypes.VOID)
+		mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
 	else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 
 	frametracker.onVisualChange();
@@ -142,7 +147,7 @@ function regenType(boardsim: Board, mesh: Mesh, type: number): void {
 /**
  * Generates the mesh data for a specific piece type in the gamefile that has a texture. (not compatible with voids)
  * Must be called whenever we add more undefineds placeholders to the this piece list.
- * 
+ *
  * SLOWEST. Minimize calling.
  * @param boardsim
  * @param mesh
@@ -155,14 +160,21 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	const texture = texturecache.getTexture(type);
 	return {
 		instanceData,
-		model: createRenderable_Instanced_GivenInfo(vertexData, castInstanceDataToFloat32(instanceData), ATTRIBUTE_INFO, 'TRIANGLES', 'textureInstanced', [{ texture, uniformName: 'u_sampler' }])
+		model: createRenderable_Instanced_GivenInfo(
+			vertexData,
+			castInstanceDataToFloat32(instanceData),
+			ATTRIBUTE_INFO,
+			'TRIANGLES',
+			'textureInstanced',
+			[{ texture, uniformName: 'u_sampler' }],
+		),
 	};
 }
 
 /**
  * Generates the model of the voids in the game.
  * Must be called whenever we add more undefineds placeholders to the voids piece list.
- * 
+ *
  * SLOWEST. Minimize calling.
  */
 function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
@@ -173,7 +185,13 @@ function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 
 	return {
 		instanceData,
-		model: createRenderable_Instanced(vertexData, castInstanceDataToFloat32(instanceData), 'TRIANGLES', 'colorInstanced', true)
+		model: createRenderable_Instanced(
+			vertexData,
+			castInstanceDataToFloat32(instanceData),
+			'TRIANGLES',
+			'colorInstanced',
+			true,
+		),
 	};
 }
 
@@ -188,19 +206,24 @@ function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number):
 	const instanceData: InstanceData = []; // Initialize empty
 
 	let currIndex: number = 0;
-	boardutil.iteratePiecesInTypeRange_IncludeUndefineds(boardsim.pieces, type, (idx: number, isUndefined: boolean) => {
-		if (isUndefined) {
-			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
-			instanceData[currIndex] = null;
-			instanceData[currIndex + 1] = null;
-		} else { // NOT undefined
-			const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
-			// Apply the piece mesh offset to the coordinates
-			instanceData[currIndex] = coords[0] - mesh.offset[0];
-			instanceData[currIndex + 1] = coords[1] - mesh.offset[1];
-		}
-		currIndex += STRIDE_PER_PIECE;
-	});
+	boardutil.iteratePiecesInTypeRange_IncludeUndefineds(
+		boardsim.pieces,
+		type,
+		(idx: number, isUndefined: boolean) => {
+			if (isUndefined) {
+				// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
+				instanceData[currIndex] = null;
+				instanceData[currIndex + 1] = null;
+			} else {
+				// NOT undefined
+				const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
+				// Apply the piece mesh offset to the coordinates
+				instanceData[currIndex] = coords[0] - mesh.offset[0];
+				instanceData[currIndex + 1] = coords[1] - mesh.offset[1];
+			}
+			currIndex += STRIDE_PER_PIECE;
+		},
+	);
 
 	return instanceData;
 }
@@ -222,7 +245,8 @@ function castInstanceDataToFloat32(instanceData: InstanceData): Float32Array {
 			// Convert null to NaN. When used as a vertex position, NaN values are typically
 			// discarded by the GPU's rasterizer, effectively making the vertex invisible.
 			result[i] = NaN; // Alternative would be Infinity
-		} else { // value === bigint
+		} else {
+			// value === bigint
 			// Convert the bigint to a number. The Float32Array will store it as a 32-bit float.
 			// Naturally, precision loss occurs.
 			result[i] = Number(value);
@@ -251,9 +275,7 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
 	return result;
 }
 
-
 // Shifting Meshes ------------------------------------------------------------------------
-
 
 /**
  * Shifts the instance data of each piece mesh in the game to require less severe
@@ -261,13 +283,13 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
  * Faster than {@link regenAll}.
  */
 function shiftAll(boardsim: Board, mesh: Mesh): void {
-	console.log("Shifting all piece meshes.");
+	console.log('Shifting all piece meshes.');
 
 	const newOffset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 
 	const diffXOffset = mesh.offset[0] - newOffset[0];
 	const diffYOffset = mesh.offset[1] - newOffset[1];
-	
+
 	// const chebyshevDistance = vectors.chebyshevDistance(mesh.offset, newOffset);
 	// if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
 	// 	console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
@@ -291,31 +313,28 @@ function shiftAll(boardsim: Board, mesh: Mesh): void {
  * @param diffYOffset - The y-amount to shift the model's vertex data.
  */
 function shiftModel(meshData: MeshData, diffXOffset: bigint, diffYOffset: bigint): void {
-
 	const instanceData = meshData.instanceData; // High precision floats for performing calculations
 	const instanceData32 = meshData.model.instanceData; // Low precision floats for sending to the gpu
 	for (let i = 0; i < instanceData32.length; i += STRIDE_PER_PIECE) {
 		if (instanceData[i] === null) continue; // Skip undefined placeholders
-		
+
 		instanceData[i]! += diffXOffset;
 		instanceData[i + 1]! += diffYOffset;
 		// Copy the float32 values from the bigint array so as to retain the most precision
 		instanceData32[i]! = Number(instanceData[i]!);
 		instanceData32[i + 1]! = Number(instanceData[i + 1]!);
 	}
-	
+
 	// Update the buffer on the gpu!
 	meshData.model.updateBufferIndices_InstanceBuffer(0, instanceData.length); // Update every index
 }
 
-
 // Rotating Models ------------------------------------------------------------------------------
-
 
 /**
  * Rotates each piece model (except voids) by updating its vertex data of
  * a single instance with the updated rotation, then reinits them on the gpu.
- * 
+ *
  * FAST, as this only needs to modify the vertex data of a single instance per piece type.
  */
 function rotateAll(mesh: Mesh, newInverted: boolean): void {
@@ -329,21 +348,22 @@ function rotateAll(mesh: Mesh, newInverted: boolean): void {
 		if (typeutil.SVGLESS_TYPES.has(rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = meshData.model.vertexData;
-		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net
+		if (vertexData.length !== newVertexData.length)
+			throw Error(
+				'New vertex data must be the same length as the existing! Cannot update buffer indices.',
+			); // Safety net
 		vertexData.set(newVertexData); // Copies the values over without changing the memory location
 		meshData.model.updateBufferIndices_VertexBuffer(0, vertexData.length); // Send those changes off to the gpu
 	}
 }
 
-
 // Modifying Mesh Data --------------------------------------------------------------------------
-
 
 /**
  * Overwrites the instance data of the specified piece within its
  * piece type mesh with the new coordinates of the instance.
  * Then sends that change off to the gpu.
- * 
+ *
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
@@ -366,7 +386,7 @@ function overwritebufferdata(mesh: Mesh, piece: Piece): void {
 /**
  * Deletes the instance data of the specified piece within its piece type mesh
  * by overwriting it with Infinity's, then sends that change off to the gpu.
- * 
+ *
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
@@ -376,7 +396,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 	const i = piece.index * STRIDE_PER_PIECE;
 
 	// Unfortunately we can't set them to 0 to hide it, as an actual piece instance would be visible at [0,0]
-	meshData.instanceData[i] = null; 
+	meshData.instanceData[i] = null;
 	meshData.instanceData[i + 1] = null;
 	meshData.model.instanceData[i] = NaN;
 	meshData.model.instanceData[i + 1] = NaN;
@@ -385,9 +405,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE); // Update only the indices the piece was at
 }
 
-
 // Rendering ----------------------------------------------------------------------------------------
-
 
 /**
  * Renders ever piece type mesh of the game, EXCLUDING voids,
@@ -406,17 +424,17 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 		// NOT ANYMORE SINCE ADDING STAR FIELD ANIMATION (voids are rendered separately)
 		// mesh.types[rawTypes.VOID]?.model.render(position, scale);
 		return;
-	};
+	}
 
 	// We can render everything...
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
-	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset)) shiftAll(boardsim, mesh);
+	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset))
+		shiftAll(boardsim, mesh);
 
 	// Test if the rotation has changed
 	const correctInverted = perspective.getIsViewingBlackPerspective();
 	if (mesh.inverted !== correctInverted) rotateAll(mesh, correctInverted);
-
 
 	for (const [typeStr, meshData] of Object.entries(mesh.types)) {
 		const type = Number(typeStr);
@@ -428,7 +446,7 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 /** Renders the voids mesh. */
 function renderVoids(mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
-	
+
 	const boardPos = boardpos.getBoardPos();
 	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
 	const boardScale = boardpos.getBoardScaleAsNumber();
@@ -441,15 +459,14 @@ function renderVoids(mesh: Mesh | undefined): void {
  * Tests if the board position is at least REGEN_RANGE-distance away from the current offset.
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
-function isOffsetOutOfRangeOfRegenRange(offset: Coords): boolean { // offset: [x,y]
+function isOffsetOutOfRangeOfRegenRange(offset: Coords): boolean {
+	// offset: [x,y]
 	const boardPosRounded: Coords = bd.coordsToBigInt(boardpos.getBoardPos());
 	const chebyshevDist = vectors.chebyshevDistance(boardPosRounded, offset);
 	return chebyshevDist > REGEN_RANGE;
 }
 
-
 // Exports --------------------------------------------------------------------------------------------
-
 
 export default {
 	ATTRIBUTE_INFO,
@@ -463,7 +480,4 @@ export default {
 	renderVoids,
 };
 
-export type {
-	MeshData,
-	Mesh,
-};
+export type { MeshData, Mesh };

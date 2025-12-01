@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/chess/util/winconutil.ts
 
 /**
@@ -7,21 +6,30 @@
  *
  */
 
-
 import type { GameRules } from '../variants/gamerules.js';
 import type { Player } from './typeutil.js';
 
-
 /** Valid win conditions that either color can have. */
-const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','koth'];
+const validWinConditions = [
+	'checkmate',
+	'royalcapture',
+	'allroyalscaptured',
+	'allpiecescaptured',
+	'koth',
+];
 
 /**
  * List of all win conditions that happen after a move being made.
  * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement.
  * which can happen at any point in time.
  */
-const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat'];
-
+const decisiveGameConclusions = [
+	...validWinConditions,
+	'stalemate',
+	'repetition',
+	'moverule',
+	'insuffmat',
+];
 
 /**
  * true if the provided win condition is valid for any color to have in the gamerules.
@@ -43,7 +51,9 @@ function isWinConditionValid(winCondition: string): boolean {
  */
 function isGameConclusionDecisive(gameConclusion: string | undefined): boolean {
 	if (gameConclusion === undefined) {
-		throw new Error('Should not be be testing if game conclusion is decisive when game is not over!');
+		throw new Error(
+			'Should not be be testing if game conclusion is decisive when game is not over!',
+		);
 	}
 	const { condition } = getVictorAndConditionFromGameConclusion(gameConclusion);
 	return isConclusionDecisive(condition);
@@ -71,7 +81,10 @@ function isConclusionDecisive(condition: string): boolean {
  * @param gameConclusion - The gameConclusion of the gamefile. Examples: '1 checkmate' / '0 stalemate'
  * @returns An object containing 2 properties: `victor` and `condition`
  */
-function getVictorAndConditionFromGameConclusion(gameConclusion: string): { condition: string, victor?: Player } {
+function getVictorAndConditionFromGameConclusion(gameConclusion: string): {
+	condition: string;
+	victor?: Player;
+} {
 	const [victorStr, condition] = gameConclusion.split(' ');
 	// If the conclusion is "aborted", then the victor isn't specified.
 	if (victorStr === 'aborted') return { condition: victorStr };
@@ -82,14 +95,14 @@ function getVictorAndConditionFromGameConclusion(gameConclusion: string): { cond
 	};
 }
 
-
 /**
  * Returns the termination of the game in english language.
  * @param gameRules
  * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
-	if (condition === 'moverule') { // One exception
+	if (condition === 'moverule') {
+		// One exception
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
 		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
 	}

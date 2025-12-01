@@ -1,9 +1,7 @@
-
 // src/client/scripts/esm/webgl/post_processing/passes/PassThroughPass.ts
 
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
-
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /**
  * A Post Processing Pass Through Effect, with zero effects.
@@ -17,17 +15,17 @@ export class PassThroughPass implements PostProcessPass {
 	 * HAS NO EFFECT IN THE PASS THROUGH PASS.
 	 */
 	public masterStrength: number = 1.0;
-	
+
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('post_pass');
 	}
 
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		this.program.use();
-		
+
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-		
+
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 	}
 }

@@ -1,4 +1,3 @@
-
 /**
  * This script keeps track of the time the server will be restarting, if it is going to be.
  * This is determined by database/allowinvites.json. Whenever an invite is attempted to be
@@ -6,10 +5,8 @@
  * The actual reading is done in src/server/game/updateServerRestart.js
  */
 
-
 /** The time the server is restarting, if it is, in milliseconds after the Unix Opoch, otherwise false. @type {number | false} */
 let serverRestartingAt: number | false = false;
-
 
 /**
  * Returns the time the server is restarting at, if it is, in milliseconds after the Unix Opoch, otherwise false.
@@ -49,10 +46,9 @@ function getMinutesUntilServerRestart(): number | undefined {
 	return returnThis; // Convert to minutes
 }
 
-
 export {
 	getTimeServerRestarting,
 	setTimeServerRestarting,
 	cancelServerRestart,
-	getMinutesUntilServerRestart
+	getMinutesUntilServerRestart,
 };

@@ -1,66 +1,59 @@
-
 // src/client/scripts/esm/util/math/bounds.ts
 
 /**
  * This script contains methods for constructing and operating on bounding boxes.
  */
 
-import type { BigDecimal } from "../bigdecimal/bigdecimal.js";
-import type { BDCoords, Coords, DoubleCoords } from "../../chess/util/coordutil.js";
+import type { BigDecimal } from '../bigdecimal/bigdecimal.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 
-import bd from "../bigdecimal/bigdecimal.js";
-import bimath from "../bigdecimal/bimath.js";
-
+import bd from '../bigdecimal/bigdecimal.js';
+import bimath from '../bigdecimal/bimath.js';
 
 // Type Definitions --------------------------------------------------------------
 
-
 /** A arbitrarily large rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {
-    /** The x-coordinate of the left side of the box. */
-    left: bigint,
-    /** The x-coordinate of the right side of the box. */
-    right: bigint,
-    /** The y-coordinate of the bottom side of the box. */
-    bottom: bigint,
-    /** The y-coordinate of the top side of the box. */
-    top: bigint
-};
+	/** The x-coordinate of the left side of the box. */
+	left: bigint;
+	/** The x-coordinate of the right side of the box. */
+	right: bigint;
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: bigint;
+	/** The y-coordinate of the top side of the box. */
+	top: bigint;
+}
 
 /** A rectangle object with properties for the coordinates of its sides, but using BigDecimal
  * instead of bigints for arbitrary deciaml precision. */
 interface BoundingBoxBD {
-    /** The x-coordinate of the left side of the box. */
-    left: BigDecimal,
-    /** The x-coordinate of the right side of the box. */
-    right: BigDecimal,
-    /** The y-coordinate of the bottom side of the box. */
-    bottom: BigDecimal,
-    /** The y-coordinate of the top side of the box. */
-    top: BigDecimal
+	/** The x-coordinate of the left side of the box. */
+	left: BigDecimal;
+	/** The x-coordinate of the right side of the box. */
+	right: BigDecimal;
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: BigDecimal;
+	/** The y-coordinate of the top side of the box. */
+	top: BigDecimal;
 }
 
 /** A rectangle object with properties for the coordinates of its sides, but using numbers instead of bigints. */
 interface DoubleBoundingBox {
-    /** The x-coordinate of the left side of the box. */
-    left: number,
-    /** The x-coordinate of the right side of the box. */
-    right: number,
-    /** The y-coordinate of the bottom side of the box. */
-    bottom: number,
-    /** The y-coordinate of the top side of the box. */
-    top: number
-};
-
+	/** The x-coordinate of the left side of the box. */
+	left: number;
+	/** The x-coordinate of the right side of the box. */
+	right: number;
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: number;
+	/** The y-coordinate of the top side of the box. */
+	top: number;
+}
 
 // Constants -----------------------------------------
 
-
 const TWO = bd.FromNumber(2.0);
 
-
 // Construction --------------------------------------------------------
-
 
 /**
  * Calculates the minimum bounding box that contains all the provided coordinates.
@@ -88,7 +81,7 @@ function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxB
 		left: bd.FromNumber(box.left),
 		right: bd.FromNumber(box.right),
 		bottom: bd.FromNumber(box.bottom),
-		top: bd.FromNumber(box.top)
+		top: bd.FromNumber(box.top),
 	};
 }
 
@@ -97,7 +90,7 @@ function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 		left: bd.FromBigInt(box.left),
 		right: bd.FromBigInt(box.right),
 		bottom: bd.FromBigInt(box.bottom),
-		top: bd.FromBigInt(box.top)
+		top: bd.FromBigInt(box.top),
 	};
 }
 
@@ -136,7 +129,7 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
 		left: bd.min(box1.left, box2.left),
 		right: bd.max(box1.right, box2.right),
 		bottom: bd.min(box1.bottom, box2.bottom),
-		top: bd.max(box1.top, box2.top)
+		top: bd.max(box1.top, box2.top),
 	};
 }
 
@@ -148,7 +141,7 @@ function mergeBoundingBoxDoubles(box1: BoundingBox, box2: BoundingBox): Bounding
 		left: bimath.min(box1.left, box2.left),
 		right: bimath.max(box1.right, box2.right),
 		bottom: bimath.min(box1.bottom, box2.bottom),
-		top: bimath.max(box1.top, box2.top)
+		top: bimath.max(box1.top, box2.top),
 	};
 }
 
@@ -165,9 +158,7 @@ function translateBoundingBox(box: BoundingBox, translation: Coords): BoundingBo
 	};
 }
 
-
 // Operations -----------------------------------------------------------------------
-
 
 /**
  * Determines if one bounding box (`innerBox`) is entirely contained within another bounding box (`outerBox`).
@@ -249,25 +240,20 @@ function boxContainsSquareDouble(box: DoubleBoundingBox, square: DoubleCoords): 
 function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 	const xSum = bd.add(box.left, box.right);
 	const ySum = bd.add(box.bottom, box.top);
-	return [
-        bd.divide_fixed(xSum, TWO),
-        bd.divide_fixed(ySum, TWO)
-    ];
+	return [bd.divide_fixed(xSum, TWO), bd.divide_fixed(ySum, TWO)];
 }
 
-
 // Debugging --------------------------------------------------------
-
 
 /** [DEBUG] Prints a box of BigDecimal floating point edges, with their exact representations. SLOW. */
 function printBDBox(box: BoundingBoxBD): void {
 	// console.log(`Box: left=${bd.toNumber(box.left)}, right=${bd.toNumber(box.right)}, bottom=${bd.toNumber(box.bottom)}, top=${bd.toNumber(box.top)}`);
-	console.log(`Box: left=${bd.toExactString(box.left)}, right=${bd.toExactString(box.right)}, bottom=${bd.toExactString(box.bottom)}, top=${bd.toExactString(box.top)}`);
+	console.log(
+		`Box: left=${bd.toExactString(box.left)}, right=${bd.toExactString(box.right)}, bottom=${bd.toExactString(box.bottom)}, top=${bd.toExactString(box.top)}`,
+	);
 }
 
-
 // Exports ----------------------------------------------------------
-
 
 export default {
 	// Construction
@@ -294,8 +280,4 @@ export default {
 	printBDBox,
 };
 
-export type {
-	BoundingBox,
-	BoundingBoxBD,
-	DoubleBoundingBox,
-};
+export type { BoundingBox, BoundingBoxBD, DoubleBoundingBox };

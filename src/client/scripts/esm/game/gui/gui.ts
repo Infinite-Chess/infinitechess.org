@@ -1,8 +1,7 @@
-
 /**
  * This script adds event listeners for our main overlay html element that
  * contains all of our gui pages.
- * 
+ *
  * We also prepare the board here whenever ANY gui page (non-game) is opened.
  */
 
@@ -15,11 +14,7 @@ import guititle from './guititle.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 import bigdecimal from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
-
-
 // Functions ------------------------------------------------------------------------------
-
-
 
 /**
  * Call when we first load the page, or leave any game. This prepares the board
@@ -37,17 +32,13 @@ function prepareForOpen(): void {
 function randomizePanVelDir(): void {
 	const randTheta = Math.random() * 2 * Math.PI;
 	const XYComponents = vectors.getXYComponents_FromAngle(randTheta);
-	boardpos.setPanVel([
-		XYComponents[0] * guititle.boardVel,
-		XYComponents[1] * guititle.boardVel
-	]);
+	boardpos.setPanVel([XYComponents[0] * guititle.boardVel, XYComponents[1] * guititle.boardVel]);
 }
 
 /** Displays the status message on screen "Feature is planned". */
 function displayStatus_FeaturePlanned(): void {
 	statustext.showStatus(translations['planned_feature']);
 }
-
 
 export default {
 	prepareForOpen,

@@ -1,28 +1,23 @@
-
 // src/client/scripts/esm/game/rendering/effect_zone/zones/UndercurrentZone.ts
 
 /**
  * This is the 1st zone you encounter moving away from the origin.
- * 
+ *
  * It has NO visual effect, but it does introduce the first ambience.
  */
 
+import type { Zone } from '../EffectZoneManager';
 
-import type { Zone } from "../EffectZoneManager";
-
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
-import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
-
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 
 export class UndercurrentZone implements Zone {
-
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 1;
 
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
-
 
 	constructor() {
 		// Load the ambience...
@@ -31,11 +26,10 @@ export class UndercurrentZone implements Zone {
 		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 	}
 
-
 	public update(): void {
 		// No dynamic state to update for a pass-through zone.
 	}
-    
+
 	public getUniforms(): Record<string, any> {
 		return {};
 	}

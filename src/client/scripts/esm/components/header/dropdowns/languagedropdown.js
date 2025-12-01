@@ -1,30 +1,26 @@
-
 // This script selects new languages when we click a language in the language dropdown.
 // It also appends the lng query param to all header navigation links.
 // And it removes the lng query param from the url after loading.
 
-import docutil from "../../../util/docutil.js";
-
+import docutil from '../../../util/docutil.js';
 
 // Document Elements -------------------------------------------------------------------------
 
 const settingsDropdown = document.querySelector('.settings-dropdown');
 
 const languageDropdown = document.querySelector('.language-dropdown');
-const dropdownItems = document.querySelectorAll(".language-dropdown-item");
+const dropdownItems = document.querySelectorAll('.language-dropdown-item');
 const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title');
-
-
 
 // Functions ---------------------------------------------------------------------------------
 
 (function init() {
 	// Request cookie if it doesn't exist
-	if (!docutil.getCookieValue("i18next")) {
-		fetch("/setlanguage", {
-			method: "POST",
-			credentials: "same-origin",
-			"is-fetch-request": "true" // Custom header
+	if (!docutil.getCookieValue('i18next')) {
+		fetch('/setlanguage', {
+			method: 'POST',
+			credentials: 'same-origin',
+			'is-fetch-request': 'true', // Custom header
 		});
 	}
 	removeLngQueryParam();
@@ -64,8 +60,6 @@ function removeLngQueryParam() {
 	window.history.replaceState({}, '', url);
 }
 
-
-
 function open() {
 	languageDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
@@ -77,28 +71,27 @@ function close() {
 	settingsDropdown.classList.remove('transparent');
 }
 
-
 function initListeners() {
 	languageDropdownTitle.addEventListener('click', close);
-	dropdownItems.forEach(item => {
-		item.addEventListener("click", onLanguageClicked);
+	dropdownItems.forEach((item) => {
+		item.addEventListener('click', onLanguageClicked);
 	});
 }
 function closeListeners() {
 	languageDropdownTitle.removeEventListener('click', close);
-	dropdownItems.forEach(item => {
-		item.removeEventListener("click", onLanguageClicked);
+	dropdownItems.forEach((item) => {
+		item.removeEventListener('click', onLanguageClicked);
 	});
 }
 
 function onLanguageClicked(event) {
 	const item = event.currentTarget;
-	const selectedLanguage = item.getAttribute("value"); // Get the selected language code
-	docutil.updateCookie("i18next", selectedLanguage, 365);
+	const selectedLanguage = item.getAttribute('value'); // Get the selected language code
+	docutil.updateCookie('i18next', selectedLanguage, 365);
 
 	// Modify the URL to include the "lng" query parameter
 	const url = new URL(window.location);
-	url.searchParams.set("lng", selectedLanguage);
+	url.searchParams.set('lng', selectedLanguage);
 
 	// Update the browser's URL without reloading the page
 	window.history.replaceState({}, '', url);
@@ -106,8 +99,6 @@ function onLanguageClicked(event) {
 	// Reload the page
 	location.reload();
 }
-
-
 
 export default {
 	initListeners,

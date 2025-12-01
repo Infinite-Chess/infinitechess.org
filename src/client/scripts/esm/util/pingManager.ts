@@ -1,23 +1,18 @@
-
 /**
  * PingManager
  * Manages the current ping value and handles events related to ping updates and socket closures.
- * 
+ *
  * This script is only used for subtracting the ping value from the clock values the server reported.
  */
 
-
 // Variables -------------------------------------------------------------
-
 
 let currentPing: number = 0; // Stores the current ping value
 
 const MAX_PING_HISTORY: number = 3; // Maximum number of ping history entries to store
 const pingHistory: number[] = []; // Stores the last 'MAX_PING_HISTORY' ping values
 
-
 // Functions -------------------------------------------------------------
-
 
 // Initialize event listeners for ping and socket-closed events
 (function init(): void {
@@ -81,9 +76,7 @@ function getAveragePing(): number {
 	return sum / pingHistory.length;
 }
 
-
 // ---------------------------------------------------------------------
-
 
 export default {
 	getPing,

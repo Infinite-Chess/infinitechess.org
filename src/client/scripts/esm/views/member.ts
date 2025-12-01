@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/views/member.ts
 
 /*
@@ -13,11 +12,11 @@
  * * Deletes account when button clicked and password entered.
  */
 
-import docutil from "../util/docutil.js";
-import validatorama from "../util/validatorama.js";
-import validcheckmates from "../../../../shared/chess/util/validcheckmates.js";
+import docutil from '../util/docutil.js';
+import validatorama from '../util/validatorama.js';
+import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
 // @ts-ignore
-import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
+import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 // --- Type Definitions ---
 
@@ -43,9 +42,15 @@ const element_sendEmail = document.getElementById('sendemail') as HTMLAnchorElem
 
 const element_memberName = document.getElementById('membername')!;
 
-const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze') as HTMLImageElement;
-const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver') as HTMLImageElement;
-const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold') as HTMLImageElement;
+const element_checkmateBadgeBronze = document.getElementById(
+	'checkmate-badge-bronze',
+) as HTMLImageElement;
+const element_checkmateBadgeSilver = document.getElementById(
+	'checkmate-badge-silver',
+) as HTMLImageElement;
+const element_checkmateBadgeGold = document.getElementById(
+	'checkmate-badge-gold',
+) as HTMLImageElement;
 
 const element_showAccountInfo = document.getElementById('show-account-info') as HTMLButtonElement;
 const element_deleteAccount = document.getElementById('delete-account') as HTMLButtonElement;
@@ -75,7 +80,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
+			'is-fetch-request': 'true', // Custom header
 		},
 	};
 	// Server reads refresh token cookie, no Authorization header needed here as per original comments
@@ -93,7 +98,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		}
 		if (!response.ok) {
 			// Handle other potential errors if needed
-			console.error("Failed to fetch member data:", response.status, response.statusText);
+			console.error('Failed to fetch member data:', response.status, response.statusText);
 			// Potentially redirect to an error page or show a message
 			// For now, let's assume it resolves to JSON even on error based on later code
 			// but ideally, handle non-JSON error responses too.
@@ -114,13 +119,23 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		const eloElement = document.getElementById('ranked_elo')!;
 		eloElement.textContent = result.ranked_elo;
 
-		const infinityLeaderboardPositionElement = document.getElementById('infinity_leaderboard_position')!;
-		infinityLeaderboardPositionElement.textContent = result.infinity_leaderboard_position === undefined ? "?" : 
-						(result.ranked_elo.slice(-1) !== "?" ? '#' + String(result.infinity_leaderboard_position) : `#${result.infinity_leaderboard_position}?`);
-		
-		const infinityLeaderboardRatingDeviationElement = document.getElementById('infinity_leaderboard_rating_deviation')!;
-		infinityLeaderboardRatingDeviationElement.textContent = result.infinity_leaderboard_rating_deviation === undefined ? "?" : 
-						String(result.infinity_leaderboard_rating_deviation);
+		const infinityLeaderboardPositionElement = document.getElementById(
+			'infinity_leaderboard_position',
+		)!;
+		infinityLeaderboardPositionElement.textContent =
+			result.infinity_leaderboard_position === undefined
+				? '?'
+				: result.ranked_elo.slice(-1) !== '?'
+					? '#' + String(result.infinity_leaderboard_position)
+					: `#${result.infinity_leaderboard_position}?`;
+
+		const infinityLeaderboardRatingDeviationElement = document.getElementById(
+			'infinity_leaderboard_rating_deviation',
+		)!;
+		infinityLeaderboardRatingDeviationElement.textContent =
+			result.infinity_leaderboard_rating_deviation === undefined
+				? '?'
+				: String(result.infinity_leaderboard_rating_deviation);
 
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 
@@ -142,15 +157,14 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 			// --- Display elements specific to own profile ---
 			element_showAccountInfo.classList.remove('hidden');
 			element_deleteAccount.classList.remove('hidden');
-			element_deleteAccount.addEventListener("click", () => removeAccount(true));
+			element_deleteAccount.addEventListener('click', () => removeAccount(true));
 			element_email.textContent = result.email!;
 		}
 
 		// Change username text size depending on character count
 		recalcUsernameSize();
-
 	} catch (error) {
-		console.error("Error loading member data:", error);
+		console.error('Error loading member data:', error);
 		// Redirect to a generic error page or display an error message
 		// window.location.href = languagedropdown.addLngQueryParamToLink('/500'); // Example
 	}
@@ -175,16 +189,21 @@ function updateCompletedCheckmatesInformation(checkmates_beaten: string): void {
 	else if (numCompleted >= 0.5 * numTotal) shownBadge = element_checkmateBadgeBronze;
 
 	// Ensure only the correct badge (or none) is shown
-	[element_checkmateBadgeBronze, element_checkmateBadgeSilver, element_checkmateBadgeGold].forEach(badge => {
-		if (badge === shownBadge) badge.classList.remove("hidden");
-		else badge.classList.add("hidden");
+	[
+		element_checkmateBadgeBronze,
+		element_checkmateBadgeSilver,
+		element_checkmateBadgeGold,
+	].forEach((badge) => {
+		if (badge === shownBadge) badge.classList.remove('hidden');
+		else badge.classList.add('hidden');
 	});
 }
 
 /** Reveals the account information section. */
-function showAccountInfo(): void { // Called from inside the html via event listener
-	element_showAccountInfo.classList.add("hidden");
-	element_accountInfo.classList.remove("hidden");
+function showAccountInfo(): void {
+	// Called from inside the html via event listener
+	element_showAccountInfo.classList.add('hidden');
+	element_accountInfo.classList.remove('hidden');
 }
 
 /**
@@ -193,10 +212,10 @@ function showAccountInfo(): void { // Called from inside the html via event list
  */
 async function removeAccount(confirmation: boolean): Promise<void> {
 	if (confirmation) {
-		if (!confirm(translations["js-confirm_delete"])) return; // User cancelled the initial confirmation
+		if (!confirm(translations['js-confirm_delete'])) return; // User cancelled the initial confirmation
 	}
 
-	const password = prompt(translations["js-enter_password"]);
+	const password = prompt(translations['js-enter_password']);
 	const cancelWasPressed = password === null;
 	if (cancelWasPressed) return; // User pressed Cancel in the password prompt
 
@@ -205,7 +224,7 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
+			'is-fetch-request': 'true', // Custom header
 		},
 		body: JSON.stringify({ password }), // Send password in body
 		credentials: 'same-origin', // Allows cookies (like session/CSRF) to be sent
@@ -214,7 +233,8 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 	try {
 		const response = await fetch(`/member/${member}/delete`, config);
 
-		if (!response.ok) { // Probably incorrect password
+		if (!response.ok) {
+			// Probably incorrect password
 			// Attempt to parse error message from server
 			const result: { message: string } = await response.json();
 			alert(result.message); // Show server error message
@@ -225,8 +245,8 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 			window.location.href = languagedropdown.addLngQueryParamToLink('/');
 		}
 	} catch (error) {
-		console.error("Network or other error during account deletion:", error);
-		alert("An error occurred while trying to delete the account. Please try again.");
+		console.error('Network or other error during account deletion:', error);
+		alert('An error occurred while trying to delete the account. Please try again.');
 	}
 }
 
@@ -238,7 +258,7 @@ function resendConfirmEmail(): void {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
+			'is-fetch-request': 'true', // Custom header
 		},
 		credentials: 'same-origin',
 	};
@@ -251,22 +271,23 @@ function resendConfirmEmail(): void {
 			}
 			if (!response.ok) {
 				// Handle other errors (e.g., rate limiting, server issue)
-				console.error("Failed to resend email:", response.status, response.statusText);
+				console.error('Failed to resend email:', response.status, response.statusText);
 				// Optionally show an error message to the user
-				alert("Failed to resend confirmation email. Please try again later.");
+				alert('Failed to resend confirmation email. Please try again later.');
 				return Promise.reject(new Error(`Server error: ${response.status}`));
 			}
 			return response.json(); // Expecting a success message perhaps?
 		})
-		.then((result) => { // Email was resent! Reload the page so the user knows something happened.
-			console.log("Resend email result:", result); // Log success indication from server if any
+		.then((result) => {
+			// Email was resent! Reload the page so the user knows something happened.
+			console.log('Resend email result:', result); // Log success indication from server if any
 			window.location.reload();
 		})
-		.catch(error => {
+		.catch((error) => {
 			// Catch errors from fetch itself or Promise.reject calls
 			if (error.message !== 'Unauthorized' && !error.message.startsWith('Server error:')) {
-				console.error("Error resending confirmation email:", error);
-				alert("An error occurred while resending the email.");
+				console.error('Error resending confirmation email:', error);
+				alert('An error occurred while resending the email.');
 			}
 			// Errors like 401 or server errors are already handled/logged in the .then block
 		});
@@ -294,4 +315,4 @@ function recalcUsernameSize(): void {
 
 // --- Global Event Listeners ---
 
-window.addEventListener("resize", recalcUsernameSize);
+window.addEventListener('resize', recalcUsernameSize);

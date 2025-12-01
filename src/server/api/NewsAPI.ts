@@ -7,7 +7,11 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import { getMemberDataByCriteria, MemberRecord, updateMemberColumns } from '../database/memberManager.js';
+import {
+	getMemberDataByCriteria,
+	MemberRecord,
+	updateMemberColumns,
+} from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
 /**
@@ -25,7 +29,12 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId, false);
+	const memberData: MemberRecord = getMemberDataByCriteria(
+		['last_read_news_date'],
+		'user_id',
+		userId,
+		false,
+	);
 
 	const lastReadDate = memberData.last_read_news_date;
 
@@ -34,10 +43,10 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 		res.json({ count: 0 });
 		return;
 	}
-	
+
 	// Count unread news posts
 	const unreadCount = countUnreadNews(lastReadDate);
-	
+
 	res.json({ count: unreadCount });
 }
 
@@ -55,7 +64,12 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId, false);
+	const memberData: MemberRecord = getMemberDataByCriteria(
+		['last_read_news_date'],
+		'user_id',
+		userId,
+		false,
+	);
 
 	const lastReadDate = memberData.last_read_news_date;
 
@@ -64,10 +78,10 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 		res.json({ dates: [] });
 		return;
 	}
-	
+
 	// Get unread news dates
 	const unreadDates = getUnreadNewsDates(lastReadDate);
-	
+
 	res.json({ dates: unreadDates });
 }
 
@@ -85,15 +99,11 @@ function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
 	const userId = req.memberInfo.user_id;
 
 	const latestNewsDate = getLatestNewsDate();
-	
+
 	const success = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
-	
+
 	if (success) res.status(200).json({ success: true });
 	else res.status(500).json({ success: false, message: 'Failed to update last read news date.' });
 }
 
-export {
-	getUnreadNewsCount,
-	getUnreadNewsDatesEndpoint,
-	markNewsAsRead,
-};
+export { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead };

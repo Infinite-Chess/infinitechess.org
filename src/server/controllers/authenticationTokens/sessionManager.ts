@@ -1,9 +1,7 @@
-
 /**
  * This module handles the creation, renewal, and revocation of user login sessions.
  * It uses secure cookies and interacts with the `refreshTokenManager` for database operations.
  */
-
 
 // @ts-ignore
 import { deletePreferencesCookie } from '../../api/Prefs.js';
@@ -11,17 +9,13 @@ import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
 import { addRefreshToken, deleteRefreshToken } from '../../database/refreshTokenManager.js';
 
-
 import type { Request, Response } from 'express';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
-
 
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 
-
 // Renewing & Revoking Sessions --------------------------------------------------------------------
-
 
 /** Makes sure a user's session is still fresh, renewing it if it's older than a day. */
 export function freshenSession(
@@ -30,12 +24,14 @@ export function freshenSession(
 	user_id: number,
 	username: string,
 	roles: string[] | null,
-	tokenRecord: RefreshTokenRecord
+	tokenRecord: RefreshTokenRecord,
 ): void {
 	const timeSinceCreated = Date.now() - tokenRecord.created_at;
 	if (timeSinceCreated < minTimeToWaitToRenewRefreshTokensMillis) return;
 
-	console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`);
+	console.log(
+		`Renewing member "${username}"s session by issuing them new login cookies! -------`,
+	);
 
 	// Create the new token BEFORE touching the database.
 	const newToken = signRefreshToken(user_id, username, roles);
@@ -63,20 +59,20 @@ export function createNewSession(
 	res: Response,
 	user_id: number,
 	username: string,
-	roles: string[] | null
+	roles: string[] | null,
 ): void {
 	// The payload can be an object with their username and their roles.
 	const refreshToken = signRefreshToken(user_id, username, roles);
-    
+
 	// Save the refresh token to the database
 	addRefreshToken(req, user_id, refreshToken);
-    
+
 	createSessionCookies(res, user_id, username, refreshToken);
 }
 
 /**
  * Terminates the session of a client by deleting their session, preferences, and practice progress cookies.
- * 
+ *
  * NOTE: This only clears the cookies from the user's browser.
  * To invalidate the token on the server side, you must also call `deleteRefreshToken(token)`.
  * This is typically done in a logout route handler.
@@ -88,9 +84,7 @@ export function revokeSession(res: Response): void {
 	deletePracticeProgressCookie(res);
 }
 
-
 // Cookies storing session information --------------------------------------------------------------------
-
 
 /**
  * Creates and sets the cookies:
@@ -101,10 +95,20 @@ export function revokeSession(res: Response): void {
  * @param username - The username of the user.
  * @param refreshToken - The refresh token to be stored in the cookie.
  */
-function createSessionCookies(res: Response, userId: number, username: string, refreshToken: string): void {
+function createSessionCookies(
+	res: Response,
+	userId: number,
+	username: string,
+	refreshToken: string,
+): void {
 	// Create and sets an HTTP-only cookie containing the refresh token.
 	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true.
-	res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'none', secure: true, maxAge: refreshTokenExpiryMillis });
+	res.cookie('jwt', refreshToken, {
+		httpOnly: true,
+		sameSite: 'none',
+		secure: true,
+		maxAge: refreshTokenExpiryMillis,
+	});
 	createMemberInfoCookie(res, userId, username);
 }
 
@@ -123,7 +127,12 @@ function createMemberInfoCookie(res: Response, userId: number, username: string)
 
 	// Set the cookie (readable by JavaScript, not HTTP-only).
 	// Cross-site usage requires we set sameSite to 'None'! Also requires secure (https) true.
-	res.cookie('memberInfo', memberInfo, { httpOnly: false, sameSite: 'none', secure: true, maxAge: refreshTokenExpiryMillis });
+	res.cookie('memberInfo', memberInfo, {
+		httpOnly: false,
+		sameSite: 'none',
+		secure: true,
+		maxAge: refreshTokenExpiryMillis,
+	});
 }
 
 /**

@@ -1,4 +1,3 @@
-
 /**
  * This script checks if a user belongs to a game, when they send the 'joingame'
  * message, and if so, sends them the game info
@@ -27,7 +26,4 @@ function onJoinGame(ws: CustomWebSocket): void {
 	cancelDisconnectTimer(game, colorPlayingAs);
 }
 
-
-export {
-	onJoinGame
-};
+export { onJoinGame };

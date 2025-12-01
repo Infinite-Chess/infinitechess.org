@@ -1,4 +1,3 @@
-
 // src/server/middleware/middleware.js
 
 /**
@@ -38,28 +37,34 @@ import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { handleLogin } from '../controllers/loginController.js';
-import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
+import {
+	checkEmailValidity,
+	checkUsernameAvailable,
+	createNewMember,
+} from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
-import { processCommand } from "../api/AdminPanel.js";
+import { processCommand } from '../api/AdminPanel.js';
 import { getContributors } from '../api/GitHub.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
-import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
+import {
+	handleForgotPasswordRequest,
+	handleResetPassword,
+} from '../controllers/passwordResetController.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
 // import EditorSavesAPI from '../api/EditorSavesAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Configures the Middleware Waterfall
- * 
+ *
  * app.use adds the provided function to EVERY SINGLE router and incoming connection.
  * Each middleware function must call next() to go to the next middleware.
  * Connections that do not pass one middleware will not continue.
- * 
+ *
  * @param {object} app - The express application instance.
  */
 function configureMiddleware(app) {
-
 	// Note: requests that are rate limited will not be logged, to mitigate slow-down during a DDOS.
 	app.use(rateLimit);
 
@@ -71,24 +76,26 @@ function configureMiddleware(app) {
 
 	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
-	app.use(helmet({
-		contentSecurityPolicy: {
-			directives: {
-				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'"],  // Allows inline scripts
-				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
-				objectSrc: ["'none'"],
-				frameSrc: ["'self'", 'https://www.youtube.com'],
-				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "blob:"]
+	app.use(
+		helmet({
+			contentSecurityPolicy: {
+				directives: {
+					defaultSrc: ["'self'"],
+					scriptSrc: ["'self'", "'unsafe-inline'"], // Allows inline scripts
+					scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
+					objectSrc: ["'none'"],
+					frameSrc: ["'self'", 'https://www.youtube.com'],
+					imgSrc: ["'self'", 'data:', 'https://avatars.githubusercontent.com', 'blob:'],
+				},
 			},
-		},
-	}));
+		}),
+	);
 
 	// Path Traversal Protection, and error protection from malformed URLs
 	app.use((req, res, next) => {
 		try {
 			const decoded = decodeURIComponent(req.url);
-			
+
 			// Check 1: Raw encoded patterns (before decoding)
 			const encodedPatterns = /(%2e%2e|%252e|%%32%65)/gi;
 			if (encodedPatterns.test(req.url)) {
@@ -108,7 +115,7 @@ function configureMiddleware(app) {
 
 			next();
 		} catch (_err) {
-			console.warn('Blocked invalid URL encoding:', req.url); 
+			console.warn('Blocked invalid URL encoding:', req.url);
 			res.status(400).send('Invalid URL encoding');
 		}
 	});
@@ -119,23 +126,23 @@ function configureMiddleware(app) {
 	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
 
 	/**
-     * Cross Origin Resource Sharing
-     * 
-     * This allows 3rd party middleware. Without this, other sites will get an
-     * error when retreiving data on your site to serve to their customers.
-     * Be careful, incorrectly setting will block our own customers.
-     * For many applications though, you don't want it open to the public,
-     * but perhaps you do want search engines to have access?
-     * 
-     * Does this create a 'Access-Control-Allow-Origin' header?
-     */
+	 * Cross Origin Resource Sharing
+	 *
+	 * This allows 3rd party middleware. Without this, other sites will get an
+	 * error when retreiving data on your site to serve to their customers.
+	 * Be careful, incorrectly setting will block our own customers.
+	 * For many applications though, you don't want it open to the public,
+	 * but perhaps you do want search engines to have access?
+	 *
+	 * Does this create a 'Access-Control-Allow-Origin' header?
+	 */
 	const options = useOriginWhitelist ? corsOptions : undefined;
 	app.use(cors(options));
 
 	/**
-     * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
-     * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
-     */
+	 * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
+	 * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
+	 */
 	app.use(express.urlencoded({ limit: '10kb', extended: false })); // Limit the size to avoid parsing excessively large objects
 
 	// Sets the req.cookies property
@@ -148,7 +155,10 @@ function configureMiddleware(app) {
 	// but it will be a request for an HTML or API
 
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
-	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
+	app.use(
+		'/.well-known/acme-challenge',
+		express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')),
+	);
 
 	// This sets the 'browser-id' cookie on every request for an HTML file
 	app.use(assignOrRenewBrowserID);
@@ -172,14 +182,15 @@ function configureMiddleware(app) {
 
 	// API --------------------------------------------------------------------
 
-	app.post("/auth", handleLogin); // Login fetch POST request
+	app.post('/auth', handleLogin); // Login fetch POST request
 
-	app.post("/setlanguage", (req, res) => { // Language cookie setter POST request
-		res.cookie("i18next", req.i18n.resolvedLanguage);
-		res.send(""); // Doesn't work without this for some reason
+	app.post('/setlanguage', (req, res) => {
+		// Language cookie setter POST request
+		res.cookie('i18next', req.i18n.resolvedLanguage);
+		res.send(''); // Doesn't work without this for some reason
 	});
 
-	app.get("/api/contributors", (req, res) => {
+	app.get('/api/contributors', (req, res) => {
 		const contributors = getContributors();
 		res.send(JSON.stringify(contributors));
 	});
@@ -187,18 +198,18 @@ function configureMiddleware(app) {
 	// Token Authenticator -------------------------------------------------------
 
 	/**
-     * Sets the req.memberInfo properties if they have an authorization
-     * header (contains access token) or refresh cookie (contains refresh token).
-     * Don't send unauthorized people private stuff without the proper role.
-	 * 
+	 * Sets the req.memberInfo properties if they have an authorization
+	 * header (contains access token) or refresh cookie (contains refresh token).
+	 * Don't send unauthorized people private stuff without the proper role.
+	 *
 	 * PLACE AS LOW AS YOU CAN, BUT ABOVE ALL ROUTES THAT NEED AUTHENTICATION!!
 	 * This requires database requests.
-     */
+	 */
 	app.use(verifyJWT);
 
 	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------
 
-	app.post("/api/get-access-token", accessTokenIssuer);
+	app.post('/api/get-access-token', accessTokenIssuer);
 
 	app.post('/api/set-preferences', postPrefs);
 
@@ -216,17 +227,20 @@ function configureMiddleware(app) {
 	// app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
 	// app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
 
-	app.get("/logout", handleLogout);
+	app.get('/logout', handleLogout);
 
-	app.get("/command/:command", processCommand);
+	app.get('/command/:command', processCommand);
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
 	app.get('/member/:member/send-email', requestConfirmEmail);
-	app.get("/verify/:member/:code", verifyAccount);
+	app.get('/verify/:member/:code', verifyAccount);
 
 	// Leaderboard router
-	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
+	app.get(
+		'/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank',
+		getLeaderboardData,
+	);
 
 	app.post('/forgot-password', handleForgotPasswordRequest);
 	app.post('/reset-password', handleResetPassword);

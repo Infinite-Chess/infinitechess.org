@@ -1,6 +1,5 @@
-
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /**
  * A post-processing pass that reduces the number of colors in the scene
@@ -20,7 +19,6 @@ export class PosterizePass implements PostProcessPass {
 	 * Set 1 or less to effectively disable the effect.
 	 */
 	public levels: number = 8;
-
 
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('posterize');

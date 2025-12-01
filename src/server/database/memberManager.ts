@@ -1,4 +1,3 @@
-
 // src/server/database/memberManager.ts
 
 /**
@@ -11,9 +10,7 @@ import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { SqliteError } from 'better-sqlite3';
 
-
 // Type Definitions ----------------------------------------------------------
-
 
 /** Structure of a member record. */
 export interface MemberRecord {
@@ -34,9 +31,7 @@ export interface MemberRecord {
 	last_read_news_date?: string | null;
 }
 
-
 // Constants ----------------------------------------------------------
-
 
 /** SQLite constraint error code constant */
 const SQLITE_CONSTRAINT_ERROR = 'SQLITE_CONSTRAINT';
@@ -44,9 +39,7 @@ const SQLITE_CONSTRAINT_ERROR = 'SQLITE_CONSTRAINT';
 /** Custom error message for user not found during deletion */
 const USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
 
-
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
-
 
 /**
  * Creates a new account. This is the single, authoritative function for user creation.
@@ -59,10 +52,18 @@ const USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
  * @param verification_code The unique code for verification, if they are not yet verified.
  * @param is_verification_notified The verified notification status.
  * @returns The user_id of the newly created user.
- * 
+ *
  * @throws If the insertion fails (e.g., due to constraint violation or other unexpected error).
  */
-function addUser(username: string, email: string, hashedPassword: string, is_verified: 0 | 1, verification_code: string | null, is_verification_notified: 0 | 1): number {
+function addUser(
+	username: string,
+	email: string,
+	hashedPassword: string,
+	is_verified: 0 | 1,
+	verification_code: string | null,
+	is_verification_notified: 0 | 1,
+): number {
+	// prettier-ignore
 	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string; is_verified: 0 | 1; verification_code: string | null; is_verification_notified: 0 | 1 }], number>((userData) => {
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
@@ -86,26 +87,37 @@ function addUser(username: string, email: string, hashedPassword: string, is_ver
 			userData.is_verified,
 			userData.verification_code,
 			userData.is_verification_notified,
-			currentDate
+			currentDate,
 		];
 		db.run(membersQuery, params);
 
 		// Step 4: Insert into the 'player_stats' table.
 		const statsQuery = `INSERT INTO player_stats (user_id) VALUES (?)`;
 		db.run(statsQuery, [userId]);
-		
+
 		// If both inserts succeed, the transaction will commit and return the new user_id.
 		return userId;
 	});
 
 	try {
-		return createAccountTransaction({ username, email, hashedPassword, is_verified, verification_code, is_verification_notified });
+		return createAccountTransaction({
+			username,
+			email,
+			hashedPassword,
+			is_verified,
+			verification_code,
+			is_verification_notified,
+		});
 	} catch (error: unknown) {
 		const detailedError = error instanceof SqliteError ? error.message : String(error);
-		logEventsAndPrint(`Account creation transaction for "${username}" failed and was rolled back: ${detailedError}`, 'errLog.txt');
-		
+		logEventsAndPrint(
+			`Account creation transaction for "${username}" failed and was rolled back: ${detailedError}`,
+			'errLog.txt',
+		);
+
 		let genericError: string = 'A database error occurred.'; // Generic error message to avoid leaking details
-		if (error instanceof SqliteError && error.code === SQLITE_CONSTRAINT_ERROR) genericError = SQLITE_CONSTRAINT_ERROR;
+		if (error instanceof SqliteError && error.code === SQLITE_CONSTRAINT_ERROR)
+			genericError = SQLITE_CONSTRAINT_ERROR;
 		throw Error(genericError); // Rethrow with the generic error message, or specific constraint error
 	}
 }
@@ -116,11 +128,10 @@ function addUser(username: string, email: string, hashedPassword: string, is_ver
  * @param user_id - The ID of the user to delete.
  * @param reason_deleted - The reason the user is being deleted.
  * @returns A result object: { success: true } on success, or { success: false, reason: string } on failure.
- * 
+ *
  * @throws If a database error occurs during the deletion process.
  */
 function deleteUser(user_id: number, reason_deleted: string): void {
-
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
 	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {
@@ -157,15 +168,14 @@ function deleteUser(user_id: number, reason_deleted: string): void {
 		// Generic error message for return value
 		let genericError = 'A database error occurred.';
 		// Handle our custom "user not found" error
-		if (error instanceof Error && error.message === USER_NOT_FOUND_ERROR) genericError = USER_NOT_FOUND_ERROR;
+		if (error instanceof Error && error.message === USER_NOT_FOUND_ERROR)
+			genericError = USER_NOT_FOUND_ERROR;
 		throw Error(genericError); // Rethrow with the generic error message
 	}
 }
 // console.log(deleteUser(3887110, 'security'));
 
-
 // General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
-
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -175,26 +185,47 @@ function deleteUser(user_id: number, reason_deleted: string): void {
  * @param skipErrorLogging - If true, errors will not be logged when no match is found.
  * @returns An object containing the requested columns, or an empty object if no match is found.
  */
-function getMemberDataByCriteria(columns: string[], searchKey: string, searchValue: string | number, skipErrorLogging: boolean): MemberRecord {
-
+function getMemberDataByCriteria(
+	columns: string[],
+	searchKey: string,
+	searchValue: string | number,
+	skipErrorLogging: boolean,
+): MemberRecord {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
-		logEventsAndPrint(`When getting member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		logEventsAndPrint(
+			`When getting member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
+			'errLog.txt',
+		);
 		return {};
 	}
-	if (!columns.every(column => typeof column === 'string' && allMemberColumns.includes(column))) {
-		logEventsAndPrint(`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+	if (
+		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
+	) {
+		logEventsAndPrint(
+			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
+			'errLog.txt',
+		);
 		return {};
 	}
 
 	// Check if the searchKey and searchValue are valid
-	if (typeof searchKey !== 'string' || typeof searchValue !== 'string' && typeof searchValue !== 'number') {
-		logEventsAndPrint(`When getting member data by criteria, searchKey must be a string and searchValue must be a number or string! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValue)}`, 'errLog.txt');
+	if (
+		typeof searchKey !== 'string' ||
+		(typeof searchValue !== 'string' && typeof searchValue !== 'number')
+	) {
+		logEventsAndPrint(
+			`When getting member data by criteria, searchKey must be a string and searchValue must be a number or string! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValue)}`,
+			'errLog.txt',
+		);
 		return {};
 	}
 	if (!uniqueMemberKeys.includes(searchKey)) {
-		logEventsAndPrint(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
+			'errLog.txt',
+		);
 		return {};
 	}
 
@@ -209,7 +240,11 @@ function getMemberDataByCriteria(columns: string[], searchKey: string, searchVal
 
 		// If no row is found, return an empty object
 		if (!row) {
-			if (!skipErrorLogging) logEventsAndPrint(`No matches found for ${searchKey} = ${searchValue}`, 'errLog.txt');
+			if (!skipErrorLogging)
+				logEventsAndPrint(
+					`No matches found for ${searchKey} = ${searchValue}`,
+					'errLog.txt',
+				);
 			return {};
 		}
 
@@ -231,26 +266,43 @@ function getMemberDataByCriteria(columns: string[], searchKey: string, searchVal
  * @param skipErrorLogging - If true, errors will not be logged when no match is found.
  * @returns An object containing a list of MemberRecords, or an empty list if no matches are found.
  */
-function getMultipleMemberDataByCriteria(columns: string[], searchKey: string, searchValueList: string[] | number[]): MemberRecord[] {
-
+function getMultipleMemberDataByCriteria(
+	columns: string[],
+	searchKey: string,
+	searchValueList: string[] | number[],
+): MemberRecord[] {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
-		logEventsAndPrint(`When getting multiple member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		logEventsAndPrint(
+			`When getting multiple member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
+			'errLog.txt',
+		);
 		return [];
 	}
-	if (!columns.every(column => typeof column === 'string' && allMemberColumns.includes(column))) {
-		logEventsAndPrint(`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+	if (
+		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
+	) {
+		logEventsAndPrint(
+			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
+			'errLog.txt',
+		);
 		return [];
 	}
 
 	// Check if the searchKey and searchValueList are valid
 	if (typeof searchKey !== 'string' || !Array.isArray(searchValueList)) {
-		logEventsAndPrint(`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
+		logEventsAndPrint(
+			`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`,
+			'errLog.txt',
+		);
 		return [];
 	}
 	if (!uniqueMemberKeys.includes(searchKey)) {
-		logEventsAndPrint(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
+			'errLog.txt',
+		);
 		return [];
 	}
 
@@ -270,7 +322,10 @@ function getMultipleMemberDataByCriteria(columns: string[], searchKey: string, s
 
 		// If no row is found, return an empty object
 		if (!rows || rows.length === 0) {
-			logEventsAndPrint(`No matches found for ${searchKey} in ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
+			logEventsAndPrint(
+				`No matches found for ${searchKey} in ${jsutil.ensureJSONString(searchValueList)}`,
+				'errLog.txt',
+			);
 			return [];
 		}
 
@@ -293,14 +348,20 @@ function getMultipleMemberDataByCriteria(columns: string[], searchKey: string, s
 function updateMemberColumns(userId: number, columnsAndValues: Record<string, any>): boolean {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEventsAndPrint(`Invalid or empty columns and values provided for user ID "${userId}" when updating member columns!`, 'errLog.txt');
+		logEventsAndPrint(
+			`Invalid or empty columns and values provided for user ID "${userId}" when updating member columns!`,
+			'errLog.txt',
+		);
 		return false;
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allMemberColumns.includes(column)) {
-			logEventsAndPrint(`Invalid column "${column}" provided for user ID "${userId}" when updating member columns!`, 'errLog.txt');
+			logEventsAndPrint(
+				`Invalid column "${column}" provided for user ID "${userId}" when updating member columns!`,
+				'errLog.txt',
+			);
 			return false;
 		}
 		// Convert objects (e.g., JSON) to strings for storage
@@ -310,7 +371,9 @@ function updateMemberColumns(userId: number, columnsAndValues: Record<string, an
 	}
 
 	// Dynamically build the SET part of the query
-	const setStatements = Object.keys(columnsAndValues).map(column => `${column} = ?`).join(', ');
+	const setStatements = Object.keys(columnsAndValues)
+		.map((column) => `${column} = ?`)
+		.join(', ');
 	const values = Object.values(columnsAndValues);
 
 	// Add the userId as the last parameter for the WHERE clause
@@ -326,22 +389,26 @@ function updateMemberColumns(userId: number, columnsAndValues: Record<string, an
 		// Check if the update was successful
 		if (result.changes > 0) return true;
 		else {
-			logEventsAndPrint(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt');
+			logEventsAndPrint(
+				`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`,
+				'errLog.txt',
+			);
 			return false;
 		}
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${userId}": ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${userId}": ${message}`,
+			'errLog.txt',
+		);
 
 		// Return false indicating failure
 		return false;
 	}
 }
 
-
 // Login Count & Last Seen ---------------------------------------------------------------------------------------
-
 
 /**
  * Increments the login count and updates the last_seen column for a member based on their user ID.
@@ -360,12 +427,18 @@ function updateLoginCountAndLastSeen(userId: number): void {
 		const result = db.run(query, [userId]);
 
 		// Log if no changes were made
-		if (result.changes === 0) logEventsAndPrint(`No changes made when updating login_count and last_seen for member of id "${userId}"!`, 'errLog.txt');
-
+		if (result.changes === 0)
+			logEventsAndPrint(
+				`No changes made when updating login_count and last_seen for member of id "${userId}"!`,
+				'errLog.txt',
+			);
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error updating login_count and last_seen for member of id "${userId}": ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error updating login_count and last_seen for member of id "${userId}": ${message}`,
+			'errLog.txt',
+		);
 	}
 }
 
@@ -386,17 +459,22 @@ function updateLastSeen(userId: number): void {
 		const result = db.run(query, [userId]);
 
 		// Log if no changes were made
-		if (result.changes === 0) logEventsAndPrint(`No changes made when updating last_seen for member of id "${userId}"!`, 'errLog.txt');
+		if (result.changes === 0)
+			logEventsAndPrint(
+				`No changes made when updating last_seen for member of id "${userId}"!`,
+				'errLog.txt',
+			);
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error updating last_seen for member of id "${userId}": ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error updating last_seen for member of id "${userId}": ${message}`,
+			'errLog.txt',
+		);
 	}
 }
 
-
 // Utility -----------------------------------------------------------------------------------
-
 
 /**
  * Generates a unique user_id that no other member has ever used.
@@ -415,7 +493,7 @@ function genUniqueUserID(): number {
  * IGNORES whether the deleted_members table may contain the user_id.
  * @param user_id - The user ID to check.
  * @returns Returns true if the member exists, false otherwise.
- * 
+ *
  * @throws If a database error occurs during the check.
  */
 function doesMemberOfIDExist(user_id: number): boolean {
@@ -426,11 +504,13 @@ function doesMemberOfIDExist(user_id: number): boolean {
 
 		// row.found will be 0 or 1
 		return Boolean(row?.found);
-
 	} catch (error: unknown) {
 		// Log the error if the query fails
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error checking if member of user_id (${user_id}) exists: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error checking if member of user_id (${user_id}) exists: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred.'); // Rethrow generic error
 	}
 }
@@ -439,7 +519,7 @@ function doesMemberOfIDExist(user_id: number): boolean {
  * Checks if a given user_id exists in the members table OR deleted_members table.
  * @param userId - The user ID to check.
  * @returns Returns true if the user_id has been used, false otherwise.
- * 
+ *
  * @throws If a database error occurs during the check.
  */
 function isUserIdTaken(userId: number): boolean {
@@ -457,16 +537,17 @@ function isUserIdTaken(userId: number): boolean {
 
 		// row.found will be 0 or 1
 		return Boolean(row?.found);
-
 	} catch (error: unknown) {
 		// Log the error if the query fails
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error checking if user_id (${userId}) has been used: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error checking if user_id (${userId}) has been used: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred.'); // Rethrow generic error
 	}
 }
 // console.log("taken? " + isUserIdTaken(14443702));
-
 
 /**
  * Checks if a member with the given username exists in the members table (case-insensitive,
@@ -487,7 +568,10 @@ function isUsernameTaken(username: string): boolean {
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error checking if username "${username}" is taken: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error checking if username "${username}" is taken: ${message}`,
+			'errLog.txt',
+		);
 
 		// Return false if there's an error (indicating the username is not found)
 		return false;
@@ -513,17 +597,14 @@ function isEmailTaken(email: string): boolean {
 		// Log error if the query fails
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error checking if email "${email}" exists: ${message}`, 'errLog.txt');
-		return false;  // Return false if there's an error
+		return false; // Return false if there's an error
 	}
 }
 
-
 // Exports -----------------------------------------------------------------------------
-
 
 export {
 	SQLITE_CONSTRAINT_ERROR,
-
 	addUser,
 	deleteUser,
 	getMemberDataByCriteria,
@@ -533,5 +614,5 @@ export {
 	updateLastSeen,
 	doesMemberOfIDExist,
 	isUsernameTaken,
-	isEmailTaken
+	isEmailTaken,
 };

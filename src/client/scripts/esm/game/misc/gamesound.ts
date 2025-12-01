@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/game/misc/gamesound.ts
 
 /**
@@ -9,32 +8,30 @@
  * calling {@link AudioManager.playAudio}.
  */
 
-import type { EffectConfig } from "../../audio/AudioEffects.js";
-import type { Coords } from "../../../../../shared/chess/util/coordutil.js";
+import type { EffectConfig } from '../../audio/AudioEffects.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 
-import screenshake from "../rendering/screenshake.js";
-import math from "../../../../../shared/util/math/math.js";
-import WaterRipples from "../rendering/WaterRipples.js";
-import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import AudioManager, { SoundObject } from "../../audio/AudioManager.js";
-
+import screenshake from '../rendering/screenshake.js';
+import math from '../../../../../shared/util/math/math.js';
+import WaterRipples from '../rendering/WaterRipples.js';
+import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import AudioManager, { SoundObject } from '../../audio/AudioManager.js';
 
 // Constants --------------------------------------------------------------------------
-
 
 /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
 const soundStamps = {
 	gamestart: [0, 2.008],
-	move: [2.009, 2.150],
-	capture: [2.151,2.462],
-	bell: [2.463,5.402],
+	move: [2.009, 2.15],
+	capture: [2.151, 2.462],
+	bell: [2.463, 5.402],
 	lowtime: [5.404, 5.985],
 	win: [5.986, 7.994],
 	draw: [7.995, 10.003],
 	loss: [10.004, 12.012],
 	drum1: [12.013, 16.012],
 	drum2: [16.013, 19.262],
-	tick: [19.263 , 25.012],
+	tick: [19.263, 25.012],
 	ticking: [25.013, 36.357],
 	viola_staccato_c3: [36.359, 38.357],
 	violin_staccato_c4: [38.359, 40.357],
@@ -42,8 +39,8 @@ const soundStamps = {
 	marimba_c2_soft: [42.357, 44.356],
 	base_staccato_c2: [44.357, 46.354],
 	ripple: [46.356, 50.354],
-	glass_crack_1: [50.356, 50.760],
-	glass_crack_2: [50.760, 51.848],
+	glass_crack_1: [50.356, 50.76],
+	glass_crack_2: [50.76, 51.848],
 	glass_crack_3: [51.848, 52.621],
 	glass_crack_4: [52.621, 53.222],
 	glass_crack_5: [53.222, 53.627],
@@ -53,9 +50,7 @@ type SoundName = keyof typeof soundStamps;
 
 type SoundTimeSnippet = readonly [number, number];
 
-
 // Move Configs --------------------------------------------------------------------------
-
 
 /** Config for successive, or rapidly played move sounds. */
 const SUCCESSIVE_MOVES_CONFIG = {
@@ -107,7 +102,6 @@ const RIPPLE_CONFIG = {
 	volume: 0.8,
 } as const;
 
-
 /** Config for the screen shake effect for very large moves. */
 const SHAKE_CONFIG = {
 	/** The order of magnitude distance a piece needs to move for the screen shake to begin triggering. */
@@ -127,34 +121,28 @@ const PREMOVE_CONFIG = {
 	volume: 0.5,
 } as const;
 
-
 // Initiation Variables --------------------------------------------------------------------------
-
 
 /** The decoded buffer of the fetched game sound spritesheet. */
 let spritesheetDecodedBuffer: AudioBuffer | undefined = undefined;
 
-
 // State ------------------------------------------------------------------------------
-
 
 /** Timestamp of the last played move sound. */
 let timeLastMoveOrCaptureSound = 0;
 
-
 // Spritesheet Buffer ----------------------------------------------------
-
 
 // Fetch and decode the buffer of the sound spritesheet.
 fetch('sounds/spritesheet/soundspritesheet.opus')
-	.then(response => response.arrayBuffer())
-	.then(arrayBuffer => AudioManager.decodeAudioData(arrayBuffer))
-	.then(decodedBuffer => {
+	.then((response) => response.arrayBuffer())
+	.then((arrayBuffer) => AudioManager.decodeAudioData(arrayBuffer))
+	.then((decodedBuffer) => {
 		spritesheetDecodedBuffer = decodedBuffer;
 		// console.log('Sound spritesheet loaded and decoded successfully.');
 	})
-	.catch(error => {
-		const message = (error instanceof Error) ? error.message : String(error);
+	.catch((error) => {
+		const message = error instanceof Error ? error.message : String(error);
 		console.error(`An error ocurred during loading of sound spritesheet: ${message}`);
 	});
 
@@ -166,21 +154,20 @@ function getSoundStamp(soundName: SoundName): SoundTimeSnippet {
 }
 
 /** Calculates the duration of a sound time snippet in seconds. */
-function getStampDuration(stamp: SoundTimeSnippet): number { // [ startTimeSecs, endTimeSecs ]
+function getStampDuration(stamp: SoundTimeSnippet): number {
+	// [ startTimeSecs, endTimeSecs ]
 	return stamp[1] - stamp[0];
 }
 
 /** Retrieves the start time and duration of a sound inside the spritesheet. */
-function getSoundTimeSnippet(soundName: SoundName): { startTime: number, duration: number } {
+function getSoundTimeSnippet(soundName: SoundName): { startTime: number; duration: number } {
 	const stamp = getSoundStamp(soundName);
 	const startTime = stamp[0];
 	const duration = getStampDuration(stamp);
 	return { startTime, duration };
 }
 
-
 // Playing Sounds -----------------------------------------------------------------------------
-
 
 /**
  * Plays a sound by name from the spritesheet.
@@ -188,9 +175,28 @@ function getSoundTimeSnippet(soundName: SoundName): { startTime: number, duratio
  * @param options Optional parameters like volume, delay, and offset.
  * @returns A SoundObject if the sound is played, otherwise undefined.
  */
-function playSoundEffect(soundName: SoundName, options: { volume?: number, delay?: number, offset?: number, reverbWetLevel?: number, reverbDuration?: number, playbackRate?: number, bypassDownsampler?: boolean } = {}): SoundObject | undefined {
+function playSoundEffect(
+	soundName: SoundName,
+	options: {
+		volume?: number;
+		delay?: number;
+		offset?: number;
+		reverbWetLevel?: number;
+		reverbDuration?: number;
+		playbackRate?: number;
+		bypassDownsampler?: boolean;
+	} = {},
+): SoundObject | undefined {
 	let { startTime, duration } = getSoundTimeSnippet(soundName);
-	const { volume, delay, offset, reverbWetLevel, reverbDuration, playbackRate, bypassDownsampler } = options;
+	const {
+		volume,
+		delay,
+		offset,
+		reverbWetLevel,
+		reverbDuration,
+		playbackRate,
+		bypassDownsampler,
+	} = options;
 
 	// If offset is specified, adjust the start time and duration accordingly
 	if (offset) {
@@ -203,9 +209,23 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
 
 	// Add reverb effect if specified
 	const effects: EffectConfig[] = [];
-	if (reverbWetLevel && reverbDuration) effects.push({ type: 'reverb', durationSecs: reverbDuration, dryLevel: 1, wetLevel: reverbWetLevel });
+	if (reverbWetLevel && reverbDuration)
+		effects.push({
+			type: 'reverb',
+			durationSecs: reverbDuration,
+			dryLevel: 1,
+			wetLevel: reverbWetLevel,
+		});
 
-	return AudioManager.playAudio(spritesheetDecodedBuffer, { startTime, duration, volume, delay, playbackRate, effects, bypassDownsampler });
+	return AudioManager.playAudio(spritesheetDecodedBuffer, {
+		startTime,
+		duration,
+		volume,
+		delay,
+		playbackRate,
+		effects,
+		bypassDownsampler,
+	});
 }
 
 /**
@@ -216,7 +236,12 @@ function playSoundEffect(soundName: SoundName, options: { volume?: number, delay
  * @param premove - Whether this move is a premove.
  * @param destination - Optional. The destination coordinates of the piece move, for ripple effects.
  */
-function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean, destination?: Coords): void {
+function playMove(
+	distanceMoved: BigDecimal,
+	capture: boolean,
+	premove: boolean,
+	destination?: Coords,
+): void {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -225,7 +250,8 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 	const soundEffectName = capture ? 'capture' : 'move';
 
 	// Determine if we should add delay (sounds played at same time, such as the king & rook while castling)
-	const delaySecs = (Math.max(0, SUCCESSIVE_MOVES_CONFIG.gap - timeSinceLastMoveSoundPlayed)) / 1000;
+	const delaySecs =
+		Math.max(0, SUCCESSIVE_MOVES_CONFIG.gap - timeSinceLastMoveSoundPlayed) / 1000;
 
 	// Determine if we should dampen the sound (sounds played successively, close together)
 	const shouldDampen = timeSinceLastMoveSoundPlayed < SUCCESSIVE_MOVES_CONFIG.threshold;
@@ -235,25 +261,42 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 	const volume = 1 * dampener;
 
 	const playbackRate = premove ? PREMOVE_CONFIG.playbackRate : 1; // Premove moves are played faster, so they sound more like a click.
-	
+
 	const { reverbWetLevel, reverbDuration } = calculateReverb(distanceMoved);
 
-	playSoundEffect(soundEffectName, { volume, reverbWetLevel, reverbDuration, delay: delaySecs, playbackRate });
+	playSoundEffect(soundEffectName, {
+		volume,
+		reverbWetLevel,
+		reverbDuration,
+		delay: delaySecs,
+		playbackRate,
+	});
 
 	if (destination && bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
 		// Trigger water dropplet ripple effect
 		const rippleVolume = volume * RIPPLE_CONFIG.volume;
 		// Calculate playback rate based on distance moved
 		const eDifference = bd.log10(distanceMoved) - bd.log10(RIPPLE_CONFIG.minDist);
-		const ripplePlayrate = playbackRate * Math.max(RIPPLE_CONFIG.maxPlaybackRate - (eDifference * RIPPLE_CONFIG.playbackRateReductionPerE), RIPPLE_CONFIG.minPlaybackRate);
+		const ripplePlayrate =
+			playbackRate *
+			Math.max(
+				RIPPLE_CONFIG.maxPlaybackRate -
+					eDifference * RIPPLE_CONFIG.playbackRateReductionPerE,
+				RIPPLE_CONFIG.minPlaybackRate,
+			);
 		// console.log("Ripple playrate:", ripplePlayrate);
 
-		playSoundEffect('ripple', { volume: rippleVolume, delay: delaySecs, playbackRate: ripplePlayrate });
+		playSoundEffect('ripple', {
+			volume: rippleVolume,
+			delay: delaySecs,
+			playbackRate: ripplePlayrate,
+		});
 		WaterRipples.addRipple(destination);
 		screenshake.trigger(0.25);
 	} else {
 		// Apply screen shake for very large moves
-		const rawTrauma = (bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
+		const rawTrauma =
+			(bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
 		const trauma = math.clamp(rawTrauma, 0, 1);
 		if (trauma > 0) screenshake.trigger(trauma); // Delay slightly so it syncs better with the audio
 
@@ -266,11 +309,21 @@ function playMove(distanceMoved: BigDecimal, capture: boolean, premove: boolean,
 }
 
 /** Takes the distance a piece moved, and returns the applicable reverb wet level and duration. */
-function calculateReverb(distanceMoved: BigDecimal): { reverbWetLevel: number, reverbDuration: number } | { reverbWetLevel: undefined, reverbDuration: undefined } {
+function calculateReverb(
+	distanceMoved: BigDecimal,
+):
+	| { reverbWetLevel: number; reverbDuration: number }
+	| { reverbWetLevel: undefined; reverbDuration: undefined } {
 	const distanceMovedNum = bd.toNumber(distanceMoved);
-	const x = (distanceMovedNum - REVERB_CONFIG.minDist) / (REVERB_CONFIG.maxDist - REVERB_CONFIG.minDist); // 0-1
+	const x =
+		(distanceMovedNum - REVERB_CONFIG.minDist) /
+		(REVERB_CONFIG.maxDist - REVERB_CONFIG.minDist); // 0-1
 	if (x <= 0) return { reverbWetLevel: undefined, reverbDuration: undefined };
-	else if (x >= 1) return { reverbWetLevel: REVERB_CONFIG.maxWetLevel, reverbDuration: REVERB_CONFIG.duration };
+	else if (x >= 1)
+		return {
+			reverbWetLevel: REVERB_CONFIG.maxWetLevel,
+			reverbDuration: REVERB_CONFIG.duration,
+		};
 
 	const reverbWetLevel = REVERB_CONFIG.maxWetLevel * x; // No easing applied, for now
 
@@ -302,11 +355,15 @@ function playDrum(): SoundObject | undefined {
 	return playSoundEffect(soundName, { volume: 0.7 });
 }
 
-function playTick({ volume, offset }: { volume?: number, offset?: number } = {}): SoundObject | undefined {
+function playTick({ volume, offset }: { volume?: number; offset?: number } = {}):
+	| SoundObject
+	| undefined {
 	return playSoundEffect('tick', { volume, offset });
 }
 
-function playTicking({ volume, offset }: { volume?: number, offset?: number } = {}): SoundObject | undefined {
+function playTicking({ volume, offset }: { volume?: number; offset?: number } = {}):
+	| SoundObject
+	| undefined {
 	return playSoundEffect('ticking', { volume, offset });
 }
 
@@ -329,20 +386,25 @@ function playBase(): SoundObject | undefined {
 
 function playGlassCrack(): SoundObject | undefined {
 	const rand = Math.random();
+	// prettier-ignore
 	const soundName: SoundName = rand < 0.2 ? 'glass_crack_1'
 		: rand < 0.4 ? 'glass_crack_2'
 		: rand < 0.6 ? 'glass_crack_3'
 		: rand < 0.8 ? 'glass_crack_4'
-		: 'glass_crack_5';
+						: 'glass_crack_5';
 	const PLAYRATE_BASE_OFFSET = -0.2;
 	const PLAYRATE_VARIATION = 0.07;
 	const playrate = 1 + (Math.random() * 2 - 1) * PLAYRATE_VARIATION + PLAYRATE_BASE_OFFSET;
-	return playSoundEffect(soundName, { volume: 0.04, playbackRate: playrate, reverbWetLevel: 4.0, reverbDuration: 0.8, bypassDownsampler: true });
+	return playSoundEffect(soundName, {
+		volume: 0.04,
+		playbackRate: playrate,
+		reverbWetLevel: 4.0,
+		reverbDuration: 0.8,
+		bypassDownsampler: true,
+	});
 }
 
-
 // Exports ------------------------------------------------------------------------------
-
 
 export default {
 	playMove,

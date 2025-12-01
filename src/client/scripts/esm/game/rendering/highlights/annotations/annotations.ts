@@ -1,4 +1,3 @@
-
 /**
  * This script manages all annotations
  * * Squares
@@ -6,25 +5,22 @@
  * * Rays
  */
 
-import type { BDCoords, Coords } from "../../../../../../../shared/chess/util/coordutil.js";
-import type { Ray } from "../../../../../../../shared/util/math/vectors.js";
+import type { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil.js';
+import type { Ray } from '../../../../../../../shared/util/math/vectors.js';
 
-import drawsquares from "./drawsquares.js";
-import preferences from "../../../../components/header/preferences.js";
-import gameslot from "../../../chess/gameslot.js";
-import jsutil from "../../../../../../../shared/util/jsutil.js";
-import drawarrows from "./drawarrows.js";
-import gameloader from "../../../chess/gameloader.js";
-import drawrays from "./drawrays.js";
-import coordutil from "../../../../../../../shared/chess/util/coordutil.js";
-import bd from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
-import keybinds from "../../../misc/keybinds.js";
-import { Mouse } from "../../../input.js";
-
-
+import drawsquares from './drawsquares.js';
+import preferences from '../../../../components/header/preferences.js';
+import gameslot from '../../../chess/gameslot.js';
+import jsutil from '../../../../../../../shared/util/jsutil.js';
+import drawarrows from './drawarrows.js';
+import gameloader from '../../../chess/gameloader.js';
+import drawrays from './drawrays.js';
+import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import bd from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
+import keybinds from '../../../misc/keybinds.js';
+import { Mouse } from '../../../input.js';
 
 // Type Definitions ------------------------------------------------------------
-
 
 /** An object storing all visible annotations for a specific ply. */
 interface Annotes {
@@ -56,18 +52,14 @@ interface Arrow {
 	yRatio: number;
 }
 
-
 // Variables -------------------------------------------------------------------
-
 
 /** The annotations tied to specific move plies, when lingering annotations is OFF. */
 const annotes_plies: Annotes[] = [];
 /** The main list of annotations, when lingering annotations is ON. */
 let annotes_linger: Annotes = getEmptyAnnotes();
 
-
 // Getters ---------------------------------------------------------------------
-
 
 /** Returns the list of all Square highlights currently visible. */
 function getSquares(): Coords[] {
@@ -84,9 +76,7 @@ function getRays(): Ray[] {
 	return getRelevantAnnotes().Rays;
 }
 
-
 // Helpers ---------------------------------------------------------------------
-
 
 /**
  * Returns the visible annotations according to the current Lingering Annotations mode:
@@ -109,9 +99,11 @@ document.addEventListener('lingering-annotations-toggle', (e) => {
 	if (!gameloader.areInAGame()) return;
 	const enabled: boolean = e.detail;
 	const ply = gameslot.getGamefile()!.boardsim.state.local.moveIndex + 1; // Change -1 based to 0 based index
-	if (enabled) { /** Transfer annotes from the ply to {@link annotes_linger} */ 
+	if (enabled) {
+		/** Transfer annotes from the ply to {@link annotes_linger} */
 		annotes_linger = jsutil.deepCopyObject(annotes_plies[ply]!);
-	} else { /** Transfer annotes from {@link annotes_linger} to the current ply */ 
+	} else {
+		/** Transfer annotes from {@link annotes_linger} to the current ply */
 		annotes_plies[ply] = jsutil.deepCopyObject(annotes_linger);
 		// Clear these
 		clearAnnotes(annotes_linger);
@@ -130,9 +122,7 @@ function clearAnnotes(annotes: Annotes): void {
 	annotes.Rays.length = 0;
 }
 
-
 // Functions -------------------------------------------------------------------
-
 
 /** Main Adds/deletes annotations */
 function update(): void {
@@ -140,7 +130,8 @@ function update(): void {
 	if (mouseKeybind === undefined) return; // No button is assigned to drawing annotations currently
 	// When this throws, we need to go into drawarrows, drawsquares, and drawrays update methods
 	// and make it so the mouse button is accepted as an argument.
-	if (mouseKeybind !== Mouse.RIGHT) throw Error("Annote drawing only supports right mouse button.");
+	if (mouseKeybind !== Mouse.RIGHT)
+		throw Error('Annote drawing only supports right mouse button.');
 
 	const annotes = getRelevantAnnotes();
 
@@ -161,10 +152,13 @@ function Collapse(): void {
 	if (annotes.Rays.length > 0) {
 		// Collapse rays instead of erasing all annotations.
 		// Can map to integer Coords since the argument we pass in ensures we only get back integer intersections.
-		const additionalSquares = drawrays.collapseRays(annotes.Rays, true).map((i) => bd.coordsToBigInt(i));
+		const additionalSquares = drawrays
+			.collapseRays(annotes.Rays, true)
+			.map((i) => bd.coordsToBigInt(i));
 		for (const newSquare of additionalSquares) {
 			// Avoid adding duplicates
-			if (annotes.Squares.every(s => !coordutil.areCoordsEqual(s, newSquare))) annotes.Squares.push(newSquare);
+			if (annotes.Squares.every((s) => !coordutil.areCoordsEqual(s, newSquare)))
+				annotes.Squares.push(newSquare);
 		}
 		annotes.Rays.length = 0; // Erase all rays
 		drawrays.dispatchRayCountEvent(annotes.Rays);
@@ -191,9 +185,7 @@ function onGameUnload(): void {
 	drawrays.clearPresetOverrides();
 }
 
-
 // Rendering ----------------------------------------------------------
-
 
 /** Renders the annotations that should be rendered below the pieces */
 function render_belowPieces(): void {
@@ -207,9 +199,7 @@ function render_abovePieces(): void {
 	drawarrows.render(annotes.Arrows);
 }
 
-
 // Exports ----------------------------------------------------------
-
 
 export default {
 	getSquares,
@@ -224,8 +214,4 @@ export default {
 	render_abovePieces,
 };
 
-export type {
-	Square,
-	Arrow,
-	Ray,
-};
+export type { Square, Arrow, Ray };

@@ -1,22 +1,16 @@
-
 /**
  * This script terminates websockets.
  */
 
-
-import socketUtility from "./socketUtility.js";
-import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager.js";
-import wsutil from "../../shared/util/wsutil.js";
-
+import socketUtility from './socketUtility.js';
+import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
+import wsutil from '../../shared/util/wsutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 
-
-import type { CustomWebSocket } from "./socketUtility.js";
-
+import type { CustomWebSocket } from './socketUtility.js';
 
 // Functions ---------------------------------------------------------------------------
-
 
 function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	const reasonString = reason.toString();
@@ -41,7 +35,10 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 
 	cancelRenewConnectionTimer(ws);
 
-	if (reasonString === 'No echo heard') console.log(`Socket closed from no echo heard. ${socketUtility.stringifySocketMetadata(ws)}`);
+	if (reasonString === 'No echo heard')
+		console.log(
+			`Socket closed from no echo heard. ${socketUtility.stringifySocketMetadata(ws)}`,
+		);
 }
 
 function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
@@ -49,8 +46,4 @@ function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
 	ws.metadata.renewConnectionTimeoutID = undefined;
 }
 
-
-
-export {
-	onclose,
-};
+export { onclose };

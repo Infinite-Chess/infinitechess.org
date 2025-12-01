@@ -1,45 +1,40 @@
-
 /**
  * This script contains utility methods for working with coordinates [x,y].
- * 
+ *
  * ZERO dependancies.
  */
 
-import bd, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
-
+import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 // Type Definitions ------------------------------------------------------------
-
 
 /**
  * A length-2 array of coordinates: `[x,y]`
  * Contains infinite precision integers, represented as BigInt.
  */
-type Coords = [bigint,bigint];
+type Coords = [bigint, bigint];
 
 /**
  * A pair of arbitrarily large coordinates WITH decimal precision included.
  * Typically used for calculating graphics on the cpu-side.
  * BD = BigDecimal
  */
-type BDCoords = [BigDecimal, BigDecimal]
+type BDCoords = [BigDecimal, BigDecimal];
 
 /** For when we don't need arbitrary size. */
-type DoubleCoords = [number, number]
+type DoubleCoords = [number, number];
 
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
- * 
+ *
  * This is often used as the key for a piece in piece lists.
- * 
+ *
  * This will never be in scientific notation. However, moves beyond
  * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
 type CoordsKey = `${bigint},${bigint}`;
-    
 
 // Functions -------------------------------------------------------------------
-
 
 /** Returns the key string of the coordinates: [x,y] => 'x,y' */
 function getKeyFromCoords(coords: Coords): CoordsKey {
@@ -94,7 +89,10 @@ function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
  * @returns The resulting coordinate pair after subtracting.
  */
 function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BDCoords {
-	return [bd.subtract(minuendCoord[0], subtrahendCoord[0]), bd.subtract(minuendCoord[1], subtrahendCoord[1])];
+	return [
+		bd.subtract(minuendCoord[0], subtrahendCoord[0]),
+		bd.subtract(minuendCoord[1], subtrahendCoord[1]),
+	];
 }
 
 /**
@@ -103,7 +101,10 @@ function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BD
  * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
  * @returns The resulting coordinate pair after subtracting.
  */
-function subtractDoubleCoords(minuendCoord: DoubleCoords, subtrahendCoord: DoubleCoords): DoubleCoords {
+function subtractDoubleCoords(
+	minuendCoord: DoubleCoords,
+	subtrahendCoord: DoubleCoords,
+): DoubleCoords {
 	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
 }
 
@@ -118,10 +119,7 @@ function copyCoords(coords: Coords): Coords {
  * Makes a deep copy of the provided BigDecimal coordinates
  */
 function copyBDCoords(coords: BDCoords): BDCoords {
-	return [
-		bd.clone(coords[0]),
-		bd.clone(coords[1])
-	];
+	return [bd.clone(coords[0]), bd.clone(coords[1])];
 }
 
 /**
@@ -155,9 +153,7 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 	return [start[0] + travelX, start[1] + travelY];
 }
 
-
 // Debugging --------------------------------------------------------------------
-
 
 /** [DEBUG] Stringifies a pair of BigDecimal coordinates into their exact representation. SLOW. */
 function stringifyBDCoords(coords: BDCoords): string {
@@ -166,10 +162,7 @@ function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toString(coords[0])}, ${bd.toString(coords[1])})`;
 }
 
-
 // Exports --------------------------------------------------------------------
-
-
 
 export default {
 	getKeyFromCoords,
@@ -189,9 +182,4 @@ export default {
 	stringifyBDCoords,
 };
 
-export type {
-	Coords,
-	BDCoords,
-	DoubleCoords,
-	CoordsKey,
-};
+export type { Coords, BDCoords, DoubleCoords, CoordsKey };

@@ -1,16 +1,14 @@
-
 /**
  * This script will store the keybinds for various game actions.
- * 
+ *
  * Currently we only store keybinds that actually CHANGE.
  * But in the future we can expand this with perhaps an option menu.
  */
 
-import guinavigation from "../gui/guinavigation.js";
-import boardeditor from "../boardeditor/boardeditor.js";
-import perspective from "../rendering/perspective.js";
-import { Mouse, MouseButton } from "../input.js";
-
+import guinavigation from '../gui/guinavigation.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import perspective from '../rendering/perspective.js';
+import { Mouse, MouseButton } from '../input.js';
 
 /** Returns the mouse button currently assigned to board dragging. */
 function getBoardDragMouseButton(): MouseButton | undefined {
@@ -42,7 +40,6 @@ function getPieceSelectionMouseButton(): MouseButton | undefined {
 	// Default: Left mouse
 	return Mouse.LEFT;
 }
-
 
 export default {
 	getBoardDragMouseButton,

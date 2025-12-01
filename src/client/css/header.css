@@ -1,23 +1,23 @@
 :root {
-    /* THIS GETS OVERWRITTEN BY JAVASCRIPT in header.js that correctly sets the
+	/* THIS GETS OVERWRITTEN BY JAVASCRIPT in header.js that correctly sets the
     viewport height based on how much screen space the home button bar takes up! */
-    --vh: 100vh;
-    --header-height: 40px;
-    --dropdown-item-height: 43px;
-    --header-link-hover-color: rgb(230, 230, 230);
-    --currPage-background-color: rgb(237, 237, 237);
-    --switch-on-color: rgb(97, 97, 97); /* Default value. Can be modified using javascript */
-    --header-link-max-padding: 16px;
-    --header-link-min-padding: 8px;
-    --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
-    --CBC-out: cubic-bezier(.54,0,1,.97); /* Settings dropdown OUT curve */
-    --CBC-CM-in: cubic-bezier(.09,1.61,.36,1); /* Checkmark IN curve */
-    --CBC-CM-out: cubic-bezier(0,1.1,1,1); /* Checkmark OUT curve */
-    --CBC-switch: cubic-bezier(0,1.05,.47,1); /* Toggle switch curve */
+	--vh: 100vh;
+	--header-height: 40px;
+	--dropdown-item-height: 43px;
+	--header-link-hover-color: rgb(230, 230, 230);
+	--currPage-background-color: rgb(237, 237, 237);
+	--switch-on-color: rgb(97, 97, 97); /* Default value. Can be modified using javascript */
+	--header-link-max-padding: 16px;
+	--header-link-min-padding: 8px;
+	--CBC-in: cubic-bezier(0, 1.05, 0.47, 1); /* Settings dropdown IN curve */
+	--CBC-out: cubic-bezier(0.54, 0, 1, 0.97); /* Settings dropdown OUT curve */
+	--CBC-CM-in: cubic-bezier(0.09, 1.61, 0.36, 1); /* Checkmark IN curve */
+	--CBC-CM-out: cubic-bezier(0, 1.1, 1, 1); /* Checkmark OUT curve */
+	--CBC-switch: cubic-bezier(0, 1.05, 0.47, 1); /* Toggle switch curve */
 }
 
 header {
-    /* 
+	/* 
     box-shadow: 0px 1px 5px rgb(107, 107, 107);
     overflow: scroll;
     white-space: nowrap;
@@ -25,68 +25,76 @@ header {
     background-color: white;
     z-index: 1; */
 
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    height: var(--header-height);
-    background-color: white;
-    border-bottom: 1px solid black;
-    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
-    font-size: 16px;
-    align-items: center;
-    user-select: none; /* Prevent text selection */
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	z-index: 1;
+	display: flex;
+	justify-content: space-between;
+	height: var(--header-height);
+	background-color: white;
+	border-bottom: 1px solid black;
+	box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
+	font-size: 16px;
+	align-items: center;
+	user-select: none; /* Prevent text selection */
 }
 
 header a {
-    text-decoration: none;
-    color: black;
-    display: flex;
-    align-items: center;
+	text-decoration: none;
+	color: black;
+	display: flex;
+	align-items: center;
 }
 
 header label {
-    font-size: inherit; /* Prevents createaccount.css changing the font size. */
+	font-size: inherit; /* Prevents createaccount.css changing the font size. */
 }
 
 /* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
 
-.svg-pawn { /* The pawn svg and loading animation that we use in several spots */
-    position: relative;
-    bottom: 3px;
-    height: 65%;
-    aspect-ratio: 1;
-    stroke: #666;
-    fill: #666;
+.svg-pawn {
+	/* The pawn svg and loading animation that we use in several spots */
+	position: relative;
+	bottom: 3px;
+	height: 65%;
+	aspect-ratio: 1;
+	stroke: #666;
+	fill: #666;
 }
 
 /* The spinny pawn animation */
 .spinny-pawn {
-    transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
-    animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
+	transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
+	animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
 }
 
-.svg-language, .svg-board, .svg-legalmove, .svg-perspective, .svg-selection,
-.svg-squares, .svg-mouse, .svg-sound, .svg-camera,
+.svg-language,
+.svg-board,
+.svg-legalmove,
+.svg-perspective,
+.svg-selection,
+.svg-squares,
+.svg-mouse,
+.svg-sound,
+.svg-camera,
 .checkmark {
-    width: 19px;
-    aspect-ratio: 1;
-    padding: 0 2px;
+	width: 19px;
+	aspect-ratio: 1;
+	padding: 0 2px;
 }
 
 .svg-language {
-    transform: scale(1.21);
+	transform: scale(1.21);
 }
 
 .svg-perspective {
-    transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 .svg-mouse {
-    transform: scale(1.47);
+	transform: scale(1.47);
 }
 
 .svg-sound {
@@ -94,24 +102,22 @@ header label {
 }
 
 .svg-camera {
-    transform: scale(1.3);
+	transform: scale(1.3);
 }
 
 .svg-undo {
-    transform: scale(1.8);
-    aspect-ratio: 1;
+	transform: scale(1.8);
+	aspect-ratio: 1;
 }
-
-
 
 /* The Infinite Chess text and logo, left side of header */
 
 .home {
-    display: flex;
+	display: flex;
 	gap: 5px;
-    height: 100%;
-    align-items: center;
-    padding: 0 8px;
+	height: 100%;
+	align-items: center;
+	padding: 0 8px;
 	white-space: nowrap; /* Prevent text from wrapping */
 	overflow: hidden; /* Hide overflow if needed */
 }
@@ -121,285 +127,299 @@ header label {
 }
 
 .home picture img {
-    height: 100%;
+	height: 100%;
 }
 
 .home p {
-    font-family: georgia;
-    font-size: 24px;
+	font-family: georgia;
+	font-size: 24px;
 }
 
 .home:hover p {
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
 /* Hide the "Infinite Chess" text when we are at compactness level 1 */
 .home.compact-1 p {
-    display: none;
+	display: none;
 }
 
 .home.compact-1:hover {
-    background-color: var(--header-link-hover-color);
+	background-color: var(--header-link-hover-color);
 }
-
-
 
 /* The navigation hyperlinks, middle of header. Play, News, Leaderboard, Login, Create Account */
 
 nav {
-    display: flex;
-    height: 100%;
+	display: flex;
+	height: 100%;
 }
 
 nav a {
-    padding: 0 calc(var(--header-link-max-padding)) 0;
+	padding: 0 calc(var(--header-link-max-padding)) 0;
 	white-space: nowrap; /* Prevent text from wrapping */
 	overflow: clip; /* Hide overflow if needed. FIREFOX NEEDS THIS TO BE "CLIP" */
 	position: relative; /* Required for correct absolute positioning of news notification badge */
 }
 
 nav span {
-    padding-left: 4px;
+	padding-left: 4px;
 }
 
 nav .svg-pawn {
-    bottom: 1px;
+	bottom: 1px;
 }
 
 nav #svg-news {
-    height: 55%;
-    padding: 0 5px;
+	height: 55%;
+	padding: 0 5px;
 }
 
 nav #svg-leaderboard {
-    height: 55%;
-    padding-left: 4px;
+	height: 55%;
+	padding-left: 4px;
 }
 
 nav #svg-login {
-    height: 60%;
-    padding-left: 4px;
+	height: 60%;
+	padding-left: 4px;
 }
 
 nav #svg-profile {
-    height: 47.5%;
-    padding: 0 4px 0 6px;
+	height: 47.5%;
+	padding: 0 4px 0 6px;
 }
 
 nav #svg-createaccount {
-    height: 50%;
-    padding-left: 7px;
-    position: relative;
-    top: 1px;
+	height: 50%;
+	padding-left: 7px;
+	position: relative;
+	top: 1px;
 }
 
 nav #svg-logout {
-    height: 63%;
-    padding-left: 5px;
+	height: 63%;
+	padding-left: 5px;
 }
 
 nav a:hover {
-    background-color: var(--header-link-hover-color);
+	background-color: var(--header-link-hover-color);
 }
 
 /* Hide the navigation SVGs when we are at compactness level 2 */
 nav.compact-2 svg {
-    display: none;
+	display: none;
 }
 nav.compact-2 span {
-    padding: 0 4px;
+	padding: 0 4px;
 }
 
 /* Navigation SVGs are visible again, but not the text */
 nav.compact-3 span {
-    display: none;
+	display: none;
 }
 nav.compact-3 #svg-news {
-    padding: 0 4px;
+	padding: 0 4px;
 }
 nav.compact-3 #svg-leaderboard {
-    padding: 0 4px;
+	padding: 0 4px;
 }
 nav.compact-3 #svg-profile {
-    padding: 0 4px;
+	padding: 0 4px;
 }
 nav.compact-3 #svg-createaccount {
-    padding-left: 5px;
+	padding-left: 5px;
 }
 nav.compact-3 #svg-logout {
-    padding-left: 4px;
+	padding-left: 4px;
 }
-
-
 
 /* The gear and settings dropdown menu, right side of header. */
 
 .settings {
-    height: 100%;
-    width: var(--header-height);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+	height: 100%;
+	width: var(--header-height);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
 }
 
 .settings.open {
-    background-color: var(--currPage-background-color);
+	background-color: var(--currPage-background-color);
 }
 
 .settings:hover {
-    background-color: var(--header-link-hover-color);
+	background-color: var(--header-link-hover-color);
 }
 
-.settings:active { /* Prevents blue highlight when holding finger over the gear button */
-    background-color: var(--header-link-hover-color); 
-    -webkit-tap-highlight-color: transparent;
+.settings:active {
+	/* Prevents blue highlight when holding finger over the gear button */
+	background-color: var(--header-link-hover-color);
+	-webkit-tap-highlight-color: transparent;
 }
 
 .gear {
-    width: 45%;
-    transition: transform 0.2s var(--CBC-out);
+	width: 45%;
+	transition: transform 0.2s var(--CBC-out);
 }
 
 .settings.open .gear {
-    transition: transform 0.3s var(--CBC-in);
-    transform: rotate(60deg);
+	transition: transform 0.3s var(--CBC-in);
+	transform: rotate(60deg);
 }
 
 .dropdown {
-    position: absolute; /* Position relative to the nearest positioned ancestor */
-    top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
-    right: 0; 
-    min-width: 195px;
-    width: fit-content; /* Polish needs to be able to fit content because it's a little bit wider */
-    /* Can't enable these because words "Perspective Sensitivity" won't wrap but instead increase the length of the whole dropdown. */
-    /* min-width: 195px;
+	position: absolute; /* Position relative to the nearest positioned ancestor */
+	top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
+	right: 0;
+	min-width: 195px;
+	width: fit-content; /* Polish needs to be able to fit content because it's a little bit wider */
+	/* Can't enable these because words "Perspective Sensitivity" won't wrap but instead increase the length of the whole dropdown. */
+	/* min-width: 195px;
     width: fit-content; */
-    background-color: white;
-    box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1;
-    border: 1px solid black;
-    border-right: unset;
-    cursor: auto;
-    border-radius: 0 0 0 5px;
-    overflow: hidden; /* Prevent children from rendering outside the border */
-    transform: translateX(0); /* Slide into view */
-    transition: transform 0.3s var(--CBC-in), visibility 0s, opacity 0.25s ease-in-out;
+	background-color: white;
+	box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
+	z-index: 1;
+	border: 1px solid black;
+	border-right: unset;
+	cursor: auto;
+	border-radius: 0 0 0 5px;
+	overflow: hidden; /* Prevent children from rendering outside the border */
+	transform: translateX(0); /* Slide into view */
+	transition:
+		transform 0.3s var(--CBC-in),
+		visibility 0s,
+		opacity 0.25s ease-in-out;
 }
 
 .dropdown.visibility-hidden {
-    transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
-    transition: transform 0.2s var(--CBC-out), visibility 0s 0.2s, opacity 0.25s ease-in-out;
+	transform: translateX(
+		100%
+	); /* Just off screen to the right, to start out, until it's animated in. */
+	transition:
+		transform 0.2s var(--CBC-out),
+		visibility 0s 0.2s,
+		opacity 0.25s ease-in-out;
 }
 
-.dropdown-title { /* The back button at the top of 2+ deep dropdown */
-    display: flex;
-    align-items: center;
-    height: var(--dropdown-item-height);
-    padding: 0 15px;
-    cursor: pointer;
-    border-bottom: 1px solid grey;
+.dropdown-title {
+	/* The back button at the top of 2+ deep dropdown */
+	display: flex;
+	align-items: center;
+	height: var(--dropdown-item-height);
+	padding: 0 15px;
+	cursor: pointer;
+	border-bottom: 1px solid grey;
 }
 
-.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover, .boolean-option:hover {
-    background-color: var(--header-link-hover-color);
+.dropdown-title:hover,
+.settings-dropdown-item:hover,
+.language-dropdown-item:hover,
+.legalmove-option:hover,
+.boolean-option:hover {
+	background-color: var(--header-link-hover-color);
 }
 
 /* Dropdown items */
 .settings-dropdown-item {
-    display: flex;
-    align-items: center;
-    height: var(--dropdown-item-height);
-    padding: 0 15px 0 8px;
-    cursor: pointer;
+	display: flex;
+	align-items: center;
+	height: var(--dropdown-item-height);
+	padding: 0 15px 0 8px;
+	cursor: pointer;
 }
 
 p.text {
-    padding: 10px 6px;
-    max-width: 150px;
-    margin-right: auto;
+	padding: 10px 6px;
+	max-width: 150px;
+	margin-right: auto;
 }
 
-span.arrow-head-right, span.arrow-head-left {
-    width: 8px;
-    height: 8px;
-    border-right: 3px solid #666;
-    border-top: 3px solid #666;
+span.arrow-head-right,
+span.arrow-head-left {
+	width: 8px;
+	height: 8px;
+	border-right: 3px solid #666;
+	border-top: 3px solid #666;
 }
 span.arrow-head-right {
-    margin-left: auto;
-    transform: rotate(45deg) /* skew(10deg, 10deg); */;
+	margin-left: auto;
+	transform: rotate(45deg) /* skew(10deg, 10deg); */;
 }
 span.arrow-head-left {
-    margin-right: auto;
-    transform: rotate(225deg) /* skew(10deg, 10deg); */;
+	margin-right: auto;
+	transform: rotate(225deg) /* skew(10deg, 10deg); */;
 }
 
 .checkmark {
-    width: 30px;
-    aspect-ratio: 1;
-    margin-left: auto;
-    fill: #444;
-    transition: transform 0.5s var(--CBC-CM-in);
-    transform: scale(1);
+	width: 30px;
+	aspect-ratio: 1;
+	margin-left: auto;
+	fill: #444;
+	transition: transform 0.5s var(--CBC-CM-in);
+	transform: scale(1);
 }
 
 .checkmark.visibility-hidden {
-    transition: transform 0.2s var(--CBC-CM-out), visibility 0s 0.5s;
-    transform: scale(0);
+	transition:
+		transform 0.2s var(--CBC-CM-out),
+		visibility 0s 0.5s;
+	transform: scale(0);
 }
 
 /* Switch toggles */
 
 .switch {
-    position: relative;
+	position: relative;
 }
 
 .switch input {
-    display: none;
+	display: none;
 }
 
 .switch > input + * {
-    position: absolute;
-    inset: 0;
-    border-radius: 14px;
-    background-color: #777;
-    border: 2px solid #777;
-    transition: 0.2s var(--CBC-switch);
-    transition-property: background-color, border-color;
+	position: absolute;
+	inset: 0;
+	border-radius: 14px;
+	background-color: #777;
+	border: 2px solid #777;
+	transition: 0.2s var(--CBC-switch);
+	transition-property: background-color, border-color;
 }
 
 .switch > input + ::before {
-    content: '';
-    display: block;
-    border-radius: 14px;
-    background-color: white;
-    width: 50%;
-    height: 100%;
-    transition: transform 0.2s var(--CBC-switch);
-    box-shadow: 0px 1px 2px #00000076;
+	content: '';
+	display: block;
+	border-radius: 14px;
+	background-color: white;
+	width: 50%;
+	height: 100%;
+	transition: transform 0.2s var(--CBC-switch);
+	box-shadow: 0px 1px 2px #00000076;
 }
 
 .switch input:checked + ::before {
-    transform: translateX(100%);
+	transform: translateX(100%);
 }
 .switch input:checked + * {
-    background-color: var(--switch-on-color);
-    border-color: var(--switch-on-color);
+	background-color: var(--switch-on-color);
+	border-color: var(--switch-on-color);
 }
-
 
 /* Language nested dropdown */
 
-.language-dropdown-item, .legalmove-option, .boolean-option {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
+.language-dropdown-item,
+.legalmove-option,
+.boolean-option {
+	display: flex;
+	align-items: center;
+	cursor: pointer;
 }
 
 .language-dropdown-item {
-    height: 48px;
-    padding: 0 15px;
+	height: 48px;
+	padding: 0 15px;
 }
 
 /* .language-dropdown-item p.name {
@@ -407,49 +427,49 @@ span.arrow-head-left {
 } */
 
 .language-dropdown-item p.englishName {
-    color: grey;
-    font-size: 0.7em;
+	color: grey;
+	font-size: 0.7em;
 }
-
 
 /* Board theme nested dropdown */
 
 .dropdown-scrollable {
-    /* Set max height to bottom of screen */
-    max-height: calc(var(--vh) - var(--header-height) - var(--dropdown-item-height));
-    overflow-y: auto;
+	/* Set max height to bottom of screen */
+	max-height: calc(var(--vh) - var(--header-height) - var(--dropdown-item-height));
+	overflow-y: auto;
 }
 
 .board-dropdown {
-    width: 211px;
+	width: 211px;
 }
 
 p.theme-title {
-    text-align: center;
-    padding-top: 8px;
+	text-align: center;
+	padding-top: 8px;
 }
 
 .theme-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 45.5px);
-    justify-content: center;
-    gap: 14px; /* Combined margin from both axes (7px) */
-    padding: 12px 0px 16px;
-    border-bottom: 1px solid grey;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 45.5px);
+	justify-content: center;
+	gap: 14px; /* Combined margin from both axes (7px) */
+	padding: 12px 0px 16px;
+	border-bottom: 1px solid grey;
 }
 
 .theme-list img {
-    width: 45.5px;
-    image-rendering: pixelated;
-    border-radius: 2px;
-    outline: 3px solid rgb(97, 97, 97);
-    cursor: pointer;
-    justify-self: center;
-    align-self: center;
+	width: 45.5px;
+	image-rendering: pixelated;
+	border-radius: 2px;
+	outline: 3px solid rgb(97, 97, 97);
+	cursor: pointer;
+	justify-self: center;
+	align-self: center;
 }
 
-.theme-list img:hover, .theme-list img.selected {
-    outline: 5px solid black;
+.theme-list img:hover,
+.theme-list img.selected {
+	outline: 5px solid black;
 }
 
 /* Legalmove shape nested dropdown */
@@ -459,141 +479,143 @@ p.theme-title {
 } */
 
 .legalmove-option {
-    height: 43px;
-    padding: 0 15px 0 8px;
+	height: 43px;
+	padding: 0 15px 0 8px;
 }
 
 /* Selection dropdown */
 
 .selection-option-title {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 35px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 35px;
 }
 
 .boolean-option p.text {
-    padding: 10px 6px 10px 3px;
+	padding: 10px 6px 10px 3px;
 }
 
 .boolean-option {
-    min-height: 43px;
-    padding: 0 8px 0 8px;
+	min-height: 43px;
+	padding: 0 8px 0 8px;
 }
 
 .boolean-option .switch {
-    width: 36px;
-    height: 20px;
-    margin: 0 2px 0 4px;
+	width: 36px;
+	height: 20px;
+	margin: 0 2px 0 4px;
 }
 
 /* Perspective & Sound dropdowns */
 
-.perspective-option, .sound-option {
-    font-size: 14px;
-    padding: 5px 0 10px;
+.perspective-option,
+.sound-option {
+	font-size: 14px;
+	padding: 5px 0 10px;
 }
 
-.perspective-option .perspective-option-title, .sound-option .sound-option-title {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 35px;
+.perspective-option .perspective-option-title,
+.sound-option .sound-option-title {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 35px;
 }
 
-.perspective-option .perspective-option-title p { /* "Mouse Sensitivity", "Field of View" */
-    padding-left: 6px;
+.perspective-option .perspective-option-title p {
+	/* "Mouse Sensitivity", "Field of View" */
+	padding-left: 6px;
 }
 
-.perspective-option .slider-container, .sound-option .slider-container {
-    display: flex;
-    margin-left: 8px;
+.perspective-option .slider-container,
+.sound-option .slider-container {
+	display: flex;
+	margin-left: 8px;
 }
 
-.perspective-option .slider, .sound-option .slider {
-    width: 100%;
+.perspective-option .slider,
+.sound-option .slider {
+	width: 100%;
 }
 
-.perspective-option .slider:hover, .sound-option .slider:hover {
-    cursor: pointer;
+.perspective-option .slider:hover,
+.sound-option .slider:hover {
+	cursor: pointer;
 }
 
-.perspective-option .value, .sound-option .value {
-    padding-left: 5px;
+.perspective-option .value,
+.sound-option .value {
+	padding-left: 5px;
 	text-align: left;
-    flex-shrink: 0;
+	flex-shrink: 0;
 }
 
-.perspective-option.mouse-sensitivity .value, .sound-option.master-volume .value {
+.perspective-option.mouse-sensitivity .value,
+.sound-option.master-volume .value {
 	width: 50px;
 }
 
 .perspective-option.fov .value {
-    width: 35px;
+	width: 35px;
 }
-
-
 
 /* Reset default buttons */
 
 .reset-default-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 5px;
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	margin-top: 5px;
 }
 
 .reset-default {
-    display: flex;
-    align-items: center;
-    width: fit-content;
-    height: fit-content;
-    border-radius: 15px;
-    padding: 3px 8px;
+	display: flex;
+	align-items: center;
+	width: fit-content;
+	height: fit-content;
+	border-radius: 15px;
+	padding: 3px 8px;
 }
 
 .reset-default:hover {
-    background-color: rgb(233, 233, 233);
-    cursor: pointer;
+	background-color: rgb(233, 233, 233);
+	cursor: pointer;
 }
 
 .reset-default span {
-    padding-left: 2px;
+	padding-left: 2px;
 }
 
 .reset-default-container .svg-undo {
-    width: 19px;
-    transform-origin: 70% 55%;
+	width: 19px;
+	transform-origin: 70% 55%;
 }
-
-
-
-
 
 /* Ping Meter */
 
 .ping-meter {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 50px;
-    padding: 0 15px;
-    border-top: 1px solid grey;
-    overflow: hidden; /* Don't let the connection bars glow effect leak above */
-    font-size: 0px; /* Prevents a small amount of margin between each element */
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	height: 50px;
+	padding: 0 15px;
+	border-top: 1px solid grey;
+	overflow: hidden; /* Don't let the connection bars glow effect leak above */
+	font-size: 0px; /* Prevents a small amount of margin between each element */
 }
 
 .ping-meter .ping {
-    font-size: 15px;
+	font-size: 15px;
 }
 
 .ping-meter .ping-value {
-    font-size: 15px;
-    padding: 0 3px 0 6px;
+	font-size: 15px;
+	padding: 0 3px 0 6px;
 }
 
 .ping-meter .ms {
-    font-size: 13px;
+	font-size: 13px;
 }
 
 /* .ping-bars {
@@ -601,334 +623,377 @@ p.theme-title {
 } */
 
 .ping-bar {
-    outline: 1px solid #0000008c;
-    display: inline-block;
-    width: 9px;
-    /* box-shadow: 0px 0px 5px 0px #0000007a; */
-    background-color: rgb(210, 210, 210);
+	outline: 1px solid #0000008c;
+	display: inline-block;
+	width: 9px;
+	/* box-shadow: 0px 0px 5px 0px #0000007a; */
+	background-color: rgb(210, 210, 210);
 }
 
 .ping-bar.green {
-    background-color: #78ff78;
+	background-color: #78ff78;
 }
 
 .ping-bar.yellow {
-    background-color: #f8f878;
+	background-color: #f8f878;
 }
 
 .ping-bar.red {
-    background-color: #ff8b8b;
+	background-color: #ff8b8b;
 }
 
-.ping-glow { /* Relatively positioned 0-space element that only glows */
-    box-shadow: 0px 0px 80px 30px #000000c4;
-    position: relative;
-    bottom: 7px;
-    z-index: -1; /* Places glow behind all bars */
-    left: 10px;
-    overflow: hidden;
-    /* transform: scaleY(0.7); */
+.ping-glow {
+	/* Relatively positioned 0-space element that only glows */
+	box-shadow: 0px 0px 80px 30px #000000c4;
+	position: relative;
+	bottom: 7px;
+	z-index: -1; /* Places glow behind all bars */
+	left: 10px;
+	overflow: hidden;
+	/* transform: scaleY(0.7); */
 }
-
-
-
 
 /* Miscellaneous (some of these can probably be put in a universal stylesheet for all pages, not just the header stylesheet) */
 
 /* Greys the background of the navigation hyperlink we are currently in */
 .currPage {
-    background-color: var(--currPage-background-color);
+	background-color: var(--currPage-background-color);
 }
 
 .hidden {
-    display: none;
+	display: none;
 }
 
 .center {
-    text-align: center;
+	text-align: center;
 }
 
 .visibility-hidden {
-    visibility: hidden;
+	visibility: hidden;
 }
 
 .transparent {
-    opacity: 0%;
-    pointer-events: none;
+	opacity: 0%;
+	pointer-events: none;
 }
 
 /* Used for disallowing changing your coordinates in an online game */
 .set-cursor-to-not-allowed {
-    cursor: not-allowed;
+	cursor: not-allowed;
 }
 
-.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
-    user-select: none; 
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+.unselectable {
+	/* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
 }
 
-.selectable { /* Makes text inside the elements with the .unselectable class re-selectable */
-    user-select: text;
-    -moz-user-select: text;
-    -webkit-user-select: text;
-    -ms-user-select: text;
+.selectable {
+	/* Makes text inside the elements with the .unselectable class re-selectable */
+	user-select: text;
+	-moz-user-select: text;
+	-webkit-user-select: text;
+	-ms-user-select: text;
 }
-
-
 
 /* Animations */
 
 @keyframes spin {
-    0% {
-      transform: rotate(0deg); /* Start at 0 degrees */
-    }
-    100% {
-      transform: rotate(360deg); /* Complete a full 360 degree rotation */
-    }
+	0% {
+		transform: rotate(0deg); /* Start at 0 degrees */
+	}
+	100% {
+		transform: rotate(360deg); /* Complete a full 360 degree rotation */
+	}
 }
-
-
 
 /* Tooltips */
 
-.tooltip-dl, .tooltip-d, .tooltip-dr, .tooltip-u, .tooltip-ul {
-    position: relative;
+.tooltip-dl,
+.tooltip-d,
+.tooltip-dr,
+.tooltip-u,
+.tooltip-ul {
+	position: relative;
 }
 
 /* The main tooltip black box */
-.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before, .tooltip-u::before, .tooltip-ul::before {
-    content: attr(data-tooltip);
-    position: absolute;
-    background-color: black;
-    color: rgb(236, 236, 236);
-    text-align: center;
-    border-radius: 6px;
-    font-size: 12px;
-    width: max-content; /* Width based on content size */
-    max-width: 150px;
-    padding: 5px 5px;
-    visibility: hidden; /* Hidden by default */
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out;
-    /* Hovering over the tooltip won't count as hovering over its parent */
-    pointer-events: none;
+.tooltip-dl::before,
+.tooltip-d::before,
+.tooltip-dr::before,
+.tooltip-u::before,
+.tooltip-ul::before {
+	content: attr(data-tooltip);
+	position: absolute;
+	background-color: black;
+	color: rgb(236, 236, 236);
+	text-align: center;
+	border-radius: 6px;
+	font-size: 12px;
+	width: max-content; /* Width based on content size */
+	max-width: 150px;
+	padding: 5px 5px;
+	visibility: hidden; /* Hidden by default */
+	opacity: 0;
+	transition: opacity 0.1s ease-in-out;
+	/* Hovering over the tooltip won't count as hovering over its parent */
+	pointer-events: none;
 
-    /* Ensure text wraps inside the tooltip */
-    word-wrap: break-word;
-    word-break: break-word;
-    white-space: normal;
+	/* Ensure text wraps inside the tooltip */
+	word-wrap: break-word;
+	word-break: break-word;
+	white-space: normal;
 }
 
 /* down-left */
 .tooltip-dl::before {
-    top: calc(100% + 8px);
-    right: 0;
+	top: calc(100% + 8px);
+	right: 0;
 }
 
 /* down */
 .tooltip-d::before {
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%); /* Shift it left by half of its width */
+	top: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%); /* Shift it left by half of its width */
 }
 
 /* down-right */
 .tooltip-dr::before {
-    top: calc(100% + 8px);
-    left: 0;
+	top: calc(100% + 8px);
+	left: 0;
 }
 
 /* up */
 .tooltip-u::before {
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%); /* Shift it left by half of its width */
+	bottom: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%); /* Shift it left by half of its width */
 }
 
 /* up left */
 .tooltip-ul::before {
-    bottom: calc(100% + 8px);
-    right: 0;
+	bottom: calc(100% + 8px);
+	right: 0;
 }
 
 /* The arrow above or below the tooltip box */
-.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after, .tooltip-u::after, .tooltip-ul::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    border-width: 5px;
-    border-style: solid;
-    border-color:  transparent transparent black transparent;
-    visibility: hidden; /* Hidden by default */
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out;
-    z-index: 1;
-    /* Hovering over the tooltip won't count as hovering over its parent */
-    pointer-events: none;
+.tooltip-dl::after,
+.tooltip-d::after,
+.tooltip-dr::after,
+.tooltip-u::after,
+.tooltip-ul::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent black transparent;
+	visibility: hidden; /* Hidden by default */
+	opacity: 0;
+	transition: opacity 0.1s ease-in-out;
+	z-index: 1;
+	/* Hovering over the tooltip won't count as hovering over its parent */
+	pointer-events: none;
 }
 
-.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after {
-    top: calc(100% + 8.5px); /* Position right above the tooltip */
-    transform: translate(-50%, -100%);
+.tooltip-dl::after,
+.tooltip-d::after,
+.tooltip-dr::after {
+	top: calc(100% + 8.5px); /* Position right above the tooltip */
+	transform: translate(-50%, -100%);
 }
 
-.tooltip-u::after, .tooltip-ul::after {
-    bottom: calc(100% + 8.5px);
-    transform: rotate(180deg) translate(50%, -100%);
+.tooltip-u::after,
+.tooltip-ul::after {
+	bottom: calc(100% + 8.5px);
+	transform: rotate(180deg) translate(50%, -100%);
 }
 
 /* After 1s of hovering, the tooltip becomes visible */
-.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before, .tooltip-ul:hover::before,
-.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after, .tooltip-ul:hover::after {
-    visibility: visible;
-    opacity: 1;
-    transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
-    z-index: 1;
+.tooltip-dl:hover::before,
+.tooltip-d:hover::before,
+.tooltip-dr:hover::before,
+.tooltip-u:hover::before,
+.tooltip-ul:hover::before,
+.tooltip-dl:hover::after,
+.tooltip-d:hover::after,
+.tooltip-dr:hover::after,
+.tooltip-u:hover::after,
+.tooltip-ul:hover::after {
+	visibility: visible;
+	opacity: 1;
+	transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
+	z-index: 1;
 }
 
 /* Overwriting styles after you've already started hovering (no delay) */
-.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before, .tooltip-u.fast-transition:hover::before, .tooltip-ul.fast-transition:hover::before,
-.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after, .tooltip-u.fast-transition:hover::after, .tooltip-ul.fast-transition:hover::after {
-    transition-delay: 0s; /* Delay the tooltip appearance */
+.tooltip-dl.fast-transition:hover::before,
+.tooltip-d.fast-transition:hover::before,
+.tooltip-dr.fast-transition:hover::before,
+.tooltip-u.fast-transition:hover::before,
+.tooltip-ul.fast-transition:hover::before,
+.tooltip-dl.fast-transition:hover::after,
+.tooltip-d.fast-transition:hover::after,
+.tooltip-dr.fast-transition:hover::after,
+.tooltip-u.fast-transition:hover::after,
+.tooltip-ul.fast-transition:hover::after {
+	transition-delay: 0s; /* Delay the tooltip appearance */
 }
 
 /* Mobile devices should NOT show the tooltips on hover.. perhaps on active though? */
 @media not (pointer: fine) {
-    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before, .tooltip-ul:hover::before,
-    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after, .tooltip-ul:hover::after {
-        visibility: hidden;
-        opacity: 0;
-        transition-delay: 0; /* Delay the tooltip appearance */
-        z-index: 0;
-    }
-  
-    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before, .tooltip-u:active::before, .tooltip-ul:active::before,
-    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after, .tooltip-u:active::after, .tooltip-ul:active::after {
-        visibility: visible;
-        opacity: 1;
-        transition-delay: 0.5s; /* Delay the tooltip appearance */
-        z-index: 1;
-    }
+	.tooltip-dl:hover::before,
+	.tooltip-d:hover::before,
+	.tooltip-dr:hover::before,
+	.tooltip-u:hover::before,
+	.tooltip-ul:hover::before,
+	.tooltip-dl:hover::after,
+	.tooltip-d:hover::after,
+	.tooltip-dr:hover::after,
+	.tooltip-u:hover::after,
+	.tooltip-ul:hover::after {
+		visibility: hidden;
+		opacity: 0;
+		transition-delay: 0; /* Delay the tooltip appearance */
+		z-index: 0;
+	}
+
+	.tooltip-dl:active::before,
+	.tooltip-d:active::before,
+	.tooltip-dr:active::before,
+	.tooltip-u:active::before,
+	.tooltip-ul:active::before,
+	.tooltip-dl:active::after,
+	.tooltip-d:active::after,
+	.tooltip-dr:active::after,
+	.tooltip-u:active::after,
+	.tooltip-ul:active::after {
+		visibility: visible;
+		opacity: 1;
+		transition-delay: 0.5s; /* Delay the tooltip appearance */
+		z-index: 1;
+	}
 }
-
-
 
 /* Badge shine properties - needed both for play and for member page */
 
 #checkmate-badge-bronze {
-    --shine-color: rgba(229, 203, 180, 0.3);
+	--shine-color: rgba(229, 203, 180, 0.3);
 }
 
 #checkmate-badge-silver {
-    --shine-color: rgba(192, 192, 192, 0.22);
+	--shine-color: rgba(192, 192, 192, 0.22);
 }
 
 #checkmate-badge-gold {
-    --shine-color: rgba(255, 215, 0, 0.24);
+	--shine-color: rgba(255, 215, 0, 0.24);
 }
-  
-.badge .shine-clockwise, .badge .shine-anticlockwise {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    transform: translate(-50%, -50%);
-    /* Conic gradient produces the rays */
-    background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
-    /* Use a radial mask to fade the rays proportional to distance */
-    mask-image: radial-gradient(circle, black 30%, transparent 55%);
-    -webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    animation: rotateShine linear infinite;
-    pointer-events: none;  /* This prevents the shine from being part of the hover area */
-    z-index: -1;
+
+.badge .shine-clockwise,
+.badge .shine-anticlockwise {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 200%;
+	height: 200%;
+	transform: translate(-50%, -50%);
+	/* Conic gradient produces the rays */
+	background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
+	/* Use a radial mask to fade the rays proportional to distance */
+	mask-image: radial-gradient(circle, black 30%, transparent 55%);
+	-webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	animation: rotateShine linear infinite;
+	pointer-events: none; /* This prevents the shine from being part of the hover area */
+	z-index: -1;
 }
 
 .badge .shine-clockwise {
-    animation-direction: normal;
-    animation-duration: 13s;
+	animation-direction: normal;
+	animation-duration: 13s;
 }
 
 .badge .shine-anticlockwise {
-    animation-direction: reverse;
-    animation-duration: 26s;
+	animation-direction: reverse;
+	animation-duration: 26s;
 }
 
-.badge:hover .shine-clockwise, .badge:hover .shine-anticlockwise {
-    opacity: 1;
+.badge:hover .shine-clockwise,
+.badge:hover .shine-anticlockwise {
+	opacity: 1;
 }
 
 @keyframes rotateShine {
-    from {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-    to {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
+	from {
+		transform: translate(-50%, -50%) rotate(0deg);
+	}
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
 }
-
 
 /* Username Embed Containers */
 
 .username-embed {
-    display: flex;
-    align-items: center;
-    /* flex-wrap: wrap; */
-    gap: 0.3em;
-    width: fit-content;
+	display: flex;
+	align-items: center;
+	/* flex-wrap: wrap; */
+	gap: 0.3em;
+	width: fit-content;
 }
 
-.username-embed .svg-profile, .svg-engine {
-    width: 1em;
-    height: 1em;
-    aspect-ratio: 1;
+.username-embed .svg-profile,
+.svg-engine {
+	width: 1em;
+	height: 1em;
+	aspect-ratio: 1;
 }
 
 .username-embed .username {
-    font-size: 1em;
-    font-weight: bold;
-    color: #000;
-    text-decoration: none;
+	font-size: 1em;
+	font-weight: bold;
+	color: #000;
+	text-decoration: none;
 }
 
 .username-embed .elo {
-    color: #666;
-    font-size: 0.9em;
+	color: #666;
+	font-size: 0.9em;
 }
 
 .username-embed .eloChange {
-    font-size: 0.9em;
+	font-size: 0.9em;
 }
 
 .username-embed .eloChange.positive {
-    color: green;
+	color: green;
 }
 
 .username-embed .eloChange.negative {
-    color: red;
+	color: red;
 }
-
 
 /* Fades the right side of the element away to hide overflow text */
 .fade-element {
-    mask-image: linear-gradient(
+	/* prettier-ignore */
+	mask-image: linear-gradient(
       to right,
       black 0%,
       black calc(100% - 20px),
       transparent 100%
     );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      black 0%,
-      black calc(100% - 20px),
-      transparent 100%
-    );
+	-webkit-mask-image: linear-gradient(
+		to right,
+		black 0%,
+		black calc(100% - 20px),
+		transparent 100%
+	);
 }
 
 .justify-content-right {
-    justify-content: right;
+	justify-content: right;
 }

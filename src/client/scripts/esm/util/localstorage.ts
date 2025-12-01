@@ -1,4 +1,3 @@
-
 /**
  * This script handles reading, saving, and deleting expired
  * browser local storage data for us!
@@ -6,15 +5,14 @@
  * (unless the user clears their browser cache)
  */
 
-import jsutil from "../../../../shared/util/jsutil.js";
-
+import jsutil from '../../../../shared/util/jsutil.js';
 
 /** An entry in local storage */
 interface Entry {
 	/** The actual value of the entry */
-	value: any,
+	value: any;
 	/** The timestamp the entry will become stale, at which point it should be deleted. */
-	expires: number
+	expires: number;
 }
 
 /** For debugging. This prints to the console all save and delete operations. */
@@ -51,7 +49,8 @@ function loadItem(key: string): any {
 	let save: Entry | any;
 	try {
 		save = JSON.parse(stringifiedSave, jsutil.parseReviver); // { value, expires }
-	} catch (_e) { // Value wasn't in json format, just delete it. They have to be in json because we always store the 'expiry' property.
+	} catch (_e) {
+		// Value wasn't in json format, just delete it. They have to be in json because we always store the 'expiry' property.
 		deleteItem(key);
 		return;
 	}
@@ -78,7 +77,9 @@ function deleteItem(key: string): void {
 
 function hasItemExpired(save: Entry | any): boolean {
 	if (save.expires === undefined) {
-		console.log(`Local storage item was in an old format. Deleting it! Value: ${JSON.stringify(save)}}`);
+		console.log(
+			`Local storage item was in an old format. Deleting it! Value: ${JSON.stringify(save)}}`,
+		);
 		return true;
 	}
 	return Date.now() >= save.expires;
@@ -95,7 +96,7 @@ function eraseExpiredItems(): void {
 }
 
 function eraseAll(): void {
-	console.log("Erasing ALL items in local storage...");
+	console.log('Erasing ALL items in local storage...');
 	const keys = Object.keys(localStorage);
 	for (const key of keys) {
 		deleteItem(key); // Auto-deletes expired items
@@ -107,5 +108,5 @@ export default {
 	loadItem,
 	deleteItem,
 	eraseExpiredItems,
-	eraseAll
+	eraseAll,
 };

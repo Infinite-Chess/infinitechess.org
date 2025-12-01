@@ -1,36 +1,34 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/selection/sdrag.ts
 
 /**
  * Selection Tool Drag
- * 
+ *
  * This handles when the current selection has been grabbed on the edge,
  * and handles moving the selection.
  */
 
-import { Mouse } from "../../../input";
-import coordutil, { Coords } from "../../../../../../../shared/chess/util/coordutil";
-import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
-import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
-import mouse from "../../../../util/mouse";
-import gameslot from "../../../chess/gameslot";
-import space from "../../../misc/space";
-import arrows from "../../../rendering/arrows/arrows";
-import selectiontool from "./selectiontool";
-import stoolgraphics from "./stoolgraphics";
-import stransformations from "./stransformations";
-import scursor from "./scursor";
-
+import { Mouse } from '../../../input';
+import coordutil, { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import bounds, {
+	BoundingBox,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds';
+import mouse from '../../../../util/mouse';
+import gameslot from '../../../chess/gameslot';
+import space from '../../../misc/space';
+import arrows from '../../../rendering/arrows/arrows';
+import selectiontool from './selectiontool';
+import stoolgraphics from './stoolgraphics';
+import stransformations from './stransformations';
+import scursor from './scursor';
 
 // Constants -----------------------------------------
-
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
 const GRABBABLE_DIST = 6;
 
-
 // State ---------------------------------------------
-
 
 /** Whether the mouse is currently within the minimum distance to grab and drag the selection. */
 let withinGrabDist = false;
@@ -44,9 +42,7 @@ let lastPointerCoords: Coords | undefined;
 /** The integer coordinate the mouse has grabbed, if we're dragging the selection. */
 let anchorCoords: Coords | undefined = undefined;
 
-
 // Methods -------------------------------------------
-
 
 /**
  * Updates the logic that handles dragging the selection box from the edges.
@@ -58,13 +54,15 @@ function update(): void {
 
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
+		if (respectiveListener.pointerExists(pointerId!))
+			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 		// Test if pointer released (execute selection translation)
 		if (!respectiveListener.isPointerHeld(pointerId!)) dropSelection();
 	} else {
 		// Determine if the board needs to be picked up,
 		// or if the canvas cursor style should change.
-		if (isMouseHoveringOverSelectionEdge()) { // Within grab distance
+		if (isMouseHoveringOverSelectionEdge()) {
+			// Within grab distance
 			if (!withinGrabDist) {
 				withinGrabDist = true;
 				scursor.addCursor('grab');
@@ -78,7 +76,8 @@ function update(): void {
 				pointerId = mouse.getMouseId(Mouse.LEFT)!;
 				pickUpSelection();
 			}
-		} else { // NOT within grab distance
+		} else {
+			// NOT within grab distance
 			if (withinGrabDist) {
 				withinGrabDist = false;
 				scursor.removeCursor('grab');
@@ -101,18 +100,16 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	// Determine if the mouse is within the grabbable edge area.
 	// This is true if the mouse is inside the selection box expanded by the grab distance,
 	// but not inside the selection box shrunk by the grab distance.
-	const mouseIsInOuterBox = (
+	const mouseIsInOuterBox =
 		mouseWorld[0] >= selectionWorldBox.left - grabbableDist &&
 		mouseWorld[0] <= selectionWorldBox.right + grabbableDist &&
 		mouseWorld[1] >= selectionWorldBox.bottom - grabbableDist &&
-		mouseWorld[1] <= selectionWorldBox.top + grabbableDist
-	);
-	const mouseIsInInnerBox = (
+		mouseWorld[1] <= selectionWorldBox.top + grabbableDist;
+	const mouseIsInInnerBox =
 		mouseWorld[0] > selectionWorldBox.left + grabbableDist &&
 		mouseWorld[0] < selectionWorldBox.right - grabbableDist &&
 		mouseWorld[1] > selectionWorldBox.bottom + grabbableDist &&
-		mouseWorld[1] < selectionWorldBox.top - grabbableDist
-	);
+		mouseWorld[1] < selectionWorldBox.top - grabbableDist;
 
 	return mouseIsInOuterBox && !mouseIsInInnerBox;
 }
@@ -148,7 +145,7 @@ function pickUpSelection(): void {
 
 function dropSelection(): void {
 	// Determine the final distance to translate the selection.
-	
+
 	// Determine by how many tiles the pointer has dragged from the anchor
 	const translation: Coords = coordutil.subtractCoords(lastPointerCoords!, anchorCoords!);
 
@@ -180,9 +177,7 @@ function dropSelection(): void {
 // 	return translation[0] !== 0n || translation[1] !== 0n;
 // }
 
-
 // Rendering ---------------------------------------------
-
 
 function render(): void {
 	if (!areDragging || !anchorCoords) return;
@@ -201,15 +196,14 @@ function render(): void {
 	const translatedIntBox: BoundingBox = bounds.translateBoundingBox(selectionIntBox, translation);
 
 	// Convert it to a world-space box, with edges rounded away to encapsulate the entirity of the squares.
-	const translatedWorldBox: DoubleBoundingBox = selectiontool.convertIntBoxToWorldBox(translatedIntBox);
+	const translatedWorldBox: DoubleBoundingBox =
+		selectiontool.convertIntBoxToWorldBox(translatedIntBox);
 
 	stoolgraphics.renderSelectionBoxWireframe(translatedWorldBox);
 	// stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
 }
 
-
 // Exports -----------------------------------------------
-
 
 export default {
 	GRABBABLE_DIST,

@@ -1,13 +1,11 @@
- 
 /**
  * This script contains lists of all piece types and players,
  * and utility methods for working with them.
  */
 
-
 /**
  * Every raw type of piece supported in the game.
- * 
+ *
  * This exact arrangement affects the order of which
  * the checkmate algorithm searches for legal moves,
  * and it affects the order the miniimages of the
@@ -35,7 +33,7 @@ const rawTypes = {
 	HUYGEN: 18,
 	ROOK: 19,
 	BISHOP: 20,
-	PAWN: 21
+	PAWN: 21,
 } as const;
 
 const neutralRawTypes: RawType[] = [rawTypes.VOID, rawTypes.OBSTACLE];
@@ -68,17 +66,40 @@ const ext = {
 
 /**
  * The string representations of each raw type.
- * 
+ *
  * MUST BE IN THE EXACT SAME ORDER AS {@link rawTypes}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-const strtypes = ['void', 'obstacle', 'king', 'giraffe', 'camel', 'zebra', 'knightrider', 'amazon', 'queen', 'royalQueen', 'hawk', 'chancellor', 'archbishop', 'centaur', 'royalCentaur', 'rose', 'knight', 'guard', 'huygen', 'rook', 'bishop', 'pawn'] as const;
+const strtypes = [
+	'void',
+	'obstacle',
+	'king',
+	'giraffe',
+	'camel',
+	'zebra',
+	'knightrider',
+	'amazon',
+	'queen',
+	'royalQueen',
+	'hawk',
+	'chancellor',
+	'archbishop',
+	'centaur',
+	'royalCentaur',
+	'rose',
+	'knight',
+	'guard',
+	'huygen',
+	'rook',
+	'bishop',
+	'pawn',
+] as const;
 
 /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
 const jumpingRoyals: RawType[] = [rawTypes.KING, rawTypes.ROYALCENTAUR];
 /**
  * A list of the royals that the checkmate algorithm cannot detect when they are in checkmate,
  * however it still is illegal to move into check.
- * 
+ *
  * Players have to voluntarily resign if they
  * believe their sliding royal is in checkmate.
  */
@@ -91,33 +112,33 @@ const royals: RawType[] = [...jumpingRoyals, ...slidingRoyals];
 
 /**
  * The string representations of each player color.
- * 
+ *
  * MUST BE IN THE EXACT SAME ORDER AS {@link players}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-const strcolors = ["neutral", "white", "black", "red", "blue", "yellow", "green"] as const;
+const strcolors = ['neutral', 'white', 'black', 'red', 'blue', 'yellow', 'green'] as const;
 
 /** Raw piece types that don't have an SVG */
 const SVGLESS_TYPES: Set<RawType> = new Set([rawTypes.VOID]);
 
-type StrPlayer = typeof strcolors[number]
-type RawType = typeof rawTypes[keyof typeof rawTypes]
-type Player = typeof players[keyof typeof players]
+type StrPlayer = (typeof strcolors)[number];
+type RawType = (typeof rawTypes)[keyof typeof rawTypes];
+type Player = (typeof players)[keyof typeof players];
 
 /** A dictionary type with raw types for keys */
 type RawTypeGroup<T> = {
-	[_t in RawType]?: T
-}
+	[_t in RawType]?: T;
+};
 
 /** A dictionary type with all types for keys */
-type TypeGroup<T> = { [t: number]: T }
+type TypeGroup<T> = { [t: number]: T };
 
 /** A dictionary type with player colors for keys */
 type PlayerGroup<T> = {
-	[_p in Player]?: T
-}
+	[_p in Player]?: T;
+};
 
 function getRawType(type: number): RawType {
-	return type % numTypes as RawType;
+	return (type % numTypes) as RawType;
 }
 
 function getColorFromType(type: number): Player {
@@ -144,7 +165,11 @@ function buildAllTypesForPlayers(players: Player[], rawTypes: RawType[]): number
 	return builtTypes;
 }
 
-function forEachPieceType(callback: (_pieceType: number) => void, players: Player[], includePieces: RawType[]): void {
+function forEachPieceType(
+	callback: (_pieceType: number) => void,
+	players: Player[],
+	includePieces: RawType[],
+): void {
 	for (let i = players.length - 1; i >= 0; i--) {
 		for (const r of includePieces) {
 			callback(buildType(r, players[i]!));
@@ -159,6 +184,7 @@ function invertType(type: number): number {
 }
 
 function invertPlayer(player: Player): Player {
+	// prettier-ignore
 	return player === players.NEUTRAL ? players.NEUTRAL :
 		player === players.WHITE ? players.BLACK :
 		player === players.BLACK ? players.WHITE :
@@ -176,15 +202,17 @@ function getPlayerFromString(string: StrPlayer): Player {
 /**
  * Deletes for pieces that aren't included in this game.
  */
-function deleteUnusedFromRawTypeGroup<T>(existingRawTypes: RawType[], exclude: RawTypeGroup<T>): void {
+function deleteUnusedFromRawTypeGroup<T>(
+	existingRawTypes: RawType[],
+	exclude: RawTypeGroup<T>,
+): void {
 	for (const key in exclude) {
 		const rawType = Number(key) as RawType;
 		if (!existingRawTypes.includes(rawType)) delete exclude[rawType];
 	}
 }
 
-
-/** 
+/**
  * Returns the english string of a piece type.
  * 30 => "[30] queen(white)"
  */
@@ -193,21 +221,9 @@ function debugType(type: number): string {
 	return `[${type}] ${getRawTypeStr(raw)}(${strcolors[c]})`;
 }
 
-export type {
-	RawType,
-	Player,
-	RawTypeGroup,
-	TypeGroup,
-	PlayerGroup,
-};
+export type { RawType, Player, RawTypeGroup, TypeGroup, PlayerGroup };
 
-export {
-	rawTypes,
-	neutralRawTypes,
-	ext,
-	numTypes,
-	players,
-};
+export { rawTypes, neutralRawTypes, ext, numTypes, players };
 
 export default {
 	jumpingRoyals,

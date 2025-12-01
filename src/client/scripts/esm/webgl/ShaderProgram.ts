@@ -1,6 +1,4 @@
-
 // src/client/scripts/esm/webgl/ShaderProgram.ts
-
 
 /**
  * A wrapper around a WebGLProgram that handles the boilerplate of
@@ -16,14 +14,13 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 	private attributeLocations: Map<string, number> = new Map();
 	private uniformLocations: Map<string, WebGLUniformLocation> = new Map();
 
-
 	/**
-     * Creates, compiles, and links a WebGL program from vertex and fragment shader source.
-     * This constructor will throw an error if the shaders fail to compile or link.
-     * @param gl - The WebGL rendering context.
-     * @param vertexSource - The GLSL source code for the vertex shader.
-     * @param fragmentSource - The GLSL source code for the fragment shader.
-     */
+	 * Creates, compiles, and links a WebGL program from vertex and fragment shader source.
+	 * This constructor will throw an error if the shaders fail to compile or link.
+	 * @param gl - The WebGL rendering context.
+	 * @param vertexSource - The GLSL source code for the vertex shader.
+	 * @param fragmentSource - The GLSL source code for the fragment shader.
+	 */
 	constructor(gl: WebGL2RenderingContext, vertexSource: string, fragmentSource: string) {
 		this.gl = gl;
 		const vertexShader = this.compileShader(gl.VERTEX_SHADER, vertexSource);
@@ -31,7 +28,6 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 
 		this.program = this.createProgram(vertexShader, fragmentShader);
 	}
-
 
 	/** Activates this shader program for use in rendering. */
 	public use(): void {
@@ -61,18 +57,16 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 		return location;
 	}
 
-
 	// Private Helper Methods -----------------------------------------------------------
 
-
 	/**
-     * Creates an actual program from the provided vertex shader and fragment shader
-     * in which our webgl context can switch to via gl.useProgram() before rendering.
-     */
+	 * Creates an actual program from the provided vertex shader and fragment shader
+	 * in which our webgl context can switch to via gl.useProgram() before rendering.
+	 */
 	private createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
 		// Create the shader program
 		const program = this.gl.createProgram();
-		if (!program) throw Error("Failed to create WebGL program.");
+		if (!program) throw Error('Failed to create WebGL program.');
 
 		this.gl.attachShader(program, vertexShader);
 		this.gl.attachShader(program, fragmentShader);
@@ -85,13 +79,12 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 		}
 		return program;
 	}
-    
 
 	/**
-     * Creates a shader of the given type, from the specified source code.
-     * @param type - `gl.VERTEX_SHADER` or `gl.FRAGMENT_SHADER`
-     * @param sourceText - The shader source code, in GLSL version 1.00
-     */
+	 * Creates a shader of the given type, from the specified source code.
+	 * @param type - `gl.VERTEX_SHADER` or `gl.FRAGMENT_SHADER`
+	 * @param sourceText - The shader source code, in GLSL version 1.00
+	 */
 	private compileShader(type: number, source: string): WebGLShader {
 		const shader = this.gl.createShader(type);
 		if (!shader) throw Error(`Failed to create shader (type: ${type})`);

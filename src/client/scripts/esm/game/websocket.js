@@ -1,4 +1,3 @@
-
 // Import Start
 import statustext from './gui/statustext.js';
 import invites from './misc/invites.js';
@@ -15,7 +14,7 @@ import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 import docutil from '../util/docutil.js';
 // Import End
 
-"use strict";
+('use strict');
 
 // Custom type definitions...
 
@@ -51,10 +50,10 @@ const cushionBeforeAutoCloseMillis = 10000;
  * the websocket when we're not subscribed to anything for at least {@link cushionBeforeAutoCloseMillis} */
 let timeoutIDToAutoClose;
 
-const validSubs = ["invites", "game"];
+const validSubs = ['invites', 'game'];
 const subs = {
 	invites: false,
-	game: false
+	game: false,
 };
 const timeToResubAfterNetworkLossMillis = 5000;
 const timeToResubAfterTooManyRequestsMillis = 10000;
@@ -85,8 +84,6 @@ const simulatedWebsocketLatencyMillis_Debug = 1000; // 1 Second
  */
 let lastTimeWeGotAuthorizationNeededMessage;
 
-
-
 (function init() {
 	initListeners();
 })();
@@ -96,7 +93,8 @@ function initListeners() {
 }
 
 function toggleDebug() {
-	if (!docutil.isLocalEnvironment()) statustext.showStatus("Can't enable websocket latency in production.");
+	if (!docutil.isLocalEnvironment())
+		statustext.showStatus("Can't enable websocket latency in production.");
 	DEBUG = !DEBUG;
 	statustext.showStatus(`Toggled websocket latency: ${DEBUG}`);
 }
@@ -110,17 +108,17 @@ function alertUserLostConnection() {
  * Repeatedly tries to open a web socket to the server until it is successful,
  * **unless** we are in timeout, then it will refuse.
  * This will never open more than a single socket at a time.
- * 
+ *
  * This NEVER needs to be called manually, because
  * {@link sendmessage} automatically calls this.
- * @returns {boolean} *true* if was able to open a socket.
+ * @returns {Promise<boolean>} *true* if was able to open a socket.
  */
 async function establishSocket() {
 	// Before we try to establish the socket again, we have to make sure we aren't in timeout from sending too many requests!
 	if (inTimeout) return false;
 
 	while (openingSocket || (socket && socket.readyState !== WebSocket.OPEN)) {
-		if (config.DEV_BUILD) console.log("Waiting for the socket to be established or closed..");
+		if (config.DEV_BUILD) console.log('Waiting for the socket to be established or closed..');
 		await thread.sleep(100); // NEVER open more than 1 socket!
 	}
 	if (socket && socket.readyState === WebSocket.OPEN) return true;
@@ -139,13 +137,17 @@ async function establishSocket() {
 	while (!success && !zeroSubs()) {
 		// Request came back with an error
 		noConnection = true;
-		statustext.showStatusForDuration(translations.websocket.no_connection, timeToResubAfterNetworkLossMillis);
+		statustext.showStatusForDuration(
+			translations.websocket.no_connection,
+			timeToResubAfterNetworkLossMillis,
+		);
 		invites.clearIfOnPlayPage(); // Erase on-screen invites.
 		await thread.sleep(timeToResubAfterNetworkLossMillis);
 		success = await openSocket();
 	}
 	// This is the only instance where we've reconnected.
-	if (success && noConnection) statustext.showStatusForDuration(translations.websocket.reconnected, 1000);
+	if (success && noConnection)
+		statustext.showStatusForDuration(translations.websocket.reconnected, 1000);
 	noConnection = false;
 	cancelAllTimerIDsToCancelOnNewSocket();
 
@@ -207,9 +209,10 @@ function httpLostConnection() {
 /**
  * Call when we hear a server echo. This cancels the timer that assumes
  * we lost the connection and tries to renew it.
- * @param {WebsocketMessage} message 
+ * @param {WebsocketMessage} message
  */
-function cancelTimerOfMessageID(message) { // { sub, action, value, id }
+function cancelTimerOfMessageID(message) {
+	// { sub, action, value, id }
 	const echoMessageID = message.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
 
 	// How long did it take the message to return round trip?
@@ -231,19 +234,22 @@ function cancelTimerOfMessageID(message) { // { sub, action, value, id }
  * The cause specified will cause us to automatically
  * try to reconnect a new websocket and resub to everything.
  * Called a few seconds after not hearing a server echo from one of our message.
- * @param {*} messageID 
- * @returns 
+ * @param {*} messageID
+ * @returns
  */
 function renewConnection(messageID) {
-	if (messageID) { // Delete the timeout ID that cancels the timer to renew the connection.
+	if (messageID) {
+		// Delete the timeout ID that cancels the timer to renew the connection.
 		delete echoTimers[messageID];
 		// console.log(`Deleted echoTimer with message id ${messageID} after server didn't echo us. New echoTimers:`)
 		// console.log(echoTimers);
 	}
 	if (!socket) return;
-	console.log(`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`);
+	console.log(
+		`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`,
+	);
 	dispatchLostConnectionCustomEvent();
-	socket.close(1000, "Connection closed by client. Renew.");
+	socket.close(1000, 'Connection closed by client. Renew.');
 }
 
 /**
@@ -251,7 +257,8 @@ function renewConnection(messageID) {
  * Sends an echo to the server, then routes the message to where it needs to go.
  * @param {Object} serverMessage - The incoming server's message's `data` property contains the stringified message contents.
  */
-function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
+function onmessage(serverMessage) {
+	// data: { sub, action, value, id, replyto }
 	/** @type {WebsocketMessage} */
 	let message;
 	try {
@@ -261,11 +268,12 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
 		return console.error('Error parsing incoming message as JSON:', error);
 	}
 
-	const isEcho = message.action === "echo";
+	const isEcho = message.action === 'echo';
 
 	if (DEBUG) {
-		if (isEcho) { if (alsoPrintIncomingEchos) console.log(`Incoming message: ${JSON.stringify(message)}`); }
-		else console.log(`Incoming message: ${JSON.stringify(message)}`);
+		if (isEcho) {
+			if (alsoPrintIncomingEchos) console.log(`Incoming message: ${JSON.stringify(message)}`);
+		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
 
 	if (isEcho) return cancelTimerOfMessageID(message);
@@ -275,25 +283,27 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
 	const sub = message.sub;
 
 	// Send our echo here! We always send an echo to every message EXCEPT echos themselves!
-	sendmessage("general", "echo", message.id);
+	sendmessage('general', 'echo', message.id);
 
 	// Execute any on-reply function!
 	executeOnreplyFunc(message.replyto);
 
-	switch (sub) { // Route the message where it needs to go
+	switch (
+		sub // Route the message where it needs to go
+	) {
 		case undefined: // Basically a null message. They look like: { id, replyto }. This allows us to execute any on-reply func for the message we sent.
 			break;
-		case "general":
+		case 'general':
 			ongeneralmessage(message.action, message.value);
 			break;
-		case "invites":
+		case 'invites':
 			invites.onmessage(message);
 			break;
-		case "game":
+		case 'game':
 			onlinegamerouter.routeMessage(message);
 			break;
 		default:
-			console.error("Unknown socket subscription received from the server! Message:");
+			console.error('Unknown socket subscription received from the server! Message:');
 			return console.log(message);
 	}
 }
@@ -305,28 +315,30 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
  */
 function ongeneralmessage(action, value) {
 	switch (action) {
-		case "notify":
+		case 'notify':
 			statustext.showStatus(value);
 			break;
-		case "notifyerror":
+		case 'notifyerror':
 			statustext.showStatus(value, true, 2);
 			break;
-		case "print":
+		case 'print':
 			console.log(value);
 			break;
-		case "printerror":
+		case 'printerror':
 			console.error(value);
 			break;
-		case "renewconnection":
+		case 'renewconnection':
 			// The server sends this empty message, expecting an echo from us,
 			// just so it knows we are still connected and processing.
 			break;
-		case "gameversion":
+		case 'gameversion':
 			// If the current version doesn't match, hard refresh.
 			if (value !== config.GAME_VERSION) handleHardRefresh(value);
 			break;
 		default:
-			console.log(`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`);
+			console.log(
+				`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`,
+			);
 	}
 }
 
@@ -357,16 +369,21 @@ function ongeneralmessage(action, value) {
  * try hard refreshing again 1 day from now.
  * @param {string} GAME_VERSION - The game version the server is currently running.
  */
-function handleHardRefresh(GAME_VERSION) { // New update!
+function handleHardRefresh(GAME_VERSION) {
+	// New update!
 	if (!GAME_VERSION) throw new Error("Can't hard refresh with no expected version.");
 
 	const reloadInfo = {
 		timeLastHardRefreshed: Date.now(),
-		expectedVersion: GAME_VERSION
+		expectedVersion: GAME_VERSION,
 	};
 	const preexistingHardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
-	if (preexistingHardRefreshInfo?.expectedVersion === GAME_VERSION) { // Don't hard-refresh, we've already tried for this version.
-		if (!preexistingHardRefreshInfo.sentNotSupported) sendFeatureNotSupported(`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${config.GAME_VERSION}`);
+	if (preexistingHardRefreshInfo?.expectedVersion === GAME_VERSION) {
+		// Don't hard-refresh, we've already tried for this version.
+		if (!preexistingHardRefreshInfo.sentNotSupported)
+			sendFeatureNotSupported(
+				`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${config.GAME_VERSION}`,
+			);
 		preexistingHardRefreshInfo.sentNotSupported = true;
 		saveInfo(preexistingHardRefreshInfo);
 		return;
@@ -374,12 +391,14 @@ function handleHardRefresh(GAME_VERSION) { // New update!
 	saveInfo(reloadInfo);
 	location.reload(true);
 
-	function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 })); }
+	function saveInfo(info) {
+		localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 }));
+	}
 }
 
 /**
- * 
- * @param {string} description 
+ *
+ * @param {string} description
  */
 function sendFeatureNotSupported(description) {
 	sendmessage('general', 'feature-not-supported', description);
@@ -401,13 +420,12 @@ function onclose(event) {
 
 	guiplay.onSocketClose();
 
-
 	const trimmedReason = event.reason.trim();
 	const notByChoice = wsutil.wasSocketClosureNotByTheirChoice(event.code, trimmedReason);
 	// Dispatch an event to let other code know that that a websocket closed
 	/**
 	 * True if we want to show the loading animation.
-	 * 
+	 *
 	 * If it was closed, not by our choice, but we have nothing
 	 * to be subscribed to, just close the ping meter anyway.
 	 */
@@ -426,53 +444,78 @@ function onclose(event) {
 	}
 
 	switch (trimmedReason) {
-		case "Connection expired":
+		case 'Connection expired':
 			// Reopen connection and resubscribe
 			resubAll(); // Instantly reconnects.
 			// setTimeout(resubAll, 5000); // Wait 5 seconds, used for dev testing
 			break;
-		case "Connection closed by client":
+		case 'Connection closed by client':
 			//console.log("Closed web socket successfully.")
 			break;
-		case "Connection closed by client. Renew.": // We closed the socket after hearing no echo
-			console.log("Closed web socket successfully. Renewing now..");
+		case 'Connection closed by client. Renew.': // We closed the socket after hearing no echo
+			console.log('Closed web socket successfully. Renewing now..');
 			resubAll(); // Instantly reconnects.
 			break;
-		case "Unable to identify client IP address":
-			statustext.showStatus(`${translations.websocket.unable_to_identify_ip} ${translations.websocket.please_report_bug}`, true, 100);
+		case 'Unable to identify client IP address':
+			statustext.showStatus(
+				`${translations.websocket.unable_to_identify_ip} ${translations.websocket.please_report_bug}`,
+				true,
+				100,
+			);
 			invites.clearIfOnPlayPage(); // Erase on-screen invites.
 			break; // Don't resub
-		case "Authentication needed": // We don't have a browser-id cookie
+		case 'Authentication needed': // We don't have a browser-id cookie
 			onAuthenticationNeeded();
 			break; // Don't resub
-		case "Logged out":
+		case 'Logged out':
 			document.dispatchEvent(new CustomEvent('logout')); // Our header and validatorama scripts may listen for this event
 			resubAll(); // Instantly reconnects.
 			break;
-		case "Too Many Requests. Try again soon.":
-			statustext.showStatusForDuration(translations.websocket.too_many_requests, timeToResubAfterTooManyRequestsMillis);
+		case 'Too Many Requests. Try again soon.':
+			statustext.showStatusForDuration(
+				translations.websocket.too_many_requests,
+				timeToResubAfterTooManyRequestsMillis,
+			);
 			enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
 			break;
-		case "Message Too Big":
-			statustext.showStatus(`${translations.websocket.message_too_big} ${translations.websocket.please_report_bug}`, true, 3);
+		case 'Message Too Big':
+			statustext.showStatus(
+				`${translations.websocket.message_too_big} ${translations.websocket.please_report_bug}`,
+				true,
+				3,
+			);
 			enterTimeout(timeToResubAfterMessageTooBigMillis);
 			break;
-		case "Too Many Sockets":
-			statustext.showStatus(`${translations.websocket.too_many_sockets} ${translations.websocket.please_report_bug}`, true, 3);
+		case 'Too Many Sockets':
+			statustext.showStatus(
+				`${translations.websocket.too_many_sockets} ${translations.websocket.please_report_bug}`,
+				true,
+				3,
+			);
 			setTimeout(resubAll, timeToResubAfterTooManyRequestsMillis);
 			break;
-		case "Origin Error":
-			statustext.showStatus(`${translations.websocket.origin_error} ${translations.websocket.please_report_bug}`, true, 3);
+		case 'Origin Error':
+			statustext.showStatus(
+				`${translations.websocket.origin_error} ${translations.websocket.please_report_bug}`,
+				true,
+				3,
+			);
 			invites.clearIfOnPlayPage(); // Erase on-screen invites.
 			enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
 			break;
-		case "No echo heard": // Client took too long to respond, assumed connection is broken
+		case 'No echo heard': // Client took too long to respond, assumed connection is broken
 			dispatchLostConnectionCustomEvent();
 			resubAll(); // Instantly reconnects.
 			break;
 		default:
-			statustext.showStatus(`${translations.websocket.connection_closed} "${trimmedReason}" ${translations.websocket.please_report_bug}`, true, 100);
-			console.error("Unknown reason why the WebSocket connection was closed. Not reopening or resubscribing.");
+			statustext.showStatus(
+				`${translations.websocket.connection_closed} "${trimmedReason}" ${translations.websocket.please_report_bug}`,
+				true,
+				100,
+			);
+			console.error(
+				'Unknown reason why the WebSocket connection was closed. Not reopening or resubscribing.',
+			);
 	}
 }
 
@@ -491,7 +534,8 @@ function dispatchOpeningSocketCustomEvent() {
  * @param {number} timeMillis - The time to remain in timeout, in milliseconds.
  */
 function enterTimeout(timeMillis) {
-	if (timeMillis === undefined) return console.error("Cannot enter timeout for an undefined amount of time!");
+	if (timeMillis === undefined)
+		return console.error('Cannot enter timeout for an undefined amount of time!');
 	if (inTimeout) return; // Already in timeout, don't spam timers!
 	inTimeout = true;
 	setTimeout(leaveTimeout, timeMillis);
@@ -513,8 +557,9 @@ function leaveTimeout() {
  * @param {Function} [onreplyFunc] An optional function to execute when we receive the server's response to this message, or to execute immediately if we can't establish a socket, or after 5 seconds if we don't hear anything back.
  * @returns {boolean} *true* if the message was able to send.
  */
-async function sendmessage(route, action, value, isUserAction, onreplyFunc) { // invites, createinvite, inviteinfo
-	if (!await establishSocket()) {
+async function sendmessage(route, action, value, isUserAction, onreplyFunc) {
+	// invites, createinvite, inviteinfo
+	if (!(await establishSocket())) {
 		if (isUserAction) statustext.showStatus(translations.websocket.too_many_requests);
 		if (onreplyFunc) onreplyFunc(); // Execute this now
 		return false;
@@ -523,12 +568,13 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 	resetTimerToCloseSocket();
 
 	let payload;
-	if (action === "echo") {
+	if (action === 'echo') {
 		payload = {
-			route: "echo",
+			route: 'echo',
 			contents: value,
 		};
-	} else { // Not an echo, so we need to send a message with an ID, and expect an echo back.
+	} else {
+		// Not an echo, so we need to send a message with an ID, and expect an echo back.
 		payload = {
 			route, // general/invites/game
 			contents: {
@@ -544,7 +590,7 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 		// This will be canceled if we here the echo in time.
 		echoTimers[payload.id] = {
 			timeSent: Date.now(),
-			timeoutID: setTimeout(renewConnection, timeToWaitForEchoMillis, payload.id)
+			timeoutID: setTimeout(renewConnection, timeToWaitForEchoMillis, payload.id),
 		};
 		//console.log(`Set timer of message id "${payload.id}"`)
 
@@ -555,10 +601,11 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 
 	const stringifiedMessage = JSON.stringify(payload);
 
-	if (DEBUG) { // Add a simulated delay to the message
-		setTimeout(() => { socket.send(stringifiedMessage); }, simulatedWebsocketLatencyMillis_Debug);
+	if (DEBUG) {
+		// Add a simulated delay to the message
+		setTimeout(() => socket.send(stringifiedMessage), simulatedWebsocketLatencyMillis_Debug);
 	} else socket.send(stringifiedMessage);
-	
+
 	return true;
 }
 
@@ -600,37 +647,36 @@ function resetOnreplyFuncs() {
 
 /** Cancels all timers that we wanted to cancel upon a new socket established. */
 function cancelAllTimerIDsToCancelOnNewSocket() {
-	timerIDsToCancelOnNewSocket.forEach((ID) => { clearTimeout(ID); });
+	timerIDsToCancelOnNewSocket.forEach((ID) => clearTimeout(ID));
 }
 
 /**
  * Adds a timer ID to cancel upon the next socket establishment.
- * @param {number} ID 
+ * @param {number} ID
  */
 function addTimerIDToCancelOnNewSocket(ID) {
 	timerIDsToCancelOnNewSocket.push(ID);
 }
-
 
 /** Closes the socket. Call this when it's no longer in use (we're not
  * subbed to anything). This auto-unsubs us from everything client-side.
  * The server will auto-unsub us from everything on that side. */
 function closeSocket() {
 	if (!socket) return;
-	if (socket.readyState !== WebSocket.OPEN) return console.error("Cannot close socket because it's not open! Yet socket is defined.");
+	if (socket.readyState !== WebSocket.OPEN)
+		return console.error("Cannot close socket because it's not open! Yet socket is defined.");
 	// CAN'T CALL this or when we leave the page and hit the back button
 	// to return, we won't be subscribed to the game no more and won't resync!
 	// Normally, when we close the socket, we aren't subbed to anything anyway,
 	// ONLY when closeSocket() is called before page leave.
 	// unsubAll();
-	socket.close(1000, "Connection closed by client");
+	socket.close(1000, 'Connection closed by client');
 }
 
 /** If we have zero subscriptions, reset the 10 second timer to terminate the socket connection. */
 function resetTimerToCloseSocket() {
 	clearTimeout(timeoutIDToAutoClose);
 	if (zeroSubs()) timeoutIDToAutoClose = setTimeout(closeSocket, cushionBeforeAutoCloseMillis);
-    
 }
 
 /** Returns true if we're currently not subscribed to anything */
@@ -651,35 +697,38 @@ function zeroSubs() {
  * Games will have to be resynced.
  */
 async function resubAll() {
-	if (config.DEV_BUILD) console.log("Resubbing all..");
+	if (config.DEV_BUILD) console.log('Resubbing all..');
 
 	if (zeroSubs()) {
 		noConnection = false; // We don't care if we are no longer connected if we don't even need an open socket.
-		return console.log("No subs to sub to.");
-	} else { // 1+ subs
-		if (!await establishSocket()) return false; // this only returns false when it fails AND there's no subs to sub to.
+		return console.log('No subs to sub to.');
+	} else {
+		// 1+ subs
+		if (!(await establishSocket())) return false; // this only returns false when it fails AND there's no subs to sub to.
 	}
 
 	for (const sub of validSubs) {
 		if (subs[sub] === false) continue; // Don't resub
 		switch (sub) {
-			case "invites":
+			case 'invites':
 				await invites.subscribeToInvites(true); // Subscribe even though we think we are already subscribed (subs.invites === true)
 				break;
-			case "game":
+			case 'game':
 				onlinegame.resyncToGame();
 				break;
 			default:
-				return console.error(`Cannot resub to all subs after an unexpected socket closure with strange sub ${sub}!`);
+				return console.error(
+					`Cannot resub to all subs after an unexpected socket closure with strange sub ${sub}!`,
+				);
 		}
 	}
 }
 
-window.addEventListener('pageshow', function(event) {
+window.addEventListener('pageshow', function (event) {
 	if (event.persisted) {
 		// The page was loaded from the back/forward cache (bfcache)
 		// console.log("Page was accessed using the back button or forward button.");
-		console.log("Page was returned to using the back or forward button.");
+		console.log('Page was returned to using the back or forward button.');
 		resubAll();
 	} else {
 		// The page was loaded normally
@@ -733,7 +782,7 @@ function areSubbedToSub(sub) {
 
 /**
  * Marks ourself as no longer subscribed to a subscription list.
- * 
+ *
  * If our websocket happens to close unexpectedly, we won't re-subscribe to it.
  * @param {'invites' | 'game'} sub - The name of the sub to delete
  */

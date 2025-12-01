@@ -1,4 +1,3 @@
-
 /**
  * This script handles the game info bar, during a game,
  * displaying the clocks, and whos turn it currently is.
@@ -8,7 +7,6 @@ import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
-
 
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
@@ -22,8 +20,6 @@ import usernamecontainer from '../../util/usernamecontainer.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 
-
-
 // Variables
 
 const element_gameInfoBar = document.getElementById('game-info-bar')!;
@@ -34,8 +30,12 @@ const element_playerBlackContainer = document.querySelector('.player-container.r
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
 const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
-const element_undoButton: HTMLButtonElement = document.getElementById('undobutton')! as HTMLButtonElement;
-const element_restartButton: HTMLButtonElement = document.getElementById('restartbutton')! as HTMLButtonElement;
+const element_undoButton: HTMLButtonElement = document.getElementById(
+	'undobutton',
+)! as HTMLButtonElement;
+const element_restartButton: HTMLButtonElement = document.getElementById(
+	'restartbutton',
+)! as HTMLButtonElement;
 
 let isOpen = false;
 /** Whether to show the practice mode game control buttons - undo move and restart. */
@@ -48,7 +48,7 @@ let usernamecontainer_black: UsernameContainer | undefined;
 // Functions
 
 /**
- * 
+ *
  * @param metadata - The metadata of the gamefile, with its respective White and Black player names
  * @param {boolean} showGameControlButtons
  */
@@ -79,29 +79,53 @@ function embedUsernameContainers(gameMetadata: MetaData): void {
 
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(gameMetadata);
 
-	const playerRatings: PlayerGroup<Rating> | undefined = onlinegame.areInOnlineGame() ? onlinegame.getPlayerRatings() : undefined;
+	const playerRatings: PlayerGroup<Rating> | undefined = onlinegame.areInOnlineGame()
+		? onlinegame.getPlayerRatings()
+		: undefined;
 
 	// Set white username container
 	const username_item_white: UsernameItem = { value: white, openInNewWindow: true };
-	const change_white = gameMetadata.WhiteRatingDiff ? Number(gameMetadata.WhiteRatingDiff) : undefined;
-	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE] ? {
-		value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
-		confident: playerRatings[players.WHITE]!.confident,
-		change: change_white,
-	} : undefined;
-	usernamecontainer_white = usernamecontainer.createUsernameContainer(white_type, username_item_white, rating_item_white);
-	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white.element, element_playerWhite);
+	const change_white = gameMetadata.WhiteRatingDiff
+		? Number(gameMetadata.WhiteRatingDiff)
+		: undefined;
+	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE]
+		? {
+				value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
+				confident: playerRatings[players.WHITE]!.confident,
+				change: change_white,
+			}
+		: undefined;
+	usernamecontainer_white = usernamecontainer.createUsernameContainer(
+		white_type,
+		username_item_white,
+		rating_item_white,
+	);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(
+		usernamecontainer_white.element,
+		element_playerWhite,
+	);
 
 	// Set black username container
 	const username_item_black: UsernameItem = { value: black, openInNewWindow: true };
-	const change_black = gameMetadata.BlackRatingDiff ? Number(gameMetadata.BlackRatingDiff) : undefined;
-	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK] ? {
-		value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
-		confident: playerRatings[players.BLACK]!.confident,
-		change: change_black
-	} : undefined;
-	usernamecontainer_black = usernamecontainer.createUsernameContainer(black_type, username_item_black, rating_item_black);
-	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black.element, element_playerBlack);
+	const change_black = gameMetadata.BlackRatingDiff
+		? Number(gameMetadata.BlackRatingDiff)
+		: undefined;
+	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK]
+		? {
+				value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
+				confident: playerRatings[players.BLACK]!.confident,
+				change: change_black,
+			}
+		: undefined;
+	usernamecontainer_black = usernamecontainer.createUsernameContainer(
+		black_type,
+		username_item_black,
+		rating_item_black,
+	);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(
+		usernamecontainer_black.element,
+		element_playerBlack,
+	);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
 	setTimeout(updateAlignmentUsernames, 0);
@@ -116,10 +140,10 @@ function close(): void {
 
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
-	
+
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
-	
+
 	// Close button listeners
 	closeListeners_Gamecontrol();
 	element_practiceButtons.classList.add('hidden');
@@ -132,15 +156,14 @@ function clearUsernameContainers(): void {
 	// console.log("Clearing username containers");
 
 	// Stop any running number animations
-	usernamecontainer_white?.animationCancels.forEach(fn => fn());
+	usernamecontainer_white?.animationCancels.forEach((fn) => fn());
 	usernamecontainer_white?.element.remove();
 	usernamecontainer_white = undefined;
 
 	// Stop any running number animations
-	usernamecontainer_black?.animationCancels.forEach(fn => fn());
+	usernamecontainer_black?.animationCancels.forEach((fn) => fn());
 	usernamecontainer_black?.element.remove();
 	usernamecontainer_black = undefined;
-	
 }
 
 function initListeners_Gamecontrol(): void {
@@ -157,12 +180,12 @@ function closeListeners_Gamecontrol(): void {
 }
 
 function undoMove(): void {
-	const event = new Event("guigameinfo-undoMove");
+	const event = new Event('guigameinfo-undoMove');
 	document.dispatchEvent(event);
 }
 
 function restartGame(): void {
-	const event = new Event("guigameinfo-restart");
+	const event = new Event('guigameinfo-restart');
 	document.dispatchEvent(event);
 }
 
@@ -172,12 +195,11 @@ function restartGame(): void {
 function update_GameControlButtons(undoingIsLegal: boolean): void {
 	if (undoingIsLegal) {
 		element_undoButton.classList.remove('opacity-0_5');
-		element_undoButton.style.cursor = "pointer";
+		element_undoButton.style.cursor = 'pointer';
 		element_undoButton.disabled = false;
-	}
-	else {
+	} else {
 		element_undoButton.classList.add('opacity-0_5');
-		element_undoButton.style.cursor = "not-allowed";
+		element_undoButton.style.cursor = 'not-allowed';
 		element_undoButton.disabled = true; // Disables the 'click' event from firing when it is pressed
 	}
 }
@@ -209,7 +231,12 @@ function toggle(): void {
  * Given a metadata object, determines the names of the players to be displayed, as well as the type of player,
  * which determines the svg of the username container, and whether it should hyperlink or not.
  */
-function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_type: 'player' | 'guest' | 'engine', black_type: 'player' | 'guest' | 'engine' } {
+function getPlayerNamesForGame(metadata: MetaData): {
+	white: string;
+	black: string;
+	white_type: 'player' | 'guest' | 'engine';
+	black_type: 'player' | 'guest' | 'engine';
+} {
 	if (gameloader.getTypeOfGameWeIn() === 'local' || boardeditor.areInBoardEditor()) {
 		return {
 			white: translations['player_name_white_generic'],
@@ -217,16 +244,33 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 			white_type: 'guest',
 			black_type: 'guest',
 		};
-	} else if (onlinegame.areInOnlineGame()) {	
-		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
+	} else if (onlinegame.areInOnlineGame()) {
+		if (metadata.White === undefined || metadata.Black === undefined)
+			throw Error(
+				'White or Black metadata not defined when getting player names for online game.',
+			);
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
-		const white = onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'];
-		const black = onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black'];
+		const white =
+			onlinegame.areWeColorInOnlineGame(players.WHITE) &&
+			metadata['White'] === translations['guest_indicator']
+				? translations['you_indicator']
+				: metadata['White'];
+		const black =
+			onlinegame.areWeColorInOnlineGame(players.BLACK) &&
+			metadata['Black'] === translations['guest_indicator']
+				? translations['you_indicator']
+				: metadata['Black'];
 		return {
 			white: white,
 			black: black,
-			white_type: white === translations['guest_indicator'] || white === translations['you_indicator'] ? 'guest' : 'player',
-			black_type: black === translations['guest_indicator'] || black === translations['you_indicator'] ? 'guest' : 'player',
+			white_type:
+				white === translations['guest_indicator'] || white === translations['you_indicator']
+					? 'guest'
+					: 'player',
+			black_type:
+				black === translations['guest_indicator'] || black === translations['you_indicator']
+					? 'guest'
+					: 'player',
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
@@ -235,7 +279,10 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 			white_type: metadata.White === translations['you_indicator'] ? 'guest' : 'engine',
 			black_type: metadata.Black === translations['you_indicator'] ? 'guest' : 'engine',
 		};
-	} else throw Error('Cannot get player names for game when not in a local, board editor, online, or engine game.');
+	} else
+		throw Error(
+			'Cannot get player names for game when not in a local, board editor, online, or engine game.',
+		);
 }
 
 /**
@@ -251,13 +298,18 @@ function updateWhosTurn(): void {
 
 	const color = basegame.whosTurn;
 
-	if (color !== players.WHITE && color !== players.BLACK) throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
+	if (color !== players.WHITE && color !== players.BLACK)
+		throw Error(
+			`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`,
+		);
 
-	let textContent = "";
+	let textContent = '';
 	if (!gameloader.areInLocalGame()) {
 		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
-	} else textContent = color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
+	} else
+		textContent =
+			color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
 
 	element_whosturn.textContent = textContent;
 }
@@ -272,8 +324,8 @@ function gameEnd(conclusion?: string): void {
 
 	const { basegame } = gameslot.getGamefile()!;
 
+	// prettier-ignore
 	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole()) {
-
 		if (victor !== undefined && onlinegame.areInOnlineGame() && onlinegame.getOurColor() === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time
                                                                             : condition === 'resignation' ? resultTranslations.you_resignation
@@ -282,13 +334,13 @@ function gameEnd(conclusion?: string): void {
                                                                             : condition === 'allroyalscaptured' ? resultTranslations.you_allroyalscaptured
                                                                             : condition === 'allpiecescaptured' ? resultTranslations.you_allpiecescaptured
                                                                             : condition === 'koth' ? resultTranslations.you_koth
-                                                                            : resultTranslations.you_generic;
+												: resultTranslations.you_generic;
 		else if (victor === players.NEUTRAL) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
                                                                     : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                     : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
                                                                     : condition === 'agreement' ? resultTranslations.draw_agreement
-                                                                    : resultTranslations.draw_generic;
+									: resultTranslations.draw_generic;
 		else if (condition === 'aborted') element_whosturn.textContent = resultTranslations.aborted;
 		else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.opponent_checkmate
                                                             : condition === 'time' ? resultTranslations.opponent_time
@@ -298,41 +350,48 @@ function gameEnd(conclusion?: string): void {
                                                             : condition === 'allroyalscaptured' ? resultTranslations.opponent_allroyalscaptured
                                                             : condition === 'allpiecescaptured' ? resultTranslations.opponent_allpiecescaptured
                                                             : condition === 'koth' ? resultTranslations.opponent_koth
-                                                            : resultTranslations.opponent_generic;
+												: resultTranslations.opponent_generic;
 	} else { // Local game, OR spectating an online game
 		if (condition === 'checkmate') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_checkmate
                                                                     : victor === players.BLACK ? resultTranslations.black_checkmate
-                                                                    : `${resultTranslations.bug_generic} Ending: checkmate`;
+						: `${resultTranslations.bug_generic} Ending: checkmate`;
 		else if (condition === 'time') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_time
                                                                     : victor === players.BLACK ? resultTranslations.black_time
-                                                                    : `${resultTranslations.bug_generic} Ending: time`;
+						: `${resultTranslations.bug_generic} Ending: time`;
 		else if (condition === 'resignation') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_resignation
 																		   : victor === players.BLACK ? resultTranslations.black_resignation
-																		   : `${resultTranslations.bug_generic} Ending: resignation`;
+						: `${resultTranslations.bug_generic} Ending: resignation`;
 		else if (condition === 'disconnect') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_disconnect
 																			: victor === players.BLACK ? resultTranslations.black_disconnect
-																			: `${resultTranslations.bug_generic} Ending: disconnect`;
+						: `${resultTranslations.bug_generic} Ending: disconnect`;
 		else if (condition === 'royalcapture') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_royalcapture
                                                                             : victor === players.BLACK ? resultTranslations.black_royalcapture
-                                                                            : `${resultTranslations.bug_generic} Ending: royalcapture`;
+						: `${resultTranslations.bug_generic} Ending: royalcapture`;
 		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allroyalscaptured
                                                                                 : victor === players.BLACK ? resultTranslations.black_allroyalscaptured
-                                                                                : `${resultTranslations.bug_generic} Ending: allroyalscaptured`;
+						: `${resultTranslations.bug_generic} Ending: allroyalscaptured`;
 		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allpiecescaptured
                                                                                 : victor === players.BLACK ? resultTranslations.black_allpiecescaptured
-                                                                                : `${resultTranslations.bug_generic} Ending: allpiecescaptured`;
+						: `${resultTranslations.bug_generic} Ending: allpiecescaptured`;
 		else if (condition === 'koth') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_koth
                                                                     : victor === players.BLACK ? resultTranslations.black_koth
-                                                                    : `${resultTranslations.bug_generic} Ending: koth`;
-		else if (condition === 'stalemate') element_whosturn.textContent = resultTranslations.draw_stalemate;
-		else if (condition === 'repetition') element_whosturn.textContent = resultTranslations.draw_repetition;
-		else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`;
-		else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations.draw_insuffmat;
-		else if (condition === 'agreement') element_whosturn.textContent = resultTranslations.draw_agreement;
+						: `${resultTranslations.bug_generic} Ending: koth`;
+		else if (condition === 'stalemate')
+			element_whosturn.textContent = resultTranslations.draw_stalemate;
+		else if (condition === 'repetition')
+			element_whosturn.textContent = resultTranslations.draw_repetition;
+		else if (condition === 'moverule')
+			element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${basegame.gameRules.moveRule! / 2}${resultTranslations.draw_moverule[1]}`;
+		else if (condition === 'insuffmat')
+			element_whosturn.textContent = resultTranslations.draw_insuffmat;
+		else if (condition === 'agreement')
+			element_whosturn.textContent = resultTranslations.draw_agreement;
 		else if (condition === 'aborted') element_whosturn.textContent = resultTranslations.aborted;
 		else {
 			element_whosturn.textContent = resultTranslations.bug_generic;
-			console.error(`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`);
+			console.error(
+				`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`,
+			);
 		}
 	}
 }
@@ -373,15 +432,29 @@ function updateAlignmentUsernames(): void {
  * This gets called when the client receives a "gameratingchange" message from a websocket
  * Displays the rating changes from the game in the existing username containers, while keeping all display options the same
  */
-function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>): void {
+function addRatingChangeToExistingUsernameContainers(
+	ratingChanges: PlayerGroup<PlayerRatingChangeInfo>,
+): void {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
 	const { basegame } = gameslot.getGamefile()!;
-	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.WHITE]!.change);
-	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.BLACK]!.change);
+	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
+		ratingChanges[players.WHITE]!.change,
+	);
+	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
+		ratingChanges[players.BLACK]!.change,
+	);
 
 	// Update username containers
-	usernamecontainer.createEloChangeItem(usernamecontainer_white!, ratingChanges[players.WHITE]!.newRating, ratingChanges[players.WHITE]!.change);
-	usernamecontainer.createEloChangeItem(usernamecontainer_black!, ratingChanges[players.BLACK]!.newRating, ratingChanges[players.BLACK]!.change);
+	usernamecontainer.createEloChangeItem(
+		usernamecontainer_white!,
+		ratingChanges[players.WHITE]!.newRating,
+		ratingChanges[players.WHITE]!.change,
+	);
+	usernamecontainer.createEloChangeItem(
+		usernamecontainer_black!,
+		ratingChanges[players.BLACK]!.newRating,
+		ratingChanges[players.BLACK]!.change,
+	);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
 	setTimeout(updateAlignmentUsernames, 0);
@@ -399,5 +472,5 @@ export default {
 	gameEnd,
 	getHeightOfGameInfoBar,
 	updateAlignmentUsernames,
-	addRatingChangeToExistingUsernameContainers
+	addRatingChangeToExistingUsernameContainers,
 };

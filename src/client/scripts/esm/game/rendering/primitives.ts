@@ -1,40 +1,35 @@
-
 // src/client/scripts/esm/game/rendering/primitives.ts
 
 /**
  * This script contains methods for obtaining the vertex array data
  * of many common shapes, when their dimensions and position are known.
- * 
+ *
  * This vertex data can then be used to pass into a buffer model for rendering.
  */
 
-
 import type { Color } from '../../../../../shared/util/math/math.js';
-
-
 
 // =========================================== Quads ==================================================
 
-
-
 /** [TRIANGLES] Generates vertex data for a 2D quad with NO COLOR DATA. */
 function Quad(left: number, bottom: number, right: number, top: number): number[] {
+	// prettier-ignore
 	return [
-    //     Position
+		//     Position
         left,  bottom,
         left,  top,
         right, bottom,
         right, bottom,
         left,  top,
         right, top,
-    ];
+	];
 }
 
-
 /** [TRIANGLES] Generates vertex data for a solid-colored 2D quad. */
+// prettier-ignore
 function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
-    //      Position           Color
+		//      Position           Color
         left,  bottom,      r, g, b, a,
         left,  top,         r, g, b, a,
         right, bottom,      r, g, b, a,
@@ -42,13 +37,14 @@ function Quad_Color(left: number, bottom: number, right: number, top: number, [r
         right, bottom,      r, g, b, a,
         left,  top,         r, g, b, a,
         right, top,         r, g, b, a,
-    ];
+	];
 }
 
 /** [TRIANGLES] Generates vertex data for a solid-colored 3D quad. */
+// prettier-ignore
 function Quad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
 	return [
-    //      Position              Color
+		//      Position              Color
         left,  bottom, z,      r, g, b, a,
         left,  top,    z,      r, g, b, a,
         right, bottom, z,      r, g, b, a,
@@ -56,13 +52,14 @@ function Quad_Color3D(left: number, bottom: number, right: number, top: number, 
         right, bottom, z,      r, g, b, a,
         left,  top,    z,      r, g, b, a,
         right, top,    z,      r, g, b, a,
-    ];
+	];
 }
 
 /** [TRIANGLES] Generates vertex and texture coordinate data for a textured 2D quad. */
+// prettier-ignore
 function Quad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
-    //     Position          Texture Coord
+		//     Position          Texture Coord
         left,  bottom,    texleft,  texbottom,
         left,  top,       texleft,  textop,
         right, bottom,    texright, texbottom,
@@ -70,13 +67,14 @@ function Quad_Texture(left: number, bottom: number, right: number, top: number, 
         right, bottom,    texright, texbottom,
         left,  top,       texleft,  textop,
         right, top,       texright, textop,
-    ];
+	];
 }
 
 /** [TRIANGLES] Generates vertex, texture coordinate, and color data for a tinted textured 2D quad. */
+// prettier-ignore
 function Quad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
-    //     Position          Texture Coord           Color
+		//     Position          Texture Coord           Color
         left,  bottom,    texleft,  texbottom,    r, g, b, a,
         left,  top,       texleft,  textop,       r, g, b, a,
         right, bottom,    texright, texbottom,    r, g, b, a,
@@ -84,13 +82,14 @@ function Quad_ColorTexture(left: number, bottom: number, right: number, top: num
         right, bottom,    texright, texbottom,    r, g, b, a,
         left,  top,       texleft,  textop,       r, g, b, a,
         right, top,       texright, textop,       r, g, b, a,
-    ];
+	];
 }
 
 /** [TRIANGLES] Generates vertex, texture coordinate, and color data for a tinted textured 3D quad. */
+// prettier-ignore
 function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
-    //       Position            Texture Coord           Color
+		//       Position            Texture Coord           Color
         left,  bottom, z,     texleft,  texbottom,    r, g, b, a,
         left,  top,    z,     texleft,  textop,       r, g, b, a,
         right, bottom, z,     texright, texbottom,    r, g, b, a,
@@ -98,21 +97,23 @@ function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: n
         right, bottom, z,     texright, texbottom,    r, g, b, a,
         left,  top,    z,     texleft,  textop,       r, g, b, a,
         right, top,    z,     texright, textop,       r, g, b, a,
-    ];
+	];
 }
 
 /** [LINE_LOOP] Generates vertex data for the outline of a 2D rectangle. */
+// prettier-ignore
 function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
-    //    x     y            color
+		//    x     y            color
         left,  bottom,    r, g, b, a,
         left,  top,       r, g, b, a,
         right, top,       r, g, b, a,
         right, bottom,    r, g, b, a,
-    ];
+	];
 }
 
 /** [TRIANGLES] Generates vertex data for the outline of a 2D DASHED rectangle. */
+// prettier-ignore
 function DashedRect(left: number, bottom: number, right: number, top: number, thickness: number, dashLength: number, gapLength: number, [r,g,b,a]: Color): number[] {
 	const data: number[] = [];
 	const cycleLength = dashLength + gapLength;
@@ -143,7 +144,7 @@ function DashedRect(left: number, bottom: number, right: number, top: number, th
 			pushQuad(x, top - halfThick, dashEnd, top + halfThick);
 		}
 	}
-	
+
 	// Vertical dashes (left and right edges)
 	for (let y = bottom; y < top; y += cycleLength) {
 		const dashEnd = Math.min(y + dashLength, top);
@@ -158,11 +159,7 @@ function DashedRect(left: number, bottom: number, right: number, top: number, th
 	return data;
 }
 
-
-
 // =========================================== Circles ================================================
-
-
 
 /** [LINE_LOOP] Generates vertex data for the outline of a hollow circle. */
 // function Circle_LINES(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
@@ -184,6 +181,7 @@ function DashedRect(left: number, bottom: number, right: number, top: number, th
 // }
 
 /** [TRIANGLES] Generates vertex data for a solid-colored circle composed of triangles. */
+// prettier-ignore
 function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b,a]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
 
@@ -211,12 +209,14 @@ function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b
 }
 
 /** [TRIANGLE_FAN] Generates vertex data for a circle with a color gradient from the center to the edge. */
+// prettier-ignore
 function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] { 
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a fuzz ball.");
 
-	const data: number[] = [x, y,   r1, g1, b1, a1]; // Mid point
+	const data: number[] = [x, y, r1, g1, b1, a1]; // Mid point
 
-	for (let i = 0; i <= resolution; i++) { // Add all outer points
+	for (let i = 0; i <= resolution; i++) {
+		// Add all outer points
 		const theta = (i / resolution) * 2 * Math.PI;
 		const thisX = x + radius * Math.cos(theta);
 		const thisY = y + radius * Math.sin(theta);
@@ -262,6 +262,7 @@ function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g
 // }
 
 /** [TRIANGLES] Generates vertex data for a ring with color gradients between the inner and outer edges. */
+// prettier-ignore
 function Ring(x: number, y: number, inRad: number, outRad: number, resolution: number, [r1,g1,b1,a1]: Color, [r2,g2,b2,a2]: Color): number[] {
 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
 
@@ -296,16 +297,13 @@ function Ring(x: number, y: number, inRad: number, outRad: number, resolution: n
 	return data;
 }
 
-
-
 // =========================================== Other Shapes ================================================
 
-
-
 /** [TRIANGLES] Generates vertex data for a four-sided, hollow rectangular prism. */
+// prettier-ignore
 function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
 	return [
-        //     Vertex                   Color
+		//     Vertex                   Color
         left,  bottom, startZ,      r, g, b, a,
         left,  bottom, endZ,        r, g, b, a,
         right, bottom, startZ,      r, g, b, a,
@@ -333,14 +331,10 @@ function BoxTunnel(left: number, bottom: number, startZ: number, right: number, 
         left,  bottom, startZ,      r, g, b, a,
         left,  top,    endZ,        r, g, b, a,
         left,  bottom, endZ,        r, g, b, a,
-    ];
+	];
 }
 
-
-
 // =========================================== Exports ================================================
-
-
 
 export default {
 	// Quads

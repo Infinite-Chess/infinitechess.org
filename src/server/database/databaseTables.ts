@@ -1,18 +1,14 @@
-
 // src/server/database/databaseTables.ts
 
 /**
  * This script creates our database tables if they aren't already present.
  */
 
-
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 
-
 // Variables -----------------------------------------------------------------------------------
-
 
 const user_id_upper_cap: number = 14_776_336; // 62**4: Limit of unique user id with 4-digit base-62 user ids!
 const game_id_upper_cap: number = 14_776_336; // 62**4: Limit of unique game id with 4-digit base-62 game ids!
@@ -57,7 +53,7 @@ const allPlayerStatsColumns: string[] = [
 	'game_count_draws_rated',
 	'game_count_wins_casual',
 	'game_count_losses_casual',
-	'game_count_draws_casual'
+	'game_count_draws_casual',
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
@@ -68,7 +64,7 @@ const allPlayerGamesColumns: string[] = [
 	'score',
 	'clock_at_end_millis',
 	'elo_at_game',
-	'elo_change_from_game'
+	'elo_change_from_game',
 ];
 
 /** All columns of the games table. Each of these would be valid to retrieve from any game. */
@@ -85,7 +81,7 @@ const allGamesColumns: string[] = [
 	'termination',
 	'move_count',
 	'time_duration_millis',
-	'icn'
+	'icn',
 ];
 
 /** All columns of the rating_abuse table. Each of these would be valid to retrieve from any member and/or leaderboard. */
@@ -93,12 +89,10 @@ const allRatingAbuseColumns: string[] = [
 	'user_id',
 	'leaderboard_id',
 	'game_count_since_last_check',
-	'last_alerted_at'
+	'last_alerted_at',
 ];
 
-
 // Functions -----------------------------------------------------------------------------------
-
 
 /** Creates the tables in our database if they do not exist. */
 function generateTables(): void {
@@ -149,7 +143,9 @@ function generateTables(): void {
 	// To quickly get all leaderboards for a specific user
 	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_user ON leaderboards (user_id);`);
 	// To quickly get rankings for a specific leaderboard (ESSENTIAL)
-	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`);
+	db.run(
+		`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`,
+	);
 
 	// Games table
 	db.run(`
@@ -238,7 +234,6 @@ function generateTables(): void {
 	// To quickly get all rating_abuse entries for a specific user
 	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
 
-	
 	// Password Reset Tokens table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -254,7 +249,6 @@ function generateTables(): void {
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
 
-
 	// Refresh Tokens table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -269,7 +263,9 @@ function generateTables(): void {
 	`);
 	// Indexes for refresh_tokens table
 	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);`);
-	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`);
+	db.run(
+		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`,
+	);
 
 	// Editor Saves table
 	// db.run(`
@@ -318,23 +314,24 @@ function generateTables(): void {
 /**
  * Adds the last_read_news_date column to the members table if it doesn't exist.
  * This migration sets the default value to current date for existing users so they don't see all old news as unread.
- * 
+ *
  * DELETE AFTER PROD DB MIGRATES!
  */
 function migrateAddLastReadNewsDate(): void {
 	if (!db.columnExists('members', 'last_read_news_date')) {
 		console.log('Adding last_read_news_date column to members table...');
 		db.run('ALTER TABLE members ADD COLUMN last_read_news_date TEXT');
-		
+
 		// Set default value to current date for existing users
 		const currentDate = new Date().toISOString().split('T')[0]!; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
 		console.log(`Setting last_read_news_date to ${currentDate} for existing users...`);
-		db.run('UPDATE members SET last_read_news_date = ? WHERE last_read_news_date IS NULL', [currentDate]);
-		
+		db.run('UPDATE members SET last_read_news_date = ? WHERE last_read_news_date IS NULL', [
+			currentDate,
+		]);
+
 		console.log('Successfully added and initialized last_read_news_date column.');
 	}
 }
-
 
 function initDatabase(): void {
 	generateTables();
@@ -342,7 +339,6 @@ function initDatabase(): void {
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }
-
 
 export {
 	user_id_upper_cap,

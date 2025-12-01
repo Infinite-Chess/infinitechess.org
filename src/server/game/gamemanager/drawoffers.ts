@@ -1,8 +1,7 @@
-
 /**
  * This script contains utility methods for draw offers,
  * and has almost zero dependancies.
- * 
+ *
  * It does NOT contain the routes for when a player
  * extends/accepts a draw offer!
  * NOR does it send any websocket messages.
@@ -19,7 +18,7 @@ import type { Player } from '../../../shared/chess/util/typeutil.js';
  * Minimum number of plies (half-moves) that
  * must span between 2 consecutive draw offers
  * by the same player!
- * 
+ *
  * THIS MUST ALWAYS MATCH THE CLIENT-SIDE!!!!
  */
 const movesBetweenDrawOffers = 2;
@@ -48,7 +47,8 @@ function doesColorHaveExtendedDrawOffer(game: Game, color: Player): boolean {
  */
 function hasColorOfferedDrawTooFast(game: Game, color: Player): boolean {
 	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(game, color); // number | undefined
-	if (lastPlyDrawOffered !== undefined) { // They have made at least 1 offer this game
+	if (lastPlyDrawOffered !== undefined) {
+		// They have made at least 1 offer this game
 		// console.log("Last ply offered:", lastPlyDrawOffered);
 		const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
 		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
@@ -63,7 +63,10 @@ function hasColorOfferedDrawTooFast(game: Game, color: Player): boolean {
  */
 function openDrawOffer(game: Game, color: Player): void {
 	if (isDrawOfferOpen(game)) {
-		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errLog.txt");
+		logEventsAndPrint(
+			"MUST NOT open a draw offer when there's already one open!!",
+			'errLog.txt',
+		);
 		return;
 	}
 	const playerdata = game.players[color]!;

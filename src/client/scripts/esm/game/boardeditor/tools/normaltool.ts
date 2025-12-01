@@ -1,28 +1,24 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/normaltool.ts
-
 
 /**
  * Normal Tool for the Board Editor
- * 
+ *
  * This tool can drag pieces around.
  */
 
-import type { Board, FullGame } from "../../../../../../shared/chess/logic/gamefile";
-import type { _Move_Compact } from "../../../../../../shared/chess/logic/icn/icnconverter";
-import type { Mesh } from "../../rendering/piecemodels";
-import type { Edit } from "../boardeditor";
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile';
+import type { _Move_Compact } from '../../../../../../shared/chess/logic/icn/icnconverter';
+import type { Mesh } from '../../rendering/piecemodels';
+import type { Edit } from '../boardeditor';
 
-import movepiece from "../../../../../../shared/chess/logic/movepiece";
-import state from "../../../../../../shared/chess/logic/state";
-import boardutil from "../../../../../../shared/chess/util/boardutil";
-import coordutil from "../../../../../../shared/chess/util/coordutil";
-import movesequence from "../../chess/movesequence";
-import boardeditor from "../boardeditor";
-
+import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import state from '../../../../../../shared/chess/logic/state';
+import boardutil from '../../../../../../shared/chess/util/boardutil';
+import coordutil from '../../../../../../shared/chess/util/coordutil';
+import movesequence from '../../chess/movesequence';
+import boardeditor from '../boardeditor';
 
 // Making Move Edits in the Game ---------------------------------------------
-
 
 /**
  * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
@@ -46,16 +42,19 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
  */
 function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
-	if (!piece) throw Error(`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+	if (!piece)
+		throw Error(
+			`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`,
+		);
 
 	// Initialize the state, and change list, as empty for now.
 	const edit: Edit = {
 		changes: [],
 		state: { local: [], global: [] },
 	};
-	
+
 	movepiece.calcMovesChanges(boardsim, piece, moveDraft, edit); // Move piece regularly (no specials)
-	
+
 	// Queue the state change transfer of this edit's special right to its new destination.
 	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
@@ -63,13 +62,11 @@ function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 	const destinationHasSpecialRight = boardsim.state.global.specialRights.has(endCoordsKey);
 	state.createSpecialRightsState(edit, startCoordsKey, hasSpecialRight, false); // Delete the special right from the startCoords, if it exists
 	state.createSpecialRightsState(edit, endCoordsKey, destinationHasSpecialRight, hasSpecialRight); // Transfer the special right to the endCoords, if it exists
-	
+
 	return edit;
 }
 
-
 // Exports --------------------------------------------------------------------
-
 
 export default {
 	makeMoveEdit,

@@ -1,14 +1,12 @@
-
 // src/server/database/database.ts
 
 /*
- * This module provides utility functions for managing SQLite database operations 
+ * This module provides utility functions for managing SQLite database operations
  * using the `better-sqlite3` library.
- * 
+ *
  * It supports executing SQL queries, retrieving  results (single or multiple rows),
  * caching prepared statements for performance,  and handling database transactions.
  */
-
 
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
@@ -23,16 +21,12 @@ const dbPath: string = path.join(__dirname, '../../../database.db');
 const db = new Database(dbPath); // Optional for logging queries
 // const db = new Database(dbPath, { verbose: console.log }); // Optional for logging queries
 
-
 // Variables ----------------------------------------------------------------------------------------------
-
 
 // Prepared statements cache
 const stmtCache: Record<string, Database.Statement> = {};
 
-
 // Query Calls --------------------------------------------------------------------------------------------
-
 
 // Utility function to retrieve or prepare statements
 function prepareStatement(query: string): Database.Statement {
@@ -89,7 +83,9 @@ function columnExists(tableName: string, columnName: string): boolean {
 	try {
 		// PRAGMA queries are special and should not use the statement cache.
 		// We access the raw db instance's prepare method directly.
-		const result = db.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name = ?`).get(tableName, columnName);
+		const result = db
+			.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name = ?`)
+			.get(tableName, columnName);
 		return !!result;
 	} catch (error) {
 		console.error(`Error checking if column ${columnName} exists in ${tableName}:`, error);
@@ -100,30 +96,28 @@ function columnExists(tableName: string, columnName: string): boolean {
 /**
  * Creates a transaction function that wraps the given callback in a database transaction.
  * The callback will be executed atomically - either all operations succeed or all are rolled back.
- * 
+ *
  * @template Args - The argument types for the transaction function
  * @template Return - The return type of the transaction function
  * @param callback - The function to execute within the transaction context
  * @returns A transaction function that executes the callback atomically
- * 
+ *
  * @example
  * ```typescript
  * const transferFunds = transaction((fromId: number, toId: number, amount: number) => {
  *   run('UPDATE accounts SET balance = balance - ? WHERE id = ?', [amount, fromId]);
  *   run('UPDATE accounts SET balance = balance + ? WHERE id = ?', [amount, toId]);
  * });
- * 
+ *
  * // Execute the transaction
  * transferFunds(1, 2, 100);
  * ```
  */
 function transaction<Args extends unknown[], Return>(
-	callback: (..._args: Args) => Return
+	callback: (..._args: Args) => Return,
 ): (..._args: Args) => Return {
 	return db.transaction(callback);
 }
-
-
 
 export default {
 	run,

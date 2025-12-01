@@ -1,8 +1,6 @@
-
 /**
  * This script contains utility methods for working with the gamefile's moves list.
  */
-
 
 import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
@@ -15,32 +13,28 @@ import type { _Move_Compact } from '../logic/icn/icnconverter.js';
 import coordutil from './coordutil.js';
 import { players } from './typeutil.js';
 
-
 // Type Definitions ------------------------------------------------------------------------------
 
-
 /**
- * The format of outdated 2D moves list in game ICN notation. 
- * 
+ * The format of outdated 2D moves list in game ICN notation.
+ *
  * Where if the first move in the first array is null, that means it's black to move first.
  * No other move will be null.
  */
-type DepricatedMoves = [null | DepricatedMove, null | DepricatedMove][]
+type DepricatedMoves = [null | DepricatedMove, null | DepricatedMove][];
 
 /** The format of an outdated Move */
 interface DepricatedMove {
-	startCoords: Coords,
-	endCoords: Coords,
-	type: string,
-	captured?: string,
-	enpassant?: enpassant,
-	promotion?: promotion,
-	castle?: castle
+	startCoords: Coords;
+	endCoords: Coords;
+	type: string;
+	captured?: string;
+	enpassant?: enpassant;
+	promotion?: promotion;
+	castle?: castle;
 }
 
-
 // Functions ------------------------------------------------------------------------------
-
 
 /**
  * Returns the move one forward from the current position we're viewing, if it exists.
@@ -97,7 +91,7 @@ function getCurrentMove(boardsim: Board): Move | undefined {
  * Gets the move from the moves list at the specified index
  */
 function getMoveFromIndex(moves: Move[], index: number): Move {
-	if (isIndexOutOfRange(moves, index)) throw Error("Cannot get next move when index overflow");
+	if (isIndexOutOfRange(moves, index)) throw Error('Cannot get next move when index overflow');
 	return moves[index]!;
 }
 
@@ -129,19 +123,24 @@ function getWhosTurnAtFront(basegame: Game): Player {
  * Returns whos turn it is at the front of the game,
  * provided the only information you have is the existing moves list
  * and the turnOrder gamerule.
- * 
+ *
  * You may need this if the gamefile hasn't actually been contructed yet.
  * @param numberOfMoves - The number of moves played in the game so far (length of the current moves list).
  * @param turnOrder - The order of players turns in the game.
  */
-function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOrder: GameRules['turnOrder']): Player {
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(
+	numberOfMoves: number,
+	turnOrder: GameRules['turnOrder'],
+): Player {
 	return turnOrder[numberOfMoves % turnOrder.length]!;
 }
 
 /**
  * Returns total ply count (or half-moves) of the game so far.
  */
-function getPlyCount(moves: Move[]): number { return moves.length; }
+function getPlyCount(moves: Move[]): number {
+	return moves.length;
+}
 
 /**
  * Tests if the piece on the provided coordinates at moved at least once in the gamefile.
@@ -149,7 +148,7 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
  * @param coords - The current coordinates of the piece.
  */
 function hasPieceMoved(boardsim: Board, coords: Coords): boolean {
-	return boardsim.moves.some((move: Move ) => coordutil.areCoordsEqual(move.endCoords, coords));
+	return boardsim.moves.some((move: Move) => coordutil.areCoordsEqual(move.endCoords, coords));
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code
@@ -188,7 +187,7 @@ function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
  * @param results - PROVIDE AS AN EMPTY OBJECT! The 'turn' property will be set, destructively.
  * @returns Moves converted to the new 1D array format
  */
-function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], turn: Player } {
+function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[]; turn: Player } {
 	let turn: Player = players.WHITE;
 	const moves1D: MoveDraft[] = [];
 	for (let a = 0; a < moves.length; a++) {
@@ -206,7 +205,9 @@ function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], t
  * Returns whether the game is resignable (at least 2 moves have been played).
  * If not, then the game is considered abortable.
  */
-function isGameResignable(game: Game | Board): boolean { return game.moves.length > 1; }
+function isGameResignable(game: Game | Board): boolean {
+	return game.moves.length > 1;
+}
 
 /**
  * Returns the color of the player that played the provided index within the moves list.
@@ -256,9 +257,7 @@ function isMoveNullMove(move: _Move_Compact): boolean {
 	return coordutil.areCoordsEqual(move.startCoords, move.endCoords);
 }
 
-
 // ------------------------------------------------------------------------------
-
 
 export default {
 	getMoveOneForward,

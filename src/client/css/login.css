@@ -1,181 +1,177 @@
 * {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana;
-    border: 0;
-    /* Enable temporarily during dev to see the borders of all elements */
-    /* outline: 1px solid rgba(0, 0, 0, 0.214); */
+	margin: 0;
+	padding: 0;
+	font-family: Verdana;
+	border: 0;
+	/* Enable temporarily during dev to see the borders of all elements */
+	/* outline: 1px solid rgba(0, 0, 0, 0.214); */
 }
 
 html {
-    height: 100%;
-    background-color: rgb(33, 33, 33);
+	height: 100%;
+	background-color: rgb(33, 33, 33);
 }
 
-
-
 main {
-    background-color: #fff;
-    /* Using PNG because it was the smallest after compression */
-    background-image: url('/img/blank_board.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-attachment: fixed;
+	background-color: #fff;
+	/* Using PNG because it was the smallest after compression */
+	background-image: url('/img/blank_board.png');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-attachment: fixed;
 
-    margin-top: 40px;
-    min-height: 425px;
+	margin-top: 40px;
+	min-height: 425px;
 }
 
 #content {
-    background-color: rgba(255, 255, 255, 0.805);
-    min-height: 425px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-    padding: 30px 20px;
+	background-color: rgba(255, 255, 255, 0.805);
+	min-height: 425px;
+	margin: auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+	padding: 30px 20px;
 }
 
 #content h1 {
-    font-size: 40px;
-    font-family: georgia;
-    margin-bottom: 60px;
+	font-size: 40px;
+	font-family: georgia;
+	margin-bottom: 60px;
 }
 
 .formfield {
-    width: fit-content;
-    text-align: right;
-    margin: auto;
-    line-height: 2.2em;
+	width: fit-content;
+	text-align: right;
+	margin: auto;
+	line-height: 2.2em;
 }
 
-#username-input-line, #password-input-line, #email-input-line {
-    text-align: center;
+#username-input-line,
+#password-input-line,
+#email-input-line {
+	text-align: center;
 }
 
 #password-input-line {
-    margin-top: 12px;
-    display: inline-block;
+	margin-top: 12px;
+	display: inline-block;
 }
 
 #confirm-password-line {
-    margin-top: 12px;
+	margin-top: 12px;
 }
 
 .formfield label {
-    font-size: 18px;
-    vertical-align: middle;
-    margin-right: 2px;
+	font-size: 18px;
+	vertical-align: middle;
+	margin-right: 2px;
 }
 
 form input {
-    border: 0;
-    border-radius: 4px;
-    padding: 0.4em;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.63);
-    font-size: 15px;
-    width: 180px;
+	border: 0;
+	border-radius: 4px;
+	padding: 0.4em;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.63);
+	font-size: 15px;
+	width: 180px;
 }
 
 form input:focus {
-    outline: solid 1px black;
+	outline: solid 1px black;
 }
 
-form input:not([type="submit"]):hover {
-    box-shadow: 0 0 8px rgb(0, 0, 0);
+form input:not([type='submit']):hover {
+	box-shadow: 0 0 8px rgb(0, 0, 0);
 }
 
 /* The instructions for the request password reset form */
 .form-instruction {
-    font-size: 16px;
-    color: #333; /* A dark grey, easy to read */
-    margin-bottom: 20px; /* Add some space between the text and the email input */
-    max-width: 350px; /* Optional: Constrain width on wider screens */
-    margin-left: auto;  /* Optional: Center the text block */
-    margin-right: auto; /* Optional: Center the text block */
-    line-height: 1.4em;
+	font-size: 16px;
+	color: #333; /* A dark grey, easy to read */
+	margin-bottom: 20px; /* Add some space between the text and the email input */
+	max-width: 350px; /* Optional: Constrain width on wider screens */
+	margin-left: auto; /* Optional: Center the text block */
+	margin-right: auto; /* Optional: Center the text block */
+	line-height: 1.4em;
 }
 
 div.error {
-    font-size: 16px;
-    text-align: center;
-    color: red;
-    margin-top: 1.0em;
-    line-height: 1em;
+	font-size: 16px;
+	text-align: center;
+	color: red;
+	margin-top: 1em;
+	line-height: 1em;
 }
 
 form input[type='submit'] {
-    height: 30px;
-    min-width: 0;
-    width: fit-content;
-    height: fit-content;
-    background-color: white;
-    font-size: 16px;
-    transition: 0.1s;
-    margin-top: 25px;
-    outline: 0;
-    transition: 0.1s;
+	height: 30px;
+	min-width: 0;
+	width: fit-content;
+	height: fit-content;
+	background-color: white;
+	font-size: 16px;
+	transition: 0.1s;
+	margin-top: 25px;
+	outline: 0;
+	transition: 0.1s;
 }
 
 form input[type='submit'].ready:hover {
-    box-shadow: 0 0 8px rgb(0, 0, 0);
-    transform: scale(1.125);
+	box-shadow: 0 0 8px rgb(0, 0, 0);
+	transform: scale(1.125);
 }
 
 form input[type='submit'].ready:focus {
-    outline: solid 1px black;
+	outline: solid 1px black;
 }
 
-
 .center {
-    text-align: center;
+	text-align: center;
 }
 
 .unavailable {
-    color: rgba(0, 0, 0, 0.199);
+	color: rgba(0, 0, 0, 0.199);
 }
 
 a {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
-    color: black;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
+	color: black;
 }
-
-
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    #content h1 {
-        font-size: calc(40px + 0.027 * (100vw - 450px));
-    }
+	#content h1 {
+		font-size: calc(40px + 0.027 * (100vw - 450px));
+	}
 
-    form input {
-        width: calc(180px + 0.15 * (100vw - 450px));
-    }
+	form input {
+		width: calc(180px + 0.15 * (100vw - 450px));
+	}
 }
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
-    form input {
-        width: 220px;
-    }
+	form input {
+		width: 220px;
+	}
 }
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    #content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px;
-        min-height: 800px;
-    }
+	#content {
+		max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+		padding: 40px 30px;
+		min-height: 800px;
+	}
 
-    #content h1 {
-        font-size: 50px;
-        margin-bottom: 70px;
-    }
+	#content h1 {
+		font-size: 50px;
+		margin-bottom: 70px;
+	}
 }
-
 
 /* Password Reset Form */
 
@@ -198,9 +194,9 @@ a {
 
 /* Style for the success message (e.g., after sending the email) */
 div.success {
-    font-size: 16px;
-    text-align: center;
-    color: green;
-    margin-top: 1.0em;
-    line-height: 1em;
+	font-size: 16px;
+	text-align: center;
+	color: green;
+	margin-top: 1em;
+	line-height: 1em;
 }
