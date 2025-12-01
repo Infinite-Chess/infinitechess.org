@@ -61,6 +61,8 @@
 		"fake-indexeddb": "^6.2.5",
 		"globals": "^15.15.0",
 		"glsl-strip-comments": "^1.0.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7",
 		"madge": "^8.0.0",
 		"nodemon": "^3.1.10",
 		"prettier": "^3.7.3",
@@ -92,6 +94,10 @@
 		"test:watch": "vitest",
 		"format": "prettier src build.js --write",
 		"format:check": "prettier src build.js --check",
-		"lint": "eslint src build.js"
+		"lint": "eslint src build.js",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"**/*": "prettier --write --ignore-unknown"
 	}
 }
