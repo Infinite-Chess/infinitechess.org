@@ -19,21 +19,23 @@ function generateSelfSignedCertificate() {
 	const pki = forge.pki;
 	const keys = pki.rsa.generateKeyPair(2048);
 	const cert = pki.createCertificate();
-    
+
 	cert.publicKey = keys.publicKey;
 	cert.serialNumber = '01';
 	cert.validity.notBefore = new Date();
 	cert.validity.notAfter = new Date();
 	cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
-    
-	const attrs = [{
-		name: 'commonName',
-		value: 'localhost'
-	}];
-    
+
+	const attrs = [
+		{
+			name: 'commonName',
+			value: 'localhost',
+		},
+	];
+
 	cert.setSubject(attrs);
 	cert.setIssuer(attrs);
-    
+
 	cert.sign(keys.privateKey, forge.md.sha256.create());
 
 	// Convert the PEM-formatted keys to strings
@@ -66,8 +68,5 @@ function ensureSelfSignedCertificate() {
 	return true;
 }
 
-
 // Export the function for external use
-export {
-	ensureSelfSignedCertificate
-};
+export { ensureSelfSignedCertificate };

@@ -1,10 +1,8 @@
-
 // src/client/scripts/esm/webgl/post_processing/PostProcessingPipeline.ts
 
-import { ProgramManager } from "../ProgramManager";
-import { ShaderProgram } from "../ShaderProgram";
-import { PassThroughPass } from "./passes/PassThroughPass";
-
+import { ProgramManager } from '../ProgramManager';
+import { ShaderProgram } from '../ShaderProgram';
+import { PassThroughPass } from './passes/PassThroughPass';
 
 /** A Post Processing Effect applied to the whole screen after rendering the scene. */
 export interface PostProcessPass {
@@ -22,7 +20,6 @@ export interface PostProcessPass {
 	 */
 	render(_gl: WebGL2RenderingContext, _inputTexture: WebGLTexture): void;
 }
-
 
 /**
  * Manages the post-processing pipeline for a raw WebGL2 application.
@@ -49,13 +46,12 @@ export class PostProcessingPipeline {
 	// This will hold the default shader for the "zero effects" case.
 	private passThroughPass: PassThroughPass;
 
-
 	constructor(gl: WebGL2RenderingContext, programManager: ProgramManager) {
 		this.gl = gl;
-		
+
 		// Get the pass-through shader from your manager.
 		this.passThroughPass = new PassThroughPass(programManager);
-		
+
 		// Get the max MSAA samples supported by the hardware.
 		this.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
 
@@ -74,7 +70,7 @@ export class PostProcessingPipeline {
 		this.sceneFBO = gl.createFramebuffer()!;
 		this.sceneColorBuffer = gl.createRenderbuffer()!;
 		this.sceneDepthStencilBuffer = gl.createRenderbuffer()!;
-		
+
 		// --- Initial sizing ---
 		this.resize(gl.canvas.width, gl.canvas.height);
 	}
@@ -83,11 +79,14 @@ export class PostProcessingPipeline {
 	 * Creates a single Framebuffer Object and its corresponding color texture.
 	 * This is for the single-sampled post-processing passes.
 	 */
-	private createFBO(width: number, height: number): { fbo: WebGLFramebuffer, texture: WebGLTexture } {
+	private createFBO(
+		width: number,
+		height: number,
+	): { fbo: WebGLFramebuffer; texture: WebGLTexture } {
 		const gl = this.gl;
 
 		const texture = gl.createTexture();
-		if (!texture) throw new Error("Could not create texture");
+		if (!texture) throw new Error('Could not create texture');
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 
 		// Allocate storage for the texture IMMEDIATELY upon creation.
@@ -104,7 +103,7 @@ export class PostProcessingPipeline {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 		const fbo = gl.createFramebuffer();
-		if (!fbo) throw new Error("Could not create framebuffer");
+		if (!fbo) throw new Error('Could not create framebuffer');
 		gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
@@ -114,7 +113,7 @@ export class PostProcessingPipeline {
 
 		return { fbo, texture };
 	}
-	
+
 	/**
 	 * Updates the entire list of post processing effect passes.
 	 */
@@ -141,7 +140,7 @@ export class PostProcessingPipeline {
 		// Set the viewport to the FBO size and clear it.
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-		
+
 		// Enable blending if your main scene needs it.
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -160,11 +159,12 @@ export class PostProcessingPipeline {
 		// to the first single-sampled FBO in our ping-pong chain.
 		gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.sceneFBO);
 		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.readFBO);
+		// prettier-ignore
 		gl.blitFramebuffer(
 			0, 0, gl.canvas.width, gl.canvas.height, // source rect
 			0, 0, gl.canvas.width, gl.canvas.height, // destination rect
 			gl.COLOR_BUFFER_BIT, // buffer to copy
-			gl.NEAREST           // filter (must be NEAREST for MSAA resolve)
+			gl.NEAREST, // filter (must be NEAREST for MSAA resolve)
 		);
 		// The anti-aliased scene is now in `readTexture`.
 
@@ -175,8 +175,9 @@ export class PostProcessingPipeline {
 
 		// If we have no added no passes, we'll use our pass-through shader.
 		// This creates a unified code path for all scenarios.
-		const activePasses: PostProcessPass[] = this.passes.length > 0 ? this.passes : [this.passThroughPass];
-		
+		const activePasses: PostProcessPass[] =
+			this.passes.length > 0 ? this.passes : [this.passThroughPass];
+
 		// 1. PING-PONG PASSES: Loop through all but the very last pass.
 		// These passes all render to the next FBO.
 		for (let i = 0; i < activePasses.length - 1; i++) {
@@ -189,7 +190,7 @@ export class PostProcessingPipeline {
 
 			this.swapFBOs(); // The FBO we just wrote to becomes the read FBO for the next pass
 		}
-		
+
 		// 2. FINAL PASS: Render the last effect directly to the screen.
 		const lastPass = activePasses[activePasses.length - 1]!;
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null); // Target the canvas
@@ -213,16 +214,17 @@ export class PostProcessingPipeline {
 		this.readTexture = this.writeTexture;
 		this.writeTexture = tempTexture;
 	}
-	
+
 	/**
 	 * Must be called whenever the canvas is resized to update the FBO textures
 	 * and the depth/stencil buffer.
 	 * @param width The new width of the canvas.
 	 * @param height The new height of the canvas.
 	 */
+	// prettier-ignore
 	public resize(width: number, height: number): void {
 		const gl = this.gl;
-		
+
 		// Resize the single-sampled color textures for post-processing
 		const textures = [this.readTexture, this.writeTexture];
 		for (const texture of textures) {
@@ -230,7 +232,7 @@ export class PostProcessingPipeline {
 			// Use RGBA8 for standard dynamic range. You could use RGBA16F for HDR.
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 		}
-		
+
 		// --- Resize the MULTISAMPLED renderbuffers for the main scene ---
 		// Color buffer
 		gl.bindRenderbuffer(gl.RENDERBUFFER, this.sceneColorBuffer);
@@ -239,7 +241,7 @@ export class PostProcessingPipeline {
 		// Depth/stencil renderbuffer
 		gl.bindRenderbuffer(gl.RENDERBUFFER, this.sceneDepthStencilBuffer);
 		gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.maxSamples, gl.DEPTH24_STENCIL8, width, height);
-		
+
 		// Attach the multisampled renderbuffers to the scene FBO
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneFBO);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this.sceneColorBuffer);

@@ -1,4 +1,3 @@
-
 /**
  * This script handles our promotion menu, when
  * pawns reach the promotion line.
@@ -13,37 +12,35 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 
-
-
 // Variables --------------------------------------------------------------------
 
 const PromotionGUI: {
-	base: HTMLElement,
-	players: PlayerGroup<HTMLElement>
+	base: HTMLElement;
+	players: PlayerGroup<HTMLElement>;
 } = {
 	base: document.getElementById('promote')!,
 	players: {
 		[players.WHITE]: document.getElementById('promotewhite')!,
-		[players.BLACK]: document.getElementById('promoteblack')!
-	}
+		[players.BLACK]: document.getElementById('promoteblack')!,
+	},
 };
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
-
 // Functions --------------------------------------------------------------------
-
 
 // Prevent right-clicking on the promotion UI
 PromotionGUI.base.addEventListener('contextmenu', (event) => event.preventDefault());
 
-
-function isUIOpen(): boolean { return selectionOpen; }
+function isUIOpen(): boolean {
+	return selectionOpen;
+}
 
 function open(color: Player): void {
 	selectionOpen = true;
 	PromotionGUI.base.classList.remove('hidden');
-	if (!(color in PromotionGUI.players)) throw new Error(`Promotion UI does not support color "${color}"`);
+	if (!(color in PromotionGUI.players))
+		throw new Error(`Promotion UI does not support color "${color}"`);
 	PromotionGUI.players[color]!.classList.remove('hidden');
 }
 
@@ -65,8 +62,10 @@ function close(): void {
 async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined): Promise<void> {
 	if (promotionsAllowed === undefined) return;
 
-	if (Object.values(PromotionGUI.players).some(element => element.childElementCount > 0)) {
-		throw new Error("Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.");
+	if (Object.values(PromotionGUI.players).some((element) => element.childElementCount > 0)) {
+		throw new Error(
+			'Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.',
+		);
 	}
 
 	for (const [playerString, rawtypes] of Object.entries(promotionsAllowed)) {
@@ -75,8 +74,10 @@ async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined): Pr
 			console.error(`Player ${player} has a promotion but not promotion UI`);
 			continue;
 		}
-		const svgs = await svgcache.getSVGElements(rawtypes.map(rawPromotion => typeutil.buildType(rawPromotion, player)));
-		svgs.forEach(svg => {
+		const svgs = await svgcache.getSVGElements(
+			rawtypes.map((rawPromotion) => typeutil.buildType(rawPromotion, player)),
+		);
+		svgs.forEach((svg) => {
 			svg.classList.add('promotepiece');
 			svg.addEventListener('click', callback_promote);
 			PromotionGUI.players[player]!.appendChild(svg);
@@ -108,7 +109,12 @@ function callback_promote(event: Event): void {
 /** Closes the UI if the mouse clicks outside it. */
 function update(): void {
 	if (!selectionOpen) return;
-	if (!listener_overlay.isMouseDown(Mouse.LEFT) && !listener_overlay.isMouseDown(Mouse.RIGHT) && !listener_overlay.isMouseDown(Mouse.MIDDLE)) return;
+	if (
+		!listener_overlay.isMouseDown(Mouse.LEFT) &&
+		!listener_overlay.isMouseDown(Mouse.RIGHT) &&
+		!listener_overlay.isMouseDown(Mouse.MIDDLE)
+	)
+		return;
 	// Atleast one mouse button was clicked-down OUTSIDE of the promotion UI
 	selection.unselectPiece();
 	close();

@@ -1,4 +1,3 @@
-
 // src/server/database/refreshTokenManager.ts
 
 /**
@@ -6,30 +5,26 @@
  * to add, find, delete, and update them in the `refresh_tokens` table.
  */
 
-
 import db from './database.js';
 import { refreshTokenExpiryMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 // @ts-ignore
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-
 import type { Request } from 'express';
-
-
 
 /**
  * Represents a record in the `refresh_tokens` database table.
  */
 export type RefreshTokenRecord = {
-    token: string;
-    user_id: number;
-    /** The Unix timestamp, in milliseconds, when the token was created. */
-    created_at: number;
-    /** The Unix timestamp, in milliseconds, when the token will expire. */
-    expires_at: number;
-    /** The last known IP address the user used this refresh token from. */
-    ip_address: string | null;
+	token: string;
+	user_id: number;
+	/** The Unix timestamp, in milliseconds, when the token was created. */
+	created_at: number;
+	/** The Unix timestamp, in milliseconds, when the token will expire. */
+	expires_at: number;
+	/** The last known IP address the user used this refresh token from. */
+	ip_address: string | null;
 };
 
 /**
@@ -70,7 +65,10 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
 		return db.all<RefreshTokenRecord>(query, user_id_list);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while processing the refresh token.');
 	}
 }
@@ -87,7 +85,7 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
 	const query = `
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, ip_address)
         VALUES (?, ?, ?, ?, ?)
-	`; 
+	`;
 	const ip_address = getClientIP(req) || null;
 	try {
 		db.run(query, [
@@ -99,7 +97,10 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
 		]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Database error while adding refresh token for userId ${userId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Database error while adding refresh token for userId ${userId}: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while processing the refresh token.');
 	}
 }
@@ -132,7 +133,10 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
 		db.run(query, [userId]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Database error while deleting all refresh tokens for userId ${userId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Database error while deleting all refresh tokens for userId ${userId}: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while processing the refresh token.');
 	}
 }
@@ -149,7 +153,10 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
 		db.run(query, [ip, token]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Database error while updating refresh token IP: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Database error while updating refresh token IP: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while processing the refresh token.');
 	}
 }

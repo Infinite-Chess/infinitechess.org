@@ -1,42 +1,37 @@
-
 /**
  * This script hides the original piece and renders a copy at the pointer location.
  * It also highlights the square that the piece would be dropped on (to do)
  * and plays the sound when the piece is dropped.
  */
 
+import type { Renderable } from '../../../webgl/Renderable.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 
-import type { Renderable } from "../../../webgl/Renderable.js";
-import type { Color } from "../../../../../../shared/util/math/math.js";
-import type { Coords, DoubleCoords } from "../../../../../../shared/chess/util/coordutil.js";
-import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
-
-
-import spritesheet from "../spritesheet.js";
-import coordutil from "../../../../../../shared/chess/util/coordutil.js";
-import frametracker from "../frametracker.js";
-import { createRenderable } from "../../../webgl/Renderable.js";
-import space from "../../misc/space.js";
-import droparrows from "./droparrows.js";
-import selection from "../../chess/selection.js";
-import preferences from "../../../components/header/preferences.js";
-import themes from "../../../../../../shared/components/header/themes.js";
-import typeutil from "../../../../../../shared/chess/util/typeutil.js";
-import animation from "../animation.js";
-import mouse from "../../../util/mouse.js";
-import boardpos from "../boardpos.js";
-import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
-import boardtiles from "../boardtiles.js";
-import primitives from "../primitives.js";
-import { listener_overlay } from "../../chess/game.js";
-import { Mouse } from "../../input.js";
-import meshes from "../meshes.js";
-import perspective from "../perspective.js";
-import camera from "../camera.js";
-
+import spritesheet from '../spritesheet.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import frametracker from '../frametracker.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
+import space from '../../misc/space.js';
+import droparrows from './droparrows.js';
+import selection from '../../chess/selection.js';
+import preferences from '../../../components/header/preferences.js';
+import themes from '../../../../../../shared/components/header/themes.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import animation from '../animation.js';
+import mouse from '../../../util/mouse.js';
+import boardpos from '../boardpos.js';
+import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
+import boardtiles from '../boardtiles.js';
+import primitives from '../primitives.js';
+import { listener_overlay } from '../../chess/game.js';
+import { Mouse } from '../../input.js';
+import meshes from '../meshes.js';
+import perspective from '../perspective.js';
+import camera from '../camera.js';
 
 // Variables --------------------------------------------------------------------------------------
-
 
 const z: number = 0.01;
 
@@ -48,7 +43,7 @@ const dragMinSizeVirtualPixels = {
 	/** 2D desktop mode */
 	mouse: 50, // Only applicable in 2D mode, not perspective
 	/** Mobile/touchscreen mode */
-	touch: 50
+	touch: 50,
 } as const;
 
 /**
@@ -60,7 +55,7 @@ const outlineWidth = {
 	// Since on touchscreen the rank/column outlines are ALWAYS enabled,
 	// make them a little less noticeable/distracting.
 	/** Mobile/touchscreen mode */
-	touch: 0.065
+	touch: 0.065,
 } as const;
 
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
@@ -69,13 +64,12 @@ const touchscreenOffset: number = 1.6; // Default: 2
 const minSizeToDrawOutline: number = 40;
 
 /** Adjustments for the dragged piece while in perspective mode. */
-const perspectiveConfigs: { z: number, shadowColor: Color } = {
+const perspectiveConfigs: { z: number; shadowColor: Color } = {
 	/** The height the piece is rendered above the board when in perspective mode. */
 	z: 0.6,
 	/** The color of the shadow of the dragged piece. */
-	shadowColor: [0.1, 0.1, 0.1, 0.5]
+	shadowColor: [0.1, 0.1, 0.1, 0.5],
 } as const;
-
 
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
@@ -98,9 +92,7 @@ let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
 let pieceType: number | undefined;
 
-
 // Functions --------------------------------------------------------------------------------------
-
 
 function areDraggingPiece(): boolean {
 	return areDragging;
@@ -127,7 +119,12 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
-	if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
+	if (
+		animation.animations.some((a) =>
+			coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!),
+		)
+	)
+		animation.clearAnimations(true);
 }
 
 /**
@@ -135,7 +132,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
  */
 function updateDragLocation(): void {
 	if (!areDragging) return;
-	
+
 	/**
 	 * If the promotion UI is open, change the world location of
 	 * the dragged piece to the promotion square
@@ -149,7 +146,9 @@ function updateDragLocation(): void {
 	} else {
 		// Normal drag location
 		worldLocation = mouse.getPointerWorld(pointerId!);
-		hoveredCoords = worldLocation ? space.convertWorldSpaceToCoords_Rounded(worldLocation) : undefined;
+		hoveredCoords = worldLocation
+			? space.convertWorldSpaceToCoords_Rounded(worldLocation)
+			: undefined;
 	}
 }
 
@@ -161,7 +160,7 @@ function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coor
 
 /** Returns the id of the pointer currently dragging a piece. */
 function getPointerIdDraggingPiece(): string | undefined {
-	if (!areDragging) throw Error("Unexpected!");
+	if (!areDragging) throw Error('Unexpected!');
 	return pointerId;
 }
 
@@ -203,17 +202,15 @@ function cancelDragging(): void {
 	parity = true;
 }
 
-
 // Rendering --------------------------------------------------------------------------------------------
-
 
 // Hides the original piece by rendering a transparent square model above it in the depth field.
 function renderTransparentSquare(): void {
 	if (!startCoords) return;
 
-	const color: Color = [0,0,0,0];
+	const color: Color = [0, 0, 0, 0];
 	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
-	return createRenderable(data, 2, "TRIANGLES", 'color', true).render([0,0,z]);
+	return createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
@@ -235,32 +232,47 @@ function genPieceModel(): Renderable | undefined {
 	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	
-	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(pieceType!, rotation);
-	
+
+	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(
+		pieceType!,
+		rotation,
+	);
+
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
-	
+
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
 	let size: number = boardScale;
-	if (!selection.getSquarePawnIsCurrentlyPromotingOn() && !perspective.getEnabled()) { // Apply a minimum size only if we're not currently promoting a pawn (promote UI open) and not in perspective mode.
+	if (!selection.getSquarePawnIsCurrentlyPromotingOn() && !perspective.getEnabled()) {
+		// Apply a minimum size only if we're not currently promoting a pawn (promote UI open) and not in perspective mode.
 		// The minimum world space the dragged piece should be rendered
-		const minSizeWorldSpace = touchscreenUsed ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch)  // Mobile/touchscreen mode
-												  : space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse); // 2D desktop mode
+		const minSizeWorldSpace = touchscreenUsed
+			? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
+			: space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse); // 2D desktop mode
 		size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
 	}
 
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
-	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
+	const bottom =
+		worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	const right = worldLocation![0] + halfSize;
 	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
-	
+
 	const data: number[] = [];
+	// prettier-ignore
 	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
+	// prettier-ignore
 	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
-	return createRenderable(data, 3, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
+	return createRenderable(
+		data,
+		3,
+		'TRIANGLES',
+		'colorTexture',
+		true,
+		spritesheet.getSpritesheet(),
+	);
 }
 
 /**
@@ -269,6 +281,7 @@ function genPieceModel(): Renderable | undefined {
  * On touchscreen the entire rank and file are outlined.
  * @returns The buffer model
  */
+// prettier-ignore
 function genOutlineModel(): Renderable {
 	const data: number[] = [];
 	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
@@ -277,11 +290,14 @@ function genOutlineModel(): Renderable {
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();
-	
+
 	// Outline the enire rank & file when:
 	// 1. We're not hovering over the start square.
 	// 2. It is a touch screen, OR we are zoomed out enough.
-	if (!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) && (pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)) {
+	if (
+		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
+		(pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)
+	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();
 
@@ -293,8 +309,8 @@ function genOutlineModel(): Renderable {
 		// Outline the hovered square
 		data.push(...getBoxFrameData(hoveredCoords!));
 	}
-	
-	return createRenderable(data, 2, "TRIANGLES", 'color', true);
+
+	return createRenderable(data, 2, 'TRIANGLES', 'color', true);
 }
 
 /**
@@ -302,6 +318,7 @@ function genOutlineModel(): Renderable {
  * @param coords - The coordinate of the box frame
  * @returns The vertex data for the frame.
  */
+// prettier-ignore
 function getBoxFrameData(coords: Coords): number[] {
 	const boardPos = boardpos.getBoardPos();
 	// We should be able to work with scale converted to a number
@@ -384,8 +401,6 @@ function getBoxFrameData(coords: Coords): number[] {
 	return vertices;
 }
 
-
-
 export default {
 	areDraggingPiece,
 	getDragParity,
@@ -397,5 +412,5 @@ export default {
 	dropPiece,
 	cancelDragging,
 	renderTransparentSquare,
-	renderPiece
+	renderPiece,
 };

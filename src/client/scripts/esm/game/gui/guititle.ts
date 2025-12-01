@@ -1,4 +1,3 @@
-
 /**
  * This script handles our Title Screen
  */
@@ -8,10 +7,10 @@ import guiboardeditor from './boardeditor/guiboardeditor.js';
 import gui from './gui.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
-
+// @ts-ignore
+import languagedropdown from '../../components/header/dropdowns/languagedropdown.js';
 
 // Variables ----------------------------------------------------------------------------
-
 
 // Title Screen
 const boardVel = 0.6; // Speed at which board slowly moves while on title screen
@@ -23,16 +22,14 @@ const element_guide = document.getElementById('rules')!;
 const element_boardEditor = document.getElementById('board-editor')!;
 const element_menuExternalLinks = document.getElementById('menu-external-links')!;
 
-
 // Functions ----------------------------------------------------------------------------
-
 
 // Call when title screen is loaded
 function open(): void {
 	titleElement.classList.remove('hidden');
 	element_menuExternalLinks.classList.remove('hidden');
 	initListeners();
-};
+}
 
 function close(): void {
 	titleElement.classList.add('hidden');
@@ -70,15 +67,14 @@ function callback_Practice(_event: Event): void {
 
 function callback_Guide(_event: Event): void {
 	// Navigate to the guide page
-	window.location.href = '/guide';
+	window.location.href = languagedropdown.addLngQueryParamToLink(`/guide`);
 }
 
+// eslint-disable-next-line no-unused-vars
 function callback_BoardEditor(_event: Event): void {
 	close();
 	guiboardeditor.open();
 }
-
-
 
 export default {
 	boardVel,

@@ -1,6 +1,6 @@
 // src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts
 
-import type { AudioParamDescriptor } from "../worklet-types";
+import type { AudioParamDescriptor } from '../worklet-types';
 
 /*
  * These need to be declared in every audio worklet processor file,
@@ -12,15 +12,15 @@ import type { AudioParamDescriptor } from "../worklet-types";
 declare abstract class AudioWorkletProcessor {
 	static get parameterDescriptors(): AudioParamDescriptor[];
 	constructor(options?: any);
-	abstract process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean;
+	abstract process(
+		inputs: Float32Array[][],
+		outputs: Float32Array[][],
+		parameters: Record<string, Float32Array>,
+	): boolean;
 }
 
-declare function registerProcessor(
-	name: string,
-	processorCtor: typeof AudioWorkletProcessor
-): void;
+declare function registerProcessor(name: string, processorCtor: typeof AudioWorkletProcessor): void;
 /* eslint-enable no-unused-vars */
-
 
 /** Parameters for the DownsamplerProcessor. */
 interface DownsamplerParameters extends Record<string, Float32Array> {
@@ -47,7 +47,7 @@ class DownsamplerProcessor extends AudioWorkletProcessor {
 	process(
 		inputs: Float32Array[][],
 		outputs: Float32Array[][],
-		parameters: DownsamplerParameters
+		parameters: DownsamplerParameters,
 	): boolean {
 		const input = inputs[0];
 		const output = outputs[0];
@@ -61,7 +61,8 @@ class DownsamplerProcessor extends AudioWorkletProcessor {
 			if (!inputChannel || !outputChannel) continue;
 
 			for (let i = 0; i < inputChannel.length; ++i) {
-				const downsamplingValue = downsampling.length > 1 ? downsampling[i]! : downsampling[0]!;
+				const downsamplingValue =
+					downsampling.length > 1 ? downsampling[i]! : downsampling[0]!;
 
 				// Downsampling: Hold the last sample value for 'downsamplingValue' samples.
 				if (this.phase % downsamplingValue < 1) this.lastSampleValue = inputChannel[i]!;

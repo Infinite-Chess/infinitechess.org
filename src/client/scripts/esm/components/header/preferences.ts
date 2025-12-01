@@ -1,23 +1,29 @@
+import themes from '../../../../../shared/components/header/themes.js';
+import pieceThemes, {
+	PieceColorGroup,
+} from '../../../../../shared/components/header/pieceThemes.js';
+import localstorage from '../../util/localstorage.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
+import validatorama from '../../util/validatorama.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import docutil from '../../util/docutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
-import themes from "../../../../../shared/components/header/themes.js";
-import pieceThemes, { PieceColorGroup } from "../../../../../shared/components/header/pieceThemes.js";
-import localstorage from "../../util/localstorage.js";
-import timeutil from "../../../../../shared/util/timeutil.js";
-import validatorama from "../../util/validatorama.js";
-import jsutil from "../../../../../shared/util/jsutil.js";
-import docutil from "../../util/docutil.js";
-import typeutil from "../../../../../shared/chess/util/typeutil.js";
-
-
-import type { Color } from "../../../../../shared/util/math/math.js";
-
-
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 // Type Definitions ------------------------------------------------------------
 
-
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_enabled', 'starfield_enabled', 'advanced_effects_enabled', 'master_volume', 'ambience_enabled'];
+const clientSidePrefs: string[] = [
+	'perspective_sensitivity',
+	'perspective_fov',
+	'drag_enabled',
+	'premove_enabled',
+	'starfield_enabled',
+	'advanced_effects_enabled',
+	'master_volume',
+	'ambience_enabled',
+];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
@@ -34,15 +40,14 @@ interface ClientSidePreferences {
 interface ServerSidePreferences {
 	theme: string;
 	legal_moves: 'dots' | 'squares';
-	animations: boolean,
-	lingering_annotations: boolean,
+	animations: boolean;
+	lingering_annotations: boolean;
 }
 
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
 
 // Variables ------------------------------------------------------------
-
 
 /** All our preferences. */
 let preferences: Preferences;
@@ -61,16 +66,13 @@ const default_advanced_effects_enabled: boolean = true;
 const default_master_volume: number = 1;
 const default_ambience_enabled: boolean = true;
 
-
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
  * We only change this to true if we change a preference that isn't only client side.
  */
 let changeWasMade: boolean = false;
 
-
 // Functions -----------------------------------------------------------------------
-
 
 (function init(): void {
 	loadPreferences();
@@ -99,7 +101,7 @@ function loadPreferences(): void {
 		// console.log("Preferences cookie was present!");
 		preferences = JSON.parse(decodeURIComponent(cookiePrefs));
 		// console.log(jsutil.deepCopyObject(preferences));
-		clientSidePrefs.forEach(pref => preferences![pref] = browserStoragePrefs[pref] );
+		clientSidePrefs.forEach((pref) => (preferences![pref] = browserStoragePrefs[pref]));
 	}
 }
 
@@ -117,12 +119,12 @@ function onChangeMade(): void {
 }
 
 async function sendPrefsToServer(): Promise<void> {
-	if (!validatorama.areWeLoggedIn()) return;  // Ensure user is logged in
-	if (!changeWasMade) return;  // Only send if preferences were changed
-	changeWasMade = false;  // Reset the flag after sending
+	if (!validatorama.areWeLoggedIn()) return; // Ensure user is logged in
+	if (!changeWasMade) return; // Only send if preferences were changed
+	changeWasMade = false; // Reset the flag after sending
 
 	console.log('Sending preferences to the server!');
-	const preparedPrefs: ServerSidePreferences = preparePrefs();  // Prepare the preferences to send
+	const preparedPrefs: ServerSidePreferences = preparePrefs(); // Prepare the preferences to send
 	POSTPrefs(preparedPrefs);
 }
 
@@ -132,25 +134,28 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
+			'is-fetch-request': 'true', // Custom header
 		} as Record<string, string>,
-		body: JSON.stringify({ preferences: preparedPrefs }),  // Send the preferences as JSON
+		body: JSON.stringify({ preferences: preparedPrefs }), // Send the preferences as JSON
 	};
 
 	// Get the access token and add it to the Authorization header
 	const token: string | undefined = await validatorama.getAccessToken();
-	if (token) config.headers['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
+	if (token) config.headers['Authorization'] = `Bearer ${token}`; // If you use tokens for authentication
 
 	try {
 		const response: Response = await fetch('/api/set-preferences', config);
-		
+
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {
 			console.log('Preferences updated successfully on the server.');
 		} else {
 			// Handle unsuccessful response
 			const errorData: any = await response.json();
-			console.error('Failed to update preferences on the server:', errorData.message || errorData);
+			console.error(
+				'Failed to update preferences on the server:',
+				errorData.message || errorData,
+			);
 		}
 	} catch (error) {
 		console.error('Error sending preferences to the server:', error);
@@ -159,7 +164,7 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 
 function preparePrefs(): ServerSidePreferences {
 	const prefsCopy: Preferences = jsutil.deepCopyObject(preferences);
-	Object.keys(prefsCopy).forEach(prefName => {
+	Object.keys(prefsCopy).forEach((prefName) => {
 		if (clientSidePrefs.includes(prefName)) delete prefsCopy[prefName];
 	});
 	// console.log(`Original preferences: ${JSON.stringify(preferences)}`);
@@ -185,7 +190,7 @@ function getStarfieldMode(): boolean {
 function setStarfieldMode(value: boolean): void {
 	preferences.starfield_enabled = value;
 	savePreferences();
-	
+
 	// Dispatch an event so that the game code can detect it, if present.
 	document.dispatchEvent(new CustomEvent('starfield-toggle', { detail: value }));
 }
@@ -195,7 +200,8 @@ function getLegalMovesShape(): 'dots' | 'squares' {
 }
 
 function setLegalMovesShape(legal_moves: 'dots' | 'squares'): void {
-	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
+	if (typeof legal_moves !== 'string')
+		throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
 	onChangeMade();
 	savePreferences();
@@ -206,7 +212,8 @@ function getDragEnabled(): boolean {
 }
 
 function setDragEnabled(drag_enabled: boolean): void {
-	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
+	if (typeof drag_enabled !== 'boolean')
+		throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
 	preferences.drag_enabled = drag_enabled;
 	savePreferences();
 }
@@ -216,7 +223,8 @@ function getPremoveEnabled(): boolean {
 }
 
 function setPremoveMode(value: boolean): void {
-	if (typeof value !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
+	if (typeof value !== 'boolean')
+		throw new Error('Cannot set preference premove_mode when it is not a boolean.');
 	preferences.premove_enabled = value;
 	savePreferences();
 
@@ -239,7 +247,8 @@ function getPerspectiveSensitivity(): number {
 }
 
 function setPerspectiveSensitivity(perspective_sensitivity: number): void {
-	if (typeof perspective_sensitivity !== 'number') throw new Error('Cannot set preference perspective_sensitivity when it is not a number.');
+	if (typeof perspective_sensitivity !== 'number')
+		throw new Error('Cannot set preference perspective_sensitivity when it is not a number.');
 	preferences.perspective_sensitivity = perspective_sensitivity;
 	savePreferences();
 }
@@ -253,7 +262,8 @@ function getDefaultPerspectiveFOV(): number {
 }
 
 function setPerspectiveFOV(perspective_fov: number): void {
-	if (typeof perspective_fov !== 'number') throw new Error('Cannot set preference perspective_fov when it is not a number.');
+	if (typeof perspective_fov !== 'number')
+		throw new Error('Cannot set preference perspective_fov when it is not a number.');
 	preferences.perspective_fov = perspective_fov;
 	savePreferences();
 	document.dispatchEvent(new CustomEvent('fov-change'));
@@ -264,7 +274,8 @@ function getLingeringAnnotationsMode(): boolean {
 }
 
 function setLingeringAnnotationsMode(value: boolean): void {
-	if (typeof value !== 'boolean') throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
+	if (typeof value !== 'boolean')
+		throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
 	preferences.lingering_annotations = value;
 	onChangeMade();
 	savePreferences();
@@ -279,7 +290,8 @@ function getAdvancedEffectsMode(): boolean {
 }
 
 function setAdvancedEffectsMode(value: boolean): void {
-	if (typeof value !== 'boolean') throw new Error('Cannot set preference advanced_effects_enabled when it is not a boolean.');
+	if (typeof value !== 'boolean')
+		throw new Error('Cannot set preference advanced_effects_enabled when it is not a boolean.');
 	preferences.advanced_effects_enabled = value;
 	savePreferences();
 }
@@ -289,7 +301,8 @@ function getMasterVolume(): number {
 }
 
 function setMasterVolume(master_volume: number): void {
-	if (typeof master_volume !== 'number') throw new Error('Cannot set preference master_volume when it is not a number.');
+	if (typeof master_volume !== 'number')
+		throw new Error('Cannot set preference master_volume when it is not a number.');
 	if (master_volume > 1) throw new Error('Cannot set master_volume > 1!');
 	preferences.master_volume = master_volume;
 	savePreferences();
@@ -304,7 +317,8 @@ function getAmbienceEnabled(): boolean {
 }
 
 function setAmbienceEnabled(ambience_enabled: boolean): void {
-	if (typeof ambience_enabled !== 'boolean') throw new Error('Cannot set preference ambience_enabled when it is not a boolean.');
+	if (typeof ambience_enabled !== 'boolean')
+		throw new Error('Cannot set preference ambience_enabled when it is not a boolean.');
 	preferences.ambience_enabled = ambience_enabled;
 	savePreferences();
 
@@ -312,9 +326,7 @@ function setAmbienceEnabled(ambience_enabled: boolean): void {
 	document.dispatchEvent(new CustomEvent('ambience-toggle', { detail: ambience_enabled }));
 }
 
-
 // Getters for our current theme properties --------------------------------------------------------
-
 
 function getColorOfLightTiles(): Color {
 	const themeName: string = getTheme();
@@ -326,10 +338,18 @@ function getColorOfDarkTiles(): Color {
 	return themes.getPropertyOfTheme(themeName, 'darkTiles');
 }
 
-function getLegalMoveHighlightColor({ isOpponentPiece, isPremove }: { isOpponentPiece: boolean, isPremove: boolean }): Color {
+function getLegalMoveHighlightColor({
+	isOpponentPiece,
+	isPremove,
+}: {
+	isOpponentPiece: boolean;
+	isPremove: boolean;
+}): Color {
 	const themeName: string = getTheme();
-	if (isOpponentPiece) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Opponent');
-	else if (isPremove) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Premove');
+	if (isOpponentPiece)
+		return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Opponent');
+	else if (isPremove)
+		return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Premove');
 	else return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Friendly');
 }
 
@@ -340,7 +360,7 @@ function getLastMoveHighlightColor(): Color {
 
 function getCheckHighlightColor(): Color {
 	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'checkHighlightColor'); 
+	return themes.getPropertyOfTheme(themeName, 'checkHighlightColor');
 }
 
 function getBoxOutlineColor(): Color {
@@ -365,7 +385,10 @@ function getTintColorOfType(type: number): Color {
 	const baseColor: Color = pieceThemes.getBaseColorForType(r, p);
 
 	const themeName: string = getTheme();
-	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(themeName, "pieceTheme");
+	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(
+		themeName,
+		'pieceTheme',
+	);
 	const tint: Color = themePieceColors[p] ?? [1, 1, 1, 1];
 
 	// Multiply the colors together to get the final color
@@ -373,7 +396,7 @@ function getTintColorOfType(type: number): Color {
 		baseColor[0] * tint[0],
 		baseColor[1] * tint[1],
 		baseColor[2] * tint[2],
-		baseColor[3] * tint[3]
+		baseColor[3] * tint[3],
 	];
 }
 
@@ -388,7 +411,6 @@ function getTintColorOfType(type: number): Color {
 // 	return themes.defaultTheme; // Default theme if not in a holiday week
 // }
 
-
 /*
  * The commented stuff below is ONLY used for fast
  * modifying of theme players using the keyboard keys!
@@ -402,7 +424,7 @@ function getTintColorOfType(type: number): Color {
 // function update() {
 
 // 	const themeProperties = themes.themes[preferences.theme]!;
-	
+
 // 	if (listener_document.isKeyDown('KeyU')) {
 // 		currPropertyIndex--;
 // 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
@@ -494,7 +516,6 @@ function getTintColorOfType(type: number): Color {
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-
 // 	if (listener_document.isKeyDown('Backslash')) {
 // 		console.log(JSON.stringify(themes.themes[preferences.theme]));
 // 	}
@@ -506,9 +527,7 @@ function getTintColorOfType(type: number): Color {
 // }
 // setInterval(dispatchThemeChangeEvent, 1000);
 
-
 // Exports -----------------------------------------------------------------------------------------
-
 
 export default {
 	getTheme,

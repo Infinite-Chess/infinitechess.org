@@ -1,10 +1,8 @@
-
 // This script selects new languages when we click a language in the language dropdown.
 // It also appends the lng query param to all header navigation links.
 // And it removes the lng query param from the url after loading.
 
-import preferences from "../preferences.js";
-
+import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -17,24 +15,19 @@ const legalmoveDropdownTitle = document.querySelector('.legalmove-dropdown .drop
 const squaresOption = document.querySelector('.legalmove-option.squares');
 const dotsOption = document.querySelector('.legalmove-option.dots');
 
-
-
 // Functions ---------------------------------------------------------------------------------
 
-
 (function init() {
-
 	showCheckmarkOnSelectedOption();
-
 })();
 
 function showCheckmarkOnSelectedOption() {
 	const selectedLegalMovesOption = preferences.getLegalMovesShape(); // squares/dots
-	const targetCheckmark = document.querySelector(`.legalmove-option.${selectedLegalMovesOption} .checkmark`);
+	const targetCheckmark = document.querySelector(
+		`.legalmove-option.${selectedLegalMovesOption} .checkmark`,
+	);
 	targetCheckmark.classList.remove('visibility-hidden');
 }
-
-
 
 function open() {
 	legalmoveDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
@@ -47,18 +40,16 @@ function close() {
 	settingsDropdown.classList.remove('transparent');
 }
 
-
 function initListeners() {
 	legalmoveDropdownTitle.addEventListener('click', close);
-	squaresOption.addEventListener("click", toggleSquares);
-	dotsOption.addEventListener("click", toggleDots);
+	squaresOption.addEventListener('click', toggleSquares);
+	dotsOption.addEventListener('click', toggleDots);
 }
 function closeListeners() {
 	legalmoveDropdownTitle.removeEventListener('click', close);
-	squaresOption.removeEventListener("click", toggleSquares);
-	dotsOption.removeEventListener("click", toggleDots);
+	squaresOption.removeEventListener('click', toggleSquares);
+	dotsOption.removeEventListener('click', toggleDots);
 }
-
 
 function toggleSquares() {
 	// console.log("Clicked squares");
@@ -79,7 +70,7 @@ function toggleDots() {
 }
 
 function hideAllCheckmarks() {
-	document.querySelectorAll('.legalmove-option .checkmark').forEach(checkmark => {
+	document.querySelectorAll('.legalmove-option .checkmark').forEach((checkmark) => {
 		checkmark.classList.add('visibility-hidden');
 	});
 }
@@ -89,8 +80,6 @@ function dispatchLegalMoveChangeEvent() {
 	const themeChangeEvent = new CustomEvent('legalmove-shape-change');
 	document.dispatchEvent(themeChangeEvent);
 }
-
-
 
 export default {
 	initListeners,

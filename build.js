@@ -1,40 +1,39 @@
-
 // build.js
 
 /**
  * This script deploys all files and assets from /src/client to /dist in order to run the website.
- * 
+ *
  * Development mode: Transpile all TypeScript files to JavaScript.
  * Production mode: Transpile and bundle all TypeScript files to JavaScript, and minify via @swc/core.
  * 					Further, all css files are minified by lightningcss.
  */
 
 import { readFile } from 'node:fs/promises';
-import swc from "@swc/core";
+import swc from '@swc/core';
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
 import { glob } from 'glob';
 import esbuild from 'esbuild';
-import path from "node:path";
+import path from 'node:path';
 import stripComments from 'glsl-strip-comments';
 
 // Local imports
-import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
+import {
+	getAllFilesInDirectoryWithExtension,
+	writeFile_ensureDirectory,
+} from './src/server/utility/fileUtils.js';
 import { DEV_BUILD } from './src/server/config/config.js';
 
-
 // ================================= CONSTANTS =================================
-
 
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
 const cssTargets = browserslistToTargets(browserslist('defaults'));
 
-
 /**
  * Any ES Module that any HTML document IMPORTS directly!
  * ADD TO THIS when we create new modules that nothing else depends on!
- * 
+ *
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
@@ -55,11 +54,17 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
-	ignore: ['**/*.test.{ts,js}']
+	ignore: ['**/*.test.{ts,js}'],
 });
 
-const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin('✅ Client Build successful.', '❌ Client Build failed.');
-const esbuildServerRebuildPlugin = getESBuildLogRebuildPlugin('✅ Server Build successful.', '❌ Server Build failed.');
+const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin(
+	'✅ Client Build successful.',
+	'❌ Client Build failed.',
+);
+const esbuildServerRebuildPlugin = getESBuildLogRebuildPlugin(
+	'✅ Server Build successful.',
+	'❌ Server Build failed.',
+);
 
 /** An esbuild plugin that logs whenever a build is finished. */
 function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
@@ -67,7 +72,7 @@ function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
 		name: 'log-rebuild',
 		setup(build) {
 			// This hook runs when a build has finished
-			build.onEnd(result => {
+			build.onEnd((result) => {
 				if (result.errors.length > 0) console.error(failureMessage);
 				else console.log(successMessage);
 			});
@@ -80,7 +85,7 @@ const GLSLMinifyPlugin = {
 	name: 'glsl-minify',
 	setup(build) {
 		// Intercept .glsl files and minify them
-		build.onLoad({ filter: /\.glsl$/ }, async(args) => {
+		build.onLoad({ filter: /\.glsl$/ }, async (args) => {
 			try {
 				// Read the GLSL file
 				const source = await readFile(args.path, 'utf8');
@@ -89,14 +94,16 @@ const GLSLMinifyPlugin = {
 				// Return the minified content as text
 				return {
 					contents: minified,
-					loader: 'text'
+					loader: 'text',
 				};
 			} catch (error) {
 				return {
-					errors: [{
-						text: `Failed to minify GLSL file: ${error.message}`,
-						location: { file: args.path }
-					}]
+					errors: [
+						{
+							text: `Failed to minify GLSL file: ${error.message}`,
+							location: { file: args.path },
+						},
+					],
 				};
 			}
 		});
@@ -115,7 +122,7 @@ const esbuildClientOptions = {
 	 * If this is false, multiple copies of the same code may be loaded onto a page,
 	 * each belonging to a separate entry point module.
 	 */
-	splitting: true, 
+	splitting: true,
 	format: 'esm', // or 'cjs' for Common JS
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// allowOverwrite: true, // Not needed?
@@ -125,7 +132,7 @@ const esbuildClientOptions = {
 
 const esbuildServerOptions = {
 	// Transpile all TS files from BOTH directories
-	entryPoints: serverEntryPoints, 
+	entryPoints: serverEntryPoints,
 	platform: 'node',
 	bundle: false, // No bundling for the server. Just transpile each file individually
 	outdir: 'dist',
@@ -134,9 +141,7 @@ const esbuildServerOptions = {
 	plugins: [esbuildServerRebuildPlugin],
 };
 
-
 // ================================ BUILDING =================================
-
 
 /** Builds the client's scripts and assets. */
 async function buildClient(isDev) {
@@ -150,14 +155,14 @@ async function buildClient(isDev) {
 	if (isDev) {
 		await context.watch();
 		// console.log('esbuild is watching for CLIENT changes...');
-	}
-	/**
-	 * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
-	 * If multiple entry points share dependencies, then those dependencies will be split into separate modules,
-	 * which means they aren't duplicated, and there's only one instance of it per page.
-	 * This also means more requests to the server, but not many.
-	 */
-	else { // Production
+	} else {
+		/**
+		 * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
+		 * If multiple entry points share dependencies, then those dependencies will be split into separate modules,
+		 * which means they aren't duplicated, and there's only one instance of it per page.
+		 * This also means more requests to the server, but not many.
+		 */
+		// Production
 		// Build once and exit if not in watch mode
 		await context.rebuild();
 		context.dispose();
@@ -166,8 +171,16 @@ async function buildClient(isDev) {
 		// Minify JS and CSS
 		// console.log('Minifying production assets...');
 		// Further minify them. This cuts off their size a further 60%!!!
-		await minifyScriptDirectory('./dist/client/scripts/cjs/', './dist/client/scripts/cjs/', false);
-		await minifyScriptDirectory('./dist/client/scripts/esm/', './dist/client/scripts/esm/', true);
+		await minifyScriptDirectory(
+			'./dist/client/scripts/cjs/',
+			'./dist/client/scripts/cjs/',
+			false,
+		);
+		await minifyScriptDirectory(
+			'./dist/client/scripts/esm/',
+			'./dist/client/scripts/esm/',
+			true,
+		);
 		await minifyCSSFiles();
 	}
 }
@@ -188,7 +201,6 @@ async function buildServer(isDev) {
 	}
 }
 
-
 /**
  * Minifies all JavaScript files in a directory and writes them to an output directory.
  * @param {string} inputDir - The directory to scan for scripts.
@@ -198,7 +210,7 @@ async function buildServer(isDev) {
  */
 async function minifyScriptDirectory(inputDir, outputDir, isModule) {
 	const files = await getAllFilesInDirectoryWithExtension(inputDir, '.js');
-		
+
 	for (const file of files) {
 		const inputFilePath = path.join(inputDir, file);
 		const outputFilePath = path.join(outputDir, file);
@@ -210,7 +222,7 @@ async function minifyScriptDirectory(inputDir, outputDir, isModule) {
 			sourceMap: false,
 			module: isModule, // Include if we're minifying ES Modules instead of Common JS
 		});
-		
+
 		// Write the minified file to the output directory
 		writeFile_ensureDirectory(outputFilePath, minified.code);
 		// console.log(`Minified: ${outputFilePath}`);
@@ -224,7 +236,7 @@ async function minifyScriptDirectory(inputDir, outputDir, isModule) {
  */
 async function minifyCSSFiles() {
 	// Bundle and compress all css files
-	const cssFiles = await getAllFilesInDirectoryWithExtension("./dist/client/css", ".css");
+	const cssFiles = await getAllFilesInDirectoryWithExtension('./dist/client/css', '.css');
 	for (const file of cssFiles) {
 		// Minify css files
 		const { code } = transform({
@@ -237,18 +249,14 @@ async function minifyCSSFiles() {
 	}
 }
 
-
 // ================================ START BUILD ================================
-
 
 /** Whether additional minifying of bundled scripts and css files should be skipped. */
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
-if (USE_DEVELOPMENT_BUILD && !DEV_BUILD) throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
+if (USE_DEVELOPMENT_BUILD && !DEV_BUILD)
+	throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
 
 // Await all so the script doesn't finish and node terminate before esbuild is done.
-await Promise.all([
-    buildClient(USE_DEVELOPMENT_BUILD),
-    buildServer(USE_DEVELOPMENT_BUILD)
-]);
+await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
 
 // console.log('Build process finished.');

@@ -1,4 +1,3 @@
-
 /**
  * This script renders the red glow surrounding
  * royal pieces currently in check.
@@ -12,17 +11,13 @@ import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from '../primitives.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
-
 // Type Definitions ----------------------------------------------------------------
-
 
 import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 
-
 // Functions -----------------------------------------------------------------------
-
 
 /**
  * Renders the red glow around all pieces in check on the currently-viewed move.
@@ -30,7 +25,7 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 function render(boardsim: Board): void {
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
 	if (royalsInCheck.length === 0) return; // Nothing in check
-    
+
 	const model = genCheckHighlightModel(royalsInCheck);
 	model.render();
 }
@@ -40,12 +35,12 @@ function render(boardsim: Board): void {
  */
 function genCheckHighlightModel(royalsInCheck: Coords[]): Renderable {
 	const color = preferences.getCheckHighlightColor(); // [r,g,b,a]
-	const colorOfPerimeter: Color = [color[0], color[1], color[2],  0]; // Same color, but zero opacity
+	const colorOfPerimeter: Color = [color[0], color[1], color[2], 0]; // Same color, but zero opacity
 
 	const outRad = 0.65 * boardpos.getBoardScaleAsNumber();
 	const inRad = 0.3 * boardpos.getBoardScaleAsNumber();
 	const resolution = 20;
-    
+
 	const data: number[] = [];
 	for (let i = 0; i < royalsInCheck.length; i++) {
 		const thisRoyalInCheckCoordsBD: BDCoords = bd.FromCoords(royalsInCheck[i]!);
@@ -56,16 +51,15 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): Renderable {
 		const y = worldSpaceCoord[1];
 
 		const dataCircle: number[] = primitives.Circle(x, y, inRad, resolution, color);
+		// prettier-ignore
 		const dataRing: number[] = primitives.Ring(x, y, inRad, outRad, resolution, color, colorOfPerimeter);
 		data.push(...dataCircle);
 		data.push(...dataRing);
 	}
 
-	return createRenderable(data, 2, "TRIANGLES", 'color', true);
+	return createRenderable(data, 2, 'TRIANGLES', 'color', true);
 }
 
-
-
 export default {
-	render
+	render,
 };

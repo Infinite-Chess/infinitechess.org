@@ -1,22 +1,17 @@
-
 // src/client/scripts/esm/util/math.ts
 
 /**
  * This script contains extra general math operations.
- * 
+ *
  * Most of the stuff in here were moved to either bounds.ts, vectors.ts, or geometry.ts.
  */
 
-
 // Type Definitions -------------------------------------------
 
-
 /** A color in a length-4 array: `[r,g,b,a]` */
-type Color = [number,number,number,number];
-
+type Color = [number, number, number, number];
 
 // Operations -----------------------------------------------------------
-
 
 /**
  * Clamps a value between a minimum and a maximum value.
@@ -32,12 +27,10 @@ function clamp(value: number, min: number, max: number): number {
  * @returns The positive remainder of the division.
  */
 function posMod(a: number, b: number): number {
-	return a - (Math.floor(a / b) * b);
+	return a - Math.floor(a / b) * b;
 }
 
-
 // Easing Functions ---------------------------------------------------
-
 
 /**
  * Applies an ease-in-out interpolation.
@@ -63,18 +56,14 @@ function easeOut(t: number): number {
 	return t * (2 - t);
 }
 
-
 // Other -------------------------------------------------------------
-
 
 /** Returns a value smoothly oscillating between a min and max. */
 function getSineWaveVariation(time: number, min: number, max: number): number {
 	return min + (Math.sin(time) * 0.5 + 0.5) * (max - min);
 }
 
-
 // Exports -----------------------------------------------------
-
 
 export default {
 	// Operations
@@ -88,6 +77,4 @@ export default {
 	getSineWaveVariation,
 };
 
-export type {
-	Color,
-};
+export type { Color };

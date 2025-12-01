@@ -1,5 +1,5 @@
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /** A simple structure to define a single droplet's state. */
 export interface RippleState {
@@ -17,7 +17,7 @@ export class WaterRipplePass implements PostProcessPass {
 	private static readonly MAX_DROPLETS = 20; // MUST match the shader constant
 
 	// --- Global Effect Controls ---
-	
+
 	/**
 	 * A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect.
 	 * HAS NO EFFECT ON THE WATER RIPPLE PASS.
@@ -47,7 +47,6 @@ export class WaterRipplePass implements PostProcessPass {
 	private centersArray: Float32Array = new Float32Array(WaterRipplePass.MAX_DROPLETS * 2);
 	private timesArray: Float32Array = new Float32Array(WaterRipplePass.MAX_DROPLETS);
 
-
 	/**
 	 * Creates a new WaterRipplePass.
 	 * @param programManager - The ProgramManager instance to retrieve shader programs.
@@ -69,7 +68,7 @@ export class WaterRipplePass implements PostProcessPass {
 		const count = Math.min(droplets.length, WaterRipplePass.MAX_DROPLETS);
 		this.activeDroplets = droplets.slice(-count); // Keep the most recent droplets
 	}
-	
+
 	/**
 	 * Informs the pass of the current rendering resolution.
 	 * This is crucial for correcting aspect ratio distortion,
@@ -83,6 +82,7 @@ export class WaterRipplePass implements PostProcessPass {
 		this.resolution[1] = height;
 	}
 
+	// prettier-ignore
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		const now = Date.now();
 
@@ -99,7 +99,7 @@ export class WaterRipplePass implements PostProcessPass {
 		this.program.use();
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-		
+
 		gl.uniform1i(this.program.getUniformLocation('u_sceneTexture'), 0);
 		gl.uniform1i(this.program.getUniformLocation('u_dropletCount'), dropletCount);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);
@@ -110,7 +110,7 @@ export class WaterRipplePass implements PostProcessPass {
 		gl.uniform1f(this.program.getUniformLocation('u_glintIntensity'), this.glintIntensity);
 		gl.uniform1f(this.program.getUniformLocation('u_glintExponent'), this.glintExponent);
 		gl.uniform2fv(this.program.getUniformLocation('u_resolution'), this.resolution);
-        
+
 		if (dropletCount > 0) {
 			// Use subarray to only send data for active droplets
 			gl.uniform2fv(this.program.getUniformLocation('u_centers'), this.centersArray.subarray(0, dropletCount * 2));

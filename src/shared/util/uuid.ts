@@ -1,7 +1,6 @@
-
 /**
  * This script generates unique identifiers for us.
- * 
+ *
  * ZERO dependancies.
  */
 
@@ -64,7 +63,11 @@ function generateNumbID(length: number): number {
  * MUST BE POSITIVE!!!	0+
  */
 function base10ToBase62(num: number): string {
-	if (!Number.isInteger(num) || num < 0) throw new Error('Input must be a non-negative integer when converting base 10 to base 62. Received: ' + num);
+	if (!Number.isInteger(num) || num < 0)
+		throw new Error(
+			'Input must be a non-negative integer when converting base 10 to base 62. Received: ' +
+				num,
+		);
 
 	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	let result = '';
@@ -86,7 +89,8 @@ function base10ToBase62(num: number): string {
  * MUST BE VALID BASE 62!!!
  */
 function base62ToBase10(base62Str: string): number {
-	if (typeof base62Str !== 'string' || base62Str.length === 0) throw new Error('Input must be a non-empty string when converting base 62 to base 10.');
+	if (typeof base62Str !== 'string' || base62Str.length === 0)
+		throw new Error('Input must be a non-empty string when converting base 62 to base 10.');
 
 	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	const base = 62;

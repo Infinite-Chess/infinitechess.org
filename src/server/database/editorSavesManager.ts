@@ -1,19 +1,15 @@
-
 // src/server/database/editorSavesManager.ts
 
 /**
  * This module manages saved positions in the editor_saves table.
  */
 
-
 import type { RunResult } from 'better-sqlite3';
 
 import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-
 // Type Definitions --------------------------------------------------------------------
-
 
 /** Represents a saved position list record (position_id, name, size only). */
 export type EditorSavesListRecord = {
@@ -27,9 +23,7 @@ export type EditorSavesIcnRecord = {
 	icn: string;
 };
 
-
 // Constants ---------------------------------------------------------------------------------
-
 
 /** Maximum number of saved positions allowed per user */
 const MAX_SAVED_POSITIONS = 50;
@@ -37,9 +31,7 @@ const MAX_SAVED_POSITIONS = 50;
 /** Error message for when the user's save quota is exceeded. */
 const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
 
-
 // Methods -----------------------------------------------------------------------------
-
 
 /**
  * Retrieves all saved positions for a given user_id.
@@ -54,7 +46,10 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 		return db.all<EditorSavesListRecord>(query, [user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error retrieving saved positions for user_id ${user_id}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error retrieving saved positions for user_id ${user_id}: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while managing editor saves.');
 	}
 }
@@ -73,7 +68,10 @@ function addSavedPosition(user_id: number, name: string, size: number, icn: stri
 	try {
 		const transaction = db.transaction(() => {
 			// 1. Get count within the transaction
-			const countResult = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`, [user_id]);
+			const countResult = db.get<{ count: number }>(
+				`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`,
+				[user_id],
+			);
 			const currentCount = countResult?.count ?? 0;
 
 			// 2. Check quota
@@ -98,7 +96,10 @@ function addSavedPosition(user_id: number, name: string, size: number, icn: stri
 		}
 		// Log and throw generic error for all other database errors
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while managing editor saves.');
 	}
 }
@@ -110,13 +111,19 @@ function addSavedPosition(user_id: number, name: string, size: number, icn: stri
  * @returns The ICN record if found and owned by the user, otherwise undefined.
  * @throws {Error} A database error occurred while managing editor saves.
  */
-function getSavedPositionICN(position_id: number, user_id: number): EditorSavesIcnRecord | undefined {
+function getSavedPositionICN(
+	position_id: number,
+	user_id: number,
+): EditorSavesIcnRecord | undefined {
 	try {
 		const query = `SELECT icn FROM editor_saves WHERE position_id = ? AND user_id = ?`;
 		return db.get<EditorSavesIcnRecord>(query, [position_id, user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error retrieving ICN for position_id ${position_id} and user_id ${user_id}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error retrieving ICN for position_id ${position_id} and user_id ${user_id}: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while managing editor saves.');
 	}
 }
@@ -135,7 +142,10 @@ function deleteSavedPosition(position_id: number, user_id: number): RunResult {
 		return db.run(query, [position_id, user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error deleting position_id ${position_id} for user_id ${user_id}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error deleting position_id ${position_id} for user_id ${user_id}: ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while managing editor saves.');
 	}
 }
@@ -155,11 +165,13 @@ function renameSavedPosition(position_id: number, user_id: number, name: string)
 		return db.run(query, [name, position_id, user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error renaming position_id ${position_id} for user_id ${user_id} to "${name}": ${message}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error renaming position_id ${position_id} for user_id ${user_id} to "${name}": ${message}`,
+			'errLog.txt',
+		);
 		throw new Error('A database error occurred while managing editor saves.');
 	}
 }
-
 
 export default {
 	// Constants

@@ -1,7 +1,6 @@
-
 // src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.ts
 
-import type { AudioParamDescriptor } from "../worklet-types";
+import type { AudioParamDescriptor } from '../worklet-types';
 
 /*
  * These need to be declared in every audio worklet processor file,
@@ -13,15 +12,15 @@ import type { AudioParamDescriptor } from "../worklet-types";
 declare abstract class AudioWorkletProcessor {
 	static get parameterDescriptors(): AudioParamDescriptor[];
 	constructor(options?: any);
-	abstract process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean;
+	abstract process(
+		inputs: Float32Array[][],
+		outputs: Float32Array[][],
+		parameters: Record<string, Float32Array>,
+	): boolean;
 }
 
-declare function registerProcessor(
-	name: string,
-	processorCtor: typeof AudioWorkletProcessor
-): void;
+declare function registerProcessor(name: string, processorCtor: typeof AudioWorkletProcessor): void;
 /* eslint-enable no-unused-vars */
-
 
 /** Parameters for the BitcrusherProcessor. */
 interface BitcrusherParameters extends Record<string, Float32Array> {
@@ -56,7 +55,7 @@ class BitcrusherProcessor extends AudioWorkletProcessor {
 	process(
 		inputs: Float32Array[][],
 		outputs: Float32Array[][],
-		parameters: BitcrusherParameters
+		parameters: BitcrusherParameters,
 	): boolean {
 		const input = inputs[0];
 		const output = outputs[0];
@@ -72,7 +71,8 @@ class BitcrusherProcessor extends AudioWorkletProcessor {
 
 			for (let i = 0; i < inputChannel.length; ++i) {
 				const bitDepthValue = bitDepth.length > 1 ? bitDepth[i]! : bitDepth[0]!;
-				const downsamplingValue = downsampling.length > 1 ? downsampling[i]! : downsampling[0]!;
+				const downsamplingValue =
+					downsampling.length > 1 ? downsampling[i]! : downsampling[0]!;
 
 				// Downsampling
 				if (this.phase % downsamplingValue < 1) this.lastSampleValue = inputChannel[i]!;

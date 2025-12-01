@@ -1,14 +1,11 @@
-
 // src/client/scripts/esm/chess/variants/omega4generator.ts
 
 /**
  * Here lies the position generator for the Omega^4 Showcase variant.
  */
 
-
 import coordutil, { CoordsKey, Coords } from '../util/coordutil.js';
 import { rawTypes as r, ext as e } from '../util/typeutil.js';
-
 
 /**
  * Generates the Omega^4 position example
@@ -143,7 +140,12 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 
 	return startingPos;
 
-	function appendPawnTower(startingPos: Map<CoordsKey, number>, x: bigint, startY: bigint, endY: bigint): void {
+	function appendPawnTower(
+		startingPos: Map<CoordsKey, number>,
+		x: bigint,
+		startY: bigint,
+		endY: bigint,
+	): void {
 		if (endY < startY) return; // Don't do negative pawn towers
 		for (let y = startY; y <= endY; y++) {
 			const thisCoords: Coords = [x, y];
@@ -157,7 +159,13 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		startingPos.delete(key);
 	}
 
-	function spawnRookTower(startingPos: Map<CoordsKey, number>, xStart: bigint, yStart: bigint, dist: bigint): void {
+	// prettier-ignore
+	function spawnRookTower(
+		startingPos: Map<CoordsKey, number>,
+		xStart: bigint,
+		yStart: bigint,
+		dist: bigint,
+	): void {
 		// First wall with 4 bishops
 		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 1n]), r.PAWN + e.B);
@@ -201,7 +209,13 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		appendPawnTower(startingPos, xStart + 2n, yStart + 16n, dist);
 	}
 
-	function spawnAllRookTowers(startingPos: Map<CoordsKey, number>, xStart: bigint, yStart: bigint, xEnd: bigint, yEnd: bigint): void {
+	function spawnAllRookTowers(
+		startingPos: Map<CoordsKey, number>,
+		xStart: bigint,
+		yStart: bigint,
+		xEnd: bigint,
+		yEnd: bigint,
+	): void {
 		let y: bigint = yStart;
 		for (let x = xStart; x < xEnd; x += 3n) {
 			spawnRookTower(startingPos, x, y, yEnd);
@@ -209,7 +223,13 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		}
 	}
 
-	function spawnAllBishopCannons(startingPos: Map<CoordsKey, number>, startX: bigint, startY: bigint, endX: bigint, endY: bigint): void {
+	function spawnAllBishopCannons(
+		startingPos: Map<CoordsKey, number>,
+		startX: bigint,
+		startY: bigint,
+		endX: bigint,
+		endY: bigint,
+	): void {
 		const spacing = 7n;
 		let currX: bigint = startX;
 		let currY: bigint = startY;
@@ -222,7 +242,13 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		} while (currX < endX && currY > endY);
 	}
 
-	function genBishopCannon(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, i: number): void {
+	// prettier-ignore
+	function genBishopCannon(
+		startingPos: Map<CoordsKey, number>,
+		x: bigint,
+		y: bigint,
+		i: number,
+	): void {
 		// Pawn staples that never change
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.W);
@@ -260,7 +286,7 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		const upDiag: bigint = puzzleY - puzzleX;
 		if (upDiag > -990n) {
 			for (let a = 1; a <= count; a++) {
-				const isLastIndex: boolean = (a === count);
+				const isLastIndex: boolean = a === count;
 				genBishopPuzzlePiece(startingPos, puzzleX, puzzleY, isLastIndex);
 				puzzleX += 1n;
 				puzzleY += 1n;
@@ -277,7 +303,12 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		}
 	}
 
-	function genBishopPuzzlePiece(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, isLastIndex: boolean): void {
+	function genBishopPuzzlePiece(
+		startingPos: Map<CoordsKey, number>,
+		x: bigint,
+		y: bigint,
+		isLastIndex: boolean,
+	): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 2n]), r.BISHOP + e.B);
@@ -295,7 +326,13 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 2n]), r.PAWN + e.B);
 	}
 
-	function spawnAllWings(startingPos: Map<CoordsKey, number>, startX: bigint, startY: bigint, endX: bigint, endY: bigint): void {
+	function spawnAllWings(
+		startingPos: Map<CoordsKey, number>,
+		startX: bigint,
+		startY: bigint,
+		endX: bigint,
+		endY: bigint,
+	): void {
 		const spacing = 8n;
 		let currX: bigint = startX;
 		let currY: bigint = startY;
@@ -326,7 +363,7 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		let segX: bigint = x - 5n;
 		let segY: bigint = y - 8n;
 		for (let a = 1; a <= count; a++) {
-			const isLastIndex: boolean = (a === count);
+			const isLastIndex: boolean = a === count;
 			genWingSegment(startingPos, segX, segY, isLastIndex);
 			segX -= segSpacing;
 			segY += segSpacing;
@@ -338,7 +375,12 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		setAir(startingPos, [x - 5n, y - 10n]);
 	}
 
-	function genWingSegment(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, isLastIndex: boolean): void {
+	function genWingSegment(
+		startingPos: Map<CoordsKey, number>,
+		x: bigint,
+		y: bigint,
+		isLastIndex: boolean,
+	): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 2n]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y - 1n]), r.PAWN + e.W);
@@ -384,7 +426,14 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 5n]), r.PAWN + e.W);
 	}
 
-	function addVoidSquaresToOmegaFourth(startingPos: Map<CoordsKey, number>, left: bigint, top: bigint, right: bigint, bottomright: bigint, bottomleft: bigint): void {
+	function addVoidSquaresToOmegaFourth(
+		startingPos: Map<CoordsKey, number>,
+		left: bigint,
+		top: bigint,
+		right: bigint,
+		bottomright: bigint,
+		bottomleft: bigint,
+	): void {
 		for (let x = left; x <= right; x++) {
 			const key: CoordsKey = coordutil.getKeyFromCoords([x, top]);
 			startingPos.set(key, r.VOID + e.N);
@@ -418,5 +467,5 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 }
 
 export default {
-	genPositionOfOmegaFourth
+	genPositionOfOmegaFourth,
 };

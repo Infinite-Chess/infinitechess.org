@@ -1,256 +1,251 @@
 * {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana;
-    border: 0;
-    /* Enable temporarily during dev to see the borders of all elements */
-    /* outline: 1px solid rgba(0, 0, 0, 0.145); */
+	margin: 0;
+	padding: 0;
+	font-family: Verdana;
+	border: 0;
+	/* Enable temporarily during dev to see the borders of all elements */
+	/* outline: 1px solid rgba(0, 0, 0, 0.145); */
 }
 
 html {
-    height: 100%;
-    background-color: rgb(33, 33, 33);
+	height: 100%;
+	background-color: rgb(33, 33, 33);
 }
 
-
-
-
 main {
-    background-color: #fff;
-    /* Using PNG because it was the smallest after compression */
-    background-image: url('/img/blank_board.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-attachment: fixed;
+	background-color: #fff;
+	/* Using PNG because it was the smallest after compression */
+	background-image: url('/img/blank_board.png');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-attachment: fixed;
 
-    margin-top: 40px;
-    min-height: 400px;
+	margin-top: 40px;
+	min-height: 400px;
 }
 
 #content {
-    display: flex;
-    flex-direction: column;
-    background-color: rgba(255, 255, 255, 0.805);
-    min-height: 450px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-    padding: 30px 20px;
-    text-align: center;
+	display: flex;
+	flex-direction: column;
+	background-color: rgba(255, 255, 255, 0.805);
+	min-height: 450px;
+	margin: auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+	padding: 30px 20px;
+	text-align: center;
 }
 
 #verifyerror h2 {
-    font-size: 16px;
+	font-size: 16px;
 }
 
 #verifyerror p {
-    font-size: 11px;
-    margin-top: 0.5em;
-    margin-bottom: 20px;
+	font-size: 11px;
+	margin-top: 0.5em;
+	margin-bottom: 20px;
 }
 
 #verifyconfirm {
-    font-size: 16px;
-    margin-bottom: 20px;
+	font-size: 16px;
+	margin-bottom: 20px;
 }
 
 #content a {
-    color: rgb(0, 0, 0);
+	color: rgb(0, 0, 0);
 }
 
 #sendemail:hover {
-    cursor:pointer;
+	cursor: pointer;
 }
 
-.member, section {
-    background-color: rgba(238, 238, 238, 0.655);
-    border-radius: 6px;
-    border: solid 1px rgba(0, 0, 0, 0.123);
-    margin-bottom: 20px;
-    padding: 12px;
+.member,
+section {
+	background-color: rgba(238, 238, 238, 0.655);
+	border-radius: 6px;
+	border: solid 1px rgba(0, 0, 0, 0.123);
+	margin-bottom: 20px;
+	padding: 12px;
 }
 
 .member {
-    display: flex;
-    gap: 4%;
+	display: flex;
+	gap: 4%;
 }
 
 .member img {
-    display: inline-block;
-    height: 100px;
-    vertical-align: top;
+	display: inline-block;
+	height: 100px;
+	vertical-align: top;
 }
 
 .membername-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: end;
+	display: flex;
+	flex-direction: column;
+	justify-content: end;
 }
 
 .member h1 {
-    font-size: 16px;
-    font-family: georgia;
+	font-size: 16px;
+	font-family: georgia;
 }
-
 
 /* Badges */
 
 #badgelist {
-    display: flex;
-    height: 60px;
+	display: flex;
+	height: 60px;
 }
 
 #badgelist img {
-    height: 100%;
+	height: 100%;
 }
 
 .badge {
-    position: relative;
-    transition: transform 0.4s ease;
-    user-select: none;
-    width: 60px;
-    height: 60px;
+	position: relative;
+	transition: transform 0.4s ease;
+	user-select: none;
+	width: 60px;
+	height: 60px;
 }
-  
+
 .badge:hover {
-    transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 /* Badge shine properties are in header.css since they are shared with badges on play page */
 
-
 .stats {
-    padding: 12px 12px;
+	padding: 12px 12px;
 }
 
 .stats p {
-    display: inline-block;
-    margin: 0px 16px;
-    line-height: 2em;
+	display: inline-block;
+	margin: 0px 16px;
+	line-height: 2em;
 }
 
 #content-container {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 2;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 2;
 }
 
 .action-button {
-    margin-bottom: 20px;
-    padding: 0.7em 1em;
-    border-radius: 0.5em;
-    background-color: white;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.502);
-    transition: 0.15s;
+	margin-bottom: 20px;
+	padding: 0.7em 1em;
+	border-radius: 0.5em;
+	background-color: white;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.502);
+	transition: 0.15s;
 }
 
 .action-button:hover {
-    padding: 0.8em 1.15em;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.799);
-    cursor: pointer;
+	padding: 0.8em 1.15em;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.799);
+	cursor: pointer;
 }
 
 #delete-account {
-    margin-bottom: 0;
-    background-color: #fff1f1;
-    color: red;
-    font-weight: bold;
-    border: 1.5px solid red;
-    box-shadow: 0 0 8px rgba(148, 0, 0, 0.502);
+	margin-bottom: 0;
+	background-color: #fff1f1;
+	color: red;
+	font-weight: bold;
+	border: 1.5px solid red;
+	box-shadow: 0 0 8px rgba(148, 0, 0, 0.502);
 }
 
 #action-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 8px rgba(255, 211, 211, 0.799);
+	transform: scale(1.1);
+	box-shadow: 0 0 8px rgba(255, 211, 211, 0.799);
 }
 
 #show-account-info:active {
-    box-shadow: 0 0 8px rgb(0, 0, 0);
+	box-shadow: 0 0 8px rgb(0, 0, 0);
 }
 
 #delete-account:active {
-    background-color: #ffcaca;
+	background-color: #ffcaca;
 }
 
 #accountinfo {
-    /* background-color: rgba(219, 219, 219, 0.655); */
-    padding: 10px 16px 12px;
-    text-align: left;
+	/* background-color: rgba(219, 219, 219, 0.655); */
+	padding: 10px 16px 12px;
+	text-align: left;
 }
 
 #accountinfo h6 {
-    text-transform: uppercase;
-    margin-bottom: 6px;
+	text-transform: uppercase;
+	margin-bottom: 6px;
 }
 
 .hidden {
-    display: none;
+	display: none;
 }
 
 .currPage {
-    background-color: rgb(236, 236, 236);
+	background-color: rgb(236, 236, 236);
 }
 
 .center {
-    text-align: center;
+	text-align: center;
 }
 
 .red {
-    color: red;
+	color: red;
 }
 
 .green {
-    color: rgb(0, 162, 0);
+	color: rgb(0, 162, 0);
 }
 
 .underline {
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
 a {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
 }
-
-
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    .member {
-        padding: calc(12px + (100vw - 450px) * 0.05);
-    }
+	.member {
+		padding: calc(12px + (100vw - 450px) * 0.05);
+	}
 
-    .member img {
-        height: calc(100px + (100vw - 450px) * 0.165);
-    }
+	.member img {
+		height: calc(100px + (100vw - 450px) * 0.165);
+	}
 }
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
-    #verifyerror h2, #verifyconfirm {
-        font-size: 20px;
-    }
-    
-    #verifyerror p {
-        font-size: 13px;
-    }
+	#verifyerror h2,
+	#verifyconfirm {
+		font-size: 20px;
+	}
+
+	#verifyerror p {
+		font-size: 13px;
+	}
 }
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    #content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px;
-        min-height: calc(100vh - 182px);
-    }
+	#content {
+		max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+		padding: 40px 30px;
+		min-height: calc(100vh - 182px);
+	}
 
-    .member {
-        padding: 30px;
-    }
+	.member {
+		padding: 30px;
+	}
 
-    .member img {
-        height: 160px;
-    }
+	.member img {
+		height: 160px;
+	}
 }

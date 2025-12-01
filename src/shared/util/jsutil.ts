@@ -1,24 +1,22 @@
-
 // src/client/scripts/esm/util/jsutil.ts
 
 /**
  * This scripts contains utility methods for working with javascript objects.
  */
 
-import bimath from "./bigdecimal/bimath.js";
-
+import bimath from './bigdecimal/bimath.js';
 
 /**
  * Deep copies an entire object, no matter how deep its nested.
  * No properties will contain references to the source object.
  * Use this instead of structuredClone() because of browser support,
  * or when that throws an error due to functions contained within the src.
- * 
+ *
  * SLOW. Avoid using for very massive objects.
  */
 function deepCopyObject<T extends unknown>(src: T): T {
-	if (typeof src !== "object" || src === null) return src;
-    
+	if (typeof src !== 'object' || src === null) return src;
+
 	// Check for Maps
 	if (src instanceof Map) {
 		// Create a new Map instance
@@ -54,7 +52,7 @@ function deepCopyObject<T extends unknown>(src: T): T {
 		const value = src[key];
 		copy[key] = deepCopyObject(value); // Recursively copy each property
 	}
-    
+
 	return copy as T; // Return the copied object
 }
 
@@ -65,13 +63,13 @@ function copyFloat32Array(src: Float32Array): Float32Array {
 	if (!src || !(src instanceof Float32Array)) {
 		throw new Error('Invalid input: must be a Float32Array');
 	}
-    
+
 	const copy = new Float32Array(src.length);
-    
+
 	for (let i = 0; i < src.length; i++) {
 		copy[i]! = src[i]!;
 	}
-    
+
 	return copy;
 }
 
@@ -83,7 +81,7 @@ function copyFloat32Array(src: Float32Array): Float32Array {
  * @param value - The value to find in the array.
  * @returns An object telling you whether the value was found, and the index of that value, or where it can be inserted to remain organized.
  */
-function binarySearch(sortedArray: number[], value: number): { found: boolean, index: number } {
+function binarySearch(sortedArray: number[], value: number): { found: boolean; index: number } {
 	let left = 0;
 	let right = sortedArray.length - 1;
 
@@ -103,7 +101,7 @@ function binarySearch(sortedArray: number[], value: number): { found: boolean, i
 /**
  * Uses binary search to quickly find and insert the given number in the
  * organized array.
- * 
+ *
  * MUST NOT ALREADY CONTAIN THE VALUE!!
  * @param sortedArray - The array to search, which must be sorted in ascending order.
  * @param value - The value add in the correct place, retaining order.
@@ -111,7 +109,10 @@ function binarySearch(sortedArray: number[], value: number): { found: boolean, i
  */
 function addElementToOrganizedArray(sortedArray: number[], value: number): number[] {
 	const { found, index } = binarySearch(sortedArray, value);
-	if (found) throw Error(`Cannot add element to sorted array when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`);
+	if (found)
+		throw Error(
+			`Cannot add element to sorted array when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`,
+		);
 	sortedArray.splice(index, 0, value);
 	return sortedArray;
 }
@@ -135,16 +136,23 @@ function findIndexOfPointInOrganizedArray(sortedArray: number[], point: number):
  */
 function deleteElementFromOrganizedArray(sortedArray: number[], value: number): number[] {
 	const { found, index } = binarySearch(sortedArray, value);
-	if (!found) throw Error(`Cannot delete value "${value}" from organized array (not found). Array: ${JSON.stringify(sortedArray)}`);
+	if (!found)
+		throw Error(
+			`Cannot delete value "${value}" from organized array (not found). Array: ${JSON.stringify(sortedArray)}`,
+		);
 	sortedArray.splice(index, 1);
 	return sortedArray;
 }
 
 // Removes specified object from given array. Throws error if it fails. The object cannot be an object or array, only a single value.
-function removeObjectFromArray(array: any[], object: any): void { // object can't be an array
+function removeObjectFromArray(array: any[], object: any): void {
+	// object can't be an array
 	const index = array.indexOf(object);
 	if (index !== -1) array.splice(index, 1);
-	else throw Error(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`);
+	else
+		throw Error(
+			`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`,
+		);
 }
 
 // // Returns true if provided object is a float32array
@@ -174,7 +182,7 @@ function isEmpty(obj: object): boolean {
 	for (const prop in obj) {
 		if (Object.prototype.hasOwnProperty.call(obj, prop)) return false;
 	}
-    
+
 	return true;
 }
 
@@ -194,8 +202,8 @@ function isJson(str: string): boolean {
  * Returns a new object with the keys being the values of the provided object, and the values being the keys.
  * THE VALUES WILL ALWAYS BE STRINGS. This is because the keys of an object are always strings.
  */
-function invertObj(obj: Record<string,string>): Record<string,string> {
-	const inv: Record<string,string> = {};
+function invertObj(obj: Record<string, string>): Record<string, string> {
+	const inv: Record<string, string> = {};
 	for (const key in obj) {
 		inv[obj[key]!] = key;
 	}
@@ -212,15 +220,14 @@ function getMissingStringsFromArray(array1: string[], array2: string[]): string[
 	// Convert array1 to a Set for efficient lookup
 	const set1 = new Set(array1);
 	const missing: string[] = [];
- 
+
 	// Check if each element in array2 is present in set1
 	for (const item of array2) {
 		if (!set1.has(item)) missing.push(item); // If element from array2 is missing in array1, add it to the missing list
 	}
- 
+
 	return missing; // Return the list of missing strings
 }
-
 
 /**
  * Estimates the size, in memory, of ANY object, no matter how deep it's nested,
@@ -229,7 +236,7 @@ function getMissingStringsFromArray(array1: string[], array2: string[]): string[
  * This takes into account added overhead from each object/array created,
  * as those have extra prototype methods, etc, adding more memory. It also
  * attempts to correctly estimate the size of TypedArrays, ArrayBuffers, Maps, and Sets.
- * 
+ *
  * @author Gemini 2.5 Pro
  */
 function estimateMemorySizeOf(obj: any): string {
@@ -242,12 +249,18 @@ function estimateMemorySizeOf(obj: any): string {
 
 		// --- Primitive types ---
 		if (typeof value === 'boolean') bytes = 4;
-		else if (typeof value === 'string') bytes = value.length * 2; // Each char is 2 bytes in JS strings (UTF-16)
-		else if (typeof value === 'number') bytes = 8; // 64-bit float
-		else if (typeof value === 'symbol') bytes = (value.description?.length ?? 0) * 2 + 8; // Description + internal overhead
-		else if (typeof value === 'bigint') bytes = bimath.estimateBigIntSize(value); // Precise BigInt estimator
-		else if (value === null || typeof value === 'undefined') bytes = 0; // Very small
-		else if (typeof value === 'function') bytes = value.toString().length * 2 + 100; // Very rough guess
+		else if (typeof value === 'string')
+			bytes = value.length * 2; // Each char is 2 bytes in JS strings (UTF-16)
+		else if (typeof value === 'number')
+			bytes = 8; // 64-bit float
+		else if (typeof value === 'symbol')
+			bytes = (value.description?.length ?? 0) * 2 + 8; // Description + internal overhead
+		else if (typeof value === 'bigint')
+			bytes = bimath.estimateBigIntSize(value); // Precise BigInt estimator
+		else if (value === null || typeof value === 'undefined')
+			bytes = 0; // Very small
+		else if (typeof value === 'function')
+			bytes = value.toString().length * 2 + 100; // Very rough guess
 		// --- Object types ---
 		else if (typeof value === 'object') {
 			// --- Handle circular references and already visited objects ---
@@ -271,9 +284,11 @@ function estimateMemorySizeOf(obj: any): string {
 				}
 			}
 			// Date objects
-			else if (value instanceof Date) bytes = 8 + 40; // Internal number + object overhead
+			else if (value instanceof Date)
+				bytes = 8 + 40; // Internal number + object overhead
 			// RegExp objects
-			else if (value instanceof RegExp) bytes = value.source.length * 2 + 40; // Source string + object overhead
+			else if (value instanceof RegExp)
+				bytes = value.source.length * 2 + 40; // Source string + object overhead
 			// Map objects
 			else if (value instanceof Map) {
 				bytes = 64; // Overhead for the Map object itself
@@ -303,7 +318,7 @@ function estimateMemorySizeOf(obj: any): string {
 
 					// Size of the key (property name or array index)
 					if (!isArray || isNaN(parseInt(key, 10))) {
-						 bytes += key.length * 2; // Key string size
+						bytes += key.length * 2; // Key string size
 					}
 
 					// Reference pointer size (approx)
@@ -320,10 +335,10 @@ function estimateMemorySizeOf(obj: any): string {
 
 	// Turns the number into a human-readable string
 	function formatByteSize(bytes: number): string {
-		if (bytes < 1024) return bytes + " bytes";
-		else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-		else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-		else return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+		if (bytes < 1024) return bytes + ' bytes';
+		else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+		else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+		else return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 	}
 
 	// --- Main execution ---
@@ -332,7 +347,6 @@ function estimateMemorySizeOf(obj: any): string {
 	return formatByteSize(totalBytes);
 }
 
-
 /**
  * A "replacer" for JSON.stringify()'ing with custom behavior,
  * allowing us to stringify special objects like BigInts, Maps and TypedArrays.
@@ -340,26 +354,30 @@ function estimateMemorySizeOf(obj: any): string {
  */
 function stringifyReplacer(key: string, value: any): any {
 	// Stringify BigInts
-	if (typeof value === 'bigint') return {
-		$$type: "BigInt",
-		value: value.toString() // Convert BigInt to a string
-	};
+	if (typeof value === 'bigint')
+		return {
+			$$type: 'BigInt',
+			value: value.toString(), // Convert BigInt to a string
+		};
 	// Stringify Maps
-	if (value instanceof Map) return {
-		$$type: "Map",
-		value: [...value]
-	};
+	if (value instanceof Map)
+		return {
+			$$type: 'Map',
+			value: [...value],
+		};
 	// Stringify Sets
-	if (value instanceof Set) return {
-		$$type: "Set",
-		value: [...value] // Convert Set elements to an array
-	};
+	if (value instanceof Set)
+		return {
+			$$type: 'Set',
+			value: [...value], // Convert Set elements to an array
+		};
 	// Stringify TypedArrays
 	for (const [name, type] of Object.entries(FixedArrayInfo)) {
-		if (value instanceof type) return {
-			$$type: name,
-			value: [...value]
-		};
+		if (value instanceof type)
+			return {
+				$$type: name,
+				value: [...value],
+			};
 	}
 
 	return value;
@@ -367,20 +385,20 @@ function stringifyReplacer(key: string, value: any): any {
 
 /** TypedArray constructors and their names. */
 const FixedArrayInfo = {
-	"Float32Array": Float32Array,
-	"Float64Array": Float64Array,
+	Float32Array: Float32Array,
+	Float64Array: Float64Array,
 
-	"Int8Array": Int8Array,
-	"Int16Array": Int16Array,
-	"Int32Array": Int32Array,
+	Int8Array: Int8Array,
+	Int16Array: Int16Array,
+	Int32Array: Int32Array,
 
-	"Uint8Array": Uint8Array,
-	"Uint16Array": Uint16Array,
-	"Uint32Array": Uint32Array,
+	Uint8Array: Uint8Array,
+	Uint16Array: Uint16Array,
+	Uint32Array: Uint32Array,
 } as const;
 
 /** Type representing any of the TypedArray constructor types listed in FixedArrayInfo. */
-type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
+type FixedArrayConstructor = (typeof FixedArrayInfo)[keyof typeof FixedArrayInfo];
 
 /**
  * A "reviver" for JSON.parse()'ing that will convert back from the custom stringified format to the original objects.
@@ -392,7 +410,8 @@ function parseReviver(key: string, value: any): any {
 		if (value.$$type === 'Map') return new Map(value.value); // value.value should be an array of [key, value] pairs
 		if (value.$$type === 'Set') return new Set(value.value); // value.value should be an array of elements
 		if (value.$$type in FixedArrayInfo) {
-			const constructor: FixedArrayConstructor = FixedArrayInfo[value.$$type as keyof typeof FixedArrayInfo]; // Get the constructor
+			const constructor: FixedArrayConstructor =
+				FixedArrayInfo[value.$$type as keyof typeof FixedArrayInfo]; // Get the constructor
 			return new constructor(value.value); // value.value should be an array of numbers
 		}
 	}
@@ -412,7 +431,8 @@ function ensureJSONString(input: any, errorMessage?: string): string {
 		return JSON.stringify(input, stringifyReplacer);
 	} catch (error) {
 		// Handle cases where input cannot be stringified
-		if (errorMessage) { // Print the error...
+		if (errorMessage) {
+			// Print the error...
 			const errText = `${errorMessage}\n${(error as Error).stack}`;
 			console.log(errText);
 		}
@@ -432,7 +452,6 @@ function areSetsEqual(set1: Set<any>, set2: Set<any>): boolean {
 function typedKeys<T extends object>(obj: T): Array<keyof T> {
 	return Object.keys(obj) as Array<keyof T>;
 }
-
 
 export default {
 	binarySearch,

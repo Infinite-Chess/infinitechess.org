@@ -1,9 +1,8 @@
-
 // src/client/scripts/esm/util/indexeddb.ts
 
 /**
  * This script handles reading, saving, and deleting browser IndexedDB data.
- * 
+ *
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
  */
 
@@ -53,7 +52,7 @@ function initDB(): Promise<IDBDatabase> {
 
 		request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
 			const db = (event.target as IDBOpenDBRequest).result;
-			
+
 			// Create object store if it doesn't exist
 			if (!db.objectStoreNames.contains(STORE_NAME)) {
 				db.createObjectStore(STORE_NAME);
@@ -106,7 +105,7 @@ async function withWrite<R>(op: (_store: IDBObjectStore) => IDBRequest<R>): Prom
  * @returns A promise that resolves when the item is saved
  */
 async function saveItem<T>(key: string, value: T): Promise<void> {
-	return withWrite(store => store.put(value, key));
+	return withWrite((store) => store.put(value, key));
 }
 
 /**
@@ -115,7 +114,7 @@ async function saveItem<T>(key: string, value: T): Promise<void> {
  * @returns A promise that resolves to the entry value, or undefined if not found
  */
 async function loadItem<T>(key: string): Promise<T | undefined> {
-	return withRead<T | undefined>(store => store.get(key));
+	return withRead<T | undefined>((store) => store.get(key));
 }
 
 /**
@@ -123,8 +122,8 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
  * @param key The name/key of the item in storage
  * @returns A promise that resolves when the item is deleted
  */
-async function deleteItem(key: string): Promise<void> {	
-	return withWrite(store => store.delete(key));
+async function deleteItem(key: string): Promise<void> {
+	return withWrite((store) => store.delete(key));
 }
 
 /**
@@ -132,7 +131,7 @@ async function deleteItem(key: string): Promise<void> {
  * @returns A promise that resolves to an array of all keys
  */
 async function getAllKeys(): Promise<string[]> {
-	const keys = await withRead<IDBValidKey[]>(store => store.getAllKeys());
+	const keys = await withRead<IDBValidKey[]>((store) => store.getAllKeys());
 	return keys as string[];
 }
 
@@ -141,7 +140,7 @@ async function getAllKeys(): Promise<string[]> {
  * @returns A promise that resolves when all items are deleted
  */
 async function eraseAll(): Promise<void> {
-	return withWrite(store => store.clear());
+	return withWrite((store) => store.clear());
 }
 
 /** Reset the cached DB instance (close if open) so the next call to initDB() re-initializes. */
@@ -156,7 +155,6 @@ function resetDBInstance(): void {
 	dbInstance = null;
 	dbInitPromise = null;
 }
-
 
 export default {
 	saveItem,

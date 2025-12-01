@@ -1,11 +1,9 @@
-import style from "../../../game/gui/style.js";
-import preferences from "../preferences.js";
-import checkerboardgenerator from "../../../chess/rendering/checkerboardgenerator.js";
-import themes from "../../../../../../shared/components/header/themes.js";
-
+import style from '../../../game/gui/style.js';
+import preferences from '../preferences.js';
+import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
+import themes from '../../../../../../shared/components/header/themes.js';
 
 // Document Elements -------------------------------------------------------------------------
-
 
 const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-title');
 const boardDropdown = document.querySelector('.board-dropdown');
@@ -14,15 +12,12 @@ const themeList = document.querySelector('.theme-list'); // Get the theme list d
 const starfieldCheckbox = document.querySelector('.boolean-option.starfield input');
 const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced-effects input');
 
-
 // Functions ---------------------------------------------------------------------------------
-
 
 (function init() {
 	showCheckmarkOnSelectedOptions();
 	addThemesToThemesDropdown();
 })();
-
 
 function showCheckmarkOnSelectedOptions() {
 	starfieldCheckbox.checked = preferences.getStarfieldMode();
@@ -30,7 +25,6 @@ function showCheckmarkOnSelectedOptions() {
 }
 
 async function addThemesToThemesDropdown() {
-
 	const themeDictionary = themes.themes;
 
 	// Loop through each theme in the dictionary
@@ -42,8 +36,8 @@ async function addThemesToThemesDropdown() {
 		// Create the checkerboard image for the theme
 		const checkerboardImage = await checkerboardgenerator.createCheckerboardIMG(
 			style.arrayToCssColor(lightTiles), // Convert to CSS color format
-			style.arrayToCssColor(darkTiles),  // Convert to CSS color format
-			2 // Width
+			style.arrayToCssColor(darkTiles), // Convert to CSS color format
+			2, // Width
 		);
 		checkerboardImage.setAttribute('theme', themeName);
 		checkerboardImage.setAttribute('draggable', 'false');
@@ -54,7 +48,6 @@ async function addThemesToThemesDropdown() {
 
 	updateThemeSelectedStyling();
 }
-
 
 function open() {
 	boardDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
@@ -94,7 +87,6 @@ function closeThemeChangeListeners() {
 	}
 }
 
-
 function selectTheme(event) {
 	const selectedTheme = event.target.getAttribute('theme');
 
@@ -102,7 +94,7 @@ function selectTheme(event) {
 	preferences.setTheme(selectedTheme);
 
 	updateThemeSelectedStyling();
-	
+
 	// Dispatch a custom event for theme change so that any game code present can pick it up.
 	document.dispatchEvent(new Event('theme-change'));
 }
@@ -111,7 +103,8 @@ function updateThemeSelectedStyling() {
 	const selectedTheme = preferences.getTheme();
 	for (let i = 0; i < themeList.children.length; i++) {
 		const theme = themeList.children[i];
-		if (selectTheme && theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');
+		if (selectTheme && theme.getAttribute('theme') === selectedTheme)
+			theme.classList.add('selected');
 		else theme.classList.remove('selected');
 	}
 }
@@ -126,5 +119,5 @@ function toggleAdvancedEffects() {
 
 export default {
 	open,
-	close
+	close,
 };

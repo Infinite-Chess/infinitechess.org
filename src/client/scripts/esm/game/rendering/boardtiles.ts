@@ -1,4 +1,3 @@
-
 /**
  * This script renders the board, and changes it's color.
  * We also keep track of what tile the mouse is currently hovering over.
@@ -33,15 +32,13 @@ import math from '../../../../../shared/util/math/math.js';
 import webgl, { gl } from './webgl.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 
-
 // Type Definitions ----------------------------------------------------------------
 
 /**
  * Optional noise textures to bind during rendering,
  * for the uber shader to apply board Zone effects.
  */
-type NoiseTextures = { perlinNoise?: WebGLTexture, whiteNoise?: WebGLTexture };
-
+type NoiseTextures = { perlinNoise?: WebGLTexture; whiteNoise?: WebGLTexture };
 
 // Constants ---------------------------------------------------------------------------
 
@@ -56,9 +53,7 @@ const ONE = bd.FromNumber(1.0);
 const TWO = bd.FromNumber(2.0);
 const TEN = bd.FromNumber(10);
 
-
 // Variables ---------------------------------------------------------------------------
-
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
 let tilesTexture_2: WebGLTexture | undefined; // Opaque, no mipmaps
@@ -71,7 +66,6 @@ let tilesTexture_256mips: WebGLTexture | undefined;
  * Independent of theme.
  */
 let tilesMask: WebGLTexture | undefined;
-
 
 /**
  * The *exact* bounding box of the board currently visible on the canvas.
@@ -97,12 +91,11 @@ let lightTiles: Color;
 /** Color [r,g,b,a] of the dark tiles. */
 let darkTiles: Color;
 
-
 // Initialization --------------------------------------------------------------------------------
 
-
 // Add event listener for theme changes
-document.addEventListener('theme-change', (_event) => { // Custom Event listener.
+document.addEventListener('theme-change', (_event) => {
+	// Custom Event listener.
 	console.log(`Theme change event detected: ${preferences.getTheme()}`);
 	updateTheme();
 	const gamefile = gameslot.getGamefile();
@@ -124,7 +117,7 @@ document.addEventListener('theme-change', (_event) => { // Custom Event listener
 function init(): void {
 	// Generate the tiles mask texture
 	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
-	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then(tilesMask_IMG => { 
+	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then((tilesMask_IMG) => {
 		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
 	});
 
@@ -141,18 +134,18 @@ async function initTextures(): Promise<void> {
 	// Generate both images in parallel
 	const [tilesTexture_2_IMG, tilesTexture_256mips_IMG] = await Promise.all([
 		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2),
-		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256)
+		checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256),
 	]);
 
 	tilesTexture_2 = TextureLoader.loadTexture(gl, tilesTexture_2_IMG, { mipmaps: false });
-	tilesTexture_256mips = TextureLoader.loadTexture(gl, tilesTexture_256mips_IMG, { mipmaps: true });
+	tilesTexture_256mips = TextureLoader.loadTexture(gl, tilesTexture_256mips_IMG, {
+		mipmaps: true,
+	});
 
 	frametracker.onVisualChange();
 }
 
-
 // Updating --------------------------------------------------------------------------------
-
 
 // Recalculate board velicity, scale, and other common variables.
 function recalcVariables(): void {
@@ -160,17 +153,22 @@ function recalcVariables(): void {
 }
 
 function recalcBoundingBox(): void {
-
-	boundingBoxFloat = getBoundingBoxOfBoard(boardpos.getBoardPos(), boardpos.getBoardScale(), false);
+	boundingBoxFloat = getBoundingBoxOfBoard(
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+		false,
+	);
 	boundingBox = roundAwayBoundingBox(boundingBoxFloat);
 
-	const boundingBoxFloat_debugMode = getBoundingBoxOfBoard(boardpos.getBoardPos(), boardpos.getBoardScale(), true);
+	const boundingBoxFloat_debugMode = getBoundingBoxOfBoard(
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+		true,
+	);
 	boundingBox_debugMode = roundAwayBoundingBox(boundingBoxFloat_debugMode);
 }
 
-
 // Public API ---------------------------------------------------------------------------------
-
 
 function getSquareCenter(): BigDecimal {
 	return bd.FromNumber(squareCenter);
@@ -183,7 +181,7 @@ function getSquareCenterAsNumber(): number {
 function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
-	const factor1: BigDecimal = bd.FromNumber(camera.canvas.height * 0.5 / screenBoundingBox.top);
+	const factor1: BigDecimal = bd.FromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
 	const tileWidthPixels_Physical = bd.multiply_floating(factor1, boardpos.getBoardScale()); // Greater for retina displays
 
 	const divisor = bd.FromNumber(window.devicePixelRatio);
@@ -199,7 +197,9 @@ function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
  * @returns The board bounding box
  */
 function gboundingBox(debugMode = camera.getDebug()): BoundingBox {
-	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
+	return debugMode
+		? jsutil.deepCopyObject(boundingBox_debugMode)
+		: jsutil.deepCopyObject(boundingBox);
 }
 
 /**
@@ -213,10 +213,10 @@ function gboundingBoxFloat(): BoundingBoxBD {
 /**
  * Calculates the bounding box of the board visible on screen,
  * when the camera is at the specified position, up to a certain precision level.
- * 
+ *
  * This is different from the bounding box of the canvas, because
  * this is effected by the camera's scale (zoom) property.
- * 
+ *
  * Returns in float form. To round away from the origin to encapsulate
  * the whole of all tiles at least partially visible, further use {@link roundAwayBoundingBox}
  * @param [position] The position of the camera.
@@ -224,7 +224,11 @@ function gboundingBoxFloat(): BoundingBoxBD {
  * @param debugMode - Whether developer mode is enabled.
  * @returns The bounding box
  */
-function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode?: boolean): BoundingBoxBD {
+function getBoundingBoxOfBoard(
+	position: BDCoords = boardpos.getBoardPos(),
+	scale: BigDecimal = boardpos.getBoardScale(),
+	debugMode?: boolean,
+): BoundingBoxBD {
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 
 	function getAxisEdges(position: BigDecimal, screenEnd: number): [BigDecimal, BigDecimal] {
@@ -237,7 +241,7 @@ function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scal
 
 	const [left, right] = getAxisEdges(position[0], screenBoundingBox.right);
 	const [bottom, top] = getAxisEdges(position[1], screenBoundingBox.top);
-	
+
 	return { left, right, bottom, top };
 }
 
@@ -246,7 +250,8 @@ function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scal
  * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
  * @returns {BoundingBox} The perspective mode render range bounding box
  */
-function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD { // ~18
+function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD {
+	// ~18
 	const position = boardpos.getBoardPos();
 	const scale = boardpos.getBoardScale();
 	const rangeOfViewBD = bd.FromNumber(rangeOfView);
@@ -263,7 +268,7 @@ function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD { //
 /**
  * Returns a new board bounding box, with its edges rounded away from the
  * center of the canvas to encapsulate the whole of any squares partially included.
- * STILL IS AN INTEGER BOUNDING BOX, 
+ * STILL IS AN INTEGER BOUNDING BOX,
  * @param src - The source board bounding box
  * @returns The rounded bounding box
  */
@@ -275,20 +280,24 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	const right = bd.toBigInt(bd.ceil(bd.add(src.right, squareCenterMinusOne))); // ceil(right + squareCenter - 1)
 	const bottom = bd.toBigInt(bd.floor(bd.add(src.bottom, squareCenter))); // floor(bottom + squareCenter)
 	const top = bd.toBigInt(bd.ceil(bd.add(src.top, squareCenterMinusOne))); // ceil(top + squareCenter - 1)
-    
+
 	return { left, right, bottom, top };
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme(): void {
 	const gamefile = gameslot.getGamefile();
-	if (gamefile && gamefileutility.isGameOver(gamefile.basegame)) darkenColor(); // Reset to slightly darkened board
+	if (gamefile && gamefileutility.isGameOver(gamefile.basegame))
+		darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
 	updateSkyColor();
 	updateNavColor();
 }
 
-function resetColor(newLightTiles = preferences.getColorOfLightTiles(), newDarkTiles = preferences.getColorOfDarkTiles()): void {
+function resetColor(
+	newLightTiles = preferences.getColorOfLightTiles(),
+	newDarkTiles = preferences.getColorOfDarkTiles(),
+): void {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
 	initTextures();
@@ -310,7 +319,7 @@ function updateSkyColor(): void {
 	// AFTER STAR FIELD ANIMATION
 	const baseDim = 0.27;
 	const multiplierDim = 0.6;
-	const skyR = (avgR - baseDim) * multiplierDim; 
+	const skyR = (avgR - baseDim) * multiplierDim;
 	const skyG = (avgG - baseDim) * multiplierDim;
 	const skyB = (avgB - baseDim) * multiplierDim;
 
@@ -324,7 +333,6 @@ function updateNavColor(): void {
 	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
 	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
 	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
-
 
 	// With the default theme, these should be max
 	let navR = 255;
@@ -365,9 +373,7 @@ function darkenColor(): void {
 	resetColor([darkWR, darkWG, darkWB, 1], [darkDR, darkDG, darkDB, 1]);
 }
 
-
 // Rendering -------------------------------------------------------------------------
-
 
 // Renders board tiles
 function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
@@ -410,7 +416,8 @@ function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<st
 	// console.log("currentE:", currentE);
 
 	// Board 1 (most zoomed in, always rendered, but may be fading out)
-	const board1_E = Math.floor((currentE - eWhen1TileIs1VirtualPixel) / 3) * 3 + eWhen1TileIs1VirtualPixel;
+	const board1_E =
+		Math.floor((currentE - eWhen1TileIs1VirtualPixel) / 3) * 3 + eWhen1TileIs1VirtualPixel;
 	// console.log("board1_E:", board1_E);
 
 	/**
@@ -432,14 +439,18 @@ function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<st
 		// console.log("Rendering 2nd board");
 		const power = -Math.round(board2_E - eWhen1TileIs1VirtualPixel); // Rounding is ONLY necessary due to correct tiny floating point inaccuracies. This MUST be an integer.
 		const zoom = bd.powerInt(TEN, power);
-		generateBoardModel(noiseTextures, zoom, 1.0)?.render([0,0,z], undefined, uniforms);
+		generateBoardModel(noiseTextures, zoom, 1.0)?.render([0, 0, z], undefined, uniforms);
 	}
 
 	// ALWAYS render board 1 (most zoomed in).
 	// This is rendered on top, and may be fading out.
 	const power = -Math.round(board1_E - eWhen1TileIs1VirtualPixel); // Rounding is ONLY necessary due to correct tiny floating point inaccuracies. This MUST be an integer.
 	const zoom = bd.powerInt(TEN, power);
-	generateBoardModel(noiseTextures, zoom, board1_Opacity_Eased)?.render([0,0,z], undefined, uniforms);
+	generateBoardModel(noiseTextures, zoom, board1_Opacity_Eased)?.render(
+		[0, 0, z],
+		undefined,
+		uniforms,
+	);
 }
 
 /** Returns what Z level the board tiles should be rendered at this frame. */
@@ -453,7 +464,11 @@ function getRelativeZ(): number {
  * @param noise - Noise textures for zone effects, if they are loaded.
  * @param zoom - The zoom level to generate the board model at. Main board: 1.0
  */
-function generateBoardModel({ perlinNoise, whiteNoise }: NoiseTextures = {}, zoom: BigDecimal, opacity: number = 1.0): Renderable | undefined {
+function generateBoardModel(
+	{ perlinNoise, whiteNoise }: NoiseTextures = {},
+	zoom: BigDecimal,
+	opacity: number = 1.0,
+): Renderable | undefined {
 	if (!tilesMask) return; // Mask texture not loaded yet
 
 	const boardScale = boardpos.getBoardScale();
@@ -461,7 +476,8 @@ function generateBoardModel({ perlinNoise, whiteNoise }: NoiseTextures = {}, zoo
 	/** Whether this is NOT the main board (zoom level 1.0) */
 	const isFractal = !bd.areEqual(zoom, ONE);
 	// Fractal boards get the texture with no antialiasing, but some moire.
-	const boardTexture = isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+	const boardTexture =
+		isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
 	if (!boardTexture) return; // Texture not loaded yet
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
@@ -479,7 +495,7 @@ function generateBoardModel({ perlinNoise, whiteNoise }: NoiseTextures = {}, zoo
 		const boardPosAdjusted: BigDecimal = bd.add(boardPos, squareCenter);
 		const addend1: BigDecimal = bd.divide_fixed(boardPosAdjusted, zoom);
 		const addend2: BigDecimal = bd.FromNumber(start / zoomTimesScale);
-		
+
 		const sum: BigDecimal = bd.add(addend1, addend2);
 		const mod2: number = bd.toNumber(bd.mod(sum, TWO));
 		const texstart: number = mod2 / 2;
@@ -492,27 +508,32 @@ function generateBoardModel({ perlinNoise, whiteNoise }: NoiseTextures = {}, zoo
 
 	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], left, right);
 	const [texstartY, texendY] = getAxisTexCoords(boardPos[1], bottom, top);
-	
+
+	// prettier-ignore
 	const data = primitives.Quad_ColorTexture(left, bottom, right, top, texstartX, texstartY, texendX, texendY, 1, 1, 1, opacity);
 
 	const attributeInfo: AttributeInfo = [
 		{ name: 'a_position', numComponents: 2 },
 		{ name: 'a_texturecoord', numComponents: 2 },
-		{ name: 'a_color', numComponents: 4 }
+		{ name: 'a_color', numComponents: 4 },
 	];
 	const textures: TextureInfo[] = [
 		{ texture: boardTexture, uniformName: 'u_colorTexture' },
-		{ texture: tilesMask, uniformName: 'u_maskTexture' }
+		{ texture: tilesMask, uniformName: 'u_maskTexture' },
 	];
 	if (perlinNoise) textures.push({ texture: perlinNoise, uniformName: 'u_perlinNoiseTexture' });
 	if (whiteNoise) textures.push({ texture: whiteNoise, uniformName: 'u_whiteNoiseTexture' });
-	
-	return createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures);
+
+	return createRenderable_GivenInfo(
+		data,
+		attributeInfo,
+		'TRIANGLES',
+		'board_uber_shader',
+		textures,
+	);
 }
 
-
 // Exports -------------------------------------------------------------------------
-
 
 export default {
 	// Initialization

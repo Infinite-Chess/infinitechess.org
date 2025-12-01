@@ -1,31 +1,26 @@
-
 /**
  * This script handles the dragging of the board,
  * and throwing it after letting go.
  */
 
+import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
-import type { BDCoords, DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
-
-import mouse from "../../util/mouse.js";
-import boardpos from "./boardpos.js";
-import guipromotion from "../gui/guipromotion.js";
-import vectors from "../../../../../shared/util/math/vectors.js";
-import coordutil from "../../../../../shared/chess/util/coordutil.js";
-import perspective from "./perspective.js";
-import Transition from "./transitions/Transition.js";
-import drawarrows from "./highlights/annotations/drawarrows.js";
-import drawrays from "./highlights/annotations/drawrays.js";
-import selection from "../chess/selection.js";
-import keybinds from "../misc/keybinds.js";
-import boardeditor from "../boardeditor/boardeditor.js";
-import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import { listener_overlay } from "../chess/game.js";
-
-
+import mouse from '../../util/mouse.js';
+import boardpos from './boardpos.js';
+import guipromotion from '../gui/guipromotion.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import perspective from './perspective.js';
+import Transition from './transitions/Transition.js';
+import drawarrows from './highlights/annotations/drawarrows.js';
+import drawrays from './highlights/annotations/drawrays.js';
+import selection from '../chess/selection.js';
+import keybinds from '../misc/keybinds.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import { listener_overlay } from '../chess/game.js';
 
 // Types -------------------------------------------------------------
-
 
 /**
  * A board position/scale entry, used for calculating its velocity
@@ -37,9 +32,7 @@ interface PositionHistoryEntry {
 	boardScale: BigDecimal;
 }
 
-
 // Variables -------------------------------------------------------------
-
 
 /** Whether we currently dragging the board */
 let boardIsGrabbed: boolean = false;
@@ -49,34 +42,26 @@ let scale_WhenBoardPinched: BigDecimal | undefined;
 /** Equal to the distance between 2 fingers the moment they touched down. (pinching the board) */
 let fingerPixelDist_WhenBoardPinched: number | undefined;
 
-
 /** The ID of the first pointer that grabbed the board */
 let pointer1Id: string | undefined;
 /** The ID of the second pointer that grabbed the board */
 let pointer2Id: string | undefined;
-
 
 /** What coordinates 1 finger has grabbed the board, if it has. */
 let pointer1BoardPosGrabbed: BDCoords | undefined;
 /** What coordinates a 2nd finger has grabbed the board, if it has. */
 let pointer2BoardPosGrabbed: BDCoords | undefined;
 
-
-
 /** Stores past board positions from the last few frames. Used to calculate throw velocity after dragging. */
 const positionHistory: PositionHistoryEntry[] = [];
 const positionHistoryWindowMillis: number = 80; // The amount of milliseconds to look back into for board velocity calculation.
 
-
 // Functions -------------------------------------------------------------------
-
 
 /** Whether the board is currently being dragged by one or more pointers. */
 function isBoardDragging(): boolean {
 	return boardIsGrabbed;
 }
-
-
 
 /**
  * Returns the ids of all pointers that started pressing down this frame
@@ -88,10 +73,12 @@ function getBoardDraggablePointersDown(): string[] {
 	const mouseKeybind = keybinds.getBoardDragMouseButton();
 	if (mouseKeybind === undefined) return [];
 	// Prevent duplicates by using a Set
-	return [...new Set([
-		...listener_overlay.getPointersDown(mouseKeybind),
-		...listener_overlay.getTouchPointersDown()
-	])];
+	return [
+		...new Set([
+			...listener_overlay.getPointersDown(mouseKeybind),
+			...listener_overlay.getTouchPointersDown(),
+		]),
+	];
 }
 
 /**
@@ -103,19 +90,21 @@ function getBoardDraggablePointers(): string[] {
 	const mouseKeybind = keybinds.getBoardDragMouseButton();
 	if (mouseKeybind === undefined) return [];
 	// Prevent duplicates by using a Set
-	return [...new Set([
-		...listener_overlay.getAllPointers(mouseKeybind),
-		...listener_overlay.getAllTouchPointers()
-	])];
+	return [
+		...new Set([
+			...listener_overlay.getAllPointers(mouseKeybind),
+			...listener_overlay.getAllTouchPointers(),
+		]),
+	];
 }
-
 
 /**
  * Checks if the board needs to PINCHED (DOUBLE-GRABBED) by any new pointers presssed down this frame.
  * Will NOT initiate a single-pointer grab!
  */
 function checkIfBoardPinched(): void {
-	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen()) return;
+	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen())
+		return;
 
 	if (pointer2Id !== undefined) return; // Already pinched
 
@@ -157,7 +146,8 @@ function checkIfBoardPinched(): void {
 
 /** Checks if the board needs to SINGLE-GRABBED by any new pointers pressed down this frame. */
 function checkIfBoardSingleGrabbed(): void {
-	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen()) return;
+	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen())
+		return;
 
 	if (boardIsGrabbed) return; // Already grabbed
 
@@ -183,14 +173,13 @@ function stealPointer(pointerId: string): void {
 
 /** Grabs board with the given pointer. */
 function initSinglePointerDrag(pointerId: string): void {
-
 	// console.log('Board grabbed with pointer', pointerId);
-	
+
 	pointer1Id = pointerId;
 	pointer1BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer1Id!)!;
 	// console.log('pointer1BoardPosGrabbed', pointer1BoardPosGrabbed);
 	boardIsGrabbed = true;
-	boardpos.setPanVel([0,0]); // Erase all momentum
+	boardpos.setPanVel([0, 0]); // Erase all momentum
 
 	addCurrentPositionToHistory();
 }
@@ -201,7 +190,7 @@ function initDoublePointerDrag(pointerId: string): void {
 	// This can happen in board editor if you drag board with right mouse,
 	// drag offscreen, let go, then right click to drag board again.
 	if (pointer1Id === pointerId) return;
-	
+
 	// Pixel distance
 	const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
 	const p2Pos = listener_overlay.getPointerPos(pointerId)!;
@@ -238,28 +227,35 @@ function checkIfBoardDropped(): void {
 
 	const pointer1Released = !allPointers.includes(pointer1Id!);
 
-	if (pointer2Id === undefined) { // 1 finger drag
-		if (pointer1Released) { // Finger has been released
+	if (pointer2Id === undefined) {
+		// 1 finger drag
+		if (pointer1Released) {
+			// Finger has been released
 			throwBoard(now);
 			cancelBoardDrag();
 		} // else still one finger holding the board
-	} else { // 2 finger drag
+	} else {
+		// 2 finger drag
 		const pointer2Released = !allPointers.includes(pointer2Id);
-	
+
 		if (!pointer1Released && !pointer2Released) return; // Both fingers are still holding the board
 
 		throwScale(now);
-			
-		if (pointer1Released && pointer2Released) { // Both fingers have been released
+
+		if (pointer1Released && pointer2Released) {
+			// Both fingers have been released
 			throwBoard(now);
 			cancelBoardDrag();
-		} else { // Only one finger has been released
-			if (pointer2Released) { // Only Pointer 2 released
+		} else {
+			// Only one finger has been released
+			if (pointer2Released) {
+				// Only Pointer 2 released
 				pointer2Id = undefined;
 				pointer2BoardPosGrabbed = undefined;
 				// Recalculate pointer 1's grab position
 				pointer1BoardPosGrabbed = mouse.getTilePointerOver_Float(pointer1Id!)!;
-			} else if (pointer1Released) { // Only Pointer 1 released
+			} else if (pointer1Released) {
+				// Only Pointer 1 released
 				// Make pointer2 pointer1
 				pointer1Id = pointer2Id;
 				// Recalculate pointer 2's grab position
@@ -299,7 +295,7 @@ function throwBoard(time: number): void {
 	const boardScale = lastBoardState.boardScale;
 	const newPanVel: DoubleCoords = [
 		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaX, deltaT), boardScale)),
-		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaY, deltaT), boardScale))
+		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaY, deltaT), boardScale)),
 	];
 	// console.log('Throwing board with velocity', newPanVel);
 	boardpos.setPanVel(newPanVel);
@@ -314,11 +310,12 @@ function throwScale(time: number): void {
 	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0]!;
 	const lastBoardState = positionHistory[positionHistory.length - 1]!;
-	const ratio = bd.toNumber(bd.divide_floating(lastBoardState.boardScale, firstBoardState.boardScale));
+	const ratio = bd.toNumber(
+		bd.divide_floating(lastBoardState.boardScale, firstBoardState.boardScale),
+	);
 	const deltaTime = (lastBoardState.time - firstBoardState.time) / 1000;
 	boardpos.setScaleVel((ratio - 1) / deltaTime);
 }
-
 
 /** Called if the board is being dragged, calculates the new board position. */
 function dragBoard(): void {
@@ -326,7 +323,8 @@ function dragBoard(): void {
 
 	// Calculate new board position...
 
-	if (pointer2Id === undefined) { // 1 Finger drag
+	if (pointer2Id === undefined) {
+		// 1 Finger drag
 
 		const mouseWorld = bd.FromDoubleCoords(mouse.getPointerWorld(pointer1Id!)!);
 		// console.log('Mouse world', mousePos);
@@ -334,9 +332,9 @@ function dragBoard(): void {
 		/**
 		 * worldCoordsX / boardScale + boardPosX = mouseCoordsX
 		 * worldCoordsY / boardScale + boardPosY = mouseCoordsY
-		 * 
+		 *
 		 * Solve for boardPosX & boardPosY:
-		 * 
+		 *
 		 * boardPosX = mouseCoordsX - worldCoordsX / boardScale
 		 * boardPosY = mouseCoordsY - worldCoordsY / boardScale
 		 */
@@ -344,22 +342,34 @@ function dragBoard(): void {
 		const boardScale = boardpos.getBoardScale();
 		const newBoardPos: BDCoords = [
 			// negate and add pointer1BoardPosGrabbed instead of flipped, because we don't need high precision here.
-			bd.add(bd.negate(bd.divide_fixed(mouseWorld[0], boardScale)), pointer1BoardPosGrabbed![0]),
-			bd.add(bd.negate(bd.divide_fixed(mouseWorld[1], boardScale)), pointer1BoardPosGrabbed![1])
+			bd.add(
+				bd.negate(bd.divide_fixed(mouseWorld[0], boardScale)),
+				pointer1BoardPosGrabbed![0],
+			),
+			bd.add(
+				bd.negate(bd.divide_fixed(mouseWorld[1], boardScale)),
+				pointer1BoardPosGrabbed![1],
+			),
 		];
 		boardpos.setBoardPos(newBoardPos);
-
-	} else { // 2 Fingers grab/pinch   (center the board position, & calculate scale)
+	} else {
+		// 2 Fingers grab/pinch   (center the board position, & calculate scale)
 
 		const pointer1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
 		const pointer2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
-		const pointer1World = mouse.convertMousePositionToWorldSpace(pointer1Pos, listener_overlay.element);
-		const pointer2World = mouse.convertMousePositionToWorldSpace(pointer2Pos, listener_overlay.element);
+		const pointer1World = mouse.convertMousePositionToWorldSpace(
+			pointer1Pos,
+			listener_overlay.element,
+		);
+		const pointer2World = mouse.convertMousePositionToWorldSpace(
+			pointer2Pos,
+			listener_overlay.element,
+		);
 
 		// Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
 		const thisPixelDist = vectors.euclideanDistanceDoubles(pointer1Pos, pointer2Pos);
 		const ratio = bd.FromNumber(thisPixelDist / fingerPixelDist_WhenBoardPinched!);
-	
+
 		const newScale = bd.multiply_floating(scale_WhenBoardPinched!, ratio);
 		boardpos.setBoardScale(newScale);
 
@@ -368,26 +378,32 @@ function dragBoard(): void {
 		 * as one finger dragging from the midpoint between them.
 		 */
 
-		const midCoords: BDCoords = coordutil.lerpCoords(pointer1BoardPosGrabbed!, pointer2BoardPosGrabbed!, 0.5);
+		const midCoords: BDCoords = coordutil.lerpCoords(
+			pointer1BoardPosGrabbed!,
+			pointer2BoardPosGrabbed!,
+			0.5,
+		);
 
-		const midPosWorld: BDCoords = bd.FromDoubleCoords(coordutil.lerpCoordsDouble(pointer1World, pointer2World, 0.5));
+		const midPosWorld: BDCoords = bd.FromDoubleCoords(
+			coordutil.lerpCoordsDouble(pointer1World, pointer2World, 0.5),
+		);
 
 		const newBoardPos: BDCoords = [
 			// negate and add midCoords instead of flipped, because we don't need high precision here.
 			bd.add(bd.negate(bd.divide_fixed(midPosWorld[0], newScale)), midCoords[0]),
-			bd.add(bd.negate(bd.divide_fixed(midPosWorld[1], newScale)), midCoords[1])
+			bd.add(bd.negate(bd.divide_fixed(midPosWorld[1], newScale)), midCoords[1]),
 		];
 
 		boardpos.setBoardPos(newBoardPos);
 	}
-    
+
 	addCurrentPositionToHistory();
 }
 
 /**
  * Adds the board's current position and scale to its history.
  * Used for calculating the velocity of the board after letting go.
- * 
+ *
  * History is only kept track of while dragging.
  */
 function addCurrentPositionToHistory(): void {
@@ -396,7 +412,7 @@ function addCurrentPositionToHistory(): void {
 	positionHistory.push({
 		time: now,
 		boardPos: boardpos.getBoardPos(),
-		boardScale: boardpos.getBoardScale()
+		boardScale: boardpos.getBoardScale(),
 	});
 }
 
@@ -406,12 +422,11 @@ function addCurrentPositionToHistory(): void {
  */
 function removeOldPositions(now: number): void {
 	const earliestTime = now - positionHistoryWindowMillis;
-	while (positionHistory.length > 0 && positionHistory[0]!.time < earliestTime) positionHistory.shift();
+	while (positionHistory.length > 0 && positionHistory[0]!.time < earliestTime)
+		positionHistory.shift();
 }
 
-
 // Exports ------------------------------------------------------------
-
 
 export default {
 	isBoardDragging,

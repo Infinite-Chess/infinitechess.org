@@ -26,7 +26,6 @@ const rateToUpdateRecentConnections = 1000; // 1 Second
  */
 const rateLimitHash = {};
 
-
 // For detecting if we're under a DDOS attack...
 
 /** Interval to check if we think we're experiencing a DDOS */
@@ -40,7 +39,7 @@ const requestCapToToggleAttackMode = 200;
 /**
  * Whether we think we're currently experiencing a DDOS.
  * When true, in the future we can strictly limit what actions users can request/perform!
- * 
+ *
  * Ideas:
  * 1. All htmls, or statically served file items, should only be served once per minute to each IP.
  * 2. Don't rate limit player's websocket messages who are currently in a game.
@@ -60,7 +59,7 @@ const recentRequests = []; // List of times of recent connections
 /**
  * The maximum size of an incoming websocket message, in bytes.
  * Above this will be rejected, and an error sent to the client.
- * 
+ *
  * DIRECTLY CONTROLS THE maximum distance players can move in online games!
  * 500 KB allows moves up to 1e100000 squares away, with some padding.
  * On mobile it would take 6 hours of zooming out at
@@ -68,8 +67,6 @@ const recentRequests = []; // List of times of recent connections
  * It would take WAYYYY longer on desktop!
  */
 const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
-
-
 
 /**
  * Generates a key for rate limiting based on the client's IP address and user agent.
@@ -96,19 +93,22 @@ function getIpBrowserAgentKey(req, ws) {
  */
 function rateLimit(req, res, next) {
 	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
-    
+
 	countRecentRequests();
 
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address when rate limiting!', 'reqLogRateLimited.txt');
-		return res.status(500).json({ message: "Unable to identify client IP address" });
+		logEvents(
+			'Unable to identify client IP address when rate limiting!',
+			'reqLogRateLimited.txt',
+		);
+		return res.status(500).json({ message: 'Unable to identify client IP address' });
 	}
 
 	if (isIPBanned(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 		logEvents(logThis, 'bannedIPLog.txt');
-		return res.status(403).json({ message: "You are banned" });
+		return res.status(403).json({ message: 'You are banned' });
 	}
 
 	const userKey = getIpBrowserAgentKey(req); // By this point their IP is defined so this will be defined.
@@ -116,9 +116,13 @@ function rateLimit(req, res, next) {
 	// Add the current timestamp to their list of recent connection timestamps.
 	incrementClientConnectionCount(userKey);
 
-	if (rateLimitHash[userKey].length > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
-		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
-		return res.status(429).json({ message: "Too Many Requests. Try again soon." });
+	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
+		// Rate limit them (too many requests sent)
+		logEvents(
+			`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`,
+			'reqLogRateLimited.txt',
+		);
+		return res.status(429).json({ message: 'Too Many Requests. Try again soon.' });
 	}
 
 	next(); // Continue the middleware waterfall
@@ -134,7 +138,6 @@ function rateLimit(req, res, next) {
  * @returns {boolean} false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
  */
 function rateLimitWebSocket(req, ws) {
-
 	countRecentRequests();
 
 	const userKey = getIpBrowserAgentKey(req, ws); // By this point their IP is defined so this will be defined.
@@ -143,7 +146,10 @@ function rateLimitWebSocket(req, ws) {
 	incrementClientConnectionCount(userKey);
 
 	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
-		logEvents(`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
+		logEvents(
+			`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey].length}`,
+			'reqLogRateLimited.txt',
+		);
 		ws.close(1009, 'Too Many Requests. Try again soon.');
 		return false;
 	}
@@ -187,7 +193,8 @@ setInterval(() => {
 
 		// Check if there are no timestamps
 		if (timestamps.length === 0) {
-			const logMessage = "Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.";
+			const logMessage =
+				'Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.';
 			logEventsAndPrint(logMessage, 'errLog.txt');
 			delete rateLimitHash[key];
 			continue;
@@ -205,14 +212,16 @@ setInterval(() => {
 		}
 
 		// Use binary search to find the index to split at
-		const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(timestamps, currentTimeMillis - minuteInMillis);
+		const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(
+			timestamps,
+			currentTimeMillis - minuteInMillis,
+		);
 
 		// Remove all timestamps to the left of the found index
 		timestamps.splice(0, indexToSplitAt);
 		if (timestamps.length === 0) delete rateLimitHash[key];
 	}
 }, rateToUpdateRecentConnections);
-
 
 /**
  * Adds the current timestamp to {@link recentRequests}.
@@ -229,7 +238,7 @@ function countRecentRequests() {
  * of timestamps that are longer than {@link requestWindowToToggleAttackModeMillis} ago.
  * This uses binary search to quickly find the splice point, so that
  * we don't potentially have to check hundreds of timestamps.
- * 
+ *
  * This also activates {@link underAttackMode} if it thinks we have had SO
  * many recent connections that it must be a DDOS attack.
  */
@@ -240,7 +249,8 @@ setInterval(() => {
 	recentRequests.splice(0, indexToSplitAt + 1);
 
 	if (recentRequests.length > requestCapToToggleAttackMode) {
-		if (!underAttackMode) { // Toggle on
+		if (!underAttackMode) {
+			// Toggle on
 			underAttackMode = true;
 			logAttackBegin();
 		}
@@ -262,7 +272,4 @@ function logAttackEnd() {
 	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
-export {
-	rateLimit,
-	rateLimitWebSocket
-};
+export { rateLimit, rateLimitWebSocket };

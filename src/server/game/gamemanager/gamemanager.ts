@@ -1,4 +1,3 @@
-
 /**
  * The script keeps track of all our active online games.
  */
@@ -9,7 +8,11 @@ import WebSocket from 'ws';
 // @ts-ignore
 import { executeSafely_async } from '../../utility/errorGuard.js';
 // @ts-ignore
-import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
+import {
+	incrementActiveGameCount,
+	decrementActiveGameCount,
+	printActiveGameCount,
+} from './gamecount.js';
 // @ts-ignore
 import { closeDrawOffer } from './drawoffers.js';
 // @ts-ignore
@@ -18,8 +21,18 @@ import gameutility from './gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
-import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
-import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
+import {
+	cancelAutoAFKResignTimer,
+	startDisconnectTimer,
+	cancelDisconnectTimers,
+	getDisconnectionForgivenessDuration,
+} from './afkdisconnect.js';
+import {
+	addUserToActiveGames,
+	removeUserFromActiveGame,
+	getIDOfGamePlayerIsIn,
+	hasColorInGameSeenConclusion,
+} from './activeplayers.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -34,9 +47,9 @@ import type { Player } from '../../../shared/chess/util/typeutil.js';
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * The object containing all currently active games. Each game's id is the key: `{ id: Game }` 
+ * The object containing all currently active games. Each game's id is the key: `{ id: Game }`
  * This may temporarily include games that are over, but not yet deleted/logged.
- * 
+ *
  * The game's ids are the same id they will receive in the database! For this reason they must
  * be unique across the games table, and all other live games.
  */
@@ -59,7 +72,13 @@ const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
  * @param player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
-function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number): void { // Player 1 is the invite owner.
+function createGame(
+	invite: Invite,
+	player1Socket: CustomWebSocket | undefined,
+	player2Socket: CustomWebSocket,
+	replyto?: number,
+): void {
+	// Player 1 is the invite owner.
 	const gameID = issueUniqueGameId();
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
@@ -75,7 +94,7 @@ function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, 
 
 	addGameToActiveGames(game);
 
-	console.log("Starting new game:");
+	console.log('Starting new game:');
 	gameutility.printGame(game);
 	printActiveGameCount();
 }
@@ -83,7 +102,7 @@ function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, 
 /**
  * Returns an id that is unique across BOTH the games table
  * AND the live games inside {@link activeGames}.
- * 
+ *
  * The game will receive this same id in the database when it is logged.
  */
 function issueUniqueGameId(): number {
@@ -128,10 +147,14 @@ function isMemberInSomeActiveGame(username: string): boolean {
  */
 function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = true } = {}): void {
 	const gameID = ws.metadata.subscriptions.game?.id;
-	if (gameID === undefined) return console.error("Cannot unsub client from game when it's not subscribed to one.");
+	if (gameID === undefined)
+		return console.error("Cannot unsub client from game when it's not subscribed to one.");
 
 	const game = getGameByID(gameID);
-	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
+	if (!game)
+		return console.log(
+			`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
+		);
 
 	gameutility.unsubClientFromGame(game, ws); // Don't tell the client to unsub because their socket is CLOSING
 
@@ -140,11 +163,16 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (gameutility.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
 
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)! as Player;
-	if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
-		console.log("Waiting 5 seconds before starting disconnection timer.");
+	if (unsubNotByChoice) {
+		// Internet interruption. Give them 5 seconds before starting auto-resign timer.
+		console.log('Waiting 5 seconds before starting disconnection timer.');
 		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-		game.players[color]!.disconnect.startID = setTimeout(() => startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect), forgivenessDurationMillis);
-	} else { // Closed tab manually. Immediately start auto-resign timer.
+		game.players[color]!.disconnect.startID = setTimeout(
+			() => startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect),
+			forgivenessDurationMillis,
+		);
+	} else {
+		// Closed tab manually. Immediately start auto-resign timer.
 		startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	}
 }
@@ -154,7 +182,9 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
  * @param id - The id of the game to pull.
  * @returns The game
  */
-function getGameByID(id: number): Game | undefined { return activeGames[id]; }
+function getGameByID(id: number): Game | undefined {
+	return activeGames[id];
+}
 
 /**
  * Gets a game by player.
@@ -175,8 +205,8 @@ function getGameByPlayer(player: AuthMemberInfo): Game | undefined {
  */
 function getGameBySocket(ws: CustomWebSocket): Game | undefined {
 	const gameID = ws.metadata.subscriptions.game?.id;
-	if (gameID) return getGameByID(gameID); 
-    
+	if (gameID) return getGameByID(gameID);
+
 	// The socket is not subscribed to any game. Perhaps this is a resync/refresh?
 
 	// Is the client in a game? What's their username/browser-id?
@@ -187,7 +217,7 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
 /**
  * Called when the client sees the game conclusion. Tries to remove them from the players
  * in active games list, which then allows them to join a new game.
- * 
+ *
  * THIS SHOULD ALSO be the point when the server knows this player
  * agrees with the resulting game conclusion (no cheating detected),
  * and the server may change the players elos once both players send this.
@@ -199,12 +229,14 @@ function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Gam
 
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, game.id);
-    
+
 	// If both players have requested this (i.e. have seen the game conclusion),
 	// and the game is scheduled to be deleted, just delete it now!
-    
+
 	// Is the opponent still in the players in active games list? (has not seen the game results)
-	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
+	const color =
+		ws.metadata.subscriptions.game?.color ||
+		gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
 	if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 
@@ -224,7 +256,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Gam
  */
 function pushGameClock(game: Game): number | undefined {
 	const colorWhoJustMoved = game.whosTurn!; // white/black
-	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
+	game.whosTurn = game.gameRules.turnOrder[game.moves.length % game.gameRules.turnOrder.length];
 
 	const curPlayerdata = game.players[game.whosTurn!]!;
 	const prevPlayerdata = game.players[colorWhoJustMoved]!;
@@ -251,7 +283,10 @@ function pushGameClock(game: Game): number | undefined {
 		clearTimeout(game.autoTimeLossTimeoutID);
 		// Set the next one
 		const timeUntilLoseOnTime = Math.max(game.timeRemainAtTurnStart!, 0);
-		game.autoTimeLossTimeoutID = setTimeout(() => onPlayerLostOnTime(game), timeUntilLoseOnTime);
+		game.autoTimeLossTimeoutID = setTimeout(
+			() => onPlayerLostOnTime(game),
+			timeUntilLoseOnTime,
+		);
 	}
 
 	return prevPlayerdata.timer;
@@ -308,9 +343,14 @@ function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {})
 
 	const players: Record<string, any> = {};
 	for (const [c, data] of Object.entries(game.players)) {
-		players[c] = {id: data.identifier.signedIn ? data.identifier.username : data.identifier.browser_id, s: data.identifier.signedIn};
+		players[c] = {
+			id: data.identifier.signedIn ? data.identifier.username : data.identifier.browser_id,
+			s: data.identifier.signedIn,
+		};
 	}
-	console.log(`Game ${game.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${game.gameConclusion}. Moves: ${game.moves.length}.`);
+	console.log(
+		`Game ${game.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${game.gameConclusion}. Moves: ${game.moves.length}.`,
+	);
 	printActiveGameCount();
 
 	stopGameClock(game);
@@ -339,7 +379,7 @@ function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {})
  * @param game - The game
  */
 function onPlayerLostOnTime(game: Game): void {
-	console.log("Someone has lost on time!");
+	console.log('Someone has lost on time!');
 
 	// Who lost on time?
 	const loser = game.whosTurn!;
@@ -362,13 +402,16 @@ function onPlayerLostOnTime(game: Game): void {
  * @param colorWon - The color that won by opponent disconnection
  */
 function onPlayerLostByDisconnect(game: Game, colorWon: Player): void {
-	if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!");
+	if (gameutility.isGameOver(game))
+		return console.error(
+			'We should have cancelled the auto-loss-by-disconnection timer when the game ended!',
+		);
 
 	if (gameutility.isGameResignable(game)) {
-		console.log("Someone has lost by disconnection!");
+		console.log('Someone has lost by disconnection!');
 		setGameConclusion(game, `${colorWon} disconnect`);
 	} else {
-		console.log("Game aborted from disconnection.");
+		console.log('Game aborted from disconnection.');
 		setGameConclusion(game, 'aborted');
 	}
 
@@ -385,10 +428,10 @@ function onPlayerLostByDisconnect(game: Game, colorWon: Player): void {
  */
 function onPlayerLostByAbandonment(game: Game, colorWon: Player): void {
 	if (gameutility.isGameResignable(game)) {
-		console.log("Someone has lost by abandonment!");
+		console.log('Someone has lost by abandonment!');
 		setGameConclusion(game, `${colorWon} disconnect`);
 	} else {
-		console.log("Game aborted from abandonment.");
+		console.log('Game aborted from abandonment.');
 		setGameConclusion(game, 'aborted');
 	}
 
@@ -417,7 +460,11 @@ async function deleteGame(game: Game): Promise<void> {
 
 		// Mostly deprecated:
 		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-		await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
+		await executeSafely_async(
+			statlogger.logGame,
+			`statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`,
+			game,
+		);
 
 		// Send rating changes to all players of game, if relevant
 		if (ratingdata !== undefined) gameutility.sendRatingChangeToAllPlayers(game, ratingdata);
@@ -431,7 +478,8 @@ async function deleteGame(game: Game): Promise<void> {
 		if (!data.socket) continue; // They don't have a socket connected.
 		// We inform their opponent they have disconnected inside js when we call this method.
 		// Tell the client to unsub on their end, IF the socket isn't closing.
-		if (data.socket.readyState === WebSocket.OPEN) sendSocketMessage(data.socket, 'game', 'unsub');
+		if (data.socket.readyState === WebSocket.OPEN)
+			sendSocketMessage(data.socket, 'game', 'unsub');
 		gameutility.unsubClientFromGame(game, data.socket);
 	}
 
@@ -471,11 +519,19 @@ function broadCastGameRestarting(): void {
 	const timeToRestart = getTimeServerRestarting() as number;
 	for (const game of Object.values(activeGames)) {
 		for (const color in game.players) {
-			gameutility.sendMessageToSocketOfColor(game, Number(color) as Player, 'game', 'serverrestart', timeToRestart);
+			gameutility.sendMessageToSocketOfColor(
+				game,
+				Number(color) as Player,
+				'game',
+				'serverrestart',
+				timeToRestart,
+			);
 		}
 	}
 	const minutesTillRestart = Math.ceil((timeToRestart - Date.now()) / (1000 * 60));
-	console.log(`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`);
+	console.log(
+		`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`,
+	);
 }
 
 //--------------------------------------------------------------------------------------------------------

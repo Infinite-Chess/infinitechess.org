@@ -1,14 +1,11 @@
-
 // src/client/scripts/esm/game/rendering/starfield.ts
 
 /**
  * Renders a starfield background inside voids and the world border
  */
 
-
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
-
 
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
@@ -23,42 +20,38 @@ import boardtiles from './boardtiles.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import gameloader from '../chess/gameloader.js';
 import docutil from '../../util/docutil.js';
-import { AttributeInfoInstanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
+import {
+	AttributeInfoInstanced,
+	createRenderable_Instanced_GivenInfo,
+} from '../../webgl/Renderable.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
-
-
 
 /** A sigle star particle. */
 type Star = {
-    /** Determines if the star should use the light or dark tile color theme. */
-    isLight: boolean;
+	/** Determines if the star should use the light or dark tile color theme. */
+	isLight: boolean;
 	/** Lifespan in milliseconds */
-    lifespan: number;
-    position: DoubleCoords;
+	lifespan: number;
+	position: DoubleCoords;
 	velocity: DoubleCoords;
-    size: number;
-    /** The maximum size offset for this star's pulse (the amplitude). */
-    pulseSize: number;
-    /** The speed of this star's pulse in radians per second. */
-    pulseSpeed: number;
-    /** The timestamp when the star was created. */
-    createdAt: number;
+	size: number;
+	/** The maximum size offset for this star's pulse (the amplitude). */
+	pulseSize: number;
+	/** The speed of this star's pulse in radians per second. */
+	pulseSpeed: number;
+	/** The timestamp when the star was created. */
+	createdAt: number;
 };
-
-
 
 /** The attribute info of our instanced models' vertex data. */
 const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [
-		{ name: 'a_position', numComponents: 2 }
-	],
+	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
 	instanceDataAttribInfo: [
 		{ name: 'a_instanceposition', numComponents: 2 },
 		{ name: 'a_instancecolor', numComponents: 4 },
 		{ name: 'a_instancesize', numComponents: 1 },
-	]
+	],
 };
-
 
 /** Configuration variables for Star Field appearance. */
 export const CONFIG = {
@@ -107,13 +100,11 @@ export const CONFIG = {
 
 	// --- Fading  ---
 	/** The duration of the fade-in/out at the start/end of a star's life, in seconds. */
-	fadeDuration: 3.0, 
-	// fadeDuration: 0.0, 
+	fadeDuration: 3.0,
+	// fadeDuration: 0.0,
 } as const;
 
-
 // Module State ------------------------------------------------------------
-
 
 /** All star objects. The entire star field. */
 const stars: Star[] = [];
@@ -128,9 +119,7 @@ let isInitialized: boolean = false;
  */
 let desiredNumStars: number = 0;
 
-
 // Initialization -----------------------------------------------------------------------
-
 
 /** Event listener for when we toggle Starfield in the settings dropdown. */
 document.addEventListener('starfield-toggle', (e) => {
@@ -145,7 +134,7 @@ document.addEventListener('starfield-toggle', (e) => {
  * This must be called once before `update`.
  */
 function init(): void {
-	if (isInitialized) throw Error("Starfield is already initialized.");
+	if (isInitialized) throw Error('Starfield is already initialized.');
 	if (!couldStarfieldEverBeVisible()) {
 		// console.log("Starfield cannot ever be visible in this game, not initializing.");
 		return; // Starfield cannot be visible in this game
@@ -177,7 +166,6 @@ function terminate(): void {
  * This is useful for initial population of stars, so they don't all fade in/out near the same time.
  */
 function createStar(randomizeAge: boolean): Star {
-
 	// Position
 	const screenBox = camera.getScreenBoundingBox(false);
 	// Apply padding
@@ -185,20 +173,17 @@ function createStar(randomizeAge: boolean): Star {
 	screenBox.right += CONFIG.screenPadding;
 	screenBox.bottom -= CONFIG.screenPadding;
 	screenBox.top += CONFIG.screenPadding;
-	const width = (screenBox.right - screenBox.left);
-	const height = (screenBox.top - screenBox.bottom);
+	const width = screenBox.right - screenBox.left;
+	const height = screenBox.top - screenBox.bottom;
 	const position: DoubleCoords = [
 		Math.random() * width + screenBox.left,
-		Math.random() * height + screenBox.bottom
+		Math.random() * height + screenBox.bottom,
 	];
 
 	// Velocity
 	const speed: number = applyVariance(CONFIG.baseSpeed, CONFIG.speedVariance);
 	const angle: number = Math.random() * 2 * Math.PI;
-	const velocity: DoubleCoords = [
-		Math.cos(angle) * speed,
-		Math.sin(angle) * speed
-	];
+	const velocity: DoubleCoords = [Math.cos(angle) * speed, Math.sin(angle) * speed];
 
 	// Lifespan
 	let newLifespan = applyVariance(CONFIG.baseLifespan, CONFIG.lifespanVariance) * 1000; // Convert to milliseconds
@@ -219,8 +204,8 @@ function createStar(randomizeAge: boolean): Star {
 /** Calculate's this frames desired number of stars, dependant on your screen area. */
 function getDesiredNumStars(): number {
 	const screenBox = camera.getScreenBoundingBox(false);
-	const paddedWidth = (screenBox.right - screenBox.left) + (CONFIG.screenPadding * 2);
-	const paddedHeight = (screenBox.top - screenBox.bottom) + (CONFIG.screenPadding * 2);
+	const paddedWidth = screenBox.right - screenBox.left + CONFIG.screenPadding * 2;
+	const paddedHeight = screenBox.top - screenBox.bottom + CONFIG.screenPadding * 2;
 	const area = paddedWidth * paddedHeight;
 	return Math.round(area * CONFIG.starDensity);
 }
@@ -235,9 +220,7 @@ function applyVariance(base: number, variance: number): number {
 	return base + (Math.random() - 0.5) * 2 * variance;
 }
 
-
 // Updating ----------------------------------------------------------------------
-
 
 /** Updates all stars motion, opacity, pulsing, birth, and death! */
 function update(): void {
@@ -336,9 +319,7 @@ function isStarfieldVisible(): boolean {
 	return !bounds.boxContainsBox(boardsim.playableRegion, screenBox);
 }
 
-
 // Rendering ----------------------------------------------------------------------
-
 
 /** Renders the star field. */
 function render(): void {
@@ -353,7 +334,7 @@ function render(): void {
 
 	const now = performance.now(); // Get current time once for this frame.
 
-	stars.forEach(star => {
+	stars.forEach((star) => {
 		const age = now - star.createdAt;
 		const timeUntilDeath = star.lifespan - age;
 
@@ -362,14 +343,15 @@ function render(): void {
 		// Oscillates between 0 and 1 (only increasing size)
 		const sinWave = -0.5 * Math.cos(pulsingCycleSecs * star.pulseSpeed) + 0.5;
 		// The final size is the base size plus the scaled sine wave
-		const currentSize = star.size + (sinWave * star.pulseSize);
+		const currentSize = star.size + sinWave * star.pulseSize;
 
 		// Fade In/Out Alpha Calculation
 		let fadeInAlpha = CONFIG.opacity;
 		if (age < fadeMillis) fadeInAlpha = (age / fadeMillis) * CONFIG.opacity;
 
 		let fadeOutAlpha = CONFIG.opacity;
-		if (timeUntilDeath < fadeMillis) fadeOutAlpha = (timeUntilDeath / fadeMillis) * CONFIG.opacity;
+		if (timeUntilDeath < fadeMillis)
+			fadeOutAlpha = (timeUntilDeath / fadeMillis) * CONFIG.opacity;
 
 		// Use the minimum of the two alphas.
 		// If a star's lifespan is shorter than 2x fadeDuration,
@@ -385,13 +367,17 @@ function render(): void {
 	});
 
 	perspective.renderWithoutPerspectiveRotations(() => {
-		createRenderable_Instanced_GivenInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES', 'starfield').render();
+		createRenderable_Instanced_GivenInfo(
+			vertexData,
+			instanceData,
+			ATTRIB_INFO,
+			'TRIANGLES',
+			'starfield',
+		).render();
 	});
 }
 
-
 // Exports -----------------------------------------------------------------------
-
 
 export default {
 	init,

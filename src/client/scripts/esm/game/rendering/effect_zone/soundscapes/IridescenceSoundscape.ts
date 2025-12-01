@@ -1,148 +1,147 @@
-
-import type { LayerConfig } from "../../../../audio/SoundLayer";
+import type { LayerConfig } from '../../../../audio/SoundLayer';
 
 /** The first two layers of the Iridescence soundscape (lower pitch). */
 const layers12: LayerConfig[] = [
 	{
 		volume: {
-			base: 0.015
+			base: 0.015,
 		},
 		source: {
-			type: "noise"
+			type: 'noise',
 		},
 		filters: [
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 418
+					base: 418,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
+					base: 0,
+				},
 			},
 			{
-				type: "lowpass",
+				type: 'lowpass',
 				frequency: {
-					base: 418
+					base: 418,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
-			}
-		]
+					base: 0,
+				},
+			},
+		],
 	},
 	{
 		volume: {
-			base: 0.12
+			base: 0.12,
 		},
 		source: {
-			type: "noise"
+			type: 'noise',
 		},
 		filters: [
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 631
+					base: 631,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
+					base: 0,
+				},
 			},
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 631
+					base: 631,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
-			}
-		]
-	}
+					base: 0,
+				},
+			},
+		],
+	},
 ];
 
 /** The third and fourth layers of the Iridescence soundscape (higher pitch). */
 const layers34: LayerConfig[] = [
 	{
 		volume: {
-			base: 0.2
+			base: 0.2,
 		},
 		source: {
-			type: "noise"
+			type: 'noise',
 		},
 		filters: [
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 851
+					base: 851,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
+					base: 0,
+				},
 			},
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 850
+					base: 850,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
-			}
-		]
+					base: 0,
+				},
+			},
+		],
 	},
 	{
 		volume: {
-			base: 0.02
+			base: 0.02,
 		},
 		source: {
-			type: "noise"
+			type: 'noise',
 		},
 		filters: [
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 1714
+					base: 1714,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
+					base: 0,
+				},
 			},
 			{
-				type: "bandpass",
+				type: 'bandpass',
 				frequency: {
-					base: 1715
+					base: 1715,
 				},
 				Q: {
-					base: 29.9901
+					base: 29.9901,
 				},
 				gain: {
-					base: 0
-				}
-			}
-		]
-	}
+					base: 0,
+				},
+			},
+		],
+	},
 ];
 
 export default {

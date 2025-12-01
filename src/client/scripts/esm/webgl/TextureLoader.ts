@@ -1,4 +1,3 @@
-
 interface Options {
 	/** Whether to generate and use mipmaps for the texture. Default is false. */
 	mipmaps?: boolean;
@@ -17,15 +16,21 @@ class TextureLoader {
 	 * @param options - Optional settings for texture creation.
 	 * @returns The created WebGLTexture.
 	 */
-	public static loadTexture(gl: WebGL2RenderingContext, img: HTMLImageElement, options: Options = {}): WebGLTexture {
+	public static loadTexture(
+		gl: WebGL2RenderingContext,
+		img: HTMLImageElement,
+		options: Options = {},
+	): WebGLTexture {
 		const settings: Required<Options> = { ...this.defaultOptions, ...options };
-				
+
 		if (!isPowerOfTwo(img.naturalWidth) || !isPowerOfTwo(img.naturalHeight)) {
-			throw new Error(`Image dimensions are not a power of two! Cannot use REPEAT wrapping mode. ${img.naturalWidth}x${img.naturalHeight}`);
+			throw new Error(
+				`Image dimensions are not a power of two! Cannot use REPEAT wrapping mode. ${img.naturalWidth}x${img.naturalHeight}`,
+			);
 		}
 
 		const texture = gl.createTexture();
-		
+
 		// Upload the image to the GPU
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // Flip image pixels into the bottom-to-top order that WebGL expects.
 		gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -41,8 +46,8 @@ class TextureLoader {
 			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST); // Jagged edges, mipmap snapping (jagged all the time)
 
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // Magnification, smooth edges (noticeable when zooming in)
-
-		} else { // No mipmaps. Set wrapping
+		} else {
+			// No mipmaps. Set wrapping
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // Minification, smooth edges (not very noticeable)
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); // Magnification, hard edges. Gives that pixelated look required for low-resolution board tiles texture.
 		}

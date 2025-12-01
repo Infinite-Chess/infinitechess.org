@@ -1,16 +1,12 @@
-
-import { getClientIP } from "../utility/IP.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
-import { getTranslationForReq } from "../utility/translate.js";
-
+import { getClientIP } from '../utility/IP.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
 /**
  * The script rate limits login/authentication attempts by a combination of username and IP address
  */
 
-
 // Variables ----------------------------------------------------------------------------
-
 
 /** Maximum consecutive login attempts allowed for each username-IP
  * combination before they will be locked out temporarily. */
@@ -33,9 +29,7 @@ const loginAttemptData = {};
  * login attempt data, if they have stopped trying to login. */
 const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minutes
 
-
 // Functions ----------------------------------------------------------------------------
-
 
 /**
  * Prevents a user-IP combination from entering login attempts too fast.
@@ -46,9 +40,9 @@ function rateLimitLogin(req, res, browserAgent) {
 	loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
 		attempts: 0,
 		cooldownTimeSecs: 0,
-		lastAttemptTime: now
+		lastAttemptTime: now,
 	};
-    
+
 	const timeSinceLastAttemptsSecs = (now - loginAttemptData[browserAgent].lastAttemptTime) / 1000;
 
 	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) {
@@ -58,15 +52,21 @@ function rateLimitLogin(req, res, browserAgent) {
 
 	// Too many attempts!
 
-	if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
+	if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) {
+		// Still on cooldown
 
 		let translation = getTranslationForReq('server.javascript.ws-login_failure_retry_in', req);
-		const login_cooldown = Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs);
-		const seconds_plurality = login_cooldown === 1 ? getTranslationForReq("server.javascript.ws-second", req) : getTranslationForReq("server.javascript.ws-seconds", req);
+		const login_cooldown = Math.floor(
+			loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs,
+		);
+		const seconds_plurality =
+			login_cooldown === 1
+				? getTranslationForReq('server.javascript.ws-second', req)
+				: getTranslationForReq('server.javascript.ws-seconds', req);
 		translation += ` ${login_cooldown} ${seconds_plurality}.`;
 
-		res.status(401).json({ 'message': translation }); // "Failed to log in, try again in 3 seconds.""
-        
+		res.status(401).json({ message: translation }); // "Failed to log in, try again in 3 seconds.""
+
 		// Reset the timer to auto-delete them from the login attempt data
 		// if they haven't tried in a while.
 		// This is so it doesn't get cluttered over time
@@ -155,7 +155,10 @@ function onIncorrectPassword(browserAgent, username) {
 	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
 	// Lock them!
 	loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
-	logEventsAndPrint(`${username} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt");
+	logEventsAndPrint(
+		`${username} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`,
+		'loginAttempts.txt',
+	);
 }
 
 /**
@@ -169,11 +172,4 @@ function onCorrectPassword(browserAgent) {
 	delete loginAttemptData[browserAgent];
 }
 
-
-
-export {
-	rateLimitLogin,
-	onCorrectPassword,
-	onIncorrectPassword,
-	getBrowserAgent,
-};
+export { rateLimitLogin, onCorrectPassword, onIncorrectPassword, getBrowserAgent };

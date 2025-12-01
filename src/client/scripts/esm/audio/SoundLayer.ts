@@ -1,21 +1,18 @@
-
 // src/client/scripts/esm/audio/SoundLayer.ts
 
 /**
  * This module implements the audio graph for individual sound layers within a soundscape.
- * 
+ *
  * A sound layer could either be:
  * - A noise source (e.g. white noise) with filters applied.
  * - An oscillator source (e.g. sine wave) with filters applied.
- * 
+ *
  * Each layer can have its own volume control, and each parameter can be modulated by an LFO.
  */
 
-import { createLFO, LFOConfig } from "./LFOFactory";
-
+import { createLFO, LFOConfig } from './LFOFactory';
 
 // Type Definitions ------------------------------------------------------------------
-
 
 /** A single sound layer within a soundscape. */
 export interface LayerConfig {
@@ -64,9 +61,7 @@ interface ModulatedParamConfig {
 	lfo?: LFOConfig;
 }
 
-
 // SoundLayer Class ----------------------------------------------------------------
-
 
 /**
  * Represents the complete audio graph for a single layer in a soundscape.
@@ -76,12 +71,16 @@ export class SoundLayer {
 	/** All unique oscillators and LFOs that need to be started and stopped for this layer. */
 	private readonly allNodesToStart: (AudioBufferSourceNode | OscillatorNode)[] = [];
 
-
-	constructor(context: AudioContext, config: LayerConfig, sharedNoiseSource: AudioBufferSourceNode) {
+	constructor(
+		context: AudioContext,
+		config: LayerConfig,
+		sharedNoiseSource: AudioBufferSourceNode,
+	) {
 		this.outputGain = context.createGain();
 		this.outputGain.gain.value = config.volume.base;
 
-		if (config.volume.lfo) { // The volume for this layer is modulated by an LFO
+		if (config.volume.lfo) {
+			// The volume for this layer is modulated by an LFO
 			const lfo = createLFO(context, config.volume.lfo);
 			lfo.source.connect(lfo.gain).connect(this.outputGain.gain);
 			this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
@@ -92,7 +91,8 @@ export class SoundLayer {
 		if (config.source.type === 'noise') {
 			currentNode = sharedNoiseSource;
 			// The shared noise source is managed by the player, so we don't add it to our start/stop list.
-		} else { // type === 'oscillator'
+		} else {
+			// type === 'oscillator'
 			const oscConfig: OscillatorSourceConfig = config.source;
 			const osc = context.createOscillator();
 			osc.type = oscConfig.wave;
@@ -109,12 +109,12 @@ export class SoundLayer {
 				lfo.source.connect(lfo.gain).connect(osc.detune);
 				this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
 			}
-			
+
 			currentNode = osc;
 			this.allNodesToStart.push(osc);
 		}
 
-		config.filters.forEach(filterConfig => {
+		config.filters.forEach((filterConfig) => {
 			const filterNode = context.createBiquadFilter();
 			filterNode.type = filterConfig.type;
 			filterNode.frequency.value = filterConfig.frequency.base;
@@ -143,7 +143,6 @@ export class SoundLayer {
 
 		currentNode.connect(this.outputGain);
 	}
-	
 
 	/** Connects this layer's output to a destination node. */
 	public connect(destination: AudioNode): void {
@@ -154,11 +153,11 @@ export class SoundLayer {
 	public start(): void {
 		// FUTURE: Potentially upgrade to start perlin noise buffers at random
 		// offsets so they don't sound identical every refresh.
-		this.allNodesToStart.forEach(node => node.start(0));
+		this.allNodesToStart.forEach((node) => node.start(0));
 	}
 
 	/** Stops all unique oscillators and LFOs for this layer. */
 	public stop(): void {
-		this.allNodesToStart.forEach(node => node.stop(0));
+		this.allNodesToStart.forEach((node) => node.stop(0));
 	}
 }

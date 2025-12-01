@@ -1,4 +1,3 @@
-
 /**
  * This script creates event listeners for managing the current classes
  * of all elements with a tooltip available.
@@ -6,14 +5,18 @@
  * until you go a little but without viewing another tooltip.
  */
 
-import docutil from "./docutil.js";
-
+import docutil from './docutil.js';
 
 // Variables ----------------------------------------------------------------------------
 
-
-const tooltipClasses: string[] = ['tooltip-dl', 'tooltip-d', 'tooltip-dr','tooltip-u', 'tooltip-ul'];
-const tooltipClasses_Dotted = tooltipClasses.map(classname => '.' + classname );
+const tooltipClasses: string[] = [
+	'tooltip-dl',
+	'tooltip-d',
+	'tooltip-dr',
+	'tooltip-u',
+	'tooltip-ul',
+];
+const tooltipClasses_Dotted = tooltipClasses.map((classname) => '.' + classname);
 
 /** A list (set) of all tooltip elements that have had fast-transition listeners attached already. */
 const initializedTooltips: Set<HTMLElement> = new Set();
@@ -33,9 +36,7 @@ let fastTransitionTimeoutID: ReturnType<typeof setTimeout> | undefined;
  * if no tooltipped has been viewed for a bit. */
 const fastTransitionCooldownMillis: number = 750;
 
-
 // Functions ----------------------------------------------------------------------------
-
 
 /** Enables fast transition mode for tooltips. */
 function enableFastTransition(): void {
@@ -43,7 +44,7 @@ function enableFastTransition(): void {
 
 	// console.log("Enabled fast transition");
 	fastTransitionMode = true;
-	initializedTooltips.forEach(tooltip => tooltip.classList.add('fast-transition') );
+	initializedTooltips.forEach((tooltip) => tooltip.classList.add('fast-transition'));
 }
 
 /** Cancels the timer to exit fast transition mode. */
@@ -60,7 +61,7 @@ function disableFastTransition(): void {
 	// console.log("Disabled fast transition");
 	fastTransitionTimeoutID = undefined;
 	fastTransitionMode = false;
-	initializedTooltips.forEach(tooltip => tooltip.classList.remove('fast-transition'));
+	initializedTooltips.forEach((tooltip) => tooltip.classList.remove('fast-transition'));
 }
 
 /**
@@ -68,16 +69,18 @@ function disableFastTransition(): void {
  * 'tooltip-d', 'tooltip-dl', or 'tooltip-dr'.
  */
 function getTooltipClass(element: Element): string | null {
-	return tooltipClasses.find(cls => element.classList.contains(cls)) ?? null;
+	return tooltipClasses.find((cls) => element.classList.contains(cls)) ?? null;
 }
 
 /** Discovers new tooltip elements, attaches fast-transition listeners, and adds them to the tooltips list. */
 function addFastTransitionListeners(): void {
 	if (!docutil.isMouseSupported()) return;
-	
-	const allTooltipsOnPage = document.querySelectorAll<HTMLElement>(tooltipClasses_Dotted.join(', '));
 
-	allTooltipsOnPage.forEach(tooltip => {
+	const allTooltipsOnPage = document.querySelectorAll<HTMLElement>(
+		tooltipClasses_Dotted.join(', '),
+	);
+
+	allTooltipsOnPage.forEach((tooltip) => {
 		if (tooltip.dataset['tooltip_initialized'] === 'true') return; // If already initialized, skip this element.
 		tooltip.dataset['tooltip_initialized'] = 'true'; // Mark THIS element as initialized.
 		initializedTooltips.add(tooltip); // Add to the list
@@ -121,7 +124,10 @@ function addFastTransitionListeners(): void {
 
 		function resetTimerToAddClass(): void {
 			cancelTimerToAddClass();
-			addBackClassTimeoutID = setTimeout(addBackClass, timeToReAddTooltipClassAfterDeletionMillis);
+			addBackClassTimeoutID = setTimeout(
+				addBackClass,
+				timeToReAddTooltipClassAfterDeletionMillis,
+			);
 		}
 
 		function addBackClass(): void {
@@ -150,7 +156,10 @@ function addFastTransitionListeners(): void {
 
 			if (tooltipVisible) {
 				enableFastTransition();
-				fastTransitionTimeoutID = setTimeout(() => disableFastTransition(), fastTransitionCooldownMillis);
+				fastTransitionTimeoutID = setTimeout(
+					() => disableFastTransition(),
+					fastTransitionCooldownMillis,
+				);
 			}
 
 			tooltipVisible = false;
@@ -177,9 +186,7 @@ function initTooltips(): void {
 
 initTooltips();
 
-
 // -------------------------------------------------------------------------------------------
-
 
 // Export so that it can be imported on every page. Otherwise esbuild won't include it.
 export default {

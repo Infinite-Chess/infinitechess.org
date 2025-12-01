@@ -1,14 +1,8 @@
-
-
-import uuid from "../../shared/util/uuid.js";
-import { isBrowserIDBanned } from "../middleware/banned.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
-
-
+import uuid from '../../shared/util/uuid.js';
+import { isBrowserIDBanned } from '../middleware/banned.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
-
-
 
 /**
  * Assigns/renews the browser-id cookie to all requests for an html file.
@@ -32,18 +26,21 @@ function assignOrRenewBrowserID(req, res, next) {
 }
 
 function giveBrowserID(req, res) {
-
 	const cookieName = 'browser-id';
 	const id = uuid.generateID_Base62(6);
 
 	// console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
 
 	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis /* 1 day */ });
+	res.cookie(cookieName, id, {
+		httpOnly: true,
+		sameSite: 'None',
+		secure: true,
+		maxAge: expireOfBrowserIDCookieMillis /* 1 day */,
+	});
 }
 
 function refreshBrowserID(req, res) {
-
 	const cookieName = 'browser-id';
 	const cookies = req.cookies;
 	const id = cookies[cookieName];
@@ -51,19 +48,27 @@ function refreshBrowserID(req, res) {
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
 	// console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
-	
+
 	// Readable by server with web socket connections, NOT by javascript
-	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis });
+	res.cookie(cookieName, id, {
+		httpOnly: true,
+		sameSite: 'None',
+		secure: true,
+		maxAge: expireOfBrowserIDCookieMillis,
+	});
 }
 
 function makeBrowserIDPermanent(req, res, browserID) {
 	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-	res.cookie('browser-id', browserID, { httpOnly: true, sameSite: 'None', secure: true, maxAge: Number.MAX_SAFE_INTEGER /* FOREVER!! */ });
+	res.cookie('browser-id', browserID, {
+		httpOnly: true,
+		sameSite: 'None',
+		secure: true,
+		maxAge: Number.MAX_SAFE_INTEGER /* FOREVER!! */,
+	});
 
 	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!!!!!!!!!!!!!!!!!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 	logEventsAndPrint(logThis, 'bannedIPLog.txt');
 }
 
-export {
-	assignOrRenewBrowserID,
-};
+export { assignOrRenewBrowserID };

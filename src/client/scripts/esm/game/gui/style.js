@@ -1,5 +1,4 @@
-
-"use strict";
+'use strict';
 
 /**
  * This script holds common operations on document elements,
@@ -13,7 +12,6 @@ const element_style = document.getElementById('style'); // The in-html-doc style
 // What things require styling that our javascript changes?
 // * The navigation bar, when the theme changes.
 let navigationStyle;
-
 
 // Other operations
 
@@ -67,7 +65,8 @@ function getChildByIndexInParent(parent, index) {
  * @returns {string} A CSS rgba color string.
  */
 function arrayToCssColor(colorArray) {
-	if (colorArray.length !== 4) throw new Error('Array must have exactly 4 elements: [r, g, b, a].');
+	if (colorArray.length !== 4)
+		throw new Error('Array must have exactly 4 elements: [r, g, b, a].');
 
 	const [r, g, b, a] = colorArray.map((value, index) => {
 		if (index < 3) {
@@ -81,7 +80,6 @@ function arrayToCssColor(colorArray) {
 
 	return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
-
 
 export default {
 	setNavStyle,
