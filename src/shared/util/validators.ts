@@ -35,9 +35,6 @@ enum UsernameValidationResult {
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
- * 
- * However, the following have been used:
- * admin
  */
 const reservedUsernames: string[] = [
 	'infinitechess',
