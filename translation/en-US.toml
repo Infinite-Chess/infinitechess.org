@@ -110,6 +110,7 @@ code_heading = "Code"
 code_credits = [
 "by Brandon Jones and Colin MacKenzie IV.",
 "by Andreas Tsevas and Naviary.",
+"by Tilted Development LTD.",
 ]
 language_heading = "Language Translations"
 language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
@@ -432,6 +433,8 @@ copied_position = "Copied position to clipboard!"
 loaded_position_from_clipboard = "Loaded position from clipboard!"
 reset_position = "Position was reset!"
 clear_position = "Position was cleared!"
+clipboard_manual_paste = "Enter code:"
+clipboard_manual_copy = "Code:"
 
 [play.javascript.rendering]
 on = "On"
