@@ -42,13 +42,6 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 			// Reset variable because it now exists.
 			usernameError = document.getElementById("usernameerror");
 		}
-	} else if (usernameError) { // No errors, delete that error element if it exists
-		usernameHasError = false;
-		usernameError.remove();
-		element_usernameInput.removeAttribute('style');
-	}
-
-	if (error !== validators.UsernameValidationResult.Ok) {
 		switch (error) {
 			// TODO: add translation for both of the cases, too long and too short
 			case validators.UsernameValidationResult.UsernameTooShort:
@@ -61,6 +54,10 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 				// ignoring some other errors the validator might return, this could be changed in the future
 				break;
 		}
+	} else if (usernameError) { // No errors, delete that error element if it exists
+		usernameHasError = false;
+		usernameError.remove();
+		element_usernameInput.removeAttribute('style');
 	}
 
 	updateSubmitButton();
@@ -101,7 +98,7 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 
 	let emailError = document.getElementById("emailerror"); // Does an error already exist?
 
-	const error = validators.validateEmail(element_emailInput.value); //!validEmail(element_emailInput.value);
+	const error = validators.validateEmail(element_emailInput.value);
 
 	// If ANY error, make sure errorElement is created
 	if (error !== validators.EmailValidationResult.Ok) {
@@ -113,13 +110,6 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 			// Reset variable because it now exists.
 			emailError = document.getElementById("emailerror");
 		}
-	} else if (emailError) { // No errors, delete that error element if it exists
-		emailHasError = false;
-		emailError.remove();
-		element_emailInput.removeAttribute('style');
-	}
-    
-	if (error !== validators.EmailValidationResult.Ok) {
 		switch (error) {
 			case validators.EmailValidationResult.EmailTooLong:
 				emailError.textContent = translations["js-email_too_long"];
@@ -131,6 +121,10 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 				emailError.textContent = translations["js-email_invalid"];
 				break;
 		}
+	} else if (emailError) { // No errors, delete that error element if it exists
+		emailHasError = false;
+		emailError.remove();
+		element_emailInput.removeAttribute('style');
 	}
 
 	updateSubmitButton();
