@@ -433,8 +433,8 @@ copied_position = "Copied position to clipboard!"
 loaded_position_from_clipboard = "Loaded position from clipboard!"
 reset_position = "Position was reset!"
 clear_position = "Position was cleared!"
-clipboard_manual_paste = "Enter code:"
-clipboard_manual_copy = "Code:"
+clipboard_manual_paste = "Paste text:"
+clipboard_manual_copy = "Copy text:"
 
 [play.javascript.rendering]
 on = "On"
