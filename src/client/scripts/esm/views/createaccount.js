@@ -185,13 +185,11 @@ element_passwordInput.addEventListener('input', () => {
 		 * @type Map<validators["PasswordValidationResult"], string>
 		 */
 		const errorKeys = new Map();
-		errorKeys.set(validators.PasswordValidationResult.InvalidFormat, 'js-pwd_incorrect_format');
 		errorKeys.set(validators.PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
 		errorKeys.set(validators.PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
 		errorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
 
-		passwordError.textContent =
-			translations[errorKeys.get(validationResult) ?? 'js-pwd_incorrect_format'];
+		passwordError.textContent = translations[errorKeys.get(validationResult)];
 	} else {
 		passwordHasError = false;
 		if (passwordError) {

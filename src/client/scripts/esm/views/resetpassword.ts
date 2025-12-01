@@ -88,16 +88,12 @@ function initializeForm(elements: FormElements): void {
 		if (validationResult !== validators.PasswordValidationResult.Ok) {
 			// I found it to be less bloated by using a Map here, but ideally the validator should already return a translation string to be used
 			const errorKeys: Map<number, string> = new Map();
-			errorKeys.set(
-				validators.PasswordValidationResult.InvalidFormat,
-				'js-pwd_incorrect_format',
-			);
 			errorKeys.set(validators.PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
 			errorKeys.set(validators.PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
 			errorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
 
 			messageElement = createErrorMessageElement(
-				translations[errorKeys.get(validationResult) ?? 'js-pwd_incorrect_format'],
+				translations[errorKeys.get(validationResult)!],
 			);
 			newPasswordInput.focus();
 			return false;
