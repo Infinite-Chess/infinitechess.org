@@ -86,6 +86,16 @@ export default [
 		// Required for us to use the @typescript-eslint/explicit-function-return-type rule below
 		plugins: { '@typescript-eslint': pluginTypescript },
 		rules: {
+			'no-unused-vars': 'off', // Default rule causes false positives on Enums
+			'@typescript-eslint/no-unused-vars': [
+				// Typescript-specific unused variable rule
+				'warn',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_',
+				},
+			],
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off',
 			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined

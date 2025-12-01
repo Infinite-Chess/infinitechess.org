@@ -8,9 +8,6 @@
  * - Possibly return a class (?) with a .getTranslationKey() function or add some other way to do that (then there could also be the .isValid property)
  */
 
-// i have no idea why eslint complains about unused vars here, maybe someone else knows why and can fix it
-/* eslint-disable no-unused-vars */
-
 enum PasswordValidationResult {
 	Ok,
 	PasswordTooShort,
