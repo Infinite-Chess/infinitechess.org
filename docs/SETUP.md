@@ -1,38 +1,34 @@
-# Setting up your workspace #
+# Setting up your workspace
 
 This guide walks you through the initial setup phase of the infinitechess.org server on your machine. This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
 
 **This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, many people are willing to assist you in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
-**SUMMARY of the setup process for experienced users:** Install Node.js. Fork the repo and install the project dependencies via `npm i`. Now you can run `npm run dev` to launch a live infinite chess server at `https://localhost:3443`. Read the [Navigation Guide](./NAVIGATING.md) to get a brief rundown of the project structure.
+**SUMMARY of the setup process for experienced users:** Install Node.js. Fork the repo and install the project dependencies via `npm i`. Now you can run `npm run dev` to launch a live infinite chess server at `https://localhost:3443`. Using the [list of recommended VSCode Extensions](#step-6-install-recommended-vscode-extensions) is highly recommended but optional. Read the [Navigation Guide](./NAVIGATING.md) to get a brief rundown of the project structure.
 
-
-
-## Step 1: Install Git ##
+## Step 1: Install Git
 
 Let's check to make sure you have Git already installed. Open a command prompt (windows) or terminal (mac), and enter the following:
+
 ```
 git version
 ```
+
 If this outputs a version number, you have it installed, proceed to the next step! If it outputted unknown command, [follow this guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it!
 
-## Step 2: Download VSCode ##
+## Step 2: Download VSCode
 
 This guide will use VSCode, which is **highly** recommended, but you may use another code editor if you wish, as long as it is compatible with Node, npm, and has source control features. This guide will walk you through the process using VSCode.
 
 [Go here](https://code.visualstudio.com/) to download and install VSCode. Be sure you have Visual Studio **Code**, and not Visual Studio (they are different).
 
-
-
-## Step 3: Install Node.js ##
+## Step 3: Install Node.js
 
 [Go here](https://nodejs.org/en/download/package-manager) to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
 
 <img width="916" alt="22 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/9f0b5cab-f372-45f6-b648-cefef99e68a0">
 
-
-
-## Step 4: Forking the repository ##
+## Step 4: Forking the repository
 
 Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"! You will need a github account.
 
@@ -56,18 +52,18 @@ The fork you just created should be at or near the top of the list, click on it!
 
 Choose a location on your machine to store the repository. Then when prompted whether to open the cloned repository, click "Open".
 
-
-
-## Step 5: Install project dependencies ##
+## Step 5: Install project dependencies
 
 Inside the opened VSCode project, open a terminal window within it by going to Terminal > New Terminal.
 
 Run the following command to auto-install all project dependancies:
+
 ```
 npm i
 ```
 
 To test run the server, and start it up from now on, enter the command:
+
 ```
 npm run dev
 ```
@@ -76,12 +72,12 @@ The first time you run this, you should see something like:
 
 <img width="1187" height="481" alt="Screenshot 2025-09-19 at 9 52 21 PM" src="https://github.com/user-attachments/assets/52e70488-2126-47ad-a93f-b72d9a614b5e" />
 
-
 Subsequent startups will look something like:
 
 <img width="1185" height="209" alt="Screenshot 2025-09-19 at 9 53 17 PM" src="https://github.com/user-attachments/assets/474184a5-493e-4bae-a7a4-3ebd0ba325df" />
 
 You should now be able to connect to the server through local host! Open a web browser and go to:
+
 ```
 https://localhost:3443
 ```
@@ -105,9 +101,7 @@ If done correctly, you should be met with the following. This means the server h
 
 <img width="667" height="170" alt="Screenshot 2025-09-19 at 9 56 26 PM" src="https://github.com/user-attachments/assets/2e98bec2-8c1e-47e5-a1e3-a6139da03117" />
 
-
-
-## Step 6: Install VSCode Extensions ##
+## Step 6: Install recommended VSCode Extensions
 
 1. ESLint
 
@@ -117,18 +111,19 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 <img width="1081" alt="Screen Shot 2024-08-16 at 10 26 33 PM copy" src="https://github.com/user-attachments/assets/7df938ff-da69-4675-934f-4a61e93e69c1">
 
+2. Prettier - Code formatter
 
-2. SQLite
+Using this extenstion will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
+
+3. SQLite Viewer
 
 Installing this extension will allow you to preview the contents of the database during development. The database stores all account information.
 
-3. GitHub Pull Requests
+4. GitHub Pull Requests
 
 Installing this extension is not required, but highly recommended. It allows you to test run the code of other peoples pull requests on your system, so you can give collective feedback!
 
-
-
-## Step 7 (optional): Setting up the email service ##
+## Step 7 (optional): Setting up the email service
 
 While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
 
@@ -162,16 +157,13 @@ If your app password is ever leaked, or you suspect it might be, return to your 
 
 Now upon creating a new account, you should see a message "Email is sent to member ExampleUsername!". If you see an error, or "Email environment variables not specified. Not sending email.", then it was setup incorrectly.
 
-Note that you will only be able click "Verify Account" in the verification emails if you  are on the same machine running the server, as the verification link contains `localhost` within it.
+Note that you will only be able click "Verify Account" in the verification emails if you are on the same machine running the server, as the verification link contains `localhost` within it.
 
-
-### **You are all set up now to start developing!** 🥳 ###
+### **You are all set up now to start developing!** 🥳
 
 Let's move on to learn how to suggest changes to the repository! Or, skip right to the [Conclusion](#conclusion).
 
-
-
-## Creating a Pull Request ##
+## Creating a Pull Request
 
 After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab.
 
@@ -195,9 +187,7 @@ On the home page of the fork you created ON YOUR GITHUB account, click on "Pull 
 
 Now click "New pull request", followed by "Create pull request"! Your changes will be reviewed soon and either be accepted, rejected, or commented on!
 
-
-
-## Conclusion ##
+## Conclusion
 
 Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss with the others how we should best go about things!
 
