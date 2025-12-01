@@ -1,6 +1,10 @@
 {
+	"79": {
+		"note": "Remove ws-password_format on line 642.",
+		"changes": []
+	},
 	"78": {
-		"note": "remove js-username_specs",
+		"note": "Remove js-username_specs.",
 		"changes": []
 	},
 	"77": {
@@ -109,7 +113,7 @@
 	},
 	"51": {
 		"note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 603",
-    	"changes": []
+		"changes": []
 	},
 	"50": {
 		"note": "Added annotations, erase, and collapse, lines 285-287.",
@@ -179,7 +183,7 @@
 		"note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
 		"changes": []
 	},
-	"33":{
+	"33": {
 		"note": "Added progress_checkmate on line 332 under play.javascript",
 		"changes": []
 	},
@@ -222,7 +226,7 @@
 	},
 	"26": {
 		"note": "Modified webgl_unsupported, line 303",
-		"changes": [ "play.javascript.webgl_unsupported" ]
+		"changes": ["play.javascript.webgl_unsupported"]
 	},
 	"25": {
 		"note": "Added the following in header.settings, lines 21-23: selection, selection-drag, selection-premove.",
@@ -252,9 +256,7 @@
 	},
 	"20": {
 		"note": "Added fields for game button tooltips, lines 241-247",
-		"changes": [
-			"play.gamebuttontooltips"
-		]
+		"changes": ["play.gamebuttontooltips"]
 	},
 	"19": {
 		"note": "Updated wording of verify_message and resend_message, lines 94-95",
@@ -304,15 +306,11 @@
 	},
 	"12": {
 		"note": "Corrected opponen_resignation to opponent_resignation",
-		"changes": [
-			"play.javascript.results.opponen_resignation"
-		]
+		"changes": ["play.javascript.results.opponen_resignation"]
 	},
 	"11": {
 		"note": "Changed the structure of play.javascript.termination.moverule",
-		"changes": [
-			"play.javascript.termination.moverule"
-		]
+		"changes": ["play.javascript.termination.moverule"]
 	},
 	"10": {
 		"note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
@@ -327,18 +325,15 @@
 	},
 	"9": {
 		"note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
-		"changes": [
-			"play.guide.controls_paragraph",
-			"play.guide.keybinds"
-		]
+		"changes": ["play.guide.controls_paragraph", "play.guide.keybinds"]
 	},
 	"8": {
 		"note": "Added a knightrider description for the guide, on line 170.",
-		"changes": [ "play.guide.pieces.knightrider" ]
+		"changes": ["play.guide.pieces.knightrider"]
 	},
 	"7": {
 		"note": "Added ws-server_under_maintenance on line 561.",
-		"changes": [ "server.javascript.ws-server_under_maintenance" ]
+		"changes": ["server.javascript.ws-server_under_maintenance"]
 	},
 	"6": {
 		"note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
@@ -394,15 +389,15 @@
 	},
 	"4": {
 		"note": "Added news.july22-2024 on line 462",
-		"changes": [ "news.july22-2024" ]
+		"changes": ["news.july22-2024"]
 	},
 	"3": {
 		"note": "added play.javascript.invites.start_game on line 314",
-		"changes": [ "play.javascript.invites.start_game" ]
+		"changes": ["play.javascript.invites.start_game"]
 	},
 	"2": {
 		"note": "added login.login_button on line 448",
-		"changes": [ "login.login_button" ]
+		"changes": ["login.login_button"]
 	},
 	"1": {
 		"note": "inital commit of en-US-toml",
