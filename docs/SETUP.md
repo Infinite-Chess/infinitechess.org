@@ -110,7 +110,8 @@ Installing the ESLint VSCode extension will help your pull requests be approved 
 Go to the extensions tab, search for "eslint", click the one by "Microsoft", then Click "Install"!
 
 <img width="1081" alt="Screen Shot 2024-08-16 at 10 26 33 PM copy" src="https://github.com/user-attachments/assets/7df938ff-da69-4675-934f-4a61e93e69c1">
-<div style="height: 40px;"></div>
+<br>
+<br>
 
 2. **Prettier - Code formatter**
 
