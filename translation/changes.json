@@ -1,4 +1,8 @@
 {
+	"78": {
+		"note": "remove js-username_specs",
+		"changes": []
+	},
 	"77": {
 		"note": "Added js-email_too_long on line 159.",
 		"changes": []
