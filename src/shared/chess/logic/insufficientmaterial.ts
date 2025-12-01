@@ -107,6 +107,12 @@ const insuffmatScenarios_special: Scenario[] = [
 	{ [r.ROYALCENTAUR + e.B]: 1, [r.AMAZON + e.W]: 1 },
 ];
 
+// other special insuffmat scenarios, with the world border nearby
+const insuffmatScenarios_special_worldborder: Scenario[] = [
+	{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
+	{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
+];
+
 /**
  * Detects if the provided piecelist scenario is a draw by insufficient material
  * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
@@ -128,7 +134,9 @@ function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean)
 			else scenrariosForInsuffMat = insuffmatScenarios_0K1k;
 			delete scenarioCopy[r.KING + e.B];
 		} else {
-			scenrariosForInsuffMat = insuffmatScenarios_special;
+			if (worldBorderNearOrigin)
+				scenrariosForInsuffMat = insuffmatScenarios_special_worldborder;
+			else scenrariosForInsuffMat = insuffmatScenarios_special;
 		}
 	} else {
 		scenrariosForInsuffMat = insuffmatScenarios_special;
