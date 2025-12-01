@@ -30,9 +30,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // The chance of false positives can further be reduced by modifying getAdaptiveNumRounds() to do more checks.
 // -----------------------------------------------------------------------------------------------
 
-"use strict";
+'use strict';
 
-import bimath from "./bigdecimal/bimath.js";
+import bimath from './bigdecimal/bimath.js';
 
 // Some useful BigInt constants
 const ZERO = 0n;
@@ -46,7 +46,7 @@ const MAX_SAFE_INTEGER_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
 // Useful int constants
 // See https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Testing_against_small_sets_of_bases
 // and: https://oeis.org/A014233
-// and longer base lists: https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test 
+// and longer base lists: https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 const LIMIT_2 = 2047;
 const LIMIT_2_3 = 1373653;
 const LIMIT_2_3_5 = 25326001;
@@ -108,11 +108,9 @@ function twoMultiplicity(n) {
  * @returns {string} A string of `numBits` random bits.
  */
 function getRandomBitString(numBits) {
-	let bits = "";
+	let bits = '';
 	while (bits.length < numBits) {
-		bits += Math.random()
-			.toString(2)
-			.substring(2, 50);
+		bits += Math.random().toString(2).substring(2, 50);
 	}
 	return bits.substring(0, numBits);
 }
@@ -244,9 +242,10 @@ function validateBases(bases, nSub) {
 	if (!bases) return null;
 	if (!Array.isArray(bases)) throw new TypeError(`invalid bases option (must be an array)`);
 	// Ensure all bases are valid BigInts within [2, n-2]
-	return bases.map(b => {
-		if (typeof b !== "bigint") b = BigInt(b);
-		if (!(b >= TWO) || !(b < nSub)) throw new RangeError(`invalid base (must be in the range [2, n-2]): ${b}`);
+	return bases.map((b) => {
+		if (typeof b !== 'bigint') b = BigInt(b);
+		if (!(b >= TWO) || !(b < nSub))
+			throw new RangeError(`invalid base (must be in the range [2, n-2]): ${b}`);
 		return b;
 	});
 }
@@ -259,7 +258,8 @@ function validateBases(bases, nSub) {
  * @returns - return value: (p1 * p2) % modulus
  */
 function modProductNumber(p1, p2, modulus) {
-	if (p1 > SAFE_SQRT || p2 > SAFE_SQRT) return Number(( BigInt(p1) * BigInt(p2) ) % BigInt(modulus));
+	if (p1 > SAFE_SQRT || p2 > SAFE_SQRT)
+		return Number((BigInt(p1) * BigInt(p2)) % BigInt(modulus));
 	else return (p1 * p2) % modulus;
 }
 
@@ -270,8 +270,8 @@ function modProductNumber(p1, p2, modulus) {
  * @returns - return value: (base ** 2) % modulus
  */
 function modSquaredNumber(base, modulus) {
-	if (base > SAFE_SQRT) return Number(( BigInt(base) ** TWO ) % BigInt(modulus));
-	else return (base ** 2) % modulus;
+	if (base > SAFE_SQRT) return Number(BigInt(base) ** TWO % BigInt(modulus));
+	else return base ** 2 % modulus;
 }
 
 /**
@@ -307,7 +307,7 @@ function modPowBigint(base, exponent, modulus) {
 	while (exponent !== ZERO) {
 		if (exponent % TWO === ZERO) {
 			exponent = exponent / TWO;
-			base = (base ** TWO) % modulus;
+			base = base ** TWO % modulus;
 		} else {
 			exponent = exponent - ONE;
 			accumulator = (base * accumulator) % modulus;
@@ -340,9 +340,12 @@ function primalityTest(n, options) {
 function primalityTestNumber(n) {
 	let bases;
 	// Handle some small special cases
-	if (n < 2) return false; // n = 0 or 1
-	else if (n < 4) return true; // n = 2 or 3
-	else if (n % 2 === 0) return false; // Quick short-circuit for other even n
+	if (n < 2)
+		return false; // n = 0 or 1
+	else if (n < 4)
+		return true; // n = 2 or 3
+	else if (n % 2 === 0)
+		return false; // Quick short-circuit for other even n
 	else if (n < LIMIT_2) bases = INT_BASES.slice(0, 1);
 	else if (n < LIMIT_2_3) bases = INT_BASES.slice(0, 2);
 	else if (n < LIMIT_2_3_5) bases = INT_BASES.slice(0, 3);
@@ -362,16 +365,16 @@ function primalityTestNumber(n) {
 
 	for (let round = 0; round < bases.length; round++) {
 		const base = bases[round];
-    
+
 		// Normal Miller-Rabin method => FAST for smaller numbers!
 		const modularpower = modPowNumber(base, d, n);
 		if (modularpower !== 1) {
-			for (let i = 0, x = modularpower;  x !== nSub; i += 1, x = modSquaredNumber(x,n)) {
+			for (let i = 0, x = modularpower; x !== nSub; i += 1, x = modSquaredNumber(x, n)) {
 				if (i === r - 1) return false;
 			}
 		}
 	}
-  
+
 	return true;
 }
 
@@ -392,14 +395,14 @@ function primalityTestNumber(n) {
  *     If left undefined, it is set automatically (recommended).
  * @returns {boolean} true if all the primality tests passed, false otherwise
  */
-function primalityTestBigint(
-	n,
-	{ numRounds, bases, findDivisor = true, useMontgomery} = {}
-) {
+function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontgomery } = {}) {
 	// Handle some small special cases
-	if (n < TWO) return false; // n = 0 or 1
-	else if (n < FOUR) return true; // n = 2 or 3
-	else if (!(n & ONE)) return false; // Quick short-circuit for other even n
+	if (n < TWO)
+		return false; // n = 0 or 1
+	else if (n < FOUR)
+		return true; // n = 2 or 3
+	else if (!(n & ONE))
+		return false; // Quick short-circuit for other even n
 	else if (n < LIMIT_DETERMINISM) bases = BIGINT_BASES;
 
 	const nBits = bimath.bitLength_bisection(n);
@@ -426,7 +429,8 @@ function primalityTestBigint(
 		else useMontgomery = true;
 	}
 
-	if (useMontgomery) { // Faster for larger numbers (like above 1e30)
+	if (useMontgomery) {
+		// Faster for larger numbers (like above 1e30)
 		// Convert into a Montgomery reduction context for faster modular exponentiation
 		const reductionContext = getReductionContext(n);
 		const oneReduced = montgomeryReduce(ONE, reductionContext); // The number 1 in the reduction context
@@ -441,7 +445,7 @@ function primalityTestBigint(
 			} else {
 				// Select a random base to test
 				do {
-					base = BigInt("0b" + getRandomBitString(nBits));
+					base = BigInt('0b' + getRandomBitString(nBits));
 				} while (!(base >= TWO) || !(base < nSub)); // The base must lie within [2, n-2]
 			}
 
@@ -460,7 +464,8 @@ function primalityTestBigint(
 			for (i = ZERO; i < r; i++) {
 				y = montgomerySqr(x, reductionContext);
 
-				if (y === oneReduced) return false; // The test failed: base^(d*2^i) = 1 (mod n) and thus cannot be -1 for any i
+				if (y === oneReduced)
+					return false; // The test failed: base^(d*2^i) = 1 (mod n) and thus cannot be -1 for any i
 				else if (y === nSubReduced) {
 					// The test passed: base^(d*2^i) = -1 (mod n) for the current i
 					// So n is a strong probable prime to this base (though n may still be composite)
@@ -474,7 +479,8 @@ function primalityTestBigint(
 			if (i === r) return false;
 		}
 		return true;
-	} else { // Use Miller-Robin method (faster for smaller numbers, like below 1e30)
+	} else {
+		// Use Miller-Robin method (faster for smaller numbers, like below 1e30)
 		for (let round = 0; round < numRounds; round++) {
 			let base;
 			if (validBases !== null) {
@@ -484,7 +490,7 @@ function primalityTestBigint(
 			} else {
 				// Select a random base to test
 				do {
-					base = BigInt("0b" + getRandomBitString(nBits));
+					base = BigInt('0b' + getRandomBitString(nBits));
 				} while (!(base >= TWO) || !(base < nSub)); // The base must lie within [2, n-2]
 			}
 
@@ -497,7 +503,7 @@ function primalityTestBigint(
 			// normal Miller-Rabin
 			const modularpower = modPowBigint(base, d, n);
 			if (modularpower !== ONE) {
-				for (let i = ZERO, x = modularpower;  x !== nSub; i += ONE, x = (x ** TWO) % n) {
+				for (let i = ZERO, x = modularpower; x !== nSub; i += ONE, x = x ** TWO % n) {
 					if (i === r - ONE) return false;
 				}
 			}
@@ -522,11 +528,9 @@ function getAdaptiveNumRounds(inputBits) {
 	else return 6;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Everything below this line is only for testing purposes
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 // Get the mathjs module via "npm install mathjs"
 /*
@@ -600,7 +604,6 @@ function test_program(){
 test_program();
 */
 
-
 export default {
-	primalityTest
+	primalityTest,
 };

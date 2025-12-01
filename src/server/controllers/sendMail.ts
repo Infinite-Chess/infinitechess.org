@@ -1,4 +1,3 @@
-
 // src/controllers/sendMail.ts
 
 import nodemailer from 'nodemailer';
@@ -16,21 +15,22 @@ const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
 
 /**
  * Who our sent emails will appear as if they're from.
- * 
+ *
  * For this to work, it must be added as a "Send mail as"
  * alias in our Gmail account.
  */
 const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
 
-const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
-	? nodemailer.createTransport({
-		service: 'gmail',
-		auth: {
-			user: EMAIL_USERNAME,
-			pass: EMAIL_APP_PASSWORD
-		},
-	})
-	: null;
+const transporter =
+	EMAIL_USERNAME && EMAIL_APP_PASSWORD
+		? nodemailer.createTransport({
+				service: 'gmail',
+				auth: {
+					user: EMAIL_USERNAME,
+					pass: EMAIL_APP_PASSWORD,
+				},
+			})
+		: null;
 
 // --- Helper Functions ---
 
@@ -47,8 +47,8 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 
 async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
 	if (!transporter) {
-		console.log("Email environment variables not specified. Not sending password reset email.");
-		console.log("Password Reset Link (for dev):", resetUrl);
+		console.log('Email environment variables not specified. Not sending password reset email.');
+		console.log('Password Reset Link (for dev):', resetUrl);
 		return;
 	}
 
@@ -63,7 +63,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 		from: `"Infinite Chess" <${FROM}>`,
 		to: recipientEmail,
 		subject: 'Your Password Reset Request',
-		html: createEmailHtmlWrapper('Password Reset Request', content)
+		html: createEmailHtmlWrapper('Password Reset Request', content),
 	};
 
 	try {
@@ -85,34 +85,46 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		['username', 'email', 'is_verified', 'verification_code'],
 		'user_id',
 		user_id,
-		false
+		false,
 	) as MemberRecord;
 
 	if (!memberData.username || !memberData.email) {
-		logEventsAndPrint(`Unable to send email confirmation for non-existent member of id (${user_id})!`, 'errLog.txt');
+		logEventsAndPrint(
+			`Unable to send email confirmation for non-existent member of id (${user_id})!`,
+			'errLog.txt',
+		);
 		return;
 	}
 
 	// Check the new 'is_verified' column directly.
 	if (memberData.is_verified === 1) {
-		console.log(`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`);
+		console.log(
+			`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`,
+		);
 		return;
 	}
 
 	// An unverified user MUST have a verification code.
 	if (!memberData.verification_code) {
-		logEventsAndPrint(`User ${memberData.username} (ID: ${user_id}) is unverified but has no verification code. Cannot send email.`, 'errLog.txt');
+		logEventsAndPrint(
+			`User ${memberData.username} (ID: ${user_id}) is unverified but has no verification code. Cannot send email.`,
+			'errLog.txt',
+		);
 		return;
 	}
 
 	try {
 		// Construct verification URL using the new 'verification_code' column
 		const baseUrl = getAppBaseUrl();
-		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${memberData.verification_code}`).toString();
+		const verificationUrl = new URL(
+			`${baseUrl}/verify/${memberData.username.toLowerCase()}/${memberData.verification_code}`,
+		).toString();
 
 		if (!transporter) {
-			console.log("Email environment variables not specified. Not sending email confirmation.");
-			console.log("Verification Link (for dev):", verificationUrl);
+			console.log(
+				'Email environment variables not specified. Not sending email confirmation.',
+			);
+			console.log('Verification Link (for dev):', verificationUrl);
 			return;
 		}
 
@@ -127,17 +139,19 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			from: `"Infinite Chess" <${FROM}>`,
 			to: memberData.email,
 			subject: 'Verify Your Account',
-			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content)
+			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
 		};
 
 		await transporter.sendMail(mailOptions);
 		console.log(`Verification email sent to member ${memberData.username} of ID ${user_id}!`);
-
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
-		logEventsAndPrint(`Error during sendEmailConfirmation for user_id (${user_id}): ${errorMessage}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Error during sendEmailConfirmation for user_id (${user_id}): ${errorMessage}`,
+			'errLog.txt',
+		);
 	}
-};
+}
 
 /** API to resend the verification email. */
 function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
@@ -156,7 +170,7 @@ function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
 		res.status(403).json({ sent: false, message: 'Forbidden' });
 		return;
 	}
-	
+
 	// Send the email (fire-and-forget, no need to await here as we respond to the user immediately)
 	sendEmailConfirmation(user_id);
 
@@ -171,7 +185,9 @@ function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
 		if (!transporter) {
-			console.log("Email environment variables not specified. Not sending rating abuse email.");
+			console.log(
+				'Email environment variables not specified. Not sending rating abuse email.',
+			);
 			return;
 		}
 
@@ -179,23 +195,21 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 			from: `Infinite Chess <${FROM}>`,
 			to: EMAIL_USERNAME,
 			subject: messageSubject,
-			text: messageText
+			text: messageText,
 		};
 
 		await transporter.sendMail(mailOptions);
-		console.log(`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`);
-
+		console.log(
+			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`,
+		);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
-		await logEventsAndPrint(`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`, 'errLog.txt');
+		await logEventsAndPrint(
+			`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`,
+			'errLog.txt',
+		);
 	}
 }
 
-
 // --- Exports ---
-export {
-	sendPasswordResetEmail,
-	sendEmailConfirmation,
-	requestConfirmEmail,
-	sendRatingAbuseEmail
-};
+export { sendPasswordResetEmail, sendEmailConfirmation, requestConfirmEmail, sendRatingAbuseEmail };

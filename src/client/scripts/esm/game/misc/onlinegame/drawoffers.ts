@@ -1,16 +1,12 @@
-
-
 /**
  * This script stores the logic surrounding draw extending and acceptance
  * in online games, client-side.
- * 
+ *
  * It also keeps track of the last ply (half-move) we extended a draw offer,
  * if we have done so, in the current online game.
  */
 
-
 import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
-
 
 // @ts-ignore
 import statustext from '../../gui/statustext.js';
@@ -24,15 +20,13 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
 import gamesound from '../gamesound.js';
 
-
 // Variables ---------------------------------------------------
-
 
 /**
  * Minimum number of plies (half-moves) that
  * must span between 2 consecutive draw offers
  * by the same player!
- * 
+ *
  * THIS MUST ALWAYS MATCH THE SERVER-SIDE!!!!
  */
 const movesBetweenDrawOffers: number = 2;
@@ -43,9 +37,7 @@ let plyOfLastOfferedDraw: number | undefined;
 /** Whether we have an open draw offer FROM OUR OPPONENT */
 let isAcceptingDraw: boolean = false;
 
-
 // Functions ---------------------------------------------------
-
 
 /**
  * Returns true if us extending a draw offer to our opponent is legal.
@@ -169,8 +161,6 @@ function onGameClose(): void {
 	guidrawoffer.close();
 	guipause.updateDrawOfferButton();
 }
-
-
 
 export default {
 	isOfferingDrawLegal,

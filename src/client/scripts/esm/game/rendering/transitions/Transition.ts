@@ -13,7 +13,6 @@
  * within a constant duration, while still feeling smooth and natural.
  */
 
-
 import perspective from '../perspective.js';
 import space from '../../misc/space.js';
 import boardtiles from '../boardtiles.js';
@@ -21,39 +20,40 @@ import boarddrag from '../boarddrag.js';
 import boardpos from '../boardpos.js';
 import math from '../../../../../../shared/util/math/math.js';
 import area, { Area } from '../area.js';
-import coordutil, { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../shared/chess/util/coordutil.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
 
-
 // Type Definitions ----------------------------------------------------------------------
 
-
 /** Main Transition type. Either Zooming OR Panning. */
-type Transition = ZoomTransition & {
-	/** Whether this is a Zooming Transition, vs a Panning one. Panning transitions don't need a destination scale. */
-	isZoom: true;
-} | PanTransition & {
-	isZoom: false;
-}
+type Transition =
+	| (ZoomTransition & {
+			/** Whether this is a Zooming Transition, vs a Panning one. Panning transitions don't need a destination scale. */
+			isZoom: true;
+	  })
+	| (PanTransition & {
+			isZoom: false;
+	  });
 
 export type ZoomTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
 	/** The destination board location. */
 	destinationScale: BigDecimal;
-}
+};
 
 type PanTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
-}
-
-
+};
 
 // Constants ----------------------------------------------------------------------
-
 
 /** The maximum number of transitions we will retain in our history, for undoing transitions. */
 const HISTORY_CAP = 20;
@@ -88,19 +88,14 @@ const ZOOM_TRANSITION_CONFIG = {
 	},
 } as const;
 
-
 const ONE = bd.FromBigInt(1n);
 const NEGONE = bd.FromBigInt(-1n);
 
-
 // Variables ----------------------------------------------------------------------
-
 
 const teleportHistory: Transition[] = [];
 
-
 // State --------------------------------------------------------------------------
-
 
 // The state of the current transition
 
@@ -109,7 +104,7 @@ let isTransitioning: boolean = false;
 /**
  * If defined, then after the current transition is
  * finished, we should immediately start this transition.
- * 
+ *
  * This should be defined for transitions which first require us to
  * zoom out to fit everything on screen before zooming back into them.
  */
@@ -126,7 +121,6 @@ let isZoom: boolean;
  * the destination scale requires us to zoom out to get there.
  */
 let isZoomOut: boolean;
-
 
 // Shared State
 
@@ -146,7 +140,6 @@ let destinationE: number;
 /** Precalculated difference between the current transition's origin and destination scale's "e" value. */
 let differenceE: number;
 
-
 // Pan-specific State
 
 /**
@@ -154,7 +147,6 @@ let differenceE: number;
  * difference between the current transition's origin and destination coords.
  */
 let differenceCoords: BDCoords;
-
 
 // Zoom-specific State, pre-calculated
 
@@ -167,21 +159,21 @@ let differenceWorldSpace: DoubleCoords;
 
 /**
  * Which kinematic model to use for the current long zoom transition.
- * 
+ *
  * - C_INF: C-infinity, 1-stage model (shortest duration, smoothest).
  *   Used if its natural duration fits within the cap transition duration.
- * 
+ *
  * - C_ONE_2_STAGE: C¹, velocity-continuous, 2-stage model.
  *   Used if C_INF would take too long (4e36), but this model fits within the cap duration.
  *   Without this fallback model, C_ONE_3_STAGE at specific zooms would have to
  *   accelerate, decelerate, accelerate, then decelerate again, which feels bad.
- * 
+ *
  * - C_ONE_3_STAGE: C¹, velocity-continuous, 3-stage model with fixed duration.
  *   Used if both other models would take too long (4e54).
  *   Compresses the potentially arbitrarily large scale difference into stage 2.
  */
 let zoomModel: 'C_INF' | 'C_ONE_2_STAGE' | 'C_ONE_3_STAGE';
-let stageEndTimes: { stage1: number; stage2: number; stage3: number; };
+let stageEndTimes: { stage1: number; stage2: number; stage3: number };
 
 // C-infinity model state
 let initial_accel_c_inf: number;
@@ -197,10 +189,7 @@ let v_at_stage2_mid: number;
 let e_at_stage2_end: number;
 let v_at_stage2_end: number;
 
-
-
 // Initiating Transitions ---------------------------------------------------------------------
-
 
 /** Sets common variables between starting either a Zooming or Panning Transition. */
 function onTransitionStart(): void {
@@ -214,11 +203,15 @@ function onTransitionStart(): void {
 }
 
 /** Starts a Zooming Transition. */
-function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefined, ignoreHistory: boolean): void {
+function startZoomTransition(
+	tel1: ZoomTransition,
+	tel2: ZoomTransition | undefined,
+	ignoreHistory: boolean,
+): void {
 	onTransitionStart();
 
 	nextTransition = tel2;
-	
+
 	destinationCoords = tel1.destinationCoords;
 	destinationScale = tel1.destinationScale;
 	originE = bd.ln(originScale); // We're using base E
@@ -230,34 +223,48 @@ function startZoomTransition(tel1: ZoomTransition, tel2: ZoomTransition | undefi
 
 	// Determine world coordinates
 	if (isZoomOut) {
-		originWorldSpace = [0,0];
-		destinationWorldSpace = space.convertCoordToWorldSpace(originCoords, destinationCoords, destinationScale);
-	} else { // Is a zoom-in
+		originWorldSpace = [0, 0];
+		destinationWorldSpace = space.convertCoordToWorldSpace(
+			originCoords,
+			destinationCoords,
+			destinationScale,
+		);
+	} else {
+		// Is a zoom-in
 		originWorldSpace = space.convertCoordToWorldSpace(destinationCoords);
-		destinationWorldSpace = [0,0];
+		destinationWorldSpace = [0, 0];
 	}
 	differenceWorldSpace = coordutil.subtractDoubleCoords(destinationWorldSpace, originWorldSpace);
 
 	// Perspective duration multiplier
-	const perspectiveMultiplier = perspective.getEnabled() ? ZOOM_TRANSITION_CONFIG.DURATION_PERSPECTIVE_MULTIPLIER : 1;
+	const perspectiveMultiplier = perspective.getEnabled()
+		? ZOOM_TRANSITION_CONFIG.DURATION_PERSPECTIVE_MULTIPLIER
+		: 1;
 	const maxDuration = ZOOM_TRANSITION_CONFIG.MAX_DURATION * perspectiveMultiplier;
 	const edgeAccel = ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION / perspectiveMultiplier;
-    
+
 	// Determine which model to use by checking each profile's
 	// natural duration (excludes base duration or capping) in order.
 
 	// C-infinity model natural duration if capped at our comfortable EDGE_ACCELERATION.
-	const natural_duration_c_inf_millis = Math.sqrt(Math.abs(6 * differenceE / edgeAccel)) * 1000;
+	const natural_duration_c_inf_millis = Math.sqrt(Math.abs((6 * differenceE) / edgeAccel)) * 1000;
 	// C¹ 2-stage model natural duration, if capped at our comfortable EDGE_ACCELERATION.
 	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / edgeAccel)) * 2 * 1000;
 
-	if (natural_duration_c_inf_millis <= maxDuration) setupCInfinityModel(natural_duration_c_inf_millis, maxDuration);
-	else if (natural_duration_c_one_millis <= maxDuration) setupCOne2StageModel(natural_duration_c_one_millis, edgeAccel);
+	if (natural_duration_c_inf_millis <= maxDuration)
+		setupCInfinityModel(natural_duration_c_inf_millis, maxDuration);
+	else if (natural_duration_c_one_millis <= maxDuration)
+		setupCOne2StageModel(natural_duration_c_one_millis, edgeAccel);
 	else setupCOne3StageModel(edgeAccel, maxDuration); // Both other models would take too long. Use the fixed-duration 3-stage profile.
 
 	// console.log("Duration: " + durationMillis + "ms");
 
-	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos(), destinationScale: boardpos.getBoardScale() });
+	if (!ignoreHistory)
+		pushToTelHistory({
+			isZoom,
+			destinationCoords: boardpos.getBoardPos(),
+			destinationScale: boardpos.getBoardScale(),
+		});
 }
 
 /** Sets up the C-Infinity 1-Stage Model for the current zoom transition. */
@@ -272,8 +279,8 @@ function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration:
 
 	// Based on this final duration, solve for the required initial acceleration and jerk.
 	if (T > 0) {
-		initial_accel_c_inf = 6 * differenceE / (T * T);
-		jerk_c_inf = -2 * initial_accel_c_inf / T; // Jerk is constant throughout
+		initial_accel_c_inf = (6 * differenceE) / (T * T);
+		jerk_c_inf = (-2 * initial_accel_c_inf) / T; // Jerk is constant throughout
 	} else {
 		initial_accel_c_inf = 0;
 		jerk_c_inf = 0;
@@ -287,20 +294,20 @@ function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: 
 	zoomModel = 'C_ONE_2_STAGE';
 
 	durationMillis = natural_duration_c_one_millis;
-	
+
 	accel_stage1 = Math.sign(differenceE) * edgeAccel;
 	const t_half_secs = durationMillis / 2000;
 
 	stageEndTimes = {
 		stage1: t_half_secs * 1000,
 		// Not used, but set for consistency
-		stage2: durationMillis, 
+		stage2: durationMillis,
 		stage3: durationMillis,
 	};
 
 	// Pre-calculate boundary conditions for the handoff.
 	v_at_stage1_end = accel_stage1 * t_half_secs;
-	e_at_stage1_end = originE + (0.5 * accel_stage1 * t_half_secs * t_half_secs);
+	e_at_stage1_end = originE + 0.5 * accel_stage1 * t_half_secs * t_half_secs;
 }
 
 /** Sets up the C¹ 3-Stage Model for the current zoom transition. */
@@ -320,7 +327,7 @@ function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 		stage2: (t1 + t2) * 1000,
 		stage3: durationMillis,
 	};
-	
+
 	// Set Stage 1 acceleration and determine the distance it covers.
 	// The direction of acceleration depends on the direction of the zoom.
 	accel_stage1 = Math.sign(differenceE) * edgeAccel;
@@ -331,7 +338,7 @@ function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 
 	// Calculate the remaining distance that must be covered in Stage 2.
 	const remaining_dist = differenceE - dist_stage1_and_3;
-		
+
 	// Solve for the Stage 2 acceleration needed to cover that remaining distance.
 	// We use the formula: d = v₀t + 0.5at²
 	// For the first half of stage 2, v₀ is the velocity at the end of stage 1.
@@ -342,17 +349,18 @@ function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 	accel_stage2 = (remaining_dist - 2 * v_at_stage1_end * t_s2_half) / (t_s2_half * t_s2_half);
 
 	const edgeAccelPositive = Math.sign(differenceE) === 1;
-	if (edgeAccelPositive && accel_stage2 < 0 || !edgeAccelPositive && accel_stage2 > 0) {
-		console.warn("Calculated stage 2 acceleration has the wrong sign: " + accel_stage2);
+	if ((edgeAccelPositive && accel_stage2 < 0) || (!edgeAccelPositive && accel_stage2 > 0)) {
+		console.warn('Calculated stage 2 acceleration has the wrong sign: ' + accel_stage2);
 	}
-	
+
 	// Pre-calculate all boundary conditions to use in the update loop.
-	e_at_stage1_end = originE + (0.5 * dist_stage1_and_3);
+	e_at_stage1_end = originE + 0.5 * dist_stage1_and_3;
 	v_at_stage2_mid = v_at_stage1_end + accel_stage2 * t_s2_half;
-	e_at_stage2_mid = e_at_stage1_end + (v_at_stage1_end * t_s2_half) + (0.5 * accel_stage2 * t_s2_half * t_s2_half);
+	e_at_stage2_mid =
+		e_at_stage1_end + v_at_stage1_end * t_s2_half + 0.5 * accel_stage2 * t_s2_half * t_s2_half;
 
 	// By symmetry of the C¹ model within Stage 2, velocity at the end is guaranteed to match velocity at the start.
-	v_at_stage2_end = v_at_stage1_end; 
+	v_at_stage2_end = v_at_stage1_end;
 	e_at_stage2_end = e_at_stage1_end + remaining_dist; // By definition
 }
 
@@ -363,11 +371,11 @@ function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 	destinationCoords = endCoord;
 	differenceCoords = coordutil.subtractBDCoords(destinationCoords, originCoords);
 	destinationScale = originScale;
-	
+
 	isZoom = false;
 
 	durationMillis = PAN_TRANSITION_CONFIG.DURATION_MILLIS;
-	
+
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos() });
 }
 
@@ -404,15 +412,21 @@ function singleZoomToCoordsList(coordsList: Coords[]): void {
  * Will not incur an intermediate transition if it is not on screen originally.
  */
 function singleZoomToBDCoords(coords: BDCoords): void {
-	const snapBoundingBox: BoundingBoxBD = { left: coords[0], right: coords[0], bottom: coords[1], top: coords[1] };
-	const boxFloating: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquareBD(snapBoundingBox);
+	const snapBoundingBox: BoundingBoxBD = {
+		left: coords[0],
+		right: coords[0],
+		bottom: coords[1],
+		top: coords[1],
+	};
+	const boxFloating: BoundingBoxBD =
+		meshes.expandTileBoundingBoxToEncompassWholeSquareBD(snapBoundingBox);
 	const transitionArea: Area = area.calculateFromUnpaddedBox(boxFloating);
 	zoomTransitionToArea(transitionArea);
 }
 
 /**
  * Starts a Zooming Transition to a predefined Area.
- * 
+ *
  * Will not incur a following transition if the area is not on screen.
  */
 function zoomTransitionToArea(theArea: Area): void {
@@ -434,21 +448,24 @@ function undoTransition(): void {
 	const previousTrans = teleportHistory.pop();
 	if (!previousTrans) return; // Nothing in history
 
-	if (previousTrans.isZoom) { // Zooming Transition
+	if (previousTrans.isZoom) {
+		// Zooming Transition
 		const thisArea: Area = {
 			coords: previousTrans.destinationCoords,
 			scale: previousTrans.destinationScale,
-			boundingBox: boardtiles.getBoundingBoxOfBoard(previousTrans.destinationCoords, previousTrans.destinationScale)
+			boundingBox: boardtiles.getBoundingBoxOfBoard(
+				previousTrans.destinationCoords,
+				previousTrans.destinationScale,
+			),
 		};
 		area.initTransitionFromArea(thisArea, true);
-	} else { // Panning transition
+	} else {
+		// Panning transition
 		startPanTransition(previousTrans.destinationCoords, true);
 	}
 }
 
-
 // Updating --------------------------------------------------------------------------------------
-
 
 /** If we are currently transitioning, this updates the board position and scale. */
 function update(): void {
@@ -471,7 +488,6 @@ function update(): void {
 	}
 }
 
-
 /**
  * Handles the kinematic update logic for all zoom transitions.
  */
@@ -479,8 +495,9 @@ function updateZoomingTransition(elapsedTime: number): void {
 	const t_sec = elapsedTime / 1000;
 	let currentE: number;
 
-	if (zoomModel === "C_INF") currentE = updateCInfinityTransition(t_sec);
-	else if (zoomModel === "C_ONE_2_STAGE") currentE = updateCOne2StageTransition(t_sec, elapsedTime);
+	if (zoomModel === 'C_INF') currentE = updateCInfinityTransition(t_sec);
+	else if (zoomModel === 'C_ONE_2_STAGE')
+		currentE = updateCOne2StageTransition(t_sec, elapsedTime);
 	else currentE = updateCOne3StageTransition(t_sec, elapsedTime);
 
 	applyZoomState(currentE, elapsedTime);
@@ -491,7 +508,11 @@ function updateCInfinityTransition(t_sec: number): number {
 	// Position with constant jerk is given by the cubic formula:
 	// e(t) = e₀ + v₀t + 0.5a₀t² + (1/6)jt³
 	// Since e₀ and v₀ are 0 relative to the start:
-	return originE + (0.5 * initial_accel_c_inf * t_sec * t_sec) + ((1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec);
+	return (
+		originE +
+		0.5 * initial_accel_c_inf * t_sec * t_sec +
+		(1 / 6) * jerk_c_inf * t_sec * t_sec * t_sec
+	);
 }
 
 /** Calculates the current "e" value for the current C¹ 2-Stage Model zoom transition. */
@@ -499,11 +520,11 @@ function updateCOne2StageTransition(t_sec: number, elapsedTime: number): number 
 	if (elapsedTime <= stageEndTimes.stage1) {
 		// Stage 1: Accelerate
 		const t = t_sec;
-		return originE + (0.5 * accel_stage1 * t * t);
+		return originE + 0.5 * accel_stage1 * t * t;
 	} else {
 		// Stage 2: Symmetrical Decelerate
-		const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
-		return e_at_stage1_end + (v_at_stage1_end * t_s2) - (0.5 * accel_stage1 * t_s2 * t_s2);
+		const t_s2 = t_sec - stageEndTimes.stage1 / 1000;
+		return e_at_stage1_end + v_at_stage1_end * t_s2 - 0.5 * accel_stage1 * t_s2 * t_s2;
 	}
 }
 
@@ -513,25 +534,27 @@ function updateCOne3StageTransition(t_sec: number, elapsedTime: number): number 
 		// STAGE 1: Constant positive acceleration
 		// console.log("Stage 1");
 		const t = t_sec;
-		return originE + (0.5 * accel_stage1 * t * t);
+		return originE + 0.5 * accel_stage1 * t * t;
 	} else if (elapsedTime <= stageEndTimes.stage2) {
 		// STAGE 2: Higher acceleration, then symmetrical deceleration.
 		// console.log("Stage 2");
-		const t_s2 = t_sec - (stageEndTimes.stage1 / 1000);
+		const t_s2 = t_sec - stageEndTimes.stage1 / 1000;
 		const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
 		if (t_s2 <= t_s2_half) {
 			// First half of Stage 2: Constant acceleration
-			return e_at_stage1_end + (v_at_stage1_end * t_s2) + (0.5 * accel_stage2 * t_s2 * t_s2);
+			return e_at_stage1_end + v_at_stage1_end * t_s2 + 0.5 * accel_stage2 * t_s2 * t_s2;
 		} else {
 			// Second half of Stage 2: Symmetrical constant deceleration
 			const t_s2_b = t_s2 - t_s2_half; // Time into the second half
-			return e_at_stage2_mid + (v_at_stage2_mid * t_s2_b) - (0.5 * accel_stage2 * t_s2_b * t_s2_b);
+			return (
+				e_at_stage2_mid + v_at_stage2_mid * t_s2_b - 0.5 * accel_stage2 * t_s2_b * t_s2_b
+			);
 		}
 	} else {
 		// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
 		// console.log("Stage 3");
-		const t_s3 = t_sec - (stageEndTimes.stage2 / 1000);
-		return e_at_stage2_end + (v_at_stage2_end * t_s3) - (0.5 * accel_stage1 * t_s3 * t_s3);
+		const t_s3 = t_sec - stageEndTimes.stage2 / 1000;
+		return e_at_stage2_end + v_at_stage2_end * t_s3 - 0.5 * accel_stage1 * t_s3 * t_s3;
 	}
 }
 
@@ -573,16 +596,22 @@ function applyZoomState(currentE: number, elapsedTime: number): void {
 	boardpos.setBoardPos([newX, newY]);
 }
 
-
 /** Updates the board position and scale for the current PANNING Transition. */
-function updatePanningTransition(t: number, easedT: number, originCoords: BDCoords, destinationCoords: BDCoords, differenceCoords: BDCoords): void {
-    
+function updatePanningTransition(
+	t: number,
+	easedT: number,
+	originCoords: BDCoords,
+	destinationCoords: BDCoords,
+	differenceCoords: BDCoords,
+): void {
 	// What is the scale?
 	// What is the maximum distance we should pan b4 teleporting to the other half?
 	const boardScale = boardpos.getBoardScale();
 	const maxPanDist = bd.FromNumber(PAN_TRANSITION_CONFIG.MAX_PAN_DISTANCE);
 	const maxDistSquares = bd.divide_floating(maxPanDist, boardScale);
-	const transGreaterThanMaxDist = bd.compare(bd.abs(differenceCoords[0]), maxDistSquares) > 0 || bd.compare(bd.abs(differenceCoords[1]), maxDistSquares) > 0;
+	const transGreaterThanMaxDist =
+		bd.compare(bd.abs(differenceCoords[0]), maxDistSquares) > 0 ||
+		bd.compare(bd.abs(differenceCoords[1]), maxDistSquares) > 0;
 
 	let newX: BigDecimal;
 	let newY: BigDecimal;
@@ -590,14 +619,16 @@ function updatePanningTransition(t: number, easedT: number, originCoords: BDCoor
 	const difference = coordutil.copyBDCoords(differenceCoords);
 	const easedTBD = bd.FromNumber(easedT);
 
-	if (!transGreaterThanMaxDist) { // No mid-transition teleport required to maintain constant duration.
+	if (!transGreaterThanMaxDist) {
+		// No mid-transition teleport required to maintain constant duration.
 		// Calculate new world-space
 		const addX = bd.multiply_fixed(difference[0], easedTBD);
 		const addY = bd.multiply_fixed(difference[1], easedTBD);
 		// Convert to board position
 		newX = bd.add(originCoords[0], addX);
 		newY = bd.add(originCoords[1], addY);
-	} else { // Mid-transition teleport REQUIRED to maintain constant duration.
+	} else {
+		// Mid-transition teleport REQUIRED to maintain constant duration.
 		// 1st half or 2nd half?
 		const firstHalf = t < 0.5;
 		const neg = firstHalf ? ONE : NEGONE;
@@ -628,20 +659,19 @@ function updatePanningTransition(t: number, easedT: number, originCoords: BDCoor
 	boardpos.setBoardPos([newX, newY]);
 }
 
-
 /** Sets the board position & scale to the destination of the current transition, and ends the transition. */
-function finishTransition(): void { // Called at the end of a teleport
+function finishTransition(): void {
+	// Called at the end of a teleport
 	// Set the final coords and scale
 	boardpos.setBoardPos(destinationCoords);
 	boardpos.setBoardScale(destinationScale);
 
-	if (nextTransition) startZoomTransition(nextTransition, undefined, true); // true to ignore history for the second part of a two-step zoom
+	if (nextTransition)
+		startZoomTransition(nextTransition, undefined, true); // true to ignore history for the second part of a two-step zoom
 	else isTransitioning = false;
 }
 
-
 // Utility ------------------------------------------------------------------------------
-
 
 /** Whether we are currently transitioning.  */
 function areTransitioning(): boolean {
@@ -660,9 +690,7 @@ function terminate(): void {
 	nextTransition = undefined;
 }
 
-
 // Exports ------------------------------------------------------------------------------
-
 
 export default {
 	// Initiating Transitions

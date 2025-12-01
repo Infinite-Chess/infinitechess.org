@@ -1,10 +1,8 @@
-
 // src/client/scripts/esm/game/rendering/screenshake.ts
 
 /**
  * This module can apply a screen shake effect to the camera when requested.
  */
-
 
 import type { Mat4 } from './camera';
 
@@ -15,9 +13,7 @@ import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera';
 import frametracker from './frametracker.js';
 
-
 // Constants -----------------------------------------------------------------------
-
 
 // Shake Parameters
 
@@ -29,15 +25,11 @@ const MAX_TRANSLATION = 0.23; // Default: 0.28
 /** How quickly trauma fades. Higher is faster. */
 const TRAUMA_DECAY = 1.2;
 
-
 // State ---------------------------------------------------------------------------
-
 
 let trauma = 0.0; // Current shake intensity, 0.0 to 1.0
 
-
 // Functions -----------------------------------------------------------------------
-
 
 /**
  * Adds trauma to the camera, triggering or intensifying the shake.
@@ -69,7 +61,6 @@ function update(): void {
 	camera.onPositionChange(); // Camera will update its view matrix
 }
 
-
 /**
  * Calculates and returns a 4x4 transformation matrix representing the current shake offset.
  * If there is no trauma, it returns an identity matrix (no shake).
@@ -88,11 +79,11 @@ function getShakeMatrix(): Mat4 {
 	const yaw = MAX_ROTATION_DEGREES * shakePower * getRandomNoise();
 	const pitch = MAX_ROTATION_DEGREES * shakePower * getRandomNoise();
 	const roll = MAX_ROTATION_DEGREES * shakePower * getRandomNoise();
-    
+
 	// Convert degrees to radians for gl-matrix
-	const yawRad = yaw * Math.PI / 180;
-	const pitchRad = pitch * Math.PI / 180;
-	const rollRad = roll * Math.PI / 180;
+	const yawRad = (yaw * Math.PI) / 180;
+	const pitchRad = (pitch * Math.PI) / 180;
+	const rollRad = (roll * Math.PI) / 180;
 
 	// Calculate Translation
 	const offsetX = MAX_TRANSLATION * shakePower * getRandomNoise();
@@ -113,9 +104,7 @@ function getShakeMatrix(): Mat4 {
 	return shakeMatrix;
 }
 
-
 // Exports -------------------------------------------------------------------------
-
 
 export default {
 	trigger,

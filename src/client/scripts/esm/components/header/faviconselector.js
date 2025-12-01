@@ -1,4 +1,3 @@
-
 // This script auto detects device theme and adjusts the browser icon accordingly
 
 const element_favicon = document.getElementById('favicon');
@@ -17,13 +16,13 @@ if (window.matchMedia) {
 	// Initial theme detection
 	const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
 	switchFavicon(prefersDarkScheme ? 'dark' : 'light');
-	
+
 	// Listen for theme changes
-	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
 		const newTheme = event.matches ? 'dark' : 'light';
 		console.log(`Toggled ${newTheme} icon`);
 		switchFavicon(newTheme);
 	});
-};
+}
 
 export default {};

@@ -1,34 +1,31 @@
-
 // src/client/scripts/esm/game/boardeditor/egamerules.ts
 
 /**
  * Editor Game Rules
- * 
+ *
  * Manages the game rules of the board editor position.
  */
 
-import type { Coords } from "../../../../../shared/chess/util/coordutil";
-import type { GameRules } from "../../../../../shared/chess/variants/gamerules";
-import type { RawType, PlayerGroup } from "../../../../../shared/chess/util/typeutil";
-import type { Edit } from "./boardeditor";
-import type { Piece } from "../../../../../shared/chess/util/boardutil";
+import type { Coords } from '../../../../../shared/chess/util/coordutil';
+import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
+import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
+import type { Edit } from './boardeditor';
+import type { Piece } from '../../../../../shared/chess/util/boardutil';
 
-import typeutil, { players, rawTypes } from "../../../../../shared/chess/util/typeutil";
-import { EnPassant, GlobalGameState } from "../../../../../shared/chess/logic/state";
-import icnconverter from "../../../../../shared/chess/logic/icn/icnconverter";
-import winconutil from "../../../../../shared/chess/util/winconutil";
-import gameslot from "../chess/gameslot";
-import guigamerules from "../gui/boardeditor/guigamerules";
-import boardeditor from "./boardeditor";
-import boardutil from "../../../../../shared/chess/util/boardutil";
-
+import typeutil, { players, rawTypes } from '../../../../../shared/chess/util/typeutil';
+import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
+import winconutil from '../../../../../shared/chess/util/winconutil';
+import gameslot from '../chess/gameslot';
+import guigamerules from '../gui/boardeditor/guigamerules';
+import boardeditor from './boardeditor';
+import boardutil from '../../../../../shared/chess/util/boardutil';
 
 // Type Definitions --------------------------------------------------------------
 
-
 /** Type encoding information for the game rules object of the editor position */
 interface GameRulesGUIinfo {
-    playerToMove: 'white' | 'black';
+	playerToMove: 'white' | 'black';
 	enPassant?: {
 		x: bigint;
 		y: bigint;
@@ -47,50 +44,62 @@ interface GameRulesGUIinfo {
 	castling?: boolean;
 }
 
-
 // Constants -------------------------------------------------------------
-
 
 // Game rule relevant piece types
 
 /** All piece types affected by the pawnDoublePush rule */
-const pawnDoublePushTypes : RawType[] = [rawTypes.PAWN];
+const pawnDoublePushTypes: RawType[] = [rawTypes.PAWN];
 /** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
-const castlingTypes : RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
-
+const castlingTypes: RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
 
 // State -------------------------------------------------------------
-
 
 /** Virtual game rules object for the position */
 let gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
-	winConditions: [icnconverter.default_win_condition]
+	winConditions: [icnconverter.default_win_condition],
 };
 
-
 // Getting & Setting -------------------------------------------------------------
-
 
 function getPlayerToMove(): 'white' | 'black' {
 	return gamerulesGUIinfo.playerToMove;
 }
 
-function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: number | undefined; enpassantcoords: Coords | undefined; } {
+function getCurrentGamerulesAndState(): {
+	gameRules: GameRules;
+	moveRuleState: number | undefined;
+	enpassantcoords: Coords | undefined;
+} {
 	// Construct gameRules
+	// prettier-ignore
 	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
-	const moveRule = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
-	const winConditions = { [players.WHITE]: gamerulesGUIinfo.winConditions, [players.BLACK]: gamerulesGUIinfo.winConditions };
+	const moveRule =
+		gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
+	const winConditions = {
+		[players.WHITE]: gamerulesGUIinfo.winConditions,
+		[players.BLACK]: gamerulesGUIinfo.winConditions,
+	};
 	let promotionRanks: PlayerGroup<bigint[]> | undefined = undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined = undefined;
-	if (gamerulesGUIinfo.promotionsAllowed !== undefined && gamerulesGUIinfo.promotionRanks !== undefined) {
+	if (
+		gamerulesGUIinfo.promotionsAllowed !== undefined &&
+		gamerulesGUIinfo.promotionRanks !== undefined
+	) {
 		promotionsAllowed = {};
 		promotionRanks = {};
-		if (gamerulesGUIinfo.promotionRanks.white !== undefined && gamerulesGUIinfo.promotionRanks.white.length !== 0) {
+		if (
+			gamerulesGUIinfo.promotionRanks.white !== undefined &&
+			gamerulesGUIinfo.promotionRanks.white.length !== 0
+		) {
 			promotionRanks[players.WHITE] = gamerulesGUIinfo.promotionRanks.white;
 			promotionsAllowed[players.WHITE] = gamerulesGUIinfo.promotionsAllowed;
 		}
-		if (gamerulesGUIinfo.promotionRanks.black !== undefined && gamerulesGUIinfo.promotionRanks.black.length !== 0) {
+		if (
+			gamerulesGUIinfo.promotionRanks.black !== undefined &&
+			gamerulesGUIinfo.promotionRanks.black.length !== 0
+		) {
 			promotionRanks[players.BLACK] = gamerulesGUIinfo.promotionRanks.black;
 			promotionsAllowed[players.BLACK] = gamerulesGUIinfo.promotionsAllowed;
 		}
@@ -101,20 +110,22 @@ function getCurrentGamerulesAndState(): { gameRules: GameRules; moveRuleState: n
 		moveRule,
 		promotionRanks,
 		promotionsAllowed,
-		winConditions
+		winConditions,
 	};
 
-	const moveRuleState = gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
+	const moveRuleState =
+		gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
+	// prettier-ignore
 	const enpassantcoords: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 
 	return {
 		gameRules,
 		moveRuleState,
-		enpassantcoords
+		enpassantcoords,
 	};
 }
 
-/** 
+/**
  * Update the game rules object keeping track of all current game rules by using new gameRules and state_global.
  * Optionally, pawnDoublePush and castling can also be passed into this function, if they should take values other than undefined.
  * Optionally, an Edit object can be passed to this function if the board state should be updated
@@ -126,15 +137,16 @@ function setGamerulesGUIinfo(
 	castling: boolean | undefined,
 ): void {
 	const firstPlayer = gameRules.turnOrder[0];
+	// prettier-ignore
 	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
 
-	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = "white";
-	else gamerulesGUIinfo.playerToMove = "black";
+	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = 'white';
+	else gamerulesGUIinfo.playerToMove = 'black';
 
 	if (state_global.enpassant !== undefined) {
 		gamerulesGUIinfo.enPassant = {
-			x : state_global.enpassant.square[0],
-			y : state_global.enpassant.square[1],
+			x: state_global.enpassant.square[0],
+			y: state_global.enpassant.square[1],
 		};
 	} else {
 		gamerulesGUIinfo.enPassant = undefined;
@@ -143,7 +155,7 @@ function setGamerulesGUIinfo(
 	if (gameRules.moveRule !== undefined) {
 		gamerulesGUIinfo.moveRule = {
 			current: state_global.moveRuleState || 0,
-			max: gameRules.moveRule
+			max: gameRules.moveRule,
 		};
 	} else {
 		gamerulesGUIinfo.moveRule = undefined;
@@ -152,30 +164,40 @@ function setGamerulesGUIinfo(
 	if (gameRules.promotionRanks !== undefined) {
 		gamerulesGUIinfo.promotionRanks = {
 			white: gameRules.promotionRanks[players.WHITE],
-			black: gameRules.promotionRanks[players.BLACK]
+			black: gameRules.promotionRanks[players.BLACK],
 		};
 	} else {
 		gamerulesGUIinfo.promotionRanks = undefined;
 	}
 
 	if (gameRules.promotionsAllowed !== undefined) {
-		gamerulesGUIinfo.promotionsAllowed = [...new Set([
-			...gameRules.promotionsAllowed[players.WHITE] || [],
-			...gameRules.promotionsAllowed[players.BLACK] || []
-		])];
-		if (gamerulesGUIinfo.promotionsAllowed.length === 0) gamerulesGUIinfo.promotionsAllowed = undefined;
+		gamerulesGUIinfo.promotionsAllowed = [
+			...new Set([
+				...(gameRules.promotionsAllowed[players.WHITE] || []),
+				...(gameRules.promotionsAllowed[players.BLACK] || []),
+			]),
+		];
+		if (gamerulesGUIinfo.promotionsAllowed.length === 0)
+			gamerulesGUIinfo.promotionsAllowed = undefined;
 	} else {
 		gamerulesGUIinfo.promotionsAllowed = undefined;
 	}
 
-	gamerulesGUIinfo.winConditions = [...new Set([
-		...gameRules.winConditions[players.WHITE] || [icnconverter.default_win_condition],
-		...gameRules.winConditions[players.BLACK] || [icnconverter.default_win_condition]
-	])].filter(wincon => winconutil.isWinConditionValid(wincon));
+	gamerulesGUIinfo.winConditions = [
+		...new Set([
+			...(gameRules.winConditions[players.WHITE] || [icnconverter.default_win_condition]),
+			...(gameRules.winConditions[players.BLACK] || [icnconverter.default_win_condition]),
+		]),
+	].filter((wincon) => winconutil.isWinConditionValid(wincon));
 
 	// Update gamefile properties for rendering purposes and correct legal move calculation
+	// prettier-ignore
 	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
-	updateGamefileProperties(enpassantSquare, gamerulesGUIinfo.promotionRanks, gamerulesGUIinfo.playerToMove);
+	updateGamefileProperties(
+		enpassantSquare,
+		gamerulesGUIinfo.promotionRanks,
+		gamerulesGUIinfo.playerToMove,
+	);
 
 	// Update pawn double push specialrights of position, if necessary
 	gamerulesGUIinfo.pawnDoublePush = pawnDoublePush;
@@ -191,10 +213,10 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
 		playerToMove: 'white',
 		winConditions: [icnconverter.default_win_condition],
 		pawnDoublePush: false,
-		castling: false
+		castling: false,
 	};
 
-	updateGamefileProperties(undefined, undefined, "white");
+	updateGamefileProperties(undefined, undefined, 'white');
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
@@ -204,17 +226,22 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
  * This also gets called when resetting the position.
  * @param value - The value to set pawnDoublePush and castling to, or undefined to set them to indeterminate.
  */
-function setPositionDependentGameRules(options: { pawnDoublePush?: boolean | undefined, castling?: boolean | undefined } = {}): void {
+function setPositionDependentGameRules(
+	options: { pawnDoublePush?: boolean | undefined; castling?: boolean | undefined } = {},
+): void {
 	gamerulesGUIinfo.pawnDoublePush = options.pawnDoublePush;
 	gamerulesGUIinfo.castling = options.castling;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
-function getPositionDependentGameRules(): { pawnDoublePush: boolean | undefined, castling: boolean | undefined } {
+function getPositionDependentGameRules(): {
+	pawnDoublePush: boolean | undefined;
+	castling: boolean | undefined;
+} {
 	return {
 		pawnDoublePush: gamerulesGUIinfo.pawnDoublePush,
-		castling: gamerulesGUIinfo.castling
+		castling: gamerulesGUIinfo.castling,
 	};
 }
 
@@ -232,18 +259,15 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolean): void {
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
 		const rawtype = typeutil.getRawType(type);
-		if (
-			pawnDoublePushTypes.includes(rawtype) &&
-			gamerulesGUIinfo.pawnDoublePush !== future
-		) gamerulesGUIinfo.pawnDoublePush = undefined;
+		if (pawnDoublePushTypes.includes(rawtype) && gamerulesGUIinfo.pawnDoublePush !== future)
+			gamerulesGUIinfo.pawnDoublePush = undefined;
 	}
-	
+
 	if (gamerulesGUIinfo.castling !== undefined) {
 		const rawtype = typeutil.getRawType(type);
 		if (castlingTypes.includes(rawtype)) {
 			if (gamerulesGUIinfo.castling !== future) gamerulesGUIinfo.castling = undefined;
-		}
-		else if (!pawnDoublePushTypes.includes(rawtype)) {
+		} else if (!pawnDoublePushTypes.includes(rawtype)) {
 			if (future) gamerulesGUIinfo.castling = undefined;
 		}
 	}
@@ -251,38 +275,37 @@ function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolea
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
-
 // Updating Special Rights -------------------------------------------------------------
 
-
 /** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
-function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit) : void {
+function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): void {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
-	};
+		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
+			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
+	}
 }
 
 /** Gives or removes all special rights of rooks and jumping royals according to the value of castling. */
-function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit) : void {
+function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
-	
+
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (castlingTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
-		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
-	};
+		if (castlingTypes.includes(typeutil.getRawType(piece.type)))
+			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
+		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
+			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
+	}
 }
 
-
 // Updating Gamefile State -------------------------------------------------------------
-
 
 /**
  * Updates the en passant square, promotion lines, and turn order in the current gamefile.
@@ -290,7 +313,7 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit) : voi
  */
 function updateGamefileProperties(
 	enpassantCoords: Coords | undefined,
-	promotionRanks : { white?: bigint[]; black?: bigint[] } | undefined,
+	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
 	playerToMove: 'white' | 'black',
 ): void {
 	const gamefile = gameslot.getGamefile()!;
@@ -299,6 +322,7 @@ function updateGamefileProperties(
 	if (enpassantCoords === undefined) {
 		gamefile.boardsim.state.global.enpassant = undefined;
 	} else {
+		// prettier-ignore
 		const pawn: Coords = playerToMove === 'white' ? [enpassantCoords[0], enpassantCoords[1] - 1n] : playerToMove === 'black' ? [enpassantCoords[0], enpassantCoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 		const enpassant: EnPassant = { square: enpassantCoords, pawn };
 		gamefile.boardsim.state.global.enpassant = enpassant;
@@ -314,18 +338,15 @@ function updateGamefileProperties(
 	}
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
+	// prettier-ignore
 	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [players.WHITE, players.BLACK] : playerToMove === 'black' ? [players.BLACK, players.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
 	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
 }
 
-
 // Exports -------------------------------------------------------------
 
-
-export type {
-	GameRulesGUIinfo,
-};
+export type { GameRulesGUIinfo };
 
 export default {
 	pawnDoublePushTypes,

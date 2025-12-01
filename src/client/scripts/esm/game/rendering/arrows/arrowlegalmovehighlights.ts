@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/game/rendering/arrows/arrowlegalmovehighlights.ts
 
 /**
@@ -6,63 +5,58 @@
  * legal moves of all arrow indicators being hovered over.
  */
 
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { RenderableInstanced } from '../../../webgl/Renderable.js';
+import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 
-import type { Color } from "../../../../../../shared/util/math/math.js";
-import type { RenderableInstanced } from "../../../webgl/Renderable.js";
-import type { LegalMoves } from "../../../../../../shared/chess/logic/legalmoves.js";
-import type { Vec3 } from "../../../../../../shared/util/math/vectors.js";
-import type { Piece } from "../../../../../../shared/chess/util/boardutil.js";
-
-import typeutil from "../../../../../../shared/chess/util/typeutil.js";
-import gameslot from "../../chess/gameslot.js";
-import onlinegame from "../../misc/onlinegame/onlinegame.js";
-import selection from "../../chess/selection.js";
-import moveutil from "../../../../../../shared/chess/util/moveutil.js";
-import preferences from "../../../components/header/preferences.js";
-import boardpos from "../boardpos.js";
-import legalmoves from "../../../../../../shared/chess/logic/legalmoves.js";
-import bd from "../../../../../../shared/util/bigdecimal/bigdecimal.js";
-import coordutil, { Coords } from "../../../../../../shared/chess/util/coordutil.js";
-import legalmovemodel from "../highlights/legalmovemodel.js";
-import arrows, { ArrowPiece } from "./arrows.js";
-import meshes from "../meshes.js";
-
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import gameslot from '../../chess/gameslot.js';
+import onlinegame from '../../misc/onlinegame/onlinegame.js';
+import selection from '../../chess/selection.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import preferences from '../../../components/header/preferences.js';
+import boardpos from '../boardpos.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
+import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
+import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import legalmovemodel from '../highlights/legalmovemodel.js';
+import arrows, { ArrowPiece } from './arrows.js';
+import meshes from '../meshes.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------
-
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {
 	/** The Piece this arrow is pointing to, including its coords & type. */
-	piece: Piece,
+	piece: Piece;
 	/** The calculated legal moves of the piece. */
-	legalMoves: LegalMoves,
+	legalMoves: LegalMoves;
 	/** The buffer model for rendering the non-capturing legal moves of the piece. */
-	model_NonCapture: RenderableInstanced,
+	model_NonCapture: RenderableInstanced;
 	/** The buffer model for rendering the capturing legal moves of the piece. */
-	model_Capture: RenderableInstanced,
+	model_Capture: RenderableInstanced;
 	/** The [r,b,g,a] values these legal move highlights should be rendered.
 	 * Depends on whether the piece is ours, a premove, or an opponent's piece. */
-	color: Color
+	color: Color;
 }
 
 /**
  * An array storing the LegalMoves, model and other info, for rendering the legal move highlights
  * of piece arrow indicators currently being hovered over!
- * 
+ *
  * THIS IS UPDATED AFTER OTHER SCRIPTS have a chance to add/delete pieces to show arrows for,
  * as hovered arrows have a chance of being removed before rendering!
  */
 const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
-
 // Functions -------------------------------------------------------------------------------------------
-
 
 /**
  * This makes sure that the legal moves of all of the hovered arrows this
  * frame are already calculated.
- * 
+ *
  * Pieces that are consecutively hovered over each frame have their
  * legal moves cached.
  */
@@ -79,15 +73,19 @@ function update(): void {
 	const hoveredArrows = arrows.getHoveredArrows();
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
-	// hovered over anymore, delete them. Stop rendering their legal moves. 
-	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
+	// hovered over anymore, delete them. Stop rendering their legal moves.
+	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) {
+		// Iterate backwards because we are removing elements as we go
 		const thisHoveredArrow = hoveredArrowsLegalMoves[i]!;
 		// Is this arrow still being hovered over?
-		if (!hoveredArrows.some(arrow => {
-			if (arrow.piece.floating) return false;
-			const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
-			return coordutil.areCoordsEqual(integerCoords, thisHoveredArrow.piece.coords);
-		})) hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over. Delete its legal moves.
+		if (
+			!hoveredArrows.some((arrow) => {
+				if (arrow.piece.floating) return false;
+				const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
+				return coordutil.areCoordsEqual(integerCoords, thisHoveredArrow.piece.coords);
+			})
+		)
+			hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over. Delete its legal moves.
 	}
 
 	for (const pieceHovered of hoveredArrows) {
@@ -102,15 +100,20 @@ function update(): void {
  */
 function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 	// SHOULD WE JUST RETURN HERE INSTEAD OF ERROR???
-	if (!bd.areCoordsIntegers(arrowPiece.coords)) throw Error("We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!");
+	if (!bd.areCoordsIntegers(arrowPiece.coords))
+		throw Error(
+			'We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!',
+		);
 
 	// Check if their legal moves and mesh have already been stored
-	if (hoveredArrowsLegalMoves.some(hoveredArrow => {
-		const integerCoords = bd.coordsToBigInt(arrowPiece.coords);
-		return coordutil.areCoordsEqual(hoveredArrow.piece.coords, integerCoords);
-	})) return; // Legal moves and mesh already calculated.
+	if (
+		hoveredArrowsLegalMoves.some((hoveredArrow) => {
+			const integerCoords = bd.coordsToBigInt(arrowPiece.coords);
+			return coordutil.areCoordsEqual(hoveredArrow.piece.coords, integerCoords);
+		})
+	)
+		return; // Legal moves and mesh already calculated.
 
-	
 	const integerCoords: Coords = bd.coordsToBigInt(arrowPiece.coords);
 	const piece: Piece = {
 		type: arrowPiece.type,
@@ -126,14 +129,31 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.basegame.whosTurn;
+	const ourColor = onlinegame.areInOnlineGame()
+		? onlinegame.getOurColor()
+		: gamefile.basegame.whosTurn;
 	const isOpponentPiece = pieceColor !== ourColor;
 	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
-	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
+	const color = preferences.getLegalMoveHighlightColor({
+		isOpponentPiece,
+		isPremove: !isOurTurn,
+	});
 
-	const { NonCaptureModel, CaptureModel } = legalmovemodel.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);
+	const { NonCaptureModel, CaptureModel } =
+		legalmovemodel.generateModelsForPiecesLegalMoveHighlights(
+			piece.coords,
+			thisPieceLegalMoves,
+			pieceColor,
+			color,
+		);
 	// Store both these objects inside piecesHoveredOver
-	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
+	hoveredArrowsLegalMoves.push({
+		piece,
+		legalMoves: thisPieceLegalMoves,
+		model_NonCapture: NonCaptureModel,
+		model_Capture: CaptureModel,
+		color,
+	});
 }
 
 /** Renders the pre-cached legal move highlights of all arrow indicators being hovered over */
@@ -146,7 +166,7 @@ function renderEachHoveredPieceLegalMoves(): void {
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
-	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
+	hoveredArrowsLegalMoves.forEach((hoveredArrow) => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
 			const pieceSelectedCoords = selection.getPieceSelected()!.coords;
@@ -159,7 +179,7 @@ function renderEachHoveredPieceLegalMoves(): void {
 
 /**
  * Regenerates the mesh of the piece arrow indicators hovered legal moves.
- * 
+ *
  * Call when our highlights offset, or render range bounding box, changes,
  * so we account for the new offset.
  */
@@ -168,10 +188,16 @@ function regenModelsOfHoveredPieces(): void {
 
 	console.log("Updating models of hovered piece's legal moves..");
 
-	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
+	hoveredArrowsLegalMoves.forEach((hoveredArrow) => {
 		// Calculate the mesh...
 		const pieceColor = typeutil.getColorFromType(hoveredArrow.piece.type);
-		const { NonCaptureModel, CaptureModel } = legalmovemodel.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
+		const { NonCaptureModel, CaptureModel } =
+			legalmovemodel.generateModelsForPiecesLegalMoveHighlights(
+				hoveredArrow.piece.coords,
+				hoveredArrow.legalMoves,
+				pieceColor,
+				hoveredArrow.color,
+			);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;
@@ -183,9 +209,7 @@ function reset(): void {
 	hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
 }
 
-
 // -------------------------------------------------------------------------------------------------------------
-
 
 export default {
 	update,

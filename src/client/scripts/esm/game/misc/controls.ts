@@ -1,49 +1,44 @@
-
 /**
  * This script controls the board navigation
  * via the WASD keys, space/shift, and mouse wheel.
  */
 
+// @ts-ignore
+import guipause from '../gui/guipause.js';
+// @ts-ignore
+import loadbalancer from './loadbalancer.js';
+// @ts-ignore
+import websocket from '../websocket.js';
+// @ts-ignore
+import stats from '../gui/stats.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
+import camera from '../rendering/camera.js';
+import perspective from '../rendering/perspective.js';
+import copygame from '../chess/copygame.js';
+import docutil from '../../util/docutil.js';
+import mouse from '../../util/mouse.js';
+import guipromotion from '../gui/guipromotion.js';
+import boarddrag from '../rendering/boarddrag.js';
+import boardpos from '../rendering/boardpos.js';
+import selection from '../chess/selection.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import animation from '../rendering/animation.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import piecemodels from '../rendering/piecemodels.js';
+import guinavigation from '../gui/guinavigation.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import miniimage from '../rendering/miniimage.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+import Transition from '../rendering/transitions/Transition.js';
+import { listener_document } from '../chess/game.js';
 
-// @ts-ignore
-import guipause from "../gui/guipause.js";
-// @ts-ignore
-import loadbalancer from "./loadbalancer.js";
-// @ts-ignore
-import websocket from "../websocket.js";
-// @ts-ignore
-import stats from "../gui/stats.js";
-// @ts-ignore
-import statustext from "../gui/statustext.js";
-import camera from "../rendering/camera.js";
-import perspective from "../rendering/perspective.js";
-import copygame from "../chess/copygame.js";
-import docutil from "../../util/docutil.js";
-import mouse from "../../util/mouse.js";
-import guipromotion from "../gui/guipromotion.js";
-import boarddrag from "../rendering/boarddrag.js";
-import boardpos from "../rendering/boardpos.js";
-import selection from "../chess/selection.js";
-import jsutil from "../../../../../shared/util/jsutil.js";
-import animation from "../rendering/animation.js";
-import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
-import piecemodels from "../rendering/piecemodels.js";
-import guinavigation from "../gui/guinavigation.js";
-import guigameinfo from "../gui/guigameinfo.js";
-import miniimage from "../rendering/miniimage.js";
-import boardeditor from "../boardeditor/boardeditor.js";
-import vectors from "../../../../../shared/util/math/vectors.js";
-import Transition from "../rendering/transitions/Transition.js";
-import { listener_document } from "../chess/game.js";
-
-
-import type { Mesh } from "../rendering/piecemodels.js";
-import type { DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
-import type { FullGame } from "../../../../../shared/chess/logic/gamefile.js";
-
+import type { Mesh } from '../rendering/piecemodels.js';
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 // Constants -------------------------------------------------------------------
-
 
 /** The accelleration/deceleration rate of the board velocity in 2D mode. */
 const panAccel2D: number = 145; // Default: 145
@@ -70,9 +65,7 @@ const scaleVelCap_Scroll = 2.5;
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */
 const wheelMultiplier = 0.015; // Default: 0.015
 
-
 // Panning & Zooming Controls WASD/Space/Shift/Wheel ------------------------------------------------------
-
 
 // Called from game.updateBoard()
 function updateNavControls(): void {
@@ -87,7 +80,6 @@ function updateNavControls(): void {
 	detectZooming(); // Zoom/Scale (Space shift, mouse wheel)
 }
 
-
 /** Detects WASD controls, updating board velocity accordingly. */
 function detectPanning(): void {
 	if (boarddrag.isBoardDragging()) return; // Only pan if we aren't dragging the board
@@ -95,17 +87,21 @@ function detectPanning(): void {
 	let panVel = boardpos.getPanVel();
 
 	let panning = false; // Any panning key pressed this frame?
-	if (!guipromotion.isUIOpen()) { // Disable the controls temporarily
+	if (!guipromotion.isUIOpen()) {
+		// Disable the controls temporarily
 		if (listener_document.isKeyHeld('KeyD')) {
 			panning = true;
 			accelPanVel(panVel, 0);
-		} if (listener_document.isKeyHeld('KeyA')) {
+		}
+		if (listener_document.isKeyHeld('KeyA')) {
 			panning = true;
 			accelPanVel(panVel, 180);
-		} if (listener_document.isKeyHeld('KeyW')) {
+		}
+		if (listener_document.isKeyHeld('KeyW')) {
 			panning = true;
 			accelPanVel(panVel, 90);
-		} if (listener_document.isKeyHeld('KeyS')) {
+		}
+		if (listener_document.isKeyHeld('KeyS')) {
 			panning = true;
 			accelPanVel(panVel, -90);
 		}
@@ -116,7 +112,8 @@ function detectPanning(): void {
 		const hyp = Math.hypot(...panVel);
 		const relativePanVelCap = boardpos.getRelativePanVelCap();
 		const ratio = hyp / relativePanVelCap;
-		if (ratio > 1) { // Too fast, divide components by the ratio to cap our velocity
+		if (ratio > 1) {
+			// Too fast, divide components by the ratio to cap our velocity
 			panVel[0] /= ratio;
 			panVel[1] /= ratio;
 		}
@@ -126,7 +123,6 @@ function detectPanning(): void {
 
 	boardpos.setPanVel(panVel); // Set the pan velocity
 }
-
 
 /** Accelerates the given pan velocity in the provided vector direction. */
 function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
@@ -140,7 +136,6 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	return panVel;
 }
 
-
 /** Deccelerates the given pan velocity towards zero, without skipping past it. */
 function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 	if (panVel[0] === 0 && panVel[1] === 0) return panVel; // Already stopped
@@ -149,15 +144,14 @@ function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 
 	const hyp = Math.hypot(...panVel);
 	const newHyp = hyp - loadbalancer.getDeltaTime() * rateToUse;
-	if (newHyp < 0) return [0,0]; // Stop completely before we start going in the opposite direction
-	
+	if (newHyp < 0) return [0, 0]; // Stop completely before we start going in the opposite direction
+
 	const ratio = newHyp / hyp;
 
 	const newPanVel: DoubleCoords = [panVel[0] * ratio, panVel[1] * ratio];
-	
+
 	return newPanVel;
 }
-
 
 /** Detects Space/Shift/Wheel controls, updating board SCALE velocity accordingly. */
 function detectZooming(): void {
@@ -165,7 +159,8 @@ function detectZooming(): void {
 
 	let scaling = false;
 	let scrolling = false;
-	if (!guipromotion.isUIOpen()) { // Disable the controls temporarily
+	if (!guipromotion.isUIOpen()) {
+		// Disable the controls temporarily
 		// Space/Shift
 		if (listener_document.isKeyHeld('Space')) {
 			scaling = true;
@@ -196,7 +191,6 @@ function detectZooming(): void {
 	boardpos.setScaleVel(scaleVel);
 }
 
-
 /** Deccelerates the given scale velocity towards zero, without skipping past it. */
 function deccelerateScaleVel(scaleVel: number): number {
 	if (scaleVel === 0) return scaleVel; // Already stopped
@@ -206,7 +200,8 @@ function deccelerateScaleVel(scaleVel: number): number {
 	if (scaleVel > 0) {
 		scaleVel -= loadbalancer.getDeltaTime() * deccelerationToUse;
 		if (scaleVel < 0) scaleVel = 0;
-	} else { // scaleVel < 0
+	} else {
+		// scaleVel < 0
 		scaleVel += loadbalancer.getDeltaTime() * deccelerationToUse;
 		if (scaleVel > 0) scaleVel = 0;
 	}
@@ -214,9 +209,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 	return scaleVel;
 }
 
-
 // Toggles ---------------------------------------------------------------------------------
-
 
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameToggles(): void {
@@ -228,7 +221,7 @@ function testOutGameToggles(): void {
 /** Debug toggles that are only for in a game. */
 function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Escape')) guipause.toggle();
-	
+
 	if (listener_document.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (listener_document.isKeyDown('Digit2')) {
 		console.log(jsutil.deepCopyObject(gamefile));
@@ -237,7 +230,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (listener_document.isKeyDown('Digit5')) copygame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (listener_document.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
-	
+
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile.boardsim, mesh);
@@ -248,13 +241,11 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 		if (!boardeditor.areInBoardEditor()) guigameinfo.toggle();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
-	
+
 	guinavigation.update();
 }
 
-
 // Exports ---------------------------------------------------------------------------------
-
 
 export default {
 	updateNavControls,

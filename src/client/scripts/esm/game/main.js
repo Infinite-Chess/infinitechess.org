@@ -1,4 +1,3 @@
-
 /*
  * This is the main script. This is where the game begins running.
 
@@ -17,11 +16,9 @@ import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
 // Import End
 
-"use strict";
+('use strict');
 
-
-
-// Starts the game. Runs automatically once the page is loaded. 
+// Starts the game. Runs automatically once the page is loaded.
 function start() {
 	guiloading.closeAnimation(); // Stops the loading screen animation
 	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
@@ -45,20 +42,19 @@ function initListeners() {
 		// This allows us to control the reason why the socket was closed.
 		// "1000 Closed by client" instead of "1001 Endpoint left"
 		websocket.closeSocket();
-        
+
 		localstorage.eraseExpiredItems();
 	});
 }
 
 function gameLoop() {
-
-	const loop = function(runtime) {
+	const loop = function (runtime) {
 		loadbalancer.update(runtime); // Updates fps, delta time, etc..
 
 		game.update(); // Always update the game, even if we're afk. By FAR this is less resource intensive than rendering!
 
 		render(); // Render everything
-        
+
 		// Reset all event listeners states so we can catch any new events that happen for the next frame.
 		document.dispatchEvent(new Event('reset-listener-events'));
 

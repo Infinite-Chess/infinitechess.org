@@ -1,9 +1,8 @@
-
 // src/server/controllers/createAccountController.test.ts
 
 /**
  * Tests for the profanity filter used in account creation.
- * 
+ *
  * This test suite verifies that the obscenity package correctly identifies
  * profane content in usernames during account creation.
  */
@@ -105,12 +104,20 @@ describe('Profanity Filter', () => {
 	describe('Performance', () => {
 		it('should handle multiple checks efficiently', () => {
 			const testUsernames = [
-				'user1', 'user2', 'user3', 'cleanuser', 'chessplayer',
-				'john123', 'jane456', 'player789', 'gamer1000', 'testuser'
+				'user1',
+				'user2',
+				'user3',
+				'cleanuser',
+				'chessplayer',
+				'john123',
+				'jane456',
+				'player789',
+				'gamer1000',
+				'testuser',
 			];
 
 			const startTime = Date.now();
-			testUsernames.forEach(username => {
+			testUsernames.forEach((username) => {
 				checkProfanity(username);
 			});
 			const endTime = Date.now();

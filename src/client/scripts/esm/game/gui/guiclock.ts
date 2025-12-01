@@ -1,15 +1,14 @@
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import gamesound from '../misc/gamesound.js';
+import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import clock from '../../../../../shared/chess/logic/clock.js';
 
-import moveutil from "../../../../../shared/chess/util/moveutil.js";
-import gamesound from "../misc/gamesound.js";
-import clockutil from "../../../../../shared/chess/util/clockutil.js";
-import onlinegame from "../misc/onlinegame/onlinegame.js";
-import { players } from "../../../../../shared/chess/util/typeutil.js";
-import clock from "../../../../../shared/chess/logic/clock.js";
-
-import type { SoundObject } from "../../audio/AudioManager.js";
-import type { Player, PlayerGroup } from "../../../../../shared/chess/util/typeutil.js";
-import type { Game } from "../../../../../shared/chess/logic/gamefile.js";
-import type { ClockData } from "../../../../../shared/chess/logic/clock.js";
+import type { SoundObject } from '../../audio/AudioManager.js';
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { Game } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
 	[players.WHITE]: {
@@ -17,15 +16,15 @@ const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
 	},
 	[players.BLACK]: {
 		timer: document.getElementById('timer-black')!,
-	}
+	},
 };
 
 /** All variables related to the lowtime tick notification at 1 minute remaining. */
 const lowtimeNotif: {
-	playersNotified: Set<Player>,
-	timeoutID?: ReturnType<typeof setTimeout>
-	timeToStartFromEnd: number
-	clockMinsRequiredToUse: number
+	playersNotified: Set<Player>;
+	timeoutID?: ReturnType<typeof setTimeout>;
+	timeToStartFromEnd: number;
+	clockMinsRequiredToUse: number;
 } = {
 	/** Contains the players that have had the ticking sound play */
 	playersNotified: new Set(),
@@ -39,31 +38,31 @@ const lowtimeNotif: {
 /** All variables related to the 10s countdown when you're almost out of time. */
 const countdown: {
 	drum: {
-		timeoutID?: ReturnType<typeof setTimeout>
-	},
+		timeoutID?: ReturnType<typeof setTimeout>;
+	};
 	tick: {
-		timeoutID?: ReturnType<typeof setTimeout>
-		sound?: SoundObject
-		timeToStartFromEnd: number
-		fadeInDuration: number
-		fadeOutDuration: number
-	}
+		timeoutID?: ReturnType<typeof setTimeout>;
+		sound?: SoundObject;
+		timeToStartFromEnd: number;
+		fadeInDuration: number;
+		fadeOutDuration: number;
+	};
 	ticking: {
-		timeoutID?: ReturnType<typeof setTimeout>
-		sound?: SoundObject
-		timeToStartFromEnd: number
-		fadeInDuration: number
-		fadeOutDuration: number
-	}
+		timeoutID?: ReturnType<typeof setTimeout>;
+		sound?: SoundObject;
+		timeToStartFromEnd: number;
+		fadeInDuration: number;
+		fadeOutDuration: number;
+	};
 } = {
 	drum: {
 		timeoutID: undefined,
 	},
 	tick: {
 		/**
-         * The current sound object, if specified, that is playing our tick sound effects right before the 10s countdown.
-         * This can be used to stop the sound from playing.
-         */
+		 * The current sound object, if specified, that is playing our tick sound effects right before the 10s countdown.
+		 * This can be used to stop the sound from playing.
+		 */
 		sound: undefined,
 		timeoutID: undefined,
 		timeToStartFromEnd: 15625,
@@ -72,9 +71,9 @@ const countdown: {
 	},
 	ticking: {
 		/**
-         * The current sound object, if specified, that is playing our ticking sound effects during the 10s countdown.
-         * This can be used to stop the sound from playing.
-         */
+		 * The current sound object, if specified, that is playing our ticking sound effects during the 10s countdown.
+		 * This can be used to stop the sound from playing.
+		 */
 		sound: undefined,
 		timeoutID: undefined,
 		timeToStartFromEnd: 10220,
@@ -82,7 +81,6 @@ const countdown: {
 		fadeOutDuration: 100,
 	},
 };
-
 
 function hideClocks(): void {
 	for (const clockElements of Object.values(element_timers)) {
@@ -141,7 +139,12 @@ function update(basegame: Game): void {
 	const clocks = basegame.clocks!;
 
 	// Update border color
-	if (clocks.colorTicking !== undefined) updateBorderColor(basegame.clocks, element_timers[clocks.colorTicking]!.timer, clocks.currentTime[clocks.colorTicking]!);
+	if (clocks.colorTicking !== undefined)
+		updateBorderColor(
+			basegame.clocks,
+			element_timers[clocks.colorTicking]!.timer,
+			clocks.currentTime[clocks.colorTicking]!,
+		);
 	updateTextContent(basegame.clocks);
 }
 
@@ -176,12 +179,18 @@ function removeBorder(element: HTMLElement): void {
 /**
  * Changes the border color gradually
  */
-function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeRemain: number): void {
+function updateBorderColor(
+	clocks: ClockData,
+	element: HTMLElement,
+	currentTimeRemain: number,
+): void {
 	const percRemain = currentTimeRemain / (clocks.startTime.minutes * 60 * 1000);
 
 	// Green => Yellow => Orange => Red
 	const perc = 1 - percRemain;
-	let r = 0, g = 0, b = 0;
+	let r = 0,
+		g = 0,
+		b = 0;
 	if (percRemain > 1 + 1 / 3) {
 		g = 1;
 		b = 1;
@@ -189,15 +198,18 @@ function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeR
 		const localPerc = (percRemain - 1) * 3;
 		g = 1;
 		b = localPerc;
-	} else if (perc < 0.5) { // Green => Yellow
+	} else if (perc < 0.5) {
+		// Green => Yellow
 		const localPerc = perc * 2;
 		r = localPerc;
 		g = 1;
-	} else if (perc < 0.75) { // Yellow => Orange
+	} else if (perc < 0.75) {
+		// Yellow => Orange
 		const localPerc = (perc - 0.5) * 4;
 		r = 1;
 		g = 1 - localPerc * 0.5;
-	} else { // Orange => Red
+	} else {
+		// Orange => Red
 		const localPerc = (perc - 0.75) * 4;
 		r = 1;
 		g = 0.5 - localPerc * 0.5;
@@ -206,7 +218,7 @@ function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeR
 	element.style.outline = `3px solid rgb(${r * 255},${g * 255},${b * 255})`;
 }
 
-/** 
+/**
  * Updates the clocks' text content in the document.
  */
 function updateTextContent(clocks: ClockData): void {
@@ -218,7 +230,7 @@ function updateTextContent(clocks: ClockData): void {
 }
 
 // The lowtime notification...
-/** 
+/**
  * Reschedules the timer to play the ticking sound effect at 1 minute remaining.
  */
 function scheduleMinuteTick(clocks: ClockData): void {
@@ -227,7 +239,8 @@ function scheduleMinuteTick(clocks: ClockData): void {
 	const timeRemainAtTurnStart = clocks.timeRemainAtTurnStart!;
 	const timeRemain = timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd; // Time remaining until sound it should start playing
 	if (timeRemain < 0) return;
-	lowtimeNotif.timeoutID = setTimeout(() => playMinuteTick(clocks.colorTicking!), timeRemain);}
+	lowtimeNotif.timeoutID = setTimeout(() => playMinuteTick(clocks.colorTicking!), timeRemain);
+}
 
 function playMinuteTick(color: Player): void {
 	gamesound.playTick({ volume: 0.07 });
@@ -272,7 +285,10 @@ function scheduleDrum(clocks: ClockData): void {
 		secsRemaining -= addTimeNextDrum / 1000;
 	}
 	// console.log("Rescheduling drum countdown in ", timeNextDrum, "ms");
-	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(clocks, secsRemaining), timeNextDrum);
+	countdown.drum.timeoutID = setTimeout(
+		() => playDrumAndQueueNext(clocks, secsRemaining),
+		timeNextDrum,
+	);
 }
 
 function scheduleTicking(clocks: ClockData): void {
@@ -281,7 +297,8 @@ function scheduleTicking(clocks: ClockData): void {
 	// because those aren't updated every frame when the page isn't focused!!
 	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
 	const timeRemain = playerTrueTimeRemaining - countdown.ticking.timeToStartFromEnd;
-	if (timeRemain > 0) countdown.ticking.timeoutID = setTimeout(() => playTickingEffect(0), timeRemain);
+	if (timeRemain > 0)
+		countdown.ticking.timeoutID = setTimeout(() => playTickingEffect(0), timeRemain);
 	else {
 		const offset = -timeRemain;
 		playTickingEffect(offset);
@@ -302,7 +319,7 @@ function scheduleTick(clocks: ClockData): void {
 }
 
 function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number): void {
-	if (secsRemaining === undefined) return console.error("Cannot play drum without secsRemaining");
+	if (secsRemaining === undefined) return console.error('Cannot play drum without secsRemaining');
 	gamesound.playDrum();
 
 	// We have to use this instead of reading the current clock values
@@ -315,7 +332,10 @@ function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number): void {
 	const newSecsRemaining = secsRemaining - 1;
 	if (newSecsRemaining === 0) return; // Stop
 	const timeUntilNextDrum = playerTrueTimeRemaining - newSecsRemaining * 1000;
-	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(clocks, newSecsRemaining), timeUntilNextDrum);
+	countdown.drum.timeoutID = setTimeout(
+		() => playDrumAndQueueNext(clocks, newSecsRemaining),
+		timeUntilNextDrum,
+	);
 }
 
 function playTickingEffect(offset: number): void {

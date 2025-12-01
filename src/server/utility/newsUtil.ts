@@ -21,22 +21,22 @@ const language_code = 'en-US';
  */
 function getLatestNewsDate(): string | null {
 	const newsPath = path.join(__dirname, '../../../translation/news', language_code);
-	
+
 	if (!fs.existsSync(newsPath)) {
 		console.error(`News directory ${language_code} not found`);
 		return null;
 	}
 
 	const files = fs.readdirSync(newsPath);
-	const newsFiles = files.filter(file => file.endsWith('.md'));
+	const newsFiles = files.filter((file) => file.endsWith('.md'));
 
 	if (newsFiles.length === 0) {
 		return null;
 	}
 
 	// Extract dates from filenames (format: YYYY-MM-DD.md)
-	const dates = newsFiles.map(file => file.replace('.md', '')).sort();
-	
+	const dates = newsFiles.map((file) => file.replace('.md', '')).sort();
+
 	// Return the most recent date
 	const latestDate = dates[dates.length - 1];
 	return latestDate !== undefined ? latestDate : null;
@@ -48,16 +48,16 @@ function getLatestNewsDate(): string | null {
  */
 function getAllNewsDates(): string[] {
 	const newsPath = path.join(__dirname, '../../../translation/news', language_code);
-	
+
 	if (!fs.existsSync(newsPath)) {
 		return [];
 	}
 
 	const files = fs.readdirSync(newsPath);
-	const newsFiles = files.filter(file => file.endsWith('.md'));
-	
+	const newsFiles = files.filter((file) => file.endsWith('.md'));
+
 	// Extract dates and sort
-	const dates = newsFiles.map(file => file.replace('.md', '')).sort();
+	const dates = newsFiles.map((file) => file.replace('.md', '')).sort();
 	return dates;
 }
 
@@ -68,7 +68,7 @@ function getAllNewsDates(): string[] {
  */
 function countUnreadNews(lastReadDate: string | null): number {
 	const allDates = getAllNewsDates();
-	
+
 	if (allDates.length === 0) {
 		return 0;
 	}
@@ -79,7 +79,7 @@ function countUnreadNews(lastReadDate: string | null): number {
 	}
 
 	// Count posts newer than the last read date
-	const unreadCount = allDates.filter(date => date > lastReadDate).length;
+	const unreadCount = allDates.filter((date) => date > lastReadDate).length;
 	return unreadCount;
 }
 
@@ -90,7 +90,7 @@ function countUnreadNews(lastReadDate: string | null): number {
  */
 function getUnreadNewsDates(lastReadDate: string | null): string[] {
 	const allDates = getAllNewsDates();
-	
+
 	if (allDates.length === 0) {
 		return [];
 	}
@@ -101,12 +101,7 @@ function getUnreadNewsDates(lastReadDate: string | null): string[] {
 	}
 
 	// Return posts newer than the last read date
-	return allDates.filter(date => date > lastReadDate);
+	return allDates.filter((date) => date > lastReadDate);
 }
 
-export {
-	getLatestNewsDate,
-	getAllNewsDates,
-	countUnreadNews,
-	getUnreadNewsDates,
-};
+export { getLatestNewsDate, getAllNewsDates, countUnreadNews, getUnreadNewsDates };

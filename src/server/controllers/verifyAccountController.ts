@@ -1,4 +1,3 @@
-
 // src/server/controllers/verifyAccountController.ts
 
 /**
@@ -6,30 +5,31 @@
  */
 
 // @ts-ignore
-import { getTranslationForReq } from "../utility/translate.js";
-import { AddVerificationToAllSocketsOfMember } from "../socket/socketManager.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
+import { getTranslationForReq } from '../utility/translate.js';
+import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 import type { Response } from 'express';
-import type { IdentifiedRequest } from "../types.js";
+import type { IdentifiedRequest } from '../types.js';
 
 // A specific type for the return value of getMemberDataByCriteria for this module
-type MemberVerificationData = {
-	user_id: number;
-	username: string;
-	is_verified: 0 | 1;
-	verification_code: string | null;
-} | { // Only if the member isn't found...
-	user_id: undefined;
-	username: undefined;
-	is_verified: undefined;
-	verification_code: undefined;
-};
-
+type MemberVerificationData =
+	| {
+			user_id: number;
+			username: string;
+			is_verified: 0 | 1;
+			verification_code: string | null;
+	  }
+	| {
+			// Only if the member isn't found...
+			user_id: undefined;
+			username: undefined;
+			is_verified: undefined;
+			verification_code: undefined;
+	  };
 
 // Functions -------------------------------------------------------------------------
-
 
 /**
  * Route that verifies an account when the user clicks the link in the email.
@@ -37,7 +37,7 @@ type MemberVerificationData = {
  */
 export async function verifyAccount(req: IdentifiedRequest, res: Response): Promise<void> {
 	if (!req.memberInfo) {
-		logEventsAndPrint("req.memberInfo must be defined for verify account route!", 'errLog.txt');
+		logEventsAndPrint('req.memberInfo must be defined for verify account route!', 'errLog.txt');
 		res.status(500).redirect('/500');
 		return;
 	}
@@ -49,51 +49,77 @@ export async function verifyAccount(req: IdentifiedRequest, res: Response): Prom
 		['user_id', 'username', 'is_verified', 'verification_code'],
 		'username',
 		claimedUsername,
-		true
+		true,
 	) as MemberVerificationData;
-	
-	if (user_id === undefined) { // User not found
-		logEventsAndPrint(`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`, 'hackLog.txt');
+
+	if (user_id === undefined) {
+		// User not found
+		logEventsAndPrint(
+			`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`,
+			'hackLog.txt',
+		);
 		res.status(400).redirect(`/400`); // Bad request
 		return;
 	}
 
-	if (!req.memberInfo.signedIn) { // Not logged in
-		logEventsAndPrint(`Forwarding user '${username}' to login before they can verify!`, 'loginAttempts.txt');
+	if (!req.memberInfo.signedIn) {
+		// Not logged in
+		logEventsAndPrint(
+			`Forwarding user '${username}' to login before they can verify!`,
+			'loginAttempts.txt',
+		);
 		// Redirect them to the login page, BUT add a query parameter with the original verification url they were visiting!
 		const redirectTo = encodeURIComponent(req.originalUrl);
 		res.redirect(`/login?redirectTo=${redirectTo}`);
 		return;
 	}
 
-	if (req.memberInfo.username !== username) { // Forbid them if they are logged in and NOT who they're wanting to verify!
-		logEventsAndPrint(`Member "${req.memberInfo.username}" of ID "${req.memberInfo.user_id}" attempted to verify member "${username}"!`, 'loginAttempts.txt');
-		res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
+	if (req.memberInfo.username !== username) {
+		// Forbid them if they are logged in and NOT who they're wanting to verify!
+		logEventsAndPrint(
+			`Member "${req.memberInfo.username}" of ID "${req.memberInfo.user_id}" attempted to verify member "${username}"!`,
+			'loginAttempts.txt',
+		);
+		res.status(403).send(
+			getTranslationForReq('server.javascript.ws-forbidden_wrong_account', req),
+		);
 		return;
 	}
-	
+
 	// Ignore if already verified.
 	if (is_verified === 1) {
-		logEventsAndPrint(`Member "${username}" of ID ${user_id} is already verified!`, 'loginAttempts.txt');
+		logEventsAndPrint(
+			`Member "${username}" of ID ${user_id} is already verified!`,
+			'loginAttempts.txt',
+		);
 		res.redirect(`/member/${username}`);
 		return;
 	}
 
 	// Check if the verification code matches!
 	if (claimedCode !== verification_code) {
-		logEventsAndPrint(`Invalid account verification link! User "${username}", code "${claimedCode}" INCORRECT`, 'loginAttempts.txt');
+		logEventsAndPrint(
+			`Invalid account verification link! User "${username}", code "${claimedCode}" INCORRECT`,
+			'loginAttempts.txt',
+		);
 		res.status(400).redirect(`/400`);
 		return;
 	}
-	
+
 	// VERIFY THEM..
 	const result = _executeVerificationUpdate(user_id, username);
 
 	if (result.success) {
-		logEventsAndPrint(`Verified member ${username}'s account! ID ${user_id}`, 'loginAttempts.txt');
+		logEventsAndPrint(
+			`Verified member ${username}'s account! ID ${user_id}`,
+			'loginAttempts.txt',
+		);
 		res.redirect(`/member/${username.toLowerCase()}`);
 	} else {
-		logEventsAndPrint(`Verification failed for "${claimedUsername}" due to: ${result.reason}`, 'errLog.txt');
+		logEventsAndPrint(
+			`Verification failed for "${claimedUsername}" due to: ${result.reason}`,
+			'errLog.txt',
+		);
 		res.status(500).redirect(`/member/${username.toLowerCase()}`);
 	}
 }
@@ -103,18 +129,21 @@ export async function verifyAccount(req: IdentifiedRequest, res: Response): Prom
  * @param usernameCaseInsensitive The username to verify.
  * @returns A success or failure object.
  */
-export function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, username: string } | { success: false, reason: string } {
+export function manuallyVerifyUser(
+	usernameCaseInsensitive: string,
+): { success: true; username: string } | { success: false; reason: string } {
 	const { user_id, username, is_verified } = getMemberDataByCriteria(
 		['user_id', 'username', 'is_verified'],
 		'username',
 		usernameCaseInsensitive,
-		true
+		true,
 	) as Partial<MemberVerificationData>;
-	
-	if (user_id === undefined || username === undefined) { // User not found
+
+	if (user_id === undefined || username === undefined) {
+		// User not found
 		return { success: false, reason: `User "${usernameCaseInsensitive}" doesn't exist.` };
 	}
-	
+
 	if (is_verified === 1) {
 		return { success: false, reason: `User "${username}" is already verified.` };
 	}
@@ -123,7 +152,10 @@ export function manuallyVerifyUser(usernameCaseInsensitive: string): { success: 
 	const result = _executeVerificationUpdate(user_id, username);
 
 	if (result.success) {
-		logEventsAndPrint(`Manually verified member ${username}'s account! ID ${user_id}`, 'loginAttempts.txt');
+		logEventsAndPrint(
+			`Manually verified member ${username}'s account! ID ${user_id}`,
+			'loginAttempts.txt',
+		);
 		return { success: true, username };
 	} else {
 		return { success: false, reason: result.reason };
@@ -136,7 +168,10 @@ export function manuallyVerifyUser(usernameCaseInsensitive: string): { success: 
  * @param username The username of the user to verify (for logging).
  * @returns A success or failure object.
  */
-function _executeVerificationUpdate(user_id: number, username: string): { success: true } | { success: false, reason: string } {
+function _executeVerificationUpdate(
+	user_id: number,
+	username: string,
+): { success: true } | { success: false; reason: string } {
 	AddVerificationToAllSocketsOfMember(user_id);
 
 	const changes = {
@@ -146,12 +181,15 @@ function _executeVerificationUpdate(user_id: number, username: string): { succes
 		is_verification_notified: 0,
 	};
 	const changesMade = updateMemberColumns(user_id, changes);
-	
+
 	if (!changesMade) {
 		const reason = `Database update failed for user "${username}".`;
-		logEventsAndPrint(`No changes made when verifying member "${username}" (ID: ${user_id})!`, 'errLog.txt');
+		logEventsAndPrint(
+			`No changes made when verifying member "${username}" (ID: ${user_id})!`,
+			'errLog.txt',
+		);
 		return { success: false, reason };
 	}
-	
+
 	return { success: true };
 }

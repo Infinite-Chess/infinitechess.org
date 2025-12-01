@@ -1,38 +1,39 @@
-
 // src/client/scripts/esm/game/rendering/meshes.ts
-
 
 /**
  * This script can generate mesh vertex data for common shapes,
  * given game info such as coordinates, color, and textures.
- * 
+ *
  * [Model Space] - REQUIRES position and scale transformations when rendering.
  * [World Space] - DOES NOT require positional or scale transformations when rendering.
  */
 
+import type { Color } from '../../../../../shared/util/math/math.js';
+import type {
+	BoundingBox,
+	BoundingBoxBD,
+	DoubleBoundingBox,
+} from '../../../../../shared/util/math/bounds.js';
 
-import type { Color } from "../../../../../shared/util/math/math.js";
-import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../shared/util/math/bounds.js";
-
-import boardtiles from "./boardtiles.js";
-import boardpos from "./boardpos.js";
-import spritesheet from "./spritesheet.js";
-import primitives from "./primitives.js";
-import perspective from "./perspective.js";
-import { Vec3 } from "../../../../../shared/util/math/vectors.js";
-import bd, { BigDecimal } from "../../../../../shared/util/bigdecimal/bigdecimal.js";
-import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
-import bounds from "../../../../../shared/util/math/bounds.js";
-
+import boardtiles from './boardtiles.js';
+import boardpos from './boardpos.js';
+import spritesheet from './spritesheet.js';
+import primitives from './primitives.js';
+import perspective from './perspective.js';
+import { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../shared/chess/util/coordutil.js';
+import bounds from '../../../../../shared/util/math/bounds.js';
 
 // Constants -------------------------------------------------------------------------
 
-
 const ONE = bd.FromBigInt(1n);
 
-
 // Square Bounds ---------------------------------------------------------------------------
-
 
 /**
  * [Model Space] Returns a bounding box of a square.
@@ -58,11 +59,13 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 
 	const coordsBD = bd.FromCoords(coords);
 
-	const relativeCoords: DoubleCoords = bd.coordsToDoubles(coordutil.subtractBDCoords(coordsBD, boardPos));
+	const relativeCoords: DoubleCoords = bd.coordsToDoubles(
+		coordutil.subtractBDCoords(coordsBD, boardPos),
+	);
 
 	const scaledCoords: DoubleCoords = [
 		relativeCoords[0] * boardScale,
-		relativeCoords[1] * boardScale
+		relativeCoords[1] * boardScale,
 	];
 
 	const left = scaledCoords[0] - squareCenterScaled;
@@ -76,7 +79,7 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 /**
  * [Model Space] If you have say a bounding box from coordinate [1,1] to [9,9],
  * this will round that outwards from [0.5,0.5] to [9.5,9.5].
- * 
+ *
  * Expands the edges of the box, which should contain integer squares for values,
  * to encapsulate the whole of the squares on their edges.
  * Turns it into a floating point edge.
@@ -104,7 +107,7 @@ function expandTileBoundingBoxToEncompassWholeSquareBD(boundingBox: BoundingBoxB
 /**
  * [World Space] Applies our board position and scale transformations to a floating bounding box
  * so it can be rendered exactly where it is without requiring uniform translations.
- * 
+ *
  * Since its floating, we don't bother to subtract squareCenter.
  */
 function applyWorldTransformationsToBoundingBox(boundingBox: BoundingBoxBD): DoubleBoundingBox {
@@ -119,9 +122,7 @@ function applyWorldTransformationsToBoundingBox(boundingBox: BoundingBoxBD): Dou
 	return { left, bottom, right, top };
 }
 
-
 // Mesh Data ---------------------------------------------------------------------------------
-
 
 /**
  * [Model Space] Generates the vertex data of a square highlight, given the coords and color.
@@ -146,8 +147,9 @@ function QuadWorld_ColorTexture(coords: Coords, type: number, color: Color): num
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
 	const { left, right, bottom, top } = getCoordBoxWorld(coords);
-	const [ r, g, b, a ] = color;
+	const [r, g, b, a] = color;
 
+	// prettier-ignore
 	return primitives.Quad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
@@ -169,16 +171,14 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 // 	return primitives.Quad_Color(left, bottom, right, top, color);
 // }
 
-
 // Transforming Vertices ---------------------------------------------------------------
-
 
 /** Applies a rotational & translational transformation to an array of points. */
 // function applyTransformToPoints(points: DoubleCoords[], rotation: number, translation: DoubleCoords): DoubleCoords[] {
 // 	// convert rotation angle to radians
 // 	const cos = Math.cos(rotation);
 // 	const sin = Math.sin(rotation);
-    
+
 // 	// apply rotation matrix and translation vector to each point
 // 	const transformedPoints = points.map(point => {
 // 		const xRot = point[0] * cos - point[1] * sin;
@@ -187,21 +187,19 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 // 		const yTrans = yRot + translation[1];
 // 		return [xTrans, yTrans] as DoubleCoords;
 // 	});
-    
+
 // 	// return transformed points as an array of length-2 arrays
 // 	return transformedPoints;
 // }
 
-
 // Other Generic Rendering Methods -------------------------------------------------------
-
 
 /**
  * Returns a model's transformed position that should be used when rendering its buffer model.
- * 
+ *
  * Any model that has a bigint offset, should be able to subtract that offset
  * from our board position to obtain a number small emough for the gpu to render.
- * 
+ *
  * Typically this will always include numbers smaller than 10,000
  */
 function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
@@ -214,13 +212,11 @@ function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0
 		// offset - boardPos
 		getAxis(boardPos[0], modelOffset[0]),
 		getAxis(boardPos[1], modelOffset[1]),
-		z
+		z,
 	];
 }
 
-
 // Exports -----------------------------------------------------------------------
-
 
 export default {
 	// Square Bounds

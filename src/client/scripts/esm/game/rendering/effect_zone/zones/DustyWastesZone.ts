@@ -1,18 +1,15 @@
-
 // src/client/scripts/esm/game/rendering/effect_zone/zones/DustyWastesZone.ts
 
 // @ts-ignore
-import loadbalancer from "../../../misc/loadbalancer";
-import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
-import { GlitchPass } from "../../../../webgl/post_processing/passes/GlitchPass";
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { ProgramManager } from "../../../../webgl/ProgramManager";
-import { Zone } from "../EffectZoneManager";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
-
+import loadbalancer from '../../../misc/loadbalancer';
+import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
+import { GlitchPass } from '../../../../webgl/post_processing/passes/GlitchPass';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { ProgramManager } from '../../../../webgl/ProgramManager';
+import { Zone } from '../EffectZoneManager';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class DustyWastesZone implements Zone {
-
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 6;
 
@@ -21,7 +18,6 @@ export class DustyWastesZone implements Zone {
 
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
-
 
 	// --- Wind Effect Properties ---
 	/** The opacity of the wind effect. */
@@ -45,7 +41,6 @@ export class DustyWastesZone implements Zone {
 	/** The speed at which the wind direction rotates, in radians per second. */
 	private windRotationSpeed: number = 0.0025;
 
-
 	// --- Glitch Effect Properties ---
 	/** A multiplier for the chromatic aberration strength. */
 	private aberrationStrengthMultiplier: number = 1.3;
@@ -61,7 +56,6 @@ export class DustyWastesZone implements Zone {
 	private maxInterval: number = 7.0;
 	/** Maximum allowed glitch intensity ("trauma") before clamping. */
 	private maxTrauma: number = 2.0;
-
 
 	// ============ State ============
 
@@ -81,14 +75,13 @@ export class DustyWastesZone implements Zone {
 	/** Countdown timer in seconds until the next glitch burst. */
 	private timeUntilNextGlitch: number = 0.0;
 
-
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.brightness = -0.2; // Default: 0.7
 		this.colorGradePass.tint = [1.0, 0.75, 0.7]; // Slight red tint
 
 		this.glitchPass = new GlitchPass(programManager);
-		
+
 		// Load the ambience...
 
 		const noiseConfig: SoundscapeConfig = {
@@ -98,80 +91,79 @@ export class DustyWastesZone implements Zone {
 					volume: {
 						base: 1,
 						lfo: {
-							wave: "perlin",
+							wave: 'perlin',
 							rate: 0.76,
-							depth: 0.12
-						}
+							depth: 0.12,
+						},
 					},
 					source: {
-						type: "noise"
+						type: 'noise',
 					},
 					filters: [
 						{
-							type: "lowpass",
+							type: 'lowpass',
 							frequency: {
-								base: 271
+								base: 271,
 							},
 							Q: {
-								base: 1.0001
+								base: 1.0001,
 							},
 							gain: {
-								base: 0
-							}
-						}
-					]
+								base: 0,
+							},
+						},
+					],
 				},
 				{
 					volume: {
-						base: 0.5
+						base: 0.5,
 					},
 					source: {
-						type: "noise"
+						type: 'noise',
 					},
 					filters: [
 						{
-							type: "bandpass",
+							type: 'bandpass',
 							frequency: {
 								base: 909,
 								lfo: {
-									wave: "perlin",
+									wave: 'perlin',
 									rate: 0.47,
-									depth: 203
-								}
+									depth: 203,
+								},
 							},
 							Q: {
-								base: 29.9901
+								base: 29.9901,
 							},
 							gain: {
-								base: 0
-							}
+								base: 0,
+							},
 						},
 						{
-							type: "bandpass",
+							type: 'bandpass',
 							frequency: {
 								base: 909,
 								lfo: {
-									wave: "perlin",
+									wave: 'perlin',
 									rate: 0.35,
-									depth: 201
-								}
+									depth: 201,
+								},
 							},
 							Q: {
-								base: 10.7801
+								base: 10.7801,
 							},
 							gain: {
-								base: 0
-							}
-						}
-					]
-				}
-			]
+								base: 0,
+							},
+						},
+					],
+				},
+			],
 		};
 
 		// Initialize the player with the config.
 		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
-
 
 	/** Responsible for calculating the exact UV offsets of the noise texture layers each frame. */
 	public update(): void {
@@ -180,28 +172,25 @@ export class DustyWastesZone implements Zone {
 		// --- Wind update logic ---
 
 		// Optional animation of other properties
-		
+
 		// this.windSpeed = math.getSineWaveVariation(Date.now() / 1000, 0, 0.9);
 		// this.windDirectionsOffset = math.getSineWaveVariation(Date.now() / 1000, 0, 2.5);
 		// this.windSpeedsOffset = math.getSineWaveVariation(Date.now() / 1000, 1, 2.0);
 
 		// Animate the wind direction.
-	
+
 		this.windDirection += this.windRotationSpeed * this.windRotationParity * deltaTime;
 		if (this.windDirection > Math.PI * 2) this.windDirection -= Math.PI * 2;
 		else if (this.windDirection < 0) this.windDirection += Math.PI * 2;
 
 		// Calculate the instantaneous velocity vectors for this frame.
-		const angle1 = this.windDirection - (this.windDirectionsOffset / 2);
-		const angle2 = this.windDirection + (this.windDirectionsOffset / 2);
+		const angle1 = this.windDirection - this.windDirectionsOffset / 2;
+		const angle2 = this.windDirection + this.windDirectionsOffset / 2;
 
-		const velocity1 = [
-			Math.cos(angle1) * this.windSpeed,
-			Math.sin(angle1) * this.windSpeed
-		];
+		const velocity1 = [Math.cos(angle1) * this.windSpeed, Math.sin(angle1) * this.windSpeed];
 		const velocity2 = [
 			Math.cos(angle2) * this.windSpeed * this.windSpeedsOffset,
-			Math.sin(angle2) * this.windSpeed * this.windSpeedsOffset
+			Math.sin(angle2) * this.windSpeed * this.windSpeedsOffset,
 		];
 
 		// 3. Integrate: Add the displacement for this frame (velocity * deltaTime) to the total offset.
@@ -209,7 +198,6 @@ export class DustyWastesZone implements Zone {
 		this.uvOffset1[1] += (velocity1[1]! * deltaTime) % 1;
 		this.uvOffset2[0] += (velocity2[0]! * deltaTime) % 1;
 		this.uvOffset2[1] += (velocity2[1]! * deltaTime) % 1;
-
 
 		// --- Glitch update logic ---
 
@@ -220,7 +208,8 @@ export class DustyWastesZone implements Zone {
 		this.timeUntilNextGlitch -= deltaTime;
 		if (this.timeUntilNextGlitch <= 0) {
 			// Add a random amount of "trauma"
-			const traumaToAdd = this.minTraumaToAdd + Math.random() * (this.maxTraumaToAdd - this.minTraumaToAdd);
+			const traumaToAdd =
+				this.minTraumaToAdd + Math.random() * (this.maxTraumaToAdd - this.minTraumaToAdd);
 			this.glitchIntensity = Math.min(this.glitchIntensity + traumaToAdd, this.maxTrauma); // Clamp at maxTrauma
 
 			this.randomizeNextGlitchTimer(); // Reset the timer for the next burst
@@ -230,7 +219,8 @@ export class DustyWastesZone implements Zone {
 		// Use powers to make the visual effect more "bursty" and less linear
 		const intensity = this.glitchIntensity * this.glitchIntensity;
 		this.glitchPass.tearStrength = intensity;
-		this.glitchPass.aberrationStrength = this.glitchIntensity * this.aberrationStrengthMultiplier;
+		this.glitchPass.aberrationStrength =
+			this.glitchIntensity * this.aberrationStrengthMultiplier;
 
 		// 4. Keep the shader's internal time moving for tear pattern animation
 		this.glitchPass.time += deltaTime;
@@ -238,7 +228,8 @@ export class DustyWastesZone implements Zone {
 
 	// Copied from GlitchZone for combined effect
 	private randomizeNextGlitchTimer(): void {
-		this.timeUntilNextGlitch = this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
+		this.timeUntilNextGlitch =
+			this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 	}
 
 	public getUniforms(): Record<string, any> {
@@ -254,7 +245,7 @@ export class DustyWastesZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [this.colorGradePass, this.glitchPass];
 	}
-    
+
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
 	}

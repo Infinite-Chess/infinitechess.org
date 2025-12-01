@@ -1,8 +1,7 @@
-
 // src/client/scripts/esm/webgl/post_processing/passes/WaterPass.ts
 
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /** Defines a single ripple's source point. */
 export interface RippleSource {
@@ -39,7 +38,6 @@ export class WaterPass implements PostProcessPass {
 	// Pre-allocated array for performance to avoid creating new arrays every frame
 	private centersArray: Float32Array = new Float32Array(WaterPass.MAX_SOURCES * 2);
 
-
 	/**
 	 * Creates a new PondPass.
 	 * @param programManager - The ProgramManager instance to retrieve the shader program.
@@ -74,6 +72,7 @@ export class WaterPass implements PostProcessPass {
 		this.resolution[1] = height;
 	}
 
+	// prettier-ignore
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		// --- 1. Prepare uniform data ---
 		const sourceCount = this.activeSources.length;

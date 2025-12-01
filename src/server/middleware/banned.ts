@@ -10,25 +10,30 @@ const bannedPath = path.resolve('database/banned.json');
 ensureBannedFileExists: {
 	if (fs.existsSync(bannedPath)) break ensureBannedFileExists; // Already exists
 
-	const content = JSON.stringify({
-		emails: {},
-		IPs: {},
-		"browser-ids": {}
-	}, null, 2);
+	const content = JSON.stringify(
+		{
+			emails: {},
+			IPs: {},
+			'browser-ids': {},
+		},
+		null,
+		2,
+	);
 	writeFile_ensureDirectory(bannedPath, content);
-	console.log("Generated banned file");
+	console.log('Generated banned file');
 }
 
 let bannedJSON: {
-		IPs: Record<string, any>,
-		emails: Record<string, any>,
-		'browser-ids': Record<string, any>
+	IPs: Record<string, any>;
+	emails: Record<string, any>;
+	'browser-ids': Record<string, any>;
 };
 try {
 	bannedJSON = await readFile(bannedPath);
 } catch (e) {
-	const errMsg = 'Unable to read banned.json on startup. ' + (e instanceof Error ? e.stack : String(e));
-	throw new Error(errMsg); 
+	const errMsg =
+		'Unable to read banned.json on startup. ' + (e instanceof Error ? e.stack : String(e));
+	throw new Error(errMsg);
 }
 function isEmailBanned(email: string): boolean {
 	const emailLowercase = email.toLowerCase();
@@ -43,8 +48,4 @@ function isBrowserIDBanned(browserID: string): boolean {
 	return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 
-export {
-	isEmailBanned,
-	isIPBanned,
-	isBrowserIDBanned
-};
+export { isEmailBanned, isIPBanned, isBrowserIDBanned };

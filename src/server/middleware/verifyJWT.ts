@@ -1,4 +1,3 @@
-
 /*
  * This module reads incoming requests, searching for a
  * valid authorization header, or a valid refresh token cookie,
@@ -8,15 +7,19 @@
  */
 
 import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../types.js';
-import { freshenSession, revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
-import { isAccessTokenValid, isRefreshTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
+import {
+	freshenSession,
+	revokeSession,
+} from '../controllers/authenticationTokens/sessionManager.js';
+import {
+	isAccessTokenValid,
+	isRefreshTokenValid,
+} from '../controllers/authenticationTokens/tokenValidator.js';
 import { CustomWebSocket } from '../socket/socketUtility.js';
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from './logEvents.js';
 
-
-import type { Request, Response, NextFunction } from "express";
-
+import type { Request, Response, NextFunction } from 'express';
 
 /**
  * [HTTP] Reads the request's bearer token (from the authorization header)
@@ -30,18 +33,19 @@ function verifyJWT(req: Request, res: Response, next: NextFunction): void {
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
 
 	// After this line, typescript then thinks the req is of the IdentifiedRequest type.
-	if (!isRequestIdentified(req)) throw Error("Not all required IdentifiedRequest properties were set!");
+	if (!isRequestIdentified(req))
+		throw Error('Not all required IdentifiedRequest properties were set!');
 
 	const hasAccessToken = verifyAccessToken(req, res);
 	if (!hasAccessToken) verifyRefreshToken(req, res);
 
 	next(); // Continue down the middleware waterfall
-};
+}
 
 /**
  * [HTTP] Reads the request's bearer token (from the authorization header),
  * sets the connections `memberInfo` property if it is valid (are signed in).
- * 
+ *
  * Returns whether they have a valid access token or not.
  */
 function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
@@ -54,7 +58,10 @@ function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
 
 	const result = isAccessTokenValid(accessToken);
 	if (!result.isValid) {
-		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt');
+		logEventsAndPrint(
+			`Invalid access token, expired or tampered! "${accessToken}"`,
+			'errLog.txt',
+		);
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		// The client should never use an expired token unless it's a bug.
 		revokeSession(res);
@@ -63,9 +70,9 @@ function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
 
 	// Token is valid and hasn't hit the 15m expiry
 
-	console.log("A valid access token was used! :D :D");
+	console.log('A valid access token was used! :D :D');
 
-	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload}; // Username was our payload when we generated the access token
+	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
 	return true;
 }
 
@@ -83,7 +90,9 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 
 	if (!result.isValid) {
 		// Token was expired or tampered, or manually invalidated.
-		console.log(`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
+		console.log(
+			`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`,
+		);
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		revokeSession(res);
 		return;
@@ -93,7 +102,14 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 
 	try {
 		// Renew the session if it was issued more than a day ago.
-		freshenSession(req, res, payload.user_id, payload.username, payload.roles, result.tokenRecord);
+		freshenSession(
+			req,
+			res,
+			payload.user_id,
+			payload.username,
+			payload.roles,
+			result.tokenRecord,
+		);
 	} catch (error) {
 		const errMsg = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error freshening session: ${errMsg}`, 'errLog.txt');
@@ -102,9 +118,7 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 	// Valid! Set their req.memberInfo property!
 
 	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
-};
-
-
+}
 
 /**
  * [WebSocket] Reads the refresh cookie token,
@@ -115,7 +129,7 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
  */
 function verifyJWTWebSocket(ws: CustomWebSocket): void {
 	verifyRefreshToken_WebSocket(ws);
-};
+}
 
 /**
  * [WebSocket] If they have a valid refresh token cookie (http-only), set's
@@ -133,14 +147,13 @@ function verifyRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	const ip = ws.metadata.IP;
 	const result = isRefreshTokenValid(refreshToken, ip); // True for refresh token
 	if (!result.isValid) {
-		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
+		console.log(
+			`Invalid refresh token (websocket): Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`,
+		);
 		return; // Token was expired or tampered
 	}
 
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }
 
-export {
-	verifyJWT,
-	verifyJWTWebSocket
-};
+export { verifyJWT, verifyJWTWebSocket };

@@ -1,4 +1,3 @@
-
 // src/server/game/gamemanager/gamerouter.ts
 
 /*
@@ -20,10 +19,9 @@ import { onJoinGame } from './joingame.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('resync'), 	  value: z.int() }),
+	z.strictObject({ action: z.literal('resync'), value: z.int() }),
 	z.strictObject({ action: z.literal('AFK') }),
 	z.strictObject({ action: z.literal('AFK-Return') }),
 	z.strictObject({ action: z.literal('offerdraw') }),
@@ -33,12 +31,11 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('removefromplayersinactivegames') }),
 	z.strictObject({ action: z.literal('paste') }),
-	z.strictObject({ action: z.literal('report'),	  value: reportschem }),
-	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem })
+	z.strictObject({ action: z.literal('report'), value: reportschem }),
+	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem }),
 ]);
 
 type GameMessage = z.infer<typeof GameSchema>;
-
 
 /**
  * Handles all incoming websocket messages related to active games.
@@ -48,7 +45,6 @@ type GameMessage = z.infer<typeof GameSchema>;
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  */
 function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number): void {
-
 	// All actions that don't require a game
 	switch (contents.action) {
 		case 'resync':
@@ -62,7 +58,9 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 	const game = getGameBySocket(ws); // The game they belong in, if they belong in one.
 	if (!game) {
 		// This is rare but can happen if the game is deleted on the server while their message is in transit.
-		console.log(`Received game message of action "${contents.action}" when player is not in a game. Maybe it was just deleted?`);
+		console.log(
+			`Received game message of action "${contents.action}" when player is not in a game. Maybe it was just deleted?`,
+		);
 		return;
 	}
 
@@ -107,9 +105,4 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 	}
 }
 
-
-export {
-	routeGameMessage,
-
-	GameSchema,
-};
+export { routeGameMessage, GameSchema };

@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/game/rendering/perspective.ts
 
 /**
@@ -26,7 +25,6 @@ import { Mouse } from '../input.js';
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 
-
 /** Whether perspective mode is enabled. */
 let enabled = false;
 
@@ -48,22 +46,31 @@ const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors i
 /** The buffer model of the mouse crosshair when in perspective mode. */
 let crosshairModel: Renderable;
 
-
 // Getters
-function getEnabled(): boolean { return enabled; }
-function getRotX(): number { return rotX; }
-function getRotZ(): number { return rotZ; }
-function getIsViewingBlackPerspective(): boolean { return isViewingBlackPerspective; }
+function getEnabled(): boolean {
+	return enabled;
+}
+function getRotX(): number {
+	return rotX;
+}
+function getRotZ(): number {
+	return rotZ;
+}
+function getIsViewingBlackPerspective(): boolean {
+	return isViewingBlackPerspective;
+}
 
 function toggle(): void {
-	if (!docutil.isMouseSupported()) return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
+	if (!docutil.isMouseSupported())
+		return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
 }
 
 function enable(): void {
-	if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
+	if (enabled)
+		return console.error('Should not be enabling perspective when it is already enabled.');
 	enabled = true;
 
 	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].on}`;
@@ -86,8 +93,10 @@ function disable(): void {
 	guipause.callback_Resume();
 
 	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].off}`;
-    
-	const viewWhitePerspective = gameslot.areInGame() ? gameslot.isLoadedGameViewingWhitePerspective() : true;
+
+	const viewWhitePerspective = gameslot.areInGame()
+		? gameslot.isLoadedGameViewingWhitePerspective()
+		: true;
 	resetRotations(viewWhitePerspective);
 }
 
@@ -126,14 +135,16 @@ function update(): void {
 		if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
 			listener_overlay.claimMouseClick(Mouse.LEFT);
 			relockMouse();
-		} else if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
+		} else if (listener_overlay.isMouseDown(Mouse.LEFT))
+			listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
 		return;
 	}
 
 	const mouseChange = listener_document.getPhysicalPointerDelta('mouse');
-	if (!mouseChange) throw Error("Mouse pointer not present!");
+	if (!mouseChange) throw Error('Mouse pointer not present!');
 
-	const thisSensitivity = mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
+	const thisSensitivity =
+		mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
 
 	// Change rotations based on mouse motion
 	rotX += mouseChange[1] * thisSensitivity;
@@ -153,14 +164,15 @@ function applyRotations(viewMatrix: Mat4): void {
 	// Shift the origin before rotating plane
 	mat4.translate(viewMatrix, viewMatrix, cameraPos);
 
-	if (rotX < 0) { // Looking up somewhat
+	if (rotX < 0) {
+		// Looking up somewhat
 		const rotXRad = rotX * (Math.PI / 180);
-		mat4.rotate(viewMatrix, viewMatrix, rotXRad, [1,0,0]);
+		mat4.rotate(viewMatrix, viewMatrix, rotXRad, [1, 0, 0]);
 	}
 	// const rotYRad = rotY * (Math.PI / 180);
 	// mat4.rotate(viewMatrix, viewMatrix, rotYRad, [0,1,0])
 	const rotZRad = rotZ * (Math.PI / 180);
-	mat4.rotate(viewMatrix, viewMatrix, rotZRad, [0,0,1]);
+	mat4.rotate(viewMatrix, viewMatrix, rotZRad, [0, 0, 1]);
 
 	// Shift the origin back where it was
 	const negativeCameraPos = [-cameraPos[0], -cameraPos[1], -cameraPos[2]];
@@ -195,58 +207,60 @@ function initCrosshairModel(): void {
 
 	const screenHeight = camera.getScreenHeightWorld();
 
-	const innerSide = (crosshairThickness / 2) * screenHeight  / camera.getCanvasHeightVirtualPixels();
-	const outerSide = (crosshairWidth / 2) * screenHeight / camera.getCanvasHeightVirtualPixels();
+	const innerSide =
+		((crosshairThickness / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
+	const outerSide = ((crosshairWidth / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
 
-	const [r,g,b,a] = crosshairColor;
+	const [r, g, b, a] = crosshairColor;
 
+	// prettier-ignore
 	const data = new Float32Array([
-        //       Vertex         Color
-        //              MEDICAL PLUS sign cross hair
-        // Horz bar
+		//       Vertex         Color
+		//              MEDICAL PLUS sign cross hair
+		// Horz bar
             -outerSide, -innerSide,       r, g, b, a,
             -outerSide,  innerSide,       r, g, b, a,
             outerSide,  innerSide,        r, g, b, a,
-            
+
             outerSide,  innerSide,        r, g, b, a,
             outerSide,  -innerSide,       r, g, b, a,
             -outerSide,  -innerSide,      r, g, b, a,
-        // Vert bar
+		// Vert bar
             -innerSide, -outerSide,       r, g, b, a,
             -innerSide,  outerSide,       r, g, b, a,
             innerSide,  outerSide,        r, g, b, a,
-            
+
             innerSide,  outerSide,        r, g, b, a,
             innerSide,  -outerSide,       r, g, b, a,
             -innerSide,  -outerSide,      r, g, b, a,
             -outerSide, -innerSide,       r, g, b, a,
-        //              CROSS crosshair
-        // Horz bar
-        //     -outerSide, -innerSide,       r, g, b, a,
-        //     -outerSide,  innerSide,       r, g, b, a,
-        //     outerSide,  innerSide,        r, g, b, a,
-            
-        //     outerSide,  innerSide,        r, g, b, a,
-        //     outerSide,  -innerSide,       r, g, b, a,
-        //     -outerSide,  -innerSide,      r, g, b, a,
-        // // Vert bar, top half
-        //     -innerSide, innerSide,       r, g, b, a,
-        //     -innerSide,  outerSide,       r, g, b, a,
-        //     innerSide,  outerSide,        r, g, b, a,
-            
-        //     innerSide,  outerSide,        r, g, b, a,
-        //     innerSide,  innerSide,       r, g, b, a,
-        //     -innerSide,  innerSide,      r, g, b, a,
-        //     // Vert bar, bottom half
-        //     -innerSide, -innerSide,       r, g, b, a,
-        //     -innerSide,  -outerSide,       r, g, b, a,
-        //     innerSide,  -outerSide,        r, g, b, a,
-            
-        //     innerSide,  -outerSide,        r, g, b, a,
-        //     innerSide,  -innerSide,       r, g, b, a,
-        //     -innerSide,  -innerSide,      r, g, b, a,
-    ]);
-	crosshairModel = createRenderable(data, 2, "TRIANGLES", 'color', true); 
+		//              CROSS crosshair
+		// Horz bar
+		//     -outerSide, -innerSide,       r, g, b, a,
+		//     -outerSide,  innerSide,       r, g, b, a,
+		//     outerSide,  innerSide,        r, g, b, a,
+
+		//     outerSide,  innerSide,        r, g, b, a,
+		//     outerSide,  -innerSide,       r, g, b, a,
+		//     -outerSide,  -innerSide,      r, g, b, a,
+		// // Vert bar, top half
+		//     -innerSide, innerSide,       r, g, b, a,
+		//     -innerSide,  outerSide,       r, g, b, a,
+		//     innerSide,  outerSide,        r, g, b, a,
+
+		//     innerSide,  outerSide,        r, g, b, a,
+		//     innerSide,  innerSide,       r, g, b, a,
+		//     -innerSide,  innerSide,      r, g, b, a,
+		//     // Vert bar, bottom half
+		//     -innerSide, -innerSide,       r, g, b, a,
+		//     -innerSide,  -outerSide,       r, g, b, a,
+		//     innerSide,  -outerSide,        r, g, b, a,
+
+		//     innerSide,  -outerSide,        r, g, b, a,
+		//     innerSide,  -innerSide,       r, g, b, a,
+		//     -innerSide,  -innerSide,      r, g, b, a,
+	]);
+	crosshairModel = createRenderable(data, 2, 'TRIANGLES', 'color', true);
 }
 
 function renderCrosshair(): void {
@@ -286,9 +300,7 @@ function updateIsViewingBlackPerspective(): void {
 	isViewingBlackPerspective = rotZ > 90 && rotZ < 270;
 }
 
-
 // Exports -----------------------------------------------------------------------
-
 
 export default {
 	getEnabled,
@@ -307,5 +319,5 @@ export default {
 	renderWithoutPerspectiveRotations,
 	unlockMouse,
 	isLookingUp,
-	initCrosshairModel
+	initCrosshairModel,
 };

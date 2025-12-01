@@ -1,4 +1,3 @@
-
 // Import Start
 import invites from './invites.js';
 import stats from '../gui/stats.js';
@@ -8,13 +7,13 @@ import tabnameflash from './onlinegame/tabnameflash.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 // Import End
 
-'use strict';
+('use strict');
 
 /**
  * This script keeps track of our deltaTime, FPS
  * and decides how many milliseconds per frame
  * large tasks like mesh generation receive.
- * 
+ *
  * This currently does NOT decrease dedicated ms when MULTIPLE long tasks are running.
  * Currently the only long task is the mesh generation of all the pieces
  * (the checkmate algorithm is no longer asynchronious)
@@ -37,7 +36,6 @@ let timeForLongTasks = 0;
 const minLongTaskRatio = 1; // Minimum ratio of longTaskDedicatedTime : renderTime. 1 will give them equal time. 0.5 will give long tasks half as much time as rendering.
 const damping = 1; // Amount of millis to subtract from the calculate timeForLongTasks to allow for the extra time between functions to allow 60fps
 
-
 // Amount of time lapsed between connections to the server.  Lower = Less lag but greater server cost.
 const refreshPeriod = 1000; // Milliseconds
 const stayConnectedPeriod = 5000;
@@ -57,8 +55,6 @@ let windowIsVisible = true;
 const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
 // const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
 let timeToDeleteInviteTimeoutID;
-
-
 
 // Millis since the start of the program
 function getRunTime() {
@@ -86,7 +82,8 @@ function isPageHidden() {
 	return !windowIsVisible;
 }
 
-function update(runtime) { // milliseconds
+function update(runtime) {
+	// milliseconds
 	updateDeltaTime(runtime);
 
 	frames.push(runTime);
@@ -118,7 +115,7 @@ function trimFrames() {
 }
 
 function updateFPS() {
-	fps = frames.length * 1000 / fpsWindow;
+	fps = (frames.length * 1000) / fpsWindow;
 	stats.updateFPS(fps);
 }
 
@@ -147,7 +144,6 @@ function timeAnimationFrame() {
 }
 
 function updateTimeForLongTasks() {
-
 	// How much time should we dedicate to long tasks?
 
 	// What I WANT to do, is try to obtain 60fps (or our refresh rate),
@@ -166,7 +162,8 @@ function updateTimeForLongTasks() {
 }
 
 function updateAFK() {
-	if (listener_overlay.atleastOneInput() || listener_document.atleastOneInput()) onReturnFromAFK();
+	if (listener_overlay.atleastOneInput() || listener_document.atleastOneInput())
+		onReturnFromAFK();
 }
 
 function onReturnFromAFK() {
@@ -205,17 +202,15 @@ function onHibernate() {
 	invites.unsubFromInvites();
 }
 
-
 // The 'focus' and 'blur' event listeners fire the MOST common, when you so much as click a different window on-screen,
 // EVEN though the game is still visible on screen, it just means it lost focus!
-
 
 // This fires the next most commonly, whenever
 // the page becomes NOT visible on the screen no more!
 // It's at the same time this fires when animation frames are no longer rendered.
 // Use this listener as a giveaway that we have disconnected!
 
-document.addEventListener("visibilitychange", function() {
+document.addEventListener('visibilitychange', function () {
 	if (document.hidden) {
 		windowIsVisible = false;
 
@@ -226,8 +221,10 @@ document.addEventListener("visibilitychange", function() {
 		// THIS ALSO UNSUBS US
 		// timeToDeleteInviteTimeoutID = setTimeout(websocket.unsubFromInvites, timeToDeleteInviteAfterPageHiddenMillis)
 		// This ONLY cancels our invite if we have one
-		timeToDeleteInviteTimeoutID = setTimeout(invites.cancel, timeToDeleteInviteAfterPageHiddenMillis);
-
+		timeToDeleteInviteTimeoutID = setTimeout(
+			invites.cancel,
+			timeToDeleteInviteAfterPageHiddenMillis,
+		);
 	} else {
 		windowIsVisible = true;
 

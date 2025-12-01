@@ -1,17 +1,14 @@
-
 /**
  * This script keeps track of the echos we are expecting from recent websocket-out messages.
- * 
+ *
  * Typically, if we don't receive an echo within five seconds,
  * we think the connection was lost, so we terminate the websocket.
  */
 
-
 // Variables ---------------------------------------------------------------------------
 
-
 /**
- * 
+ *
  * An object containing the timeout ID's for the timers that auto terminate
  * websockets if we never hear an echo back: `{ messageID: timeoutID }`
  */
@@ -23,9 +20,7 @@ const echoTimers: { [messageID: number]: NodeJS.Timeout | number } = {};
  */
 const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've disconnected!
 
-
 // Functions ---------------------------------------------------------------------------
-
 
 function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number): void {
 	echoTimers[messageID] = timeout;
@@ -45,10 +40,4 @@ function deleteEchoTimerForMessageID(messageIDEchoIsFor: number): boolean {
 	return true; // Valid echo
 }
 
-
-
-export {
-	addTimeoutToEchoTimers,
-	deleteEchoTimerForMessageID,
-	timeToWaitForEchoMillis,
-};
+export { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis };

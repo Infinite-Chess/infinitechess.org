@@ -1,14 +1,13 @@
-
 // src/client/scripts/esm/renderers/ColorFlowRenderer.ts
 
 /**
  * A modular renderer that paints a color flow effect across the
  * entire screen on demand, similar to the Iridescene Zone effect.
  * Intended for use as a background effect inside void for video footage.
- * 
+ *
  * It is entirely self-contained, using its own shaders and buffers.
  * The shader written specifically for this script is: src/client/shaders/fullscreen_colorflow/fragment.glsl
- * 
+ *
  * Usage:
  *   1. Instantiate with a WebGL2RenderingContext.
  *   2. Call render(deltaTime) each frame to draw the effect.
@@ -16,7 +15,7 @@
 export class ColorFlowRenderer {
 	private gl: WebGL2RenderingContext;
 	private program: WebGLProgram | null = null;
-    
+
 	// --- Buffers & VAO ---
 	private quadBuffer: WebGLBuffer | null = null;
 	private vao: WebGLVertexArrayObject | null = null;
@@ -36,7 +35,7 @@ export class ColorFlowRenderer {
 		[0.0, 0.8, 0.6], // Seafoam Green
 		[0.0, 0.4, 0.8], // Azure
 		[0.1, 0.1, 0.4], // Dark Indigo
-    ];
+	];
 
 	// --- State ---
 	private flowDirection: number = Math.random() * Math.PI * 2;
@@ -90,11 +89,12 @@ export class ColorFlowRenderer {
 		const vertexShader = this.createShader(this.gl.VERTEX_SHADER, this.vsSource);
 		const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, this.fsSource);
 
-		if (!vertexShader || !fragmentShader) throw new Error("ColorFlowRenderer: Failed to create shaders");
+		if (!vertexShader || !fragmentShader)
+			throw new Error('ColorFlowRenderer: Failed to create shaders');
 
 		// 2. Create Program
 		this.program = this.gl.createProgram();
-		if (!this.program) throw new Error("ColorFlowRenderer: Failed to create program");
+		if (!this.program) throw new Error('ColorFlowRenderer: Failed to create program');
 
 		this.gl.attachShader(this.program, vertexShader);
 		this.gl.attachShader(this.program, fragmentShader);
@@ -102,13 +102,14 @@ export class ColorFlowRenderer {
 
 		if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
 			console.error(this.gl.getProgramInfoLog(this.program));
-			throw new Error("ColorFlowRenderer: Failed to link program");
+			throw new Error('ColorFlowRenderer: Failed to link program');
 		}
 
 		// 3. Create Full-Screen Quad & VAO
 		this.vao = this.gl.createVertexArray();
 		this.gl.bindVertexArray(this.vao);
 
+		// prettier-ignore
 		const vertices = new Float32Array([
             -1, -1,  1, -1,
             -1,  1, -1,  1,
@@ -120,7 +121,7 @@ export class ColorFlowRenderer {
 		this.gl.bufferData(this.gl.ARRAY_BUFFER, vertices, this.gl.STATIC_DRAW);
 
 		// Configure attributes INSIDE the VAO
-		const positionLoc = this.gl.getAttribLocation(this.program, "a_position");
+		const positionLoc = this.gl.getAttribLocation(this.program, 'a_position');
 		this.gl.enableVertexAttribArray(positionLoc);
 		this.gl.vertexAttribPointer(positionLoc, 2, this.gl.FLOAT, false, 0, 0);
 
@@ -143,9 +144,9 @@ export class ColorFlowRenderer {
 	}
 
 	/**
-     * Updates internal animation state and draws the effect to the current framebuffer.
-     * @param deltaTime Time in seconds since the last frame
-     */
+	 * Updates internal animation state and draws the effect to the current framebuffer.
+	 * @param deltaTime Time in seconds since the last frame
+	 */
 	public render(deltaTime: number): void {
 		if (!this.program || !this.vao) return;
 
@@ -171,18 +172,18 @@ export class ColorFlowRenderer {
 		// --- 3. SETUP & DRAW ---
 		this.gl.useProgram(this.program);
 		this.gl.bindVertexArray(this.vao);
-        
+
 		// Ensure we draw over everything and don't write to depth buffer
 		this.gl.disable(this.gl.DEPTH_TEST);
 		this.gl.depthMask(false);
 
 		// Set Uniforms
-		const uResolution = this.gl.getUniformLocation(this.program, "u_resolution");
-		const uFlowDistance = this.gl.getUniformLocation(this.program, "u_flowDistance");
-		const uFlowDirectionVec = this.gl.getUniformLocation(this.program, "u_flowDirectionVec");
-		const uGradientRepeat = this.gl.getUniformLocation(this.program, "u_gradientRepeat");
-		const uAlpha = this.gl.getUniformLocation(this.program, "u_alpha");
-		const uColors = this.gl.getUniformLocation(this.program, "u_colors");
+		const uResolution = this.gl.getUniformLocation(this.program, 'u_resolution');
+		const uFlowDistance = this.gl.getUniformLocation(this.program, 'u_flowDistance');
+		const uFlowDirectionVec = this.gl.getUniformLocation(this.program, 'u_flowDirectionVec');
+		const uGradientRepeat = this.gl.getUniformLocation(this.program, 'u_gradientRepeat');
+		const uAlpha = this.gl.getUniformLocation(this.program, 'u_alpha');
+		const uColors = this.gl.getUniformLocation(this.program, 'u_colors');
 
 		this.gl.uniform2f(uResolution, this.gl.canvas.width, this.gl.canvas.height);
 		this.gl.uniform1f(uFlowDistance, this.flowDistance);
@@ -192,7 +193,7 @@ export class ColorFlowRenderer {
 
 		const flatColors: number[] = [];
 		for (let i = 0; i < 6; i++) {
-			const col = this.colors[i] || [0,0,0];
+			const col = this.colors[i] || [0, 0, 0];
 			flatColors.push(...col);
 		}
 		this.gl.uniform3fv(uColors, new Float32Array(flatColors));
@@ -209,8 +210,9 @@ export class ColorFlowRenderer {
 
 		// --- 4. RESTORE STATE ---
 		this.gl.depthMask(prevDepthMask);
-		if (prevDepthTest) this.gl.enable(this.gl.DEPTH_TEST); else this.gl.disable(this.gl.DEPTH_TEST);
-        
+		if (prevDepthTest) this.gl.enable(this.gl.DEPTH_TEST);
+		else this.gl.disable(this.gl.DEPTH_TEST);
+
 		if (prevBlend) {
 			this.gl.enable(this.gl.BLEND);
 			this.gl.blendFuncSeparate(prevSrcRGB, prevDstRGB, prevSrcAlpha, prevDstAlpha);

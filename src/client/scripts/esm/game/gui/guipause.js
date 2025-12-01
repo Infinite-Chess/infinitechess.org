@@ -1,4 +1,3 @@
-
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
@@ -22,7 +21,7 @@ import { listener_document } from '../chess/game.js';
 import { Mouse } from '../input.js';
 // Import End
 
-"use strict";
+('use strict');
 
 /**
  * This script handles our Pause menu
@@ -51,10 +50,12 @@ const element_perspective = document.getElementById('toggleperspective');
  * Returns *true* if the game is currently paused.
  * @returns {boolean}
  */
-function areWePaused() { return isPaused; }
+function areWePaused() {
+	return isPaused;
+}
 
 /**
- * 
+ *
  * @returns {HTMLElement}
  */
 function getelement_perspective() {
@@ -92,10 +93,12 @@ function toggle() {
 function updatePasteButtonTransparency() {
 	const moves = gameslot.getGamefile().boardsim.moves;
 
-	const legalInPrivateMatch = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && moves.length === 0;
+	const legalInPrivateMatch =
+		onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && moves.length === 0;
 
-	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
-	else                                                      element_pastegame.classList.remove('opacity-0_5');
+	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch)
+		element_pastegame.classList.add('opacity-0_5');
+	else element_pastegame.classList.remove('opacity-0_5');
 }
 
 function updatePerspectiveButtonTransparency() {
@@ -142,9 +145,17 @@ function onReceiveGameConclusion() {
 function updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange } = {}) {
 	if (!isPaused) return;
 
-	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame() || onlinegame.hasPlayerPressedAbortOrResignButton() ) {
+	if (
+		!onlinegame.areInOnlineGame() ||
+		onlinegame.hasServerConcludedGame() ||
+		onlinegame.hasPlayerPressedAbortOrResignButton()
+	) {
 		// If the text currently says "Abort Game" or "Resign Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort or resign and actually not want to exit to main menu.
-		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.main_menu) freezeMainMenuButton();
+		if (
+			freezeMainMenuButtonUponChange &&
+			element_mainmenu.textContent !== translations.main_menu
+		)
+			freezeMainMenuButton();
 		element_mainmenu.textContent = translations.main_menu;
 		is_main_menu_button_used_as_resign_or_abort_button = false;
 		return;
@@ -153,7 +164,11 @@ function updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange } = {}) {
 	is_main_menu_button_used_as_resign_or_abort_button = true;
 	if (moveutil.isGameResignable(gameslot.getGamefile().basegame)) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.resign_game) freezeMainMenuButton();
+		if (
+			freezeMainMenuButtonUponChange &&
+			element_mainmenu.textContent !== translations.resign_game
+		)
+			freezeMainMenuButton();
 		element_mainmenu.textContent = translations.resign_game;
 		return;
 	}
@@ -249,12 +264,13 @@ function callback_OfferDraw() {
 function callback_ToggleArrows() {
 	arrows.toggleArrows();
 	const mode = arrows.getMode();
+	// prettier-ignore
 	const text = mode === 0 ? translations.arrows_off
                : mode === 1 ? translations.arrows_defense
 			   : mode === 2 ? translations.arrows_all
-                            : translations.arrows_all_hippogonals;
+			   : translations.arrows_all_hippogonals;
 	element_pointers.textContent = text;
-	if (!isPaused) statustext.showStatus(translations.toggled + " " + text);
+	if (!isPaused) statustext.showStatus(translations.toggled + ' ' + text);
 }
 
 function callback_Perspective() {

@@ -1,29 +1,26 @@
-
 /**
  * This script keeps track of how long we have been afk in the current online game,
  * and if it's for too long, it informs the server that fact,
  * then the server starts an auto-resign timer if we don't return.
- * 
+ *
  * This will also display a countdown onscreen, and sound effects,
  * before we are auto-resigned.
- * 
+ *
  * It will also display a countdown until our opponent is auto-resigned,
  * if they are the one that is afk.
  */
 
-import onlinegame from "./onlinegame.js";
-import gameslot from "../../chess/gameslot.js";
-import gamefileutility from "../../../../../../shared/chess/util/gamefileutility.js";
-import moveutil from "../../../../../../shared/chess/util/moveutil.js";
-import pingManager from "../../../util/pingManager.js";
-import { listener_document, listener_overlay } from "../../chess/game.js";
-import gamesound from "../gamesound.js";
+import onlinegame from './onlinegame.js';
+import gameslot from '../../chess/gameslot.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import pingManager from '../../../util/pingManager.js';
+import { listener_document, listener_overlay } from '../../chess/game.js';
+import gamesound from '../gamesound.js';
 // @ts-ignore
-import websocket from "../../websocket.js";
+import websocket from '../../websocket.js';
 // @ts-ignore
-import statustext from "../../gui/statustext.js";
-
-
+import statustext from '../../gui/statustext.js';
 
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */
 const timeUntilAFKSecs: number = 40; // 40 + 20 = 1 minute
@@ -56,16 +53,12 @@ let timeOpponentLoseFromAFK: number | undefined;
 /** The timeout ID of the timer to display the next "Opponent is AFK..." message. */
 let displayOpponentAFKTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
-
-
 // If we lost connection while displaying status messages of when our opponent
 // will disconnect, stop doing that.
 document.addEventListener('connection-lost', () => {
 	// Stop saying when the opponent will lose from being afk
 	clearTimeout(displayOpponentAFKTimeoutID);
 });
-
-
 
 function isOurAFKAutoResignTimerRunning(): boolean {
 	// If the time we will lose from being afk is defined, the timer is running
@@ -80,11 +73,11 @@ function onGameStart(): void {
 function onGameClose(): void {
 	// Reset everything
 	cancelAFKTimer();
-	timeoutID = undefined,
+	timeoutID = undefined;
 	timeWeLoseFromAFK = undefined;
-	displayAFKTimeoutID = undefined,
-	playStaccatoTimeoutID = undefined,
-	displayOpponentAFKTimeoutID = undefined,
+	displayAFKTimeoutID = undefined;
+	playStaccatoTimeoutID = undefined;
+	displayOpponentAFKTimeoutID = undefined;
 	timeOpponentLoseFromAFK = undefined;
 }
 
@@ -109,13 +102,20 @@ function updateAFK(): void {
 function rescheduleAlertServerWeAFK(): void {
 	clearTimeout(timeoutID);
 	const { basegame } = gameslot.getGamefile()!;
-	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(basegame) || onlinegame.getIsPrivate() && basegame.untimed) return;
+	if (
+		!onlinegame.isItOurTurn() ||
+		gamefileutility.isGameOver(basegame) ||
+		(onlinegame.getIsPrivate() && basegame.untimed)
+	)
+		return;
 	// Timed resignable games cannot be auto-resigned from going afk (to make tournament games more fair)
 	if (!basegame.untimed && moveutil.isGameResignable(basegame)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
-	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(basegame) ? timeUntilAFKSecs_Abortable
-										: basegame.untimed ? timeUntilAFKSecs_Untimed
-										: timeUntilAFKSecs;
+	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(basegame)
+		? timeUntilAFKSecs_Abortable
+		: basegame.untimed
+			? timeUntilAFKSecs_Untimed
+			: timeUntilAFKSecs;
 	timeoutID = setTimeout(tellServerWeAFK, timeUntilAlertServerWeAFKSecs * 1000);
 }
 
@@ -127,7 +127,7 @@ function cancelAFKTimer(): void {
 }
 
 function tellServerWeAFK(): void {
-	websocket.sendmessage('game','AFK');
+	websocket.sendmessage('game', 'AFK');
 	timeWeLoseFromAFK = Date.now() + timerToLossFromAFK;
 
 	// Play lowtime alert sound
@@ -140,7 +140,7 @@ function tellServerWeAFK(): void {
 }
 
 function tellServerWeBackFromAFK(): void {
-	websocket.sendmessage('game','AFK-Return');
+	websocket.sendmessage('game', 'AFK-Return');
 	timeWeLoseFromAFK = undefined;
 	clearTimeout(displayAFKTimeoutID);
 	clearTimeout(playStaccatoTimeoutID);
@@ -149,8 +149,13 @@ function tellServerWeBackFromAFK(): void {
 }
 
 function displayWeAFK(secsRemaining: number): void {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
-	statustext.showStatusForDuration(`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
+		? translations['onlinegame'].auto_resigning_in
+		: translations['onlinegame'].auto_aborting_in;
+	statustext.showStatusForDuration(
+		`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`,
+		1000,
+	);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
 	const timeRemainUntilAFKLoss = timeWeLoseFromAFK! - Date.now();
@@ -161,17 +166,19 @@ function displayWeAFK(secsRemaining: number): void {
 function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number): void {
 	if (note === 'c3') gamesound.playViola_c3();
 	else if (note === 'c4') gamesound.playViolin_c4();
-    
+
 	const nextSecsRemaining = secsRemaining > 5 ? secsRemaining - 1 : secsRemaining - 0.5;
 	if (nextSecsRemaining === 0) return; // Stop
 	const nextNote = nextSecsRemaining === Math.floor(nextSecsRemaining) ? 'c3' : 'c4';
 	const timeRemainUntilAFKLoss = timeWeLoseFromAFK! - Date.now();
 	const timeToPlayNextDisplayWeAFK = timeRemainUntilAFKLoss - nextSecsRemaining * 1000;
-	playStaccatoTimeoutID = setTimeout(playStaccatoNote, timeToPlayNextDisplayWeAFK, nextNote, nextSecsRemaining);
+	playStaccatoTimeoutID = setTimeout(
+		playStaccatoNote,
+		timeToPlayNextDisplayWeAFK,
+		nextNote,
+		nextSecsRemaining,
+	);
 }
-
-
-
 
 function startOpponentAFKCountdown(millisUntilAutoAFKResign: number): void {
 	// Cancel the previous one if this is overwriting
@@ -193,16 +200,23 @@ function stopOpponentAFKCountdown(): void {
 }
 
 function displayOpponentAFK(secsRemaining: number): void {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
-	statustext.showStatusForDuration(`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
+		? translations['onlinegame'].auto_resigning_in
+		: translations['onlinegame'].auto_aborting_in;
+	statustext.showStatusForDuration(
+		`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`,
+		1000,
+	);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
 	const timeRemainUntilAFKLoss = timeOpponentLoseFromAFK! - Date.now();
 	const timeToPlayNextDisplayWeAFK = timeRemainUntilAFKLoss - nextSecsRemaining * 1000;
-	displayOpponentAFKTimeoutID = setTimeout(displayOpponentAFK, timeToPlayNextDisplayWeAFK, nextSecsRemaining);
+	displayOpponentAFKTimeoutID = setTimeout(
+		displayOpponentAFK,
+		timeToPlayNextDisplayWeAFK,
+		nextSecsRemaining,
+	);
 }
-
-
 
 export default {
 	onGameStart,

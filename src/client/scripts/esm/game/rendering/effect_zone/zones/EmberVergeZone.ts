@@ -1,17 +1,14 @@
-
 // src/client/scripts/esm/game/rendering/effect_zone/zones/EmberVergeZone.ts
 
-import type { Zone } from "../EffectZoneManager";
+import type { Zone } from '../EffectZoneManager';
 
 // @ts-ignore
-import loadbalancer from "../../../misc/loadbalancer";
-import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
-
+import loadbalancer from '../../../misc/loadbalancer';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class EmberVergeZone implements Zone {
-
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 11;
 
@@ -20,6 +17,7 @@ export class EmberVergeZone implements Zone {
 
 	// --- Configurable Properties ---
 
+	// prettier-ignore
 	private readonly colors: [number, number, number][] = [
 		[0.92, 0.82, 0.62], // Faded Gold
 		[0.6, 0.8, 0.6],    // Muted Green
@@ -44,17 +42,14 @@ export class EmberVergeZone implements Zone {
 	/** The phase shift applied to the light tiles' gradient, as a percentage of the gradient's total length. */
 	private maskOffset: number = 0.07;
 
-
 	// --- State Properties ---
 
 	/** The current direction of the flow, in radians. */
 	private flowDirection: number = Math.random() * Math.PI * 2;
 
-
 	constructor() {
 		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 	}
-
 
 	public update(): void {
 		const deltaTime = loadbalancer.getDeltaTime(); // In seconds
@@ -69,10 +64,10 @@ export class EmberVergeZone implements Zone {
 		// Pre-calculate the direction vector
 		const flowDirectionVec: [number, number] = [
 			Math.cos(this.flowDirection),
-			Math.sin(this.flowDirection)
+			Math.sin(this.flowDirection),
 		];
-		
-		const flowDistance = performance.now() / 1000 * this.flowSpeed;
+
+		const flowDistance = (performance.now() / 1000) * this.flowSpeed;
 
 		const uniforms: Record<string, any> = {
 			u11_flowDistance: flowDistance,
@@ -95,7 +90,7 @@ export class EmberVergeZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [];
 	}
-	
+
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
 	}

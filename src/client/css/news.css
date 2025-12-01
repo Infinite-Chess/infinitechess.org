@@ -1,148 +1,141 @@
 * {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana;
-    border: 0;
-    /* Enable temporarily during dev to see the borders of all elements */
-    /* outline: 1px solid rgba(0, 0, 0, 0.191); */
+	margin: 0;
+	padding: 0;
+	font-family: Verdana;
+	border: 0;
+	/* Enable temporarily during dev to see the borders of all elements */
+	/* outline: 1px solid rgba(0, 0, 0, 0.191); */
 }
 
 html {
-    height: 100%;
-    background-color: rgb(33, 33, 33);
+	height: 100%;
+	background-color: rgb(33, 33, 33);
 }
 
-
-
 main {
-    background-color: #fff;
-    /* Using PNG because it was the smallest after compression */
-    background-image: url('/img/blank_board.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-attachment: fixed;
+	background-color: #fff;
+	/* Using PNG because it was the smallest after compression */
+	background-image: url('/img/blank_board.png');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-attachment: fixed;
 
-    margin-top: 40px;
-    min-height: 400px;
+	margin-top: 40px;
+	min-height: 400px;
 }
 
 .content {
-    background-color: rgba(255, 255, 255, 0.805);
-    min-height: 450px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-    padding: 30px 20px;
+	background-color: rgba(255, 255, 255, 0.805);
+	min-height: 450px;
+	margin: auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+	padding: 30px 20px;
 }
 
 .content h1 {
-    font-size: 40px;
-    font-family: georgia;
-    text-transform: uppercase;
-    margin-bottom: 40px;
+	font-size: 40px;
+	font-family: georgia;
+	text-transform: uppercase;
+	margin-bottom: 40px;
 }
 
 .news-posts .news-post h1 {
-    font-size: 1.7em;
-    margin-bottom: 1em;
-    font-family: inherit;
-    text-transform: none;
+	font-size: 1.7em;
+	margin-bottom: 1em;
+	font-family: inherit;
+	text-transform: none;
 }
 
-.content h2, .content h3 {
-    margin: 1em 0;
+.content h2,
+.content h3 {
+	margin: 1em 0;
 }
 
 .content p {
-    line-height: 1.5;
-    font-size: 17px;
-    margin-bottom: 1em;
+	line-height: 1.5;
+	font-size: 17px;
+	margin-bottom: 1em;
 }
 
 .content p.status {
-    font-style: italic;
-    font-size: 16px;
-    margin-bottom: 35px;
+	font-style: italic;
+	font-size: 16px;
+	margin-bottom: 35px;
 }
 
 .content p.date {
-    margin-top: 35px;
-    font-weight: bold;
-    font-size: 18px;
+	margin-top: 35px;
+	font-weight: bold;
+	font-size: 18px;
 }
 
 .content ul li {
-    margin-bottom: 0.7em;
+	margin-bottom: 0.7em;
 }
 
-
 .center {
-    text-align: center;
+	text-align: center;
 }
 
 a {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
 }
 
 .red {
-    color: red;
+	color: red;
 }
-
-
 
 /* Don't hide borders on hr tags */
 hr {
-    border: 1px solid #00000057;
+	border: 1px solid #00000057;
 }
 
 .news-post {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
 }
 
 .news-post-date {
-    font-size: 0.75em;
-    font-weight: 700;
-    color: rgb(0 0 0 / 47%);
-    margin-top: 1em;
+	font-size: 0.75em;
+	font-weight: 700;
+	color: rgb(0 0 0 / 47%);
+	margin-top: 1em;
 }
 
 .news-post-markdown {
-    margin: 1em 0;
+	margin: 1em 0;
 }
 
 iframe {
-	width: 350px;  /* Makes the iframe take the full width of the parent */
-    max-width: 100%;
-    aspect-ratio: 16 / 9; /* Set your desired aspect ratio (16:9 in this case) */
-    height: auto; /* Automatically adjust the height based on the aspect ratio */
+	width: 350px; /* Makes the iframe take the full width of the parent */
+	max-width: 100%;
+	aspect-ratio: 16 / 9; /* Set your desired aspect ratio (16:9 in this case) */
+	height: auto; /* Automatically adjust the height based on the aspect ratio */
 }
-
-
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    .content h1 {
-        font-size: calc(40px + 0.028 * (100vw - 450px));
-    }
+	.content h1 {
+		font-size: calc(40px + 0.028 * (100vw - 450px));
+	}
 }
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    .content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px;
-        min-height: 800px;
-    }
+	.content {
+		max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+		padding: 40px 30px;
+		min-height: 800px;
+	}
 
-    .content h1 {
-        font-size: 50px;
-        margin-bottom: 50px;
-    }
+	.content h1 {
+		font-size: 50px;
+		margin-bottom: 50px;
+	}
 }
-

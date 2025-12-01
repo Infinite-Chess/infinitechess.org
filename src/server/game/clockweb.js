@@ -1,9 +1,23 @@
-
 // @ts-ignore
-import { DEV_BUILD } from "../config/config.js";
+import { DEV_BUILD } from '../config/config.js';
 
 /** These are the allowed time controls in production. */
-const validTimeControls = ['-','60+2','120+2','180+2','300+2','480+3','600+4','600+6','720+5','900+6','1200+8','1500+10','1800+15','2400+20']; 
+const validTimeControls = [
+	'-',
+	'60+2',
+	'120+2',
+	'180+2',
+	'300+2',
+	'480+3',
+	'600+4',
+	'600+6',
+	'720+5',
+	'900+6',
+	'1200+8',
+	'1500+10',
+	'1800+15',
+	'2400+20',
+];
 /** These are only allowed in development. */
 const devTimeControls = ['15+2'];
 
@@ -14,8 +28,10 @@ const devTimeControls = ['15+2'];
  * @returns {boolean} *true* if it is valid.
  */
 function isClockValueValid(time_control) {
-	return validTimeControls.includes(time_control) ||
-	DEV_BUILD && devTimeControls.includes(time_control);
+	return (
+		validTimeControls.includes(time_control) ||
+		(DEV_BUILD && devTimeControls.includes(time_control))
+	);
 }
 
 /**
@@ -26,7 +42,7 @@ function isClockValueValid(time_control) {
  */
 function getMinutesAndIncrementFromClock(clock) {
 	if (isClockValueInfinite(clock)) return null;
-	const [ seconds, increment ] = clock.split('+').map(part => +part); // Convert them into a number
+	const [seconds, increment] = clock.split('+').map((part) => +part); // Convert them into a number
 	const minutes = seconds / 60;
 	return { minutes, increment };
 }
@@ -36,7 +52,9 @@ function getMinutesAndIncrementFromClock(clock) {
  * @param {string} clock - The clock value (e.g. "10+5").
  * @returns {boolean} *true* if it's infinite.
  */
-function isClockValueInfinite(clock) { return clock === '-'; }
+function isClockValueInfinite(clock) {
+	return clock === '-';
+}
 
 export default {
 	isClockValueValid,

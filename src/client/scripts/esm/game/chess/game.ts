@@ -1,11 +1,8 @@
-
 /**
  * This script prepares our game.
- * 
+ *
  * And contains our main update() and render() methods
  */
-
-
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
@@ -53,22 +50,22 @@ import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 import screenshake from '../rendering/screenshake.js';
 import webgl, { gl } from '../rendering/webgl.js';
-import { PostProcessingPipeline, PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline.js';
+import {
+	PostProcessingPipeline,
+	PostProcessPass,
+} from '../../webgl/post_processing/PostProcessingPipeline.js';
 import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 
-
 // Variables -------------------------------------------------------------------------------
-
 
 const element_overlay: HTMLElement = document.getElementById('overlay')!;
 /** The input listener for the overlay element */
 let listener_overlay: InputListener;
 /** The input listener for the document element */
 let listener_document: InputListener;
-
 
 /** Manager of our Shaders */
 let programManager: ProgramManager;
@@ -83,10 +80,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 //  */
 // let colorFlowRenderer: ColorFlowRenderer;
 
-
-
 // Functions -------------------------------------------------------------------------------
-
 
 function init(): void {
 	programManager = new ProgramManager(gl);
@@ -97,7 +91,7 @@ function init(): void {
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
 	boardtiles.init();
-	
+
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
@@ -105,16 +99,16 @@ function init(): void {
 
 	guititle.open();
 
-	window.addEventListener("resize", onScreenResize);
+	window.addEventListener('resize', onScreenResize);
 }
 
 function onScreenResize(): void {
 	camera.onScreenResize();
 
 	pipeline.resize(gl.canvas.width, gl.canvas.height);
-	
+
 	const detail = { width: gl.canvas.width, height: gl.canvas.height };
-	document.dispatchEvent(new CustomEvent("canvas_resize", { detail }));
+	document.dispatchEvent(new CustomEvent('canvas_resize', { detail }));
 }
 
 // Update the game every single frame
@@ -123,7 +117,8 @@ function update(): void {
 	controls.testOutGameToggles();
 	invites.update();
 	// Any input should trigger the next frame to render.
-	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput()) frametracker.onVisualChange();
+	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput())
+		frametracker.onVisualChange();
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
@@ -146,7 +141,8 @@ function update(): void {
 	perspective.update(); // Update perspective camera according to mouse movement
 
 	const timeWinner = clock.update(gamefile.basegame);
-	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
+	if (timeWinner && !onlinegame.areInOnlineGame()) {
+		// undefined if no clock has ran out
 		gamefile.basegame.gameConclusion = `${timeWinner} time`;
 		gameslot.concludeGame();
 	}
@@ -161,7 +157,7 @@ function update(): void {
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
-	
+
 	// Update the effect zone manager (after board variables are recalculated).
 	effectZoneManager!.update(getFurthestTileVisible());
 
@@ -185,7 +181,7 @@ function update(): void {
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
-	
+
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
 	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
@@ -228,9 +224,6 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
 	}
 }
 
-
-
-
 /**
  * Renders everthing in-game, and applies post processing effects to the final image.
  */
@@ -266,7 +259,7 @@ function renderScene(): void {
 		effectZoneManager!.renderBoard();
 		return;
 	}
-	
+
 	const boardsim = gamefile.boardsim;
 
 	// Star Field Animation: Appears in border & voids
@@ -275,7 +268,7 @@ function renderScene(): void {
 		() => border.drawPlayableRegionMask(boardsim), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
 		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
-		'or' // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
+		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
 	);
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
@@ -283,14 +276,14 @@ function renderScene(): void {
 		() => border.drawPlayableRegionMask(boardsim), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE
-		'and' // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
+		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
 	);
 
 	if (camera.getDebug() && !perspective.getEnabled()) renderOutlineofScreenBox();
 
 	/**
 	 * What is the order of rendering?
-	 * 
+	 *
 	 * Board tiles
 	 * Highlights
 	 * Pieces
@@ -306,11 +299,11 @@ function renderScene(): void {
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
-    
+
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
 	pieces.renderPiecesInGame(gamefile.boardsim, mesh);
-	
+
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		animation.renderAnimations();
@@ -335,14 +328,13 @@ function renderTilesAndPromoteLines(): void {
  */
 function renderOutlineofScreenBox(): void {
 	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
-	
+
 	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
-	const color: Color = [0,0,0, 0.5]; // Transparent Black
+	const color: Color = [0, 0, 0, 0.5]; // Transparent Black
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
+	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
-
 
 /** Returns the absolute value of the furthest tile from the origin on our screen. */
 function getFurthestTileVisible(): bigint {
@@ -360,8 +352,6 @@ function getOverlay(): HTMLElement {
 	return element_overlay;
 }
 
-
-
 export default {
 	init,
 	update,
@@ -369,7 +359,4 @@ export default {
 	getOverlay,
 };
 
-export {
-	listener_overlay,
-	listener_document,
-};
+export { listener_overlay, listener_document };

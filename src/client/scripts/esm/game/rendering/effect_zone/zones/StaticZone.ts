@@ -1,20 +1,18 @@
-
 // src/client/scripts/esm/game/rendering/effect_zone/zones/StaticZone.ts
 
-import AudioManager from "../../../../audio/AudioManager";
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { Zone } from "../EffectZoneManager";
-import { ProgramManager } from "../../../../webgl/ProgramManager";
-import { ColorGradePass } from "../../../../webgl/post_processing/passes/ColorGradePass";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
+import AudioManager from '../../../../audio/AudioManager';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { Zone } from '../EffectZoneManager';
+import { ProgramManager } from '../../../../webgl/ProgramManager';
+import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class StaticZone implements Zone {
-
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 7;
 
 	private colorGradePass: ColorGradePass;
-	
+
 	/** The soundscape player for this zone. */
 	private ambience: SoundscapePlayer;
 
@@ -29,7 +27,6 @@ export class StaticZone implements Zone {
 	private readonly UPDATE_INTERVAL = 60;
 	// private readonly UPDATE_INTERVAL = 1000; // For testing
 
-    
 	// --- STATE ---
 
 	/** The last timestamp the pixels were randomized. */
@@ -37,7 +34,6 @@ export class StaticZone implements Zone {
 	/** The current UV offset. */
 	private uvOffset: [number, number] = [0, 0];
 
-    
 	constructor(programManager: ProgramManager) {
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 0.35; // Default: 0.5
@@ -50,33 +46,32 @@ export class StaticZone implements Zone {
 			layers: [
 				{
 					volume: {
-						base: 1
+						base: 1,
 					},
 					source: {
-						type: "noise"
+						type: 'noise',
 					},
 					filters: [
 						{
-							type: "highpass",
+							type: 'highpass',
 							frequency: {
-								base: 900
+								base: 900,
 							},
 							Q: {
-								base: 1
+								base: 1,
 							},
 							gain: {
-								base: 0
-							}
-						}
-					]
-				}
-			]
+								base: 0,
+							},
+						},
+					],
+				},
+			],
 		};
 
 		// Initialize the player with the config.
 		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
-
 
 	public update(): void {
 		// Randomize the pixels every little bit.
@@ -85,9 +80,9 @@ export class StaticZone implements Zone {
 			this.lastUpdateTime = now;
 			// Generate a random offset, but snap it to the pixel grid.
 			this.uvOffset = [
-                Math.floor(Math.random() * this.TEXTURE_WIDTH) / this.TEXTURE_WIDTH,
-                Math.floor(Math.random() * this.TEXTURE_WIDTH) / this.TEXTURE_WIDTH,
-            ];
+				Math.floor(Math.random() * this.TEXTURE_WIDTH) / this.TEXTURE_WIDTH,
+				Math.floor(Math.random() * this.TEXTURE_WIDTH) / this.TEXTURE_WIDTH,
+			];
 		}
 	}
 

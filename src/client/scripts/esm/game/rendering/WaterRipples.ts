@@ -1,29 +1,26 @@
-
 // src/client/scripts/esm/game/rendering/WaterRipples.ts
 
 /**
  * This scripts managers the animated water ripple effect for extremely large moves.
  */
 
-import type { PostProcessPass } from "../../webgl/post_processing/PostProcessingPipeline";
-import type { ProgramManager } from "../../webgl/ProgramManager";
+import type { PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline';
+import type { ProgramManager } from '../../webgl/ProgramManager';
 
-import frametracker from "./frametracker";
-import camera from "./camera";
-import space from "../misc/space";
-import bigdecimal from "../../../../../shared/util/bigdecimal/bigdecimal";
-import boardpos from "./boardpos";
-import drawrays from "./highlights/annotations/drawrays";
-import bounds from "../../../../../shared/util/math/bounds";
-import perspective from "./perspective";
-import gameloader from "../chess/gameloader";
-import coordutil, { Coords } from "../../../../../shared/chess/util/coordutil";
-import { players as p } from "../../../../../shared/chess/util/typeutil";
-import { RippleState, WaterRipplePass } from "../../webgl/post_processing/passes/WaterRipplePass";
-
+import frametracker from './frametracker';
+import camera from './camera';
+import space from '../misc/space';
+import bigdecimal from '../../../../../shared/util/bigdecimal/bigdecimal';
+import boardpos from './boardpos';
+import drawrays from './highlights/annotations/drawrays';
+import bounds from '../../../../../shared/util/math/bounds';
+import perspective from './perspective';
+import gameloader from '../chess/gameloader';
+import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
+import { players as p } from '../../../../../shared/chess/util/typeutil';
+import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
 
 // Constants --------------------------------------------------------------------------------
-
 
 /**
  * The distance beyond the screen edge that ripples are capped at, in virtual pixels,
@@ -41,9 +38,7 @@ const RIPPLE_LIFETIME_BASE = 1.1;
 /** How much longer ripples last per screen ratio of width/height. */
 const RIPPLE_LIFETIME_MULTIPLIER = 0.5;
 
-
 // Variables --------------------------------------------------------------------------------
-
 
 let waterRipplePass: WaterRipplePass;
 
@@ -55,9 +50,7 @@ const activeDroplets: RippleState[] = [];
  */
 let rippleLifetime: number;
 
-
 // Functions --------------------------------------------------------------------------------
-
 
 function init(programManager: ProgramManager, width: number, height: number): void {
 	waterRipplePass = new WaterRipplePass(programManager, width, height);
@@ -66,7 +59,7 @@ function init(programManager: ProgramManager, width: number, height: number): vo
 
 	// The post processing effect relies on the dimensions of the canvas.
 	// Init listener for screen resize
-	document.addEventListener("canvas_resize", (event) => {
+	document.addEventListener('canvas_resize', (event) => {
 		const { width, height } = event.detail;
 		waterRipplePass.setResolution(width, height);
 		updateRippleLifetime(width, height);
@@ -77,7 +70,6 @@ function updateRippleLifetime(width: number, height: number): void {
 	rippleLifetime = RIPPLE_LIFETIME_BASE + RIPPLE_LIFETIME_MULTIPLIER * (width / height);
 	// console.log(`ripple lifetime adjusted to ${rippleLifetime.toFixed(2)}s`);
 }
-
 
 /**
  * Adds a ripple droplet at the given source coordinates.
@@ -106,7 +98,10 @@ function addRipple(sourceCoords: Coords): void {
 	// Don't let the ripple source be too far off-screen
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
 		// console.log("Ripple source outside of padded screen.");
-		const vectorToSource = coordutil.subtractBDCoords(bigdecimal.FromCoords(sourceCoords), boardpos.getBoardPos());
+		const vectorToSource = coordutil.subtractBDCoords(
+			bigdecimal.FromCoords(sourceCoords),
+			boardpos.getBoardPos(),
+		);
 		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
 
 		if (closestVector[0] === 0n) {
@@ -153,7 +148,8 @@ function update(): void {
 	// Filter out old droplets
 	for (let i = activeDroplets.length - 1; i >= 0; i--) {
 		const droplet = activeDroplets[i]!;
-		if (now >= droplet.timeCreated + rippleLifetime * 1000) { // Convert seconds to milliseconds
+		if (now >= droplet.timeCreated + rippleLifetime * 1000) {
+			// Convert seconds to milliseconds
 			activeDroplets.splice(i, 1);
 			// console.log("Removed ripple droplet.");
 		}
@@ -178,7 +174,6 @@ function getPass(): PostProcessPass[] {
 	if (activeDroplets.length === 0) return [];
 	return [waterRipplePass];
 }
-
 
 export default {
 	init,

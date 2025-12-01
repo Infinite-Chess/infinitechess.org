@@ -1,4 +1,3 @@
-
 import { initDatabase } from './database/databaseTables.js';
 initDatabase();
 // Ensure our workspace is ready for the dev environment
@@ -23,13 +22,13 @@ import socketServer from './socket/socketServer.js';
 initTranslations();
 
 // Set EJS as the view engine
-app.engine("html", ejs.renderFile);
-app.set("view engine", "html");
+app.engine('html', ejs.renderFile);
+app.set('view engine', 'html');
 
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 configureMiddleware(app); // Setup the middleware waterfall
- 
+
 // Start the server
 const HTTPPORT = DEV_BUILD ? process.env.HTTPPORT_LOCAL : process.env.HTTPPORT;
 const HTTPSPORT = DEV_BUILD ? process.env.HTTPSPORT_LOCAL : process.env.HTTPSPORT;
@@ -42,17 +41,21 @@ socketServer.start(httpsServer);
 // On closing...
 
 let cleanupDone = false;
-process.on('SIGUSR2', async() => { await handleCleanup('SIGUSR2'); }); // A file was saved (nodemon auto restarts)
-process.on('SIGINT', async() => { await handleCleanup('SIGINT'); }); // Ctrl>C was pressed (force terminates nodemon)
+process.on('SIGUSR2', async () => {
+	await handleCleanup('SIGUSR2');
+}); // A file was saved (nodemon auto restarts)
+process.on('SIGINT', async () => {
+	await handleCleanup('SIGINT');
+}); // Ctrl>C was pressed (force terminates nodemon)
 async function handleCleanup(_signal) {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;
 	// console.log(`\nReceived ${signal}. Cleaning up...`);
-	console.log("Closing...");
+	console.log('Closing...');
 
 	await logAllGames();
 
-	db.close();  // Close the database when the server is shutting down.
+	db.close(); // Close the database when the server is shutting down.
 
 	process.exit(0);
 }

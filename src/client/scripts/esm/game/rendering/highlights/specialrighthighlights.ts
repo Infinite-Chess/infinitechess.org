@@ -1,32 +1,27 @@
-
 /**
  * This is a DEBUGGING script for rendering special right and enpassant highlights.
- * 
+ *
  * Enable by pressing `7`.
  */
 
-import type { BDCoords, Coords } from "../../../../../../shared/chess/util/coordutil.js";
-import type { Color } from "../../../../../../shared/util/math/math.js";
-import type { Vec3 } from "../../../../../../shared/util/math/vectors.js";
-
+import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 
 // @ts-ignore
-import statustext from "../../gui/statustext.js";
-import gameslot from "../../chess/gameslot.js";
-import coordutil from "../../../../../../shared/chess/util/coordutil.js";
-import frametracker from "../frametracker.js";
-import legalmovemodel from "./legalmovemodel.js";
-import boardpos from "../boardpos.js";
-import legalmoveshapes from "../instancedshapes.js";
-import piecemodels from "../piecemodels.js";
-import squarerendering from "./squarerendering.js";
-import meshes from "../meshes.js";
-import { RenderableInstanced, createRenderable_Instanced } from "../../../webgl/Renderable.js";
-
-
+import statustext from '../../gui/statustext.js';
+import gameslot from '../../chess/gameslot.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import frametracker from '../frametracker.js';
+import legalmovemodel from './legalmovemodel.js';
+import boardpos from '../boardpos.js';
+import legalmoveshapes from '../instancedshapes.js';
+import piecemodels from '../piecemodels.js';
+import squarerendering from './squarerendering.js';
+import meshes from '../meshes.js';
+import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables -------------------------------------------------------------------------------------
-
 
 /** The color of the special rights indicator. */
 const SPECIAL_RIGHTS_COLOR: Color = [0, 1, 0.5, 0.3];
@@ -36,7 +31,6 @@ const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
 let model: RenderableInstanced | undefined;
-
 
 // Functions -------------------------------------------------------------------------------------
 
@@ -81,11 +75,17 @@ function regenModel(): void {
 	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
 	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
 	const vertexData: number[] = legalmoveshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
-	model = createRenderable_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(squaresToHighlight), "TRIANGLES", 'colorInstanced', true);
+	model = createRenderable_Instanced(
+		vertexData,
+		piecemodels.castBigIntArrayToFloat32(squaresToHighlight),
+		'TRIANGLES',
+		'colorInstanced',
+		true,
+	);
 }
 
 function renderSpecialRights(): void {
-	if (!model) throw Error("Specialrights model not initialized");
+	if (!model) throw Error('Specialrights model not initialized');
 
 	const boardPos: BDCoords = boardpos.getBoardPos();
 	const offset: Coords = legalmovemodel.getOffset();
@@ -101,12 +101,14 @@ function renderEnPassant(): void {
 	if (!gamefile.boardsim.state.global.enpassant) return; // No enpassant gamefile property
 
 	const u_size = boardpos.getBoardScaleAsNumber();
-	squarerendering.genModel([gamefile.boardsim.state.global.enpassant.square], ENPASSANT_COLOR).render(undefined, undefined, { u_size });
+	squarerendering
+		.genModel([gamefile.boardsim.state.global.enpassant.square], ENPASSANT_COLOR)
+		.render(undefined, undefined, { u_size });
 }
 
 /**
  * Called when any forward-global-move is made in the game, us or our opponent.
- * 
+ *
  * This does not count rewinding/forwarding (which are local changes),
  * nor does it count simulated moves, or moves only made using movepiece.makeMove() and then reverted.
  */
@@ -120,9 +122,7 @@ function onGameClose(): void {
 	model = undefined;
 }
 
-
 // Exports -----------------------------------------------------------------------
-
 
 export default {
 	enable,

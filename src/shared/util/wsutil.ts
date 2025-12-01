@@ -1,13 +1,9 @@
-
 /*
  * This script should contain utility methods regarding
  * sockets that both the CLIENT and server can use.
  */
 
-
 // Variables ---------------------------------------------------------------------------------
-
-
 
 // Possible websocket closure reasons:
 
@@ -29,8 +25,6 @@
 // Other:
 // 1006 "" Network error
 // 1001 "" Endpoint going away. (Closed tab without performing cleanup)
-
-
 
 // All client-side closure codes:
 
@@ -64,20 +58,20 @@
 // 1009 "Origin Error"
 // 1014 "No echo heard"  (Client took too long to respond)
 
-
-
 // These are the closure reasons where we will RETAIN their invite for a set amount of time before deleting it by disconnection!
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
 const closureCodesNotByChoice: number[] = [1006];
-const closureReasonsNotByChoice: string[] = ["Connection expired", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
-
-
+const closureReasonsNotByChoice: string[] = [
+	'Connection expired',
+	'Message Too Big',
+	'Too Many Sockets',
+	'No echo heard',
+	'Connection closed by client. Renew.',
+];
 
 // Functions ---------------------------------------------------------------------------------
-
-
 
 /**
  * Determines if the WebSocket closure was not initiated by the client (i.e., they had no control over the closure).
@@ -87,12 +81,12 @@ const closureReasonsNotByChoice: string[] = ["Connection expired", "Message Too 
  * @returns `true` if the closure was not initiated by the client, otherwise `false`.
  */
 function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean {
-	return closureCodesNotByChoice.includes(code) || closureReasonsNotByChoice.includes(reason.trim());
+	return (
+		closureCodesNotByChoice.includes(code) || closureReasonsNotByChoice.includes(reason.trim())
+	);
 }
 
-
 // -----------------------------------------------------------------------------------------
-
 
 export default {
 	wasSocketClosureNotByTheirChoice,

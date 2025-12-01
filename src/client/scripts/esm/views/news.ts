@@ -20,8 +20,8 @@ async function markNewsAsRead(): Promise<void> {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'is-fetch-request': 'true'
-			}
+				'is-fetch-request': 'true',
+			},
 		});
 
 		if (response.ok) {
@@ -40,8 +40,8 @@ async function fetchUnreadNewsDates(): Promise<string[]> {
 	try {
 		const response = await fetch('/api/news/unread-dates', {
 			headers: {
-				'is-fetch-request': 'true'
-			}
+				'is-fetch-request': 'true',
+			},
 		});
 
 		if (!response.ok) return [];
@@ -106,10 +106,10 @@ function addNewBadge(postElement: HTMLElement): void {
 			gap: 8px;
 			margin-top: 1em;
 		`;
-		
+
 		// Remove margin-top from date span since wrapper now has it
 		(dateSpan as HTMLElement).style.marginTop = '0';
-		
+
 		// Replace the date span with the wrapper
 		dateSpan.parentNode.insertBefore(wrapper, dateSpan);
 		wrapper.appendChild(dateSpan);
@@ -125,16 +125,16 @@ function addNewBadge(postElement: HTMLElement): void {
  */
 async function init(): Promise<void> {
 	const username = validatorama.getOurUsername();
-	
+
 	if (username) {
 		// Fetch unread news dates first
 		const unreadDates = await fetchUnreadNewsDates();
-		
+
 		// Add NEW badges to unread posts
 		if (unreadDates.length > 0) {
 			addNewBadgesToUnreadPosts(unreadDates);
 		}
-		
+
 		markNewsAsRead();
 	}
 }

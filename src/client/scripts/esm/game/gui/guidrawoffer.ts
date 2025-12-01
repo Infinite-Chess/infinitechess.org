@@ -1,21 +1,17 @@
-
 /**
  * This script opens and closes our Draw Offer UI
  * on the bottom navigation bar.
- * 
+ *
  * It does NOT calculate if extending an offer is legal,
  * nor does it keep track of our current offers!
  */
-
 
 import guigameinfo from './guigameinfo.js';
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guiclock from './guiclock.js';
 
-
 // Variables -------------------------------------------------------------------
-
 
 const element_draw_offer_ui = document.getElementById('draw_offer_ui')!;
 const element_acceptDraw = document.getElementById('acceptdraw')!;
@@ -25,9 +21,7 @@ const element_whosturn = document.getElementById('whosturn')!;
 /** Whether the player names and clocks have been hidden to give space for the draw offer UI */
 let drawOfferUICramped: boolean = false;
 
-
 // Functions -------------------------------------------------------------------
-
 
 /** Reveals the draw offer UI on the bottom navigation bar */
 function open(): void {
@@ -69,14 +63,16 @@ function closeDrawOfferListeners(): void {
  */
 function updateVisibilityOfNamesAndClocksWithDrawOffer(): void {
 	if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
-	    
-	if (isDrawOfferUICramped()) { // Hide the player names and clocks
+
+	if (isDrawOfferUICramped()) {
+		// Hide the player names and clocks
 		if (drawOfferUICramped) return; // Already hidden
 		// console.log("hiding");
 		drawOfferUICramped = true;
 		guigameinfo.hidePlayerNames();
 		guiclock.hideClocks();
-	} else { // We have space now, reveal them!
+	} else {
+		// We have space now, reveal them!
 		if (!drawOfferUICramped) return; // Already revealed
 		// console.log("revealing");
 		drawOfferUICramped = false;
@@ -94,7 +90,6 @@ function isDrawOfferUICramped(): boolean {
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }
-
 
 export default {
 	open,

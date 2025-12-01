@@ -1,25 +1,21 @@
-
 /**
  * This script updates the checkmates_beaten list in the database when a user submits a newly completed checkmate
  */
 
-import validcheckmates from "../../shared/chess/util/validcheckmates.js";
-import jsutil from "../../shared/util/jsutil.js";
-import { logEventsAndPrint } from "../middleware/logEvents.js";
+import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+import jsutil from '../../shared/util/jsutil.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
-
-import type { IdentifiedRequest, ParsedCookies } from "../types.js";
-import type { Request, Response } from "express";
-
+import type { IdentifiedRequest, ParsedCookies } from '../types.js';
+import type { Request, Response } from 'express';
 
 // Functions -------------------------------------------------------------
-
 
 /**
  * Middleware to set the checkmates_beaten cookie for logged-in users based on their memberInfo cookie.
  * Only sets the checkmates_beaten cookie on HTML requests (requests without an origin header).
- * 
+ *
  * It is possible for the memberInfo cookie to be tampered with, but checkmates_beaten can be public information anyway.
  * We are reading the memberInfo cookie instead of verifying their session token
  * because that could take a little bit longer as it requires a database look up.
@@ -40,34 +36,42 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function):
 	const memberInfoCookieStringified = cookies.memberInfo;
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
-	let memberInfoCookie: { user_id: number, username: string };
+	let memberInfoCookie: { user_id: number; username: string };
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEventsAndPrint(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as Error).stack}`, 'errLog.txt');
+		logEventsAndPrint(
+			`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as Error).stack}`,
+			'errLog.txt',
+		);
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
-	if (typeof memberInfoCookie !== "object") {
-		logEventsAndPrint(`memberInfo cookie did not parse into an object when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
+	if (typeof memberInfoCookie !== 'object') {
+		logEventsAndPrint(
+			`memberInfo cookie did not parse into an object when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
+			'errLog.txt',
+		);
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
 	const user_id = memberInfoCookie.user_id;
 	if (typeof user_id !== 'number') {
-		logEventsAndPrint(`memberInfo cookie user_id property was not a number when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
+		logEventsAndPrint(
+			`memberInfo cookie user_id property was not a number when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
+			'errLog.txt',
+		);
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
 	const checkmates_beaten = getCheckmatesBeaten(user_id); // Fetch their checkmates_beaten from the database
 
 	createPracticeProgressCookie(res, checkmates_beaten);
-	
+
 	// console.log(`Set checkmates_beaten cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
 
 	next();
 }
-
 
 /**
  * Sets the checkmates_beaten cookie for the user.
@@ -101,7 +105,12 @@ function deletePracticeProgressCookie(res: Response): void {
  * @returns - Returns the checkmates_beaten string if found, otherwise undefined. (e.g. "2Q-1k,3R-1k,1Q1R1B-1k")
  */
 function getCheckmatesBeaten(userId: number): string {
-	const { checkmates_beaten } = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId, true);
+	const { checkmates_beaten } = getMemberDataByCriteria(
+		['checkmates_beaten'],
+		'user_id',
+		userId,
+		true,
+	);
 	return checkmates_beaten ?? ''; // Could be undefined if no match is found
 }
 
@@ -119,8 +128,11 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
  */
 function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
 	if (!req.memberInfo.signedIn) {
-		logEventsAndPrint("User tried to save checkmates_beaten when they weren't signed in!", 'errLog.txt');
-		res.status(401).json({ message: "Can't save checkmates_beaten, not signed in."});
+		logEventsAndPrint(
+			"User tried to save checkmates_beaten when they weren't signed in!",
+			'errLog.txt',
+		);
+		res.status(401).json({ message: "Can't save checkmates_beaten, not signed in." });
 		return;
 	}
 
@@ -128,22 +140,24 @@ function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
 	const new_checkmate_beaten: string = req.body.new_checkmate_beaten;
 
 	// Validate the new checkmate ID
-	if (typeof new_checkmate_beaten !== 'string') { // Not a string
+	if (typeof new_checkmate_beaten !== 'string') {
+		// Not a string
 		res.status(400).json({ message: 'Invalid checkmate ID' });
 		return;
 	}
-	if (!Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) { // Not a valid checkmate
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) {
+		// Not a valid checkmate
 		res.status(400).json({ message: 'Invalid checkmate ID' });
 		return;
 	}
-
 
 	// Checkmate is valid...
 
 	let checkmates_beaten: string = getCheckmatesBeaten(user_id);
 	const checkmates_beaten_array: string[] = checkmatesBeatenToStringArray(checkmates_beaten);
 
-	if (checkmates_beaten_array.includes(new_checkmate_beaten)) { // Already beaten
+	if (checkmates_beaten_array.includes(new_checkmate_beaten)) {
+		// Already beaten
 		res.status(200).json({ message: 'Checkmate already beaten' });
 		return;
 	}
@@ -159,12 +173,18 @@ function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		logEventsAndPrint(`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`, 'checkmates_beaten.txt');
+		logEventsAndPrint(
+			`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`,
+			'checkmates_beaten.txt',
+		);
 		// Create a new cookie with the updated checkmate list for the user
 		createPracticeProgressCookie(res, checkmates_beaten);
 		res.status(200).json({ message: 'Checkmate recorded successfully' });
 	} else {
-		logEventsAndPrint(`Failed to save new practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt');
+		logEventsAndPrint(
+			`Failed to save new practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`,
+			'errLog.txt',
+		);
 		res.status(500).json({ message: 'Failed to update serverside practice checkmate' });
 	}
 }
@@ -173,5 +193,5 @@ export {
 	setPracticeProgressCookie,
 	deletePracticeProgressCookie,
 	getCheckmatesBeaten,
-	postCheckmateBeaten
+	postCheckmateBeaten,
 };

@@ -1,9 +1,7 @@
-
 // src/client/scripts/esm/webgl/post_processing/passes/VoronoiDistortionPass.ts
 
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
-
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /**
  * A post-processing pass that distorts the image based on an animated
@@ -25,21 +23,21 @@ export class VoronoiDistortionPass implements PostProcessPass {
 
 	/** The strength of the cells' distortion. */
 	public strength: number = 0.007;
-	
+
 	/** The thickness of the ridges between cells. */
 	public ridgeThickness = 0.02;
 
 	/** The strength of the ridges' lensing effect. */
 	public ridgeStrength = 0.04;
 
-
 	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('voronoi_distortion');
 	}
 
+	// prettier-ignore
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		this.program.use();
-		
+
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
 

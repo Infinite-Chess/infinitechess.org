@@ -1,10 +1,9 @@
-
 // This module stores our themes. Straight forward :P
 
-import jsutil from "../../util/jsutil.js";
+import jsutil from '../../util/jsutil.js';
 
-import type { Color } from "../../util/math/math.js";
-import type { PieceColorGroup } from "./pieceThemes.js";
+import type { Color } from '../../util/math/math.js';
+import type { PieceColorGroup } from './pieceThemes.js';
 
 /*
  * Strings for computed property names.
@@ -12,18 +11,17 @@ import type { PieceColorGroup } from "./pieceThemes.js";
  * By using computed property names, we greatly compact this script,
  * as our bundler changes the symbols to a single letter.
  */
-const lightTiles = "lightTiles";
-const darkTiles = "darkTiles";
-const legalMovesHighlightColor_Friendly = "legalMovesHighlightColor_Friendly";
-const legalMovesHighlightColor_Opponent = "legalMovesHighlightColor_Opponent";
-const legalMovesHighlightColor_Premove = "legalMovesHighlightColor_Premove";
-const lastMoveHighlightColor = "lastMoveHighlightColor";
-const checkHighlightColor = "checkHighlightColor";
-const boxOutlineColor = "boxOutlineColor";
-const annoteSquareColor = "annoteSquareColor";
-const annoteArrowColor = "annoteArrowColor";
-const pieceTheme = "pieceTheme";
-
+const lightTiles = 'lightTiles';
+const darkTiles = 'darkTiles';
+const legalMovesHighlightColor_Friendly = 'legalMovesHighlightColor_Friendly';
+const legalMovesHighlightColor_Opponent = 'legalMovesHighlightColor_Opponent';
+const legalMovesHighlightColor_Premove = 'legalMovesHighlightColor_Premove';
+const lastMoveHighlightColor = 'lastMoveHighlightColor';
+const checkHighlightColor = 'checkHighlightColor';
+const boxOutlineColor = 'boxOutlineColor';
+const annoteSquareColor = 'annoteSquareColor';
+const annoteArrowColor = 'annoteArrowColor';
+const pieceTheme = 'pieceTheme';
 
 interface ThemeProperties {
 	[lightTiles]?: Color;
@@ -36,7 +34,7 @@ interface ThemeProperties {
 	[boxOutlineColor]?: Color;
 	[annoteSquareColor]?: Color;
 	[annoteArrowColor]?: Color;
-	[pieceTheme]?: Partial<PieceColorGroup>, 
+	[pieceTheme]?: Partial<PieceColorGroup>;
 }
 
 /**
@@ -55,23 +53,24 @@ const defaults: ThemeProperties = {
 const defaultTheme = 'wood_light';
 
 const themeDictionary: { [themeName: string]: ThemeProperties } = {
-
 	/*
 	 * By using computed property names, we greatly compact this script,
 	 * as our bundler changes the symbols to a single letter.
 	 */
 
-	wood_light: { // 5D Chess
+	wood_light: {
+		// 5D Chess
 		[lightTiles]: [1, 0.85, 0.66, 1],
 		[darkTiles]: [0.87, 0.68, 0.46, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.5, 0.14, 0.38],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
-		[lastMoveHighlightColor]: [0.90, 1, 0, 0.30],
+		[lastMoveHighlightColor]: [0.9, 1, 0, 0.3],
 		// [annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares
 		// [annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	},
-	sandstone: { // Sometimes thanksgiving uses this
+	sandstone: {
+		// Sometimes thanksgiving uses this
 		[lightTiles]: [0.94, 0.88, 0.78, 1],
 		[darkTiles]: [0.74, 0.63, 0.53, 1],
 		[legalMovesHighlightColor_Friendly]: [1, 0.2, 0, 0.35], // 0.5 for BIG positions   0.35 for SMALL
@@ -87,7 +86,7 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
 	},
 	sandstone_dark: {
-		[lightTiles]: [0.86, 0.76, 0.50, 1],
+		[lightTiles]: [0.86, 0.76, 0.5, 1],
 		[darkTiles]: [0.69, 0.55, 0.35, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
@@ -112,9 +111,9 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[darkTiles]: [0.18, 0.76, 0.78, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.46, 0.1, 0.42],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0.24, 0.46],
-		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.30],
+		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.3],
 		[annoteSquareColor]: [0, 0, 1, 0.29],
-		[annoteArrowColor]: [0.66, 0, 1,0.62],
+		[annoteArrowColor]: [0.66, 0, 1, 0.62],
 	},
 	ocean: {
 		[lightTiles]: [0.42, 0.75, 0.96, 1],
@@ -133,15 +132,15 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 	blue: {
 		[lightTiles]: [0.87, 0.89, 0.91, 1],
 		[darkTiles]: [0.55, 0.64, 0.68, 1],
-		[legalMovesHighlightColor_Friendly]: [0, 0.60, 0.1, 0.34],
+		[legalMovesHighlightColor_Friendly]: [0, 0.6, 0.1, 0.34],
 		[legalMovesHighlightColor_Opponent]: [1, 0.46, 0, 0.35],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.34],
 		[lastMoveHighlightColor]: [0, 1, 1, 0.3],
 	},
 	blue_soft: {
-		[lightTiles]: [0.59, 0.70, 0.78, 1],
+		[lightTiles]: [0.59, 0.7, 0.78, 1],
 		[darkTiles]: [0.45, 0.55, 0.62, 1],
-		[legalMovesHighlightColor_Friendly]: [0, 0.60, 0.1, 0.36],
+		[legalMovesHighlightColor_Friendly]: [0, 0.6, 0.1, 0.36],
 		[legalMovesHighlightColor_Opponent]: [1, 0.46, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.36],
 	},
@@ -150,9 +149,9 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[darkTiles]: [0.35, 0.58, 0.36, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.26, 0.64, 0.56],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.43],
-		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.40],
+		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.4],
 	},
-	green: { 
+	green: {
 		[lightTiles]: [0.92, 0.93, 0.82, 1],
 		[darkTiles]: [0.45, 0.58, 0.32, 1],
 		[legalMovesHighlightColor_Friendly]: [1, 1, 0, 0.48],
@@ -165,7 +164,7 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[darkTiles]: [0.39, 0.71, 0.06, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.26, 0.48, 0.52],
 		[legalMovesHighlightColor_Opponent]: [1, 0, 0, 0.35],
-		[legalMovesHighlightColor_Premove]: [0, 0, 0.30, 0.34],
+		[legalMovesHighlightColor_Premove]: [0, 0, 0.3, 0.34],
 		[lastMoveHighlightColor]: [0, 0.26, 1, 0.24],
 	},
 	avocado: {
@@ -173,12 +172,12 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[darkTiles]: [0.62, 0.77, 0.35, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.26, 0.48, 0.4],
 		[legalMovesHighlightColor_Opponent]: [1, 0, 0, 0.31],
-		[legalMovesHighlightColor_Premove]: [0, 0, 0.30, 0.30],
+		[legalMovesHighlightColor_Premove]: [0, 0, 0.3, 0.3],
 		[lastMoveHighlightColor]: [0, 0.28, 1, 0.24],
 	},
 	white: {
 		[lightTiles]: [1, 1, 1, 1],
-		[darkTiles]:  [0.78, 0.78, 0.78, 1],
+		[darkTiles]: [0.78, 0.78, 0.78, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0, 1, 0.28],
 		[legalMovesHighlightColor_Opponent]: [1, 0.72, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.26, 0.36],
@@ -211,16 +210,16 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[darkTiles]: [0.3, 0.3, 0.3, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.58, 0.1, 0.34],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.31],
-		[legalMovesHighlightColor_Premove]: [0, 0, 0.40, 0.26],
+		[legalMovesHighlightColor_Premove]: [0, 0, 0.4, 0.26],
 	},
 	seabed: {
 		[lightTiles]: [0.56, 0.66, 0.57, 1],
 		[darkTiles]: [0.42, 0.51, 0.42, 1],
-		[legalMovesHighlightColor_Friendly]: [0, 0.20, 0.78, 0.32],
+		[legalMovesHighlightColor_Friendly]: [0, 0.2, 0.78, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.28, 0.28],
 	},
-	marble: { 
+	marble: {
 		[lightTiles]: [0.78, 0.78, 0.7, 1],
 		[darkTiles]: [0.44, 0.42, 0.4, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.44],
@@ -232,7 +231,7 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[darkTiles]: [0.59, 0.49, 0.7, 1],
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.44],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.39],
-		[legalMovesHighlightColor_Premove]: [0, 0, 0.30, 0.42],
+		[legalMovesHighlightColor_Premove]: [0, 0, 0.3, 0.42],
 	},
 	pink: {
 		[lightTiles]: [0.98, 0.93, 0.93, 1],
@@ -250,7 +249,7 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[lastMoveHighlightColor]: [0, 1, 0, 0.28],
 	},
 
-	// purple_hard: { 
+	// purple_hard: {
 	// 	[a]: [0.95, 0.95, 0.95, 1],
 	// 	[b]: [0.49, 0.42, 0.68, 1],
 	// },

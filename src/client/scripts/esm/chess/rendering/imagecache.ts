@@ -1,4 +1,3 @@
-
 /**
  * This script caches the HTMLImageElement objects for the pieces
  * required by the currently loaded game.
@@ -32,12 +31,20 @@ let cachedImages: TypeGroup<HTMLImageElement> = {};
  * normalizes them, and stores them in the cache.
  */
 async function initImagesForGame(boardsim: Board): Promise<void> {
-	if (Object.keys(cachedImages).length > 0) throw Error("Image cache already initialized. Call deleteImageCache() when unloading games.");
+	if (Object.keys(cachedImages).length > 0)
+		throw Error(
+			'Image cache already initialized. Call deleteImageCache() when unloading games.',
+		);
 	// console.log("Initializing image cache for game...");
 
 	// 1. Determine required piece types (excluding SVG-less ones)
-	const types = boardsim.existingTypes.filter((t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)) );
-	if (types.length === 0) return console.log("No piece types with SVGs found for this game. Image cache remains empty.");
+	const types = boardsim.existingTypes.filter(
+		(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),
+	);
+	if (types.length === 0)
+		return console.log(
+			'No piece types with SVGs found for this game. Image cache remains empty.',
+		);
 
 	// console.log("Required piece types for image cache:", types);
 
@@ -58,17 +65,21 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 
 		for (const img of initialImages) {
 			// Ensure the image has an ID which corresponds to the piece type
-			if (!img.id) throw Error("Image is missing ID after conversion from SVG.");
+			if (!img.id) throw Error('Image is missing ID after conversion from SVG.');
 
 			// Start normalization process for each image
-			const promise = svgtoimageconverter.normalizeImagePixelData(img)
-				.then(normalizedImg => {
+			const promise = svgtoimageconverter
+				.normalizeImagePixelData(img)
+				.then((normalizedImg) => {
 					newCache[img.id] = normalizedImg;
 					// Optional: Log successful caching of a specific type
 					// console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
 				})
-				.catch(error => {
-					console.error(`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`, error);
+				.catch((error) => {
+					console.error(
+						`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`,
+						error,
+					);
 					// Decide how to handle normalization failures - potentially throw?
 				});
 			normalizationPromises.push(promise);
@@ -81,9 +92,8 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 		cachedImages = newCache;
 
 		// console.log(`Image cache initialization complete. Cached ${Object.keys(cachedImages).length} images.`);
-
 	} catch (error) {
-		console.error("Error during image cache initialization:", error);
+		console.error('Error during image cache initialization:', error);
 		// Clear cache on failure to avoid partial state
 		cachedImages = {};
 		// Re-throw the error so the caller knows initialization failed
@@ -98,7 +108,10 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
  */
 function getPieceImage(type: number): HTMLImageElement {
 	const image = cachedImages[type];
-	if (!image) throw new Error(`Image for piece type ${typeutil.debugType(type)} not found in cache. Was initImagesForGame() called?`);
+	if (!image)
+		throw new Error(
+			`Image for piece type ${typeutil.debugType(type)} not found in cache. Was initImagesForGame() called?`,
+		);
 	// Optional: Return a clone to prevent external modification of the cached element?
 	// For simple display, returning the direct reference is usually fine and more performant.
 	// If you plan to modify the image attributes (like style) elsewhere, cloning might be safer:

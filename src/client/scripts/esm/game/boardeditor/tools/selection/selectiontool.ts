@@ -1,33 +1,34 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/selection.ts
 
 /**
  * The Selection Tool for the Board Editor
- * 
+ *
  * Acts similarly to that of Google Sheets
  */
 
-import type { Coords } from "../../../../../../../shared/chess/util/coordutil";
+import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
 
-import mouse from "../../../../util/mouse";
-import arrows from "../../../rendering/arrows/arrows";
-import stoolgraphics from "./stoolgraphics";
-import { Mouse } from "../../../input";
-import { listener_document, listener_overlay } from "../../../chess/game";
-import bounds, { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
-import meshes from "../../../rendering/meshes";
-import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
-import sfill from "./sfill";
-import sdrag from "./sdrag";
-import guiboardeditor from "../../../gui/boardeditor/guiboardeditor";
-import boardutil from "../../../../../../../shared/chess/util/boardutil";
-import gameslot from "../../../chess/gameslot";
-import boardeditor from "../../boardeditor";
-import stransformations from "./stransformations";
-
+import mouse from '../../../../util/mouse';
+import arrows from '../../../rendering/arrows/arrows';
+import stoolgraphics from './stoolgraphics';
+import { Mouse } from '../../../input';
+import { listener_document, listener_overlay } from '../../../chess/game';
+import bounds, {
+	BoundingBox,
+	BoundingBoxBD,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds';
+import meshes from '../../../rendering/meshes';
+import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import sfill from './sfill';
+import sdrag from './sdrag';
+import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
+import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import gameslot from '../../../chess/gameslot';
+import boardeditor from '../../boardeditor';
+import stransformations from './stransformations';
 
 // State ----------------------------------------------
-
 
 /** Whether or now we are currently making a selection. */
 let selecting: boolean = false;
@@ -45,14 +46,13 @@ let startPoint: Coords | undefined;
  */
 let endPoint: Coords | undefined;
 
-
 // Methods -------------------------------------------
-
 
 function update(): void {
 	if (isExistingSelection()) testShortcuts(); // Is a current selection, or one is in progress
 
-	if (!selecting) { // No selection in progress (either none made yet, or have already made one)
+	if (!selecting) {
+		// No selection in progress (either none made yet, or have already made one)
 		// Update grabbing the selection box first
 		if (isACurrentSelection()) {
 			sfill.update(); // Update fill tool handler
@@ -66,10 +66,12 @@ function update(): void {
 			pointerId = mouse.getMouseId(Mouse.LEFT)!;
 			beginSelection();
 		}
-	} else { // Selection in progress
+	} else {
+		// Selection in progress
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
+		if (respectiveListener.pointerExists(pointerId!))
+			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 		// Test if pointer released (finalize new selection)
 		if (!respectiveListener.isPointerHeld(pointerId!)) endSelection();
 	}
@@ -126,7 +128,6 @@ function resetState(): void {
 	guiboardeditor.onClearSelection();
 }
 
-
 /** Whether there is a current selection, NOT whether we are currently MAKING a selection. */
 function isACurrentSelection(): boolean {
 	return !!startPoint && !!endPoint;
@@ -140,9 +141,9 @@ function isExistingSelection(): boolean {
 	return !!selecting || !!endPoint;
 }
 
-
 function render(): void {
-	if (isExistingSelection()) { // There either is a selection, or we are currently making one
+	if (isExistingSelection()) {
+		// There either is a selection, or we are currently making one
 		const selectionWorldBox = getSelectionWorldBox()!;
 
 		// Render the selection box
@@ -155,10 +156,11 @@ function render(): void {
 			sfill.render(); // Fill tool graphics
 			sdrag.render(); // Selection drag graphics
 		}
-	} else { // No selection, and not currently making one
+	} else {
+		// No selection, and not currently making one
 		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
 		// Outline the rank and file of the square hovered over
-		stoolgraphics.outlineRankAndFile(); 
+		stoolgraphics.outlineRankAndFile();
 	}
 }
 
@@ -171,7 +173,7 @@ function getSelectionIntBox(): BoundingBox | undefined {
 		left: bimath.min(startPoint[0], currentTile[0]),
 		right: bimath.max(startPoint[0], currentTile[0]),
 		bottom: bimath.min(startPoint[1], currentTile[1]),
-		top: bimath.max(startPoint[1], currentTile[1])
+		top: bimath.max(startPoint[1], currentTile[1]),
 	};
 }
 
@@ -189,7 +191,8 @@ function getSelectionWorldBox(): DoubleBoundingBox | undefined {
  */
 function convertIntBoxToWorldBox(intBox: BoundingBox): DoubleBoundingBox {
 	// Moves the edges of the box outward to encapsulate the entirity of the squares, instead of just the centers.
-	const roundedAwayBox: BoundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
+	const roundedAwayBox: BoundingBoxBD =
+		meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
 	// Convert it to a world-space box
 	return meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
 }
@@ -199,12 +202,10 @@ function convertIntBoxToWorldBox(intBox: BoundingBox): DoubleBoundingBox {
  * ONLY CALL if you know a selection exists!
  */
 function getSelectionCorners(): [Coords, Coords] {
-	if (!startPoint || !endPoint) throw new Error("No current selection. Can't get selection corners.");
+	if (!startPoint || !endPoint)
+		throw new Error("No current selection. Can't get selection corners.");
 
-	return [
-		startPoint,
-		endPoint,
-	];
+	return [startPoint, endPoint];
 }
 
 /**
@@ -221,9 +222,11 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 
 /** Selects all pieces in the current position, and transitions to the selection. */
 function selectAll(): void {
-	boardeditor.setTool("selection-tool"); // Switch if we're not already using
+	boardeditor.setTool('selection-tool'); // Switch if we're not already using
 
-	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(
+		gameslot.getGamefile()!.boardsim.pieces!,
+	);
 
 	if (allCoords.length === 0) {
 		// No pieces, cancel selection
@@ -243,9 +246,7 @@ function selectAll(): void {
 	// Transition.zoomToCoordsBox(box);
 }
 
-
 // Exports ------------------------------------------------------
-
 
 export default {
 	update,

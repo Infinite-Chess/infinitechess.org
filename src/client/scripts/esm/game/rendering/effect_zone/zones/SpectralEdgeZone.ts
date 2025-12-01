@@ -1,18 +1,15 @@
-
 // src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
 
-import type { Zone } from "../EffectZoneManager";
+import type { Zone } from '../EffectZoneManager';
 
 // @ts-ignore
-import loadbalancer from "../../../misc/loadbalancer";
-import UndercurrentSoundscape from "../soundscapes/UndercurrentSoundscape";
-import IridescenceSoundscape from "../soundscapes/IridescenceSoundscape";
-import { PostProcessPass } from "../../../../webgl/post_processing/PostProcessingPipeline";
-import { SoundscapeConfig, SoundscapePlayer } from "../../../../audio/SoundscapePlayer";
-
+import loadbalancer from '../../../misc/loadbalancer';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
+import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class SpectralEdgeZone implements Zone {
-
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 4;
 
@@ -46,13 +43,10 @@ export class SpectralEdgeZone implements Zone {
 	/** The phase shift applied to the light tiles' gradient, as a percentage of the gradient's total length. */
 	private maskOffset: number = 0.07; // Default: 0.06
 
-
 	// --- State Properties ---
 
 	/** The current direction of the flow, in radians. */
 	private flowDirection: number = Math.random() * Math.PI * 2;
-
-
 
 	constructor() {
 		// Load the ambience...
@@ -64,20 +58,19 @@ export class SpectralEdgeZone implements Zone {
 				{
 					// Custom volume
 					volume: {
-						base: 0.8
+						base: 0.8,
 					},
 					source: UndercurrentSoundscape.source,
-					filters: UndercurrentSoundscape.filters
+					filters: UndercurrentSoundscape.filters,
 				},
 				// Partial of Iridescence layers
-				...IridescenceSoundscape.layers12
-			]
+				...IridescenceSoundscape.layers12,
+			],
 		};
 
 		// Initialize the player with the config.
 		this.ambience = new SoundscapePlayer(noiseConfig);
 	}
-
 
 	public update(): void {
 		const deltaTime = loadbalancer.getDeltaTime(); // In seconds
@@ -92,10 +85,10 @@ export class SpectralEdgeZone implements Zone {
 		// Pre-calculate the direction vector
 		const flowDirectionVec: [number, number] = [
 			Math.cos(this.flowDirection),
-			Math.sin(this.flowDirection)
+			Math.sin(this.flowDirection),
 		];
-		
-		const flowDistance = performance.now() / 1000 * this.flowSpeed;
+
+		const flowDistance = (performance.now() / 1000) * this.flowSpeed;
 
 		const uniforms: Record<string, any> = {
 			u4_flowDistance: flowDistance,
@@ -118,7 +111,7 @@ export class SpectralEdgeZone implements Zone {
 	public getPasses(): PostProcessPass[] {
 		return [];
 	}
-	
+
 	public fadeInAmbience(transitionDurationMillis: number): void {
 		this.ambience.fadeIn(transitionDurationMillis);
 	}

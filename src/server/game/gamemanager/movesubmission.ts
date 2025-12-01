@@ -1,4 +1,3 @@
-
 /**
  * The script handles when a user submits a move in
  * the game they are in, and does basic checks to make sure it's valid.
@@ -8,7 +7,6 @@ import * as z from 'zod';
 
 // Middleware imports
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
 
 // @ts-ignore
 import winconutil from '../../../shared/chess/util/winconutil.js';
@@ -21,7 +19,6 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import socketUtility from '../../socket/socketUtility.js';
 import bimath from '../../../shared/util/bigdecimal/bimath.js';
-
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -41,7 +38,7 @@ type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
 const DIGITS_PER_SECOND = 4.5;
 
 /**
- * 
+ *
  * Call when a websocket submits a move. Performs some checks,
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
@@ -52,8 +49,15 @@ const DIGITS_PER_SECOND = 4.5;
 function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMoveMessage): void {
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
-		console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.");
-		sendSocketMessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
+		console.error(
+			'Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.',
+		);
+		sendSocketMessage(
+			ws,
+			'general',
+			'printerror',
+			'Failed to submit move. You are not subscribed to a game.',
+		);
 		return;
 	}
 
@@ -64,39 +68,52 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 	// If the game is already over, don't accept it.
 	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
 	// The ACTUAL game conclusion SHOULD already be on the way to them so....
-	if (gameutility.isGameOver(game)) return; 
+	if (gameutility.isGameOver(game)) return;
 
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = game.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		console.error(`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
+		console.error(
+			`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
+		);
 		return resyncToGame(ws, game.id);
 	}
 
 	// Make sure it's their turn
-	if (game.whosTurn !== color) return sendSocketMessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
+	if (game.whosTurn !== color)
+		return sendSocketMessage(
+			ws,
+			'general',
+			'printerror',
+			"Cannot submit a move when it's not your turn.",
+		);
 
 	// Legality checks...
 	const moveDraft = doesMoveCheckOut(messageContents.move);
 	if (moveDraft === false) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
+		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
 	}
-	
+
 	// Check if the move exceeds the soft distance cap based on game duration
 	if (!isMoveWithinDistanceCap(moveDraft, game.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, "general", "printerror", "Move distance exceeds allowed limit for game duration.");
+		return sendSocketMessage(
+			ws,
+			'general',
+			'printerror',
+			'Move distance exceeds allowed limit for game duration.',
+		);
 	}
-	
+
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, "general", "printerror", "Invalid game conclusion.");
+		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
 	}
-    
+
 	const move: BaseMove = {
 		startCoords: moveDraft.startCoords,
 		endCoords: moveDraft.endCoords,
@@ -123,7 +140,6 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 	gameutility.sendMoveToColor(game, opponentColor, move); // Send their move to their opponent.
 }
 
-
 /**
  * Calculates the maximum distance a move should be allowed based on game duration.
  * @param gameStartTime - When the game was created (in milliseconds)
@@ -132,11 +148,11 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 function getMaxAllowedCoordinateDigits(gameStartTime: number): number {
 	const currentTime = Date.now();
 	const gameElapsedSeconds = (currentTime - gameStartTime) / 1000;
-	
+
 	// Start with a baseline of 1 digit (allows coordinates like -9 to 9)
 	const baselineDigits = 1;
 	const extraDigits = gameElapsedSeconds * DIGITS_PER_SECOND;
-	
+
 	return Math.floor(baselineDigits + extraDigits);
 }
 
@@ -149,13 +165,13 @@ function getMaxAllowedCoordinateDigits(gameStartTime: number): number {
  */
 function isMoveWithinDistanceCap(moveDraft: _Move_Out, gameStartTime: number): boolean {
 	const maxAllowedDigits = getMaxAllowedCoordinateDigits(gameStartTime);
-	
+
 	// Only check end coordinates since start coordinates are safe
 	const endXDigits = bimath.countDigits(moveDraft.endCoords[0]);
 	const endYDigits = bimath.countDigits(moveDraft.endCoords[1]);
-	
+
 	const maxDigitsInMove = Math.max(endXDigits, endYDigits);
-	
+
 	return maxDigitsInMove <= maxAllowedDigits;
 }
 
@@ -193,7 +209,8 @@ function doesGameConclusionCheckOut(gameConclusion: string | undefined, color: P
 	// It is a string...
 
 	// If conclusion is "aborted", victor will not be specified.
-	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+	const { victor, condition } =
+		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
 	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
 	// Game conclusion is decisive...
 	// We can't submit a move where our opponent wins
@@ -201,9 +218,4 @@ function doesGameConclusionCheckOut(gameConclusion: string | undefined, color: P
 	return victor !== oppositeColor;
 }
 
-
-export {
-	submitMove,
-	
-	submitmoveschem
-};
+export { submitMove, submitmoveschem };

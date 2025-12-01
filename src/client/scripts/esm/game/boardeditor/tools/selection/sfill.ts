@@ -1,32 +1,32 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/selection/sfill.ts
 
 /**
  * Selection Tool Fill
- * 
+ *
  * This handles the fill operation when dragging the fill handle
  * on the bottom-right corner of the selection box.
  */
 
-import type { Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil";
+import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
 
-import { Mouse } from "../../../input";
-import bounds, { BoundingBox, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds";
-import bimath from "../../../../../../../shared/util/bigdecimal/bimath";
-import mouse from "../../../../util/mouse";
-import gameslot from "../../../chess/gameslot";
-import space from "../../../misc/space";
-import arrows from "../../../rendering/arrows/arrows";
-import selectiontool from "./selectiontool";
-import stoolgraphics from "./stoolgraphics";
-import stransformations from "./stransformations";
-import vectors from "../../../../../../../shared/util/math/vectors";
-import sdrag from "./sdrag";
-import scursor from "./scursor";
-
+import { Mouse } from '../../../input';
+import bounds, {
+	BoundingBox,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds';
+import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import mouse from '../../../../util/mouse';
+import gameslot from '../../../chess/gameslot';
+import space from '../../../misc/space';
+import arrows from '../../../rendering/arrows/arrows';
+import selectiontool from './selectiontool';
+import stoolgraphics from './stoolgraphics';
+import stransformations from './stransformations';
+import vectors from '../../../../../../../shared/util/math/vectors';
+import sdrag from './sdrag';
+import scursor from './scursor';
 
 // State ---------------------------------------------
-
 
 /** Whether the mouse is currently within the minimum distance to grab the fill handle. */
 let withinGrabDist = false;
@@ -38,9 +38,7 @@ let pointerId: string | undefined = undefined;
 /** The last known square the pointer was hovering over. */
 let lastPointerCoords: Coords | undefined;
 
-
 // Methods -------------------------------------------
-
 
 /** Returns whether we are currently filling. */
 function areWeFilling(): boolean {
@@ -57,13 +55,15 @@ function update(): void {
 
 		const respectiveListener = mouse.getRelevantListener();
 		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!)) lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
+		if (respectiveListener.pointerExists(pointerId!))
+			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 		// Test if pointer released (execute selection translation)
 		if (!respectiveListener.isPointerHeld(pointerId!)) executeFill();
 	} else {
 		// Determine if the fill handle needs to be grabbed,
 		// or if the canvas cursor style should change.
-		if (isMouseHoveringOverFillHandle()) { // Within grab distance
+		if (isMouseHoveringOverFillHandle()) {
+			// Within grab distance
 			if (!withinGrabDist) {
 				withinGrabDist = true;
 				scursor.addCursor('crosshair');
@@ -77,7 +77,8 @@ function update(): void {
 				pointerId = mouse.getMouseId(Mouse.LEFT)!;
 				startFill();
 			}
-		} else { // NOT within grab distance
+		} else {
+			// NOT within grab distance
 			if (withinGrabDist) {
 				withinGrabDist = false;
 				scursor.removeCursor('crosshair');
@@ -89,7 +90,8 @@ function update(): void {
 /** Calculates whether the mouse is currently hovering within grab distance of the fill handle. */
 function isMouseHoveringOverFillHandle(): boolean {
 	const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
-	const fillHandleCorner: DoubleCoords = [ // Bottom-right corner
+	const fillHandleCorner: DoubleCoords = [
+		// Bottom-right corner
 		selectionWorldBox.right,
 		selectionWorldBox.bottom,
 	];
@@ -151,19 +153,24 @@ function calculateFillBox(): BoundingBox | undefined {
 	const distYFromBottom = lastPointerCoords![1] - selectionBox.bottom;
 	const distYFromTop = lastPointerCoords![1] - selectionBox.top;
 
-	const distXChoice = distXFromRight > 0n ? distXFromRight : distXFromLeft < 0n ? distXFromLeft : 0n;
-	const distYChoice = distYFromTop > 0n ? distYFromTop : distYFromBottom < 0n ? distYFromBottom : 0n;
+	const distXChoice =
+		distXFromRight > 0n ? distXFromRight : distXFromLeft < 0n ? distXFromLeft : 0n;
+	const distYChoice =
+		distYFromTop > 0n ? distYFromTop : distYFromBottom < 0n ? distYFromBottom : 0n;
 
 	// Determine which axis has the larger distance from the selection box
-	if (bimath.abs(distXChoice) >= bimath.abs(distYChoice)) { // X Axis
-		if (distXChoice > 0n) { // Filling to the right
+	if (bimath.abs(distXChoice) >= bimath.abs(distYChoice)) {
+		// X Axis
+		if (distXChoice > 0n) {
+			// Filling to the right
 			return {
 				left: selectionBox.right + 1n,
 				right: lastPointerCoords![0],
 				bottom: selectionBox.bottom,
 				top: selectionBox.top,
 			};
-		} else { // Filling to the left
+		} else {
+			// Filling to the left
 			return {
 				left: lastPointerCoords![0],
 				right: selectionBox.left - 1n,
@@ -171,15 +178,18 @@ function calculateFillBox(): BoundingBox | undefined {
 				top: selectionBox.top,
 			};
 		}
-	} else { // Y axis
-		if (distYChoice > 0n) { // Filling upwards
+	} else {
+		// Y axis
+		if (distYChoice > 0n) {
+			// Filling upwards
 			return {
 				left: selectionBox.left,
 				right: selectionBox.right,
 				bottom: selectionBox.top + 1n,
 				top: lastPointerCoords![1],
 			};
-		} else { // Filling downwards
+		} else {
+			// Filling downwards
 			return {
 				left: selectionBox.left,
 				right: selectionBox.right,
@@ -190,13 +200,11 @@ function calculateFillBox(): BoundingBox | undefined {
 	}
 }
 
-
 // Rendering ---------------------------------------------
-
 
 function render(): void {
 	if (!areFilling) return;
-	
+
 	// Determine the fill int box to render depending on the state
 	const fillBox = calculateFillBox();
 	if (!fillBox) return; // No fill to perform (let go within selection box)
@@ -207,9 +215,7 @@ function render(): void {
 	stoolgraphics.renderSelectionBoxWireframeDashed(worldFillBox);
 }
 
-
 // Exports -----------------------------------------------
-
 
 export default {
 	areWeFilling,

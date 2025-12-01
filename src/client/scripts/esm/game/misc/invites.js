@@ -1,4 +1,3 @@
-
 // Import Start
 import websocket from '../websocket.js';
 import localstorage from '../../util/localstorage.js';
@@ -14,8 +13,7 @@ import gamesound from './gamesound.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 // Import End
 
-"use strict";
-
+('use strict');
 
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
@@ -30,10 +28,8 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
  * @property {string} rated - rated/casual
  */
 
-
 /** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
 /** @typedef {import('../../../../../shared/types.js').ServerUsernameContainer} ServerUsernameContainer */
-
 
 /** This script manages the invites on the Play page. */
 
@@ -46,14 +42,14 @@ let ourInviteID;
 const element_joinExisting = document.getElementById('join-existing');
 const element_inviteCodeCode = document.getElementById('invite-code-code');
 
-
 function gelement_iCodeCode() {
 	return element_inviteCodeCode;
 }
 
 function update() {
 	if (!guiplay.isOpen()) return; // Not on the play screen
-	if (loadbalancer.gisHibernating()) statustext.showStatus(translations.invites.move_mouse, false, 0.1);
+	if (loadbalancer.gisHibernating())
+		statustext.showStatus(translations.invites.move_mouse, false, 0.1);
 }
 
 function unsubIfWeNotHave() {
@@ -66,26 +62,29 @@ function unsubFromInvites() {
 	websocket.unsubFromSub('invites');
 }
 
-
 // Update invites list according to new data!
 // Should be called by websocket script when it receives a
 // message that the server says is for the "invites" subscription
-function onmessage(data) { // { sub, action, value, id }
+function onmessage(data) {
+	// { sub, action, value, id }
 	// Any incoming message will have no effect if we're not on the invites page.
 	// This can happen if we have slow network and leave the invites screen before the server sends us an invites-related message.
 	if (!guiplay.isOpen()) return;
 
 	switch (data.action) {
-		case "inviteslist":
+		case 'inviteslist':
 			// Update the list in the document
 			updateInviteList(data.value.invitesList);
 			updateActiveGameCount(data.value.currentGameCount);
 			break;
-		case "gamecount":
+		case 'gamecount':
 			updateActiveGameCount(data.value);
 			break;
 		default:
-			statustext.showStatus(`${translations.invites.unknown_action_received_1} ${data.action} ${translations.invites.unknown_action_received_2}`, true);
+			statustext.showStatus(
+				`${translations.invites.unknown_action_received_1} ${data.action} ${translations.invites.unknown_action_received_2}`,
+				true,
+			);
 			break;
 	}
 }
@@ -95,7 +94,8 @@ function onmessage(data) { // { sub, action, value, id }
  * @param {InviteOptions} variantOptions
  */
 function create(variantOptions) {
-	if (weHaveInvite) return console.error("We already have an existing invite, can't create more.");
+	if (weHaveInvite)
+		return console.error("We already have an existing invite, can't create more.");
 
 	const inviteOptions = {
 		variant: variantOptions.variant,
@@ -115,7 +115,7 @@ function create(variantOptions) {
 	// console.log("Invite options before sending create invite:");
 	// console.log(inviteOptions);
 
-	websocket.sendmessage("invites", "createinvite", inviteOptions, true, onreplyFunc);
+	websocket.sendmessage('invites', 'createinvite', inviteOptions, true, onreplyFunc);
 }
 
 function cancel(id = ourInviteID) {
@@ -129,7 +129,7 @@ function cancel(id = ourInviteID) {
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockCreateInviteButton;
 
-	websocket.sendmessage("invites", "cancelinvite", id, true, onreplyFunc);
+	websocket.sendmessage('invites', 'cancelinvite', id, true, onreplyFunc);
 }
 
 // Generates a tag id for the invite parameters before we send off action "createinvite" to the server
@@ -147,9 +147,10 @@ function generateTagForInvite(inviteOptions) {
  * Updates the invite elements on the invite creation screen according to the new list provided.
  * @param {Invite[]} list - The latest invite list
  */
-function updateInviteList(list) { // { invitesList, currentGameCount }
+function updateInviteList(list) {
+	// { invitesList, currentGameCount }
 	if (!list) return;
-    
+
 	const alreadySeenOurInvite = weHaveInvite;
 	let alreadyPlayedSound = false;
 
@@ -160,7 +161,8 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 	let foundOurs = false;
 	let privateInviteID = undefined;
 	ourInviteID = undefined;
-	for (let i = 0; i < list.length; i++) { // { usernamecontainer, variant, clock, color, publicity }
+	for (let i = 0; i < list.length; i++) {
+		// { usernamecontainer, variant, clock, color, publicity }
 		const invite = list[i];
 
 		// Is this our own invite?
@@ -195,8 +197,12 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 			else invite.usernamecontainer.username = translations.guest_indicator;
 		}
 		const username_item = { value: invite.usernamecontainer.username, openInNewWindow: false };
-		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainer(invite.usernamecontainer.type, username_item, invite.usernamecontainer.rating).element;
-		displayelement_usernamecontainer.classList.add("invite-child");
+		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainer(
+			invite.usernamecontainer.type,
+			username_item,
+			invite.usernamecontainer.rating,
+		).element;
+		displayelement_usernamecontainer.classList.add('invite-child');
 		newInvite.appendChild(displayelement_usernamecontainer);
 
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
@@ -206,6 +212,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		const cloc = createDiv(['invite-child'], time);
 		newInvite.appendChild(cloc);
 
+		// prettier-ignore
 		const uColor = ours ? invite.color === players.WHITE ? translations.invites.you_are_white : invite.color === players.BLACK ? translations.invites.you_are_black : translations.invites.random
                             : invite.color === players.WHITE ? translations.invites.you_are_black : invite.color === players.BLACK ? translations.invites.you_are_white : translations.invites.random;
 		const color = createDiv(['invite-child'], uColor);
@@ -218,7 +225,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		const accept = createDiv(['invite-child', 'accept'], a);
 		newInvite.appendChild(accept);
 
-		const targetCont = ours ? ourInviteContainer : invitesContainer; 
+		const targetCont = ours ? ourInviteContainer : invitesContainer;
 		targetCont.appendChild(newInvite, targetCont);
 	}
 
@@ -243,7 +250,7 @@ const playBaseIfNewInvite = (() => {
 	const recentUsers = {};
 	let IDsInLastList = {};
 
-	return function(inviteList) {
+	return function (inviteList) {
 		let playedSound = false;
 		const newIDsInList = {};
 		inviteList.forEach((invite) => {
@@ -254,7 +261,7 @@ const playBaseIfNewInvite = (() => {
 			if (recentUsers[name]) return; // We recently played a sound for this user
 			if (isInviteOurs(invite)) return;
 			recentUsers[name] = true;
-			setTimeout(() => { delete recentUsers[name]; }, cooldownSecs * 1000);
+			setTimeout(() => delete recentUsers[name], cooldownSecs * 1000);
 			if (playedSound) return;
 			playSoundNewOpponentInvite();
 			playedSound = true;
@@ -266,7 +273,6 @@ const playBaseIfNewInvite = (() => {
 function playSoundNewOpponentInvite() {
 	if (docutil.isMouseSupported()) gamesound.playBase();
 	else gamesound.playViola_c3();
-    
 }
 
 // Close all previous event listeners and delete invites from the document
@@ -295,7 +301,10 @@ function clearIfOnPlayPage() {
  */
 function isInviteOurs(invite) {
 	if (validatorama.areWeLoggedIn()) {
-		return invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username;
+		return (
+			invite.usernamecontainer.type === 'player' &&
+			validatorama.getOurUsername() === invite.usernamecontainer.username
+		);
 	}
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
@@ -315,26 +324,27 @@ function isInviteOurs(invite) {
  */
 function getInviteFromElement(inviteElement) {
 	const id = inviteElement.getAttribute('id');
-    
+
 	/**
-     * Starting from the first child, the order goes:
-     * Usernamecontainer, Variant, TimeControl, Color, Publicity, Rated
-     * (see the {@link Invite} object)
-     */
+	 * Starting from the first child, the order goes:
+	 * Usernamecontainer, Variant, TimeControl, Color, Publicity, Rated
+	 * (see the {@link Invite} object)
+	 */
 
 	return {
-		usernamecontainer: usernamecontainer.extractPropertiesFromUsernameContainerElement(inviteElement.children[0]),
+		usernamecontainer: usernamecontainer.extractPropertiesFromUsernameContainerElement(
+			inviteElement.children[0],
+		),
 		variant: inviteElement.children[1].textContent,
 		clock: inviteElement.children[2].textContent,
 		color: inviteElement.children[3].textContent,
 		publicity: inviteElement.children[4].textContent,
 		rated: inviteElement.children[5].textContent,
-		id
+		id,
 	};
 }
 
 function createDiv(classes, textContent, id) {
-
 	const element = document.createElement('div');
 	for (let i = 0; i < classes.length; i++) {
 		element.classList.add(classes[i]);
@@ -352,7 +362,7 @@ function accept(inviteID, isPrivate) {
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockAcceptInviteButton;
 
-	websocket.sendmessage("invites", "acceptinvite", inviteinfo, true, onreplyFunc);
+	websocket.sendmessage('invites', 'acceptinvite', inviteinfo, true, onreplyFunc);
 }
 
 // A callback that gui fires when an invite document element is clicked!
@@ -363,18 +373,21 @@ function click(element) {
 	if (isOurs) {
 		// Only cancel if the Create Invite button isn't disabled
 		if (!guiplay.isCreateInviteButtonLocked()) cancel(invite.id);
-	} else { // Not our invite, accept the one we clicked
+	} else {
+		// Not our invite, accept the one we clicked
 		if (!guiplay.isAcceptInviteButtonLocked()) accept(invite.id, true);
 	}
 }
 
 function updateCreateInviteButton() {
 	if (guiplay.getModeSelected() !== 'online') return;
-	if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
-	else              guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
+	if (weHaveInvite)
+		guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
+	else guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
 }
 
-function updatePrivateInviteCode(privateInviteID) { // If undefined, we know we don't have a "private" invite
+function updatePrivateInviteCode(privateInviteID) {
+	// If undefined, we know we don't have a "private" invite
 	if (guiplay.getModeSelected() === 'local') return;
 
 	if (!weHaveInvite) {
@@ -414,16 +427,16 @@ function doWeHave() {
  * for incoming and deleted invites from other players.
  * @param {ignoreAlreadySubbed} *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
  * */
-async function subscribeToInvites(ignoreAlreadySubbed) { // Set to true when we are restarting the connection and need to resub to everything we were to before.
+async function subscribeToInvites(ignoreAlreadySubbed) {
+	// Set to true when we are restarting the connection and need to resub to everything we were to before.
 	if (!guiplay.isOpen()) return; // Don't subscribe to invites if we're not on the play page!
 
 	const alreadySubbed = websocket.areSubbedToSub('invites');
 	if (!ignoreAlreadySubbed && alreadySubbed) return;
 	// console.log("Subbing to invites!");
 	websocket.addSub('invites');
-	websocket.sendmessage("general", "sub", "invites");
+	websocket.sendmessage('general', 'sub', 'invites');
 }
-
 
 export default {
 	gelement_iCodeCode,
