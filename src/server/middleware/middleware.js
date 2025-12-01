@@ -76,15 +76,17 @@ function configureMiddleware(app) {
 
 	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
-	app.use(helmet({
-		contentSecurityPolicy: {
-			directives: {
-				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"],  // Allows inline scripts
-				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
-				objectSrc: ["'none'"],
-				frameSrc: ["'self'", 'https://www.youtube.com'],
-				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "blob:"]
+	app.use(
+		helmet({
+			contentSecurityPolicy: {
+				directives: {
+					defaultSrc: ["'self'"],
+					scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"], // Allows inline scripts
+					scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
+					objectSrc: ["'none'"],
+					frameSrc: ["'self'", 'https://www.youtube.com'],
+					imgSrc: ["'self'", 'data:', 'https://avatars.githubusercontent.com', 'blob:'],
+				},
 			},
 		}),
 	);
