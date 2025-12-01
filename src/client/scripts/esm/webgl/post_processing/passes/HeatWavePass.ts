@@ -1,8 +1,7 @@
-
 // src/client/scripts/esm/webgl/post_processing/passes/HeatWavePass.ts
 
-import type { ProgramManager, ProgramMap } from "../../ProgramManager";
-import type { PostProcessPass } from "../PostProcessingPipeline";
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessingPipeline';
 
 /**
  * A post-processing pass that applies a rising, shimmering heat distortion effect.
@@ -10,7 +9,7 @@ import type { PostProcessPass } from "../PostProcessingPipeline";
 export class HeatWavePass implements PostProcessPass {
 	readonly program: ProgramMap['heat_wave'];
 	private noiseTexture: WebGLTexture;
-	
+
 	// --- Public Properties to Control the Effect ---
 
 	/** A master control for the strength of the entire pass. 0.0 is off, 1.0 is full effect. */
@@ -22,19 +21,19 @@ export class HeatWavePass implements PostProcessPass {
 	/** The current time, used to animate the waves. Increment this each frame. */
 	public time: number = 0.0;
 
-
 	constructor(programManager: ProgramManager, noiseTexture: WebGLTexture) {
 		this.program = programManager.get('heat_wave');
 		this.noiseTexture = noiseTexture;
 	}
 
+	// prettier-ignore
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
 		this.program.use();
-		
+
 		// 1. Bind the scene texture from the pipeline to TEXTURE UNIT 0
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-		
+
 		// 2. Bind our own noise texture to TEXTURE UNIT 1
 		gl.activeTexture(gl.TEXTURE1);
 		gl.bindTexture(gl.TEXTURE_2D, this.noiseTexture);

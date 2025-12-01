@@ -1,16 +1,15 @@
-
 /**
  * This script stores the SVG locations and default tint colors for the pieces.
  */
 
-import { rawTypes, players } from "../../chess/util/typeutil.js";
+import { rawTypes, players } from '../../chess/util/typeutil.js';
 
-import type { RawType, Player } from "../../chess/util/typeutil.js";
-import type { Color } from "../../util/math/math.js";
+import type { RawType, Player } from '../../chess/util/typeutil.js';
+import type { Color } from '../../util/math/math.js';
 
 type PieceColorGroup = {
-	[_team in Player]: Color
-}
+	[_team in Player]: Color;
+};
 
 /** The default tints for a piece, if not provided. */
 const defaultBaseColors: PieceColorGroup = {
@@ -26,11 +25,11 @@ const defaultBaseColors: PieceColorGroup = {
 
 /** Config for the SVGs of the pieces */
 const SVGConfig: {
-    [_type in RawType]: {
+	[_type in RawType]: {
 		/** null if the raw type doesn't have an svg (VOID) */
-        location: string | null
-        colors?: PieceColorGroup
-    }
+		location: string | null;
+		colors?: PieceColorGroup;
+	};
 } = {
 	[rawTypes.VOID]: {
 		location: null, // VOID has no svg
@@ -41,11 +40,11 @@ const SVGConfig: {
 			[players.RED]: [1, 0, 0, 1],
 			[players.BLUE]: [0, 0, 1, 1],
 			[players.YELLOW]: [1, 1, 0, 1],
-			[players.GREEN]: [0, 1, 0, 1]
-		}
+			[players.GREEN]: [0, 1, 0, 1],
+		},
 	},
 	[rawTypes.OBSTACLE]: {
-		location: "fairy/obstacle",
+		location: 'fairy/obstacle',
 		colors: {
 			[players.NEUTRAL]: [0.08, 0.08, 0.08, 1],
 			[players.WHITE]: [1, 1, 1, 1],
@@ -53,29 +52,29 @@ const SVGConfig: {
 			[players.RED]: [1, 0, 0, 1],
 			[players.BLUE]: [0, 0, 1, 1],
 			[players.YELLOW]: [1, 1, 0, 1],
-			[players.GREEN]: [0, 1, 0, 1]
-		}
+			[players.GREEN]: [0, 1, 0, 1],
+		},
 	},
-	[rawTypes.KING]: { location: "classical" },
-	[rawTypes.GIRAFFE]: { location: "fairy/giraffe" },
-	[rawTypes.CAMEL]: { location: "fairy/camel" },
-	[rawTypes.ZEBRA]: { location: "fairy/zebra" },
-	[rawTypes.KNIGHTRIDER]: { location: "fairy/knightrider" },
-	[rawTypes.AMAZON]: { location: "fairy/amazon" },
-	[rawTypes.QUEEN]: { location: "classical" },
-	[rawTypes.ROYALQUEEN]: { location: "fairy/royalQueen" },
-	[rawTypes.HAWK]: { location: "fairy/hawk" },
-	[rawTypes.CHANCELLOR]: { location: "fairy/chancellor" },
-	[rawTypes.ARCHBISHOP]: { location: "fairy/archbishop" },
-	[rawTypes.CENTAUR]: { location: "fairy/centaur" },
-	[rawTypes.ROYALCENTAUR]: { location: "fairy/royalCentaur" },
-	[rawTypes.ROSE]: { location: "fairy/rose" },
-	[rawTypes.KNIGHT]: { location: "classical" },
-	[rawTypes.GUARD]: { location: "fairy/guard" },
-	[rawTypes.HUYGEN]: { location: "fairy/huygen" },
-	[rawTypes.ROOK]: { location: "classical" },
-	[rawTypes.BISHOP]: { location: "classical" },
-	[rawTypes.PAWN]: { location: "classical" },
+	[rawTypes.KING]: { location: 'classical' },
+	[rawTypes.GIRAFFE]: { location: 'fairy/giraffe' },
+	[rawTypes.CAMEL]: { location: 'fairy/camel' },
+	[rawTypes.ZEBRA]: { location: 'fairy/zebra' },
+	[rawTypes.KNIGHTRIDER]: { location: 'fairy/knightrider' },
+	[rawTypes.AMAZON]: { location: 'fairy/amazon' },
+	[rawTypes.QUEEN]: { location: 'classical' },
+	[rawTypes.ROYALQUEEN]: { location: 'fairy/royalQueen' },
+	[rawTypes.HAWK]: { location: 'fairy/hawk' },
+	[rawTypes.CHANCELLOR]: { location: 'fairy/chancellor' },
+	[rawTypes.ARCHBISHOP]: { location: 'fairy/archbishop' },
+	[rawTypes.CENTAUR]: { location: 'fairy/centaur' },
+	[rawTypes.ROYALCENTAUR]: { location: 'fairy/royalCentaur' },
+	[rawTypes.ROSE]: { location: 'fairy/rose' },
+	[rawTypes.KNIGHT]: { location: 'classical' },
+	[rawTypes.GUARD]: { location: 'fairy/guard' },
+	[rawTypes.HUYGEN]: { location: 'fairy/huygen' },
+	[rawTypes.ROOK]: { location: 'classical' },
+	[rawTypes.BISHOP]: { location: 'classical' },
+	[rawTypes.PAWN]: { location: 'classical' },
 };
 
 function getLocationsForTypes(types: Iterable<RawType>): Set<string> {
@@ -95,9 +94,7 @@ function getBaseColorForType(type: RawType, team: Player): Color {
 	return (SVGConfig[type].colors ?? defaultBaseColors)[team];
 }
 
-export type {
-	PieceColorGroup,
-};
+export type { PieceColorGroup };
 
 export default {
 	getLocationsForTypes,

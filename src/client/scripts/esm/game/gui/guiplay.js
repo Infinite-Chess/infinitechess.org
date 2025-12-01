@@ -1,4 +1,3 @@
-
 // Import Start
 import localstorage from '../../util/localstorage.js';
 import statustext from './statustext.js';
@@ -12,7 +11,6 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 // Import End
-
 
 // Type Definitions --------------------------------------------------------------------
 
@@ -28,11 +26,9 @@ import usernamecontainer from '../../util/usernamecontainer.js';
  * @property {'casual'} rated
  */
 
-
 // Variables --------------------------------------------------------------------
 
-
-"use strict";
+('use strict');
 
 /**
  * This script handles our Play page, containing
@@ -96,18 +92,30 @@ let acceptInviteButtonIsLocked = false;
  * Whether or not the play page is currently open, and the invites are visible.
  * @returns {boolean}
  */
-function isOpen() { return pageIsOpen; }
+function isOpen() {
+	return pageIsOpen;
+}
 
 /**
  * Returns whether we've selected "online", "local", or a "computer" game.
  * @returns {boolean}
  */
-function getModeSelected() { return modeSelected; }
+function getModeSelected() {
+	return modeSelected;
+}
 
-function hideElement_joinPrivate() { element_joinPrivate.classList.add('hidden'); }
-function showElement_joinPrivate() { element_joinPrivate.classList.remove('hidden'); }
-function hideElement_inviteCode() { element_inviteCode.classList.add('hidden'); }
-function showElement_inviteCode() { element_inviteCode.classList.remove('hidden'); }
+function hideElement_joinPrivate() {
+	element_joinPrivate.classList.add('hidden');
+}
+function showElement_joinPrivate() {
+	element_joinPrivate.classList.remove('hidden');
+}
+function hideElement_inviteCode() {
+	element_inviteCode.classList.add('hidden');
+}
+function showElement_inviteCode() {
+	element_inviteCode.classList.remove('hidden');
+}
 
 function open() {
 	pageIsOpen = true;
@@ -163,7 +171,8 @@ function closeListeners() {
 	element_textboxPrivate.removeEventListener('keyup', callback_textboxPrivateEnter);
 }
 
-function changePlayMode(mode) { // online / local / computer
+function changePlayMode(mode) {
+	// online / local / computer
 	if (mode === 'online' && createInviteButtonIsLocked) disableCreateInviteButton(); // Disable it immediately, it's still locked from the last time we clicked it (we quickly clicked "Local" then "Online" again before we heard back from the server)
 	if (mode !== 'online' && invites.doWeHave()) element_createInvite.click(); // Simulate clicking to cancel our invite, BEFORE we switch modes (because if the mode is local it will just start the game)
 
@@ -182,7 +191,8 @@ function changePlayMode(mode) { // online / local / computer
 		element_optionCardPrivate.classList.remove('hidden');
 		const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
 		element_optionCardClock.classList.remove('hidden');
-		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
+		element_optionClock.selectedIndex =
+			localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
 		element_joinPrivate.classList.remove('hidden');
 		const localStorageRated = localstorage.loadItem('preferred_rated_invite_value');
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
@@ -206,7 +216,8 @@ function changePlayMode(mode) { // online / local / computer
 		element_optionCardPrivate.classList.add('hidden');
 		element_optionCardClock.classList.remove('hidden');
 		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
-		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+		element_optionClock.selectedIndex =
+			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 	} else if (mode === 'computer') {
@@ -225,7 +236,8 @@ function changePlayMode(mode) { // online / local / computer
 		element_optionCardPrivate.classList.add('hidden');
 		element_optionCardClock.classList.add('hidden');
 		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
-		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+		element_optionClock.selectedIndex =
+			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 	}
@@ -250,7 +262,6 @@ function callback_local() {
 
 // Also starts local games
 function callback_createInvite() {
-
 	const inviteOptions = getInviteOptions();
 
 	if (modeSelected === 'local') {
@@ -266,18 +277,18 @@ function callback_createInvite() {
 		else invites.create(inviteOptions);
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
+		// prettier-ignore
 		const ourColor = inviteOptions.color !== players.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? players.WHITE : players.BLACK;
 		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
 			youAreColor: ourColor,
-			currentEngine: "engineCheckmatePractice",
+			currentEngine: 'engineCheckmatePractice',
 			// engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
 			engineConfig: { engineTimeLimitPerMoveMillis: 500 }, // Half a second for dev testing
 		});
 	}
 }
-
 
 /**
  * Returns an object containing the values of each of the invite options on the invite creation screen.
@@ -285,9 +296,8 @@ function callback_createInvite() {
  */
 function getInviteOptions() {
 	const strcolor = element_optionColor.value;
-	const color = strcolor === "White" ? players.WHITE :
-		strcolor === "Black" ? players.BLACK :
-		players.NEUTRAL;
+	// prettier-ignore
+	const color = strcolor === "White" ? players.WHITE : strcolor === "Black" ? players.BLACK : players.NEUTRAL;
 	return {
 		variant: element_optionVariant.value,
 		clock: element_optionClock.value,
@@ -299,11 +309,10 @@ function getInviteOptions() {
 
 // Call whenever the Variant, Clock, Color or Private inputs change, or play mode changes
 function callback_updateOptions() {
-    
 	// save prefered clock option
 	savePreferredClockOption(element_optionClock.selectedIndex);
 	savePreferredRatedOption(element_optionRated.value);
-	
+
 	// check if rated games should be enabled in online mode
 	if (modeSelected !== 'online') return;
 	const variantValue = element_optionVariant.value;
@@ -313,43 +322,46 @@ function callback_updateOptions() {
 	// conditions for enabling Rated games:
 	if (
 		variantValue in VariantLeaderboards &&
-		clockValue !== "-" &&
-		(colorValue === "Random" || privateValue === "private")
+		clockValue !== '-' &&
+		(colorValue === 'Random' || privateValue === 'private')
 	) {
 		element_optionRatedYes.disabled = false;
-	}
-	else {
-		element_optionRated.value = "casual";
+	} else {
+		element_optionRated.value = 'casual';
 		element_optionRatedYes.disabled = true;
 	}
-
 }
 
 function savePreferredClockOption(clockIndex) {
 	const localOrOnline = modeSelected;
 	// For search results: preferred_local_clock_invite_value preferred_online_clock_invite_value
-	localstorage.saveItem(`preferred_${localOrOnline}_clock_invite_value`, clockIndex, timeutil.getTotalMilliseconds({ days: 7 }));
+	localstorage.saveItem(
+		`preferred_${localOrOnline}_clock_invite_value`,
+		clockIndex,
+		timeutil.getTotalMilliseconds({ days: 7 }),
+	);
 }
 
 function savePreferredRatedOption(ratedValue) {
-	localstorage.saveItem(`preferred_rated_invite_value`, ratedValue, timeutil.getTotalMilliseconds({ years: 1 }));
+	localstorage.saveItem(
+		`preferred_rated_invite_value`,
+		ratedValue,
+		timeutil.getTotalMilliseconds({ years: 1 }),
+	);
 }
-	
 
 function callback_joinPrivate() {
-
 	const code = element_textboxPrivate.value.toLowerCase();
 
 	if (code.length !== 5) return statustext.showStatus(translations.invite_error_digits);
 
 	element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
-    
+
 	const isPrivate = true;
 	invites.accept(code, isPrivate);
 }
 
 function callback_textboxPrivateEnter() {
-
 	// 13 is the key code for Enter key
 	if (event.keyCode === 13) {
 		if (!element_joinPrivateMatch.disabled) callback_joinPrivate(event);
@@ -357,14 +369,13 @@ function callback_textboxPrivateEnter() {
 }
 
 function callback_copyInviteCode() {
-
 	if (!modeSelected.includes('online')) return;
 	if (!invites.doWeHave()) return;
-    
+
 	// Copy our private invite code.
 
 	const code = invites.gelement_iCodeCode().textContent;
-    
+
 	docutil.copyToClipboard(code);
 	statustext.showStatus(translations.invite_copied);
 }
@@ -372,7 +383,7 @@ function callback_copyInviteCode() {
 function initListeners_Invites() {
 	const invites = document.querySelectorAll('.invite');
 
-	invites.forEach(element => {
+	invites.forEach((element) => {
 		element.addEventListener('mouseenter', callback_inviteMouseEnter);
 		element.addEventListener('mouseleave', callback_inviteMouseLeave);
 		element.addEventListener('click', callback_inviteClicked);
@@ -382,7 +393,7 @@ function initListeners_Invites() {
 function closeListeners_Invites() {
 	const invites = document.querySelectorAll('.invite');
 
-	invites.forEach(element => {
+	invites.forEach((element) => {
 		element.removeEventListener('mouseenter', callback_inviteMouseEnter);
 		element.removeEventListener('mouseleave', callback_inviteMouseLeave);
 		element.removeEventListener('click', callback_inviteClicked);
@@ -391,7 +402,6 @@ function closeListeners_Invites() {
 
 function callback_inviteMouseEnter() {
 	event.target.classList.add('hover');
-
 }
 
 function callback_inviteMouseLeave() {
@@ -430,15 +440,23 @@ function unlockCreateInviteButton() {
 	// console.log('Unlocked create invite button.');
 }
 
-function disableCreateInviteButton() { element_createInvite.disabled = true; }
-function enableCreateInviteButton() { element_createInvite.disabled = false; }
-function setElement_CreateInviteTextContent(text) { element_createInvite.textContent = text;  }
+function disableCreateInviteButton() {
+	element_createInvite.disabled = true;
+}
+function enableCreateInviteButton() {
+	element_createInvite.disabled = false;
+}
+function setElement_CreateInviteTextContent(text) {
+	element_createInvite.textContent = text;
+}
 
 /**
  * Whether the Create Invite button is locked.
  * @returns {boolean}
  */
-function isCreateInviteButtonLocked() { return createInviteButtonIsLocked; }
+function isCreateInviteButtonLocked() {
+	return createInviteButtonIsLocked;
+}
 
 /**
  * Locks the *virtual* accept invite button to disable clicking other people's invites.
@@ -464,7 +482,9 @@ function unlockAcceptInviteButton() {
  * If it's locked, this means we temporarily cannot click other people's invites.
  * @returns {boolean}
  */
-function isAcceptInviteButtonLocked() { return acceptInviteButtonIsLocked; }
+function isAcceptInviteButtonLocked() {
+	return acceptInviteButtonIsLocked;
+}
 
 /**
  * Call when the socket closes, whether or not it was unexpected.

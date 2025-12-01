@@ -1,4 +1,3 @@
-
 'use strict';
 
 /* global main */
@@ -9,15 +8,13 @@
  * This is so we can execute code that needs to be executed preferrably
  * before the document fully loads (for example, the loading screen,
  * or pre-loading the sound spritesheet)
- * 
+ *
  * This is also what calls our main() function when the page fully loads.
  */
 // eslint-disable-next-line no-unused-vars
-const htmlscript = (function() {
-
+const htmlscript = (function () {
 	// Listen for the first user gesture...
 
-    
 	// If there's an error in loading, stop the loading animation
 	// ...
 
@@ -33,7 +30,7 @@ const htmlscript = (function() {
 
 		if (loadingErrorOcurred) return; // We only need to show the error text once
 		loadingErrorOcurred = true;
-        
+
 		// Hide the "LOADING" text
 		const element_loadingText = document.getElementById('loading-text');
 		element_loadingText.classList.add('hidden'); // This applies a 'display: none' rule
@@ -42,7 +39,9 @@ const htmlscript = (function() {
 		const element_loadingError = document.getElementById('loading-error');
 		const element_loadingErrorText = document.getElementById('loading-error-text');
 		element_loadingError.classList.remove('hidden');
-		element_loadingErrorText.textContent = lostNetwork ? translations.lost_network : translations.failed_to_load;
+		element_loadingErrorText.textContent = lostNetwork
+			? translations.lost_network
+			: translations.failed_to_load;
 
 		// Remove the glowing in the background animation
 		const element_loadingGlow = document.getElementById('loading-glow');
@@ -77,10 +76,10 @@ const htmlscript = (function() {
 		lostNetwork = false;
 		if (loadingErrorOcurred) window.location.reload(); // Refresh the page
 	}
-    
+
 	// When the document is loaded, start the game!
 
-	window.addEventListener('load', function() {
+	window.addEventListener('load', function () {
 		if (loadingErrorOcurred) return; // Page never finished loading, don't start the game.
 		closeLoadingScreenListeners(); // Remove document event listeners for the loading screen
 		main.start(); // Start the game!
@@ -90,5 +89,4 @@ const htmlscript = (function() {
 		callback_LoadingError,
 		removeOnerror,
 	});
-
 })();

@@ -1,4 +1,3 @@
-
 // src/server/socket/openSocket.ts
 
 /**
@@ -7,7 +6,13 @@
 
 import socketUtility from './socketUtility.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
-import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessionHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
+import {
+	addConnectionToConnectionLists,
+	doesClientHaveMaxSocketCount,
+	doesSessionHaveMaxSocketCount,
+	generateUniqueIDForSocket,
+	terminateAllIPSockets,
+} from './socketManager.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
@@ -21,26 +26,17 @@ import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/l
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 
-
 // Type Definitions ---------------------------------------------------------------------------
-
 
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
-import type { Request } from "express";
-
+import type { Request } from 'express';
 
 // Variables ---------------------------------------------------------------------------
 
-
-
-
-
 // Functions ---------------------------------------------------------------------------
 
-
-function onConnectionRequest(socket: WebSocket, req: Request): void { 
-
+function onConnectionRequest(socket: WebSocket, req: Request): void {
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
 
@@ -49,25 +45,32 @@ function onConnectionRequest(socket: WebSocket, req: Request): void {
 	// 1. Too many requests
 	// 2. Message too big
 	// In ALL these cases, we are terminating all the IPs sockets for now!
-	if (!rateLimitWebSocket(req, ws)) { // Connection not allowed
+	if (!rateLimitWebSocket(req, ws)) {
+		// Connection not allowed
 		return terminateAllIPSockets(ws.metadata.IP);
-	};
+	}
 
 	// Check if ip has too many connections
 	if (doesClientHaveMaxSocketCount(ws.metadata.IP)) {
 		console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
-	
+
 	// Initialize who they are. Member? Browser ID?...
 	verifyJWTWebSocket(ws); // Modifies ws.metadata.memberInfo if they are signed in to add the user_id, username, and roles properties.
 
-	if (ws.metadata.memberInfo.signedIn && doesSessionHaveMaxSocketCount(ws.metadata.cookies.jwt!)) {
-		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`);
+	if (
+		ws.metadata.memberInfo.signedIn &&
+		doesSessionHaveMaxSocketCount(ws.metadata.cookies.jwt!)
+	) {
+		console.log(
+			`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`,
+		);
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	if (!ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.browser_id === undefined) { // Terminate web socket connection request, they NEED authentication!
+	if (!ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.browser_id === undefined) {
+		// Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
 		socketUtility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
@@ -81,7 +84,12 @@ function onConnectionRequest(socket: WebSocket, req: Request): void {
 
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
 	if (ws.metadata.memberInfo.signedIn) {
-		const member = getMemberDataByCriteria(['is_verified'], 'user_id', ws.metadata.memberInfo.user_id, true) as { is_verified: 0 | 1 };
+		const member = getMemberDataByCriteria(
+			['is_verified'],
+			'user_id',
+			ws.metadata.memberInfo.user_id,
+			true,
+		) as { is_verified: 0 | 1 };
 		// Set the verified status. 1 means true.
 		if (member.is_verified === 1) ws.metadata.verified = true;
 	}
@@ -90,20 +98,28 @@ function onConnectionRequest(socket: WebSocket, req: Request): void {
 	sendSocketMessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
 
-function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWebSocket | undefined {
-	
+function closeIfInvalidAndAddMetadata(
+	socket: WebSocket,
+	req: Request,
+): CustomWebSocket | undefined {
 	// Make sure the connection is secure https
 	const origin = req.headers.origin;
 	if (origin === undefined || !origin.startsWith('https')) {
-		console.error(`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`);
-		socket.close(1009, "Not Secure");
+		console.error(
+			`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`,
+		);
+		socket.close(1009, 'Not Secure');
 		return;
 	}
 
 	// Make sure the origin is our website
-	if (!DEV_BUILD && origin !== process.env['APP_BASE_URL']) { // In DEV_BUILD, allow all origins.
-		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`, 'hackLog.txt');
-		socket.close(1009, "Origin Error");
+	if (!DEV_BUILD && origin !== process.env['APP_BASE_URL']) {
+		// In DEV_BUILD, allow all origins.
+		logEvents(
+			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
+			'hackLog.txt',
+		);
+		socket.close(1009, 'Origin Error');
 		return;
 	}
 
@@ -123,7 +139,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 
 	// Initialize the metadata and cast to a custom websocket object
 	const ws = socket as CustomWebSocket; // Cast WebSocket to CustomWebSocket
-	
+
 	ws.metadata = {
 		// Parse cookies from the Upgrade http headers
 		cookies,
@@ -142,9 +158,21 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
  * Adds the 'message', 'close', and 'error' event listeners to the socket
  */
 function addListenersToSocket(req: Request, ws: CustomWebSocket): void {
-	ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message); });
-	ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason); });
-	ws.on('error', (error) => { executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error); });
+	ws.on('message', (message) => {
+		executeSafely(
+			onmessage,
+			'Error caught within websocket on-message event:',
+			req,
+			ws,
+			message,
+		);
+	});
+	ws.on('close', (code, reason) => {
+		executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason);
+	});
+	ws.on('error', (error) => {
+		executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error);
+	});
 }
 
 function onerror(ws: CustomWebSocket, error: Error): void {
@@ -152,8 +180,4 @@ function onerror(ws: CustomWebSocket, error: Error): void {
 	logEventsAndPrint(errText, 'errLog.txt');
 }
 
-
-
-export {
-	onConnectionRequest
-};
+export { onConnectionRequest };

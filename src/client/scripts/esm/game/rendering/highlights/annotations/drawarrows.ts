@@ -1,32 +1,34 @@
-
 /**
  * This script allows the user to draw arrows on the board.
- * 
+ *
  * Helpful for analysis, and requested by many.
  */
 
+import space from '../../../misc/space.js';
+import preferences from '../../../../components/header/preferences.js';
+import snapping from '../snapping.js';
+import mouse from '../../../../util/mouse.js';
+import vectors from '../../../../../../../shared/util/math/vectors.js';
+import geometry from '../../../../../../../shared/util/math/geometry.js';
+import boardpos from '../../boardpos.js';
+import camera from '../../camera.js';
+import { createRenderable } from '../../../../webgl/Renderable.js';
+import { Mouse } from '../../../input.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../../shared/chess/util/coordutil.js';
+import bd, { BigDecimal } from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
 
-import space from "../../../misc/space.js";
-import preferences from "../../../../components/header/preferences.js";
-import snapping from "../snapping.js";
-import mouse from "../../../../util/mouse.js";
-import vectors from "../../../../../../../shared/util/math/vectors.js";
-import geometry from "../../../../../../../shared/util/math/geometry.js";
-import boardpos from "../../boardpos.js";
-import camera from "../../camera.js";
-import { createRenderable } from "../../../../webgl/Renderable.js";
-import { Mouse } from "../../../input.js";
-import coordutil, { BDCoords, Coords, DoubleCoords } from "../../../../../../../shared/chess/util/coordutil.js";
-import bd, { BigDecimal } from "../../../../../../../shared/util/bigdecimal/bigdecimal.js";
-
-
-import type { Arrow } from "./annotations.js";
-import type { Color } from "../../../../../../../shared/util/math/math.js";
-import type { BoundingBoxBD, DoubleBoundingBox } from "../../../../../../../shared/util/math/bounds.js";
-
+import type { Arrow } from './annotations.js';
+import type { Color } from '../../../../../../../shared/util/math/math.js';
+import type {
+	BoundingBoxBD,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds.js';
 
 // Constants -----------------------------------------------------------------
-
 
 /** Properties for the drawn arrows.*/
 const ARROW = {
@@ -52,9 +54,6 @@ const ARROW = {
 const ZERO = bd.FromBigInt(0n);
 const ONE = bd.FromBigInt(1n);
 
-
-
-
 /** This will be defined if we are CURRENTLY drawing an arrow. */
 let drag_start: Coords | undefined;
 /** The ID of the pointer that is drawing the arrow. */
@@ -62,9 +61,7 @@ let pointerId: string | undefined;
 /** The last known position of the pointer drawing an arrow. */
 let pointerWorld: DoubleCoords | undefined;
 
-
 // Updating -----------------------------------------------------------------
-
 
 /**
  * Tests if the user has started/finished drawing new arrows,
@@ -88,7 +85,7 @@ function update(arrows: Arrow[]): void {
 
 			if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
 				if (closestEntityToWorld) {
-					// Snap to nearest hovered entity 
+					// Snap to nearest hovered entity
 					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
 				} else {
 					// Snap to the current snap
@@ -99,10 +96,12 @@ function update(arrows: Arrow[]): void {
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			}
 		}
-	} else { // Currently drawing an arrow
+	} else {
+		// Currently drawing an arrow
 
 		// Test if pointer released (finalize arrow)
-		if (respectiveListener.pointerExists(pointerId!)) pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
+		if (respectiveListener.pointerExists(pointerId!))
+			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (!respectiveListener.isPointerHeld(pointerId!)) {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
@@ -130,7 +129,7 @@ function stealPointer(pointerIdToSteal: string): void {
  * @param arrows - All arrows currently visible on the board.
  * @returns An object containing the results, such as whether a change was made, and what arrow was deleted if any.
  */
-function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
+function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arrow } {
 	if (!pointerWorld) return { changed: false }; // Probably stopped drawing while looking into sky?
 
 	// console.log("Adding drawn arrow");
@@ -158,7 +157,10 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 	// If a matching arrow already exists, remove that instead.
 	for (let i = 0; i < arrows.length; i++) {
 		const arrow = arrows[i]!;
-		if (coordutil.areCoordsEqual(arrow.start, drag_start!) && coordutil.areCoordsEqual(arrow.end, drag_end)) {
+		if (
+			coordutil.areCoordsEqual(arrow.start, drag_start!) &&
+			coordutil.areCoordsEqual(arrow.end, drag_end)
+		) {
 			arrows.splice(i, 1); // Remove the existing arrow
 			return { changed: true, deletedArrow: arrow }; // No new arrow added
 		}
@@ -185,10 +187,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 	return { changed: true };
 }
 
-
 // Rendering -----------------------------------------------------------------
-
-
 
 function render(arrows: Arrow[]): void {
 	// Add the arrow currently being drawn
@@ -198,19 +197,19 @@ function render(arrows: Arrow[]): void {
 	if (arrows.length > 0) {
 		// Construct the data
 		const color = preferences.getAnnoteArrowColor();
-		const data: number[] = arrows.flatMap(arrow => getDataArrow(arrow, color));
-	
+		const data: number[] = arrows.flatMap((arrow) => getDataArrow(arrow, color));
+
 		// Render
 		createRenderable(data, 2, 'TRIANGLES', 'color', true).render(); // No transform needed
 	}
 
 	// Remove the arrow currently being drawn
 	if (drawingCurrentlyDrawn.changed) {
-		if (drawingCurrentlyDrawn.deletedArrow) arrows.push(drawingCurrentlyDrawn.deletedArrow); // Restore the deleted arrow if any
+		if (drawingCurrentlyDrawn.deletedArrow)
+			arrows.push(drawingCurrentlyDrawn.deletedArrow); // Restore the deleted arrow if any
 		else arrows.pop();
 	}
 }
-
 
 /**
  * Generates vertex data for a single arrow.
@@ -219,10 +218,7 @@ function render(arrows: Arrow[]): void {
  * @param color - The color [r, g, b, a] of the arrow.
  * @returns The vertex data for the arrow (x,y, r,g,b,a).
  */
-function getDataArrow(
-	arrow: Arrow,
-	color: Color
-): number[] {
+function getDataArrow(arrow: Arrow, color: Color): number[] {
 	// First we need to shift the arrow's base a little away from the center of the starting square.
 
 	// The distance in squares between the start and end coordinates.
@@ -230,14 +226,19 @@ function getDataArrow(
 
 	const entityWidthWorld: number = snapping.getEntityWidthWorld();
 	// How many squares wide highlights are at this zoom distance.
-	const entityWidthSquares: BigDecimal = boardpos.areZoomedOut() ? space.convertWorldSpaceToGrid(entityWidthWorld) : ONE;
-	
+	const entityWidthSquares: BigDecimal = boardpos.areZoomedOut()
+		? space.convertWorldSpaceToGrid(entityWidthWorld)
+		: ONE;
+
 	// The size of entities at this zoom level.
 	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
 	// How much the arrow base is offset from the start coordinate.
 	const arrowBaseOffsetWorld: number = ARROW.BASE_OFFSET * size;
-	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(entityWidthSquares, bd.FromNumber(ARROW.BASE_OFFSET));
+	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(
+		entityWidthSquares,
+		bd.FromNumber(ARROW.BASE_OFFSET),
+	);
 
 	// If the arrow length <= base offset, don't draw it (it would have negative length).
 	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
@@ -265,9 +266,12 @@ function getDataArrow(
 		top: space.convertWorldSpaceToCoords_Axis(viewBox.top, boardScale, boardPos[1]),
 	};
 
-
 	// Now take the arrow's vector, and calculate its intersections with this box.
-	const intersections = geometry.findLineBoxIntersectionsBD(bd.FromCoords(arrow.start), arrow.vector, viewBoxTiles);
+	const intersections = geometry.findLineBoxIntersectionsBD(
+		bd.FromCoords(arrow.start),
+		arrow.vector,
+		viewBoxTiles,
+	);
 
 	if (intersections.length < 2) return []; // Arrow not visible on screen
 
@@ -276,7 +280,7 @@ function getDataArrow(
 	// Also check if the first intersection dot product of the vector pointing from the END coords is positive.
 	const dotProductEndToFirstIntersection = vectors.dotProductBD(
 		coordutil.subtractBDCoords(intersections[0]!.coords!, bd.FromCoords(arrow.end)),
-		vectors.negateBDVector(arrow.difference)
+		vectors.negateBDVector(arrow.difference),
 	);
 	if (bd.compare(dotProductEndToFirstIntersection, ZERO) < 0) return []; // end point lies before screen
 
@@ -284,7 +288,10 @@ function getDataArrow(
 	// If it does, set it to the first intersection.
 	// To do this, we're going to have to compare dot products.
 	const firstIntersectionWorld = space.convertCoordToWorldSpace(intersections[0]!.coords!);
-	const startToFirstIntersection: DoubleCoords = coordutil.subtractDoubleCoords(firstIntersectionWorld, startWorld);
+	const startToFirstIntersection: DoubleCoords = coordutil.subtractDoubleCoords(
+		firstIntersectionWorld,
+		startWorld,
+	);
 	const startToEnd: DoubleCoords = coordutil.subtractDoubleCoords(endWorld, startWorld);
 	const dotProductStart = vectors.dotProductDoubles(startToFirstIntersection, startToEnd);
 	if (dotProductStart > 0) startWorld = firstIntersectionWorld; // startWorld lies before the first intersection, clamp it to the first intersection.
@@ -292,7 +299,10 @@ function getDataArrow(
 	// endWorld: Make sure it doesn't go past the last intersection.
 	// If it does, set it to the last intersection.
 	const lastIntersectionWorld = space.convertCoordToWorldSpace(intersections[1]!.coords!);
-	const endToLastIntersection: DoubleCoords = coordutil.subtractDoubleCoords(lastIntersectionWorld, endWorld);
+	const endToLastIntersection: DoubleCoords = coordutil.subtractDoubleCoords(
+		lastIntersectionWorld,
+		endWorld,
+	);
 	const endToStart: DoubleCoords = vectors.negateDoubleVector(startToEnd);
 	const dotProductEnd = vectors.dotProductDoubles(endToLastIntersection, endToStart);
 	if (dotProductEnd > 0) endWorld = lastIntersectionWorld; // endWorld lies past the last intersection, clamp it to the last intersection.
@@ -319,10 +329,12 @@ function getDataArrow(
 	const length = vectors.euclideanDistanceDoubles(startWorld, endWorld); // World space length from base to tip
 
 	// Helpers
+	// prettier-ignore
 	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void => {
 		vertices.push(x1, y1, r, g, b, a, x2, y2, r, g, b, a, x3, y3, r, g, b, a);
 		vertices.push(x3, y3, r, g, b, a, x4, y4, r, g, b, a, x1, y1, r, g, b, a);
 	};
+	// prettier-ignore
 	const addTriangle = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void => {
 		vertices.push(x1, y1, r, g, b, a, x2, y2, r, g, b, a, x3, y3, r, g, b, a);
 	};
@@ -362,7 +374,7 @@ function getDataArrow(
 		actualTipLength = length - actualBodyLength;
 		// Scale body width and tip width based on how their actual length compares to their desired length.
 		// desiredTipLength is guaranteed > ARROW_DRAW_THRESHOLD here.
-		const ratio = (actualTipLength / desiredTipLength);
+		const ratio = actualTipLength / desiredTipLength;
 		actualBodyWidth = bodyWidthArg * ratio;
 		actualTipWidth = tipWidthArg * ratio;
 	}
@@ -377,7 +389,8 @@ function getDataArrow(
 	const tipBaseCenterY = ey - ndy * actualTipLength;
 
 	// Tip vertices
-	const tipPointX = ex; const tipPointY = ey; // Tip apex is at the arrow's end point
+	const tipPointX = ex;
+	const tipPointY = ey; // Tip apex is at the arrow's end point
 	const tipWing1X = tipBaseCenterX + pdx * halfActualTipWidth;
 	const tipWing1Y = tipBaseCenterY + pdy * halfActualTipWidth;
 	const tipWing2X = tipBaseCenterX - pdx * halfActualTipWidth;
@@ -394,14 +407,13 @@ function getDataArrow(
 	const bodyEndLeftY = tipBaseCenterY + pdy * halfActualBodyWidth;
 	const bodyEndRightX = tipBaseCenterX - pdx * halfActualBodyWidth;
 	const bodyEndRightY = tipBaseCenterY - pdy * halfActualBodyWidth;
+	// prettier-ignore
 	addQuad(bodyStartLeftX, bodyStartLeftY, bodyEndLeftX, bodyEndLeftY, bodyEndRightX, bodyEndRightY, bodyStartRightX, bodyStartRightY);
 
 	return vertices;
 }
 
-
 // Exports -------------------------------------------------------------------
-
 
 export default {
 	update,

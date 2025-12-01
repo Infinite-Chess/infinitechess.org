@@ -1,7 +1,6 @@
-
 /**
  * This script contains utility methods for the document/window objects, or the page.
- * 
+ *
  * ZERO dependancies.
  */
 
@@ -11,14 +10,16 @@
  */
 function isLocalEnvironment(): boolean {
 	const hostname = window.location.hostname;
-    
+
 	// Check for common localhost hostnames and local IP ranges
 	return (
 		hostname === 'localhost' || // Localhost
-        hostname === '127.0.0.1' || // Loopback IP address
-        hostname.startsWith('192.168.') || // Private IPv4 address space
-        hostname.startsWith('10.') || // Private IPv4 address space
-        hostname.startsWith('172.') && parseInt(hostname.split('.')[1]!, 10) >= 16 && parseInt(hostname.split('.')[1]!, 10) <= 31 // Private IPv4 address space
+		hostname === '127.0.0.1' || // Loopback IP address
+		hostname.startsWith('192.168.') || // Private IPv4 address space
+		hostname.startsWith('10.') || // Private IPv4 address space
+		(hostname.startsWith('172.') &&
+			parseInt(hostname.split('.')[1]!, 10) >= 16 &&
+			parseInt(hostname.split('.')[1]!, 10) <= 31) // Private IPv4 address space
 	);
 }
 
@@ -27,9 +28,14 @@ function isLocalEnvironment(): boolean {
  * @param text - The text to copy
  */
 function copyToClipboard(text: string): void {
-	navigator.clipboard.writeText(text)
-		.then(() => { console.log('Copied to clipboard'); })
-		.catch((error) => { console.error('Failed to copy to clipboard', error); });
+	navigator.clipboard
+		.writeText(text)
+		.then(() => {
+			console.log('Copied to clipboard');
+		})
+		.catch((error) => {
+			console.error('Failed to copy to clipboard', error);
+		});
 }
 
 /**
@@ -37,11 +43,11 @@ function copyToClipboard(text: string): void {
  */
 function isMouseSupported(): boolean {
 	// Check if ANY connected input is capable of fine pointing (Mouse/Trackpad)
-	const hasFinePointer = window.matchMedia("(any-pointer: fine)").matches;
+	const hasFinePointer = window.matchMedia('(any-pointer: fine)').matches;
 
 	// Safety net in case the driver reports the mouse weirdly:
 	// Check if ANY connected input can hover
-	const hasHover = window.matchMedia("(any-hover: hover)").matches;
+	const hasHover = window.matchMedia('(any-hover: hover)').matches;
 
 	// If either is true, the user has hardware capable of acting like a mouse.
 	return hasFinePointer || hasHover;
@@ -52,7 +58,11 @@ function isMouseSupported(): boolean {
  */
 function isTouchSupported(): boolean {
 	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
-	return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+	return (
+		'ontouchstart' in window ||
+		navigator.maxTouchPoints > 0 ||
+		window.matchMedia('(pointer: coarse)').matches
+	);
 }
 
 /**
@@ -83,10 +93,10 @@ function getPathnameFromHref(href: string): string {
  * @returns The cookie, if it exists, otherwise, undefined.
  */
 function getCookieValue(cookieName: string): string | undefined {
-	const cookieArray = document.cookie.split("; ");
-	
+	const cookieArray = document.cookie.split('; ');
+
 	for (let i = 0; i < cookieArray.length; i++) {
-		const cookiePair = cookieArray[i]!.split("=");
+		const cookiePair = cookieArray[i]!.split('=');
 		if (cookiePair[0] === cookieName) return cookiePair[1];
 	}
 
@@ -100,13 +110,13 @@ function getCookieValue(cookieName: string): string | undefined {
  * @param days - How many days until the cookie should expire.
  */
 function updateCookie(cookieName: string, value: string, days: number): void {
-	let expires = "";
+	let expires = '';
 	if (days) {
 		const date = new Date();
 		date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-		expires = "; expires=" + date.toUTCString();
+		expires = '; expires=' + date.toUTCString();
 	}
-	document.cookie = cookieName + "=" + (value || "") + expires + "; path=/";
+	document.cookie = cookieName + '=' + (value || '') + expires + '; path=/';
 }
 
 /**

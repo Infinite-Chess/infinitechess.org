@@ -1,4 +1,3 @@
-
 /**
  * This script manages our list of all active invites,
  * subscribes and unsubs sockets to and from the invites
@@ -7,15 +6,25 @@
  */
 
 // @ts-ignore
-import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs, doesUserHaveActiveConnection } from './invitessubscribers.js';
+import {
+	getInviteSubscribers,
+	addSocketToInvitesSubs,
+	removeSocketFromInvitesSubs,
+	doesUserHaveActiveConnection,
+} from './invitessubscribers.js';
 // @ts-ignore
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import socketUtility from '../../socket/socketUtility.js';
-import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from './inviteutility.js';
+import {
+	isInvitePrivate,
+	safelyCopyInvite,
+	isInvitePublic,
+	memberInfoEq,
+} from './inviteutility.js';
 import jsutil from '../../../shared/util/jsutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
-import type { SafeInvite, Invite, } from './inviteutility.js';
+import type { SafeInvite, Invite } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { AuthMemberInfo } from '../../types.js';
 
@@ -57,21 +66,24 @@ const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
  */
 function getPublicInvitesListSafe(): SafeInvite[] {
 	const deepCopiedInvites: SafeInvite[] = [];
-	
-	for (const invite of invites) { 
+
+	for (const invite of invites) {
 		if (isInvitePrivate(invite)) continue; // Remove private invites
 		deepCopiedInvites.push(safelyCopyInvite(invite)); // Remove sensitive information
 	}
-	
+
 	return deepCopiedInvites;
 }
 
 /**
  * Adds any private invite that belongs to the socket to the provided invites list.
- * @param ws 
+ * @param ws
  * @param copyOfInvitesList - A copy of the invites list, so we don't modify the original
  */
-function addMyPrivateInviteToList(ws: CustomWebSocket, copyOfInvitesList: SafeInvite[]): SafeInvite[] {
+function addMyPrivateInviteToList(
+	ws: CustomWebSocket,
+	copyOfInvitesList: SafeInvite[],
+): SafeInvite[] {
 	for (const invite of invites) {
 		if (isInvitePublic(invite)) continue; // Next invite, this one isn't private
 		if (!memberInfoEq(ws.metadata.memberInfo, invite.owner)) continue; // Doesn't belong to us
@@ -83,12 +95,13 @@ function addMyPrivateInviteToList(ws: CustomWebSocket, copyOfInvitesList: SafeIn
 
 // When a PUBLIC invite is added or removed..
 
-/** 
- * Call when a public invite is added or deleted. 
+/**
+ * Call when a public invite is added or deleted.
  * @param ws - The websocket that trigerred this public invites change.
  * @param replyto - The ID of the incoming websocket message that triggered this method
  */
-function onPublicInvitesChange(ws?: CustomWebSocket, replyto?: number): void { // The message that this broadcast is the reply to
+function onPublicInvitesChange(ws?: CustomWebSocket, replyto?: number): void {
+	// The message that this broadcast is the reply to
 	broadcastInvites(ws, replyto);
 }
 
@@ -107,7 +120,11 @@ function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
 		// Only include the replyto code with the invite list if this socket is
 		// THE SAME SOCKET as the one that triggered this broadcast.
 		const includedReplyTo = ws === subbedSocket ? replyto : undefined;
-		sendClientInvitesList(subbedSocket, { invitesList: newInvitesListCopy, currentGameCount, replyto: includedReplyTo });
+		sendClientInvitesList(subbedSocket, {
+			invitesList: newInvitesListCopy,
+			currentGameCount,
+			replyto: includedReplyTo,
+		});
 	}
 }
 
@@ -119,10 +136,17 @@ function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
  * @param options.currentGameCount - The current active game count. Defaults to the current game count if not provided. [getActiveGameCount()]
  * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
  */
-function sendClientInvitesList(ws: CustomWebSocket, { invitesList = getPublicInvitesListSafe(), currentGameCount = getActiveGameCount(), replyto = undefined }: {replyto?: number, invitesList?: SafeInvite[], currentGameCount?: number} = {}): void {
+function sendClientInvitesList(
+	ws: CustomWebSocket,
+	{
+		invitesList = getPublicInvitesListSafe(),
+		currentGameCount = getActiveGameCount(),
+		replyto = undefined,
+	}: { replyto?: number; invitesList?: SafeInvite[]; currentGameCount?: number } = {},
+): void {
 	invitesList = addMyPrivateInviteToList(ws, invitesList);
 	const message = { invitesList, currentGameCount };
-	sendSocketMessage(ws, "invites", "inviteslist", message, replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, 'invites', 'inviteslist', message, replyto); // In order: socket, sub, action, value
 }
 
 /**
@@ -139,8 +163,9 @@ function addInvite(ws: CustomWebSocket, invite: Invite, replyto?: number): void 
 	else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite creation!
 
 	if (printNewInviteCreationsAndDeletions) {
-		if (isInvitePrivate(invite)) console.log(`Created PRIVATE invite for user ${JSON.stringify(invite.owner)}`);
-		else                         console.log(`Created invite for user ${JSON.stringify(invite.owner)}`);
+		if (isInvitePrivate(invite))
+			console.log(`Created PRIVATE invite for user ${JSON.stringify(invite.owner)}`);
+		else console.log(`Created invite for user ${JSON.stringify(invite.owner)}`);
 	}
 }
 
@@ -154,9 +179,19 @@ function addInvite(ws: CustomWebSocket, invite: Invite, replyto?: number): void 
  * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
  * @returns true if there was a public invite change
  */
-function deleteInviteByIndex(ws: CustomWebSocket, invite: Invite, index: number, { dontBroadcast = false, replyto = undefined }: { dontBroadcast?: boolean, replyto?: number } = {}): boolean {
+function deleteInviteByIndex(
+	ws: CustomWebSocket,
+	invite: Invite,
+	index: number,
+	{
+		dontBroadcast = false,
+		replyto = undefined,
+	}: { dontBroadcast?: boolean; replyto?: number } = {},
+): boolean {
 	if (index > invites.length - 1) {
-		console.error(`Cannot delete invite of index ${index} when the length of our invites list is ${invites.length}!`);
+		console.error(
+			`Cannot delete invite of index ${index} when the length of our invites list is ${invites.length}!`,
+		);
 		return false; // No public invite change
 	}
 	invites.splice(index, 1); // Delete the invite
@@ -166,7 +201,8 @@ function deleteInviteByIndex(ws: CustomWebSocket, invite: Invite, index: number,
 		else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite cancellation!
 	}
 
-	if (printNewInviteCreationsAndDeletions) console.log(`Deleted invite for user ${JSON.stringify(invite.owner)}`);
+	if (printNewInviteCreationsAndDeletions)
+		console.log(`Deleted invite for user ${JSON.stringify(invite.owner)}`);
 
 	return isInvitePublic(invite); // true if a public invite changed
 }
@@ -176,7 +212,8 @@ function deleteInviteByIndex(ws: CustomWebSocket, invite: Invite, index: number,
  * If so, they aren't allowed to create more.
  */
 function userHasInvite(ws: CustomWebSocket): boolean {
-	for (const invite of invites) if (memberInfoEq(ws.metadata.memberInfo, invite.owner)) return true;
+	for (const invite of invites)
+		if (memberInfoEq(ws.metadata.memberInfo, invite.owner)) return true;
 	return false; // Player doesn't have an existing invite
 }
 
@@ -195,7 +232,7 @@ function existingInviteHasID(id: string): boolean {
  * @param id - The invite ID
  * @returns An object: `{ invite, index }`, or undefined if the invite wasn't found.
  */
-function getInviteAndIndexByID(id: string): { invite: Invite, index: number } | undefined {
+function getInviteAndIndexByID(id: string): { invite: Invite; index: number } | undefined {
 	for (let i = 0; i < invites.length; i++) {
 		if (id === invites[i]!.id) return { invite: invites[i]!, index: i };
 	}
@@ -209,14 +246,17 @@ function getInviteAndIndexByID(id: string): { invite: Invite, index: number } | 
  * Typically called when you need to inform a player their invite was accepted.
  * @returns The websocket, if found, otherwise undefined.
  */
-function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined { // { member/browser }
+function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined {
+	// { member/browser }
 	// Iterate through all sockets, until you find one that matches the authentication of our invite owner
 	const subscribedClients = getInviteSubscribers(); // { id: ws }
 	for (const ws of Object.values(subscribedClients)) {
 		if (memberInfoEq(owner, ws.metadata.memberInfo)) return ws;
 	}
 
-	console.log(`Unable to find a socket subbed to the invites list that belongs to ${JSON.stringify(owner)}!`);
+	console.log(
+		`Unable to find a socket subbed to the invites list that belongs to ${JSON.stringify(owner)}!`,
+	);
 	return undefined;
 }
 
@@ -226,8 +266,12 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
  * and cancels any active timers to delete their invites if
  * their socket was previously closed by a network interruption.
  */
-function subToInvitesList(ws: CustomWebSocket): void { // data: { route, action, value, id }
-	if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
+function subToInvitesList(ws: CustomWebSocket): void {
+	// data: { route, action, value, id }
+	if (ws.metadata.subscriptions.invites)
+		return console.log(
+			`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
+		);
 	// if (ws.metadata.subscriptions.invites) return; // Already subscribed
 
 	addSocketToInvitesSubs(ws);
@@ -236,13 +280,13 @@ function subToInvitesList(ws: CustomWebSocket): void { // data: { route, action,
 }
 
 // Set closureNotByChoice to true if you don't immediately want to delete their invite, but say after 5 seconds.
-function unsubFromInvitesList(ws: CustomWebSocket, closureNotByChoice?: boolean): void { // data: { route, action, value, id }
+function unsubFromInvitesList(ws: CustomWebSocket, closureNotByChoice?: boolean): void {
+	// data: { route, action, value, id }
 	removeSocketFromInvitesSubs(ws);
 
 	const owner = ws.metadata.memberInfo;
 
 	if (!closureNotByChoice) return deleteUserInvitesIfNotConnected(owner); // Delete their existing invites
-		
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
 	// console.log("Setting a 5-second timer to delete a user's invites!");
@@ -266,11 +310,11 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws: CustomWebSoc
 }
 
 //-------------------------------------------------------------------------------------------
-  
+
 /**
- * Deletes the invite associated with a specific member or browser ID, 
+ * Deletes the invite associated with a specific member or browser ID,
  * but only if they don't have an active connection.
- * If the invite belongs to a signed-in member, checks username; 
+ * If the invite belongs to a signed-in member, checks username;
  * otherwise, it checks the browser ID.
  * If any public invite is deleted, it broadcasts the new invites list to all subscribers.
  * @param signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
@@ -295,7 +339,10 @@ function deleteUserInvitesIfNotConnected(info: AuthMemberInfo): void {
  * @param options.broadCastNewInvites - Flag to specify whether to broadcast the new invites list after deleting (defaults to true). [true]
  * @returns Returns true if any public invite was deleted, otherwise false.
  */
-function deleteUsersExistingInvite(info: AuthMemberInfo, { broadCastNewInvites = true } = {}): boolean {
+function deleteUsersExistingInvite(
+	info: AuthMemberInfo,
+	{ broadCastNewInvites = true } = {},
+): boolean {
 	let deletedPublicInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {
 		const invite = invites[i]!;
@@ -303,14 +350,14 @@ function deleteUsersExistingInvite(info: AuthMemberInfo, { broadCastNewInvites =
 		// Match! Delete
 		invites.splice(i, 1); // Delete the invite
 		if (isInvitePublic(invite)) deletedPublicInvite = true;
-		console.log(`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`);
+		console.log(
+			`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`,
+		);
 	}
 
 	if (deletedPublicInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted
 	return deletedPublicInvite;
 }
-
-
 
 //-------------------------------------------------------------------------------------------
 
@@ -325,5 +372,5 @@ export {
 	deleteUsersExistingInvite,
 	findSocketFromOwner,
 	onPublicInvitesChange,
-	IDLengthOfInvites
+	IDLengthOfInvites,
 };

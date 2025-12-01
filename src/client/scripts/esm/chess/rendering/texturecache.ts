@@ -1,4 +1,3 @@
-
 /**
  * This module handles the caching of WebGL textures of the pieces in our game.
  * It prevents redundant texture creation and data uploads to the GPU by caching
@@ -12,9 +11,7 @@ import imagecache from './imagecache.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 
-
 // Texture Cache Implementation ----------------------------------------------------------
-
 
 /** Internal cache storing WebGLTexture objects, keyed by piece type. */
 const textureCache: TypeGroup<WebGLTexture> = {};
@@ -33,9 +30,14 @@ async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board):
 	// console.log("Initializing texture cache for game...");
 
 	// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
-	const types = boardsim.existingTypes.filter((t: number) => !(typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t))));
+	const types = boardsim.existingTypes.filter(
+		(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),
+	);
 
-	if (types.length === 0) return console.log("TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.");
+	if (types.length === 0)
+		return console.log(
+			'TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.',
+		);
 
 	// console.log("Required piece types for texture cache:", types);
 
@@ -49,7 +51,6 @@ async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board):
 	// console.log(`TextureCache: Initialization complete. Cached ${Object.keys(textureCache).length} textures.`);
 }
 
-
 /**
  * Retrieves a WebGLTexture from the cache.
  * ASSUMES `initTexturesForGame` has been called successfully for the current game.
@@ -61,7 +62,10 @@ function getTexture(type: number): WebGLTexture {
 	const cachedTexture = textureCache[type];
 	if (cachedTexture) return cachedTexture;
 	// If not found, it implies initTexturesForGame wasn't called or failed for this type.
-	else throw new Error(`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`);
+	else
+		throw new Error(
+			`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`,
+		);
 }
 
 // /**
@@ -79,9 +83,7 @@ function getTexture(type: number): WebGLTexture {
 // 	console.log(`TextureCache: Deleted textures from GPU and cleared cache.`);
 // }
 
-
 // Exports --------------------------------------------------------------------
-
 
 export default {
 	initTexturesForGame, // Add the init function to exports

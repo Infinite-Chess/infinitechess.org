@@ -1,4 +1,3 @@
-
 /**
  * This script hides the loading animation when the page fully loads.
  * */
@@ -19,5 +18,5 @@ function closeAnimation(): void {
 }
 
 export default {
-	closeAnimation
+	closeAnimation,
 };

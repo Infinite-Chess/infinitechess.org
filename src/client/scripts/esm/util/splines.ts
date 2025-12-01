@@ -1,19 +1,17 @@
-
 // src/client/scripts/esm/util/splines.ts
 
 /**
  * This script contains utility methods for working with splines.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from "../../../../shared/chess/util/coordutil.js";
-import type { Color } from "../../../../shared/util/math/math.js";
-import type { BigDecimal } from "../../../../shared/util/bigdecimal/bigdecimal.js";
+import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../shared/util/math/math.js';
+import type { BigDecimal } from '../../../../shared/util/bigdecimal/bigdecimal.js';
 
-import { createRenderable } from "../webgl/Renderable.js";
-import space from "../game/misc/space.js";
-import bd from "../../../../shared/util/bigdecimal/bigdecimal.js";
-import boardpos from "../game/rendering/boardpos.js";
-
+import { createRenderable } from '../webgl/Renderable.js';
+import space from '../game/misc/space.js';
+import bd from '../../../../shared/util/bigdecimal/bigdecimal.js';
+import boardpos from '../game/rendering/boardpos.js';
 
 // Constants ------------------------------------------------------
 
@@ -23,20 +21,20 @@ const TWO = bd.FromBigInt(2n);
 const THREE = bd.FromBigInt(3n);
 const FOUR = bd.FromBigInt(4n);
 
-
 // Functions ---------------------------------------------------------------
-
 
 /**
  * Computes a natural cubic spline for a given set of points.
  * @param points - Array of y-values representing the points to interpolate.
  * @returns Array of spline coefficients (a, b, c, d) for each segment.
  */
-function generateCubicSplineCoefficients(points: bigint[]): { a: BigDecimal, b: BigDecimal, c: BigDecimal, d: BigDecimal }[] {
+function generateCubicSplineCoefficients(
+	points: bigint[],
+): { a: BigDecimal; b: BigDecimal; c: BigDecimal; d: BigDecimal }[] {
 	const n = points.length;
 	if (n < 2) return [];
-    
-	const a: BigDecimal[] = points.slice(0, -1).map(p => bd.FromBigInt(p));
+
+	const a: BigDecimal[] = points.slice(0, -1).map((p) => bd.FromBigInt(p));
 	const b: BigDecimal[] = new Array(n - 1).fill(ZERO);
 	const c: BigDecimal[] = new Array(n).fill(ZERO);
 	const d: BigDecimal[] = new Array(n - 1).fill(ZERO);
@@ -61,7 +59,7 @@ function generateCubicSplineCoefficients(points: bigint[]): { a: BigDecimal, b: 
 
 	// Compute d and b coefficients
 	for (let i = 0; i < n - 1; i++) {
-		d[i] = bd.divide_fixed((bd.subtract(c[i + 1]!, c[i]!)), THREE); // d[i] = (c[i + 1] - c[i]) / 3;
+		d[i] = bd.divide_fixed(bd.subtract(c[i + 1]!, c[i]!), THREE); // d[i] = (c[i + 1] - c[i]) / 3;
 		// (points[i + 1]! - points[i]!) - (2 * c[i]! + c[i + 1]!) / 3
 		const b_subtrahend = bd.FromBigInt(points[i + 1]! - points[i]!); // points[i + 1]! - points[i]!
 		const dividend = bd.add(bd.multiply_fixed(c[i]!, TWO), c[i + 1]!); // 2 * c[i]! + c[i + 1]!
@@ -80,7 +78,12 @@ function generateCubicSplineCoefficients(points: bigint[]): { a: BigDecimal, b: 
  * @param d - Right-hand side values.
  * @returns Solution array.
  */
-function thomasAlgorithm(a: BigDecimal[], b: BigDecimal[], c: BigDecimal[], d: BigDecimal[]): BigDecimal[] {
+function thomasAlgorithm(
+	a: BigDecimal[],
+	b: BigDecimal[],
+	c: BigDecimal[],
+	d: BigDecimal[],
+): BigDecimal[] {
 	const n = d.length;
 	if (n === 0) return [];
 
@@ -89,7 +92,7 @@ function thomasAlgorithm(a: BigDecimal[], b: BigDecimal[], c: BigDecimal[], d: B
 	// The system is simply b[0]*x[0] = d[0], so x[0] = d[0]/b[0].
 	// Without this, a crash happens if you move the rose 2 hops in one move.
 	if (n === 1) return [bd.divide_fixed(d[0]!, b[0]!)];
-    
+
 	const cp: BigDecimal[] = [...c];
 	const dp: BigDecimal[] = [...d];
 
@@ -99,10 +102,10 @@ function thomasAlgorithm(a: BigDecimal[], b: BigDecimal[], c: BigDecimal[], d: B
 	for (let i = 1; i < n; i++) {
 		const m_denominator = bd.subtract(b[i]!, bd.multiply_fixed(a[i - 1]!, cp[i - 1]!)); // (b[i]! - a[i - 1]! * cp[i - 1]!)
 		const m = bd.divide_fixed(ONE, m_denominator); // 1 / (b[i]! - a[i - 1]! * cp[i - 1]!)
-		
+
 		const c_i = c[i] || ZERO; // Handle case where c might be shorter
 		cp[i] = bd.multiply_fixed(c_i, m); // (c[i] || 0) * m
-		
+
 		const dp_subtrahend = bd.multiply_fixed(a[i - 1]!, dp[i - 1]!);
 		const dp_term = bd.subtract(d[i]!, dp_subtrahend);
 		dp[i] = bd.multiply_fixed(dp_term, m);
@@ -122,10 +125,13 @@ function thomasAlgorithm(a: BigDecimal[], b: BigDecimal[], c: BigDecimal[], d: B
  * @param coefficients - Array of spline coefficients.
  * @returns Interpolated value.
  */
-function evaluateSplineAt(t: number, coefficients: { a: BigDecimal, b: BigDecimal, c: BigDecimal, d: BigDecimal }[]): BigDecimal {
+function evaluateSplineAt(
+	t: number,
+	coefficients: { a: BigDecimal; b: BigDecimal; c: BigDecimal; d: BigDecimal }[],
+): BigDecimal {
 	const i = Math.max(0, Math.min(coefficients.length - 1, Math.floor(t)));
 	const { a, b, c, d } = coefficients[i]!;
-	
+
 	// Convert dt to a BigDecimal for high-precision calculations
 	const dt = bd.FromNumber(t - i);
 	const dt2 = bd.multiply_fixed(dt, dt);
@@ -147,11 +153,12 @@ function evaluateSplineAt(t: number, coefficients: { a: BigDecimal, b: BigDecima
  */
 function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoords[] {
 	// A straight line already has infinite precision
-	if (controlPoints.length < 3) return controlPoints.map(([x, y]) => [bd.FromBigInt(x), bd.FromBigInt(y)]);
+	if (controlPoints.length < 3)
+		return controlPoints.map(([x, y]) => [bd.FromBigInt(x), bd.FromBigInt(y)]);
 
 	// Extract the bigint x and y components into separate arrays.
-	const xPoints = controlPoints.map(point => point[0]);
-	const yPoints = controlPoints.map(point => point[1]);
+	const xPoints = controlPoints.map((point) => point[0]);
+	const yPoints = controlPoints.map((point) => point[1]);
 
 	// Generate the spline coefficients for each axis.
 	const xSpline = generateCubicSplineCoefficients(xPoints);
@@ -163,14 +170,14 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoor
 	// Loop through each segment of the spline.
 	for (let i = 0; i < totalSegments; i++) {
 		const isLastSegment = i === totalSegments - 1;
-		
+
 		// Interpolate points within the current segment.
 		for (let k = 0; k <= resolution; k++) {
 			// To avoid duplicating points, skip the end of a segment if it's not the final one.
 			if (!isLastSegment && k === resolution) continue;
-			
+
 			// 't' is the parameter for spline evaluation, ranging from 0 to n-1.
-			const t = i + (k / resolution);
+			const t = i + k / resolution;
 
 			let x: BigDecimal;
 			let y: BigDecimal;
@@ -178,11 +185,11 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoor
 			/**
 			 * For the very last point, use the exact control point value to guarantee
 			 * it matches the input, avoiding any potential floating-point drift from 't'.
-			 * 
+			 *
 			 * A bug is created when the animation manager
 			 * expects there to be a piece at the last waypoint, but the last
 			 * waypoint isn't an integer because of floating point imprecision.
-			 * 
+			 *
 			 * This hasn't been tested again since converting to BigDecimals.
 			 */
 			if (isLastSegment && k === resolution) {
@@ -209,16 +216,14 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoor
  * @param width - The ribbon's desired width, specified in square units.
  * @param color - RGBA color for the ribbon.
  */
-function renderSplineDebug(
-	controlPoints: BDCoords[],
-	width: number,
-	color: Color
-): void {
-	if (controlPoints.length < 2) throw Error("Spline requires at least 2 waypoints to render.");
+function renderSplineDebug(controlPoints: BDCoords[], width: number, color: Color): void {
+	if (controlPoints.length < 2) throw Error('Spline requires at least 2 waypoints to render.');
 
 	// Convert all high-precision square coordinates to world-space
 	// floating-point coordinates immediately so we can perform double arithmetic.
-	const worldControlPoints: DoubleCoords[] = controlPoints.map(p => space.convertCoordToWorldSpace(p));
+	const worldControlPoints: DoubleCoords[] = controlPoints.map((p) =>
+		space.convertCoordToWorldSpace(p),
+	);
 
 	// Convert the desired width from square units to world units by applying the board scale.
 	const scale = boardpos.getBoardScaleAsNumber();
@@ -252,13 +257,19 @@ function renderSplineDebug(
 		} else {
 			tangent = [0, 0];
 		}
-		
+
 		// Compute the perpendicular normal vector.
 		const normal: DoubleCoords = [-tangent[1], tangent[0]];
 
 		// Offset positions in world space to find the ribbon edges.
-		leftPoints.push([point[0] + normal[0] * halfWorldWidth, point[1] + normal[1] * halfWorldWidth]);
-		rightPoints.push([point[0] - normal[0] * halfWorldWidth, point[1] - normal[1] * halfWorldWidth]);
+		leftPoints.push([
+			point[0] + normal[0] * halfWorldWidth,
+			point[1] + normal[1] * halfWorldWidth,
+		]);
+		rightPoints.push([
+			point[0] - normal[0] * halfWorldWidth,
+			point[1] - normal[1] * halfWorldWidth,
+		]);
 	}
 
 	// Build triangles for each segment.
@@ -280,16 +291,14 @@ function renderSplineDebug(
 	}
 
 	// Create and render the debug model.
-	createRenderable(vertexData, 2, "TRIANGLES", 'color', true).render();
+	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-
 // Exports -----------------------------------------------------------------------------------------------------
-
 
 export default {
 	generateCubicSplineCoefficients,
 	evaluateSplineAt,
 	generateSplinePath,
-	renderSplineDebug
+	renderSplineDebug,
 };

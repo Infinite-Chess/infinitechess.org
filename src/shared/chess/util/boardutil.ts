@@ -1,33 +1,32 @@
-
 /**
  * This script contains utility methods for working with the organized pieces of a game.
  */
 
-import typeutil from "./typeutil.js";
-import coordutil from "./coordutil.js";
-import jsutil from "../../util/jsutil.js";
+import typeutil from './typeutil.js';
+import coordutil from './coordutil.js';
+import jsutil from '../../util/jsutil.js';
 
 // Type Definitions -----------------------------------------------------------------------------------------
 
-import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
-import type { Coords } from "./coordutil.js";
-import type { RawType, Player } from "./typeutil.js";
+import type { OrganizedPieces, TypeRange } from '../logic/organizedpieces.js';
+import type { Coords } from './coordutil.js';
+import type { RawType, Player } from './typeutil.js';
 
 interface Piece {
-	type: number,
-	coords: Coords,
+	type: number;
+	coords: Coords;
 	/**
 	 * Relative to the start of its type range.
 	 * To get the absolute idx, use boardutil.getAbsoluteIdx.
-	 * 
+	 *
 	 * This will be -1 if the piece does not have an index yet.
 	 * This will get set to another number when it is added to the board.
 	 */
-	index: number,
+	index: number;
 }
 
 /** A unique identifier for a single line of pieces. `C|X` */
-type LineKey = `${bigint}|${bigint}`
+type LineKey = `${bigint}|${bigint}`;
 
 // Counting Pieces ----------------------------------------------------------------------------------------------
 
@@ -39,7 +38,13 @@ type LineKey = `${bigint}|${bigint}`
  * @param [options.ignoreTypes] - Whether to ignore certain types pieces.
  * @returns The number of pieces in the gamefile.
  */
-function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreRawTypes }: { ignoreColors?: Set<Player>, ignoreRawTypes?: Set<RawType> } = {}): number {
+function getPieceCountOfGame(
+	o: OrganizedPieces,
+	{
+		ignoreColors,
+		ignoreRawTypes,
+	}: { ignoreColors?: Set<Player>; ignoreRawTypes?: Set<RawType> } = {},
+): number {
 	// Early exit optimization: If ignoreColors and ignoreRawTypes are not specified,
 	// return the size of o.coords, since that has zero undefineds.
 	if (!ignoreColors && !ignoreRawTypes) return o.coords.size;
@@ -104,7 +109,7 @@ function getPieceCountOfType(o: OrganizedPieces, type: number): number {
 
 /** Excludes undefined placeholders */
 function getPieceCountOfTypeRange(range: TypeRange): number {
-	return (range.end - range.start) - range.undefineds.length;
+	return range.end - range.start - range.undefineds.length;
 }
 
 /**
@@ -120,7 +125,6 @@ function hasAtleastOnePiece(o: OrganizedPieces): boolean {
 }
 
 // Getting All Pieces -------------------------------------------------------------------------------------------------
-
 
 /**
  * Retrieves the coordinates of all pieces.
@@ -144,12 +148,16 @@ function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
 function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 	const royalCoordsList: Coords[] = [];
 
-	typeutil.forEachPieceType(t => {
-		const range = o.typeRanges.get(t);
-		if (range === undefined) return;
+	typeutil.forEachPieceType(
+		(t) => {
+			const range = o.typeRanges.get(t);
+			if (range === undefined) return;
 
-		getCoordsOfTypeRange(o, royalCoordsList, range);
-	}, [color], typeutil.royals);
+			getCoordsOfTypeRange(o, royalCoordsList, range);
+		},
+		[color],
+		typeutil.royals,
+	);
 
 	return royalCoordsList;
 }
@@ -163,12 +171,16 @@ function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 	const royalCoordsList: Coords[] = []; // A running list of all the jumping royals of this color
 
-	typeutil.forEachPieceType(t => {
-		const range = o.typeRanges.get(t);
-		if (range === undefined) return;
+	typeutil.forEachPieceType(
+		(t) => {
+			const range = o.typeRanges.get(t);
+			if (range === undefined) return;
 
-		getCoordsOfTypeRange(o, royalCoordsList, range);
-	}, [color], typeutil.jumpingRoyals);
+			getCoordsOfTypeRange(o, royalCoordsList, range);
+		},
+		[color],
+		typeutil.jumpingRoyals,
+	);
 
 	return royalCoordsList;
 }
@@ -178,14 +190,19 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
  * skipping over undefineds placeholders, executing callback
  * on each piece idx.
  */
-function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (_idx: number) => void): void {
+function iteratePiecesInTypeRange(
+	o: OrganizedPieces,
+	type: number,
+	callback: (_idx: number) => void,
+): void {
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
+		if (idx === range.undefineds[undefinedidx]) {
+			// Is our next undefined piece entry, skip.
 			undefinedidx++;
 			continue;
-		};
+		}
 		callback(idx);
 	}
 }
@@ -194,11 +211,16 @@ function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (_
  * Efficiently iterates through every piece in a type range,
  * calculating if each idx is an undefined placeholder.
  */
-function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: number, callback: (_idx: number, _isUndefined: boolean) => void): void {
+function iteratePiecesInTypeRange_IncludeUndefineds(
+	o: OrganizedPieces,
+	type: number,
+	callback: (_idx: number, _isUndefined: boolean) => void,
+): void {
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
+		if (idx === range.undefineds[undefinedidx]) {
+			// Is our next undefined piece entry, skip.
 			undefinedidx++;
 			callback(idx, true);
 		} else callback(idx, false);
@@ -208,10 +230,11 @@ function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: nu
 function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange): void {
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
+		if (idx === range.undefineds[undefinedidx]) {
+			// Is our next undefined piece entry, skip.
 			undefinedidx++;
 			continue;
-		};
+		}
 		coords.push([o.XPositions[idx]!, o.YPositions[idx]!]);
 	}
 }
@@ -248,7 +271,7 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	return {
 		type,
 		coords,
-		index: getRelativeIdx(o, idx)
+		index: getRelativeIdx(o, idx),
 	};
 }
 
@@ -281,14 +304,14 @@ function getDefinedPieceFromIdx(o: OrganizedPieces, idx: number): Piece {
 	return {
 		type,
 		coords: getCoordsFromIdx(o, idx),
-		index: getRelativeIdx(o, idx)
+		index: getRelativeIdx(o, idx),
 	};
 }
 
 function getTypeRangeFromIdx(o: OrganizedPieces, idx: number): TypeRange {
 	const type = o.types[idx];
-	if (type === undefined) throw Error("Index is out of piece lists");
-	if (!o.typeRanges.has(type)) throw Error("Typerange is not initialized");
+	if (type === undefined) throw Error('Index is out of piece lists');
+	if (!o.typeRanges.has(type)) throw Error('Typerange is not initialized');
 
 	return o.typeRanges.get(type)!;
 }
@@ -300,10 +323,7 @@ function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
 	return o.coords.has(coordutil.getKeyFromCoords(coords));
 }
 
-export type {
-	Piece,
-	LineKey,
-};
+export type { Piece, LineKey };
 
 export default {
 	getPieceCountOfGame,

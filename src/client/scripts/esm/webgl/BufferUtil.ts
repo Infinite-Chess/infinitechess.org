@@ -1,24 +1,18 @@
-
 /**
  * This script works with buffers. Creating them, assigning data, and modifying their indices.
  */
 
-
-import { TypedArray } from "./Renderable.js";
-import { gl } from "../game/rendering/webgl.js";
-
+import { TypedArray } from './Renderable.js';
+import { gl } from '../game/rendering/webgl.js';
 
 // Variables --------------------------------------------------------------------------------
-
 
 /** The draw hint when creating buffers on the gpu. Supposedly, dynamically
  * choosing which hint based on your needs offers very minor performance improvement.
  * Can choose between `gl.STATIC_DRAW`, `gl.DYNAMIC_DRAW`, or `gl.STREAM_DRAW` */
-const DRAW_HINT = "STATIC_DRAW";
-
+const DRAW_HINT = 'STATIC_DRAW';
 
 // Functions --------------------------------------------------------------------------------
-
 
 /**
  * Updates a buffer on the gpu with new data.
@@ -41,10 +35,17 @@ const DRAW_HINT = "STATIC_DRAW";
  * @param changedIndicesStart - The index in the vertex data marking the first value changed.
  * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
-function updateBufferIndices(buffer: WebGLBuffer, data: TypedArray, changedIndicesStart: number, changedIndicesCount: number): void {
+function updateBufferIndices(
+	buffer: WebGLBuffer,
+	data: TypedArray,
+	changedIndicesStart: number,
+	changedIndicesCount: number,
+): void {
 	const endIndice = changedIndicesStart + changedIndicesCount - 1;
 	if (endIndice > data.length - 1) {
-		return console.error(`Cannot update buffer indices when they overflow the data. Data length: ${data.length}, changedIndicesStart: ${changedIndicesStart}, changedIndicesCount: ${changedIndicesCount}, endIndice: ${endIndice}`);
+		return console.error(
+			`Cannot update buffer indices when they overflow the data. Data length: ${data.length}, changedIndicesStart: ${changedIndicesStart}, changedIndicesCount: ${changedIndicesCount}, endIndice: ${endIndice}`,
+		);
 	}
 
 	// Calculate the byte offset and length based on the changed indices
@@ -52,7 +53,11 @@ function updateBufferIndices(buffer: WebGLBuffer, data: TypedArray, changedIndic
 
 	// Update the specific portion of the buffer
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-	gl.bufferSubData(gl.ARRAY_BUFFER, offsetInBytes, data.subarray(changedIndicesStart, changedIndicesStart + changedIndicesCount));
+	gl.bufferSubData(
+		gl.ARRAY_BUFFER,
+		offsetInBytes,
+		data.subarray(changedIndicesStart, changedIndicesStart + changedIndicesCount),
+	);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
 
@@ -77,9 +82,4 @@ function createBufferFromData(data: TypedArray): WebGLBuffer {
 	return buffer;
 }
 
-
-
-export {
-	updateBufferIndices,
-	createBufferFromData,
-};
+export { updateBufferIndices, createBufferFromData };

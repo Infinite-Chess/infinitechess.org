@@ -1,4 +1,3 @@
-
 /**
  * This script renders all of our pieces on the board,
  * including voids, and mini images.
@@ -16,13 +15,10 @@ import meshes from './meshes.js';
 
 // Variables ---------------------------------------------------------------------
 
-
 /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
 const ghostOpacity: number = 0.4;
 
-
 // Functions -----------------------------------------------------------------------
-
 
 /**
  * Renders all of our pieces on the board,
@@ -36,13 +32,18 @@ function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined): void {
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords): void {
 	const data = meshes.QuadWorld_ColorTexture(coords, type, [1, 1, 1, ghostOpacity]);
-	const model = createRenderable(data, 2, "TRIANGLES", 'colorTexture', true, spritesheet.getSpritesheet());
+	const model = createRenderable(
+		data,
+		2,
+		'TRIANGLES',
+		'colorTexture',
+		true,
+		spritesheet.getSpritesheet(),
+	);
 	model.render();
 }
 
-
 // ------------------------------------------------------------------------------
-
 
 export default {
 	renderPiecesInGame,

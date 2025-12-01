@@ -1,12 +1,11 @@
-
 /**
  * This script handles resyncing a client to a game when their
  * websocket closes unexpectedly, but they haven't left the page.
- * 
+ *
  * This is SEPARATE from the re-joining game that happens when you
  * refresh the page. THAT needs more info sent to the client than this resync does,
  * which is only a websocket reopening.
- * 
+ *
  * This needs to be its own script instead of in gamemanager because
  * both gamemanager and movesubmission depend on this, so we avoid circular dependancy.
  */
@@ -21,9 +20,6 @@ import jsutil from '../../../shared/util/jsutil.js';
 import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import type { Game } from './gameutility.js';
-
-
-
 
 /**
  * Resyncs a client's websocket to a game. The client already
@@ -45,7 +41,10 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 	// Make sure their pre-subbed game and game they requested to resync to match.
 	const preSubbedGameId = ws.metadata.subscriptions.game?.id;
 	if (preSubbedGameId !== undefined && preSubbedGameId !== gameID) {
-		logEventsAndPrint(`Client tried to resync to game of id (${gameID}) when they are actually subbed to game of id (${preSubbedGameId})!!`, 'errLog.txt');
+		logEventsAndPrint(
+			`Client tried to resync to game of id (${gameID}) when they are actually subbed to game of id (${preSubbedGameId})!!`,
+			'errLog.txt',
+		);
 		return;
 	}
 
@@ -58,8 +57,10 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 		return;
 	}
 
-	// Verify 
-	const colorPlayingAs = ws.metadata.subscriptions.game?.color ?? gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	// Verify
+	const colorPlayingAs =
+		ws.metadata.subscriptions.game?.color ??
+		gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 	if (!colorPlayingAs) {
 		sendSocketMessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
 		return;
@@ -72,13 +73,22 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 
 /** Sends a client a game from the database. */
 function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
-	const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'private', 'termination', 'icn']);
+	const logged_game_info = getGameData(gameID, [
+		'game_id',
+		'rated',
+		'private',
+		'termination',
+		'icn',
+	]);
 	if (!logged_game_info) {
-		logEventsAndPrint(`Unable to send player game results after game of id (${gameID}) was logged, because we weren't able to retrieve it from the games table! (Potential they just requested a non-existent game id)`, 'errLog.txt');
+		logEventsAndPrint(
+			`Unable to send player game results after game of id (${gameID}) was logged, because we weren't able to retrieve it from the games table! (Potential they just requested a non-existent game id)`,
+			'errLog.txt',
+		);
 		sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page
 		return;
 	}
-	
+
 	// They should automatically know to unsub on their end, because of this message.
 
 	// Send them the actual game info.
@@ -87,6 +97,4 @@ function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
 	console.log(`Sent client game from the database of id (${gameID})!`);
 }
 
-export {
-	resyncToGame
-};
+export { resyncToGame };

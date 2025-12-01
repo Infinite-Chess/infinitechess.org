@@ -1,4 +1,3 @@
-
 /**
  * This script contains many utility methods for working with gamefiles.
  */
@@ -18,9 +17,7 @@ import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 import wincondition from '../logic/wincondition.js';
 
-
 // Methods -------------------------------------------------------------
-
 
 /**
  * Returns true if the game is over (gameConclusion is truthy).
@@ -50,10 +47,15 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  */
 function setTerminationMetadata(basegame: Game): void {
-	if (!basegame.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
+	if (!basegame.gameConclusion)
+		return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
-	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(basegame.gameRules, victorAndCondition.condition);
+	const victorAndCondition: { victor?: Player; condition: string } =
+		winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
+	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(
+		basegame.gameRules,
+		victorAndCondition.condition,
+	);
 	basegame.metadata.Termination = conditionInPlainEnglish;
 
 	basegame.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
@@ -74,8 +76,15 @@ function eraseTerminationMetadata(basegame: Game): void {
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
-function isOpponentUsingWinCondition(basegame: Game, friendlyColor: Player, winCondition: string): boolean {
-	if (!winconutil.isWinConditionValid(winCondition)) throw new Error(`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`);
+function isOpponentUsingWinCondition(
+	basegame: Game,
+	friendlyColor: Player,
+	winCondition: string,
+): boolean {
+	if (!winconutil.isWinConditionValid(winCondition))
+		throw new Error(
+			`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`,
+		);
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
 	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
 }
@@ -87,7 +96,11 @@ function isOpponentUsingWinCondition(basegame: Game, friendlyColor: Player, winC
  */
 function doGameOverChecks(gamefile: FullGame): void {
 	gamefile.basegame.gameConclusion = wincondition.getGameConclusion(gamefile);
-	if (isGameOver(gamefile.basegame) && winconutil.isGameConclusionDecisive(gamefile.basegame.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile.boardsim);
+	if (
+		isGameOver(gamefile.basegame) &&
+		winconutil.isGameConclusionDecisive(gamefile.basegame.gameConclusion)
+	)
+		moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
 
 /**
@@ -99,15 +112,19 @@ function doGameOverChecks(gamefile: FullGame): void {
  * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
  * @param slides - All possible slide directions in the gamefile.
  */
-function areColinearSlidesPresentInGame(pieceMovesets: RawTypeGroup<() => PieceMoveset>, slides: Vec2[]): boolean { // [[1,1], [1,0], ...]
+function areColinearSlidesPresentInGame(
+	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
+	slides: Vec2[],
+): boolean {
+	// [[1,1], [1,0], ...]
 
 	/**
 	 * 1. Colinears are present if any vector is NOT a primitive vector.
-	 * 
+	 *
 	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
 	 * For example, [2,0] can be made by combining [1,0] and [1,0].
 	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
-	 * 
+	 *
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 
@@ -115,18 +132,20 @@ function areColinearSlidesPresentInGame(pieceMovesets: RawTypeGroup<() => PieceM
 
 	/**
 	 * 2. Colinears are present if there's at least one custom ignore function.
-	 * 
+	 *
 	 * This is because a custom ignore function can be used to simulate a non-primitive vector.
 	 * Or another vector for that matter.
 	 * We cannot predict if the piece will not cause colinears.
 	 */
 
-	if (Object.values(pieceMovesets).some(movesetFunc => {
-		const moveset: PieceMoveset = movesetFunc();
-		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
-		return 'ignore' in moveset || 'blocking' in moveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
-		
-	})) return true; // Colinears are present
+	if (
+		Object.values(pieceMovesets).some((movesetFunc) => {
+			const moveset: PieceMoveset = movesetFunc();
+			// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
+			return 'ignore' in moveset || 'blocking' in moveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
+		})
+	)
+		return true; // Colinears are present
 
 	return false; // Colinears are not present
 }
@@ -143,7 +162,6 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 export default {
 	isGameOver,

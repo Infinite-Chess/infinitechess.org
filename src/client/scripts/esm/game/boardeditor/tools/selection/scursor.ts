@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/selection/scursor.ts
 
 /**
@@ -8,31 +7,23 @@
  * when hovering over the selection area's edges or fill handle.
  */
 
-import game from "../../../chess/game";
-
+import game from '../../../chess/game';
 
 // Type Definitions -----------------------------------------
 
-
 type Cursor = 'grab' | 'grabbing' | 'crosshair';
 
-
 // Constants ------------------------------------------------
-
 
 /** If multiple cursor styles are enabled, only the one with most priority is actually applied. */
 const priority: Cursor[] = ['crosshair', 'grabbing', 'grab'];
 
-
 // State ----------------------------------------------------
-
 
 /** A list of all active cursor styles. */
 const current: Set<Cursor> = new Set();
 
-
 // Methods --------------------------------------------------
-
 
 /** Adds a cursor style, immediately applying it if it has the highest priority. */
 function addCursor(cursor: Cursor): void {
@@ -70,9 +61,7 @@ function updateCursor(): void {
 	overlay.style.cursor = highestPrio!; // Apply new cursor style
 }
 
-
 // Exports ---------------------------------------------------
-
 
 export default {
 	addCursor,

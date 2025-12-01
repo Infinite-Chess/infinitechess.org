@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/chess/logic/wincondition.js
 
 /**
@@ -14,15 +13,18 @@ import moveutil from '../util/moveutil.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
-import { detectCheckmateOrStalemate, pieceCountToDisableCheckmate, royalCountToDisableCheckmate } from './checkmate.js';
+import {
+	detectCheckmateOrStalemate,
+	pieceCountToDisableCheckmate,
+	royalCountToDisableCheckmate,
+} from './checkmate.js';
 import { players, rawTypes, Player } from '../util/typeutil.js';
-
 
 import type { Board, FullGame } from './gamefile.js';
 import type { Coords } from '../util/coordutil.js';
 
-
 // The squares in KOTH where if you get your king to you WIN
+// prettier-ignore
 const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
 
 /**
@@ -33,26 +35,36 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
  * @returns The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *undefined*.
  */
 function getGameConclusion(gamefile: FullGame): string | undefined {
-	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) throw new Error("Cannot perform game over checks when we're not on the last move.");
+	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim))
+		throw new Error("Cannot perform game over checks when we're not on the last move.");
 
-	return detectAllpiecescaptured(gamefile)
-        || detectRoyalCapture(gamefile)
-        || detectAllroyalscaptured(gamefile)
-        || detectKoth(gamefile)
-        || detectRepetitionDraw(gamefile)
-        || detectCheckmateOrStalemate(gamefile)
-        // This needs to be last so that a draw isn't enforced in a true win
-        || detectMoveRule(gamefile) // 50-move-rule
-        || insufficientmaterial.detectInsufficientMaterial(gamefile.basegame.gameRules, gamefile.boardsim) // checks for insufficient material
-        || undefined; // No win condition passed. No game conclusion!
+	return (
+		detectAllpiecescaptured(gamefile) ||
+		detectRoyalCapture(gamefile) ||
+		detectAllroyalscaptured(gamefile) ||
+		detectKoth(gamefile) ||
+		detectRepetitionDraw(gamefile) ||
+		detectCheckmateOrStalemate(gamefile) ||
+		// This needs to be last so that a draw isn't enforced in a true win
+		detectMoveRule(gamefile) || // 50-move-rule
+		insufficientmaterial.detectInsufficientMaterial(
+			gamefile.basegame.gameRules,
+			gamefile.boardsim,
+		) || // checks for insufficient material
+		undefined
+	); // No win condition passed. No game conclusion!
 }
 
 function detectRoyalCapture({ boardsim, basegame }: FullGame): string | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture')) return undefined; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture'))
+		return undefined; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
+			basegame,
+			boardsim.moves.length - 1,
+		);
 		return `${colorThatWon} royalcapture`;
 	}
 
@@ -60,15 +72,28 @@ function detectRoyalCapture({ boardsim, basegame }: FullGame): string | undefine
 }
 
 function detectAllroyalscaptured({ boardsim, basegame }: FullGame): string | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allroyalscaptured')) return undefined; // Not using this gamerule
+	if (
+		!gamefileutility.isOpponentUsingWinCondition(
+			basegame,
+			basegame.whosTurn,
+			'allroyalscaptured',
+		)
+	)
+		return undefined; // Not using this gamerule
 	if (!wasLastMoveARoyalCapture(boardsim)) return undefined; // Last move wasn't a royal capture.
 
 	// Are there any royal pieces remaining?
 	// Remember that whosTurn has already been flipped since the last move.
-	const royalCount: Coords[] = boardutil.getRoyalCoordsOfColor(boardsim.pieces, basegame.whosTurn);
+	const royalCount: Coords[] = boardutil.getRoyalCoordsOfColor(
+		boardsim.pieces,
+		basegame.whosTurn,
+	);
 
 	if (royalCount.length === 0) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
+			basegame,
+			boardsim.moves.length - 1,
+		);
 		return `${colorThatWon} allroyalscaptured`;
 	}
 
@@ -76,13 +101,23 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): string | und
 }
 
 function detectAllpiecescaptured({ boardsim, basegame }: FullGame): string | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allpiecescaptured')) return undefined; // Not using this gamerule
+	if (
+		!gamefileutility.isOpponentUsingWinCondition(
+			basegame,
+			basegame.whosTurn,
+			'allpiecescaptured',
+		)
+	)
+		return undefined; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
 	const count: number = boardutil.getPieceCountOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (count === 0) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
+			basegame,
+			boardsim.moves.length - 1,
+		);
 		return `${colorThatWon} allpiecescaptured`;
 	}
 
@@ -90,7 +125,8 @@ function detectAllpiecescaptured({ boardsim, basegame }: FullGame): string | und
 }
 
 function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth')) return undefined; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth'))
+		return undefined; // Not using this gamerule
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(boardsim.moves);
@@ -99,7 +135,10 @@ function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
 
 	let kingInCenter = false;
 	for (const thisCenterSquare of kothCenterSquares) {
-		const typeAtSquare: number | undefined = boardutil.getTypeFromCoords(boardsim.pieces, thisCenterSquare);
+		const typeAtSquare: number | undefined = boardutil.getTypeFromCoords(
+			boardsim.pieces,
+			thisCenterSquare,
+		);
 		if (typeAtSquare === undefined) continue;
 		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
 			kingInCenter = true;
@@ -108,7 +147,10 @@ function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
 	}
 
 	if (kingInCenter) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
+			basegame,
+			boardsim.moves.length - 1,
+		);
 		return `${colorThatWon} koth`;
 	}
 
@@ -146,7 +188,7 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 	// Check if any captured type is a royal piece.
 	const royalSet = new Set<RawType>(typeutil.royals);
 	for (const capturedType of capturedTypes) {
-		if (royalSet.has(capturedType))  return true;
+		if (royalSet.has(capturedType)) return true;
 	}
 
 	return false;

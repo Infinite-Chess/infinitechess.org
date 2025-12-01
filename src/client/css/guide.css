@@ -1,103 +1,103 @@
 /* Guide page styles */
 
 * {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana;
-    border: 0;
+	margin: 0;
+	padding: 0;
+	font-family: Verdana;
+	border: 0;
 }
 
 html {
-    height: 100%;
-    background-color: rgb(33, 33, 33);
+	height: 100%;
+	background-color: rgb(33, 33, 33);
 }
 
 main {
-    background-color: #fff;
-    background-image: url('/img/blank_board.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-attachment: fixed;
+	background-color: #fff;
+	background-image: url('/img/blank_board.png');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-attachment: fixed;
 
-    margin-top: 40px;
-    min-height: 400px;
+	margin-top: 40px;
+	min-height: 400px;
 }
 
 .content {
-    background-color: rgba(255, 255, 255, 0.805);
-    min-height: 450px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-    padding: 30px 20px;
+	background-color: rgba(255, 255, 255, 0.805);
+	min-height: 450px;
+	margin: auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+	padding: 30px 20px;
 }
 
 .center {
-    text-align: center;
+	text-align: center;
 }
 
 .guide-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0;
-    max-width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0;
+	max-width: 100%;
 }
 
 .content h1 {
-    font-size: 40px;
-    font-family: georgia;
-    text-transform: uppercase;
-    margin: 0px;
-    padding: 0;
-    text-align: center;
-    flex: 1;
+	font-size: 40px;
+	font-family: georgia;
+	text-transform: uppercase;
+	margin: 0px;
+	padding: 0;
+	text-align: center;
+	flex: 1;
 }
 
 .back-arrow {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-radius: 0.5em;
-    flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	border-radius: 0.5em;
+	flex-shrink: 0;
 }
 
 .back-arrow-spacer {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	flex-shrink: 0;
 }
 
 .back-arrow:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+	background-color: rgba(0, 0, 0, 0.05);
 }
 
 .back-arrow:active {
-    background-color: rgba(0, 0, 0, 0.1);
+	background-color: rgba(0, 0, 0, 0.1);
 }
 
 .back-arrow svg {
-    width: 100%;
-    height: 100%;
-    padding: 8px;
+	width: 100%;
+	height: 100%;
+	padding: 8px;
 }
 
 .content h2 {
-    margin: 2.25em 0 0;
-    font-weight: normal;
+	margin: 2.25em 0 0;
+	font-weight: normal;
 }
 
 .content .line-break {
-    border: 0;
-    border-top: 1px solid #adadad;
-    margin: 0.5em 0 1em;
+	border: 0;
+	border-top: 1px solid #adadad;
+	margin: 0.5em 0 1em;
 }
 
 .content {
@@ -105,184 +105,190 @@ main {
 }
 
 .content p {
-    margin: 1.5em 0;
+	margin: 1.5em 0;
 }
 
 .content li {
-    margin: 0.75em 0 0.5em 0.5em;
+	margin: 0.75em 0 0.5em 0.5em;
 }
 
 .clear-float {
-    clear: both;
+	clear: both;
 }
 
 .content img {
-    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.157);
-    border-radius: 0.7em;
-    border: 2px solid rgb(101, 101, 101);
-    box-sizing: content-box;
-    max-width: 100%;
-    height: auto;
+	box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.157);
+	border-radius: 0.7em;
+	border: 2px solid rgb(101, 101, 101);
+	box-sizing: content-box;
+	max-width: 100%;
+	height: auto;
 }
 
 .img-promotionlines {
-    margin: 0.75em 0 0.75em 1.5em;
-    width: 50%;
-    float: right;
+	margin: 0.75em 0 0.75em 1.5em;
+	width: 50%;
+	float: right;
 }
 
 .img-kingrookfork {
-    margin: 0.75em 1.5em 0.75em 0;
-    float: left;
-    width: 42%;
+	margin: 0.75em 1.5em 0.75em 0;
+	float: left;
+	width: 42%;
 }
 
 .img-arrowindicators {
-    margin: 0.75em 0 0.75em 1.5em;
-    width: 25%;
-    float: right;
+	margin: 0.75em 0 0.75em 1.5em;
+	width: 25%;
+	float: right;
 }
 
 .fairy-pieces {
-    display: flex;
-    height: min(35vmin, 400px);
-    align-items: stretch;
-    justify-content: center;
-    margin: 1.5em 0;
+	display: flex;
+	height: min(35vmin, 400px);
+	align-items: stretch;
+	justify-content: center;
+	margin: 1.5em 0;
 }
 
 .img-fairymoveset {
-    box-sizing: border-box;
-    margin: 0 1em 0 0;
-    height: 100%;
-    aspect-ratio: 1 / 1;
+	box-sizing: border-box;
+	margin: 0 1em 0 0;
+	height: 100%;
+	aspect-ratio: 1 / 1;
 }
 
 .img-fairymoveset img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 .fairy-card-container {
-    font-size: min(2vmin, 20px);
-    display: flex;
-    box-sizing: border-box;
+	font-size: min(2vmin, 20px);
+	display: flex;
+	box-sizing: border-box;
 }
 
-.left-arrow, .right-arrow {
-    display: flex;
-    width: 13%;
-    flex-shrink: 0;
-    cursor: pointer;
+.left-arrow,
+.right-arrow {
+	display: flex;
+	width: 13%;
+	flex-shrink: 0;
+	cursor: pointer;
 }
 
-.left-arrow svg, .right-arrow svg {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 5%;
-    border-radius: 0.5em;
+.left-arrow svg,
+.right-arrow svg {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 5%;
+	border-radius: 0.5em;
 }
 
-.left-arrow svg:hover, .right-arrow svg:hover {
-    background-color: rgb(234, 234, 234);
+.left-arrow svg:hover,
+.right-arrow svg:hover {
+	background-color: rgb(234, 234, 234);
 }
 
-.left-arrow svg:active, .right-arrow svg:active {
-    background-color: rgb(221, 221, 221);
+.left-arrow svg:active,
+.right-arrow svg:active {
+	background-color: rgb(221, 221, 221);
 }
 
 .opacity-0_25 {
-    opacity: 0.25;
+	opacity: 0.25;
 }
 
 .fairy-card {
-    margin: 0 1em;
-    display: flex;
-    flex-direction: column;
+	margin: 0 1em;
+	display: flex;
+	flex-direction: column;
 }
 
 .space-1 {
-    flex-grow: 1;
+	flex-grow: 1;
 }
 
 .fairy-card-title {
-    text-align: center;
-    font-size: 1.6em;
-    font-weight: bold;
-    margin: 0 0 1em;
-    text-shadow: 0 0.12em 0.2em rgba(0, 0, 0, 0.203);
-    flex-grow: 0;
+	text-align: center;
+	font-size: 1.6em;
+	font-weight: bold;
+	margin: 0 0 1em;
+	text-shadow: 0 0.12em 0.2em rgba(0, 0, 0, 0.203);
+	flex-grow: 0;
 }
 
 .fairy-card-description {
-    margin: 0;
-    font-size: 1em;
-    flex-grow: 0;
+	margin: 0;
+	font-size: 1em;
+	flex-grow: 0;
 }
 
 .space-2 {
-    flex-grow: 2;
+	flex-grow: 2;
 }
 
 /* Responsive styles */
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    .content {
-        max-width: calc(870px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px;
-        min-height: 800px;
-    }
+	.content {
+		max-width: calc(870px - 60px); /* 60px less than 810 to account for padding */
+		padding: 40px 30px;
+		min-height: 800px;
+	}
 
-    .content h1 {
-        font-size: 50px;
-        margin: 0px;
-    }
+	.content h1 {
+		font-size: 50px;
+		margin: 0px;
+	}
 }
 
 @media only screen and (max-width: 700px) {
-    .img-promotionlines, .img-kingrookfork {
-        float: none;
-        width: 95%;
-        margin: 0.75em auto;
-        display: block;
-    }
+	.img-promotionlines,
+	.img-kingrookfork {
+		float: none;
+		width: 95%;
+		margin: 0.75em auto;
+		display: block;
+	}
 }
 
 @media only screen and (max-width: 500px) {
-    .img-arrowindicators {
-        width: 96px;
-    }
+	.img-arrowindicators {
+		width: 96px;
+	}
 }
 
 @media only screen and (max-width: 600px), (max-height: 648px) {
-    .img-fairymoveset {
-        width: 95%;
-        height: unset;
-        margin: 0 0 0.75em;
-    }
+	.img-fairymoveset {
+		width: 95%;
+		height: unset;
+		margin: 0 0 0.75em;
+	}
 
-    .fairy-card-container {
-        padding-bottom: 0.75em;
-        min-height: 18em;
-    }
+	.fairy-card-container {
+		padding-bottom: 0.75em;
+		min-height: 18em;
+	}
 
-    .left-arrow, .right-arrow {
-        display: flex;
-        max-width: 50px;
-    }
+	.left-arrow,
+	.right-arrow {
+		display: flex;
+		max-width: 50px;
+	}
 
-    .fairy-pieces {
-        flex-wrap: wrap;
-        height: unset;
-    }
+	.fairy-pieces {
+		flex-wrap: wrap;
+		height: unset;
+	}
 
-    .fairy-card-title {
-        font-size: 2.4em;
-    }
-    
-    .fairy-card-description {
-        font-size: 1.5em;
-    }
+	.fairy-card-title {
+		font-size: 2.4em;
+	}
+
+	.fairy-card-description {
+		font-size: 1.5em;
+	}
 }

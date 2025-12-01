@@ -1,25 +1,17 @@
-
-
 /**
  * This script opens and closes our settings drop-down menu when it is clicked.
  */
 
-
 // Document Elements -------------------------------------------------------------------------
-
 
 const pingMeter = document.querySelector('.ping-meter');
 const pingBars = document.querySelector('.ping-bars');
 const pingValue = document.querySelector('.ping-value');
 const loadingAnim = document.querySelector('.ping-meter .svg-pawn'); // Spinning-pawn loading animation
 
-
 // Variables ---------------------------------------------------------------------------------
 
-
-
 // Functions ---------------------------------------------------------------------------------
-
 
 (function init() {
 	initEventListeners();
@@ -62,7 +54,7 @@ function removeAllColor() {
 /**
  * Returns the number of Bars that should be lit up according to the given ping.
  * This can be customized.
- * @param {number} ping 
+ * @param {number} ping
  * @returns {number}
  */
 function getBarCount(ping) {
@@ -90,12 +82,13 @@ function openMeterAndDisplayLoading() {
  * A callback function that is executed when we receive the custom socket closed event.
  * 1. If the soccer was close by choice, we close the ping meter.
  * 2. If the socket was closed by bad network, we display the loading animation
- * @param {CustomEvent} event 
+ * @param {CustomEvent} event
  */
 function socketClosed(event) {
 	const notByChoise = event.detail; // This will be true if the user didn't intend to close the connection, they could have bad network.
 
-	if (notByChoise) openMeterAndDisplayLoading(); // Hide the green bars, show the spinning-pawn loading animation
+	if (notByChoise)
+		openMeterAndDisplayLoading(); // Hide the green bars, show the spinning-pawn loading animation
 	else closeMeter(); // By choice. Just close the ping meter, we are no longer connected
 }
 
@@ -105,6 +98,5 @@ function closeMeter() {
 	loadingAnim.classList.remove('hidden');
 	pingValue.textContent = '-';
 }
-
 
 export default {};

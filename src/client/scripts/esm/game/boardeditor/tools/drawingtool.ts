@@ -1,38 +1,33 @@
-
 // src/client/scripts/esm/game/boardeditor/tools/drawing/drawingtool.ts
 
 /**
  * Editor Drawing Tool
- * 
+ *
  * Manages all drawing tools
  */
 
-import type { FullGame } from "../../../../../../shared/chess/logic/gamefile";
+import type { FullGame } from '../../../../../../shared/chess/logic/gamefile';
 
-import state from "../../../../../../shared/chess/logic/state";
-import boardutil, { Piece } from "../../../../../../shared/chess/util/boardutil";
-import coordutil, { Coords } from "../../../../../../shared/chess/util/coordutil";
-import typeutil, { Player, players, rawTypes } from "../../../../../../shared/chess/util/typeutil";
-import mouse from "../../../util/mouse";
-import gameslot from "../../chess/gameslot";
-import selection from "../../chess/selection";
-import guiboardeditor from "../../gui/boardeditor/guiboardeditor";
-import { Mouse } from "../../input";
-import arrows from "../../rendering/arrows/arrows";
-import specialrighthighlights from "../../rendering/highlights/specialrighthighlights";
-import boardeditor, { Edit, Tool } from "../boardeditor";
-import egamerules from "../egamerules";
-
+import state from '../../../../../../shared/chess/logic/state';
+import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil';
+import typeutil, { Player, players, rawTypes } from '../../../../../../shared/chess/util/typeutil';
+import mouse from '../../../util/mouse';
+import gameslot from '../../chess/gameslot';
+import selection from '../../chess/selection';
+import guiboardeditor from '../../gui/boardeditor/guiboardeditor';
+import { Mouse } from '../../input';
+import arrows from '../../rendering/arrows/arrows';
+import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
+import boardeditor, { Edit, Tool } from '../boardeditor';
+import egamerules from '../egamerules';
 
 // Constants -------------------------------------------------------
 
-
 /** All tools that support drawing. */
-const drawingTools: Tool[] = ["placer", "eraser", "specialrights"];
-
+const drawingTools: Tool[] = ['placer', 'eraser', 'specialrights'];
 
 // State -----------------------------------------------------------
-
 
 let currentColor: Player = players.WHITE;
 let currentPieceType: number = typeutil.buildType(rawTypes.PAWN, currentColor);
@@ -53,9 +48,7 @@ let previousSquare: Coords | undefined;
 /** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
 let addingSpecialRights: boolean | undefined;
 
-
 // Initialization ---------------------------------------------------------
-
 
 function init(): void {
 	guiboardeditor.updatePieceColors(currentColor);
@@ -75,13 +68,11 @@ function resetState(): void {
 	addingSpecialRights = undefined;
 }
 
-
 // Managing the Edit --------------------------------------------
-
 
 function beginEdit(): void {
 	drawing = true;
-	thisEdit = { changes:[], state: {local: [], global: []} };
+	thisEdit = { changes: [], state: { local: [], global: [] } };
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
@@ -112,8 +103,7 @@ function update(currentTool: Tool): void {
 		mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
 		drawingToolPointerId = mouse.getMouseId(Mouse.LEFT)!;
 		beginEdit();
-	}
-	else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
+	} else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
 
 	if (!drawing || !thisEdit) return; // If not currently drawing, nothing more to do
 
@@ -121,19 +111,21 @@ function update(currentTool: Tool): void {
 	const mesh = gameslot.getMesh()!;
 	const mouseCoords = mouse.getTileMouseOver_Integer();
 	if (mouseCoords === undefined) return;
-	if (previousSquare !== undefined && coordutil.areCoordsEqual(mouseCoords, previousSquare)) return;
+	if (previousSquare !== undefined && coordutil.areCoordsEqual(mouseCoords, previousSquare))
+		return;
 	previousSquare = mouseCoords;
 
 	const pieceHovered = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, mouseCoords);
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
-		case "placer": {
+		case 'placer': {
 			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
 			// Determine if special right should be given to the new piece, depending on gamerule checkboxes.
 			const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+			// prettier-ignore
 			const specialright: boolean = (
 				(!!pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
 				(!!castling && egamerules.castlingTypes.includes(typeutil.getRawType(currentPieceType)))
@@ -141,17 +133,22 @@ function update(currentTool: Tool): void {
 			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
 			break;
 		}
-		case "eraser":
+		case 'eraser':
 			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
-		case "specialrights":
+		case 'specialrights':
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
 			break;
 		default:
-			throw Error("Tried to draw with a non-drawing tool.");
+			throw Error('Tried to draw with a non-drawing tool.');
 	}
 
-	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
+	if (
+		edit.changes.length === 0 &&
+		edit.state.local.length === 0 &&
+		edit.state.global.length === 0
+	)
+		return;
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	thisEdit.changes.push(...edit.changes);
 	thisEdit.state.local.push(...edit.state.local);
@@ -159,7 +156,11 @@ function update(currentTool: Tool): void {
 }
 
 /** Queues a specialrights state addition/deletion on the specified piece. */
-function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined): void {
+function queueToggleSpecialRight(
+	gamefile: FullGame,
+	edit: Edit,
+	pieceHovered: Piece | undefined,
+): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
@@ -173,17 +174,15 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 	egamerules.updateGamerulesUponQueueToggleSpecialRight(pieceHovered.type, future);
 }
 
-
 // API ---------------------------------------------------------
-
 
 function onToolChange(tool: Tool): void {
 	endEdit();
 
-	if (tool === "specialrights") specialrighthighlights.enable();
+	if (tool === 'specialrights') specialrighthighlights.enable();
 	else specialrighthighlights.disable();
 
-	if (tool !== "placer") guiboardeditor.markPiece(null);
+	if (tool !== 'placer') guiboardeditor.markPiece(null);
 	else guiboardeditor.markPiece(currentPieceType);
 }
 
@@ -217,9 +216,7 @@ function getColor(): Player {
 	return currentColor;
 }
 
-
 // Exports --------------------------------------------------------------------
-
 
 export default {
 	// Initialization

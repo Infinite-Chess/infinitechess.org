@@ -1,7 +1,6 @@
-
 /**
  * [ZOOMED IN] This script renders legal moves of:
- * 
+ *
  * * Selected piece
  * * All hovered arrows
  */
@@ -26,9 +25,7 @@ import camera from '../camera.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
-
 // Variables -----------------------------------------------------------------------------
-
 
 /** The current piece selected, if there is one. */
 let pieceSelected: Piece | undefined;
@@ -52,9 +49,7 @@ let model_NonCapture: RenderableInstanced | undefined;
  */
 let model_Capture: RenderableInstanced | undefined;
 
-
 // Init Listeners --------------------------------------------------------------------------------
-
 
 // When the legal move shape settings is modified, regenerate the model of the highlights
 document.addEventListener('legalmove-shape-change', regenerateAll); // Custom Event
@@ -63,9 +58,7 @@ document.addEventListener('legalmove-shape-change', regenerateAll); // Custom Ev
 // will be regenerated next render call.
 document.addEventListener('theme-change', regenerateAll);
 
-
 // On Events -------------------------------------------------------------------------------------
-
 
 /** Call this from selection.js when a piece is selected */
 function onPieceSelected(piece: Piece, legalMoves: LegalMoves): void {
@@ -84,9 +77,7 @@ function onPieceUnselected(): void {
 	model_Capture = undefined;
 }
 
-
 // Rendering --------------------------------------------------------------------------------------
-
 
 /**
  * Renders the legal move highlights of the selected piece, all hovered arrows,
@@ -108,7 +99,7 @@ function render(): void {
  * Regenerates both the models of our selected piece's legal move highlights,
  * and the models of pieces legal moves of which we're currently hovering over their arrow,
  * and the model of the special rights highlights.
- * 
+ *
  * Basically everything that relies on {@link model_Offset}
  */
 function regenerateAll(): void {
@@ -123,26 +114,41 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 
 	// The model of the selected piece's legal moves
 	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
-	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
+	const color_options = {
+		isOpponentPiece: selection.isOpponentPieceSelected(),
+		isPremove: selection.arePremoving(),
+	};
 	const color: Color = preferences.getLegalMoveHighlightColor(color_options);
-	const { NonCaptureModel, CaptureModel } = legalmovemodel.generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, selectedPieceColor, color);
+	const { NonCaptureModel, CaptureModel } =
+		legalmovemodel.generateModelsForPiecesLegalMoveHighlights(
+			pieceSelected!.coords,
+			selectedPieceLegalMoves!,
+			selectedPieceColor,
+			color,
+		);
 	model_NonCapture = NonCaptureModel;
 	model_Capture = CaptureModel;
-	
+
 	// The selected piece highlight model
 	const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(color);
 	const coords = pieceSelected!.coords;
 	const offsetCoord = coordutil.subtractCoords(coords, legalmovemodel.getOffset());
 	const instanceData: bigint[] = [...offsetCoord];
-	model_SelectedPiece = createRenderable_Instanced(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), "TRIANGLES", 'colorInstanced', true),
-	
+	model_SelectedPiece = createRenderable_Instanced(
+		vertexData,
+		piecemodels.castBigIntArrayToFloat32(instanceData),
+		'TRIANGLES',
+		'colorInstanced',
+		true,
+	);
+
 	frametracker.onVisualChange();
 }
 
 /**
  * Renders the current selected piece's legal move mesh,
  * IF a piece is selected.
- * 
+ *
  * The mesh should have been pre-calculated.
  */
 function renderSelectedPieceLegalMoves(): void {
@@ -153,16 +159,14 @@ function renderSelectedPieceLegalMoves(): void {
 	const position = meshes.getModelPosition(boardPos, legalmovemodel.getOffset(), 0);
 	const boardScale: number = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
-	
+
 	// Render each of the models using instanced rendering.
 	model_SelectedPiece!.render(position, scale);
 	model_NonCapture!.render(position, scale);
 	model_Capture!.render(position, scale);
 }
 
-
 // Exports -----------------------------------------------------------------------------------
-
 
 export default {
 	// On Events

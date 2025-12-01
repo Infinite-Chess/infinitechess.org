@@ -1,11 +1,8 @@
-
 /**
  * A factory for creating Low-Frequency Oscillator (LFO) units for modulating audio parameters.
  */
 
-
-import PerlinNoise from "../util/PerlinNoise";
-
+import PerlinNoise from '../util/PerlinNoise';
 
 /** Configuration for a low-frequency oscillator (LFO) modulating a parameter. */
 export interface LFOConfig {
@@ -20,10 +17,8 @@ interface LFOUnit {
 	gain: GainNode;
 }
 
-
 /** A shared AudioBuffer for Perlin noise LFOs to use. */
 let perlinNoiseBuffer: AudioBuffer | null = null;
-
 
 /**
  * A factory for creating LFO (Low-Frequency Oscillator) units.
@@ -50,7 +45,8 @@ export function createLFO(context: AudioContext, config: LFOConfig): LFOUnit {
 
 /** Creates a looping AudioBufferSourceNode that outputs Perlin noise. */
 function createPerlinLFO(context: AudioContext, rate: number): AudioBufferSourceNode {
-	if (!perlinNoiseBuffer) { // Create the perlin noise buffer only once
+	if (!perlinNoiseBuffer) {
+		// Create the perlin noise buffer only once
 		const duration = 30; // 30 seconds long buffer
 		const sampleCount = context.sampleRate * duration;
 

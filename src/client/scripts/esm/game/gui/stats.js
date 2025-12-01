@@ -1,4 +1,3 @@
-
 // Import Start
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import config from '../config.js';
@@ -6,8 +5,7 @@ import gameslot from '../chess/gameslot.js';
 import guinavigation from './guinavigation.js';
 // Import End
 
-"use strict";
-
+('use strict');
 
 /**
  * This script renders the statis in the corner of the screen.
@@ -48,7 +46,6 @@ function hideMoves() {
 }
 
 function updateTextContentOfMoves() {
-
 	const currentPly = gameslot.getGamefile().boardsim.state.local.moveIndex + 1;
 	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile().boardsim.moves);
 
@@ -79,8 +76,6 @@ function updateFPS(fps) {
 	const truncated = fps | 0; // Bitwise operation that quickly rounds towards zero
 	elementStatusFPS.textContent = `FPS: ${truncated}`;
 }
-
-
 
 export default {
 	showMoves,

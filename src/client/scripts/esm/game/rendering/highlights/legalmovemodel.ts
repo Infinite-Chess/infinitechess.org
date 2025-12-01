@@ -1,16 +1,19 @@
-
 // src/client/scripts/esm/game/rendering/highlights/legalmovemodel.ts
 
 /**
  * [ZOOMED IN] This script handles the model
  * generation of piece's legal move highlights.
- * 
+ *
  * That also includes Rays.
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../shared/chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
@@ -32,15 +35,19 @@ import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
-import { AttributeInfoInstanced, RenderableInstanced, createRenderable, createRenderable_Instanced, createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
+import {
+	AttributeInfoInstanced,
+	RenderableInstanced,
+	createRenderable,
+	createRenderable_Instanced,
+	createRenderable_Instanced_GivenInfo,
+} from '../../../webgl/Renderable.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
 import bimath from '../../../../../../shared/util/bigdecimal/bimath.js';
 
-
 // Type Definitions ------------------------------------------------------------
-
 
 /** Information for iterating the instance data of a legal move line as far as it needs to be rendered. */
 type RayIterationInfo = {
@@ -50,38 +57,38 @@ type RayIterationInfo = {
 	startCoordsOffset: Coords;
 	/** How many times to repeat a highlight in one direction for this given ray. */
 	iterationCount: number;
-}
-
+};
 
 // Constants -----------------------------------------------------------------------------
 
-
 /** The attribute info for all legal move highlight instanced rendering models. */
 const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }, { name: 'a_color', numComponents: 4 }],
-	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }]
+	vertexDataAttribInfo: [
+		{ name: 'a_position', numComponents: 2 },
+		{ name: 'a_color', numComponents: 4 },
+	],
+	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
 };
 
 /**
  * An offset applied to the legal move highlights mesh, to keep all of the
  * vertex data less than this number.
- * 
+ *
  * The offset snaps to the nearest grid number of this size.
- * 
+ *
  * Without an offset, the vertex data has no imposed limit to how big the numbers can
  * get, which ends up creating graphical glitches MUCH SOONER, because the
  * GPU is only capable of Float32s, NOT Float64s (which javascript numbers are).
- * 
+ *
  * The legal move highlights offset will snap to this nearest number on the grid.
- * 
+ *
  * For example, if we're at position [8700,0] on the board, then the legal move highlight
  * offset will snap to [10000,0], making it so that the vertex data only needs to contain
  * numbers around 1300 instead of 8700 without an offset.
- * 
+ *
  * Using an offset means the vertex data ALWAYS remains less than 10000!
  */
 const highlightedMovesRegenRange = 10_000n;
-
 
 /** The distance, in perspective mode, we want to aim to render legal moves highlights out to, or farther. */
 const PERSPECTIVE_VIEW_RANGE = 1000;
@@ -92,23 +99,20 @@ const multiplier = 4;
  */
 const multiplier_perspective = 2;
 
-
 const ZERO: BigDecimal = bd.FromBigInt(0n);
-
 
 // Variables -----------------------------------------------------------------------------
 
-
 /**
  * The current view box to generate visible legal moves inside.
- * 
+ *
  * We can only generate the mesh up to a finite distance.
  * This box dynamically grows, shrinks, and translates,
  * to ALWAYS keep the entire screen in the box.
- * 
+ *
  * By default it expands past the screen somewhat, so that a little
  * panning around doesn't immediately trigger this view box to change.
- * 
+ *
  * THIS REPRESENTS THE INTEGER TILES INCLUDED IN THE RANGE.
  * For example, a `right` of 10 means it includes the X=10 tiles.
  */
@@ -117,14 +121,12 @@ let boundingBoxOfRenderRange: BoundingBox | undefined;
 /**
  * How much the vertex data of the highlight models has been offset, to make their numbers
  * close to zero, to avoid floating point imprecision.
- * 
+ *
  * This is the nearest multiple of {@link highlightedMovesRegenRange} our camera is at.
  */
-let model_Offset: Coords = [0n,0n];
-
+let model_Offset: Coords = [0n, 0n];
 
 // Updating Render Range and Offset --------------------------------------------------
-
 
 /** Returns {@link model_Offset} */
 function getOffset(): Coords {
@@ -137,7 +139,6 @@ function getOffset(): Coords {
  * @returns Whether a change was made, updating it.
  */
 function updateRenderRange(): boolean {
-
 	// Determine if our camera/screen exceeds the boundary of our render range box...
 	if (isViewRangeContainedInRenderRange()) return false; // No change needed
 
@@ -145,8 +146,9 @@ function updateRenderRange(): boolean {
 
 	// console.log("Recalculating bounding box of render range.");
 
-	const [ newWidth, newHeight ] = perspective.getEnabled() ? getDimensionsOfPerspectiveViewRange()
-                                                             : getDimensionsOfOrthographicViewRange();
+	const [newWidth, newHeight] = perspective.getEnabled()
+		? getDimensionsOfPerspectiveViewRange()
+		: getDimensionsOfOrthographicViewRange();
 
 	const halfNewWidth: BigDecimal = bd.FromNumber(newWidth / 2);
 	const halfNewHeight: BigDecimal = bd.FromNumber(newHeight / 2);
@@ -157,17 +159,19 @@ function updateRenderRange(): boolean {
 		left: space.roundCoord(bd.subtract(boardPos[0], halfNewWidth)),
 		right: space.roundCoord(bd.add(boardPos[0], halfNewWidth)),
 		bottom: space.roundCoord(bd.subtract(boardPos[1], halfNewHeight)),
-		top: space.roundCoord(bd.add(boardPos[1], halfNewHeight))
+		top: space.roundCoord(bd.add(boardPos[1], halfNewHeight)),
 	};
 
 	/** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
-	model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
+	model_Offset = geometry.roundPointToNearestGridpoint(
+		boardpos.getBoardPos(),
+		highlightedMovesRegenRange,
+	);
 
 	// console.log("Shifted offset of highlights.");
 
 	return true; // A change was made
 }
-
 
 /**
  * Returns whether our camera/screen view box is contained within
@@ -175,25 +179,29 @@ function updateRenderRange(): boolean {
  * OR if it's significantly smaller than it.
  */
 function isViewRangeContainedInRenderRange(): boolean {
-	if (!boundingBoxOfRenderRange) return false; // It isn't even initiated yet 
+	if (!boundingBoxOfRenderRange) return false; // It isn't even initiated yet
 
 	// The bounding box of what the camera currently sees on-screen.
-	const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled() ?
-        getBoundingBoxOfPerspectiveView() :
-        boardtiles.gboundingBoxFloat();
+	const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled()
+		? getBoundingBoxOfPerspectiveView()
+		: boardtiles.gboundingBoxFloat();
 
 	// In 2D mode, we also care about whether the
 	// camera box is significantly smaller than our render range.
 	if (!perspective.getEnabled()) {
 		// We can cast to number since we're confident it's going to be small (we are zoomed in)
-		const width: number = bd.toNumber(bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left));
-		const renderRangeWidth: number = Number(boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left) + 1;
+		const width: number = bd.toNumber(
+			bd.subtract(boundingBoxOfView.right, boundingBoxOfView.left),
+		);
+		const renderRangeWidth: number =
+			Number(boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left) + 1;
 
 		// multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
 		if (width * multiplier * multiplier < renderRangeWidth) return false;
 	}
 
-	const floatingRenderRangeBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxOfRenderRange);
+	const floatingRenderRangeBox =
+		meshes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxOfRenderRange);
 	// Whether the camera view box exceeds the boundaries of the render range
 	return bounds.boxContainsBoxBD(floatingRenderRangeBox, boundingBoxOfView);
 }
@@ -206,7 +214,7 @@ function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 		left: bd.subtract(boardPos[0], viewDist),
 		right: bd.add(boardPos[0], viewDist),
 		bottom: bd.subtract(boardPos[1], viewDist),
-		top: bd.add(boardPos[1], viewDist)
+		top: bd.add(boardPos[1], viewDist),
 	};
 }
 
@@ -228,14 +236,13 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	const newWidth = width * multiplier;
 	const newHeight = height * multiplier;
 
-	if (boardpos.areZoomedOut()) throw Error("Don't recalculate legal move highlights box zoomed out!"); // Don't want to generate a stupidly large model
+	if (boardpos.areZoomedOut())
+		throw Error("Don't recalculate legal move highlights box zoomed out!"); // Don't want to generate a stupidly large model
 
 	return [newWidth, newHeight];
 }
 
-
 // Generating Legal Move Buffer Models ----------------------------------------------------------------------------------
-
 
 /**
  * Generates the renderable instanced rendering buffer models for the
@@ -249,17 +256,20 @@ function generateModelsForPiecesLegalMoveHighlights(
 	coords: Coords,
 	legalMoves: LegalMoves,
 	friendlyColor: Player,
-	highlightColor: Color
-): { NonCaptureModel: RenderableInstanced, CaptureModel: RenderableInstanced } {
-
+	highlightColor: Color,
+): { NonCaptureModel: RenderableInstanced; CaptureModel: RenderableInstanced } {
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
-	const vertexData_NonCapture: number[] = usingDots ? legalmoveshapes.getDataLegalMoveDot(highlightColor) : legalmoveshapes.getDataLegalMoveSquare(highlightColor);
+	const vertexData_NonCapture: number[] = usingDots
+		? legalmoveshapes.getDataLegalMoveDot(highlightColor)
+		: legalmoveshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the NON-CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_NonCapture: bigint[] = [];
 	/** The vertex data OF A SINGLE INSTANCE of the CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
-	const vertexData_Capture: number[] = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(highlightColor) : legalmoveshapes.getDataLegalMoveSquare(highlightColor);
+	const vertexData_Capture: number[] = usingDots
+		? legalmoveshapes.getDataLegalMoveCornerTris(highlightColor)
+		: legalmoveshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_Capture: bigint[] = [];
 
@@ -268,19 +278,36 @@ function generateModelsForPiecesLegalMoveHighlights(
 	// Data of short range moves within 3 tiles
 	pushIndividual(instanceData_NonCapture, instanceData_Capture, legalMoves, gamefile.boardsim);
 	// Potentially infinite data on sliding moves...
-	pushSliding(instanceData_NonCapture, instanceData_Capture, coords, legalMoves, gamefile, friendlyColor);
+	pushSliding(
+		instanceData_NonCapture,
+		instanceData_Capture,
+		coords,
+		legalMoves,
+		gamefile,
+		friendlyColor,
+	);
 
 	return {
 		// The NON-CAPTURING legal move highlights model
-		NonCaptureModel: createRenderable_Instanced(vertexData_NonCapture, piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture), "TRIANGLES", 'colorInstanced', true),
+		NonCaptureModel: createRenderable_Instanced(
+			vertexData_NonCapture,
+			piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture),
+			'TRIANGLES',
+			'colorInstanced',
+			true,
+		),
 		// The CAPTURING legal move highlights model
-		CaptureModel: createRenderable_Instanced(vertexData_Capture, piecemodels.castBigIntArrayToFloat32(instanceData_Capture), "TRIANGLES", 'colorInstanced', true),
+		CaptureModel: createRenderable_Instanced(
+			vertexData_Capture,
+			piecemodels.castBigIntArrayToFloat32(instanceData_Capture),
+			'TRIANGLES',
+			'colorInstanced',
+			true,
+		),
 	};
 }
 
-
 // Individual Moves ------------------------------------------------------------------------------------------------------
-
 
 /**
  * Calculates instanceposition data of legal individual (jumping) moves and appends it to the provided instance data arrays.
@@ -289,7 +316,12 @@ function generateModelsForPiecesLegalMoveHighlights(
  * @param legalMoves - The piece legal moves to highlight
  * @param boardsim - A reference to the current loaded gamefile's board
  */
-function pushIndividual(instanceData_NonCapture: bigint[], instanceData_Capture: bigint[], legalMoves: LegalMoves, boardsim: Board): void {
+function pushIndividual(
+	instanceData_NonCapture: bigint[],
+	instanceData_Capture: bigint[],
+	legalMoves: LegalMoves,
+	boardsim: Board,
+): void {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const legalIndividuals: Coords[] = legalMoves.individual;
 
@@ -302,9 +334,7 @@ function pushIndividual(instanceData_NonCapture: bigint[], instanceData_Capture:
 	}
 }
 
-
 // Sliding Moves ------------------------------------------------------------------------------------------------------
-
 
 /**
  * Calculates instanceposition data of legal sliding moves and appends it to the running instance data arrays.
@@ -321,20 +351,25 @@ function pushSliding(
 	coords: Coords,
 	legalMoves: LegalMoves,
 	gamefile: FullGame,
-	friendlyColor: Player
+	friendlyColor: Player,
 ): void {
-
-	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) { // '1,0'
+	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) {
+		// '1,0'
 		const line: Vec2 = vectors.getVec2FromKey(lineKey as Vec2Key); // [dx,dy]
 
 		// The intersection points this slide direction intersects
 		// our legal move highlights render range bounding box, if it does.
 		// eslint-disable-next-line prefer-const
-		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange!);
+		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(
+			coords,
+			line,
+			boundingBoxOfRenderRange!,
+		);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
-        
+
+		// prettier-ignore
 		pushSlide(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile!, intsect2Tile!, limits, legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
 	}
 }
@@ -364,15 +399,16 @@ function pushSlide(
 	ignoreFunc: IgnoreFunction,
 	gamefile: FullGame,
 	friendlyColor: Player,
-	brute?: boolean
+	brute?: boolean,
 ): void {
 	// Right moveset...
 
 	if (intsect2.positiveDotProduct) {
 		// The start coords are either on screen, or the ray points towards the screen
+		// prettier-ignore
 		pushRay(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1, intsect2, limits[1], ignoreFunc, gamefile, friendlyColor, brute);
 	} // else the start coords are off screen and ray points in the opposite direction of the screen
-    
+
 	// Left moveset...
 
 	// Negate the vector
@@ -392,6 +428,7 @@ function pushSlide(
 		// The start coords are either on screen, or the ray points towards the screen
 		// The first index of slide limit is always negative
 		const absoluteSlideLimit = limits[0] === null ? null : bimath.abs(limits[0]);
+		// prettier-ignore
 		pushRay(instanceData_NonCapture, instanceData_Capture, coords, negStep, negVecIntsect1, negVecIntsect2, absoluteSlideLimit, ignoreFunc, gamefile, friendlyColor, brute);
 	} // else the start coords are off screen and ray points in the opposite direction of the screen
 }
@@ -421,10 +458,11 @@ function pushRay(
 	ignoreFunc: IgnoreFunction,
 	gamefile: FullGame,
 	friendlyColor: Player,
-	brute?: boolean
+	brute?: boolean,
 ): void {
 	if (limit === 0n) return; // Can't slide any spaces this ray's direction
 
+	// prettier-ignore
 	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, false);
 	if (!iterationInfo) return; // None of the piece's slide is visible on screen, skip.
 
@@ -433,19 +471,24 @@ function pushRay(
 	// Recursively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
-		legal: if (ignoreFunc(coords, targetCoords)) { // Ignore function PASSED. (Is a prime square for huygens)
+		legal: if (ignoreFunc(coords, targetCoords)) {
+			// Ignore function PASSED. (Is a prime square for huygens)
 
 			// If we're brute force checking each move for check, do that here. (royal queen, or colinear pins)
 			if (brute) {
 				const moveDraft: MoveDraft = { startCoords: coords, endCoords: targetCoords };
-				if (checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check) break legal;
+				if (checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check)
+					break legal;
 			}
 
-			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.boardsim.pieces, targetCoords);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(
+				gamefile.boardsim.pieces,
+				targetCoords,
+			);
 			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
-		
+
 		targetCoords[0] += step[0];
 		targetCoords[1] += step[1];
 		// The mesh-offset adjusted coords we're checking
@@ -460,12 +503,19 @@ function pushRay(
  * and calculates where it should start and end.
  * @param isRay - This will also include the starting coordinate, as is not the behavior for selected pieces.
  */
-function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionPoint, intsect2: IntersectionPoint, limit: bigint | null, isRay: boolean): RayIterationInfo | undefined {
+function getRayIterationInfo(
+	coords: Coords,
+	step: Vec2,
+	intsect1: IntersectionPoint,
+	intsect2: IntersectionPoint,
+	limit: bigint | null,
+	isRay: boolean,
+): RayIterationInfo | undefined {
 	const coordsBD: BDCoords = bd.FromCoords(coords);
 	const stepBD: BDCoords = bd.FromCoords(step);
 
 	const axis: 0 | 1 = step[0] === 0n ? 1 : 0; // Use the y axis if the x movement vector is zero
-    
+
 	// Determine the start coords.
 
 	let startCoords: Coords = [...coords];
@@ -479,11 +529,10 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 	if (intsect1.positiveDotProduct) {
 		// Adjust the start square to be the first square we land on after intsect1.
 		const axisDistToIntsect1: BigDecimal = bd.subtract(intsect1.coords[axis], coordsBD[axis]);
-		const distInSteps: bigint = bd.toBigInt(bd.ceil(bd.divide_fixed(axisDistToIntsect1, stepBD[axis]))); // Minimum number of steps to overtake the first intersection.
-		startCoords = [
-			coords[0] + step[0] * distInSteps,
-			coords[1] + step[1] * distInSteps
-		];
+		const distInSteps: bigint = bd.toBigInt(
+			bd.ceil(bd.divide_fixed(axisDistToIntsect1, stepBD[axis])),
+		); // Minimum number of steps to overtake the first intersection.
+		startCoords = [coords[0] + step[0] * distInSteps, coords[1] + step[1] * distInSteps];
 	}
 
 	// Determine the end coords.
@@ -491,10 +540,12 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 	// How many steps could we take before we reached intsect2?
 	const axisDistanceToIntsect2: BigDecimal = bd.subtract(intsect2.coords[axis], coordsBD[axis]);
 	// The maximum number of steps we can take before exceeding the screen edge
-	const axisStepsToReachIntsect2: bigint = bd.toBigInt(bd.floor(bd.divide_fixed(axisDistanceToIntsect2, stepBD[axis])));
+	const axisStepsToReachIntsect2: bigint = bd.toBigInt(
+		bd.floor(bd.divide_fixed(axisDistanceToIntsect2, stepBD[axis])),
+	);
 	let endCoords: Coords = [
 		coords[0] + step[0] * axisStepsToReachIntsect2,
-		coords[1] + step[1] * axisStepsToReachIntsect2
+		coords[1] + step[1] * axisStepsToReachIntsect2,
 	];
 
 	if (limit !== null) {
@@ -507,7 +558,10 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 		];
 		const furthestSquareWeCanSlideBD: BDCoords = bd.FromCoords(furthestSquareWeCanSlide);
 
-		const vectorFromFurthestSquareTowardsIntsect = coordutil.subtractBDCoords(intsect2.coords, furthestSquareWeCanSlideBD);
+		const vectorFromFurthestSquareTowardsIntsect = coordutil.subtractBDCoords(
+			intsect2.coords,
+			furthestSquareWeCanSlideBD,
+		);
 		const dotProd = vectors.dotProductBD(vectorFromFurthestSquareTowardsIntsect, stepBD);
 		// A dotProd of zero would mean it can slide EXACTLY up to the end of the screen, that is okay
 		// But positive means we can't slide far enough to reach intsect2. Shorten our endCoords!
@@ -515,7 +569,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 	}
 
 	// Next, determine iterationCount and startCoordsOffset.
-	
+
 	// Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
 	const axisDistFromStartToEnd: bigint = endCoords[axis] - startCoords[axis];
 	// How many legal move squares/dots to render on this line
@@ -527,17 +581,14 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1: IntersectionP
 	// Shift the vertex data of our first step to the right place
 	const startCoordsOffset: Coords = coordutil.subtractCoords(startCoords, model_Offset);
 
-
 	return { startCoords, startCoordsOffset, iterationCount };
 }
 
-
 // Rays --------------------------------------------------------------------------------------
-
 
 /**
  * Generates a model for rendering all rays in the provided list.
- * 
+ *
  * Rays are square highlights starting from a single coord
  * and going in one direction to infinity, unobstructed.
  */
@@ -549,29 +600,38 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
 		const step = ray.vector;
 
 		// eslint-disable-next-line prefer-const
-		let [ intsect1Tile, intsect2Tile ] = geometry.findLineBoxIntersections(ray.start, ray.vector, boundingBoxOfRenderRange!);
-		
+		let [intsect1Tile, intsect2Tile] = geometry.findLineBoxIntersections(
+			ray.start,
+			ray.vector,
+			boundingBoxOfRenderRange!,
+		);
+
 		if (!intsect1Tile && !intsect2Tile) continue; // No intersection point (off the screen).
 		if (!intsect2Tile) intsect2Tile = intsect1Tile; // If there's only one corner intersection, make the exit point the same as the entry.
-        
+
+		// prettier-ignore
 		const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(ray.start, ray.vector, intsect1Tile!, intsect2Tile!, null, true);
 		if (iterationInfo === undefined) continue; // Technically should never happen for rays since they are never blocked.
 
 		const { startCoordsOffset, iterationCount } = iterationInfo;
 
-		for (let i = 0; i < iterationCount; i++) { 
+		for (let i = 0; i < iterationCount; i++) {
 			instanceData.push(...startCoordsOffset);
 			startCoordsOffset[0] += step[0];
 			startCoordsOffset[1] += step[1];
 		}
 	}
 
-	return createRenderable_Instanced_GivenInfo(vertexData, piecemodels.castBigIntArrayToFloat32(instanceData), ATTRIB_INFO, 'TRIANGLES', 'colorInstanced');
+	return createRenderable_Instanced_GivenInfo(
+		vertexData,
+		piecemodels.castBigIntArrayToFloat32(instanceData),
+		ATTRIB_INFO,
+		'TRIANGLES',
+		'colorInstanced',
+	);
 }
 
-
 // Rendering ----------------------------------------------------------------------------------------
-
 
 /**
  * [DEBUG] Renders an outline of the box containing all legal move highlights.
@@ -579,26 +639,24 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
  */
 function renderOutlineOfRenderBox(): void {
 	// const color: Color = [1,0,1, 1]; // Magenta
-	const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
+	const color: Color = [0.65, 0.15, 0, 1]; // Maroon (matches light brown wood theme)
 	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
 
-	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
+	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
 /**
  * [DEBUG] Renders an outline of the provided floating point bounding box.
  */
 function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
-	const color: Color = [0.65,0.15,0, 1];
+	const color: Color = [0.65, 0.15, 0, 1];
 	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(box);
 	const data = primitives.Rect(left, bottom, right, top, color);
 
-	createRenderable(data, 2, "LINE_LOOP", 'color', true).render();
+	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
-
 // Exports ------------------------------------------------------------------------------------------
-
 
 export default {
 	// Updating Render Range and Offset

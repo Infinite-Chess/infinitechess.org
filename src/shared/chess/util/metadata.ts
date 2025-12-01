@@ -1,74 +1,72 @@
-
 /**
  * This script stores the type definition for a game's metadata.
- * 
+ *
  * ICN (Infinite Chess Notation) is inspired from PGN notation.
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import { Rating } from "../../../server/database/leaderboardsManager.js";
-import { players } from "./typeutil.js";
+import { Rating } from '../../../server/database/leaderboardsManager.js';
+import { players } from './typeutil.js';
 
-import type { Player } from "./typeutil.js";
+import type { Player } from './typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
-
 interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */
-	Event: string,
+	Event: string;
 	/** What website the game was played on. Right now this has no application because infinitechess.org is the ONLY site you can play this game on. */
-	Site: 'https://www.infinitechess.org/',
+	Site: 'https://www.infinitechess.org/';
 	/**
 	 * The clock value for the game, in the form `"s+s"`, where the left
 	 * is start time in seconds, and the right is increment in seconds.
-	 * 
+	 *
 	 * If the game is untimed, this should be `"-"`
 	 */
-	TimeControl: `${number}+${number}` | '-',
+	TimeControl: `${number}+${number}` | '-';
 	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
-	Round: '-',
+	Round: '-';
 	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */
-	UTCDate: string,
+	UTCDate: string;
 	/** The UTC time the game started, in the format `"HH:MM:SS"` */
-	UTCTime: string,
+	UTCTime: string;
 	/** If it's not a custom position, this must be one of the valid variants in variant.ts*/
-	Variant?: string,
-	White?: string,
-	Black?: string,
+	Variant?: string;
+	White?: string;
+	Black?: string;
 	/** The ID of the white player, if they are signed in, converted to base 62. */
-	WhiteID?: string,
+	WhiteID?: string;
 	/** The ID of the black player, if they are signed in, converted to base 62. */
-	BlackID?: string,
+	BlackID?: string;
 	/** The display elo of the white player, whihc may includ a "?" if we're uncertain about their rating. */
-	WhiteElo?: string,
+	WhiteElo?: string;
 	/** The display elo of the black player, whihc may includ a "?" if we're uncertain about their rating. */
-	BlackElo?: string,
+	BlackElo?: string;
 	/** How much elo white gained/lost from the match. */
-	WhiteRatingDiff?: string,
+	WhiteRatingDiff?: string;
 	/** How much elo black gained/lost from the match. */
-	BlackRatingDiff?: string,
+	BlackRatingDiff?: string;
 	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw) */
-	Result?: string,
+	Result?: string;
 	/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
-	Termination?: string,
+	Termination?: string;
 }
 
 /** All valid metadata names. */
 type MetadataKey = keyof MetaData;
 
-
-
 /**
  * Helper function that uses generics to link the metadata key to its value type.
  * Inside the function typescript doesn't error when we are transferring the property.
  */
-function copyMetadataField<K extends MetadataKey>(target: MetaData, source: MetaData, key: K): void {
+function copyMetadataField<K extends MetadataKey>(
+	target: MetaData,
+	source: MetaData,
+	key: K,
+): void {
 	// TS knows that target[key] and source[key] have the same type: MetaData[K]
 	target[key] = source[key];
 }
-
-
 
 /**
  * Returns the value of the game's Result metadata, depending on the victor.
@@ -85,9 +83,10 @@ function getResultFromVictor(victor?: Player): string {
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
 function getGameConclusionFromResultAndTermination(result: string, termination: string): string {
-	if (!result || !termination) throw Error("Must provide both result and termination.");
+	if (!result || !termination) throw Error('Must provide both result and termination.');
 
 	if (termination === 'aborted') return 'aborted';
+	// prettier-ignore
 	const victor: Player =
 		result === '1-0' ? players.WHITE :
 		result === '0-1' ? players.BLACK :
@@ -125,8 +124,6 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 	return isPositive ? `+${eloChange}` : `${eloChange}`; // negative numbers are already negative
 }
 
-
-
 export default {
 	copyMetadataField,
 	getResultFromVictor,
@@ -136,7 +133,4 @@ export default {
 	getWhiteBlackRatingDiff,
 };
 
-export type {
-	MetaData,
-	MetadataKey,
-};
+export type { MetaData, MetadataKey };

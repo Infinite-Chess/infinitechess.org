@@ -1,33 +1,30 @@
-
 /**
  * This script can convert SVG elements into HTMLImageElements.
- * 
+ *
  * It also can normalize the pixel data of an image by drawing it onto a canvas and re-serializing it.
  */
 
-
 // Functions --------------------------------------------------------------------------
-
 
 /** Converts a list of SVGs into a list of HTMLImageElements. Does this in parallel. */
 async function convertSVGsToImages(svgElements: SVGElement[]): Promise<HTMLImageElement[]> {
 	try {
 		// Create an array of promises, where each promise resolves to an HTMLImageElement
-		const conversionPromises = svgElements.map(svgElement => svgToImage(svgElement));
-		
+		const conversionPromises = svgElements.map((svgElement) => svgToImage(svgElement));
+
 		// Wait for all the conversion promises to resolve concurrently
 		const readyImages = await Promise.all(conversionPromises);
-		
+
 		// Optional: Append the images to the doc for debugging
 		// for (const img of readyImages) {
-		//     document.body.appendChild(img); 
+		//     document.body.appendChild(img);
 		// }
 
 		return readyImages;
 	} catch (e) {
 		// Although we assume individual svgToImage calls resolve, Promise.all itself
 		// could theoretically encounter an issue, or svgToImage might throw a sync error.
-		console.error("Error caught during conversion of SVGs to Images:", e);
+		console.error('Error caught during conversion of SVGs to Images:', e);
 		return []; // Return an empty array in case of unexpected errors
 	}
 }
@@ -71,7 +68,7 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
 /**
  * Normalizes the pixel data of an image by drawing it onto a canvas and re-serializing it.
  * This used for patching a Firefox bug where it unintentionally darkens the image by double-multiplying the RGB channels by the alpha channel.
- * 
+ *
  * We don't have to do this for the spritesheet images, because the spritesheet generator ALREADY
  * draws the images onto a large canvas and re-serializes them.
  * @param img - The image to normalize.
@@ -87,10 +84,10 @@ async function normalizeImagePixelData(img: HTMLImageElement): Promise<HTMLImage
 	canvas.height = IMG_SIZE;
 	const ctx = canvas.getContext('2d');
 	if (ctx === null) throw new Error('2D context null.');
-	
+
 	// Draw original image
 	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  
+
 	// Return as standardized image
 	const processedImg = new Image();
 	processedImg.src = canvas.toDataURL();
@@ -105,9 +102,7 @@ async function normalizeImagePixelData(img: HTMLImageElement): Promise<HTMLImage
 	return processedImg;
 }
 
-
 // Exports -------------------------------------------------------------------------
-
 
 export default {
 	convertSVGsToImages,

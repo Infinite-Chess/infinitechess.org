@@ -1,19 +1,15 @@
-
 /**
  * This script takes a list of images, and converts it into a renderable
  * spritesheet, also returning the textue locations of each image.
  */
 
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
-import type { DoubleCoords } from "../../../../../shared/chess/util/coordutil.js";
-
-
-
-type SpritesheetData =  {
+type SpritesheetData = {
 	/** A fraction 0-1 representing what percentage of the total spritesheet's width one piece takes up. */
 	pieceWidth: number;
-	texLocs: { [key: number]: DoubleCoords; };
-}
+	texLocs: { [key: number]: DoubleCoords };
+};
 
 /**
  * The preferred image width each pieces image in a spreadsheet should be.
@@ -30,13 +26,16 @@ const PREFERRED_IMG_SIZE = 512;
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A promise that resolves with the generated spritesheet as an HTMLImageElement.
  */
-async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]): Promise<{ spritesheet: HTMLImageElement; spritesheetData: SpritesheetData; }> {
+async function generateSpritesheet(
+	gl: WebGL2RenderingContext,
+	images: HTMLImageElement[],
+): Promise<{ spritesheet: HTMLImageElement; spritesheetData: SpritesheetData }> {
 	// Ensure there are images provided
 	if (images.length === 0) throw new Error('No images provided when generating spritesheet.');
-  
+
 	// Calculate the grid size: Find the smallest square grid to fit all images
 	const numImages = images.length;
-	const gridSize = Math.ceil(Math.sqrt(numImages));  // Square root of number of images, rounded up
+	const gridSize = Math.ceil(Math.sqrt(numImages)); // Square root of number of images, rounded up
 
 	const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // Naviary's is 16,384
 
@@ -46,16 +45,21 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	 */
 	const maxImgSizePerMaxTextureSize = maxTextureSize / gridSize;
 
-	const spritesheetSizeIfPreferredImgSizeUsed = roundUpToNextPowerOf2(PREFERRED_IMG_SIZE * gridSize); // Round up to nearest power of 2
-	const actualImgSizeIfUsingPreferredImgSize = spritesheetSizeIfPreferredImgSizeUsed / gridSize; 
+	const spritesheetSizeIfPreferredImgSizeUsed = roundUpToNextPowerOf2(
+		PREFERRED_IMG_SIZE * gridSize,
+	); // Round up to nearest power of 2
+	const actualImgSizeIfUsingPreferredImgSize = spritesheetSizeIfPreferredImgSizeUsed / gridSize;
 
 	/** Whichever is smaller of the two */
-	const actualImgSize = Math.min(actualImgSizeIfUsingPreferredImgSize, maxImgSizePerMaxTextureSize);
-  
+	const actualImgSize = Math.min(
+		actualImgSizeIfUsingPreferredImgSize,
+		maxImgSizePerMaxTextureSize,
+	);
+
 	// Calculate the total width and height of the canvas (spritesheet)
 	const canvasWidth = gridSize * actualImgSize;
 	const canvasHeight = gridSize * actualImgSize;
-  
+
 	// Create a canvas element for the spritesheet
 	const canvas = document.createElement('canvas');
 	canvas.width = canvasWidth;
@@ -66,7 +70,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	// Positioning variables
 	let xIndex = 0;
 	let yIndex = 0;
-  
+
 	// Draw all the images onto the canvas
 	for (let i = 0; i < numImages; i++) {
 		const x = xIndex * actualImgSize;
@@ -74,7 +78,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 
 		// Draw the image at the current position
 		ctx.drawImage(images[i]!, x, y, actualImgSize, actualImgSize);
-	
+
 		// Update the position for the next image
 		xIndex++;
 		if (xIndex === gridSize) {
@@ -82,7 +86,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 			yIndex++;
 		}
 	}
-  
+
 	// Create an HTMLImageElement from the canvas
 	const spritesheetImage = new Image();
 	spritesheetImage.src = canvas.toDataURL();
@@ -100,17 +104,17 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param gridSize - How many images fit one-way.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): SpritesheetData {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): SpritesheetData {
 	const pieceWidth = 1 / gridSize;
 	const texLocs: { [key: number]: DoubleCoords } = {};
 
 	// Positioning variables
 	let x = 0;
 	let y = 0;
-  
+
 	// Loop through the images to create the sprite data
-	images.forEach(image => { 
-		const texX = (x / gridSize);
+	images.forEach((image) => {
+		const texX = x / gridSize;
 		const texY = 1 - (y + 1) / gridSize;
 
 		// Store the texture coordinates
@@ -124,16 +128,16 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): 
 			y++;
 		}
 	});
-  
+
 	return {
 		pieceWidth,
-		texLocs
+		texLocs,
 	};
 }
 
 /**
  * Rounds up the given number to the next lowest power of two.
- * 
+ *
  * Time complexity O(1), because bitwise operations are extremely fast.
  * @param num - The number to round up.
  * @returns The nearest power of two greater than or equal to the given number.
@@ -148,7 +152,5 @@ function roundUpToNextPowerOf2(num: number): number {
 	num |= num >> 16; // Additional shift for 32-bit numbers
 	return num + 1; // Step 3: Add 1 to get the next power of 2
 }
-
-
 
 export { generateSpritesheet };

@@ -1,31 +1,31 @@
 footer {
-    text-align: center;
-    padding: 10px 0;
+	text-align: center;
+	padding: 10px 0;
 }
 
 footer a {
-    display: inline-block;
-    color: rgb(207, 207, 207);
-    margin: 10px 10px;
-    text-decoration: underline;
+	display: inline-block;
+	color: rgb(207, 207, 207);
+	margin: 10px 10px;
+	text-decoration: underline;
 }
 
 footer label {
-    font-size: 16px;
-    color: rgb(207, 207, 207);
-    margin: 10px 2px 10px 10px;
+	font-size: 16px;
+	color: rgb(207, 207, 207);
+	margin: 10px 2px 10px 10px;
 }
 
 footer select {
-    width: min-content;
-    color: rgb(207, 207, 207);
-    font-size: 1em;
-    background-color: rgba(0,0,0,0);
-    margin: 10px 10px 10px 0px;
-    cursor: pointer;
+	width: min-content;
+	color: rgb(207, 207, 207);
+	font-size: 1em;
+	background-color: rgba(0, 0, 0, 0);
+	margin: 10px 10px 10px 0px;
+	cursor: pointer;
 }
 
 /* This ONLY changes the color of the text in the language-selection dropdown list so that the contrast is easier to read on Windows */
 footer .language-option {
-    color: rgb(33, 33, 33);
+	color: rgb(33, 33, 33);
 }

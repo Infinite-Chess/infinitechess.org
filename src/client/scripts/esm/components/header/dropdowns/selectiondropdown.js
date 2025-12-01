@@ -1,7 +1,6 @@
-
 // This script allows us to enable or disable premoves and dragging pieces
 
-import preferences from "../preferences.js";
+import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -13,14 +12,14 @@ const selectionDropdownTitle = document.querySelector('.selection-dropdown .drop
 const dragCheckbox = document.querySelector('.boolean-option.drag input');
 const premoveCheckbox = document.querySelector('.boolean-option.premove input');
 const animationsCheckbox = document.querySelector('.boolean-option.animations input');
-const lingeringAnnotationsCheckbox = document.querySelector('.boolean-option.lingering-annotations input');
+const lingeringAnnotationsCheckbox = document.querySelector(
+	'.boolean-option.lingering-annotations input',
+);
 
 // Functions ---------------------------------------------------------------------------------
 
 (function init() {
-
 	showCheckmarkOnSelectedOptions();
-
 })();
 
 function showCheckmarkOnSelectedOptions() {
@@ -43,15 +42,15 @@ function close() {
 
 function initListeners() {
 	selectionDropdownTitle.addEventListener('click', close);
-	dragCheckbox.addEventListener("click", toggleDrag);
-	premoveCheckbox.addEventListener("click", togglePremove);
+	dragCheckbox.addEventListener('click', toggleDrag);
+	premoveCheckbox.addEventListener('click', togglePremove);
 	animationsCheckbox.addEventListener('click', toggleAnimations);
 	lingeringAnnotationsCheckbox.addEventListener('click', toggleLingeringAnnotations);
 }
 function closeListeners() {
 	selectionDropdownTitle.removeEventListener('click', close);
-	dragCheckbox.removeEventListener("click", toggleDrag);
-	premoveCheckbox.removeEventListener("click", togglePremove);
+	dragCheckbox.removeEventListener('click', toggleDrag);
+	premoveCheckbox.removeEventListener('click', togglePremove);
 	animationsCheckbox.removeEventListener('click', toggleAnimations);
 	lingeringAnnotationsCheckbox.removeEventListener('click', toggleLingeringAnnotations);
 }

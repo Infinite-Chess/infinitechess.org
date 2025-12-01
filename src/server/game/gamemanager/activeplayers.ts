@@ -1,11 +1,10 @@
-
 /**
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
-import type { CustomWebSocket } from "../../socket/socketUtility.js";
-import type { Player } from "../../../shared/chess/util/typeutil.js";
-import type { Game } from "./gameutility.js";
-import type { AuthMemberInfo } from "../../types.js"; 
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Game } from './gameutility.js';
+import type { AuthMemberInfo } from '../../types.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -49,11 +48,19 @@ function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
 	if (user.signedIn) {
-		if (membersInActiveGames[user.user_id] === gameID) delete membersInActiveGames[user.user_id];
-		else if (membersInActiveGames[user.user_id] !== undefined) console.log("Not removing member from active games because they speedily joined a new game!");
+		if (membersInActiveGames[user.user_id] === gameID)
+			delete membersInActiveGames[user.user_id];
+		else if (membersInActiveGames[user.user_id] !== undefined)
+			console.log(
+				'Not removing member from active games because they speedily joined a new game!',
+			);
 	} else {
-		if (browsersInActiveGames[user.browser_id] === gameID) delete browsersInActiveGames[user.browser_id];
-		else if (browsersInActiveGames[user.browser_id] !== undefined) console.log("Not removing browser from active games because they speedily joined a new game!");
+		if (browsersInActiveGames[user.browser_id] === gameID)
+			delete browsersInActiveGames[user.browser_id];
+		else if (browsersInActiveGames[user.browser_id] !== undefined)
+			console.log(
+				'Not removing browser from active games because they speedily joined a new game!',
+			);
 	}
 }
 
@@ -65,7 +72,8 @@ function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
 function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
 	const player = ws.metadata.memberInfo;
 	// Allow a member to still join a new game, even if they're browser may be connected to one already.
-	if (player.signedIn) { // Their username trumps their browser id.
+	if (player.signedIn) {
+		// Their username trumps their browser id.
 		return player.user_id in membersInActiveGames;
 	} else return player.browser_id in browsersInActiveGames;
 }
@@ -78,7 +86,10 @@ function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
  */
 function hasColorInGameSeenConclusion(game: Game, color: Player): boolean {
 	const player = game.players[color]; // { member, user_id }  OR  { browser }   (only contains one)
-	if (!player) throw new Error(`Invalid color "${color}" when checking if color in game has seen game conclusion!`);
+	if (!player)
+		throw new Error(
+			`Invalid color "${color}" when checking if color in game has seen game conclusion!`,
+		);
 
 	return getIDOfGamePlayerIsIn(player.identifier) !== game.id;
 }

@@ -1,4 +1,3 @@
-
 /**
  * This module reads the IP address attached to incoming
  * requests and websocket connection requests.
@@ -10,7 +9,7 @@ import type { Request } from 'express';
  * Reads the IP address attached to the incoming request.
  * It prioritizes the 'x-forwarded-for' header, which is commonly used by
  * reverse proxies and load balancers like Cloudflare to convey the original client IP.
- * 
+ *
  * @param req - The Express request object.
  * @returns The IP address of the request as a string, or `undefined` if not present.
  */

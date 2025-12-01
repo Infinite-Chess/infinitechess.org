@@ -2,9 +2,8 @@
  * This module accepts HTML strings and injects the script text itself into it.
  */
 
-
 /**
- * Takes an HTML document as a string, inserts a script tag into its head, 
+ * Takes an HTML document as a string, inserts a script tag into its head,
  * with the script content being the provided JavaScript code, and any corresponding attributes provided.
  * @param {string} HTML - The HTML string.
  * @param {string} JS - The JavaScript code to be inserted directly into the script tag.
@@ -18,11 +17,16 @@ function insertScriptIntoHTML(HTML, JS, attributes = {}, after) {
 	scriptTag += `>${JS}</script>`; // Add the JavaScript code and close the script tag
 
 	// Determine the insertion point
-	let insertionIndex = after ? HTML.indexOf(after) + after.length // If 'after' is provided and exists in the HTML, insert after the first occurrence of 'after'
-                               : insertionIndex = HTML.indexOf('</head>'); // Otherwise, insert before the closing </head> tag
+	let insertionIndex = after
+		? HTML.indexOf(after) + after.length // If 'after' is provided and exists in the HTML, insert after the first occurrence of 'after'
+		: (insertionIndex = HTML.indexOf('</head>')); // Otherwise, insert before the closing </head> tag
 
-	if (insertionIndex === -1) { // Throw an error if we don't know where to insert
-		if (after) throw new Error(`Cannot inject script into HTML when it doesn't contain the string '${after}'!`);
+	if (insertionIndex === -1) {
+		// Throw an error if we don't know where to insert
+		if (after)
+			throw new Error(
+				`Cannot inject script into HTML when it doesn't contain the string '${after}'!`,
+			);
 		else throw new Error(`Cannot inject script into HTML when it doesn't contain a head,!`);
 	}
 
@@ -30,6 +34,4 @@ function insertScriptIntoHTML(HTML, JS, attributes = {}, after) {
 	return HTML.slice(0, insertionIndex) + scriptTag + HTML.slice(insertionIndex);
 }
 
-export {
-	insertScriptIntoHTML,
-};
+export { insertScriptIntoHTML };

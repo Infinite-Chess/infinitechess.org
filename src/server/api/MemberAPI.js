@@ -1,4 +1,3 @@
-
 // src/server/api/MemberAPI.js
 
 // Route
@@ -8,9 +7,13 @@
 import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 
-import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
-import { getPlayerLeaderboardRating, getEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
+import {
+	getPlayerLeaderboardRating,
+	getEloOfPlayerInLeaderboard,
+	getPlayerRankInLeaderboard,
+} from '../database/leaderboardsManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
 import metadata from '../../shared/chess/util/metadata.js';
@@ -19,42 +22,59 @@ import metadata from '../../shared/chess/util/metadata.js';
  * API route: /member/:member/data
  * This is fetched from the profile page,
  * and serves info about the requested member.
- * 
+ *
  * SHOULD ONLY ever return a JSON.
  */
-const getMemberData = async(req, res) => {
+const getMemberData = async (req, res) => {
 	// What member are we getting data from?
 	const claimedUsername = req.params.member;
 
 	const {
-		user_id, username, email, joined, last_seen, checkmates_beaten,
-		is_verified, is_verification_notified
+		user_id,
+		username,
+		email,
+		joined,
+		last_seen,
+		checkmates_beaten,
+		is_verified,
+		is_verification_notified,
 	} = getMemberDataByCriteria(
 		[
-			'user_id', 'username', 'email', 'joined', 'is_verified',
-			'is_verification_notified', 'last_seen', 'checkmates_beaten',
+			'user_id',
+			'username',
+			'email',
+			'joined',
+			'is_verified',
+			'is_verification_notified',
+			'last_seen',
+			'checkmates_beaten',
 		],
 		'username',
 		claimedUsername,
-		true
+		true,
 	);
 
 	if (user_id === undefined) return res.status(404).json({ message: 'Member not found' });
 
-
 	// Get the player's display elo string from the INFINITY leaderboard
 	const ranked_elo = getEloOfPlayerInLeaderboard(user_id, Leaderboards.INFINITY); // { value: number, confident: boolean }
-	
+
 	// Get the player's position from the INFINITY leaderboard
-	const infinity_leaderboard_position = getPlayerRankInLeaderboard(user_id, Leaderboards.INFINITY);
-	
+	const infinity_leaderboard_position = getPlayerRankInLeaderboard(
+		user_id,
+		Leaderboards.INFINITY,
+	);
+
 	// Get the player's RD from the INFINITY leaderboard
-	let infinity_leaderboard_rating_deviation = getPlayerLeaderboardRating(user_id, Leaderboards.INFINITY)?.rating_deviation;
-	if (infinity_leaderboard_rating_deviation !== undefined) infinity_leaderboard_rating_deviation = Math.round(infinity_leaderboard_rating_deviation);
+	let infinity_leaderboard_rating_deviation = getPlayerLeaderboardRating(
+		user_id,
+		Leaderboards.INFINITY,
+	)?.rating_deviation;
+	if (infinity_leaderboard_rating_deviation !== undefined)
+		infinity_leaderboard_rating_deviation = Math.round(infinity_leaderboard_rating_deviation);
 
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
-	
 
 	// Load their data
 	const joinedPhrase = format(new Date(joined), 'PP');
@@ -76,10 +96,17 @@ const getMemberData = async(req, res) => {
 
 	// If they are the same person as who their requesting data, also include these.
 	if (req.memberInfo === undefined) {
-		logEventsAndPrint("req.memberInfo must be defined when requesting member data from API!", 'errLog.txt');
+		logEventsAndPrint(
+			'req.memberInfo must be defined when requesting member data from API!',
+			'errLog.txt',
+		);
 		return res.status(500).send('Internal Server Error');
 	}
-	if (req.memberInfo.signedIn && req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()) { // Their page
+	if (
+		req.memberInfo.signedIn &&
+		req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()
+	) {
+		// Their page
 		sendData.email = email; // This is their account, include their email with the response
 
 		sendData.verified = is_verified === 1;
@@ -99,6 +126,4 @@ const getMemberData = async(req, res) => {
 	res.json(sendData);
 };
 
-export {
-	getMemberData,
-};
+export { getMemberData };

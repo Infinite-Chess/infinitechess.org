@@ -1,4 +1,3 @@
-
 // src/client/scripts/esm/game/rendering/border.ts
 
 /**
@@ -6,19 +5,15 @@
  * animation of games with a world border.
  */
 
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 
-import type { Board } from "../../../../../shared/chess/logic/gamefile.js";
-
-import meshes from "./meshes.js";
-import camera from "./camera.js";
-import primitives from "./primitives.js";
-import perspective from "./perspective.js";
-import boardtiles from "./boardtiles.js";
-import bounds, { DoubleBoundingBox } from "../../../../../shared/util/math/bounds.js";
-import { createRenderable } from "../../webgl/Renderable.js";
-
-
-
+import meshes from './meshes.js';
+import camera from './camera.js';
+import primitives from './primitives.js';
+import perspective from './perspective.js';
+import boardtiles from './boardtiles.js';
+import bounds, { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 
 /**
  * Draws a square on screen containing the entire
@@ -34,8 +29,9 @@ function drawPlayableRegionMask(boardsim: Board): void {
 
 	let worldBox: DoubleBoundingBox;
 	if (boardsim.playableRegion) {
-
-		const boundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(boardsim.playableRegion);
+		const boundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(
+			boardsim.playableRegion,
+		);
 		worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD);
 
 		// Cap the world box to the screen box.
@@ -52,14 +48,12 @@ function drawPlayableRegionMask(boardsim: Board): void {
 	}
 
 	const { left, right, bottom, top } = worldBox;
-	const vertexData = primitives.Quad_Color(left, bottom, right, top, [0,0,0,1]); // Color doesn't matter since it's a mask
+	const vertexData = primitives.Quad_Color(left, bottom, right, top, [0, 0, 0, 1]); // Color doesn't matter since it's a mask
 
 	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-
 // Exports -------------------------------------
-
 
 export default {
 	drawPlayableRegionMask,

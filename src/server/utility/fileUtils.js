@@ -1,4 +1,3 @@
-
 /**
  * This module contains methods for working with
  * reading files and creating directories.
@@ -56,13 +55,13 @@ function writeFile_ensureDirectory(filePath, content) {
  */
 async function getAllFilesInDirectoryWithExtension(path, ext) {
 	const filesNFolder = await readdir(path);
-	const folders = filesNFolder.filter(v => !v.endsWith(ext));
-	const files = filesNFolder.filter(v => v.endsWith(ext));
+	const folders = filesNFolder.filter((v) => !v.endsWith(ext));
+	const files = filesNFolder.filter((v) => v.endsWith(ext));
 
 	for (const folder of folders) {
 		try {
 			const newFiles = await getAllFilesInDirectoryWithExtension(`${path}/${folder}`, ext);
-			files.push(...newFiles.map(v => `${folder}/${v}`));
+			files.push(...newFiles.map((v) => `${folder}/${v}`));
 		} catch (e) {
 			if (e.code) continue;
 			console.log(e);
