@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "79"
+version = "80"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -165,7 +165,6 @@ processing = "In Bearbeitung..."
 network-error = "Es ist ein Netzwerkfehler aufgetreten. Bitte versuchen Sie es erneut."
 
 [password-validation]
-js-pwd_incorrect_format = "Passwort hat ein falsches Format"
 js-pwd_too_short = "Passwort muss mindestens 6 Zeichen lang sein"
 js-pwd_too_long = "Passwort darf nicht länger als 72 Zeichen sein"
 js-pwd_not_pwd = "Passwort darf nicht 'password' sein"

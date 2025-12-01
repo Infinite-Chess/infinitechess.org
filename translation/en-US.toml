@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "79"
+version = "80"
 maintainer = "Naviary"
 
 [header]
@@ -165,7 +165,6 @@ processing = "Processing..."
 network-error = "A network error occurred. Please try again."
 
 [password-validation]
-js-pwd_incorrect_format = "Password is in an incorrect format"
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
