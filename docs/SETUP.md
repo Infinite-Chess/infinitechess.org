@@ -4,7 +4,7 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 **This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, many people are willing to assist you in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
-**SUMMARY of the setup process for experienced users:** Install Node.js. Fork the repo and install the project dependencies via `npm i`. Now you can run `npm run dev` to launch a live infinite chess server at `https://localhost:3443`. Using the [list of recommended VSCode Extensions](#step-6-install-recommended-vscode-extensions) is highly recommended but optional. Read the [Navigation Guide](./NAVIGATING.md) to get a brief rundown of the project structure.
+**SUMMARY of the setup process for experienced users:** Install Node.js. Fork the repo and install the project dependencies via `npm i`. Now you can run `npm run dev` to launch a live infinite chess server at `https://localhost:3443`. Using the suggested [list of VSCode Extensions](#step-6-install-vscode-extensions) is highly recommended but optional. Read the [Navigation Guide](./NAVIGATING.md) to get a brief rundown of the project structure.
 
 ## Step 1: Install Git
 
@@ -101,7 +101,7 @@ If done correctly, you should be met with the following. This means the server h
 
 <img width="667" height="170" alt="Screenshot 2025-09-19 at 9 56 26 PM" src="https://github.com/user-attachments/assets/2e98bec2-8c1e-47e5-a1e3-a6139da03117" />
 
-## Step 6: Install recommended VSCode Extensions
+## Step 6: Install VSCode Extensions
 
 1. **ESLint**
 
@@ -115,7 +115,7 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 2. **Prettier - Code formatter**
 
-Using this extenstion will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation issues and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
+Using this extension will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation issues and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
 
 3. **SQLite Viewer**
 
