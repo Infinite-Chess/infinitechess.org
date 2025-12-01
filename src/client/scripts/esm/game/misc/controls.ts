@@ -59,6 +59,8 @@ const scaleAccel_Mobile: number = 14.0; // Acceleration of board scaling   Defau
  */
 const scaleVelCap = 2.0; // Default: 1
 
+const test = 5;
+
 /** The scale velocity cap when u sing the scroll wheel (higher). */
 const scaleVelCap_Scroll = 2.5;
 
