@@ -103,7 +103,7 @@ If done correctly, you should be met with the following. This means the server h
 
 ## Step 6: Install recommended VSCode Extensions
 
-1. ESLint
+1. **ESLint**
 
 Installing the ESLint VSCode extension will help your pull requests be approved quicker, by holding your code semantics to the standards of the project! ESLint will give you errors when you have undefined variables, missing semicolons, and other items, making it easier to catch bugs before runtime!
 
@@ -111,15 +111,15 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 <img width="1081" alt="Screen Shot 2024-08-16 at 10 26 33 PM copy" src="https://github.com/user-attachments/assets/7df938ff-da69-4675-934f-4a61e93e69c1">
 
-2. Prettier - Code formatter
+2. **Prettier - Code formatter**
 
 Using this extenstion will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
 
-3. SQLite Viewer
+3. **SQLite Viewer**
 
 Installing this extension will allow you to preview the contents of the database during development. The database stores all account information.
 
-4. GitHub Pull Requests
+4. **GitHub Pull Requests**
 
 Installing this extension is not required, but highly recommended. It allows you to test run the code of other peoples pull requests on your system, so you can give collective feedback!
 
