@@ -42,9 +42,20 @@ let stats: {
 try {
 	stats = await readFile('database/stats.json');
 } catch (e) {
-	const errMsg =
-		'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
-	throw new Error(errMsg);
+	if (process.env['VITEST']) {
+		console.warn('Mocking stats for test environment');
+		stats = {
+			moveCount: {},
+			gamesPlayed: {
+				byDay: {},
+				byMonth: {},
+				allTime: {}
+			}
+		};
+	} else {
+		const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
+		throw new Error(errMsg);
+	}
 }
 
 /**
