@@ -34,6 +34,7 @@ function copyToClipboard(text: string): void {
 			console.log('Copied to clipboard');
 		})
 		.catch((error) => {
+			prompt(translations[copypaste].clipboard_manual_copy, text)
 			console.error('Failed to copy to clipboard', error);
 		});
 }
