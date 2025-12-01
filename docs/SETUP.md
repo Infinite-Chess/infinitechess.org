@@ -115,7 +115,7 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 2. **Prettier - Code formatter**
 
-Using this extenstion will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
+Using this extenstion will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation issues and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
 
 3. **SQLite Viewer**
 
