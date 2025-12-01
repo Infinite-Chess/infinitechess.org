@@ -21,8 +21,9 @@ type PieceCount = number | [number, number];
 /** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
 type Scenario = TypeGroup<PieceCount>;
 
-// If the world border exists and is closer than this number in any direction, then do not make insuffmat check
-const playableRegionUpperBoundForDisablingInsuffmat = 1_000_000n;
+// If the world border exists and is closer than this number in any direction,
+// then take the world border under consideration when doing insuffmat checks
+const playableRegionBoundForWorldBorderConsideration = 1_000_000n;
 
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
@@ -48,6 +49,13 @@ const insuffmatScenarios_1K1k: Scenario[] = [
 	{ [r.CHANCELLOR + e.W]: 1 },
 	{ [r.KNIGHTRIDER + e.W]: 2 },
 	{ [r.PAWN + e.W]: 3 },
+];
+
+// Checkmate one black king with one white king for help, with the world border nearby
+// The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list
+const insuffmatScenarios_1K1k_worldborder: Scenario[] = [
+	{ [r.BISHOP + e.W]: [Infinity, 0] },
+	{ [r.KNIGHT + e.W]: 2 },
 ];
 
 // Checkmate one black king without any white kings
@@ -85,6 +93,13 @@ const insuffmatScenarios_0K1k: Scenario[] = [
 	{ [r.HUYGEN + e.W]: 4 },
 ];
 
+// Checkmate one black king one black king without any white kings, with the world border nearby
+// The piece {[r.KING + e.B]: 1} is assumed for each entry of this list
+const insuffmatScenarios_0K1k_worldborder: Scenario[] = [
+	{ [r.BISHOP + e.W]: [Infinity, 0] },
+	{ [r.KNIGHT + e.W]: 2 },
+];
+
 // other special insuffmat scenarios
 const insuffmatScenarios_special: Scenario[] = [
 	{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
@@ -95,19 +110,22 @@ const insuffmatScenarios_special: Scenario[] = [
 /**
  * Detects if the provided piecelist scenario is a draw by insufficient material
  * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
+ * @param worldBorderNearOrigin - whether the world border is near the origin
  * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
  */
-function isScenarioInsuffMat(scenario: Scenario): boolean {
+function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean): boolean {
 	const scenarioCopy = { ...scenario };
 	// find out if we are in the 1 king vs 1 king, or in the 0 kings vs 1 king situation, and set scenrariosForInsuffMat accordingly
 	let scenrariosForInsuffMat: Scenario[];
 	if (scenarioCopy[r.KING + e.B] === 1) {
 		if (scenarioCopy[r.KING + e.W] === 1) {
-			scenrariosForInsuffMat = insuffmatScenarios_1K1k;
+			if (worldBorderNearOrigin) scenrariosForInsuffMat = insuffmatScenarios_1K1k_worldborder;
+			else scenrariosForInsuffMat = insuffmatScenarios_1K1k;
 			delete scenarioCopy[r.KING + e.W];
 			delete scenarioCopy[r.KING + e.B];
 		} else if (!scenarioCopy[r.KING + e.W]) {
-			scenrariosForInsuffMat = insuffmatScenarios_0K1k;
+			if (worldBorderNearOrigin) scenrariosForInsuffMat = insuffmatScenarios_0K1k_worldborder;
+			else scenrariosForInsuffMat = insuffmatScenarios_0K1k;
 			delete scenarioCopy[r.KING + e.B];
 		} else {
 			scenrariosForInsuffMat = insuffmatScenarios_special;
@@ -181,29 +199,6 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	)
 		return undefined;
 
-	// Do not make the draw check if the world border is closer than
-	// playableRegionUpperBoundForDisablingInsuffmat in any direction
-	if (
-		boardsim.playableRegion?.bottom !== undefined &&
-		-boardsim.playableRegion.bottom <= playableRegionUpperBoundForDisablingInsuffmat
-	)
-		return undefined;
-	if (
-		boardsim.playableRegion?.left !== undefined &&
-		-boardsim.playableRegion.left <= playableRegionUpperBoundForDisablingInsuffmat
-	)
-		return undefined;
-	if (
-		boardsim.playableRegion?.right !== undefined &&
-		boardsim.playableRegion.right <= playableRegionUpperBoundForDisablingInsuffmat
-	)
-		return undefined;
-	if (
-		boardsim.playableRegion?.top !== undefined &&
-		boardsim.playableRegion.top <= playableRegionUpperBoundForDisablingInsuffmat
-	)
-		return undefined;
-
 	// Only make the draw check if the last move was a capture or promotion or if there is no last move
 	const lastMove = moveutil.getLastMove(boardsim.moves);
 	if (lastMove && !(lastMove.flags.capture || lastMove.promotion !== undefined)) return undefined;
@@ -218,6 +213,19 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 		11
 	)
 		return undefined;
+
+	// Check if the world border exists and is closer than playableRegionBoundForWorldBorderConsideration in any direction
+	const worldBorderNearOrigin =
+		(boardsim.playableRegion?.bottom !== undefined &&
+			-boardsim.playableRegion.bottom <= playableRegionBoundForWorldBorderConsideration) ||
+		(boardsim.playableRegion?.left !== undefined &&
+			-boardsim.playableRegion.left <= playableRegionBoundForWorldBorderConsideration) ||
+		(boardsim.playableRegion?.right !== undefined &&
+			boardsim.playableRegion.right <= playableRegionBoundForWorldBorderConsideration) ||
+		(boardsim.playableRegion?.top !== undefined &&
+			boardsim.playableRegion.top <= playableRegionBoundForWorldBorderConsideration)
+			? true
+			: false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};
@@ -266,9 +274,9 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	}
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
-	if (isScenarioInsuffMat(scenario))
+	if (isScenarioInsuffMat(scenario, worldBorderNearOrigin))
 		return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
-	else if (isScenarioInsuffMat(invertedScenario))
+	else if (isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin))
 		return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
 	else return undefined;
 }
