@@ -93,7 +93,7 @@ const insuffmatScenarios_0K1k: Scenario[] = [
 	{ [r.HUYGEN + e.W]: 4 },
 ];
 
-// Checkmate one black king one black king without any white kings, with the world border nearby
+// Checkmate one black king without any white kings, with the world border nearby
 // The piece {[r.KING + e.B]: 1} is assumed for each entry of this list
 const insuffmatScenarios_0K1k_worldborder: Scenario[] = [
 	{ [r.BISHOP + e.W]: [Infinity, 0] },
