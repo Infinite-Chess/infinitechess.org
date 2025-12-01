@@ -92,8 +92,9 @@ async function callbackPaste(_event: Event): Promise<void> {
 	try {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
+		clipboard = prompt(translations['copypaste'].clipboard_manual_paste);
 		const message: string = translations['copypaste'].clipboard_denied;
-		return statustext.showStatus(message + '\n' + error, true);
+		statustext.showStatus(message + '\n' + error, true);
 	}
 
 	// Convert clipboard text to object
