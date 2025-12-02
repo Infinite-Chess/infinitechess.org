@@ -59,7 +59,7 @@ const element_email = document.getElementById('email')!;
 
 // --- Event Listeners Setup ---
 
-element_sendEmail.addEventListener('click', resendConfirmEmail);
+// element_sendEmail.addEventListener('click', resendConfirmEmail);
 element_showAccountInfo.addEventListener('click', showAccountInfo);
 // Note: deleteAccount listener added later conditionally
 

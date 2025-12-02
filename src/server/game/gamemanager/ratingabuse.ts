@@ -369,8 +369,8 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
 			Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >=
 				SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS
 		) {
-			const messageSubject = `Rating Abuse Warning: user ${username}, user_id ${user_id}`;
-			await sendRatingAbuseEmail(messageSubject, messageText);
+			// const messageSubject = `Rating Abuse Warning: user ${username}, user_id ${user_id}`;
+			// await sendRatingAbuseEmail(messageSubject, messageText);
 			// Update RatingAbuse table with last_alerted_at value
 			const last_alerted_at = timeutil.timestampToSqlite(Date.now());
 			updateRatingAbuseColumns(user_id, leaderboard_id, { last_alerted_at });

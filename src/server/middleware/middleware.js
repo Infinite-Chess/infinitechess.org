@@ -233,7 +233,7 @@ function configureMiddleware(app) {
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
-	app.get('/member/:member/send-email', requestConfirmEmail);
+	// app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get('/verify/:member/:code', verifyAccount);
 
 	// Leaderboard router
