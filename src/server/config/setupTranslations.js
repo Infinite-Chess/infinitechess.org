@@ -57,6 +57,7 @@ const languageNames = {
 	'hi-IN': 'Hindi',
 	'ko-KR': 'Korean',
 	'tr-TR': 'Turkish',
+	'fi-FI': 'Finnish',
 };
 
 const translationsFolder = './translation';

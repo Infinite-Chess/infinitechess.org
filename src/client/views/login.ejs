@@ -63,9 +63,10 @@
 
                 <!-- The "Forgot Password?" and "Back to Login" links - These control visibility of the FORMS -->
                 <p class="forgot-link-container center">
-                    <a href="#" id="forgot-link"><%=t('login.forgot_question')%></a>
+                    <!-- <a href="#" id="forgot-link" class="hidden"><%=t('login.forgot_question')%></a> -->
                     <a href="#" id="back-to-login-link" class="hidden"><%=t('login.back_to_login')%></a>
                 </p>
+                <p class="center" style="font-size: 0.9em">Password resets are temporarily unavailable.</p>
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>

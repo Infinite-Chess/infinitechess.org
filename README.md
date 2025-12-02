@@ -1,4 +1,4 @@
-# Infinite Chess Web Server #
+# Infinite Chess Web Server
 
 [InfiniteChess.org](https://www.infinitechess.org) is a free and ad-less website for playing several variants on an infinite, boundless board.
 
@@ -8,8 +8,7 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 ## Contributing
 
-This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)! For an overview of the codebase refer to [Navigation Guide](./docs/NAVIGATING.md).
-
+This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)! For an overview of the codebase refer to the [Navigation Guide](./docs/NAVIGATING.md).
 
 In case you want to help with translating the website to other languages, please read the [Translation Guide](./docs/TRANSLATIONS.md).
 

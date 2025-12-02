@@ -1,32 +1,30 @@
 // tsconfig.json
 
 {
-	"compilerOptions": {
-		"outDir": "./dist", 
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"alwaysStrict": true,
-		"noFallthroughCasesInSwitch": true,
-		"noImplicitAny": true,
-		"noImplicitOverride": true,
-		"noImplicitReturns": true,
-		"noImplicitThis": true,
-		"noPropertyAccessFromIndexSignature": true,
-		"noUncheckedIndexedAccess": true,
-		"strict": true,
-		"noEmitOnError": true,
-		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-		// "allowJs": true, // Allows TypeScript to import JavaScript modules.
-		// "checkJs": true  // Reports errors in .js files based on JSDoc and inference.
-	},
-	// Tells TypeScript and every tool that uses this file (IntelliSense, ESLint): "My source code is in the src folder."
-	"include": [
-		"src"
-	],
-	"exclude": [
-		"node_modules", 			// Don't look in node_modules
-		"dist",         			// Don't look in the output directory
-		"**/chess/engines/**/*",  	// Don't look in the chess engines directory
-	]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "alwaysStrict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "strict": true,
+    "noEmitOnError": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
+    // "allowJs": true, // Allows TypeScript to import JavaScript modules.
+    // "checkJs": true  // Reports errors in .js files based on JSDoc and inference.
+  },
+  // Tells TypeScript and every tool that uses this file (IntelliSense, ESLint): "My source code is in the src folder."
+  "include": ["src"],
+  "exclude": [
+    "node_modules", // Don't look in node_modules
+    "dist", // Don't look in the output directory
+    "**/chess/engines/**/*" // Don't look in the chess engines directory
+  ]
 }
