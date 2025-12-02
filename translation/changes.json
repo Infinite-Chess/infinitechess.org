@@ -1,403 +1,394 @@
 {
-	"76": {
-		"note": "Added contribution_count_singular and renamed contribution_count to contribution_count_plural (lines 75-76).",
-		"changes": []
-	},
-	"75": {
-		"note": "Modified undo_edit and redo_edit to include keyboard shortcuts on lines 320-321.",
-		"changes": []
-	},
-	"74": {
-		"note": "Added Palace line 265. Added CoaIP_RO & CoaIP_NO on lines 282-283.",
-		"changes": []
-	},
-	"73": {
-		"note": "Added section play.javascript.piecenames on lines 387-409. Added copied_position, loaded_position_from_clipboard, reset_position, clear_position on lines 427-430.",
-		"changes": []
-	},
-	"72": {
-		"note": "Added play.guide.pieces.rose on line 242.",
-		"changes": []
-	},
-	"71": {
-		"note": "Added coords-exceeded line 384.",
-		"changes": []
-	},
-	"70": {
-		"note": "Renamed board, board-theme, and board-starfield to appearance, appearance-theme, appearance-starfield, lines 18-20. Also, added appearance-advanced-effects on line 21.",
-		"changes": []
-	},
-	"69": {
-		"note": "Added sound, sound-master-volume, and sound-ambience, lines 32-34.",
-		"changes": []
-	},
-	"68": {
-		"note": "Deleted shaders_failed & failed_compiling_shaders, lines 366-367.",
-		"changes": []
-	},
-	"67": {
-		"note": "Added coords-invalid line 381",
-		"changes": []
-	},
-	"66": {
-		"note": "Added board-theme & board-starfield lines 19-20",
-		"changes": []
-	},
-	"65": {
-		"note": "Deleted slidelimit_not_number line 397. Changed invalid_wincon_white and invalid_wincon_black on line 389 to invalid_wincon.",
-		"changes": []
-	},
-	"64": {
-		"note": "Added undo_edit and redo_edit on lines 310-311.",
-		"changes": []
-	},
-	"63": {
-		"note": "Deleted password_reset_message 133",
-		"changes": []
-	},
-	"62": {
-		"note": "Added ws-deleting_account_in_game on line 611.",
-		"changes": []
-	},
-	"61": {
-		"note": "Added German traslation credit 115",
-		"changes": []
-	},
-	"60": {
-		"note": "Changed lines 153-164, added all of reset-password.javascript, and moved js-pwd_incorrect_format, js-pwd_too_short, js-pwd_too_long, js-pwd_not_pwd to below the new password-validation section. Added ws-password-reset-token-invalid 604. Added all of login.javascript 567-569.",
-		"changes": []
-	},
-	"59": {
-		"note": "Added ALL of reset_password lines 559-565",
-		"changes": []
-	},
-	"58": {
-		"note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556, ws-password-reset-link-sent, ws-password-change-success 588-589. Deleted ws-member_not_found 590, ws-username_and_password_required, ws-username_and_password_string 570-571, ws-unable_to_identify_client_ip, ws-you_are_banned_by_server, ws-too_many_requests_to_server, ws-bad_request 591-594. Added forgot_instruction 557.",
-		"changes": []
-	},
-	"57": {
-		"note": "Deleted ws-no_abort_game_over and ws-no_abort_after_moves on lines 601-602.",
-		"changes": []
-	},
-	"56": {
-		"note": "Deleted bug_koth line 504, bug_threecheck 501, bug_allpiecescaptured 498, bug_allroyalscaptured 495, bug_royalcapture 492, bug_time 489, bug_checkmate 486, black_threecheck 495, white_threecheck 494, opponent_threecheck 481, you_threecheck 464, threecheck 448. Added white_resignation, black_resignation, white_disconnect, black_disconnect line 485, ",
-		"changes": []
-	},
-	"55": {
-		"note": "Added cannot_paste_in_rated line 373.",
-		"changes": []
-	},
-	"54": {
-		"note": "Reworded terms.fair_play_paragraph1 line 517, terms.fair_play_rules line 520, and added line 521. Deleted update on line 554.",
-		"changes": []
-	},
-	"53": {
-		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript with 4 entries on line 43. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158. Added engine_indicator line 323. Deleted you_indicator line 401.",
-		"changes": []
-	},
-	"52": {
-		"note": "Deleted textures_credits line 90.",
-		"changes": []
-	},
-	"51": {
-		"note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 603",
-    	"changes": []
-	},
-	"50": {
-		"note": "Added annotations, erase, and collapse, lines 285-287.",
-		"changes": []
-	},
-	"49": {
-		"note": "Added selection-lingering_annotations, line 25.",
-		"changes": []
-	},
-	"48": {
-		"note": "Added selection-animations, line 24.",
-		"changes": []
-	},
-	"47": {
-		"note": "Added ranked_elo on line 119.",
-		"changes": []
-	},
-	"46": {
-		"note": "On line 183 added a note that holding Control will force-drag the board.",
-		"changes": []
-	},
-	"45": {
-		"note": "Added credits for 3 new variants 'Confined Classical', '4x4x4x4 Chess', and '5D Chess' on lines 82-84.",
-		"changes": []
-	},
-	"44": {
-		"note": "Replaced progress_checkmate on line 333 with a comment, and added 7 more translations on lines 339-345 in play.javascript",
-		"changes": []
-	},
-	"43": {
-		"note": "Added all of member.badge-tooltips, lines 122-125",
-		"changes": []
-	},
-	"42": {
-		"note": "Added member.practice_progress to line 115",
-		"changes": []
-	},
-	"41": {
-		"note": "Replaced play.play-menu.5D_Chess on line 245 with 4x4x4x4_Chess and 5D_Chess",
-		"changes": []
-	},
-	"40": {
-		"note": "Deleted toggled_edit, line 356",
-		"changes": []
-	},
-	"39": {
-		"note": "Deleted checkmates and tactics, lines 208-209. Modified title line 207. Deleted menu_checkmate line 326",
-		"changes": []
-	},
-	"38": {
-		"note": "Deleted Trappist_1 line 244, and deleted credit for Trappist-1 on line 82.",
-		"changes": []
-	},
-	"37": {
-		"note": "Added the huygen to play.guide.pieces (line 203).",
-		"changes": []
-	},
-	"36": {
-		"note": "Added practice_menu to play.pause on line 288",
-		"changes": []
-	},
-	"35": {
-		"note": "Added undo and restart to play.gamebuttontooltips on lines 277-278",
-		"changes": []
-	},
-	"34": {
-		"note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
-		"changes": []
-	},
-	"33":{
-		"note": "Added progress_checkmate on line 332 under play.javascript",
-		"changes": []
-	},
-	"32": {
-		"note": [
-			"Added practice key on line 149 under play.main-menu.",
-			"Added play.practice-menu section on line 206, and everything beneath it.",
-			"Added menu_checkmate key on line 331.",
-			"Added cannot_paste_in_engine key on line 336 under play.javascript.copypaste."
-		],
-		"changes": []
-	},
-	"31": {
-		"note": "Added variant credits for 'Chess on an Infinite Plane - Huygens Options by V. Reinhart.' and 'Trappist-1 by V. Reinhart' on lines 81-82.",
-		"changes": []
-	},
-	"30": {
-		"note": "Added email_domain_invalid, line 539.",
-		"changes": []
-	},
-	"29": {
-		"note": [
-			"Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
-			"Added Confined_Classical, line 213.",
-			"Added arrows_all_hippogonals, line 302"
-		],
-		"changes": []
-	},
-	"28": {
-		"note": [
-			"Deleted unknown_action_received_1 & unknown_action_received_2 on lines 346-347",
-			"Deleted all of play.footer, lines 264-267",
-			"Added player_name_white_generic and player_name_black_generic, lines 280 & 281"
-		],
-		"changes": []
-	},
-	"27": {
-		"note": "Added index.github_title and index.javascript.contribution_count, lines 57-60",
-		"changes": []
-	},
-	"26": {
-		"note": "Modified webgl_unsupported, line 303",
-		"changes": [ "play.javascript.webgl_unsupported" ]
-	},
-	"25": {
-		"note": "Added the following in header.settings, lines 21-23: selection, selection-drag, selection-premove.",
-		"changes": []
-	},
-	"24": {
-		"note": "Deleted play.javascript.copypaste.loaded, line 323",
-		"changes": []
-	},
-	"23": {
-		"note": [
-			"Deleted member.rating, line 105",
-			"Deleted ws-unauthorized_patron_page, line 548",
-			"Deleted ws-refresh_token_not_found_logged_out, ws-refresh_token_not_found, ws-refresh_token_expired, and ws-refresh_token_invalid, lines 534-537",
-			"Updated index.how_to_paragraph, line 47",
-			"Added play.play-menu.5D_Chess, line 227"
-		],
-		"changes": []
-	},
-	"22": {
-		"note": "Deleted all of header.javascript (lines 19-23). Changed the value of header.home (line 7). Added header.profile (line 11) & header.logout (line 10). Deleted disable_holiday_theme_desktop and disable_holiday_theme_mobile (lines 299-300). Added all of header.settings (lines 15-25).",
-		"changes": []
-	},
-	"21": {
-		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN UPDATE 22.",
-		"changes": []
-	},
-	"20": {
-		"note": "Added fields for game button tooltips, lines 241-247",
-		"changes": [
-			"play.gamebuttontooltips"
-		]
-	},
-	"19": {
-		"note": "Updated wording of verify_message and resend_message, lines 94-95",
-		"changes": []
-	},
-	"18": {
-		"note": "Added Spanish translation credit, line 89",
-		"changes": []
-	},
-	"17": {
-		"note": "Added credits.language_heading and credits.language_credits, line 82",
-		"changes": []
-	},
-	"16": {
-		"note": "Deleted all news posts. The only keys you keep in the `news` section is `title` and `more_dev_logs`! Please verify your language's news posts have been translated correctly within translation/news!",
-		"changes": []
-	},
-	"15": {
-		"note": "Added news.sept11-2024, line 493. ALL NEWS POSTS DELETED IN FUTURE CHANGE.",
-		"changes": []
-	},
-	"14": {
-		"note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117. Changed play.main-menu.loading to play.loading, and changed play.main-menu.error to play.error",
-		"changes": [
-			"index.title",
-			"member.title",
-			"play.title",
-			"play.main-menu.loading",
-			"play.main-menu.error",
-			"play.loading",
-			"play.error"
-		]
-	},
-	"13": {
-		"note": "Added draw offers. Deleted ws-player_already_has_invite, ws-accept_own_invite, and ws-invite_cancelled",
-		"changes": [
-			"play.pause.offer_draw",
-			"play.drawoffer.question",
-			"play.javascript.offer_draw",
-			"play.javascript.accept_draw",
-			"play.javascript.termination.agreement",
-			"play.javascript.results.draw_agreement",
-			"server.javascript.ws-player_already_has_invite",
-			"server.javascript.ws-accept_own_invite",
-			"server.javascript.ws-invite_cancelled"
-		]
-	},
-	"12": {
-		"note": "Corrected opponen_resignation to opponent_resignation",
-		"changes": [
-			"play.javascript.results.opponen_resignation"
-		]
-	},
-	"11": {
-		"note": "Changed the structure of play.javascript.termination.moverule",
-		"changes": [
-			"play.javascript.termination.moverule"
-		]
-	},
-	"10": {
-		"note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
-		"changes": [
-			"news.aug1-2024.date",
-			"news.aug1-2024.text_top",
-			"news.aug1-2024.update_list",
-			"news.aug26-2023.date",
-			"news.aug26-2023.text_top",
-			"news.aug26-2023.text_box"
-		]
-	},
-	"9": {
-		"note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
-		"changes": [
-			"play.guide.controls_paragraph",
-			"play.guide.keybinds"
-		]
-	},
-	"8": {
-		"note": "Added a knightrider description for the guide, on line 170.",
-		"changes": [ "play.guide.pieces.knightrider" ]
-	},
-	"7": {
-		"note": "Added ws-server_under_maintenance on line 561.",
-		"changes": [ "server.javascript.ws-server_under_maintenance" ]
-	},
-	"6": {
-		"note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
-		"changes": []
-	},
-	"5": {
-		"note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
-		"changes": [
-			"create-account.argreement",
-			"create-account.agreement",
-			"play.play-menu.variants",
-			"play.play-menu.Classical",
-			"play.play-menu.Classical_Plus",
-			"play.play-menu.CoaIP",
-			"play.play-menu.Pawndard",
-			"play.play-menu.Knighted_Chess",
-			"play.play-menu.Knightline",
-			"play.play-menu.Core",
-			"play.play-menu.Standarch",
-			"play.play-menu.Pawn_Horde",
-			"play.play-menu.Space_Classic",
-			"play.play-menu.Space",
-			"play.play-menu.Obstocean",
-			"play.play-menu.Abundance",
-			"play.play-menu.Amazon_Chandelier",
-			"play.play-menu.Containment",
-			"play.play-menu.Classical_Limit_7",
-			"play.play-menu.CoaIP_Limit_7",
-			"play.play-menu.Chess",
-			"play.play-menu.Classical_KOTH",
-			"play.play-menu.CoaIP_KOTH",
-			"play.play-menu.Omega",
-			"play.play-menu.Omega_Squared",
-			"play.play-menu.Omega_Cubed",
-			"play.play-menu.Omega_Fourth",
-			"play.play-menu.no_clock",
-			"play.play-menu.casual",
-			"server.javascript.ws-username_reserved",
-			"server.javascript.ws-already_in_game",
-			"server.javascript.ws-player_already_has_invite",
-			"server.javascript.ws-invite_cancelled",
-			"server.javascript.ws-accept_own_invite",
-			"server.javascript.ws-server_restarting",
-			"server.javascript.ws-minutes",
-			"server.javascript.ws-minute",
-			"server.javascript.ws-no_abort_game_over",
-			"server.javascript.ws-no_abort_after_moves",
-			"server.javascript.ws-game_aborted_cheating",
-			"server.javascript.ws-cannot_resign_finished_game",
-			"server.javascript.ws-invalid_code",
-			"server.javascript.ws-game_aborted"
-		]
-	},
-	"4": {
-		"note": "Added news.july22-2024 on line 462",
-		"changes": [ "news.july22-2024" ]
-	},
-	"3": {
-		"note": "added play.javascript.invites.start_game on line 314",
-		"changes": [ "play.javascript.invites.start_game" ]
-	},
-	"2": {
-		"note": "added login.login_button on line 448",
-		"changes": [ "login.login_button" ]
-	},
-	"1": {
-		"note": "inital commit of en-US-toml",
-		"changes": []
-	}
+  "76": {
+    "note": "Added contribution_count_singular and renamed contribution_count to contribution_count_plural (lines 75-76).",
+    "changes": []
+  },
+  "75": {
+    "note": "Modified undo_edit and redo_edit to include keyboard shortcuts on lines 320-321.",
+    "changes": []
+  },
+  "74": {
+    "note": "Added Palace line 265. Added CoaIP_RO & CoaIP_NO on lines 282-283.",
+    "changes": []
+  },
+  "73": {
+    "note": "Added section play.javascript.piecenames on lines 387-409. Added copied_position, loaded_position_from_clipboard, reset_position, clear_position on lines 427-430.",
+    "changes": []
+  },
+  "72": {
+    "note": "Added play.guide.pieces.rose on line 242.",
+    "changes": []
+  },
+  "71": {
+    "note": "Added coords-exceeded line 384.",
+    "changes": []
+  },
+  "70": {
+    "note": "Renamed board, board-theme, and board-starfield to appearance, appearance-theme, appearance-starfield, lines 18-20. Also, added appearance-advanced-effects on line 21.",
+    "changes": []
+  },
+  "69": {
+    "note": "Added sound, sound-master-volume, and sound-ambience, lines 32-34.",
+    "changes": []
+  },
+  "68": {
+    "note": "Deleted shaders_failed & failed_compiling_shaders, lines 366-367.",
+    "changes": []
+  },
+  "67": {
+    "note": "Added coords-invalid line 381",
+    "changes": []
+  },
+  "66": {
+    "note": "Added board-theme & board-starfield lines 19-20",
+    "changes": []
+  },
+  "65": {
+    "note": "Deleted slidelimit_not_number line 397. Changed invalid_wincon_white and invalid_wincon_black on line 389 to invalid_wincon.",
+    "changes": []
+  },
+  "64": {
+    "note": "Added undo_edit and redo_edit on lines 310-311.",
+    "changes": []
+  },
+  "63": {
+    "note": "Deleted password_reset_message 133",
+    "changes": []
+  },
+  "62": {
+    "note": "Added ws-deleting_account_in_game on line 611.",
+    "changes": []
+  },
+  "61": {
+    "note": "Added German traslation credit 115",
+    "changes": []
+  },
+  "60": {
+    "note": "Changed lines 153-164, added all of reset-password.javascript, and moved js-pwd_incorrect_format, js-pwd_too_short, js-pwd_too_long, js-pwd_not_pwd to below the new password-validation section. Added ws-password-reset-token-invalid 604. Added all of login.javascript 567-569.",
+    "changes": []
+  },
+  "59": {
+    "note": "Added ALL of reset_password lines 559-565",
+    "changes": []
+  },
+  "58": {
+    "note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556, ws-password-reset-link-sent, ws-password-change-success 588-589. Deleted ws-member_not_found 590, ws-username_and_password_required, ws-username_and_password_string 570-571, ws-unable_to_identify_client_ip, ws-you_are_banned_by_server, ws-too_many_requests_to_server, ws-bad_request 591-594. Added forgot_instruction 557.",
+    "changes": []
+  },
+  "57": {
+    "note": "Deleted ws-no_abort_game_over and ws-no_abort_after_moves on lines 601-602.",
+    "changes": []
+  },
+  "56": {
+    "note": "Deleted bug_koth line 504, bug_threecheck 501, bug_allpiecescaptured 498, bug_allroyalscaptured 495, bug_royalcapture 492, bug_time 489, bug_checkmate 486, black_threecheck 495, white_threecheck 494, opponent_threecheck 481, you_threecheck 464, threecheck 448. Added white_resignation, black_resignation, white_disconnect, black_disconnect line 485, ",
+    "changes": []
+  },
+  "55": {
+    "note": "Added cannot_paste_in_rated line 373.",
+    "changes": []
+  },
+  "54": {
+    "note": "Reworded terms.fair_play_paragraph1 line 517, terms.fair_play_rules line 520, and added line 521. Deleted update on line 554.",
+    "changes": []
+  },
+  "53": {
+    "note": "Added header.leaderboard on line 14. Added leaderboard.javascript with 4 entries on line 43. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158. Added engine_indicator line 323. Deleted you_indicator line 401.",
+    "changes": []
+  },
+  "52": {
+    "note": "Deleted textures_credits line 90.",
+    "changes": []
+  },
+  "51": {
+    "note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 603",
+    "changes": []
+  },
+  "50": {
+    "note": "Added annotations, erase, and collapse, lines 285-287.",
+    "changes": []
+  },
+  "49": {
+    "note": "Added selection-lingering_annotations, line 25.",
+    "changes": []
+  },
+  "48": {
+    "note": "Added selection-animations, line 24.",
+    "changes": []
+  },
+  "47": {
+    "note": "Added ranked_elo on line 119.",
+    "changes": []
+  },
+  "46": {
+    "note": "On line 183 added a note that holding Control will force-drag the board.",
+    "changes": []
+  },
+  "45": {
+    "note": "Added credits for 3 new variants 'Confined Classical', '4x4x4x4 Chess', and '5D Chess' on lines 82-84.",
+    "changes": []
+  },
+  "44": {
+    "note": "Replaced progress_checkmate on line 333 with a comment, and added 7 more translations on lines 339-345 in play.javascript",
+    "changes": []
+  },
+  "43": {
+    "note": "Added all of member.badge-tooltips, lines 122-125",
+    "changes": []
+  },
+  "42": {
+    "note": "Added member.practice_progress to line 115",
+    "changes": []
+  },
+  "41": {
+    "note": "Replaced play.play-menu.5D_Chess on line 245 with 4x4x4x4_Chess and 5D_Chess",
+    "changes": []
+  },
+  "40": {
+    "note": "Deleted toggled_edit, line 356",
+    "changes": []
+  },
+  "39": {
+    "note": "Deleted checkmates and tactics, lines 208-209. Modified title line 207. Deleted menu_checkmate line 326",
+    "changes": []
+  },
+  "38": {
+    "note": "Deleted Trappist_1 line 244, and deleted credit for Trappist-1 on line 82.",
+    "changes": []
+  },
+  "37": {
+    "note": "Added the huygen to play.guide.pieces (line 203).",
+    "changes": []
+  },
+  "36": {
+    "note": "Added practice_menu to play.pause on line 288",
+    "changes": []
+  },
+  "35": {
+    "note": "Added undo and restart to play.gamebuttontooltips on lines 277-278",
+    "changes": []
+  },
+  "34": {
+    "note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
+    "changes": []
+  },
+  "33": {
+    "note": "Added progress_checkmate on line 332 under play.javascript",
+    "changes": []
+  },
+  "32": {
+    "note": [
+      "Added practice key on line 149 under play.main-menu.",
+      "Added play.practice-menu section on line 206, and everything beneath it.",
+      "Added menu_checkmate key on line 331.",
+      "Added cannot_paste_in_engine key on line 336 under play.javascript.copypaste."
+    ],
+    "changes": []
+  },
+  "31": {
+    "note": "Added variant credits for 'Chess on an Infinite Plane - Huygens Options by V. Reinhart.' and 'Trappist-1 by V. Reinhart' on lines 81-82.",
+    "changes": []
+  },
+  "30": {
+    "note": "Added email_domain_invalid, line 539.",
+    "changes": []
+  },
+  "29": {
+    "note": [
+      "Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
+      "Added Confined_Classical, line 213.",
+      "Added arrows_all_hippogonals, line 302"
+    ],
+    "changes": []
+  },
+  "28": {
+    "note": [
+      "Deleted unknown_action_received_1 & unknown_action_received_2 on lines 346-347",
+      "Deleted all of play.footer, lines 264-267",
+      "Added player_name_white_generic and player_name_black_generic, lines 280 & 281"
+    ],
+    "changes": []
+  },
+  "27": {
+    "note": "Added index.github_title and index.javascript.contribution_count, lines 57-60",
+    "changes": []
+  },
+  "26": {
+    "note": "Modified webgl_unsupported, line 303",
+    "changes": ["play.javascript.webgl_unsupported"]
+  },
+  "25": {
+    "note": "Added the following in header.settings, lines 21-23: selection, selection-drag, selection-premove.",
+    "changes": []
+  },
+  "24": {
+    "note": "Deleted play.javascript.copypaste.loaded, line 323",
+    "changes": []
+  },
+  "23": {
+    "note": [
+      "Deleted member.rating, line 105",
+      "Deleted ws-unauthorized_patron_page, line 548",
+      "Deleted ws-refresh_token_not_found_logged_out, ws-refresh_token_not_found, ws-refresh_token_expired, and ws-refresh_token_invalid, lines 534-537",
+      "Updated index.how_to_paragraph, line 47",
+      "Added play.play-menu.5D_Chess, line 227"
+    ],
+    "changes": []
+  },
+  "22": {
+    "note": "Deleted all of header.javascript (lines 19-23). Changed the value of header.home (line 7). Added header.profile (line 11) & header.logout (line 10). Deleted disable_holiday_theme_desktop and disable_holiday_theme_mobile (lines 299-300). Added all of header.settings (lines 15-25).",
+    "changes": []
+  },
+  "21": {
+    "note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN UPDATE 22.",
+    "changes": []
+  },
+  "20": {
+    "note": "Added fields for game button tooltips, lines 241-247",
+    "changes": ["play.gamebuttontooltips"]
+  },
+  "19": {
+    "note": "Updated wording of verify_message and resend_message, lines 94-95",
+    "changes": []
+  },
+  "18": {
+    "note": "Added Spanish translation credit, line 89",
+    "changes": []
+  },
+  "17": {
+    "note": "Added credits.language_heading and credits.language_credits, line 82",
+    "changes": []
+  },
+  "16": {
+    "note": "Deleted all news posts. The only keys you keep in the `news` section is `title` and `more_dev_logs`! Please verify your language's news posts have been translated correctly within translation/news!",
+    "changes": []
+  },
+  "15": {
+    "note": "Added news.sept11-2024, line 493. ALL NEWS POSTS DELETED IN FUTURE CHANGE.",
+    "changes": []
+  },
+  "14": {
+    "note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117. Changed play.main-menu.loading to play.loading, and changed play.main-menu.error to play.error",
+    "changes": [
+      "index.title",
+      "member.title",
+      "play.title",
+      "play.main-menu.loading",
+      "play.main-menu.error",
+      "play.loading",
+      "play.error"
+    ]
+  },
+  "13": {
+    "note": "Added draw offers. Deleted ws-player_already_has_invite, ws-accept_own_invite, and ws-invite_cancelled",
+    "changes": [
+      "play.pause.offer_draw",
+      "play.drawoffer.question",
+      "play.javascript.offer_draw",
+      "play.javascript.accept_draw",
+      "play.javascript.termination.agreement",
+      "play.javascript.results.draw_agreement",
+      "server.javascript.ws-player_already_has_invite",
+      "server.javascript.ws-accept_own_invite",
+      "server.javascript.ws-invite_cancelled"
+    ]
+  },
+  "12": {
+    "note": "Corrected opponen_resignation to opponent_resignation",
+    "changes": ["play.javascript.results.opponen_resignation"]
+  },
+  "11": {
+    "note": "Changed the structure of play.javascript.termination.moverule",
+    "changes": ["play.javascript.termination.moverule"]
+  },
+  "10": {
+    "note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
+    "changes": [
+      "news.aug1-2024.date",
+      "news.aug1-2024.text_top",
+      "news.aug1-2024.update_list",
+      "news.aug26-2023.date",
+      "news.aug26-2023.text_top",
+      "news.aug26-2023.text_box"
+    ]
+  },
+  "9": {
+    "note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
+    "changes": ["play.guide.controls_paragraph", "play.guide.keybinds"]
+  },
+  "8": {
+    "note": "Added a knightrider description for the guide, on line 170.",
+    "changes": ["play.guide.pieces.knightrider"]
+  },
+  "7": {
+    "note": "Added ws-server_under_maintenance on line 561.",
+    "changes": ["server.javascript.ws-server_under_maintenance"]
+  },
+  "6": {
+    "note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
+    "changes": []
+  },
+  "5": {
+    "note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
+    "changes": [
+      "create-account.argreement",
+      "create-account.agreement",
+      "play.play-menu.variants",
+      "play.play-menu.Classical",
+      "play.play-menu.Classical_Plus",
+      "play.play-menu.CoaIP",
+      "play.play-menu.Pawndard",
+      "play.play-menu.Knighted_Chess",
+      "play.play-menu.Knightline",
+      "play.play-menu.Core",
+      "play.play-menu.Standarch",
+      "play.play-menu.Pawn_Horde",
+      "play.play-menu.Space_Classic",
+      "play.play-menu.Space",
+      "play.play-menu.Obstocean",
+      "play.play-menu.Abundance",
+      "play.play-menu.Amazon_Chandelier",
+      "play.play-menu.Containment",
+      "play.play-menu.Classical_Limit_7",
+      "play.play-menu.CoaIP_Limit_7",
+      "play.play-menu.Chess",
+      "play.play-menu.Classical_KOTH",
+      "play.play-menu.CoaIP_KOTH",
+      "play.play-menu.Omega",
+      "play.play-menu.Omega_Squared",
+      "play.play-menu.Omega_Cubed",
+      "play.play-menu.Omega_Fourth",
+      "play.play-menu.no_clock",
+      "play.play-menu.casual",
+      "server.javascript.ws-username_reserved",
+      "server.javascript.ws-already_in_game",
+      "server.javascript.ws-player_already_has_invite",
+      "server.javascript.ws-invite_cancelled",
+      "server.javascript.ws-accept_own_invite",
+      "server.javascript.ws-server_restarting",
+      "server.javascript.ws-minutes",
+      "server.javascript.ws-minute",
+      "server.javascript.ws-no_abort_game_over",
+      "server.javascript.ws-no_abort_after_moves",
+      "server.javascript.ws-game_aborted_cheating",
+      "server.javascript.ws-cannot_resign_finished_game",
+      "server.javascript.ws-invalid_code",
+      "server.javascript.ws-game_aborted"
+    ]
+  },
+  "4": {
+    "note": "Added news.july22-2024 on line 462",
+    "changes": ["news.july22-2024"]
+  },
+  "3": {
+    "note": "added play.javascript.invites.start_game on line 314",
+    "changes": ["play.javascript.invites.start_game"]
+  },
+  "2": {
+    "note": "added login.login_button on line 448",
+    "changes": ["login.login_button"]
+  },
+  "1": {
+    "note": "inital commit of en-US-toml",
+    "changes": []
+  }
 }

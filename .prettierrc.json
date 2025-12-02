@@ -1,11 +1,20 @@
 {
-    "semi": true,
-    "useTabs": true,
-    "tabWidth": 4,
-    "singleQuote": true,
-    "bracketSpacing": true,
-    "trailingComma": "all",
-    "arrowParens": "always",
-    "printWidth": 100,
-    "endOfLine": "lf"
+  "semi": true,
+  "useTabs": true,
+  "tabWidth": 4,
+  "singleQuote": true,
+  "bracketSpacing": true,
+  "trailingComma": "all",
+  "arrowParens": "always",
+  "printWidth": 100,
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": ["*.yml", "*.json"],
+      "options": {
+        "tabWidth": 2,
+        "useTabs": false
+      }
+    }
+  ]
 }
