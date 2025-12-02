@@ -235,16 +235,12 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 
 	// Check if the world border exists and is closer than playableRegionBoundForWorldBorderConsideration in any direction
 	const worldBorderNearOrigin =
-		(boardsim.playableRegion?.bottom !== undefined &&
-			-boardsim.playableRegion.bottom <= playableRegionBoundForWorldBorderConsideration) ||
-		(boardsim.playableRegion?.left !== undefined &&
-			-boardsim.playableRegion.left <= playableRegionBoundForWorldBorderConsideration) ||
-		(boardsim.playableRegion?.right !== undefined &&
-			boardsim.playableRegion.right <= playableRegionBoundForWorldBorderConsideration) ||
-		(boardsim.playableRegion?.top !== undefined &&
-			boardsim.playableRegion.top <= playableRegionBoundForWorldBorderConsideration)
-			? true
-			: false;
+		boardsim.playableRegion === undefined
+			? false
+			: -boardsim.playableRegion.bottom <= playableRegionBoundForWorldBorderConsideration ||
+				-boardsim.playableRegion.left <= playableRegionBoundForWorldBorderConsideration ||
+				boardsim.playableRegion.right <= playableRegionBoundForWorldBorderConsideration ||
+				boardsim.playableRegion.top <= playableRegionBoundForWorldBorderConsideration;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};
