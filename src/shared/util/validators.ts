@@ -49,7 +49,7 @@ const emailErrorTranslations = new Map<number, EmailValidationResultTranslations
 emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
 emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invalid');
 
-const usernameErrorTranslations = new Map();
+const usernameErrorTranslations = new Map<number, UsernameValidationResultTranslations>();
 usernameErrorTranslations.set(UsernameValidationResult.UsernameIsReserved, 'js-username_reserved');
 usernameErrorTranslations.set(UsernameValidationResult.UsernameTooShort, 'js-username_tooshort');
 usernameErrorTranslations.set(UsernameValidationResult.UsernameTooLong, 'ws-username_length'); // there is no translation for js-username_toolong
