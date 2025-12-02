@@ -139,7 +139,8 @@ function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean)
 			else scenrariosForInsuffMat = insuffmatScenarios_0K1k;
 			delete scenarioCopy[r.KING + e.B];
 		} else {
-			if (worldBorderNearOrigin) scenrariosForInsuffMat = insuffmatScenarios_special_worldborder;
+			if (worldBorderNearOrigin)
+				scenrariosForInsuffMat = insuffmatScenarios_special_worldborder;
 			else scenrariosForInsuffMat = insuffmatScenarios_special;
 		}
 	} else {
