@@ -70,7 +70,7 @@ function callback_Guide(_event: Event): void {
 	window.location.href = languagedropdown.addLngQueryParamToLink(`/guide`);
 }
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function callback_BoardEditor(_event: Event): void {
 	close();
 	guiboardeditor.open();

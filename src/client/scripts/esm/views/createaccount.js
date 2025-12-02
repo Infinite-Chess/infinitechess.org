@@ -10,15 +10,6 @@ const element_emailInput = document.getElementById('email');
 const element_passwordInput = document.getElementById('password');
 const element_submitButton = document.getElementById('submit');
 
-// I found it to be less bloated by using a Map here, but ideally the validator should already return a translation string to be used
-/**
- * @type Map<validators["PasswordValidationResult"], string>
- */
-const passwordErrorKeys = new Map();
-passwordErrorKeys.set(validators.PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
-passwordErrorKeys.set(validators.PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
-passwordErrorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
-
 /** Default fetch options */
 const fetchOptions = {
 	headers: {
@@ -52,18 +43,7 @@ element_usernameInput.addEventListener('input', () => {
 			// Reset variable because it now exists.
 			usernameError = document.getElementById('usernameerror');
 		}
-		switch (error) {
-			// TODO: add translation for both of the cases, too long and too short
-			case validators.UsernameValidationResult.UsernameTooShort:
-				usernameError.textContent = translations['js-username_tooshort'];
-				break;
-			case validators.UsernameValidationResult.OnlyLettersAndNumbers:
-				usernameError.textContent = translations['js-username_wrongenc'];
-				break;
-			default:
-				// ignoring some other errors the validator might return, this could be changed in the future
-				break;
-		}
+		usernameError.textContent = translations[validators.getUsernameErrorTranslation(error)];
 	} else if (usernameError) {
 		// No errors, delete that error element if it exists
 		usernameHasError = false;
@@ -122,17 +102,7 @@ element_emailInput.addEventListener('input', () => {
 			// Reset variable because it now exists.
 			emailError = document.getElementById('emailerror');
 		}
-		switch (error) {
-			case validators.EmailValidationResult.EmailTooLong:
-				emailError.textContent = translations['js-email_too_long'];
-				break;
-			case validators.EmailValidationResult.InvalidFormat:
-				emailError.textContent = translations['js-email_invalid'];
-				break;
-			default:
-				emailError.textContent = translations['js-email_invalid'];
-				break;
-		}
+		emailError.textContent = translations[validators.getEmailErrorTranslation(error)];
 	} else if (emailError) {
 		// No errors, delete that error element if it exists
 		emailHasError = false;
@@ -189,7 +159,8 @@ element_passwordInput.addEventListener('input', () => {
 			passwordError = createErrorElement('passworderror', 'password-input-line');
 			element_passwordInput.style.outline = 'solid 1px red';
 		}
-		passwordError.textContent = translations[passwordErrorKeys.get(validationResult)];
+		passwordError.textContent =
+			translations[validators.getPasswordErrorTranslation(validationResult)];
 	} else {
 		passwordHasError = false;
 		if (passwordError) {

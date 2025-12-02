@@ -29,6 +29,53 @@ enum UsernameValidationResult {
 	UsernameIsReserved,
 }
 
+type PasswordValidationResultTranslations =
+	| 'js-pwd_too_short'
+	| 'js-pwd_too_long'
+	| 'js-pwd_not_pwd';
+type EmailValidationResultTranslations = 'js-email_too_long' | 'js-email_invalid';
+type UsernameValidationResultTranslations =
+	| 'js-username_reserved'
+	| 'js-username_tooshort'
+	| 'ws-username_length'
+	| 'js-username_wrongenc';
+
+const passwordErrorTranslations = new Map<number, PasswordValidationResultTranslations>();
+passwordErrorTranslations.set(PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
+passwordErrorTranslations.set(PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
+passwordErrorTranslations.set(PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
+
+const emailErrorTranslations = new Map<number, EmailValidationResultTranslations>();
+emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
+emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invalid');
+
+const usernameErrorTranslations = new Map();
+usernameErrorTranslations.set(UsernameValidationResult.UsernameIsReserved, 'js-username_reserved');
+usernameErrorTranslations.set(UsernameValidationResult.UsernameTooShort, 'js-username_tooshort');
+usernameErrorTranslations.set(UsernameValidationResult.UsernameTooLong, 'ws-username_length'); // there is no translation for js-username_toolong
+usernameErrorTranslations.set(
+	UsernameValidationResult.OnlyLettersAndNumbers,
+	'js-username_wrongenc',
+);
+
+function getPasswordErrorTranslation(
+	err: PasswordValidationResult,
+): PasswordValidationResultTranslations | undefined {
+	return passwordErrorTranslations.get(err);
+}
+
+function getEmailErrorTranslation(
+	err: EmailValidationResult,
+): EmailValidationResultTranslations | undefined {
+	return emailErrorTranslations.get(err);
+}
+
+function getUsernameErrorTranslation(
+	err: UsernameValidationResult,
+): UsernameValidationResultTranslations | undefined {
+	return usernameErrorTranslations.get(err);
+}
+
 /**
  * Usernames that are reserved. New members cannot use these are their name.
  */
@@ -119,4 +166,7 @@ export default {
 	EmailValidationResult,
 	validateUsername,
 	UsernameValidationResult,
+	getPasswordErrorTranslation,
+	getEmailErrorTranslation,
+	getUsernameErrorTranslation,
 };

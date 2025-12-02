@@ -1,7 +1,5 @@
 // src/globals.d.ts
 
-/* eslint-disable no-unused-vars */
-
 import type { MemberInfo } from './server/types';
 
 declare global {
