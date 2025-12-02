@@ -10,6 +10,15 @@ const element_emailInput = document.getElementById('email');
 const element_passwordInput = document.getElementById('password');
 const element_submitButton = document.getElementById('submit');
 
+// I found it to be less bloated by using a Map here, but ideally the validator should already return a translation string to be used
+/**
+ * @type Map<validators["PasswordValidationResult"], string>
+ */
+const passwordErrorKeys = new Map();
+passwordErrorKeys.set(validators.PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
+passwordErrorKeys.set(validators.PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
+passwordErrorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
+
 /** Default fetch options */
 const fetchOptions = {
 	headers: {
@@ -180,16 +189,7 @@ element_passwordInput.addEventListener('input', () => {
 			passwordError = createErrorElement('passworderror', 'password-input-line');
 			element_passwordInput.style.outline = 'solid 1px red';
 		}
-		// I found it to be less bloated by using a Map here, but ideally the validator should already return a translation string to be used
-		/**
-		 * @type Map<validators["PasswordValidationResult"], string>
-		 */
-		const errorKeys = new Map();
-		errorKeys.set(validators.PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
-		errorKeys.set(validators.PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
-		errorKeys.set(validators.PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
-
-		passwordError.textContent = translations[errorKeys.get(validationResult)];
+		passwordError.textContent = translations[passwordErrorKeys.get(validationResult)];
 	} else {
 		passwordHasError = false;
 		if (passwordError) {
