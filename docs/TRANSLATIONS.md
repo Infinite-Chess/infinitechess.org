@@ -39,7 +39,7 @@ In case you are translating a language that is currently not present in the proj
 > [!IMPORTANT]
 > You should always use [en-US.toml](../translation/en-US.toml) as a reference. It is the only file that is up to date and comes straight from the developers. Do not use any other files!
 
-Then you can start a test server with `npx nodemon` and start translating. If you insert the address `https://localhost:3443` into your browser, the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure that you have selected the language that you are editing in the website's UI. There is a footer with a language selection dropdown at the bottom of almost every page.
+Then you can start a test server with `npm run dev` and start translating. If you insert the address `https://localhost:3443` into your browser, the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure that you have selected the language that you are editing in the settings in the top right.
 
 In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` in [the official changelog](../translation/changes.json) or in the [file commit history](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml). In general, a translation is only considered up to date if the `version` variable on top matches the `version` value of the English TOML file.
 
@@ -56,7 +56,7 @@ In case you are updating an existing language and you aren't sure what has chang
 
 ### Translating News Articles
 
-In addition to the TOML translation files, you also should translate news articles located in the `translation/news/` directory. Here are the steps to translate those:
+In addition to the TOML translation files, you may optionally translate news articles located in the `translation/news/` directory, but this isn't required. Here are the steps to translate those:
 
 1. **Make a copy of the [translation/news/en-US](../translation/news/en-US/) folder**: Rename it to your language's BCP 47 tag.
 
