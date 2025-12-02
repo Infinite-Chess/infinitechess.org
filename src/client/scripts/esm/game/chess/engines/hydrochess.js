@@ -27,16 +27,11 @@ async function initWasm() {
 		wasmInitPromise = init({ module_or_path: wasmUrl })
 			.then(() => {
 				console.debug('[Engine] HydroChess WASM module initialized');
-				try {
-					wasmBindings.init_panic_hook();
-				} catch (e) {
-					console.warn("[Engine] Failed to init panic hook", e);
-				}
 				wasmInitialized = true;
-				postMessage("readyok"); // Signal that the engine is ready
+				postMessage('readyok'); // Signal that the engine is ready
 				return true;
 			})
-			.catch(err => {
+			.catch((err) => {
 				console.error('[Engine] Failed to initialize HydroChess WASM module', err);
 				wasmInitialized = false;
 				return false;
@@ -57,7 +52,7 @@ self.onmessage = async function (e) {
 	if (!wasmInitialized) {
 		const initialized = await initWasm();
 		if (!initialized) {
-			console.error("[Engine] WASM module failed to initialize");
+			console.error('[Engine] WASM module failed to initialize');
 			postMessage(null);
 			return;
 		}
@@ -68,7 +63,7 @@ self.onmessage = async function (e) {
 		const current_gamefile = gameformulator.formulateGame(data.lf);
 
 		if (!current_gamefile) {
-			console.error("[Engine] Failed to formulate gamefile from data.lf");
+			console.error('[Engine] Failed to formulate gamefile from data.lf');
 			postMessage(null);
 			return;
 		}
@@ -81,7 +76,7 @@ self.onmessage = async function (e) {
 		// the Rust side just needs the current side-to-move from whosTurn.
 		const rustGameState = convertGameToRustFormat(current_gamefile);
 
-		console.debug("[Engine] Creating engine with game state:", rustGameState);
+		console.debug('[Engine] Creating engine with game state:', rustGameState);
 
 		// Create Engine instance with the game state
 		const engine = new wasm.Engine(rustGameState);
@@ -90,9 +85,10 @@ self.onmessage = async function (e) {
 		// use the timed search entry point so the Rust engine obeys the
 		// same per-move limit as the JS engines.
 		let bestMoveResult;
-		const timeLimit = data.engineConfig && typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
-			? data.engineConfig.engineTimeLimitPerMoveMillis
-			: null;
+		const timeLimit =
+			data.engineConfig && typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
+				? data.engineConfig.engineTimeLimitPerMoveMillis
+				: null;
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
 			bestMoveResult = engine.get_best_move_with_time(timeLimit);
 		} else {
@@ -138,7 +134,7 @@ self.onmessage = async function (e) {
  * Side-to-move is taken directly from gamefile.basegame.whosTurn.
  */
 function convertGameToRustFormat(gamefile) {
-	console.debug("[Engine] Converting gamefile. Keys:", Object.keys(gamefile));
+	console.debug('[Engine] Converting gamefile. Keys:', Object.keys(gamefile));
 
 	const pieces = [];
 
@@ -162,7 +158,7 @@ function convertGameToRustFormat(gamefile) {
 				x: coords[0],
 				y: coords[1],
 				piece_type: getPieceTypeCodeFromRaw(rawType),
-				player: getPlayerCodeFromColor(color)
+				player: getPlayerCodeFromColor(color),
 			});
 		});
 	} else if (piecesObj && piecesObj.coords) {
@@ -177,12 +173,12 @@ function convertGameToRustFormat(gamefile) {
 				x: coords[0],
 				y: coords[1],
 				piece_type: getPieceTypeCodeFromRaw(rawType),
-				player: getPlayerCodeFromColor(color)
+				player: getPlayerCodeFromColor(color),
 			});
 		}
 	} else {
-		console.error("[Engine] No position found in gamefile");
-		throw new Error("No position found in gamefile");
+		console.error('[Engine] No position found in gamefile');
+		throw new Error('No position found in gamefile');
 	}
 
 	console.debug(`[Engine] Extracted ${pieces.length} pieces`);
@@ -191,7 +187,8 @@ function convertGameToRustFormat(gamefile) {
 	// AND pawn double-move rights. These come from the START position; the
 	// Rust engine will update them itself when replaying moves.
 	const special_rights = [];
-	const specialRightsData = gamefile.boardsim?.startSnapshot?.state_global?.specialRights ||
+	const specialRightsData =
+		gamefile.boardsim?.startSnapshot?.state_global?.specialRights ||
 		gamefile.startSnapshot?.state_global?.specialRights ||
 		gamefile.specialRights;
 
@@ -206,8 +203,7 @@ function convertGameToRustFormat(gamefile) {
 	// not from the current boardsim state. For normal games this will be null;
 	// the Rust engine will recompute en passant squares by replaying moves.
 	let en_passant = null;
-	const enpassantData = gamefile.startSnapshot?.state_global?.enpassant ||
-		gamefile.enpassant;
+	const enpassantData = gamefile.startSnapshot?.state_global?.enpassant || gamefile.enpassant;
 
 	if (enpassantData) {
 		let square, pawnSquare;
@@ -254,18 +250,19 @@ function convertGameToRustFormat(gamefile) {
 		if (square && pawnSquare) {
 			en_passant = {
 				square: square,
-				pawn_square: pawnSquare
+				pawn_square: pawnSquare,
 			};
 		}
 	}
 
 	// Move clocks - moveRuleState is the halfmove counter for 50-move rule
-	const halfmove_clock = gamefile.boardsim?.state?.global?.moveRuleState ??
-		gamefile.startSnapshot?.state_global?.moveRuleState ?? 0;
+	const halfmove_clock =
+		gamefile.boardsim?.state?.global?.moveRuleState ??
+		gamefile.startSnapshot?.state_global?.moveRuleState ??
+		0;
 
 	// fullMove is on basegame, not boardsim.state
-	const fullmove_number = gamefile.basegame?.fullMove ??
-		gamefile.startSnapshot?.fullMove ?? 1;
+	const fullmove_number = gamefile.basegame?.fullMove ?? gamefile.startSnapshot?.fullMove ?? 1;
 
 	// Extract move history for proper repetition detection
 	const move_history = [];
@@ -275,7 +272,7 @@ function convertGameToRustFormat(gamefile) {
 			move_history.push({
 				from: `${move.startCoords[0]},${move.startCoords[1]}`,
 				to: `${move.endCoords[0]},${move.endCoords[1]}`,
-				promotion: move.promotion ? getRawTypeStr(move.promotion) : null
+				promotion: move.promotion ? getRawTypeStr(move.promotion) : null,
 			});
 		}
 	}
@@ -291,8 +288,8 @@ function convertGameToRustFormat(gamefile) {
 		if (gameRules.promotionRanks) {
 			game_rules.promotion_ranks = {
 				// Convert BigInts to strings for JSON serialization
-				white: (gameRules.promotionRanks[1] || []).map(r => String(r)),
-				black: (gameRules.promotionRanks[2] || []).map(r => String(r))
+				white: (gameRules.promotionRanks[1] || []).map((r) => String(r)),
+				black: (gameRules.promotionRanks[2] || []).map((r) => String(r)),
 			};
 		}
 
@@ -354,7 +351,7 @@ const NUM_TYPES = 22;
 function decodeType(type) {
 	return {
 		rawType: type % NUM_TYPES,
-		color: Math.floor(type / NUM_TYPES)
+		color: Math.floor(type / NUM_TYPES),
 	};
 }
 
@@ -364,16 +361,16 @@ function decodeType(type) {
  */
 function getPieceTypeCodeFromRaw(rawType) {
 	const typeMap = {
-		0: 'v',  // Void
-		1: 'x',  // Obstacle (blocker)
-		2: 'k',  // King
-		3: 'i',  // Giraffe
-		4: 'l',  // Camel
-		5: 'z',  // Zebra
-		6: 's',  // Knightrider
-		7: 'm',  // Amazon
-		8: 'q',  // Queen
-		9: 'y',  // RoyalQueen
+		0: 'v', // Void
+		1: 'x', // Obstacle (blocker)
+		2: 'k', // King
+		3: 'i', // Giraffe
+		4: 'l', // Camel
+		5: 'z', // Zebra
+		6: 's', // Knightrider
+		7: 'm', // Amazon
+		8: 'q', // Queen
+		9: 'y', // RoyalQueen
 		10: 'h', // Hawk
 		11: 'c', // Chancellor
 		12: 'a', // Archbishop
@@ -385,7 +382,7 @@ function getPieceTypeCodeFromRaw(rawType) {
 		18: 'u', // Huygen
 		19: 'r', // Rook
 		20: 'b', // Bishop
-		21: 'p'  // Pawn
+		21: 'p', // Pawn
 	};
 	return typeMap[rawType] || 'p';
 }
@@ -404,9 +401,9 @@ function getRawTypeStr(typeCode) {
  */
 function getPlayerCodeFromColor(color) {
 	const colorMap = {
-		0: 'n',  // Neutral (blockers/obstacles)
-		1: 'w',  // White
-		2: 'b',  // Black
+		0: 'n', // Neutral (blockers/obstacles)
+		1: 'w', // White
+		2: 'b', // Black
 	};
 	return colorMap[color] || 'n';
 }
@@ -463,28 +460,28 @@ function attachSpecialFlagsToMoveDraft(gamefile, moveDraft) {
  */
 function promotionStringToType(promotion, engineColor) {
 	const promotionMap = {
-		'v': 0,   // Void
-		'x': 1,   // Obstacle
-		'k': 2,   // King
-		'i': 3,   // Giraffe
-		'l': 4,   // Camel
-		'z': 5,   // Zebra
-		's': 6,   // Knightrider
-		'm': 7,   // Amazon
-		'q': 8,   // Queen
-		'y': 9,   // RoyalQueen
-		'h': 10,  // Hawk
-		'c': 11,  // Chancellor
-		'a': 12,  // Archbishop
-		'e': 13,  // Centaur
-		'd': 14,  // RoyalCentaur
-		'o': 15,  // Rose
-		'n': 16,  // Knight
-		'g': 17,  // Guard
-		'u': 18,  // Huygen
-		'r': 19,  // Rook
-		'b': 20,  // Bishop
-		'p': 21,  // Pawn
+		v: 0, // Void
+		x: 1, // Obstacle
+		k: 2, // King
+		i: 3, // Giraffe
+		l: 4, // Camel
+		z: 5, // Zebra
+		s: 6, // Knightrider
+		m: 7, // Amazon
+		q: 8, // Queen
+		y: 9, // RoyalQueen
+		h: 10, // Hawk
+		c: 11, // Chancellor
+		a: 12, // Archbishop
+		e: 13, // Centaur
+		d: 14, // RoyalCentaur
+		o: 15, // Rose
+		n: 16, // Knight
+		g: 17, // Guard
+		u: 18, // Huygen
+		r: 19, // Rook
+		b: 20, // Bishop
+		p: 21, // Pawn
 	};
 
 	// raw piece kind (0–21)
