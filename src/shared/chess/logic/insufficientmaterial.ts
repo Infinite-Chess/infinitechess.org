@@ -21,8 +21,9 @@ type PieceCount = number | [number, number];
 /** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
 type Scenario = TypeGroup<PieceCount>;
 
-/** If the world border exists and is closer than this number in any direction,
- *  then take the world border under consideration when doing insuffmat checks
+/**
+ * If the world border exists and is closer than this number in any direction,
+ * then take the world border under consideration when doing insuffmat checks
  */
 const playableRegionBoundForWorldBorderConsideration = 1_000_000n;
 
@@ -30,8 +31,9 @@ const playableRegionBoundForWorldBorderConsideration = 1_000_000n;
 // Entries for bishops are given by tuples ordered in descending order, because of parity
 // so that bishops on different colored squares are treated separately
 
-/** Checkmate one black king with one white king for help.
- *  The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
+/**
+ * Checkmate one black king with one white king for help.
+ * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
  */
 const insuffmatScenarios_1K1k: Scenario[] = [
 	{ [r.QUEEN + e.W]: 1 },
@@ -53,15 +55,17 @@ const insuffmatScenarios_1K1k: Scenario[] = [
 	{ [r.PAWN + e.W]: 3 },
 ];
 
-/** Checkmate one black king with one white king for help, with the world border nearby.
- *  The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
+/**
+ * Checkmate one black king with one white king for help, with the world border nearby.
+ * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
  */
 const insuffmatScenarios_1K1k_worldborder: Scenario[] = [
 	{ [r.BISHOP + e.W]: [Infinity, 0] },
 	{ [r.KNIGHT + e.W]: 2 },
 ];
 
-/** Checkmate one black king without any white kings.
+/**
+ * Checkmate one black king without any white kings.
  * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list.
  */
 const insuffmatScenarios_0K1k: Scenario[] = [
@@ -97,7 +101,8 @@ const insuffmatScenarios_0K1k: Scenario[] = [
 	{ [r.HUYGEN + e.W]: 4 },
 ];
 
-/** Checkmate one black king without any white kings, with the world border nearby.
+/**
+ * Checkmate one black king without any white kings, with the world border nearby.
  * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list.
  */
 const insuffmatScenarios_0K1k_worldborder: Scenario[] = [
