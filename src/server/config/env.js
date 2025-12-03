@@ -18,8 +18,6 @@ if (NODE_ENV !== 'development' && NODE_ENV !== 'production' && NODE_ENV !== 'tes
 		`NODE_ENV environment variable must be either "development", "production", or "test", received "${NODE_ENV}".`,
 	);
 
-const test = 5;
-
 /**
  * Ensures the .env file exists, creating it with default values if it doesn't.
  */
