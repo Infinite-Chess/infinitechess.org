@@ -16,6 +16,16 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 const AWS_REGION = process.env['AWS_REGION'];
 const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
 
+// Validate required environment variables
+if (!AWS_REGION) {
+	console.warn('AWS_REGION environment variable is not set. Email functionality will be disabled.');
+}
+if (!EMAIL_FROM_ADDRESS) {
+	console.warn(
+		'EMAIL_FROM_ADDRESS environment variable is not set. Email functionality will be disabled.',
+	);
+}
+
 /**
  * Who our sent emails will appear as if they're from.
  */
@@ -23,7 +33,7 @@ const FROM = EMAIL_FROM_ADDRESS;
 
 // Create SES client
 // Note: fromEnv() automatically handles AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-const sesClient = AWS_REGION
+const sesClient = AWS_REGION && EMAIL_FROM_ADDRESS
 	? new SESClient({
 			region: AWS_REGION,
 			credentials: fromEnv(),
