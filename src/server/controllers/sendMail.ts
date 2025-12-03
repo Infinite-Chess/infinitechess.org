@@ -18,7 +18,9 @@ const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
 
 // Validate required environment variables
 if (!AWS_REGION) {
-	console.warn('AWS_REGION environment variable is not set. Email functionality will be disabled.');
+	console.warn(
+		'AWS_REGION environment variable is not set. Email functionality will be disabled.',
+	);
 }
 if (!EMAIL_FROM_ADDRESS) {
 	console.warn(
@@ -33,12 +35,13 @@ const FROM = EMAIL_FROM_ADDRESS;
 
 // Create SES client
 // Note: fromEnv() automatically handles AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-const sesClient = AWS_REGION && EMAIL_FROM_ADDRESS
-	? new SESClient({
-			region: AWS_REGION,
-			credentials: fromEnv(),
-		})
-	: null;
+const sesClient =
+	AWS_REGION && EMAIL_FROM_ADDRESS
+		? new SESClient({
+				region: AWS_REGION,
+				credentials: fromEnv(),
+			})
+		: null;
 
 // Create nodemailer transporter using SES
 const transporter = sesClient
