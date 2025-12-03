@@ -15,14 +15,11 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 // --- Module Setup ---
 const AWS_REGION = process.env['AWS_REGION'];
 const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
-// Legacy support for backward compatibility
-const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
 
 /**
  * Who our sent emails will appear as if they're from.
- * Uses EMAIL_FROM_ADDRESS, falling back to EMAIL_USERNAME for backward compatibility.
  */
-const FROM = EMAIL_FROM_ADDRESS || EMAIL_USERNAME;
+const FROM = EMAIL_FROM_ADDRESS;
 
 // Create SES client
 // Note: fromEnv() automatically handles AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
