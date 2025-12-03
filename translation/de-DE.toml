@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "80"
+version = "77"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
