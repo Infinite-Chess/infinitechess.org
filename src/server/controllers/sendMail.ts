@@ -47,7 +47,7 @@ const sesClient =
 const transporter = sesClient
 	? nodemailer.createTransport({
 			SES: { ses: sesClient, aws },
-		})
+		} as nodemailer.TransportOptions)
 	: null;
 
 // --- Helper Functions ---
