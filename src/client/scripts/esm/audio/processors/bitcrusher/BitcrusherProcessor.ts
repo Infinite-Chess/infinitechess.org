@@ -8,7 +8,6 @@ import type { AudioParamDescriptor } from '../worklet-types';
  * AudioWorkletGlobalScope, and nothing I do will add it.
  */
 
-/* eslint-disable no-unused-vars */
 declare abstract class AudioWorkletProcessor {
 	static get parameterDescriptors(): AudioParamDescriptor[];
 	constructor(options?: any);
@@ -20,7 +19,6 @@ declare abstract class AudioWorkletProcessor {
 }
 
 declare function registerProcessor(name: string, processorCtor: typeof AudioWorkletProcessor): void;
-/* eslint-enable no-unused-vars */
 
 /** Parameters for the BitcrusherProcessor. */
 interface BitcrusherParameters extends Record<string, Float32Array> {

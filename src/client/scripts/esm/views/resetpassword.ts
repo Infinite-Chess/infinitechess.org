@@ -6,7 +6,7 @@
  */
 
 // Import the shared password validation utility.
-import { validatePassword } from '../util/password-validation.js';
+import validators from '../../../../shared/util/validators.js';
 
 // --- Type Definitions for Clarity ---
 type FormElements = {
@@ -84,9 +84,11 @@ function initializeForm(elements: FormElements): void {
 		const password = newPasswordInput.value;
 		const confirmPassword = confirmPasswordInput.value;
 
-		const validationResult = validatePassword(password);
-		if (!validationResult.isValid && validationResult.errorKey) {
-			messageElement = createErrorMessageElement(translations[validationResult.errorKey]);
+		const result = validators.validatePassword(password);
+		if (result !== validators.PasswordValidationResult.Ok) {
+			messageElement = createErrorMessageElement(
+				translations[validators.getPasswordErrorTranslation(result)!],
+			);
 			newPasswordInput.focus();
 			return false;
 		}
@@ -124,7 +126,9 @@ function initializeForm(elements: FormElements): void {
 				// SUCCESS
 				form.innerHTML = `<div class="success">${result.message}</div>`;
 				// Redirect to login after a delay
-				setTimeout(() => (window.location.href = '/login'), 4000);
+				setTimeout(() => {
+					window.location.href = '/login';
+				}, 4000);
 			} else {
 				// NOT OKAY => ERROR
 				onFetchError(result.message || 'An unknown error occurred.');
