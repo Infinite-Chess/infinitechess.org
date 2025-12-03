@@ -2,6 +2,10 @@
 
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
+import { SESClient } from '@aws-sdk/client-ses';
+import { fromEnv } from '@aws-sdk/credential-providers';
+// Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
+import * as aws from '@aws-sdk/client-ses';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager.js';
 
@@ -9,28 +13,39 @@ import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Module Setup ---
-const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
-const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
-const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
+const AWS_REGION = process.env['AWS_REGION'];
+const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
+
+// Validate required environment variables
+if (!AWS_REGION) {
+	console.warn('AWS_REGION environment variable is not set. Email functionality will be disabled.');
+}
+if (!EMAIL_FROM_ADDRESS) {
+	console.warn(
+		'EMAIL_FROM_ADDRESS environment variable is not set. Email functionality will be disabled.',
+	);
+}
 
 /**
  * Who our sent emails will appear as if they're from.
- *
- * For this to work, it must be added as a "Send mail as"
- * alias in our Gmail account.
  */
-const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
+const FROM = EMAIL_FROM_ADDRESS;
 
-const transporter =
-	EMAIL_USERNAME && EMAIL_APP_PASSWORD
-		? nodemailer.createTransport({
-				service: 'gmail',
-				auth: {
-					user: EMAIL_USERNAME,
-					pass: EMAIL_APP_PASSWORD,
-				},
-			})
-		: null;
+// Create SES client
+// Note: fromEnv() automatically handles AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+const sesClient = AWS_REGION && EMAIL_FROM_ADDRESS
+	? new SESClient({
+			region: AWS_REGION,
+			credentials: fromEnv(),
+		})
+	: null;
+
+// Create nodemailer transporter using SES
+const transporter = sesClient
+	? nodemailer.createTransport({
+			SES: { ses: sesClient, aws },
+		})
+	: null;
 
 // --- Helper Functions ---
 
@@ -193,14 +208,14 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 
 		const mailOptions = {
 			from: `Infinite Chess <${FROM}>`,
-			to: EMAIL_USERNAME,
+			to: FROM, // Send to same address as sender for internal notifications
 			subject: messageSubject,
 			text: messageText,
 		};
 
 		await transporter.sendMail(mailOptions);
 		console.log(
-			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`,
+			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${FROM}.`,
 		);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
