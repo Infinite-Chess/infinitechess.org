@@ -30,10 +30,10 @@ element_usernameInput.addEventListener('input', () => {
 
 	let usernameError = document.getElementById('usernameerror'); // Does an error already exist?
 
-	const error = validators.validateUsername(element_usernameInput.value);
+	const result = validators.validateUsername(element_usernameInput.value);
 
 	// If ANY error, make sure errorElement is created
-	if (error !== validators.UsernameValidationResult.Ok) {
+	if (result !== validators.UsernameValidationResult.Ok) {
 		if (!usernameError) {
 			// Create empty errorElement
 			usernameHasError = true;
@@ -43,7 +43,7 @@ element_usernameInput.addEventListener('input', () => {
 			// Reset variable because it now exists.
 			usernameError = document.getElementById('usernameerror');
 		}
-		usernameError.textContent = translations[validators.getUsernameErrorTranslation(error)];
+		usernameError.textContent = translations[validators.getUsernameErrorTranslation(result)];
 	} else if (usernameError) {
 		// No errors, delete that error element if it exists
 		usernameHasError = false;
@@ -89,10 +89,10 @@ element_emailInput.addEventListener('input', () => {
 
 	let emailError = document.getElementById('emailerror'); // Does an error already exist?
 
-	const error = validators.validateEmail(element_emailInput.value);
+	const result = validators.validateEmail(element_emailInput.value);
 
 	// If ANY error, make sure errorElement is created
-	if (error !== validators.EmailValidationResult.Ok) {
+	if (result !== validators.EmailValidationResult.Ok) {
 		if (!emailError) {
 			// Create empty errorElement
 			emailHasError = true;
@@ -102,7 +102,7 @@ element_emailInput.addEventListener('input', () => {
 			// Reset variable because it now exists.
 			emailError = document.getElementById('emailerror');
 		}
-		emailError.textContent = translations[validators.getEmailErrorTranslation(error)];
+		emailError.textContent = translations[validators.getEmailErrorTranslation(result)];
 	} else if (emailError) {
 		// No errors, delete that error element if it exists
 		emailHasError = false;
@@ -151,16 +151,15 @@ element_passwordInput.addEventListener('input', () => {
 	// When password field changes...
 	let passwordError = document.getElementById('passworderror');
 
-	const validationResult = validators.validatePassword(element_passwordInput.value);
+	const result = validators.validatePassword(element_passwordInput.value);
 
-	if (validationResult !== validators.PasswordValidationResult.Ok) {
+	if (result !== validators.PasswordValidationResult.Ok) {
 		passwordHasError = true;
 		if (!passwordError) {
 			passwordError = createErrorElement('passworderror', 'password-input-line');
 			element_passwordInput.style.outline = 'solid 1px red';
 		}
-		passwordError.textContent =
-			translations[validators.getPasswordErrorTranslation(validationResult)];
+		passwordError.textContent = translations[validators.getPasswordErrorTranslation(result)];
 	} else {
 		passwordHasError = false;
 		if (passwordError) {

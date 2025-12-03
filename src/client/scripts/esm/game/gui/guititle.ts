@@ -3,7 +3,6 @@
  */
 
 import guipractice from './guipractice.js';
-import guiboardeditor from './boardeditor/guiboardeditor.js';
 import gui from './gui.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
@@ -70,11 +69,10 @@ function callback_Guide(_event: Event): void {
 	window.location.href = languagedropdown.addLngQueryParamToLink(`/guide`);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function callback_BoardEditor(_event: Event): void {
-	close();
-	guiboardeditor.open();
-}
+// function callback_BoardEditor(_event: Event): void {
+// 	close();
+// 	guiboardeditor.open();
+// }
 
 export default {
 	boardVel,

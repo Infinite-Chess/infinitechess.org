@@ -12,28 +12,29 @@ export default [
 		rules: {
 			// Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
+			// Unused variables give a warning
 			'no-unused-vars': [
 				'warn',
 				{
-					// Unused variables give a warning
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
 					caughtErrorsIgnorePattern: '^_',
 				},
 			],
 			semi: ['error', 'always'], // Enforces semicolons be present at the end of every line.
+			// Enforces semicolons have a space after them if they are proceeded by other statements.
 			'semi-spacing': [
+				// Enforces semicolons have a space after them if they are proceeded by other statements.
 				'error',
 				{
-					// Enforces semicolons have a space after them if they are proceeded by other statements.
 					before: false,
 					after: true,
 				},
 			],
+			// Requires a space be after if, else, for, and while's.
 			'keyword-spacing': [
 				'error',
 				{
-					// Requires a space be after if, else, for, and while's.
 					before: true,
 					after: true,
 				},
@@ -44,11 +45,11 @@ export default [
 			'func-call-spacing': ['error', 'never'], // Enforces there be NO space between function CALLS and ()
 			'space-infix-ops': ['error', { int32Hint: false }], // Enforces a space around infix operators, like "=" in assignments
 			'no-eval': 'error', // Disallows use of `eval()`, as it can lead to security vulnerabilities and performance issues.
+			// All indentation must use tabs
 			indent: [
 				'error',
 				'tab',
 				{
-					// All indentation must use tabs
 					SwitchCase: 1, // Enforce switch statements to have indentation (they don't by default)
 					ignoredNodes: ['ConditionalExpression', 'ArrayExpression'], // Ignore conditional expressions "?" & ":" over multiple lines, AND array contents over multiple lines!
 				},
@@ -87,8 +88,8 @@ export default [
 		plugins: { '@typescript-eslint': pluginTypescript },
 		rules: {
 			'no-unused-vars': 'off', // Default rule causes false positives on Enums
+			// Typescript-specific unused variable rule
 			'@typescript-eslint/no-unused-vars': [
-				// Typescript-specific unused variable rule
 				'warn',
 				{
 					argsIgnorePattern: '^_',
@@ -99,9 +100,8 @@ export default [
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off',
 			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined
-			// "@typescript-eslint/explicit-function-return-type": "error",
+			// Enforces all functions to declare their return type
 			'@typescript-eslint/explicit-function-return-type': [
-				// Enforces all functions to declare their return type
 				'error',
 				{
 					allowExpressions: true, // Adds arrow functions as exceptions, as their return types are usually inferred

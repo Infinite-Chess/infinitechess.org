@@ -84,10 +84,10 @@ function initializeForm(elements: FormElements): void {
 		const password = newPasswordInput.value;
 		const confirmPassword = confirmPasswordInput.value;
 
-		const validationResult = validators.validatePassword(password);
-		if (validationResult !== validators.PasswordValidationResult.Ok) {
+		const result = validators.validatePassword(password);
+		if (result !== validators.PasswordValidationResult.Ok) {
 			messageElement = createErrorMessageElement(
-				translations[validators.getPasswordErrorTranslation(validationResult)!],
+				translations[validators.getPasswordErrorTranslation(result)!],
 			);
 			newPasswordInput.focus();
 			return false;

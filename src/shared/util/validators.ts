@@ -76,9 +76,7 @@ function getUsernameErrorTranslation(
 	return usernameErrorTranslations.get(err);
 }
 
-/**
- * Usernames that are reserved. New members cannot use these are their name.
- */
+/** Usernames that are reserved. New members cannot use these are their name. */
 // prettier-ignore
 const reservedUsernames: string[] = [
 	'infinitechess',
@@ -121,7 +119,7 @@ function validatePassword(password: string): PasswordValidationResult {
 }
 
 /**
- * Shared logic to validate emails
+ * Shared logic to validate emails.
  * **Note**: Does not check if the email is taken or banned, that's on the server to do.
  * @param email The email to check
  * @returns `Ok` if the email is valid, otherwise another member of that enum
@@ -140,7 +138,8 @@ function validateEmailFormat(email: string): boolean {
 }
 
 /**
- * Shared logic to validate usernames
+ * Shared logic to validate usernames.
+ * **Note**: Does not check if the username is taken, that's on the server to do.
  * @param username The username to check
  * @returns `Ok` if the username is valid, otherwise another member of that enum
  * @todo Return a list of errors instead of just one, for better checking (then the Ok could also be replaced by just checking if the list length is 0, which might be cleaner)

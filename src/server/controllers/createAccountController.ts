@@ -214,9 +214,9 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 
 /** Returns true if the username passes all the checks required before account generation. */
 function doUsernameValidation(username: string, req: Request, res: Response): boolean {
-	const validatorResult = validators.validateUsername(username);
-	if (validatorResult !== validators.UsernameValidationResult.Ok) {
-		switch (validatorResult) {
+	const result = validators.validateUsername(username);
+	if (result !== validators.UsernameValidationResult.Ok) {
+		switch (result) {
 			case validators.UsernameValidationResult.UsernameTooShort:
 			case validators.UsernameValidationResult.UsernameTooLong:
 				res.status(400).json({
@@ -272,9 +272,9 @@ function checkProfanity(string: string): boolean {
 
 /** Returns true if the email passes all the checks required for account generation. */
 async function doEmailValidation(string: string, req: Request, res: Response): Promise<boolean> {
-	const validatorResult = validators.validateEmail(string);
-	if (validatorResult !== validators.EmailValidationResult.Ok) {
-		switch (validatorResult) {
+	const result = validators.validateEmail(string);
+	if (result !== validators.EmailValidationResult.Ok) {
+		switch (result) {
 			case validators.EmailValidationResult.InvalidFormat:
 				res.status(400).json({
 					message: getTranslationForReq('server.javascript.ws-email_invalid', req),
@@ -332,9 +332,9 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 }
 
 function doPasswordFormatChecks(password: string, req: Request, res: Response): boolean {
-	const validatorResult = validators.validatePassword(password);
-	if (validatorResult !== validators.PasswordValidationResult.Ok) {
-		switch (validatorResult) {
+	const result = validators.validatePassword(password);
+	if (result !== validators.PasswordValidationResult.Ok) {
+		switch (result) {
 			case validators.PasswordValidationResult.PasswordTooShort:
 			case validators.PasswordValidationResult.PasswordTooLong:
 				res.status(400).json({
