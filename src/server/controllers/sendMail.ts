@@ -12,8 +12,6 @@ import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Module Setup ---
-const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
-const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
 const AWS_REGION = process.env['AWS_REGION'];
 const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
 // Legacy support for backward compatibility
@@ -26,13 +24,13 @@ const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
 const FROM = EMAIL_FROM_ADDRESS || EMAIL_USERNAME;
 
 // Create SES client
-const sesClient =
-	AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY && AWS_REGION
-		? new SESClient({
-				region: AWS_REGION,
-				credentials: fromEnv(),
-			})
-		: null;
+// Note: fromEnv() automatically handles AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+const sesClient = AWS_REGION
+	? new SESClient({
+			region: AWS_REGION,
+			credentials: fromEnv(),
+		})
+	: null;
 
 // Create nodemailer transporter using SES
 const transporter = sesClient
