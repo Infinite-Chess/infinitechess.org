@@ -227,10 +227,12 @@ async function startEngineGame(options: {
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
 	Variant?: string;
 	/** MUTUALLY EXCLUSIVE with Variant. */
-	variantOptions?: VariantOptions,
-	youAreColor: Player,
-	currentEngine: 'engineCheckmatePractice' | 'classicEngine' | 'hydrochess', // Add more union types when more engines are added
-	engineConfig: EngineConfig,
+	variantOptions?: VariantOptions;
+	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
+	TimeControl?: MetaData['TimeControl'];
+	youAreColor: Player;
+	currentEngine: 'engineCheckmatePractice' | 'classicEngine' | 'hydrochess'; // Add more union types when more engines are added
+	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
 }): Promise<void> {
@@ -251,7 +253,7 @@ async function startEngineGame(options: {
 		Event: options.Event,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		TimeControl: '-',
+		TimeControl: options.TimeControl ?? '-',
 		White:
 			options.youAreColor === players.WHITE
 				? translations['you_indicator']

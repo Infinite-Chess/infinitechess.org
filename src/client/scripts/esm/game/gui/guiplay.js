@@ -232,8 +232,8 @@ function changePlayMode(mode) {
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
-		element_optionCardClock.classList.add('hidden');
-		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
+		element_optionCardClock.classList.remove('hidden');
+		const localStorageClock = localstorage.loadItem('preferred_computer_clock_invite_value');
 		element_optionClock.selectedIndex =
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
@@ -280,8 +280,9 @@ function callback_createInvite() {
 		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
+			TimeControl: inviteOptions.clock,
 			youAreColor: ourColor,
-			currentEngine: "hydrochess",
+			currentEngine: 'hydrochess',
 			engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
 		});
 	}

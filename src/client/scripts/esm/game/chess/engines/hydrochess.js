@@ -25,9 +25,10 @@ async function initWasm() {
 	if (!wasmInitPromise) {
 		console.debug('[Engine] Initializing HydroChess WASM module');
 		wasmInitPromise = init({ module_or_path: wasmUrl })
-			.then(() => {
+			.then(async () => {
 				console.debug('[Engine] HydroChess WASM module initialized');
 				wasmInitialized = true;
+
 				postMessage('readyok'); // Signal that the engine is ready
 				return true;
 			})
@@ -74,12 +75,15 @@ self.onmessage = async function (e) {
 		// Convert to Rust-expected format.
 		// engineColor is only used on the JS side to decide when to call the engine;
 		// the Rust side just needs the current side-to-move from whosTurn.
-		const rustGameState = convertGameToRustFormat(current_gamefile);
+		// Also pass through timing information (wtime/btime/winc/binc) if provided.
+		const rustGameState = convertGameToRustFormat(current_gamefile, {
+			wtime: data.wtime,
+			btime: data.btime,
+			winc: data.winc,
+			binc: data.binc,
+		});
 
 		console.debug('[Engine] Creating engine with game state:', rustGameState);
-
-		// Create Engine instance with the game state
-		const engine = new wasm.Engine(rustGameState);
 
 		// Find the best move. If a time limit is provided via engineConfig,
 		// use the timed search entry point so the Rust engine obeys the
@@ -89,13 +93,13 @@ self.onmessage = async function (e) {
 			data.engineConfig && typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
 				? data.engineConfig.engineTimeLimitPerMoveMillis
 				: null;
+
+		const engine = new wasm.Engine(rustGameState);
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
 			bestMoveResult = engine.get_best_move_with_time(timeLimit);
 		} else {
 			bestMoveResult = engine.get_best_move();
 		}
-
-		// Free the engine
 		engine.free();
 
 		if (!bestMoveResult) {
@@ -133,7 +137,7 @@ self.onmessage = async function (e) {
  * - Game rules (promotion ranks, allowed promotions)
  * Side-to-move is taken directly from gamefile.basegame.whosTurn.
  */
-function convertGameToRustFormat(gamefile) {
+function convertGameToRustFormat(gamefile, timing) {
 	console.debug('[Engine] Converting gamefile. Keys:', Object.keys(gamefile));
 
 	const pieces = [];
@@ -333,6 +337,20 @@ function convertGameToRustFormat(gamefile) {
 		};
 	}
 
+	// Optional clock info, similar to UCI wtime/btime/winc/binc, passed through from JS.
+	let clock = null;
+	if (timing && typeof timing === 'object') {
+		const { wtime, btime, winc, binc } = timing;
+		if (Number.isFinite(wtime) && Number.isFinite(btime) && wtime >= 0 && btime >= 0) {
+			clock = {
+				wtime: Math.floor(wtime),
+				btime: Math.floor(btime),
+				winc: Number.isFinite(winc) ? Math.floor(winc) : 0,
+				binc: Number.isFinite(binc) ? Math.floor(binc) : 0,
+			};
+		}
+	}
+
 	return {
 		board: { pieces },
 		turn,
@@ -343,6 +361,7 @@ function convertGameToRustFormat(gamefile) {
 		move_history,
 		game_rules,
 		world_bounds,
+		clock,
 	};
 }
 
