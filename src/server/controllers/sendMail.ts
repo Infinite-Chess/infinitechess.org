@@ -4,6 +4,7 @@ import nodemailer from 'nodemailer';
 import { Response } from 'express';
 import { SESClient } from '@aws-sdk/client-ses';
 import { fromEnv } from '@aws-sdk/credential-providers';
+// Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
 import * as aws from '@aws-sdk/client-ses';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager.js';
@@ -198,20 +199,16 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 			return;
 		}
 
-		// Use FROM address as recipient for internal notifications
-		// In production, this should be configured via EMAIL_FROM_ADDRESS
-		const adminEmail = EMAIL_FROM_ADDRESS || EMAIL_USERNAME;
-
 		const mailOptions = {
 			from: `Infinite Chess <${FROM}>`,
-			to: adminEmail,
+			to: FROM, // Send to same address as sender for internal notifications
 			subject: messageSubject,
 			text: messageText,
 		};
 
 		await transporter.sendMail(mailOptions);
 		console.log(
-			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${adminEmail}.`,
+			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${FROM}.`,
 		);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
