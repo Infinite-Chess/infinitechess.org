@@ -351,6 +351,10 @@ function convertGameToRustFormat(gamefile, timing) {
 		}
 	}
 
+	// Variant code (internal ID), used by the Rust engine to select
+	// variant-specific evaluation parameters.
+	const variant = gamefile.basegame?.metadata?.Variant || null;
+
 	return {
 		board: { pieces },
 		turn,
@@ -362,6 +366,7 @@ function convertGameToRustFormat(gamefile, timing) {
 		game_rules,
 		world_bounds,
 		clock,
+		variant,
 	};
 }
 

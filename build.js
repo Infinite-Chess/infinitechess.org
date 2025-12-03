@@ -11,7 +11,7 @@
 import { readFile } from 'node:fs/promises';
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import swc from "@swc/core";
+import swc from '@swc/core';
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
 import { glob } from 'glob';
@@ -98,7 +98,9 @@ function ensureHydroChessWasmBuilt() {
 
 	if (!hasCommand('cargo')) {
 		console.warn(`${label} 'cargo' was not found on PATH.`);
-		console.warn(`${label} Install Rust (which includes cargo) from https://rustup.rs, then rerun the build.`);
+		console.warn(
+			`${label} Install Rust (which includes cargo) from https://rustup.rs, then rerun the build.`,
+		);
 		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
 		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
 		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
@@ -123,12 +125,13 @@ function ensureHydroChessWasmBuilt() {
 		stdio: 'inherit',
 	});
 	if (result.status !== 0) {
-		console.error(`${label} wasm-pack build failed with exit code ${result.status}. See output above.`);
+		console.error(
+			`${label} wasm-pack build failed with exit code ${result.status}. See output above.`,
+		);
 	} else {
 		console.log(`${label} Build complete (pkg/).`);
 	}
 }
-
 
 /**
  * Any ES Module that any HTML document IMPORTS directly!
@@ -362,9 +365,6 @@ if (USE_DEVELOPMENT_BUILD && !DEV_BUILD)
 ensureHydroChessWasmBuilt();
 
 // Await all so the script doesn't finish and node terminate before esbuild is done.
-await Promise.all([
-	buildClient(USE_DEVELOPMENT_BUILD),
-	buildServer(USE_DEVELOPMENT_BUILD)
-]);
+await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
 
 // console.log('Build process finished.');
