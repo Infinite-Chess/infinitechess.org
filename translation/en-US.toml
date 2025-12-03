@@ -565,7 +565,7 @@ fair_play_rules = [
 cleanliness_header = "Cleanliness"
 cleanliness_rules = [
 "In all your language on the site, you must remain clean, no vulgarity or cursing. You cannot bully, harass, or threaten anyone, or do anything that is illegal. You cannot spam other users or forums.",
-"You cannot not upload imagery to your profile that is innapropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
+"You cannot upload imagery to your profile that is inappropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
 ]
 privacy_header = "Privacy"
 privacy_rules = [
