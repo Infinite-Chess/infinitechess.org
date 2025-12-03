@@ -189,7 +189,7 @@ function createSpecialRightsState(
 	// changes arrays don't contain two specialrights state changes for the same square,
 	// but may in the editor for selection actions. But this line prevents that second
 	// state change from being queued.
-	// if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
+	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'specialrights', current, future, coordsKey };
 	move.state.global.push(newStateChange); // Special Rights is a global state
 }
