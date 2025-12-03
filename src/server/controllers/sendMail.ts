@@ -2,6 +2,9 @@
 
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
+import { SESClient } from '@aws-sdk/client-ses';
+import { fromEnv } from '@aws-sdk/credential-providers';
+import * as aws from '@aws-sdk/client-ses';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager.js';
 
@@ -9,28 +12,34 @@ import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Module Setup ---
+const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
+const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
+const AWS_REGION = process.env['AWS_REGION'];
+const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
+// Legacy support for backward compatibility
 const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
-const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
-const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
 
 /**
  * Who our sent emails will appear as if they're from.
- *
- * For this to work, it must be added as a "Send mail as"
- * alias in our Gmail account.
+ * Uses EMAIL_FROM_ADDRESS, falling back to EMAIL_USERNAME for backward compatibility.
  */
-const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
+const FROM = EMAIL_FROM_ADDRESS || EMAIL_USERNAME;
 
-const transporter =
-	EMAIL_USERNAME && EMAIL_APP_PASSWORD
-		? nodemailer.createTransport({
-				service: 'gmail',
-				auth: {
-					user: EMAIL_USERNAME,
-					pass: EMAIL_APP_PASSWORD,
-				},
+// Create SES client
+const sesClient =
+	AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY && AWS_REGION
+		? new SESClient({
+				region: AWS_REGION,
+				credentials: fromEnv(),
 			})
 		: null;
+
+// Create nodemailer transporter using SES
+const transporter = sesClient
+	? nodemailer.createTransport({
+			SES: { ses: sesClient, aws },
+		})
+	: null;
 
 // --- Helper Functions ---
 
@@ -191,16 +200,20 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 			return;
 		}
 
+		// Use FROM address as recipient for internal notifications
+		// In production, this should be configured via EMAIL_FROM_ADDRESS
+		const adminEmail = EMAIL_FROM_ADDRESS || EMAIL_USERNAME;
+
 		const mailOptions = {
 			from: `Infinite Chess <${FROM}>`,
-			to: EMAIL_USERNAME,
+			to: adminEmail,
 			subject: messageSubject,
 			text: messageText,
 		};
 
 		await transporter.sendMail(mailOptions);
 		console.log(
-			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`,
+			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${adminEmail}.`,
 		);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
