@@ -172,6 +172,8 @@ function closeListeners() {
 }
 
 function changePlayMode(mode) {
+	if (modeSelected === mode) return; // No change
+
 	// online / local / computer
 	if (mode === 'online' && createInviteButtonIsLocked) disableCreateInviteButton(); // Disable it immediately, it's still locked from the last time we clicked it (we quickly clicked "Local" then "Online" again before we heard back from the server)
 	if (mode !== 'online' && invites.doWeHave()) element_createInvite.click(); // Simulate clicking to cancel our invite, BEFORE we switch modes (because if the mode is local it will just start the game)
