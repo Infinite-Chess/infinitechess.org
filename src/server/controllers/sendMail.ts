@@ -79,7 +79,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
-		throw err;
+		throw new Error('Unexpected transporter error sending password reset email.');
 	}
 }
 
