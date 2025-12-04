@@ -11,6 +11,7 @@ import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager
 
 import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 
 // --- Module Setup ---
 const AWS_REGION = process.env['AWS_REGION'];
@@ -84,7 +85,8 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 }
 
 /**
- * Sends an account verification email to the specified member.
+ * Sends an account verification email to the specified member,
+ * IF they are not blacklisted.
  * @param user_id - The ID of the user to send the verification email to.
  */
 async function sendEmailConfirmation(user_id: number): Promise<void> {
@@ -99,6 +101,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		logEventsAndPrint(
 			`Unable to send email confirmation for non-existent member of id (${user_id})!`,
 			'errLog.txt',
+		);
+		return;
+	}
+
+	if (isBlacklisted(memberData.email)) {
+		logEventsAndPrint(
+			`[BLOCKED] Skipping email confirmation to ${memberData.email} (Blacklisted)`,
+			'emailLog.txt',
 		);
 		return;
 	}

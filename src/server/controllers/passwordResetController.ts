@@ -9,6 +9,7 @@ import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountCon
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
@@ -37,32 +38,44 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 2. Invalidate old tokens
 			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
-			// 3. Generate plain token
+			// 3. Make sure they aren't blacklisted
+			if (isBlacklisted(email)) {
+				logEventsAndPrint(
+					`User has a blacklisted email ${email} when attempting to request a password reset!`,
+					'blacklistLog.txt',
+				);
+				res.status(409).json({
+					message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+				});
+				return;
+			}
+
+			// 4. Generate plain token
 			const plainToken: string = crypto.randomBytes(32).toString('base64url');
 
-			// 4. Hash the plain token
+			// 5. Hash the plain token
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 
-			// 5. Set expiration (e.g., ~1 hour from now in milliseconds)
+			// 6. Set expiration (e.g., ~1 hour from now in milliseconds)
 			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
 
-			// 6. Store new token in the database
+			// 7. Store new token in the database
 			db.run(
 				'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
 				[userId, hashedTokenForDb, expiresAt],
 			);
 
-			// 7. Construct reset URL using the utility
+			// 8. Construct reset URL using the utility
 			const baseUrl = getAppBaseUrl();
 			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
-			// 8. Log the email send attempt
+			// 9. Log the email send attempt
 			logEventsAndPrint(
 				`Sending password reset email to user_id (${userId})...`,
 				'loginAttempts.txt',
 			);
 
-			// 9. Send email (must have its own error handling since we're not await'ing an async method!!)
+			// 10. Send email (must have its own error handling since we're not await'ing an async method!!)
 			sendPasswordResetEmail(email, resetUrl).catch((err) => {
 				const errorMessage = err instanceof Error ? err.stack : String(err);
 				logEventsAndPrint(

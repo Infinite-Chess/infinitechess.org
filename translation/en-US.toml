@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "79"
+version = "80"
 maintainer = "Naviary"
 
 [header]
@@ -636,7 +636,7 @@ ws-email_too_long = "Your email is too looooooong."
 ws-email_invalid = "This is not a valid email"
 ws-email_in_use = "This email is already in use"
 ws-email_domain_invalid = "Invalid domain."
-ws-you_are_banned = "You are banned."
+ws-email_blacklisted = "Your email is blacklisted."
 ws-password_length = "Password must be 6-72 characters long"
 ws-password_password = "Password must not be 'password'"
 ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."

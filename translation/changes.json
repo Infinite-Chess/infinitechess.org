@@ -1,4 +1,8 @@
 {
+  "80": {
+    "note": "Renamed ws-you_are_banned to ws-email_blacklisted on line 639, and edited its message.",
+    "changes": []
+  },
   "79": {
     "note": "Updated ToS sentence on line 560 'Abuse bugs or glitches in order to abort the game...'",
     "changes": []

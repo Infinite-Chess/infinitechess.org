@@ -35,10 +35,11 @@ try {
 		'Unable to read banned.json on startup. ' + (e instanceof Error ? e.stack : String(e));
 	throw new Error(errMsg);
 }
-function isEmailBanned(email: string): boolean {
-	const emailLowercase = email.toLowerCase();
-	return bannedJSON.emails[emailLowercase] !== undefined;
-}
+// EMAIL BANS are now handled in the email_blacklist database table!
+// function isEmailBanned(email: string): boolean {
+// 	const emailLowercase = email.toLowerCase();
+// 	return bannedJSON.emails[emailLowercase] !== undefined;
+// }
 
 function isIPBanned(ip: string): boolean {
 	return bannedJSON.IPs[ip] !== undefined;
@@ -48,4 +49,4 @@ function isBrowserIDBanned(browserID: string): boolean {
 	return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 
-export { isEmailBanned, isIPBanned, isBrowserIDBanned };
+export { isIPBanned, isBrowserIDBanned };
