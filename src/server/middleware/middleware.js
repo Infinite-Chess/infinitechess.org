@@ -52,6 +52,11 @@ import {
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
+import {
+	createAccountLimiter,
+	resendAccountVerificationLimiter,
+	forgotPasswordLimiter,
+} from './rateLimiters.js';
 // import EditorSavesAPI from '../api/EditorSavesAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -173,12 +178,14 @@ function configureMiddleware(app) {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.post('/createaccount', createNewMember); // "/createaccount" POST request
+	app.post('/createaccount', createAccountLimiter, createNewMember); // "/createaccount" POST request
 	app.get('/createaccount/username/:username', checkUsernameAvailable);
 	app.get('/createaccount/email/:email', checkEmailValidity);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
+
+	app.post('/reset-password', handleResetPassword);
 
 	// API --------------------------------------------------------------------
 
@@ -242,8 +249,7 @@ function configureMiddleware(app) {
 		getLeaderboardData,
 	);
 
-	app.post('/forgot-password', handleForgotPasswordRequest);
-	app.post('/reset-password', handleResetPassword);
+	app.post('/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

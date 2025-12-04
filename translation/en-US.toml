@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "77"
+version = "78"
 maintainer = "Naviary"
 
 [header]
@@ -658,3 +658,6 @@ ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
 ws-rated_invite_verification_needed = "To play ranked, you need to be signed in with a verified account."
+
+[rate-limiting]
+generic = "You have made too many requests, please try again later."

@@ -1,4 +1,8 @@
 {
+  "78": {
+    "note": "Added [rate-limiting] section lines 662-663.",
+    "changes": []
+  },
   "77": {
     "note": "Added js-email_too_long on line 159. Removed js-username_specs on line 155. Removed ws-password_format on line 642. Removed js-pwd_incorrect_format on line 168.",
     "changes": []
