@@ -255,7 +255,7 @@ function resendConfirmEmail(): void {
 	if (!isOurProfile) return; // Only allow resend if viewing own profile
 
 	const config: RequestInit = {
-		method: 'GET',
+		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			'is-fetch-request': 'true', // Custom header
