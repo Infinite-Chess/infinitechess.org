@@ -23,9 +23,6 @@ export function getClientIP(req: Request): string | undefined {
 	}
 
 	// Fallback to req.ip, which is derived from req.socket.remoteAddress
-	if (typeof req.ip === 'string') {
-		return req.ip;
-	}
-
-	return undefined;
+	// (and should match the first entry in 'x-forwarded-for' if behind a proxy)
+	return req.ip;
 }
