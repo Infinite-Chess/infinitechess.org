@@ -73,6 +73,29 @@ let modeSelected;
 const indexOf10m = 5;
 const indexOfInfiniteTime = 12;
 
+// Variants that the engine officially supports well enough for the engine tab.
+// When in computer mode, the variant dropdown will be restricted to this set.
+const engineSupportedVariants = new Set([
+	'Classical',
+	'Confined_Classical',
+	'Classical_Plus',
+	'Core',
+	'CoaIP',
+	'CoaIP_HO',
+	'CoaIP_RO',
+	'CoaIP_NO',
+	'Palace',
+	'Pawndard',
+	'Standarch',
+	'Space_Classic',
+	'Space',
+	'Abundance',
+	'Pawn_Horde',
+	'Knightline',
+	'Obstocean',
+	'Chess',
+]);
+
 /**
  * Whether the create invite button is currently locked.
  * When we create an invite, the button is disabled until we hear back from the server.
@@ -195,6 +218,10 @@ function changePlayMode(mode) {
 		const localStorageRated = localstorage.loadItem('preferred_rated_invite_value');
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
 		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
+		// In non-engine modes, all variants remain available.
+		for (const option of element_optionVariant.options) {
+			option.hidden = false;
+		}
 	} else if (mode === 'local') {
 		// Enabling the button doesn't necessarily unlock it. It's enabled for "local" so that we
 		// can click "Start Game" at any point. But it will be re-disabled if we click "online" rapidly,
@@ -218,6 +245,10 @@ function changePlayMode(mode) {
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
+		// In non-engine modes, all variants remain available.
+		for (const option of element_optionVariant.options) {
+			option.hidden = false;
+		}
 	} else if (mode === 'computer') {
 		// For now, until engines become stronger, time is not customizable.
 		enableCreateInviteButton();
@@ -238,6 +269,11 @@ function changePlayMode(mode) {
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
+		// Restrict the variant dropdown to the variants that HydroChess officially supports.
+		for (const option of element_optionVariant.options) {
+			// Keep options whose value is in the supported set; hide the rest.
+			option.hidden = !engineSupportedVariants.has(option.value);
+		}
 	}
 }
 
