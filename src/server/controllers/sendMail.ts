@@ -15,6 +15,8 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 // --- Module Setup ---
 const AWS_REGION = process.env['AWS_REGION'];
 const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
+const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
+const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
 
 /**
  * Who our sent emails will appear as if they're from.
@@ -24,7 +26,7 @@ const FROM = EMAIL_FROM_ADDRESS;
 // Create SES client
 // Note: fromEnv() automatically handles AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 const sesClient =
-	AWS_REGION && EMAIL_FROM_ADDRESS
+	AWS_REGION && EMAIL_FROM_ADDRESS && AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
 		? new SESClient({
 				region: AWS_REGION,
 				credentials: fromEnv(),
