@@ -34,7 +34,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// User exists, proceed with password reset flow
 			const userId: number = member.user_id;
 
-			// 2. Invalidate old tokens (Using database.run for DELETE)
+			// 2. Invalidate old tokens
 			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
 			// 3. Generate plain token
@@ -56,14 +56,20 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			const baseUrl = getAppBaseUrl();
 			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
-			// 8. Send email
-			sendPasswordResetEmail(email, resetUrl);
-
-			// 9. Log the email sent
+			// 8. Log the email send attempt
 			logEventsAndPrint(
-				`Sent password reset email to user_id (${userId})`,
+				`Sending password reset email to user_id (${userId})...`,
 				'loginAttempts.txt',
 			);
+
+			// 9. Send email (must have its own error handling since we're not await'ing an async method!!)
+			sendPasswordResetEmail(email, resetUrl).catch((err) => {
+				const errorMessage = err instanceof Error ? err.stack : String(err);
+				logEventsAndPrint(
+					`Background password reset email send failed for user_id (${userId}), email (${email}): ${errorMessage}`,
+					'errLog.txt',
+				);
+			});
 		} else {
 			logEventsAndPrint(
 				`No member exists with the email (${email}). Not sending password reset email.`,
@@ -77,7 +83,8 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		});
 	} catch (error) {
 		const errorMessage: string =
-			'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
+			'Forgot password database error: ' +
+			(error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({
 			message: 'An error occurred while processing your request. Please try again later.',
