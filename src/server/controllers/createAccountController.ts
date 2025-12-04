@@ -60,6 +60,21 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		res.status(400).send('Bad request'); // 400 Bad request
 		return;
 	}
+
+	// Honeypot Bot Catcher: recovery_email — if present, return generic success.
+	const recoveryEmail: string =
+		typeof req.body.recovery_email === 'string' ? req.body.recovery_email.trim() : '';
+	if (recoveryEmail.length > 0) {
+		const username = typeof req.body.username === 'string' ? req.body.username : '[empty]';
+		logEventsAndPrint(
+			`Bot signup detected! IP: ${req.ip}, Username: ${username}, User-Agent: ${req.get('User-Agent')}`,
+			'newMemberLog.txt',
+		);
+		// Return a normal-looking success so bot doesn't adapt
+		res.status(200).json({ success: true, created: true });
+		return;
+	}
+
 	// First make sure we have all 3 variables.
 	// eslint-disable-next-line prefer-const
 	let { username, email, password }: { username: string; email: string; password: string } =
