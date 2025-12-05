@@ -74,15 +74,6 @@ function configureMiddleware(app) {
 	// Note: requests that are rate limited will not be logged, to mitigate slow-down during a DDOS.
 	app.use(rateLimit);
 
-	// DELETE ONCE verified the header structure of AWS requests!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	app.use((req, res, next) => {
-		if (req.path === '/webhooks/ses') {
-			console.log('--- AWS INCOMING REQUEST DEBUG ---');
-			console.log('Headers:', JSON.stringify(req.headers, null, 2));
-		}
-		next();
-	});
-
 	// This allows us to retrieve json-received-data as a parameter/data!
 	// The logger can't log the request body without this
 	app.use(express.json({ limit: '50kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
@@ -154,7 +145,7 @@ function configureMiddleware(app) {
 	const options = useOriginWhitelist ? corsOptions : undefined;
 	app.use(cors(options));
 
-	// NEEDED because AWS SNS PROBABLY sends text/plain instead of application/json??? But it is still parsable as JSON.
+	// CUSTOM express.json() NEEDED because AWS SNS sends text/plain instead of application/json! But it is still parsable as JSON.
 	const awsParser = express.json({
 		limit: '50kb',
 		type: ['text/plain', 'application/json'],
