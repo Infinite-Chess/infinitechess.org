@@ -4,6 +4,8 @@
  * It also manages all renderd entities when zoomed out.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
 import Transition from '../transitions/Transition.js';
@@ -25,7 +27,6 @@ import geometry from '../../../../../../shared/util/math/geometry.js';
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import primitives from '../primitives.js';
 import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
-import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { Mouse } from '../../input.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
@@ -36,6 +37,7 @@ import type {
 } from '../../../../../../shared/chess/util/coordutil.js';
 import type { Line } from './highlightline.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 // Variables --------------------------------------------------------------
 
@@ -203,11 +205,11 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 	const snapDistVPixels = ENTITY_WIDTH_VPIXELS * 0.5;
 	/** THe minimum distance from a snap point, in world space, for our mouse to snap to it. */
-	const snapDistWorld: BigDecimal = bd.FromNumber(
+	const snapDistWorld: BigDecimal = bd.fromNumber(
 		space.convertPixelsToWorldSpace_Virtual(snapDistVPixels),
 	);
 	/** The mimimum distance from a snap point, in squares, for our mouse to snap to it. */
-	const snapDistSquares: BigDecimal = bd.divide_floating(snapDistWorld, boardpos.getBoardScale());
+	const snapDistSquares: BigDecimal = bd.divideFloating(snapDistWorld, boardpos.getBoardScale());
 
 	// First see if the pointer is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
@@ -341,7 +343,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) < THRESHOLD_TO_SNAP_PIECES) {
 		const pieces: BDCoords[] = boardutil
 			.getCoordsOfAllPieces(boardsim.pieces)
-			.map((c) => bd.FromCoords(c)); // Convert to BDCoords
+			.map((c) => bdcoords.FromCoords(c)); // Convert to BDCoords
 		const closestPieceSnap = findClosestEntityOfGroup(
 			pieces,
 			closeLines,
@@ -480,7 +482,7 @@ function getAllLinesSegmented(drawnRays: Ray[], presetRays: Ray[]): Line[] {
  */
 function getAnnoteSnapPoints(trimDecimals: boolean): BDCoords[] {
 	return [
-		...annotations.getSquares().map((s) => bd.FromCoords(s)), // Cast square annotations to BDCoords
+		...annotations.getSquares().map((s) => bdcoords.FromCoords(s)), // Cast square annotations to BDCoords
 		...drawrays.collapseRays(annotations.getRays(), trimDecimals),
 	];
 }

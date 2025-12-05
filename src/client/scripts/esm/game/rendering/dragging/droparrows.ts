@@ -14,8 +14,8 @@ import space from '../../misc/space.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import gameslot from '../../chess/gameslot.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 let capturedPieceThisFrame: Piece | undefined;
 
@@ -43,7 +43,7 @@ function updateCapturedPiece(): void {
 
 	hoveredArrows = hoveredArrows.filter((arrow) => {
 		if (arrow.piece.floating) return false; // Filter animated arrows
-		const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
+		const integerCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
 		return !coordutil.areCoordsEqual(integerCoords, selectedPiece.coords);
 	});
 
@@ -54,7 +54,7 @@ function updateCapturedPiece(): void {
 			gameslot.getGamefile()!,
 			selectedPieceLegalMoves,
 			selectedPiece.coords,
-			bd.coordsToBigInt(arrow.piece.coords),
+			bdcoords.coordsToBigInt(arrow.piece.coords),
 			selectedPieceColor,
 		);
 	});
@@ -67,7 +67,7 @@ function updateCapturedPiece(): void {
 
 	capturedPieceThisFrame = {
 		type: legalCapturePiece.type,
-		coords: bd.coordsToBigInt(legalCapturePiece.coords),
+		coords: bdcoords.coordsToBigInt(legalCapturePiece.coords),
 		index: legalCapturePiece.index,
 	};
 }
@@ -93,7 +93,7 @@ function shiftArrows(): void {
 	if (capturedPieceThisFrame !== undefined) {
 		// Reflect the dragged piece's new location in draganimation.ts
 		const worldCoords = space.convertCoordToWorldSpace(
-			bd.FromCoords(capturedPieceThisFrame.coords),
+			bdcoords.FromCoords(capturedPieceThisFrame.coords),
 		);
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow

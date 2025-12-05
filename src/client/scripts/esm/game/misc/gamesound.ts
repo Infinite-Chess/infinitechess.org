@@ -11,10 +11,11 @@
 import type { EffectConfig } from '../../audio/AudioEffects.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import screenshake from '../rendering/screenshake.js';
 import math from '../../../../../shared/util/math/math.js';
 import WaterRipples from '../rendering/WaterRipples.js';
-import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import AudioManager, { SoundObject } from '../../audio/AudioManager.js';
 
 // Constants --------------------------------------------------------------------------
@@ -77,7 +78,7 @@ const REVERB_CONFIG = {
 /** Config for the bell gong sound effect when moves are extremely large. */
 const BELL_CONFIG = {
 	/** The distance a piece needs to move for the bell sound to play. */
-	minDist: bd.FromBigInt(1_000_000n),
+	minDist: bd.fromBigInt(1_000_000n),
 	/** The volume of the bell gongs, as a multiplier to the move sound's volume. */
 	volume: 0.6,
 } as const;
@@ -88,8 +89,8 @@ const RIPPLE_CONFIG = {
 	 * The minimum distance a piece needs to move for the water droplet ripple effect to trigger.
 	 * At current settings, this starts at the Spectral Edge beginning.
 	 */
-	minDist: bd.FromBigInt(10n ** 120n), // 10^120 squares
-	// minDist: bd.FromBigInt(20n), // FOR TESTING
+	minDist: bd.fromBigInt(10n ** 120n), // 10^120 squares
+	// minDist: bd.fromBigInt(20n), // FOR TESTING
 	maxPlaybackRate: 1.18,
 	minPlaybackRate: 1.0,
 	/**

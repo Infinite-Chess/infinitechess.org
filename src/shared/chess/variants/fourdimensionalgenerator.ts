@@ -12,7 +12,7 @@ import coordutil from '../util/coordutil.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import { rawTypes as r, ext as e } from '../util/typeutil.js';
 import icnconverter from '../logic/icn/icnconverter.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 
 /** An object that contains all relevant quantities for the size of a single 4D chess board. */
 type Dimensions = {

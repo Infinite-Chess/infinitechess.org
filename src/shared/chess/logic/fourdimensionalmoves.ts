@@ -20,7 +20,7 @@ import boardchanges from './boardchanges.js';
 import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
 import state from './state.js';
 import specialdetect from './specialdetect.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 import legalmoves from './legalmoves.js';
 import { players } from '../util/typeutil.js';
 

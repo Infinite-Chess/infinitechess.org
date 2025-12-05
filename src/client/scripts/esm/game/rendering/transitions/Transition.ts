@@ -13,6 +13,8 @@
  * within a constant duration, while still feeling smooth and natural.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import perspective from '../perspective.js';
 import space from '../../misc/space.js';
 import boardtiles from '../boardtiles.js';
@@ -25,7 +27,6 @@ import coordutil, {
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
 
@@ -88,8 +89,8 @@ const ZOOM_TRANSITION_CONFIG = {
 	},
 } as const;
 
-const ONE = bd.FromBigInt(1n);
-const NEGONE = bd.FromBigInt(-1n);
+const ONE = bd.fromBigInt(1n);
+const NEGONE = bd.fromBigInt(-1n);
 
 // Variables ----------------------------------------------------------------------
 
@@ -576,18 +577,18 @@ function applyZoomState(currentE: number, elapsedTime: number): void {
 	}
 
 	// Apply the final scale and position to the board.
-	const newScale = bd.exp(bd.FromNumber(currentE));
+	const newScale = bd.exp(bd.fromNumber(currentE));
 	boardpos.setBoardScale(newScale);
 
 	// Calculate and set the new board position, based on where the focus point should be.
 	// SEE GRAPH ON DESMOS "World-space converted to boardPos" for my notes while writing this algorithm
 
-	const worldX = bd.FromNumber(originWorldSpace[0] + differenceWorldSpace[0] * scaleProgress);
-	const worldY = bd.FromNumber(originWorldSpace[1] + differenceWorldSpace[1] * scaleProgress);
+	const worldX = bd.fromNumber(originWorldSpace[0] + differenceWorldSpace[0] * scaleProgress);
+	const worldY = bd.fromNumber(originWorldSpace[1] + differenceWorldSpace[1] * scaleProgress);
 
 	// Convert the world-space offset to a board-space offset
-	const shiftX = bd.divide_floating(worldX, newScale);
-	const shiftY = bd.divide_floating(worldY, newScale);
+	const shiftX = bd.divideFloating(worldX, newScale);
+	const shiftY = bd.divideFloating(worldY, newScale);
 
 	// Apply the shift to the target coordinates to get the new board position
 	const newX = bd.subtract(focus[0], shiftX);
@@ -607,8 +608,8 @@ function updatePanningTransition(
 	// What is the scale?
 	// What is the maximum distance we should pan b4 teleporting to the other half?
 	const boardScale = boardpos.getBoardScale();
-	const maxPanDist = bd.FromNumber(PAN_TRANSITION_CONFIG.MAX_PAN_DISTANCE);
-	const maxDistSquares = bd.divide_floating(maxPanDist, boardScale);
+	const maxPanDist = bd.fromNumber(PAN_TRANSITION_CONFIG.MAX_PAN_DISTANCE);
+	const maxDistSquares = bd.divideFloating(maxPanDist, boardScale);
 	const transGreaterThanMaxDist =
 		bd.compare(bd.abs(differenceCoords[0]), maxDistSquares) > 0 ||
 		bd.compare(bd.abs(differenceCoords[1]), maxDistSquares) > 0;
@@ -617,13 +618,13 @@ function updatePanningTransition(
 	let newY: BigDecimal;
 
 	const difference = coordutil.copyBDCoords(differenceCoords);
-	const easedTBD = bd.FromNumber(easedT);
+	const easedTBD = bd.fromNumber(easedT);
 
 	if (!transGreaterThanMaxDist) {
 		// No mid-transition teleport required to maintain constant duration.
 		// Calculate new world-space
-		const addX = bd.multiply_fixed(difference[0], easedTBD);
-		const addY = bd.multiply_fixed(difference[1], easedTBD);
+		const addX = bd.multiply(difference[0], easedTBD);
+		const addY = bd.multiply(difference[1], easedTBD);
 		// Convert to board position
 		newX = bd.add(originCoords[0], addX);
 		newY = bd.add(originCoords[1], addY);
@@ -632,7 +633,7 @@ function updatePanningTransition(
 		// 1st half or 2nd half?
 		const firstHalf = t < 0.5;
 		const neg = firstHalf ? ONE : NEGONE;
-		const actualEasedT = bd.FromNumber(firstHalf ? easedT : 1 - easedT);
+		const actualEasedT = bd.fromNumber(firstHalf ? easedT : 1 - easedT);
 
 		// Create a new, shorter vector that points in the exact same direction,
 		// but with a length that is visually manageable on screen.
@@ -642,15 +643,15 @@ function updatePanningTransition(
 		const absDiffY = bd.abs(difference[1]);
 		const maxComponent = bd.max(absDiffX, absDiffY);
 
-		const ratio = bd.divide_floating(maxDistSquares, maxComponent);
+		const ratio = bd.divideFloating(maxDistSquares, maxComponent);
 
-		difference[0] = bd.multiply_floating(difference[0], ratio);
-		difference[1] = bd.multiply_floating(difference[1], ratio);
+		difference[0] = bd.multiplyFloating(difference[0], ratio);
+		difference[1] = bd.multiplyFloating(difference[1], ratio);
 
 		const target = firstHalf ? originCoords : destinationCoords;
 
-		const addX = bd.multiply_floating(bd.multiply_floating(difference[0], actualEasedT), neg);
-		const addY = bd.multiply_floating(bd.multiply_floating(difference[1], actualEasedT), neg);
+		const addX = bd.multiplyFloating(bd.multiplyFloating(difference[0], actualEasedT), neg);
+		const addY = bd.multiplyFloating(bd.multiplyFloating(difference[1], actualEasedT), neg);
 
 		newX = bd.add(target[0], addX);
 		newY = bd.add(target[1], addY);

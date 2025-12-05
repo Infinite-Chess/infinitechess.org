@@ -1,13 +1,12 @@
-import gamefileutility from "../../src/client/scripts/esm/chess/util/gamefileutility";
+import gamefileutility from '../../src/client/scripts/esm/chess/util/gamefileutility';
 
-const engine = (function() {
+const engine = (function () {
 	/**
 	 * returns all intersections of diagonal, horizontal and vertical lines emitting from all pieces.
 	 * meant to represent squares the engine would care about.
 	 * @param {gamefile} gamefile - gamefile
 	 */
 	function getIntersections(gamefile) {
-
 		const intersections = new Set();
 
 		const diagonalLineArr = []; // an array holding arrays of the slope and the y-intercept of each diagonal line respectfully. this will help us determine the intersections between them
@@ -74,7 +73,10 @@ const engine = (function() {
 						const move = { type, startCoords: coords, endCoords: intersectionCoords };
 						// legalmoves.checkIfMoveLegal transfers special flags from startCoords to endCoords
 						// we want our move to have the special flags so we will transfer them to it.
-						specialdetect.transferSpecialFlags_FromCoordsToMove(intersectionCoords, move);
+						specialdetect.transferSpecialFlags_FromCoordsToMove(
+							intersectionCoords,
+							move,
+						);
 						moves.push(move);
 					}
 				}
@@ -99,7 +101,13 @@ const engine = (function() {
 		for (let x = -1; x <= 1; x++) {
 			for (let y = -1; y <= 1; y++) {
 				if (x == 0 && y == 0) continue;
-				if (gamefileutility.getPieceAtCoords(gamefile, [kingCoords[0] + x, kingCoords[1] + y])) evaluation += 1;
+				if (
+					gamefileutility.getPieceAtCoords(gamefile, [
+						kingCoords[0] + x,
+						kingCoords[1] + y,
+					])
+				)
+					evaluation += 1;
 			}
 		}
 		const opponentPieceCount = gamefileutility.getPieceCountOfColor(gamefile, 'white');
@@ -108,30 +116,39 @@ const engine = (function() {
 		// Pieces that can put a king in some sort of a box or a cage (for example two rooks can put a king in a cage)
 		const boxerWhitePieces = ['queensW', 'chancellorsW', 'rooksW', 'royalQueensW'];
 		const whitePiecesWeightTable = {
-			kingsW: {weight: 4, distanceFunction: math.chebyshevDistance},
-			guardsW: {weight: 4, distanceFunction: math.chebyshevDistance},
-			knightsW: {weight: 3, distanceFunction: math.chebyshevDistance},
-			hawksW: {weight: 2, distanceFunction: math.chebyshevDistance},
+			kingsW: { weight: 4, distanceFunction: math.chebyshevDistance },
+			guardsW: { weight: 4, distanceFunction: math.chebyshevDistance },
+			knightsW: { weight: 3, distanceFunction: math.chebyshevDistance },
+			hawksW: { weight: 2, distanceFunction: math.chebyshevDistance },
 		};
 		let boxerWhitePieceCount = 0;
 		for (const boxerWhitePiece of boxerWhitePieces) {
 			boxerWhitePieceCount += gamefileutility.getPieceCountOfType(gamefile, boxerWhitePiece);
 			if (boxerWhitePieceCount > 1) {
 				for (const bWP of boxerWhitePieces) {
-					whitePiecesWeightTable[bWP] = {weight: 1, distanceFunction: math.manhattanDistance};
+					whitePiecesWeightTable[bWP] = {
+						weight: 1,
+						distanceFunction: math.manhattanDistance,
+					};
 				}
 				break;
 			}
 		}
 		for (const type of pieces.white) {
-			if (!(type in whitePiecesWeightTable) || !gamefileutility.getPieceCountOfType(gamefile, type)) continue;
+			if (
+				!(type in whitePiecesWeightTable) ||
+				!gamefileutility.getPieceCountOfType(gamefile, type)
+			)
+				continue;
 			const pieceWeightTable = whitePiecesWeightTable[type];
 
 			for (const pieceCoords of gamefile.pieces[type]) {
 				if (!pieceCoords) continue;
 				// calculate the distance between king and the piece
 				// multiply it by the piece weight and add it to the evaluation
-				evaluation += pieceWeightTable.distanceFunction(pieceCoords, kingCoords) * pieceWeightTable.weight;
+				evaluation +=
+					pieceWeightTable.distanceFunction(pieceCoords, kingCoords) *
+					pieceWeightTable.weight;
 			}
 		}
 		return evaluation;
@@ -146,7 +163,7 @@ const engine = (function() {
 		const kingCoords = gamefile.pieces.kingsB[0];
 		const kingPiece = gamefileutility.getPieceAtCoords(gamefile, gamefile.pieces.kingsB[0]);
 		const { individual } = legalmoves.calculate(gamefile, kingPiece);
-		return individual.map(x => ({type: 'kingsB', startCoords: kingCoords, endCoords: x}));
+		return individual.map((x) => ({ type: 'kingsB', startCoords: kingCoords, endCoords: x }));
 	}
 
 	/**
@@ -172,7 +189,8 @@ const engine = (function() {
 
 		// if its black's turn get all king legal moves
 		// if its white's turn get the considered moves. aka moves that move into an intersection
-		const moves = colorNum == 1 ? getBlackKingLegalMoves(gamefile) : getConsideredMoves(gamefile);
+		const moves =
+			colorNum == 1 ? getBlackKingLegalMoves(gamefile) : getConsideredMoves(gamefile);
 		for (const move of moves) {
 			movepiece.makeMove(gamefile, move, {
 				pushClock: false,
@@ -183,7 +201,7 @@ const engine = (function() {
 			const score = -negamax(gamefile, depth - 1, -beta, -alpha, -colorNum);
 			movepiece.rewindMove(gamefile, {
 				updateData: false,
-				animate: false
+				animate: false,
 			});
 			if (score >= beta) {
 				// beta cut-off
@@ -217,7 +235,7 @@ const engine = (function() {
 			const score = -negamax(gamefile, depth - 1, -Infinity, Infinity, -1);
 			movepiece.rewindMove(gamefile, {
 				updateData: false,
-				animate: false
+				animate: false,
 			});
 			if (score > bestScore) {
 				bestScore = score;
@@ -231,6 +249,6 @@ const engine = (function() {
 		getIntersections,
 		getConsideredMoves,
 		negamax,
-		calculate
+		calculate,
 	});
 })();

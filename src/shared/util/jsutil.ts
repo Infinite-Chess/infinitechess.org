@@ -4,7 +4,7 @@
  * This scripts contains utility methods for working with javascript objects.
  */
 
-import bimath from './bigdecimal/bimath.js';
+import bimath from './math/bimath.js';
 
 /**
  * Deep copies an entire object, no matter how deep its nested.

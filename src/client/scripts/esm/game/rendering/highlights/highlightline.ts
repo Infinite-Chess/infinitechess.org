@@ -3,11 +3,12 @@
  * when we are zoomed out far.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import perspective from '../perspective.js';
 import boardtiles from '../boardtiles.js';
 import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
-import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
@@ -48,11 +49,11 @@ function getRenderRange(): BoundingBoxBD {
 	} else {
 		// Perspective mode
 
-		const distToRenderBoardBD: BigDecimal = bd.FromNumber(perspective.distToRenderBoard);
+		const distToRenderBoardBD: BigDecimal = bd.fromNumber(perspective.distToRenderBoard);
 		const scale: BigDecimal = boardpos.getBoardScale();
 		const position = boardpos.getBoardPos();
 
-		const distToRenderBoard_Tiles: BigDecimal = bd.divide_floating(distToRenderBoardBD, scale);
+		const distToRenderBoard_Tiles: BigDecimal = bd.divideFloating(distToRenderBoardBD, scale);
 
 		// Shift the box based on our current board position
 		return {
