@@ -17,6 +17,7 @@ declare global {
 		'starfield-toggle': CustomEvent<boolean>;
 		'master-volume-change': CustomEvent<number>;
 		'ambience-toggle': CustomEvent<boolean>;
+		'menu-fps-limit-toggle': CustomEvent<boolean>;
 		'ray-count-change': CustomEvent<number>;
 		canvas_resize: CustomEvent<{ width: number; height: number }>;
 	}

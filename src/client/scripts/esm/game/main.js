@@ -23,6 +23,7 @@ function start() {
 	guiloading.closeAnimation(); // Stops the loading screen animation
 	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
 	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
+	frametracker.init(); // Initialize frame tracking preferences
 
 	game.init();
 

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "80"
+version = "81"
 maintainer = "Naviary"
 
 [header]
@@ -19,6 +19,7 @@ appearance = "Appearance" # Board color/theme and visual effects
 appearance-theme = "Theme"
 appearance-starfield = "Starfield" # The Starfield space animation underneath void
 appearance-advanced-effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
+appearance-fps-limit = "Reduce FPS" # Reduces framerate on title screen/menus to save GPU
 legalmoves = "Legal Moves" # Legal moves shape
 legalmoves-squares = "Squares"
 legalmoves-dots = "Dots" # Dots and 4 corner triangles

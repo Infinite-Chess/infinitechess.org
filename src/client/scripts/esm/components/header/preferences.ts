@@ -23,6 +23,7 @@ const clientSidePrefs: string[] = [
 	'advanced_effects_enabled',
 	'master_volume',
 	'ambience_enabled',
+	'menu_fps_limit',
 ];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
@@ -34,6 +35,7 @@ interface ClientSidePreferences {
 	/** Master volume level from 0 (silent) to 1 (full volume) */
 	master_volume: number;
 	ambience_enabled: boolean;
+	menu_fps_limit: boolean;
 	[key: string]: any;
 }
 
@@ -65,6 +67,7 @@ const default_starfield_enabled: boolean = true;
 const default_advanced_effects_enabled: boolean = true;
 const default_master_volume: number = 1;
 const default_ambience_enabled: boolean = true;
+const default_menu_fps_limit: boolean = false;
 
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
@@ -92,6 +95,7 @@ function loadPreferences(): void {
 		advanced_effects_enabled: default_advanced_effects_enabled,
 		master_volume: default_master_volume,
 		ambience_enabled: default_ambience_enabled,
+		menu_fps_limit: default_menu_fps_limit,
 	};
 
 	preferences = browserStoragePrefs;
@@ -326,6 +330,21 @@ function setAmbienceEnabled(ambience_enabled: boolean): void {
 	document.dispatchEvent(new CustomEvent('ambience-toggle', { detail: ambience_enabled }));
 }
 
+/** Whether to halve the framerate on menus to reduce GPU usage. */
+function getMenuFPSLimit(): boolean {
+	return preferences.menu_fps_limit ?? default_menu_fps_limit;
+}
+
+function setMenuFPSLimit(value: boolean): void {
+	if (typeof value !== 'boolean')
+		throw new Error('Cannot set preference menu_fps_limit when it is not a boolean.');
+	preferences.menu_fps_limit = value;
+	savePreferences();
+
+	// Dispatch an event.
+	document.dispatchEvent(new CustomEvent('menu-fps-limit-toggle', { detail: value }));
+}
+
 // Getters for our current theme properties --------------------------------------------------------
 
 function getColorOfLightTiles(): Color {
@@ -555,6 +574,8 @@ export default {
 	setMasterVolume,
 	getAmbienceEnabled,
 	setAmbienceEnabled,
+	getMenuFPSLimit,
+	setMenuFPSLimit,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,

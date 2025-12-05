@@ -6,6 +6,8 @@
  * ZERO dependancies.
  */
 
+import preferences from '../../components/header/preferences.js';
+
 /** Whether there has been a visual change on-screen the past frame. */
 let hasBeenVisualChange: boolean = true;
 
@@ -19,7 +21,18 @@ let frameCount: number = 0;
  * How many frames to skip between renders when on menus (not in a game).
  * A value of 2 means render every other frame is skipped.
  */
-const MENU_FRAME_SKIP = 2;
+let menuFrameSkip: number = 2;
+
+/** Initialize the frame skip value from preferences */
+function init(): void {
+	menuFrameSkip = preferences.getMenuFPSLimit() ? 2 : 1;
+	document.addEventListener('menu-fps-limit-toggle', onMenuFPSLimitToggle);
+}
+
+function onMenuFPSLimitToggle(event: CustomEvent<boolean>): void {
+	menuFrameSkip = event.detail ? 2 : 1;
+	frameCount = 0;
+}
 
 /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
 function onVisualChange(): void {
@@ -46,7 +59,7 @@ function doWeRenderNextFrame(): boolean {
 	// When on menus (title screen, etc.), limit framerate to reduce GPU usage
 	// from the continuously animated background.
 	frameCount++;
-	if (frameCount >= MENU_FRAME_SKIP) {
+	if (frameCount >= menuFrameSkip) {
 		frameCount = 0;
 		return true;
 	}
@@ -68,6 +81,7 @@ function isInGame(): boolean {
 }
 
 export default {
+	init,
 	onVisualChange,
 	doWeRenderNextFrame,
 	onFrameRender,

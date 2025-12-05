@@ -11,6 +11,7 @@ const themeList = document.querySelector('.theme-list'); // Get the theme list d
 
 const starfieldCheckbox = document.querySelector('.boolean-option.starfield input');
 const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced-effects input');
+const menuFPSLimitCheckbox = document.querySelector('.boolean-option.menu-fps-limit input');
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -22,6 +23,7 @@ const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced
 function showCheckmarkOnSelectedOptions() {
 	starfieldCheckbox.checked = preferences.getStarfieldMode();
 	advancedEffectsCheckbox.checked = preferences.getAdvancedEffectsMode();
+	menuFPSLimitCheckbox.checked = preferences.getMenuFPSLimit();
 }
 
 async function addThemesToThemesDropdown() {
@@ -65,6 +67,8 @@ function initListeners() {
 	starfieldCheckbox.addEventListener('click', toggleStarfield);
 	// Advanced Effects toggle
 	advancedEffectsCheckbox.addEventListener('click', toggleAdvancedEffects);
+	// Menu FPS Limit toggle
+	menuFPSLimitCheckbox.addEventListener('click', toggleMenuFPSLimit);
 }
 function closeListeners() {
 	boardDropdownTitle.removeEventListener('click', close);
@@ -73,6 +77,8 @@ function closeListeners() {
 	starfieldCheckbox.removeEventListener('click', toggleStarfield);
 	// Advanced Effects toggle
 	advancedEffectsCheckbox.removeEventListener('click', toggleAdvancedEffects);
+	// Menu FPS Limit toggle
+	menuFPSLimitCheckbox.removeEventListener('click', toggleMenuFPSLimit);
 }
 function initThemeChangeListeners() {
 	for (let i = 0; i < themeList.children.length; i++) {
@@ -115,6 +121,10 @@ function toggleStarfield() {
 
 function toggleAdvancedEffects() {
 	preferences.setAdvancedEffectsMode(advancedEffectsCheckbox.checked);
+}
+
+function toggleMenuFPSLimit() {
+	preferences.setMenuFPSLimit(menuFPSLimitCheckbox.checked);
 }
 
 export default {
