@@ -45,7 +45,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		return;
 	}
 
-	console.log('[AWS WEBHOOK] Signature verified successfully.');
+	// console.log('[AWS WEBHOOK] Signature verified successfully.');
 
 	// If we get here, the request is guaranteed to be from Amazon.
 	const messageType = body.Type; // Note: Validator might normalize keys, but usually Body.Type matches header

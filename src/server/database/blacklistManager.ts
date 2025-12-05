@@ -11,7 +11,6 @@ export function addToBlacklist(email: string, reason: string): void {
 			email,
 			reason,
 		]);
-		console.log(`[BLACKLIST] Added ${email} due to ${reason}`);
 		logEventsAndPrint(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog.txt');
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
