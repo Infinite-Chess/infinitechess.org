@@ -59,7 +59,7 @@ const element_email = document.getElementById('email')!;
 
 // --- Event Listeners Setup ---
 
-// element_sendEmail.addEventListener('click', resendConfirmEmail);
+element_sendEmail.addEventListener('click', resendConfirmEmail);
 element_showAccountInfo.addEventListener('click', showAccountInfo);
 // Note: deleteAccount listener added later conditionally
 
@@ -255,7 +255,7 @@ function resendConfirmEmail(): void {
 	if (!isOurProfile) return; // Only allow resend if viewing own profile
 
 	const config: RequestInit = {
-		method: 'GET',
+		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			'is-fetch-request': 'true', // Custom header

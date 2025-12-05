@@ -1,4 +1,20 @@
 {
+  "80": {
+    "note": "Renamed ws-you_are_banned to ws-email_blacklisted on line 639, and edited its message.",
+    "changes": []
+  },
+  "79": {
+    "note": "Updated ToS sentence on line 560 'Abuse bugs or glitches in order to abort the game...'",
+    "changes": []
+  },
+  "78": {
+    "note": "Added [rate-limiting] section lines 662-663.",
+    "changes": []
+  },
+  "77": {
+    "note": "Added js-email_too_long on line 159. Removed js-username_specs on line 155. Removed ws-password_format on line 642. Removed js-pwd_incorrect_format on line 168.",
+    "changes": []
+  },
   "76": {
     "note": "Added contribution_count_singular and renamed contribution_count to contribution_count_plural (lines 75-76).",
     "changes": []

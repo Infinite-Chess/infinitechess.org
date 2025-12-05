@@ -11,6 +11,8 @@
  * modelMatrix  is custom for each rendered object, translating it how desired.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
@@ -25,7 +27,6 @@ import preferences from '../../components/header/preferences.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import screenshake from './screenshake.js';
 import { gl } from './webgl.js';
-import bigdecimal, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
@@ -333,7 +334,7 @@ function onPositionChange(): void {
  */
 function getScaleWhenTilesInvisible(): BigDecimal {
 	// We can cast this to a BigDecimal last because we know the resulting scale isn't arbitrarily small.
-	return bigdecimal.FromNumber((screenBoundingBox.right * 2) / canvas.width);
+	return bd.fromNumber((screenBoundingBox.right * 2) / canvas.width);
 }
 
 /**
@@ -341,8 +342,8 @@ function getScaleWhenTilesInvisible(): BigDecimal {
  * Each tile equals 1 virtual pixel on the screen.
  */
 function getScaleWhenZoomedOut(): BigDecimal {
-	const WDPR_BD = bigdecimal.FromNumber(window.devicePixelRatio);
-	return bigdecimal.multiply_fixed(getScaleWhenTilesInvisible(), WDPR_BD);
+	const WDPR_BD = bd.fromNumber(window.devicePixelRatio);
+	return bd.multiply(getScaleWhenTilesInvisible(), WDPR_BD);
 }
 
 export type { Mat4 };

@@ -7,11 +7,13 @@
 
 import type { BoundingBox, BoundingBoxBD } from './bounds.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import coordutil, { BDCoords, Coords } from '../../chess/util/coordutil.js';
-import bd, { BigDecimal } from '../bigdecimal/bigdecimal.js';
 import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from './vectors.js';
 import bounds from './bounds.js';
-import bimath from '../bigdecimal/bimath.js';
+import bimath from './bimath.js';
+import bdcoords from '../../chess/util/bdcoords.js';
 
 // ==================================== Type Definitions ====================================
 
@@ -31,7 +33,7 @@ type BaseRay = { start: Coords; vector: Vec2 };
 
 // ======================================= Constants =======================================
 
-const ZERO = bd.FromBigInt(0n);
+const ZERO = bd.fromBigInt(0n);
 
 // ============================== Fundamental Intersection Functions ==============================
 
@@ -55,11 +57,11 @@ function calcIntersectionPointOfLines(
 	const determinant = A1 * B2 - A2 * B1;
 	if (determinant === 0n) return undefined; // Lines are parallel or identical
 
-	const determinantBD = bd.FromBigInt(determinant);
+	const determinantBD = bd.fromBigInt(determinant);
 
 	function determineAxis(dividend: bigint): BigDecimal {
-		const dividendBD = bd.FromBigInt(dividend);
-		return bd.divide_fixed(dividendBD, determinantBD);
+		const dividendBD = bd.fromBigInt(dividend);
+		return bd.divide(dividendBD, determinantBD);
 	}
 
 	// Calculate the intersection point
@@ -80,16 +82,16 @@ function calcIntersectionPointOfLinesBD(
 	B2: BigDecimal,
 	C2: BigDecimal,
 ): BDCoords | undefined {
-	const determinant = bd.subtract(bd.multiply_fixed(A1, B2), bd.multiply_fixed(A2, B1));
+	const determinant = bd.subtract(bd.multiply(A1, B2), bd.multiply(A2, B1));
 	if (bd.areEqual(determinant, ZERO)) return undefined; // Lines are parallel or identical
 
 	function determineAxis(dividend: BigDecimal): BigDecimal {
-		return bd.divide_fixed(dividend, determinant);
+		return bd.divide(dividend, determinant);
 	}
 
 	// Calculate the intersection point
-	const x = determineAxis(bd.subtract(bd.multiply_fixed(C2, B1), bd.multiply_fixed(C1, B2)));
-	const y = determineAxis(bd.subtract(bd.multiply_fixed(A2, C1), bd.multiply_fixed(A1, C2)));
+	const x = determineAxis(bd.subtract(bd.multiply(C2, B1), bd.multiply(C1, B2)));
+	const y = determineAxis(bd.subtract(bd.multiply(A2, C1), bd.multiply(A1, C2)));
 
 	return [x, y];
 }
@@ -101,7 +103,7 @@ function intersectLineAndVerticalLine(A1: bigint, B1: bigint, C1: bigint, x: big
 	// The known coordinate is x, its coefficient is A1.
 	// We are solving for y, its coefficient is B1.
 	const intersectionY = solveForUnknownAxis(A1, B1, C1, x);
-	const intersectionX = bd.FromBigInt(x);
+	const intersectionX = bd.fromBigInt(x);
 
 	return [intersectionX, intersectionY];
 }
@@ -131,7 +133,7 @@ function intersectLineAndHorizontalLine(A1: bigint, B1: bigint, C1: bigint, y: b
 	// The known coordinate is y, its coefficient is B1.
 	// We are solving for x, its coefficient is A1.
 	const intersectionX = solveForUnknownAxis(B1, A1, C1, y);
-	const intersectionY = bd.FromBigInt(y);
+	const intersectionY = bd.fromBigInt(y);
 
 	return [intersectionX, intersectionY];
 }
@@ -176,7 +178,7 @@ function solveForUnknownAxis(
 	const numerator = -(knownAxisCoeff * knownValue + C);
 
 	// Convert to BigDecimal and perform the single, final division.
-	return bd.divide_fixed(bd.FromBigInt(numerator), bd.FromBigInt(unknownAxisCoeff));
+	return bd.divide(bd.fromBigInt(numerator), bd.fromBigInt(unknownAxisCoeff));
 }
 
 /**
@@ -193,10 +195,10 @@ function solveForUnknownAxisBD(
 		throw new Error('Cannot solve for axis, as the divisor (unknownAxisCoeff) is zero.');
 
 	// Calculate the numerator
-	const numerator = bd.negate(bd.add(bd.multiply_fixed(knownAxisCoeff, knownValue), C));
+	const numerator = bd.negate(bd.add(bd.multiply(knownAxisCoeff, knownValue), C));
 
 	// Perform the single, final division.
-	return bd.divide_fixed(numerator, unknownAxisCoeff);
+	return bd.divide(numerator, unknownAxisCoeff);
 }
 
 // ================================= Composite Geometric Operations =================================
@@ -321,20 +323,22 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): BDCoord
 		const dotProd = vectors.dotProduct(ray.vector, vectorToOppositePoint);
 		if (dotProd > 0)
 			return undefined; // The ray points towards the opposite end of the segment, so no unique intersection.
-		else return bd.FromCoords(ray.start); // The intersection point is the ray's start.
+		else return bdcoords.FromCoords(ray.start); // The intersection point is the ray's start.
 	}
 
 	// 4. Check if the calculated intersection point lies on the actual segment.
-	if (!isPointOnSegment(intersectionPoint, bd.FromCoords(segP1), bd.FromCoords(segP2)))
+	if (
+		!isPointOnSegment(intersectionPoint, bdcoords.FromCoords(segP1), bdcoords.FromCoords(segP2))
+	)
 		return undefined; // Intersection point is not within the segment bounds.
 
 	// 5. Check if the intersection point lies on the ray (not "behind" its start).
 	// Calculate vector from ray start to intersection.
-	const rayStartBD = bd.FromCoords(ray.start);
+	const rayStartBD = bdcoords.FromCoords(ray.start);
 	const vectorToIntersection = vectors.calculateVectorFromBDPoints(rayStartBD, intersectionPoint);
 
 	// Calculate dot product of ray's direction vector and the vector to the intersection.
-	const rayVecBD = bd.FromCoords(ray.vector);
+	const rayVecBD = bdcoords.FromCoords(ray.vector);
 	const dotProd = vectors.dotProductBD(rayVecBD, vectorToIntersection);
 
 	if (bd.compare(dotProd, ZERO) < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
@@ -370,20 +374,20 @@ function intersectRays(ray1: Ray, ray2: Ray): BDCoords | undefined {
 
 	// Vector from ray1's start to the intersection point
 	const vectorToIntersection1 = vectors.calculateVectorFromBDPoints(
-		bd.FromCoords(ray1.start),
+		bdcoords.FromCoords(ray1.start),
 		intersectionPoint,
 	);
 	// Dot product of ray1's direction vector and vectorToIntersection1
-	const dotProd1 = vectors.dotProductBD(bd.FromCoords(ray1.vector), vectorToIntersection1);
+	const dotProd1 = vectors.dotProductBD(bdcoords.FromCoords(ray1.vector), vectorToIntersection1);
 
 	if (bd.compare(dotProd1, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray1.
 
 	// 4. Check if the intersection point lies on the second ray (similarly).
 	const vectorToIntersection2 = vectors.calculateVectorFromBDPoints(
-		bd.FromCoords(ray2.start),
+		bdcoords.FromCoords(ray2.start),
 		intersectionPoint,
 	);
-	const dotProd2 = vectors.dotProductBD(bd.FromCoords(ray2.vector), vectorToIntersection2);
+	const dotProd2 = vectors.dotProductBD(bdcoords.FromCoords(ray2.vector), vectorToIntersection2);
 
 	if (bd.compare(dotProd2, ZERO) < 0) return undefined; // The intersection point is "behind" the start of ray2.
 
@@ -536,7 +540,7 @@ function findLineBoxIntersections(
 	const startCoordsNorm = coordutil.copyCoords(startCoords);
 	if (vector[0] < 0n) startCoordsNorm[0] = -startCoordsNorm[0];
 	if (vector[1] < 0n) startCoordsNorm[1] = -startCoordsNorm[1];
-	const startCoordsSum = bd.FromBigInt(startCoordsNorm[0] + startCoordsNorm[1]);
+	const startCoordsSum = bd.fromBigInt(startCoordsNorm[0] + startCoordsNorm[1]);
 
 	return findLineBoxIntersectionsBDHelper(
 		coeffs,
@@ -709,7 +713,7 @@ function findLineBoxIntersectionsBDHelper<T extends bigint | BigDecimal>(
 function roundPointToNearestGridpoint(point: BDCoords, gridSize: bigint): Coords {
 	// point: [x,y]  gridSize is width of cells, typically 10,000
 	// Incurs rounding, but honestly this doesn't need to be exact because it's for graphics.
-	const pointBigInt: Coords = bd.coordsToBigInt(point);
+	const pointBigInt: Coords = bdcoords.coordsToBigInt(point);
 
 	// To round bigints, we add half the gridSize before dividing by it.
 	function roundBigintNearestMultiple(value: bigint, multiple: bigint): bigint {

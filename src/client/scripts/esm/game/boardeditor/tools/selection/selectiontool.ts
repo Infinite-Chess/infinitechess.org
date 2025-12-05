@@ -19,7 +19,7 @@ import bounds, {
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds';
 import meshes from '../../../rendering/meshes';
-import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import bimath from '../../../../../../../shared/util/math/bimath';
 import sfill from './sfill';
 import sdrag from './sdrag';
 import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';

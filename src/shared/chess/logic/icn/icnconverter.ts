@@ -20,7 +20,7 @@ import {
 } from '../../util/typeutil.js';
 import typeutil from '../../util/typeutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
-import bimath from '../../../util/bigdecimal/bimath.js';
+import bimath from '../../../util/math/bimath.js';
 
 import type { GameRules } from '../../variants/gamerules.js';
 import type { MetaData } from '../../util/metadata.js';

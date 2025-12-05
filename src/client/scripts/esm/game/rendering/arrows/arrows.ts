@@ -19,6 +19,8 @@ import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
@@ -40,14 +42,14 @@ import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
 import Transition from '../transitions/Transition.js';
-import bimath from '../../../../../../shared/util/bigdecimal/bimath.js';
+import bimath from '../../../../../../shared/util/math/bimath.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
-import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
 import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions --------------------------------------------------------------------
 
@@ -178,14 +180,14 @@ const paddingBetwAdjacentPictures: number = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
 const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
-const renderZoomLimitVirtualPixels: BigDecimal = bd.FromBigInt(12n); // virtual pixels. Default: 20
+const renderZoomLimitVirtualPixels: BigDecimal = bd.fromBigInt(12n); // virtual pixels. Default: 20
 
 /** The distance in perspective mode to render the arrow indicators from the camera.
  * We need this because there is no normal edge of the screen like in 2D mode. */
 const perspectiveDist = 17;
 
-const ONE = bd.FromBigInt(1n);
-const HALF = bd.FromNumber(0.5);
+const ONE = bd.fromBigInt(1n);
+const HALF = bd.fromNumber(0.5);
 
 /**
  * The mode the arrow indicators on the edges of the screen is currently in.
@@ -403,7 +405,7 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 
 /** Returns the distance one arrow's picture's center should be from the screen edge. */
 function getPadding(): BigDecimal {
-	return bd.FromNumber(width / 2 + sidePadding);
+	return bd.fromNumber(width / 2 + sidePadding);
 }
 
 /**
@@ -496,7 +498,11 @@ function calcArrowsLineDraft(
 	 * which just means it's on the opposite side.
 	 */
 	const intersections = geometry
-		.findLineBoxIntersectionsBD(bd.FromCoords(firstPiece.coords), slideDir, boundingBoxFloat)
+		.findLineBoxIntersectionsBD(
+			bdcoords.FromCoords(firstPiece.coords),
+			slideDir,
+			boundingBoxFloat,
+		)
 		.map((c) => c.coords);
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
@@ -504,7 +510,7 @@ function calcArrowsLineDraft(
 		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
 		const arrowPiece: ArrowPiece = {
 			type: piece.type,
-			coords: bd.FromCoords(piece.coords),
+			coords: bdcoords.FromCoords(piece.coords),
 			index: piece.index,
 			floating: false,
 		};
@@ -611,7 +617,7 @@ function calcArrowsLineDraft(
 		// distance, then the piece is able to slide into the screen bounding box!
 
 		if (farthestSlidePointDist !== null) {
-			let farthestSlidePointDistBD = bd.FromBigInt(farthestSlidePointDist);
+			let farthestSlidePointDistBD = bd.fromBigInt(farthestSlidePointDist);
 			// Add the additional distance from the center of the square to its edge
 			// This is so that if any part of the furthest square highlight to
 			// move to is visible on screen, we will still render the arrow!

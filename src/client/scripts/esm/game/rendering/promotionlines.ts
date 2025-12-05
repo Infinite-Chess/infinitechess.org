@@ -6,10 +6,11 @@
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 
+import bd from '@naviary/bigdecimal';
+
 import boardtiles from './boardtiles.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 import primitives from './primitives.js';
@@ -58,7 +59,7 @@ function render(): void {
 
 	function addDataForSide(ranks: bigint[], yShift: 1 | 0): void {
 		ranks.forEach((rank) => {
-			const rankBD = bd.FromBigInt(rank);
+			const rankBD = bd.fromBigInt(rank);
 			const relativeRank: number = bd.toNumber(bd.subtract(rankBD, position[1])); // Subtract our board position
 
 			const bottom = (relativeRank - squareCenterNum + yShift - THICKNESS) * scale;

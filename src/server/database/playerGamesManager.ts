@@ -199,7 +199,7 @@ function getOpponentsOfUserFromGames(
  * @param columnsAndValues - An object containing column-value pairs to update.
  * @returns - A result object indicating success or failure.
  */
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function updatePlayerGamesColumns(
 	user_id: number,
 	game_id: number,

@@ -9,7 +9,7 @@ const element_usernameInput = document.getElementById('username') as HTMLInputEl
 const element_passwordInput = document.getElementById('password') as HTMLInputElement;
 const element_submitButton = document.getElementById('submit') as HTMLInputElement;
 
-// const element_forgotLink = document.getElementById('forgot-link') as HTMLAnchorElement;
+const element_forgotLink = document.getElementById('forgot-link') as HTMLAnchorElement;
 const element_backToLoginLink = document.getElementById('back-to-login-link') as HTMLAnchorElement;
 
 const element_forgotEmailInput = document.getElementById('forgot-email') as HTMLInputElement;
@@ -141,7 +141,7 @@ function showLoginForm(): void {
 
 	element_forgotPasswordForm.classList.add('hidden');
 
-	// element_forgotLink.classList.remove('hidden');
+	element_forgotLink.classList.remove('hidden');
 	element_backToLoginLink.classList.add('hidden');
 
 	element_forgotEmailInput.value = '';
@@ -163,7 +163,7 @@ function showForgotPasswordForm(): void {
 
 	element_forgotPasswordForm.classList.remove('hidden');
 
-	// element_forgotLink.classList.add('hidden');
+	element_forgotLink.classList.add('hidden');
 	element_backToLoginLink.classList.remove('hidden');
 
 	element_usernameInput.value = '';
@@ -280,7 +280,7 @@ if (
 	!element_forgotPasswordForm ||
 	!element_submitButton ||
 	!element_forgotSubmitButton ||
-	// !element_forgotLink ||
+	!element_forgotLink ||
 	!element_backToLoginLink
 ) {
 	throw Error('Required input elements are missing from the DOM.');
@@ -292,10 +292,10 @@ element_usernameInput.addEventListener('input', handleInput);
 element_passwordInput.addEventListener('input', handleInput);
 element_forgotEmailInput.addEventListener('input', handleInput);
 
-// element_forgotLink.addEventListener('click', (event: MouseEvent): void => {
-// 	event.preventDefault();
-// 	showForgotPasswordForm();
-// });
+element_forgotLink.addEventListener('click', (event: MouseEvent): void => {
+	event.preventDefault();
+	showForgotPasswordForm();
+});
 
 element_backToLoginLink.addEventListener('click', (event: MouseEvent): void => {
 	event.preventDefault();

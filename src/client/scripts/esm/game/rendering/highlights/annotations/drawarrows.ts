@@ -4,6 +4,8 @@
  * Helpful for analysis, and requested by many.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import space from '../../../misc/space.js';
 import preferences from '../../../../components/header/preferences.js';
 import snapping from '../snapping.js';
@@ -19,7 +21,6 @@ import coordutil, {
 	Coords,
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
-import bd, { BigDecimal } from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 import type { Arrow } from './annotations.js';
 import type { Color } from '../../../../../../../shared/util/math/math.js';
@@ -27,6 +28,7 @@ import type {
 	BoundingBoxBD,
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -51,8 +53,8 @@ const ARROW = {
 	BASE_OFFSET: 0.35,
 };
 
-const ZERO = bd.FromBigInt(0n);
-const ONE = bd.FromBigInt(1n);
+const ZERO = bd.fromBigInt(0n);
+const ONE = bd.fromBigInt(1n);
 
 /** This will be defined if we are CURRENTLY drawing an arrow. */
 let drag_start: Coords | undefined;
@@ -169,7 +171,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arro
 	// Precalculate other arrow properties
 
 	const vector: Coords = coordutil.subtractCoords(drag_end, drag_start!);
-	const difference: BDCoords = bd.FromCoords(vector);
+	const difference: BDCoords = bdcoords.FromCoords(vector);
 	// Since the difference can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
 	const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
@@ -235,17 +237,17 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 
 	// How much the arrow base is offset from the start coordinate.
 	const arrowBaseOffsetWorld: number = ARROW.BASE_OFFSET * size;
-	const arrowBaseOffsetSquares: BigDecimal = bd.multiply_floating(
+	const arrowBaseOffsetSquares: BigDecimal = bd.multiplyFloating(
 		entityWidthSquares,
-		bd.FromNumber(ARROW.BASE_OFFSET),
+		bd.fromNumber(ARROW.BASE_OFFSET),
 	);
 
 	// If the arrow length <= base offset, don't draw it (it would have negative length).
 	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
 
 	// Calculate the base and tip world space coordinates
-	let startWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.start));
-	let endWorld = space.convertCoordToWorldSpace(bd.FromCoords(arrow.end));
+	let startWorld = space.convertCoordToWorldSpace(bdcoords.FromCoords(arrow.start));
+	let endWorld = space.convertCoordToWorldSpace(bdcoords.FromCoords(arrow.end));
 	// Apply the base offset to the start world coordinates
 	// so the arrow base doesn't start exactly at the center of the square.
 	startWorld[0] += arrow.xRatio * arrowBaseOffsetWorld;
@@ -268,7 +270,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 
 	// Now take the arrow's vector, and calculate its intersections with this box.
 	const intersections = geometry.findLineBoxIntersectionsBD(
-		bd.FromCoords(arrow.start),
+		bdcoords.FromCoords(arrow.start),
 		arrow.vector,
 		viewBoxTiles,
 	);
@@ -279,7 +281,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	if (!intersections[1]!.positiveDotProduct) return []; // start point lies beyond screen
 	// Also check if the first intersection dot product of the vector pointing from the END coords is positive.
 	const dotProductEndToFirstIntersection = vectors.dotProductBD(
-		coordutil.subtractBDCoords(intersections[0]!.coords!, bd.FromCoords(arrow.end)),
+		coordutil.subtractBDCoords(intersections[0]!.coords!, bdcoords.FromCoords(arrow.end)),
 		vectors.negateBDVector(arrow.difference),
 	);
 	if (bd.compare(dotProductEndToFirstIntersection, ZERO) < 0) return []; // end point lies before screen

@@ -6,8 +6,9 @@
 import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Renderable.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
-import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
+
+import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 // @ts-ignore
 import style from '../gui/style.js';
@@ -24,7 +25,6 @@ import guipromotion from '../gui/guipromotion.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from './primitives.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import perspective from './perspective.js';
@@ -49,9 +49,9 @@ const squareCenter: number = 0.5;
 const perspectiveMode_z = -0.01;
 
 // BigDecimal constants
-const ONE = bd.FromNumber(1.0);
-const TWO = bd.FromNumber(2.0);
-const TEN = bd.FromNumber(10);
+const ONE = bd.fromNumber(1.0);
+const TWO = bd.fromNumber(2.0);
+const TEN = bd.fromNumber(10);
 
 // Variables ---------------------------------------------------------------------------
 
@@ -171,7 +171,7 @@ function recalcBoundingBox(): void {
 // Public API ---------------------------------------------------------------------------------
 
 function getSquareCenter(): BigDecimal {
-	return bd.FromNumber(squareCenter);
+	return bd.fromNumber(squareCenter);
 }
 
 function getSquareCenterAsNumber(): number {
@@ -181,11 +181,11 @@ function getSquareCenterAsNumber(): number {
 function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
-	const factor1: BigDecimal = bd.FromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
-	const tileWidthPixels_Physical = bd.multiply_floating(factor1, boardpos.getBoardScale()); // Greater for retina displays
+	const factor1: BigDecimal = bd.fromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
+	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, boardpos.getBoardScale()); // Greater for retina displays
 
-	const divisor = bd.FromNumber(window.devicePixelRatio);
-	const tileWidthPixels_Virtual = bd.divide_floating(tileWidthPixels_Physical, divisor);
+	const divisor = bd.fromNumber(window.devicePixelRatio);
+	const tileWidthPixels_Virtual = bd.divideFloating(tileWidthPixels_Physical, divisor);
 
 	return tileWidthPixels_Virtual;
 }
@@ -232,8 +232,8 @@ function getBoundingBoxOfBoard(
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 
 	function getAxisEdges(position: BigDecimal, screenEnd: number): [BigDecimal, BigDecimal] {
-		const screenEndBD = bd.FromNumber(screenEnd);
-		const distToEdgeInSquares: BigDecimal = bd.divide_floating(screenEndBD, scale);
+		const screenEndBD = bd.fromNumber(screenEnd);
+		const distToEdgeInSquares: BigDecimal = bd.divideFloating(screenEndBD, scale);
 		const start = bd.subtract(position, distToEdgeInSquares);
 		const end = bd.add(position, distToEdgeInSquares);
 		return [start, end];
@@ -254,8 +254,8 @@ function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD {
 	// ~18
 	const position = boardpos.getBoardPos();
 	const scale = boardpos.getBoardScale();
-	const rangeOfViewBD = bd.FromNumber(rangeOfView);
-	const renderDistInSquares = bd.divide_floating(rangeOfViewBD, scale);
+	const rangeOfViewBD = bd.fromNumber(rangeOfView);
+	const renderDistInSquares = bd.divideFloating(rangeOfViewBD, scale);
 
 	return {
 		left: bd.subtract(position[0], renderDistInSquares),
@@ -438,14 +438,14 @@ function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<st
 	if (board1_Opacity_Eased < 1.0) {
 		// console.log("Rendering 2nd board");
 		const power = -Math.round(board2_E - eWhen1TileIs1VirtualPixel); // Rounding is ONLY necessary due to correct tiny floating point inaccuracies. This MUST be an integer.
-		const zoom = bd.powerInt(TEN, power);
+		const zoom = bd.pow(TEN, power);
 		generateBoardModel(noiseTextures, zoom, 1.0)?.render([0, 0, z], undefined, uniforms);
 	}
 
 	// ALWAYS render board 1 (most zoomed in).
 	// This is rendered on top, and may be fading out.
 	const power = -Math.round(board1_E - eWhen1TileIs1VirtualPixel); // Rounding is ONLY necessary due to correct tiny floating point inaccuracies. This MUST be an integer.
-	const zoom = bd.powerInt(TEN, power);
+	const zoom = bd.pow(TEN, power);
 	generateBoardModel(noiseTextures, zoom, board1_Opacity_Eased)?.render(
 		[0, 0, z],
 		undefined,
@@ -481,7 +481,7 @@ function generateBoardModel(
 	if (!boardTexture) return; // Texture not loaded yet
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
-	const zoomTimesScale = bd.toNumber(bd.multiply_floating(boardScale, zoom));
+	const zoomTimesScale = bd.toNumber(bd.multiplyFloating(boardScale, zoom));
 	const zoomTimesScaleTwo = zoomTimesScale * 2;
 
 	const { left, right, bottom, top } = camera.getRespectiveScreenBox();
@@ -493,8 +493,8 @@ function generateBoardModel(
 		const squareCenter = getSquareCenter();
 
 		const boardPosAdjusted: BigDecimal = bd.add(boardPos, squareCenter);
-		const addend1: BigDecimal = bd.divide_fixed(boardPosAdjusted, zoom);
-		const addend2: BigDecimal = bd.FromNumber(start / zoomTimesScale);
+		const addend1: BigDecimal = bd.divide(boardPosAdjusted, zoom);
+		const addend2: BigDecimal = bd.fromNumber(start / zoomTimesScale);
 
 		const sum: BigDecimal = bd.add(addend1, addend2);
 		const mod2: number = bd.toNumber(bd.mod(sum, TWO));

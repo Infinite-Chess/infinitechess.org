@@ -52,6 +52,12 @@ import {
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
+import {
+	createAccountLimiter,
+	resendAccountVerificationLimiter,
+	forgotPasswordLimiter,
+} from './rateLimiters.js';
+import { handleSesWebhook } from '../controllers/awsWebhook.js';
 // import EditorSavesAPI from '../api/EditorSavesAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -70,7 +76,7 @@ function configureMiddleware(app) {
 
 	// This allows us to retrieve json-received-data as a parameter/data!
 	// The logger can't log the request body without this
-	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
+	app.use(express.json({ limit: '50kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
 	app.use(reqLogger); // Log the request
 
@@ -139,6 +145,14 @@ function configureMiddleware(app) {
 	const options = useOriginWhitelist ? corsOptions : undefined;
 	app.use(cors(options));
 
+	// CUSTOM express.json() NEEDED because AWS SNS sends text/plain instead of application/json! But it is still parsable as JSON.
+	const awsParser = express.json({
+		limit: '50kb',
+		type: ['text/plain', 'application/json'],
+	});
+	// Webhook endpoint for AWS Simple Email Service (SES) to notify us of bounces and complaints
+	app.post('/webhooks/ses', awsParser, handleSesWebhook);
+
 	/**
 	 * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
 	 * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
@@ -173,12 +187,14 @@ function configureMiddleware(app) {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	// app.post('/createaccount', createNewMember); // "/createaccount" POST request
-	// app.get('/createaccount/username/:username', checkUsernameAvailable);
-	// app.get('/createaccount/email/:email', checkEmailValidity);
+	app.post('/createaccount', createAccountLimiter, createNewMember); // "/createaccount" POST request
+	app.get('/createaccount/username/:username', checkUsernameAvailable);
+	app.get('/createaccount/email/:email', checkEmailValidity);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
+
+	app.post('/reset-password', handleResetPassword);
 
 	// API --------------------------------------------------------------------
 
@@ -233,7 +249,7 @@ function configureMiddleware(app) {
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
-	// app.get('/member/:member/send-email', requestConfirmEmail);
+	app.post('/member/:member/send-email', resendAccountVerificationLimiter, requestConfirmEmail);
 	app.get('/verify/:member/:code', verifyAccount);
 
 	// Leaderboard router
@@ -242,8 +258,7 @@ function configureMiddleware(app) {
 		getLeaderboardData,
 	);
 
-	// app.post('/forgot-password', handleForgotPasswordRequest);
-	// app.post('/reset-password', handleResetPassword);
+	app.post('/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

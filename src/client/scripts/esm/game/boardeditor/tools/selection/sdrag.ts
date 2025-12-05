@@ -9,7 +9,7 @@
 
 import { Mouse } from '../../../input';
 import coordutil, { Coords } from '../../../../../../../shared/chess/util/coordutil';
-import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import bimath from '../../../../../../../shared/util/math/bimath';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,

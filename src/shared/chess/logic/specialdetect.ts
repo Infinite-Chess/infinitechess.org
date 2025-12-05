@@ -1,4 +1,6 @@
 // Import Start
+import bd from '@naviary/bigdecimal';
+
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
@@ -8,10 +10,9 @@ import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math/math.js';
 import checkresolver from './checkresolver.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
-import bd from '../../util/bigdecimal/bigdecimal.js';
 import legalmoves from './legalmoves.js';
 import { players, rawTypes } from '../util/typeutil.js';
 // Import End
@@ -22,6 +23,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { enpassantCreate } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
+import bdcoords from '../util/bdcoords.js';
 
 /**
  * This detects if special moves are legal.
@@ -406,9 +408,9 @@ function roses(
 				// Path are equal length
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
-				const coordsBD = bd.FromCoords(coords);
-				const coordPathBD = bd.FromCoords(coord.path![1]!);
-				const newCoordPathBD = bd.FromCoords(newCoord.path[1]!);
+				const coordsBD = bdcoords.FromCoords(coords);
+				const coordPathBD = bdcoords.FromCoords(coord.path![1]!);
+				const newCoordPathBD = bdcoords.FromCoords(newCoord.path[1]!);
 
 				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(
 					boardsim.startSnapshot.box,

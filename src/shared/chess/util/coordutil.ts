@@ -4,7 +4,7 @@
  * ZERO dependancies.
  */
 
-import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
+import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 // Type Definitions ------------------------------------------------------------
 
@@ -133,10 +133,10 @@ function copyBDCoords(coords: BDCoords): BDCoords {
  */
 function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
 	const bddiff: BDCoords = subtractBDCoords(end, start);
-	const bdt: BigDecimal = bd.FromNumber(t);
-	// console.log('bdt:', bd.toString(bdt), 't:', t);
-	const travelX = bd.multiply_floating(bddiff[0], bdt);
-	const travelY = bd.multiply_floating(bddiff[1], bdt);
+	const bdt: BigDecimal = bd.fromNumber(t);
+	// console.log('bdt:', bd.toApproximateString(bdt), 't:', t);
+	const travelX = bd.multiplyFloating(bddiff[0], bdt);
+	const travelY = bd.multiplyFloating(bddiff[1], bdt);
 
 	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
 }
@@ -159,7 +159,7 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toNumber(coords[0])}, ${bd.toNumber(coords[1])})`;
 	return `(${bd.toExactString(coords[0])}, ${bd.toExactString(coords[1])})`;
-	// return `(${bd.toString(coords[0])}, ${bd.toString(coords[1])})`;
+	// return `(${bd.toApproximateString(coords[0])}, ${bd.toApproximateString(coords[1])})`;
 }
 
 // Exports --------------------------------------------------------------------

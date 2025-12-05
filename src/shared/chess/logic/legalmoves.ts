@@ -2,6 +2,8 @@
  * This script calculates legal moves
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import specialdetect from './specialdetect.js';
 import winconutil from '../util/winconutil.js';
 import movepiece from './movepiece.js';
@@ -15,7 +17,6 @@ import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
 import bounds from '../../util/math/bounds.js';
-import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
@@ -29,6 +30,7 @@ import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import bdcoords from '../util/bdcoords.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -456,8 +458,8 @@ function enforceWorldBorderOnSlideLimit(
 	if (boardsim.playableRegion === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
-	const coordsBD = bd.FromCoords(coords);
-	const stepBD = bd.FromCoords(step);
+	const coordsBD = bdcoords.FromCoords(coords);
+	const stepBD = bdcoords.FromCoords(step);
 	const negatedStepBD = vectors.negateBDVector(stepBD);
 
 	// These are in order of ascending dot product.
@@ -491,7 +493,7 @@ function enforceWorldBorderOnSlideLimit(
 		// How many steps would it take to reach this point?
 		const distanceToPoint: BigDecimal = bd.subtract(destination[axis], origin[axis]);
 		// The maximum number of steps we can take before exceeding the point (inclusive to the point)
-		return bd.toBigInt(bd.floor(bd.divide_fixed(distanceToPoint, step[axis]))); // Always positive
+		return bd.toBigInt(bd.floor(bd.divide(distanceToPoint, step[axis]))); // Always positive
 	}
 
 	// Shorten our slide limit to not exceed the world border
@@ -609,7 +611,7 @@ function checkIfMoveLegal(
  *
  * MODIFIES THE MOVE DRAFT to attach any special move flags it needs!
  * @param gamefile - The gamefile
- * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
+ * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`. This will be mutated to attach any special move flags!
  * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
  */
 function isOpponentsMoveLegal(
@@ -625,9 +627,6 @@ function isOpponentsMoveLegal(
 		);
 		return 'Move is not defined. Probably an error in converting it to long format.';
 	}
-	// Don't modify the original move. This is because while it's simulated,
-	// more properties are added such as `rewindInfo`.
-	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 
 	const inCheckB4Forwarding = jsutil.deepCopyObject(boardsim.state.local.inCheck);
 
@@ -638,10 +637,10 @@ function isOpponentsMoveLegal(
 	);
 
 	// Make sure a piece exists on the start coords
-	const piecemoved = boardutil.getPieceFromCoords(boardsim.pieces, moveDraftCopy.startCoords); // { type, index, coords }
+	const piecemoved = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords); // { type, index, coords }
 	if (!piecemoved) {
 		console.log(
-			`Opponent's move is illegal because no piece exists at the startCoords: ${String(moveDraftCopy.startCoords)}`,
+			`Opponent's move is illegal because no piece exists at the startCoords: ${String(moveDraft.startCoords)}`,
 		);
 		return rewindGameAndReturnReason('No piece exists at start coords.');
 	}
@@ -650,38 +649,38 @@ function isOpponentsMoveLegal(
 	const colorOfPieceMoved = typeutil.getColorFromType(piecemoved.type);
 	if (colorOfPieceMoved !== basegame.whosTurn) {
 		console.log(
-			`Opponent's move is illegal because you can't move a non-friendly piece: ${String(moveDraftCopy.startCoords)}`,
+			`Opponent's move is illegal because you can't move a non-friendly piece: ${String(moveDraft.startCoords)}`,
 		);
 		return rewindGameAndReturnReason("Can't move a non-friendly piece.");
 	}
 
 	// If there is a promotion, make sure that's legal
-	if (moveDraftCopy.promotion !== undefined) {
+	if (moveDraft.promotion !== undefined) {
 		if (typeutil.getRawType(piecemoved.type) !== r.PAWN) {
 			console.log(
-				`Opponent's move is illegal because you can't promote a non-pawn: ${String(moveDraftCopy.startCoords)}`,
+				`Opponent's move is illegal because you can't promote a non-pawn: ${String(moveDraft.startCoords)}`,
 			);
 			return rewindGameAndReturnReason("Can't promote a non-pawn.");
 		}
-		const colorPromotedTo = typeutil.getColorFromType(moveDraftCopy.promotion);
+		const colorPromotedTo = typeutil.getColorFromType(moveDraft.promotion);
 		if (basegame.whosTurn !== colorPromotedTo) {
 			console.log(
-				`Opponent's move is illegal because they promoted to the opposite color: ${typeutil.debugType(moveDraftCopy.promotion)}`,
+				`Opponent's move is illegal because they promoted to the opposite color: ${typeutil.debugType(moveDraft.promotion)}`,
 			);
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
-		const rawPromotion = typeutil.getRawType(moveDraftCopy.promotion);
+		const rawPromotion = typeutil.getRawType(moveDraft.promotion);
 		if (!basegame.gameRules.promotionsAllowed![basegame.whosTurn]!.includes(rawPromotion)) {
 			console.log(
-				`Opponent's move is illegal because the specified promotion is illegal: ${typeutil.debugType(moveDraftCopy.promotion)}`,
+				`Opponent's move is illegal because the specified promotion is illegal: ${typeutil.debugType(moveDraft.promotion)}`,
 			);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}
 	} else {
 		// No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
-		if (specialdetect.isPawnPromotion(basegame, piecemoved.type, moveDraftCopy.endCoords)) {
+		if (specialdetect.isPawnPromotion(basegame, piecemoved.type, moveDraft.endCoords)) {
 			console.log(
-				`Opponent's move is illegal because they didn't promote at the promotion line: ${String(moveDraftCopy.endCoords)}`,
+				`Opponent's move is illegal because they didn't promote at the promotion line: ${String(moveDraft.endCoords)}`,
 			);
 			return rewindGameAndReturnReason("Didn't promote when moved to promotion line.");
 		}
@@ -691,9 +690,7 @@ function isOpponentsMoveLegal(
 	const legalMoves = calculateAll(gamefile, piecemoved);
 
 	// This should pass on any special moves tags at the same time.
-	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(
-		moveDraftCopy.endCoords,
-	);
+	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
 	if (
 		!checkIfMoveLegal(
 			gamefile,
@@ -705,13 +702,13 @@ function isOpponentsMoveLegal(
 	) {
 		// Illegal move
 		console.log(
-			`Opponent's move is illegal because the destination coords are illegal: ${String(moveDraftCopy.endCoords)}`,
+			`Opponent's move is illegal because the destination coords are illegal: ${String(moveDraft.endCoords)}`,
 		);
 		return rewindGameAndReturnReason(
 			`Destination coordinates are illegal. inCheck: ${String(boardsim.state.local.inCheck)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}`,
 		);
 	}
-	// Transfer the special move flag to the moveDraftCopy
+	// Transfer the special move flag to the moveDraft
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveDraft);
 
 	// Check the resulting game conclusion from the move and if that lines up with the opponents claim.
@@ -721,6 +718,7 @@ function isOpponentsMoveLegal(
 		claimedGameConclusion === undefined ||
 		winconutil.isGameConclusionDecisive(claimedGameConclusion)
 	) {
+		const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
 		if (simulatedConclusion !== claimedGameConclusion) {
 			console.log(

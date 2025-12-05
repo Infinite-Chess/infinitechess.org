@@ -2,35 +2,43 @@
 
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
+import { SESClient } from '@aws-sdk/client-ses';
+import { fromEnv } from '@aws-sdk/credential-providers';
+// Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
+import * as aws from '@aws-sdk/client-ses';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager.js';
 
 import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 
 // --- Module Setup ---
-const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
-const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
-const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
+const AWS_REGION = process.env['AWS_REGION'];
+const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
+const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
+const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
 
 /**
  * Who our sent emails will appear as if they're from.
- *
- * For this to work, it must be added as a "Send mail as"
- * alias in our Gmail account.
  */
-const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
+const FROM = EMAIL_FROM_ADDRESS;
 
-const transporter =
-	EMAIL_USERNAME && EMAIL_APP_PASSWORD
-		? nodemailer.createTransport({
-				service: 'gmail',
-				auth: {
-					user: EMAIL_USERNAME,
-					pass: EMAIL_APP_PASSWORD,
-				},
+// Create SES client
+const sesClient =
+	AWS_REGION && EMAIL_FROM_ADDRESS && AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
+		? new SESClient({
+				region: AWS_REGION,
+				credentials: fromEnv(),
 			})
 		: null;
+
+// Create nodemailer transporter using SES
+const transporter = sesClient
+	? nodemailer.createTransport({
+			SES: { ses: sesClient, aws },
+		} as nodemailer.TransportOptions)
+	: null;
 
 // --- Helper Functions ---
 
@@ -72,12 +80,13 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
-		throw err;
+		throw new Error('Unexpected transporter error sending password reset email.');
 	}
 }
 
 /**
- * Sends an account verification email to the specified member.
+ * Sends an account verification email to the specified member,
+ * IF they are not blacklisted.
  * @param user_id - The ID of the user to send the verification email to.
  */
 async function sendEmailConfirmation(user_id: number): Promise<void> {
@@ -92,6 +101,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		logEventsAndPrint(
 			`Unable to send email confirmation for non-existent member of id (${user_id})!`,
 			'errLog.txt',
+		);
+		return;
+	}
+
+	if (isBlacklisted(memberData.email)) {
+		logEventsAndPrint(
+			`[BLOCKED] Skipping email confirmation to ${memberData.email} (Blacklisted)`,
+			'emailLog.txt',
 		);
 		return;
 	}
@@ -193,14 +210,14 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 
 		const mailOptions = {
 			from: `Infinite Chess <${FROM}>`,
-			to: EMAIL_USERNAME,
+			to: FROM, // Send to same address as sender for internal notifications
 			subject: messageSubject,
 			text: messageText,
 		};
 
 		await transporter.sendMail(mailOptions);
 		console.log(
-			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`,
+			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${FROM}.`,
 		);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);

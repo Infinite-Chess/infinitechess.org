@@ -18,7 +18,7 @@ import gameutility, { Game } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import socketUtility from '../../socket/socketUtility.js';
-import bimath from '../../../shared/util/bigdecimal/bimath.js';
+import bimath from '../../../shared/util/math/bimath.js';
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';

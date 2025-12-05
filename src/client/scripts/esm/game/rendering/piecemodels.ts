@@ -8,6 +8,8 @@ import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
+import bd from '@naviary/bigdecimal';
+
 import { gl } from './webgl.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -19,7 +21,6 @@ import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import geometry from '../../../../../shared/util/math/geometry.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import meshes from './meshes.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
@@ -29,6 +30,7 @@ import {
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -461,7 +463,7 @@ function renderVoids(mesh: Mesh | undefined): void {
  */
 function isOffsetOutOfRangeOfRegenRange(offset: Coords): boolean {
 	// offset: [x,y]
-	const boardPosRounded: Coords = bd.coordsToBigInt(boardpos.getBoardPos());
+	const boardPosRounded: Coords = bdcoords.coordsToBigInt(boardpos.getBoardPos());
 	const chebyshevDist = vectors.chebyshevDistance(boardPosRounded, offset);
 	return chebyshevDist > REGEN_RANGE;
 }

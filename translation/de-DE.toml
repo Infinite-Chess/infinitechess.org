@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "76"
+version = "77"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -152,10 +152,10 @@ create_button = "Konto erstellen"
 agreement = ["Ich stimme den ", "Nutzungsbedingungen", " zu."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
-js-username_specs = "Der Benutzername muss mindestens 3 Zeichen lang sein und darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
 js-username_tooshort = "Der Benutzername muss mindestens 3 Zeichen lang sein"
 js-username_wrongenc = "Der Benutzername darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
 js-email_invalid = "Dies ist keine gültige E-Mail"
+js-email_too_long = "Die E-Mail ist zu lang"
 js-email_inuse = "Diese E-Mail ist bereits in Verwendung"
 
 [reset-password.javascript]
@@ -165,7 +165,6 @@ processing = "In Bearbeitung..."
 network-error = "Es ist ein Netzwerkfehler aufgetreten. Bitte versuchen Sie es erneut."
 
 [password-validation]
-js-pwd_incorrect_format = "Passwort hat ein falsches Format"
 js-pwd_too_short = "Passwort muss mindestens 6 Zeichen lang sein"
 js-pwd_too_long = "Passwort darf nicht länger als 72 Zeichen sein"
 js-pwd_not_pwd = "Passwort darf nicht 'password' sein"
@@ -639,7 +638,6 @@ ws-email_in_use = "Diese E-Mail ist bereits in Verwendung"
 ws-email_domain_invalid = "Ungültige Domain."
 ws-you_are_banned = "Sie sind gesperrt."
 ws-password_length = "Passwort muss 6 bis 72 Zeichen lang sein"
-ws-password_format = "Passwort hat ein falsches Format"
 ws-password_password = "Passwort darf nicht 'password' sein"
 ws-password-reset-link-sent = "Falls ein Konto mit dieser E-Mail Adresse existiert, wurde ein Link zur Zurücksetzung des Passworts gesendet."
 ws-password-change-success = "Ihr Passwort wurde erfolgreich zurückgesetzt. Sie werden in Kürze auf die Anmeldeseite weitergeleitet."

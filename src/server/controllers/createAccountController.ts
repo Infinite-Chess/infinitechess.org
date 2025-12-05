@@ -28,7 +28,8 @@ import {
 } from '../database/memberManager.js';
 import { sendEmailConfirmation } from './sendMail.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { isEmailBanned } from '../middleware/banned.js';
+import validators from '../../shared/util/validators.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -38,41 +39,6 @@ import { isEmailBanned } from '../middleware/banned.js';
  * Consider moving SALT_ROUNDS to a config file or environment variable
  */
 const PASSWORD_SALT_ROUNDS: number = 10;
-
-/**
- * Usernames that are reserved. New members cannot use these are their name.
- *
- * However, the following have been used:
- * admin
- */
-// prettier-ignore
-const reservedUsernames: string[] = [
-	'infinitechess',
-	'support', 'infinitechesssupport',
-	'administrator',
-	'amazon', 'amazonsupport', 'aws', 'awssupport',
-	'apple', 'applesupport',
-	'microsoft', 'microsoftsupport',
-	'google', 'googlesupport',
-	'adobe', 'adobesupport',
-	'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
-	'tesla', 'elonmusk', 'meta',
-	'walmart', 'costco',
-	'valve', 'valvesupport',
-	'github',
-	'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
-	'roblox',
-	'minecraft',
-	'fortnite',
-	'teamfortress2',
-	'amongus', 'innersloth', 'henrystickmin',
-	'halflife', 'halflife2', 'gordonfreeman',
-	'epic', 'epicgames', 'epicgamessupport',
-	'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
-	'office', 'office365',
-	'usa', 'america',
-	'donaldtrump', 'joebiden'
-];
 
 /**
  * Initialize the obscenity profanity matcher.
@@ -94,6 +60,21 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		res.status(400).send('Bad request'); // 400 Bad request
 		return;
 	}
+
+	// Honeypot Bot Catcher: recovery_email — if present, return generic success.
+	const recoveryEmail: string =
+		typeof req.body.recovery_email === 'string' ? req.body.recovery_email.trim() : '';
+	if (recoveryEmail.length > 0) {
+		const username = typeof req.body.username === 'string' ? req.body.username : '[empty]';
+		logEventsAndPrint(
+			`Bot signup detected! IP: ${req.ip}, Username: ${username}, User-Agent: ${req.get('User-Agent')}`,
+			'newMemberLog.txt',
+		);
+		// Return a normal-looking success so bot doesn't adapt
+		res.status(200).json({ success: true, created: true });
+		return;
+	}
+
 	// First make sure we have all 3 variables.
 	// eslint-disable-next-line prefer-const
 	let { username, email, password }: { username: string; email: string; password: string } =
@@ -111,8 +92,8 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 
 	// First we make checks on the username...
 	// These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
-	if (!doUsernameFormatChecks(username, req, res)) return;
-	if (!(await doEmailFormatChecks(email, req, res))) return;
+	if (!doUsernameValidation(username, req, res)) return;
+	if (!(await doEmailValidation(email, req, res))) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
 	try {
@@ -186,7 +167,6 @@ async function generateAccount({
  * Route that's called whenever the client unfocuses the email input field.
  * This tells them whether the email is valid or not.
  */
-
 async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
 
@@ -194,6 +174,13 @@ async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 		res.json({
 			valid: false,
 			reason: getTranslationForReq('server.javascript.ws-email_in_use', req),
+		});
+		return;
+	}
+	if (isBlacklisted(lowercaseEmail)) {
+		res.json({
+			valid: false,
+			reason: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return;
 	}
@@ -230,9 +217,13 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		allowed = false;
 		reason = getTranslationForReq('server.javascript.ws-username_bad_word', req);
 	}
-	if (reservedUsernames.includes(usernameLowercase)) {
+	// we only check if it's reserved and ignore any other possible reasons it might not be a valid username
+	if (
+		validators.validateUsername(username) ===
+		validators.UsernameValidationResult.UsernameIsReserved
+	) {
 		allowed = false;
-		reason = getTranslationForReq('server.javascript.ws-username_reserved', req); // Code for reserved
+		reason = getTranslationForReq('server.javascript.ws-username_reserved', req);
 	}
 
 	res.json({
@@ -243,20 +234,32 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 }
 
 /** Returns true if the username passes all the checks required before account generation. */
-function doUsernameFormatChecks(username: string, req: Request, res: Response): boolean {
-	// First we check the username's length
-	if (username.length < 3 || username.length > 20) {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-username_length', req),
-		});
-		return false;
-	}
-	// Then the format
-	if (!onlyLettersAndNumbers(username)) {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-username_letters', req),
-		});
-		return false;
+function doUsernameValidation(username: string, req: Request, res: Response): boolean {
+	const result = validators.validateUsername(username);
+	if (result !== validators.UsernameValidationResult.Ok) {
+		switch (result) {
+			case validators.UsernameValidationResult.UsernameTooShort:
+			case validators.UsernameValidationResult.UsernameTooLong:
+				res.status(400).json({
+					message: getTranslationForReq('server.javascript.ws-username_length', req),
+				});
+				return false;
+			case validators.UsernameValidationResult.OnlyLettersAndNumbers:
+				res.status(400).json({
+					message: getTranslationForReq('server.javascript.ws-username_letters', req),
+				});
+				return false;
+			case validators.UsernameValidationResult.UsernameIsReserved:
+				res.status(409).json({
+					conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
+				}); // Code for reserved (but the users don't know that!)
+				return false;
+			default:
+				res.status(400).json({
+					message: 'Username is not valid, but the server could not determine why.',
+				});
+				return false;
+		}
 	}
 	// Then check if the name's taken
 	const usernameLowercase = username.toLowerCase();
@@ -276,20 +279,8 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 		});
 		return false;
 	}
-	// Then check if the name's reserved
-	if (reservedUsernames.includes(usernameLowercase)) {
-		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
-		}); // Code for reserved (but the users don't know that!)
-		return false;
-	}
 
 	return true; // Everything's good, no conflicts!
-}
-
-function onlyLettersAndNumbers(string: string): boolean {
-	if (!string) return true;
-	return /^[a-zA-Z0-9]+$/.test(string);
 }
 
 /**
@@ -301,18 +292,26 @@ function checkProfanity(string: string): boolean {
 }
 
 /** Returns true if the email passes all the checks required for account generation. */
-async function doEmailFormatChecks(string: string, req: Request, res: Response): Promise<boolean> {
-	if (string.length > 320) {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-email_too_long', req),
-		}); // Max email length
-		return false;
-	}
-	if (!isValidEmail(string)) {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-email_invalid', req),
-		});
-		return false;
+async function doEmailValidation(string: string, req: Request, res: Response): Promise<boolean> {
+	const result = validators.validateEmail(string);
+	if (result !== validators.EmailValidationResult.Ok) {
+		switch (result) {
+			case validators.EmailValidationResult.InvalidFormat:
+				res.status(400).json({
+					message: getTranslationForReq('server.javascript.ws-email_invalid', req),
+				});
+				return false;
+			case validators.EmailValidationResult.EmailTooLong:
+				res.status(400).json({
+					message: getTranslationForReq('server.javascript.ws-email_too_long', req),
+				});
+				return false;
+			default:
+				res.status(400).json({
+					message: 'Email is not valid, but the server could not determine why.',
+				});
+				return false;
+		}
 	}
 	if (isEmailTaken(string)) {
 		res.status(409).json({
@@ -320,11 +319,11 @@ async function doEmailFormatChecks(string: string, req: Request, res: Response):
 		});
 		return false;
 	}
-	if (isEmailBanned(string)) {
-		const errMessage = `Banned user with email ${string} tried to recreate their account!`;
-		logEventsAndPrint(errMessage, 'bannedIPLog.txt');
+	if (isBlacklisted(string)) {
+		const errMessage = `Blacklisted email ${string} tried to create an account!`;
+		logEventsAndPrint(errMessage, 'blacklistLog.txt');
 		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-you_are_banned', req),
+			conflict: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return false;
 	}
@@ -335,14 +334,6 @@ async function doEmailFormatChecks(string: string, req: Request, res: Response):
 		return false;
 	}
 	return true;
-}
-
-function isValidEmail(string: string): boolean {
-	// Credit for the regex: https://stackoverflow.com/a/201378
-	const regex =
-		// eslint-disable-next-line no-control-regex
-		/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-	return regex.test(string);
 }
 
 /**
@@ -362,33 +353,28 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 }
 
 function doPasswordFormatChecks(password: string, req: Request, res: Response): boolean {
-	// First we check password length
-	if (password.length < 6 || password.length > 72) {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-password_length', req),
-		});
-		return false;
-	}
-	if (!isValidPassword(password)) {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-password_format', req),
-		});
-		return false;
-	}
-	if (password.toLowerCase() === 'password') {
-		res.status(400).json({
-			message: getTranslationForReq('server.javascript.ws-password_password', req),
-		});
-		return false;
+	const result = validators.validatePassword(password);
+	if (result !== validators.PasswordValidationResult.Ok) {
+		switch (result) {
+			case validators.PasswordValidationResult.PasswordTooShort:
+			case validators.PasswordValidationResult.PasswordTooLong:
+				res.status(400).json({
+					message: getTranslationForReq('server.javascript.ws-password_length', req),
+				});
+				return false;
+			case validators.PasswordValidationResult.PasswordIsPassword:
+				res.status(400).json({
+					message: getTranslationForReq('server.javascript.ws-password_password', req),
+				});
+				return false;
+			default:
+				res.status(400).json({
+					message: 'Password is not valid, but the server could not determine why.',
+				});
+				return false;
+		}
 	}
 	return true;
-}
-
-function isValidPassword(string: string): boolean {
-	// eslint-disable-next-line no-useless-escape
-	const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
-	if (regex.test(string) === true) return true;
-	return false;
 }
 
 export {
