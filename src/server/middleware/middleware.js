@@ -57,6 +57,7 @@ import {
 	resendAccountVerificationLimiter,
 	forgotPasswordLimiter,
 } from './rateLimiters.js';
+import { handleSesWebhook } from '../controllers/awsWebhook.js';
 // import EditorSavesAPI from '../api/EditorSavesAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -73,9 +74,18 @@ function configureMiddleware(app) {
 	// Note: requests that are rate limited will not be logged, to mitigate slow-down during a DDOS.
 	app.use(rateLimit);
 
+	// DELETE ONCE verified the header structure of AWS requests!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	app.use((req, res, next) => {
+		if (req.path === '/webhooks/ses') {
+			console.log('--- AWS INCOMING REQUEST DEBUG ---');
+			console.log('Headers:', JSON.stringify(req.headers, null, 2));
+		}
+		next();
+	});
+
 	// This allows us to retrieve json-received-data as a parameter/data!
 	// The logger can't log the request body without this
-	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
+	app.use(express.json({ limit: '50kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
 	app.use(reqLogger); // Log the request
 
@@ -143,6 +153,14 @@ function configureMiddleware(app) {
 	 */
 	const options = useOriginWhitelist ? corsOptions : undefined;
 	app.use(cors(options));
+
+	// NEEDED because AWS SNS PROBABLY sends text/plain instead of application/json??? But it is still parsable as JSON.
+	const awsParser = express.json({
+		limit: '50kb',
+		type: ['text/plain', 'application/json'],
+	});
+	// Webhook endpoint for AWS Simple Email Service (SES) to notify us of bounces and complaints
+	app.post('/webhooks/ses', awsParser, handleSesWebhook);
 
 	/**
 	 * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
