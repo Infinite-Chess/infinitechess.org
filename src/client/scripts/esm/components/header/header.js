@@ -21,8 +21,8 @@ const loginSVG = document.getElementById('svg-login');
 const profileText = document.getElementById('profile');
 const profileSVG = document.getElementById('svg-profile');
 const createaccountLink = document.getElementById('createaccount-link');
-// const createaccountText = document.getElementById('createaccount');
-// const createaccountSVG = document.getElementById('svg-createaccount');
+const createaccountText = document.getElementById('createaccount');
+const createaccountSVG = document.getElementById('svg-createaccount');
 const logoutText = document.getElementById('logout');
 const logoutSVG = document.getElementById('svg-logout');
 
@@ -47,13 +47,12 @@ function updateNavigationLinks() {
 		// Logged in
 		loginText.classList.add('hidden');
 		loginSVG.classList.add('hidden');
-		// createaccountText.classList.add('hidden');
-		// createaccountSVG.classList.add('hidden');
+		createaccountText.classList.add('hidden');
+		createaccountSVG.classList.add('hidden');
 		profileText.classList.remove('hidden');
 		profileSVG.classList.remove('hidden');
 		logoutText.classList.remove('hidden');
 		logoutSVG.classList.remove('hidden');
-		createaccountLink.classList.remove('hidden');
 
 		loginLink.href = languagedropdown.addLngQueryParamToLink(
 			`/member/${username.toLowerCase()}`,
@@ -67,9 +66,8 @@ function updateNavigationLinks() {
 		logoutText.classList.add('hidden');
 		loginText.classList.remove('hidden');
 		loginSVG.classList.remove('hidden');
-		// createaccountText.classList.remove('hidden');
-		// createaccountSVG.classList.remove('hidden');
-		createaccountLink.classList.add('hidden');
+		createaccountText.classList.remove('hidden');
+		createaccountSVG.classList.remove('hidden');
 
 		loginLink.href = languagedropdown.addLngQueryParamToLink('/login');
 		createaccountLink.href = languagedropdown.addLngQueryParamToLink('/createaccount');

@@ -6,7 +6,6 @@ initDevEnvironment();
 
 // Dependancy/built-in imports
 import express from 'express';
-const app = express();
 import https from 'https';
 import ejs from 'ejs';
 // Other imports
@@ -17,6 +16,11 @@ import { DEV_BUILD } from './config/config.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
 import socketServer from './socket/socketServer.js';
+
+const app = express();
+
+// This ensures that req.ip will give us the real user's IP instead of the Cloudflare proxy's IP.
+app.set('trust proxy', 1); // '1' means trust the first proxy hop (Cloudflare)
 
 // Initiate translations
 initTranslations();

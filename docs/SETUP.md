@@ -125,42 +125,6 @@ Installing this extension will allow you to preview the contents of the database
 
 Installing this extension is not required, but highly recommended. It allows you to test run the code of other peoples pull requests on your system, so you can give collective feedback!
 
-## Step 7 (optional): Setting up the email service
-
-While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
-
-To do this, I recommend creating a brand new gmail account for this purpose. This account will be used to send emails on behalf of your locally running Infinite Chess server.
-
-Note that gmail’s terms of service only allows automated email sending upon user-triggered events. Examples of okay emails to send are emails in response to a new account created, or a password reset request. An example of an against terms of service email would be a weekly newsletter. See gmail’s terms of service for more info.
-
-After creating a new gmail account, turn on [2-Step Verification](https://support.google.com/accounts/answer/185839?sjid=17083970032576237275-NC), this is required.
-
-Next, [go here](https://myaccount.google.com/apppasswords) where you will be able to create a new app password. If it tells you that App Passwords aren’t available for your account, you need to enable 2-Step Verification.
-
-<img width="713" alt="8" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/3a6b1c9c-9450-4fb4-8954-369fd3d7d201">
-
-For the name field, it is unimportant, but you can enter `Node.js`. Then click “Create”.
-
-It will generate a new app password, your screen should look like this, with a unique password:
-
-<img width="601" alt="9" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/8a0d7c78-235e-4a60-92a1-0c9026d711bf">
-
-Copy the 16-digit app password onto your clipboard. Next, go back to VSCode, and, in the root directory, open the `.env` file:
-
-<img width="1093" alt="Screen Shot 2024-07-02 at 11 33 07 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/4dcf72df-dc99-46a9-9857-67cae68e9119">
-
-Paste your new app password next to the `EMAIL_APP_PASSWORD` variable. Then remove the spaces in the password.
-
-Now, fill in the `EMAIL_USERNAME` variable with the email of the gmail account you just created the app password for.
-
-DO NOT LET your app password be leaked!!! If that happens, bad actors will be able to hack into your gmail account. If you only keep your app password within the `.env` file, it will not be uploaded to github, this is because ".env" is specified within the `.gitignore` file, which specifies what files to skip over when uploading to github.
-
-If your app password is ever leaked, or you suspect it might be, return to your [app passwords](https://myaccount.google.com/apppasswords) page, and click the trash button to delete it. This invalidates that password so it can no longer be used in your account. Then you may generate a new app password.
-
-Now upon creating a new account, you should see a message "Email is sent to member ExampleUsername!". If you see an error, or "Email environment variables not specified. Not sending email.", then it was setup incorrectly.
-
-Note that you will only be able click "Verify Account" in the verification emails if you are on the same machine running the server, as the verification link contains `localhost` within it.
-
 ### **You are all set up now to start developing!** 🥳
 
 Let's move on to learn how to suggest changes to the repository! Or, skip right to the [Conclusion](#conclusion).

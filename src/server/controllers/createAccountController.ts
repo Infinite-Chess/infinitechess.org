@@ -28,8 +28,8 @@ import {
 } from '../database/memberManager.js';
 import { sendEmailConfirmation } from './sendMail.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { isEmailBanned } from '../middleware/banned.js';
 import validators from '../../shared/util/validators.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -60,6 +60,21 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		res.status(400).send('Bad request'); // 400 Bad request
 		return;
 	}
+
+	// Honeypot Bot Catcher: recovery_email — if present, return generic success.
+	const recoveryEmail: string =
+		typeof req.body.recovery_email === 'string' ? req.body.recovery_email.trim() : '';
+	if (recoveryEmail.length > 0) {
+		const username = typeof req.body.username === 'string' ? req.body.username : '[empty]';
+		logEventsAndPrint(
+			`Bot signup detected! IP: ${req.ip}, Username: ${username}, User-Agent: ${req.get('User-Agent')}`,
+			'newMemberLog.txt',
+		);
+		// Return a normal-looking success so bot doesn't adapt
+		res.status(200).json({ success: true, created: true });
+		return;
+	}
+
 	// First make sure we have all 3 variables.
 	// eslint-disable-next-line prefer-const
 	let { username, email, password }: { username: string; email: string; password: string } =
@@ -152,7 +167,6 @@ async function generateAccount({
  * Route that's called whenever the client unfocuses the email input field.
  * This tells them whether the email is valid or not.
  */
-
 async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
 
@@ -160,6 +174,13 @@ async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 		res.json({
 			valid: false,
 			reason: getTranslationForReq('server.javascript.ws-email_in_use', req),
+		});
+		return;
+	}
+	if (isBlacklisted(lowercaseEmail)) {
+		res.json({
+			valid: false,
+			reason: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return;
 	}
@@ -298,11 +319,11 @@ async function doEmailValidation(string: string, req: Request, res: Response): P
 		});
 		return false;
 	}
-	if (isEmailBanned(string)) {
-		const errMessage = `Banned user with email ${string} tried to recreate their account!`;
-		logEventsAndPrint(errMessage, 'bannedIPLog.txt');
+	if (isBlacklisted(string)) {
+		const errMessage = `Blacklisted email ${string} tried to create an account!`;
+		logEventsAndPrint(errMessage, 'blacklistLog.txt');
 		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-you_are_banned', req),
+			conflict: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return false;
 	}

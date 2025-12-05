@@ -282,15 +282,14 @@ function generateTables(): void {
 	// Indexes for editor_saves table
 	// db.run(`CREATE INDEX IF NOT EXISTS idx_editor_saves_user_id ON editor_saves (user_id);`);
 
-	// Bans table
-	// createTableSQLQuery = `
-	// 	CREATE TABLE IF NOT EXISTS bans (
-	// 		emails TEXT DEFAULT '[]',
-	// 		ips TEXT DEFAULT '[]',
-	// 		browser_ids TEXT DEFAULT '[]'
-	// 	)
-	// `;
-	// db.run(createTableSQLQuery);
+	// Blacklisted Emails table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS email_blacklist (
+			email TEXT PRIMARY KEY NOT NULL,
+			reason TEXT NOT NULL, -- e.g. 'bounce', 'spam_report', 'banned'
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
 }
 
 // /**

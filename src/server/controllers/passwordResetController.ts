@@ -9,6 +9,7 @@ import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountCon
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
@@ -34,36 +35,54 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// User exists, proceed with password reset flow
 			const userId: number = member.user_id;
 
-			// 2. Invalidate old tokens (Using database.run for DELETE)
+			// 2. Invalidate old tokens
 			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
-			// 3. Generate plain token
+			// 3. Make sure they aren't blacklisted
+			if (isBlacklisted(email)) {
+				logEventsAndPrint(
+					`User has a blacklisted email ${email} when attempting to request a password reset!`,
+					'blacklistLog.txt',
+				);
+				res.status(409).json({
+					message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+				});
+				return;
+			}
+
+			// 4. Generate plain token
 			const plainToken: string = crypto.randomBytes(32).toString('base64url');
 
-			// 4. Hash the plain token
+			// 5. Hash the plain token
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 
-			// 5. Set expiration (e.g., ~1 hour from now in milliseconds)
+			// 6. Set expiration (e.g., ~1 hour from now in milliseconds)
 			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
 
-			// 6. Store new token in the database
+			// 7. Store new token in the database
 			db.run(
 				'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
 				[userId, hashedTokenForDb, expiresAt],
 			);
 
-			// 7. Construct reset URL using the utility
+			// 8. Construct reset URL using the utility
 			const baseUrl = getAppBaseUrl();
 			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
-			// 8. Send email
-			sendPasswordResetEmail(email, resetUrl);
-
-			// 9. Log the email sent
+			// 9. Log the email send attempt
 			logEventsAndPrint(
-				`Sent password reset email to user_id (${userId})`,
+				`Sending password reset email to user_id (${userId})...`,
 				'loginAttempts.txt',
 			);
+
+			// 10. Send email (must have its own error handling since we're not await'ing an async method!!)
+			sendPasswordResetEmail(email, resetUrl).catch((err) => {
+				const errorMessage = err instanceof Error ? err.stack : String(err);
+				logEventsAndPrint(
+					`Background password reset email send failed for user_id (${userId}), email (${email}): ${errorMessage}`,
+					'errLog.txt',
+				);
+			});
 		} else {
 			logEventsAndPrint(
 				`No member exists with the email (${email}). Not sending password reset email.`,
@@ -77,7 +96,8 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		});
 	} catch (error) {
 		const errorMessage: string =
-			'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
+			'Forgot password database error: ' +
+			(error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({
 			message: 'An error occurred while processing your request. Please try again later.',
