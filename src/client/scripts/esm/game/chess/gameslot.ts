@@ -51,6 +51,7 @@ import gamesound from '../misc/gamesound.js';
 import meshes from '../rendering/meshes.js';
 import starfield from '../rendering/starfield.js';
 import screenshake from '../rendering/screenshake.js';
+import frametracker from '../rendering/frametracker.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from './graphicalchanges.js';
 import { gl } from '../rendering/webgl.js';
@@ -126,6 +127,9 @@ function isLoadedGameViewingWhitePerspective(): boolean {
  */
 function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
+
+	// Mark that we're in a game - this enables full framerate rendering
+	frametracker.setInGame(true);
 	// console.log("Loading gamefile...");
 
 	// console.log('Started loading game...');
@@ -224,6 +228,9 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 function unloadGame(): void {
 	if (!loadedGamefile)
 		throw Error('Should not be calling to unload game when there is no game loaded.');
+
+	// Mark that we're no longer in a game - this enables reduced framerate on menus
+	frametracker.setInGame(false);
 	// console.error("Unloading gamefile...");
 
 	loadedGamefile = undefined;
