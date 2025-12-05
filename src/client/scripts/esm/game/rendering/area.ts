@@ -7,6 +7,8 @@
  * {@link Transition} where to teleport to.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import camera from './camera.js';
 import boardtiles from './boardtiles.js';
 import math from '../../../../../shared/util/math/math.js';
@@ -17,7 +19,6 @@ import boardpos from './boardpos.js';
 import meshes from './meshes.js';
 import space from '../misc/space.js';
 import Transition, { ZoomTransition } from './transitions/Transition.js';
-import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 import type { BDCoords, Coords } from '../../../../../shared/chess/util/coordutil.js';
@@ -35,7 +36,7 @@ export interface Area {
 	boundingBox: BoundingBoxBD;
 }
 
-const TWO = bd.FromNumber(2.0);
+const TWO = bd.fromNumber(2.0);
 
 const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
 const paddingMiniimage: number = 0.2; // The padding to use when miniimages are visible (zoomed out far)
@@ -77,14 +78,14 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
 		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
-		const paddingHorzWorldBD = bd.FromNumber(
+		const paddingHorzWorldBD = bd.fromNumber(
 			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels),
 		);
-		const paddingVertWorldBD = bd.FromNumber(
+		const paddingVertWorldBD = bd.fromNumber(
 			space.convertPixelsToWorldSpace_Virtual(paddingVertPixels),
 		);
-		const paddingHorz: BigDecimal = bd.divide_fixed(paddingHorzWorldBD, scaleBD);
-		const paddingVert: BigDecimal = bd.divide_fixed(paddingVertWorldBD, scaleBD);
+		const paddingHorz: BigDecimal = bd.divide(paddingHorzWorldBD, scaleBD);
+		const paddingVert: BigDecimal = bd.divide(paddingVertWorldBD, scaleBD);
 
 		paddedBox = {
 			left: bd.subtract(boxCopy.left, paddingHorz),
@@ -135,8 +136,8 @@ function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
 	const xDiff = bd.subtract(boundingBox.right, boundingBox.left);
 	const yDiff = bd.subtract(boundingBox.top, boundingBox.bottom);
 	return {
-		xHalfLength: bd.divide_fixed(xDiff, TWO),
-		yHalfLength: bd.divide_fixed(yDiff, TWO),
+		xHalfLength: bd.divide(xDiff, TWO),
+		yHalfLength: bd.divide(yDiff, TWO),
 	};
 }
 
@@ -154,11 +155,11 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 		bounds.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
 
 	// What is the scale required to match the sides?
-	const xScale = bd.divide_floating(screenBoundingBoxBD.right, xHalfLength);
-	const yScale = bd.divide_floating(screenBoundingBoxBD.top, yHalfLength);
+	const xScale = bd.divideFloating(screenBoundingBoxBD.right, xHalfLength);
+	const yScale = bd.divideFloating(screenBoundingBoxBD.top, yHalfLength);
 	const screenHeight = screenBoundingBox.top - screenBoundingBox.bottom;
 	// Can afterward cast to BigDecimal since they are small numbers.
-	const capScale = bd.FromNumber(screenHeight / areaMinHeightSquares);
+	const capScale = bd.fromNumber(screenHeight / areaMinHeightSquares);
 
 	let newScale = bd.min(xScale, yScale);
 	newScale = bd.min(newScale, capScale); // Cap the scale to not zoom in too close for comfort

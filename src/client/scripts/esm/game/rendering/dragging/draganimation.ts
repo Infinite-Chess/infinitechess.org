@@ -9,6 +9,8 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 
+import bd from '@naviary/bigdecimal';
+
 import spritesheet from '../spritesheet.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import frametracker from '../frametracker.js';
@@ -22,7 +24,6 @@ import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import animation from '../animation.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
-import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import { listener_overlay } from '../../chess/game.js';
@@ -30,6 +31,7 @@ import { Mouse } from '../../input.js';
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import camera from '../camera.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 // Variables --------------------------------------------------------------------------------------
 
@@ -139,7 +141,9 @@ function updateDragLocation(): void {
 	 */
 	const squarePawnPromotingOn = selection.getSquarePawnIsCurrentlyPromotingOn();
 	if (squarePawnPromotingOn !== undefined) {
-		const worldCoords = space.convertCoordToWorldSpace(bd.FromCoords(squarePawnPromotingOn));
+		const worldCoords = space.convertCoordToWorldSpace(
+			bdcoords.FromCoords(squarePawnPromotingOn),
+		);
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;
 		return;
@@ -331,8 +335,8 @@ function getBoxFrameData(coords: Coords): number[] {
 	// Subtracting these two arbitrary numbers should result in a small number,
 	// since you know how would we be dragging the piece anyway if it wasn't close.
 	// (coords - boardPos) * scale
-	const relativeX = bd.toNumber(bd.subtract(bd.FromBigInt(coords[0]), boardPos[0])) * boardScale;
-	const relativeY = bd.toNumber(bd.subtract(bd.FromBigInt(coords[1]), boardPos[1])) * boardScale;
+	const relativeX = bd.toNumber(bd.subtract(bd.fromBigInt(coords[0]), boardPos[0])) * boardScale;
+	const relativeY = bd.toNumber(bd.subtract(bd.fromBigInt(coords[1]), boardPos[1])) * boardScale;
 
 	// Account for square center offset
 	const centerX = relativeX + (0.5 - squareCenter) * boardScale;

@@ -14,7 +14,7 @@ import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds';
-import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import bimath from '../../../../../../../shared/util/math/bimath';
 import mouse from '../../../../util/mouse';
 import gameslot from '../../../chess/gameslot';
 import space from '../../../misc/space';

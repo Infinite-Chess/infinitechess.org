@@ -5,6 +5,8 @@
 
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 import guipromotion from '../gui/guipromotion.js';
@@ -17,7 +19,7 @@ import drawrays from './highlights/annotations/drawrays.js';
 import selection from '../chess/selection.js';
 import keybinds from '../misc/keybinds.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import { listener_overlay } from '../chess/game.js';
 
 // Types -------------------------------------------------------------
@@ -291,11 +293,11 @@ function throwBoard(time: number): void {
 	const lastBoardState = positionHistory[positionHistory.length - 1]!;
 	const deltaX = bd.subtract(lastBoardState.boardPos[0], firstBoardState.boardPos[0]);
 	const deltaY = bd.subtract(lastBoardState.boardPos[1], firstBoardState.boardPos[1]);
-	const deltaT = bd.FromNumber((lastBoardState.time - firstBoardState.time) / 1000);
+	const deltaT = bd.fromNumber((lastBoardState.time - firstBoardState.time) / 1000);
 	const boardScale = lastBoardState.boardScale;
 	const newPanVel: DoubleCoords = [
-		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaX, deltaT), boardScale)),
-		bd.toNumber(bd.multiply_fixed(bd.divide_fixed(deltaY, deltaT), boardScale)),
+		bd.toNumber(bd.multiply(bd.divide(deltaX, deltaT), boardScale)),
+		bd.toNumber(bd.multiply(bd.divide(deltaY, deltaT), boardScale)),
 	];
 	// console.log('Throwing board with velocity', newPanVel);
 	boardpos.setPanVel(newPanVel);
@@ -311,7 +313,7 @@ function throwScale(time: number): void {
 	const firstBoardState = positionHistory[0]!;
 	const lastBoardState = positionHistory[positionHistory.length - 1]!;
 	const ratio = bd.toNumber(
-		bd.divide_floating(lastBoardState.boardScale, firstBoardState.boardScale),
+		bd.divideFloating(lastBoardState.boardScale, firstBoardState.boardScale),
 	);
 	const deltaTime = (lastBoardState.time - firstBoardState.time) / 1000;
 	boardpos.setScaleVel((ratio - 1) / deltaTime);
@@ -326,7 +328,7 @@ function dragBoard(): void {
 	if (pointer2Id === undefined) {
 		// 1 Finger drag
 
-		const mouseWorld = bd.FromDoubleCoords(mouse.getPointerWorld(pointer1Id!)!);
+		const mouseWorld = bdcoords.FromDoubleCoords(mouse.getPointerWorld(pointer1Id!)!);
 		// console.log('Mouse world', mousePos);
 
 		/**
@@ -342,14 +344,8 @@ function dragBoard(): void {
 		const boardScale = boardpos.getBoardScale();
 		const newBoardPos: BDCoords = [
 			// negate and add pointer1BoardPosGrabbed instead of flipped, because we don't need high precision here.
-			bd.add(
-				bd.negate(bd.divide_fixed(mouseWorld[0], boardScale)),
-				pointer1BoardPosGrabbed![0],
-			),
-			bd.add(
-				bd.negate(bd.divide_fixed(mouseWorld[1], boardScale)),
-				pointer1BoardPosGrabbed![1],
-			),
+			bd.add(bd.negate(bd.divide(mouseWorld[0], boardScale)), pointer1BoardPosGrabbed![0]),
+			bd.add(bd.negate(bd.divide(mouseWorld[1], boardScale)), pointer1BoardPosGrabbed![1]),
 		];
 		boardpos.setBoardPos(newBoardPos);
 	} else {
@@ -368,9 +364,9 @@ function dragBoard(): void {
 
 		// Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
 		const thisPixelDist = vectors.euclideanDistanceDoubles(pointer1Pos, pointer2Pos);
-		const ratio = bd.FromNumber(thisPixelDist / fingerPixelDist_WhenBoardPinched!);
+		const ratio = bd.fromNumber(thisPixelDist / fingerPixelDist_WhenBoardPinched!);
 
-		const newScale = bd.multiply_floating(scale_WhenBoardPinched!, ratio);
+		const newScale = bd.multiplyFloating(scale_WhenBoardPinched!, ratio);
 		boardpos.setBoardScale(newScale);
 
 		/**
@@ -384,14 +380,14 @@ function dragBoard(): void {
 			0.5,
 		);
 
-		const midPosWorld: BDCoords = bd.FromDoubleCoords(
+		const midPosWorld: BDCoords = bdcoords.FromDoubleCoords(
 			coordutil.lerpCoordsDouble(pointer1World, pointer2World, 0.5),
 		);
 
 		const newBoardPos: BDCoords = [
 			// negate and add midCoords instead of flipped, because we don't need high precision here.
-			bd.add(bd.negate(bd.divide_fixed(midPosWorld[0], newScale)), midCoords[0]),
-			bd.add(bd.negate(bd.divide_fixed(midPosWorld[1], newScale)), midCoords[1]),
+			bd.add(bd.negate(bd.divide(midPosWorld[0], newScale)), midCoords[0]),
+			bd.add(bd.negate(bd.divide(midPosWorld[1], newScale)), midCoords[1]),
 		];
 
 		boardpos.setBoardPos(newBoardPos);

@@ -5,6 +5,8 @@
  * We also prepare the board here whenever ANY gui page (non-game) is opened.
  */
 
+import bd from '@naviary/bigdecimal';
+
 // @ts-ignore
 import statustext from './statustext.js';
 // @ts-ignore
@@ -12,7 +14,6 @@ import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
-import bigdecimal from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
 // Functions ------------------------------------------------------------------------------
 
@@ -23,7 +24,7 @@ import bigdecimal from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 function prepareForOpen(): void {
 	// Randomize pan velocity direction for the title screen and lobby menus
 	randomizePanVelDir();
-	const amount = bigdecimal.FromNumber(1.8); // Default: 1.8
+	const amount = bd.fromNumber(1.8); // Default: 1.8
 	boardpos.setBoardScale(amount);
 	loadbalancer.restartAFKTimer();
 }

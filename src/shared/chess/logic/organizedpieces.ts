@@ -13,7 +13,7 @@ import typeutil, { ext, players, rawTypes, neutralRawTypes } from '../util/typeu
 import coordutil from '../util/coordutil.js';
 import movesets from './movesets.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 
 import type { LineKey } from '../util/boardutil.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';

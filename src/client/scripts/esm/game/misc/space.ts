@@ -11,15 +11,15 @@
  * Grid space: 1 unit = width of 1 square
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import camera from '../rendering/camera.js';
 import boardpos from '../rendering/boardpos.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import board from '../rendering/boardtiles.js';
 
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
-import type { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 
-const HALF: BigDecimal = bd.FromNumber(0.5);
+const HALF: BigDecimal = bd.fromNumber(0.5);
 
 /**
  * Since the camera is fixed in place, with the board moving and scaling below it,
@@ -40,8 +40,8 @@ function convertWorldSpaceToCoords_Axis(
 	boardScale: BigDecimal,
 	boardPos: BigDecimal,
 ): BigDecimal {
-	const positionBD = bd.FromNumber(worldCoords);
-	return bd.add(bd.divide_floating(positionBD, boardScale), boardPos);
+	const positionBD = bd.fromNumber(worldCoords);
+	return bd.add(bd.divideFloating(positionBD, boardScale), boardPos);
 }
 
 /** Returns the integer square coordinate that includes the floating point square coords inside its area. */
@@ -74,7 +74,7 @@ function convertCoordToWorldSpace(
 	function getAxis(coord: BigDecimal, position: BigDecimal): number {
 		const diff = bd.subtract(coord, position);
 		const diffPlusHalf = bd.add(diff, halfMinusSquareCenter);
-		const scaled = bd.multiply_floating(diffPlusHalf, scale);
+		const scaled = bd.multiplyFloating(diffPlusHalf, scale);
 		return bd.toNumber(scaled);
 	}
 
@@ -89,7 +89,7 @@ function convertCoordToWorldSpace_IgnoreSquareCenter(
 ): DoubleCoords {
 	function getAxis(coord: BigDecimal, position: BigDecimal): number {
 		const diff = bd.subtract(coord, position);
-		const scaled = bd.multiply_floating(diff, scale);
+		const scaled = bd.multiplyFloating(diff, scale);
 		return bd.toNumber(scaled);
 	}
 	// (coords[0] - position[0]) * scale
@@ -110,10 +110,10 @@ function convertWorldSpaceToPixels_Virtual(value: number): number {
 
 /** Tells you how many square units span the grid value you pass in. */
 function convertWorldSpaceToGrid(value: number): BigDecimal {
-	const valueBD = bd.FromNumber(value);
+	const valueBD = bd.fromNumber(value);
 	const scale = boardpos.getBoardScale();
 	// value / scale
-	return bd.divide_floating(valueBD, scale);
+	return bd.divideFloating(valueBD, scale);
 }
 
 export default {

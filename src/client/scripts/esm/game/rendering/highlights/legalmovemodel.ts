@@ -20,6 +20,8 @@ import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/log
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import gameslot from '../../chess/gameslot.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
@@ -34,7 +36,6 @@ import vectors from '../../../../../../shared/util/math/vectors.js';
 import instancedshapes from '../instancedshapes.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
-import bd, { BigDecimal } from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import {
 	AttributeInfoInstanced,
 	RenderableInstanced,
@@ -45,7 +46,8 @@ import {
 import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import primitives from '../primitives.js';
-import bimath from '../../../../../../shared/util/bigdecimal/bimath.js';
+import bimath from '../../../../../../shared/util/math/bimath.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions ------------------------------------------------------------
 
@@ -99,7 +101,7 @@ const multiplier = 4;
  */
 const multiplier_perspective = 2;
 
-const ZERO: BigDecimal = bd.FromBigInt(0n);
+const ZERO: BigDecimal = bd.fromBigInt(0n);
 
 // Variables -----------------------------------------------------------------------------
 
@@ -150,8 +152,8 @@ function updateRenderRange(): boolean {
 		? getDimensionsOfPerspectiveViewRange()
 		: getDimensionsOfOrthographicViewRange();
 
-	const halfNewWidth: BigDecimal = bd.FromNumber(newWidth / 2);
-	const halfNewHeight: BigDecimal = bd.FromNumber(newHeight / 2);
+	const halfNewWidth: BigDecimal = bd.fromNumber(newWidth / 2);
+	const halfNewHeight: BigDecimal = bd.fromNumber(newHeight / 2);
 
 	const boardPos = boardpos.getBoardPos();
 
@@ -209,7 +211,7 @@ function isViewRangeContainedInRenderRange(): boolean {
 /** [PERSPECTIVE] Returns our approximate camera view range bounding box. */
 function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 	const boardPos = boardpos.getBoardPos();
-	const viewDist: BigDecimal = bd.FromNumber(PERSPECTIVE_VIEW_RANGE);
+	const viewDist: BigDecimal = bd.fromNumber(PERSPECTIVE_VIEW_RANGE);
 	return {
 		left: bd.subtract(boardPos[0], viewDist),
 		right: bd.add(boardPos[0], viewDist),
@@ -511,8 +513,8 @@ function getRayIterationInfo(
 	limit: bigint | null,
 	isRay: boolean,
 ): RayIterationInfo | undefined {
-	const coordsBD: BDCoords = bd.FromCoords(coords);
-	const stepBD: BDCoords = bd.FromCoords(step);
+	const coordsBD: BDCoords = bdcoords.FromCoords(coords);
+	const stepBD: BDCoords = bdcoords.FromCoords(step);
 
 	const axis: 0 | 1 = step[0] === 0n ? 1 : 0; // Use the y axis if the x movement vector is zero
 
@@ -530,7 +532,7 @@ function getRayIterationInfo(
 		// Adjust the start square to be the first square we land on after intsect1.
 		const axisDistToIntsect1: BigDecimal = bd.subtract(intsect1.coords[axis], coordsBD[axis]);
 		const distInSteps: bigint = bd.toBigInt(
-			bd.ceil(bd.divide_fixed(axisDistToIntsect1, stepBD[axis])),
+			bd.ceil(bd.divide(axisDistToIntsect1, stepBD[axis])),
 		); // Minimum number of steps to overtake the first intersection.
 		startCoords = [coords[0] + step[0] * distInSteps, coords[1] + step[1] * distInSteps];
 	}
@@ -541,7 +543,7 @@ function getRayIterationInfo(
 	const axisDistanceToIntsect2: BigDecimal = bd.subtract(intsect2.coords[axis], coordsBD[axis]);
 	// The maximum number of steps we can take before exceeding the screen edge
 	const axisStepsToReachIntsect2: bigint = bd.toBigInt(
-		bd.floor(bd.divide_fixed(axisDistanceToIntsect2, stepBD[axis])),
+		bd.floor(bd.divide(axisDistanceToIntsect2, stepBD[axis])),
 	);
 	let endCoords: Coords = [
 		coords[0] + step[0] * axisStepsToReachIntsect2,
@@ -556,7 +558,7 @@ function getRayIterationInfo(
 			coords[0] + step[0] * limit,
 			coords[1] + step[1] * limit,
 		];
-		const furthestSquareWeCanSlideBD: BDCoords = bd.FromCoords(furthestSquareWeCanSlide);
+		const furthestSquareWeCanSlideBD: BDCoords = bdcoords.FromCoords(furthestSquareWeCanSlide);
 
 		const vectorFromFurthestSquareTowardsIntsect = coordutil.subtractBDCoords(
 			intsect2.coords,

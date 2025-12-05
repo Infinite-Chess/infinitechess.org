@@ -19,11 +19,11 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
 import meshes from '../meshes.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ function update(): void {
 		if (
 			!hoveredArrows.some((arrow) => {
 				if (arrow.piece.floating) return false;
-				const integerCoords = bd.coordsToBigInt(arrow.piece.coords);
+				const integerCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
 				return coordutil.areCoordsEqual(integerCoords, thisHoveredArrow.piece.coords);
 			})
 		)
@@ -100,7 +100,7 @@ function update(): void {
  */
 function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 	// SHOULD WE JUST RETURN HERE INSTEAD OF ERROR???
-	if (!bd.areCoordsIntegers(arrowPiece.coords))
+	if (!bdcoords.areCoordsIntegers(arrowPiece.coords))
 		throw Error(
 			'We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!',
 		);
@@ -108,13 +108,13 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 	// Check if their legal moves and mesh have already been stored
 	if (
 		hoveredArrowsLegalMoves.some((hoveredArrow) => {
-			const integerCoords = bd.coordsToBigInt(arrowPiece.coords);
+			const integerCoords = bdcoords.coordsToBigInt(arrowPiece.coords);
 			return coordutil.areCoordsEqual(hoveredArrow.piece.coords, integerCoords);
 		})
 	)
 		return; // Legal moves and mesh already calculated.
 
-	const integerCoords: Coords = bd.coordsToBigInt(arrowPiece.coords);
+	const integerCoords: Coords = bdcoords.coordsToBigInt(arrowPiece.coords);
 	const piece: Piece = {
 		type: arrowPiece.type,
 		coords: integerCoords,

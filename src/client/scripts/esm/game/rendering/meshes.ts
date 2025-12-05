@@ -8,6 +8,8 @@
  * [World Space] - DOES NOT require positional or scale transformations when rendering.
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type {
 	BoundingBox,
@@ -21,17 +23,17 @@ import spritesheet from './spritesheet.js';
 import primitives from './primitives.js';
 import perspective from './perspective.js';
 import { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../shared/chess/util/coordutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
 // Constants -------------------------------------------------------------------------
 
-const ONE = bd.FromBigInt(1n);
+const ONE = bd.fromBigInt(1n);
 
 // Square Bounds ---------------------------------------------------------------------------
 
@@ -57,9 +59,9 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 
 	const squareCenterScaled = boardtiles.getSquareCenterAsNumber() * boardScale;
 
-	const coordsBD = bd.FromCoords(coords);
+	const coordsBD = bdcoords.FromCoords(coords);
 
-	const relativeCoords: DoubleCoords = bd.coordsToDoubles(
+	const relativeCoords: DoubleCoords = bdcoords.coordsToDoubles(
 		coordutil.subtractBDCoords(coordsBD, boardPos),
 	);
 
@@ -204,7 +206,7 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
  */
 function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0): Vec3 {
 	function getAxis(position: BigDecimal, offset: bigint): number {
-		const offsetBD = bd.FromBigInt(offset);
+		const offsetBD = bd.fromBigInt(offset);
 		return bd.toNumber(bd.subtract(offsetBD, position));
 	}
 

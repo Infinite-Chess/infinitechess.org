@@ -14,7 +14,6 @@ import vectors from '../../../../../../../shared/util/math/vectors.js';
 import variant from '../../../../../../../shared/chess/variants/variant.js';
 import gameslot from '../../../chess/gameslot.js';
 import squarerendering from '../squarerendering.js';
-import bd from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import { Mouse } from '../../../input.js';
 // @ts-ignore
 import guipause from '../../../gui/guipause.js';
@@ -22,6 +21,7 @@ import guipause from '../../../gui/guipause.js';
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil.js';
 import type { Square } from './annotations.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 
 // Variables -----------------------------------------------------------------
 
@@ -73,7 +73,7 @@ function getSquaresBelowWorld(
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach((coords) => {
-		const coordsWorld = space.convertCoordToWorldSpace(bd.FromCoords(coords));
+		const coordsWorld = space.convertCoordToWorldSpace(bdcoords.FromCoords(coords));
 		const dist_cheby = vectors.chebyshevDistanceDoubles(coordsWorld, world);
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);

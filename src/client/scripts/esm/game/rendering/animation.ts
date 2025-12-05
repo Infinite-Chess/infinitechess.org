@@ -7,6 +7,8 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 import arrows from './arrows/arrows.js';
@@ -24,8 +26,8 @@ import perspective from './perspective.js';
 import WaterRipples from './WaterRipples.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
-import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -94,8 +96,8 @@ interface Animation {
 
 // Constants -------------------------------------------------------------------
 
-const ZERO = bd.FromBigInt(0n);
-const ONE = bd.FromBigInt(1n);
+const ZERO = bd.fromBigInt(0n);
+const ONE = bd.fromBigInt(1n);
 
 /** Config for the splines. */
 const SPLINES: {
@@ -430,7 +432,7 @@ function renderAnimations(): void {
 		forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, (pieces) => {
 			// Render all captured pieces in place
 			pieces.forEach((p) => {
-				const coordsBD = bd.FromCoords(p.coords);
+				const coordsBD = bdcoords.FromCoords(p.coords);
 				processPiece(p.type, coordsBD, capturedPiecesInstanceData);
 			});
 		});
@@ -442,7 +444,7 @@ function renderAnimations(): void {
 		coords: BDCoords,
 		targetInstanceData: TypeGroup<number[]>,
 	): void {
-		const relativePosition: DoubleCoords = bd.coordsToDoubles(
+		const relativePosition: DoubleCoords = bdcoords.coordsToDoubles(
 			coordutil.subtractBDCoords(coords, boardPos),
 		);
 		if (!(type in targetInstanceData)) targetInstanceData[type] = []; // Initialize
@@ -491,14 +493,14 @@ function renderAnimations(): void {
  */
 function getCurrentSegment(
 	animation: Animation,
-	maxDistB4Teleport: BigDecimal = bd.FromNumber(MAX_DISTANCE_BEFORE_TELEPORT),
+	maxDistB4Teleport: BigDecimal = bd.fromNumber(MAX_DISTANCE_BEFORE_TELEPORT),
 ): SegmentInfo {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
 	const easedT = math.easeInOut(t);
-	const easedTBD = bd.FromNumber(easedT);
+	const easedTBD = bd.fromNumber(easedT);
 
 	/** The total distance along the animation path the animated piece should currently be at. */
 	let targetDistance: BigDecimal;
@@ -506,24 +508,24 @@ function getCurrentSegment(
 
 	if (bd.compare(animation.totalDistance, maxDistB4Teleport) <= 0) {
 		// Total distance is short enough to animate the whole path
-		targetDistance = bd.multiply_floating(animation.totalDistance, easedTBD);
+		targetDistance = bd.multiplyFloating(animation.totalDistance, easedTBD);
 	} else {
 		// The total distance is great enough to merit teleporting: Skip the middle of the path
 		if (easedT < 0.5) {
 			// First half
-			targetDistance = bd.multiply_fixed(maxDistB4Teleport, easedTBD);
+			targetDistance = bd.multiply(maxDistB4Teleport, easedTBD);
 		} else {
 			// easedT >= 0.5
 			// Second half: animate final portion of path
 			const inverseEasedT = bd.subtract(ONE, easedTBD);
-			targetDistance = bd.multiply_fixed(maxDistB4Teleport, inverseEasedT);
+			targetDistance = bd.multiply(maxDistB4Teleport, inverseEasedT);
 			forward = false;
 		}
 	}
 
 	// Return the segment the piece should be at, based on the target distance,
 	// and how far along the segment it currently is.
-	let accumulated: BigDecimal = bd.FromBigInt(0n);
+	let accumulated: BigDecimal = bd.fromBigInt(0n);
 	if (forward) {
 		for (let i = 0; i < animation.segments.length; i++) {
 			const segmentInfo = iterateSegment(i);
@@ -572,13 +574,13 @@ function getCurrentAnimationPosition(
 
 	const startPoint = segmentInfo.forward ? segment.start : segment.end;
 
-	const xTraversalAlongSegment = bd.multiply_floating(
+	const xTraversalAlongSegment = bd.multiplyFloating(
 		segmentInfo.distance,
-		bd.FromNumber(segment.xRatio),
+		bd.fromNumber(segment.xRatio),
 	);
-	const yTraversalAlongSegment = bd.multiply_floating(
+	const yTraversalAlongSegment = bd.multiplyFloating(
 		segmentInfo.distance,
-		bd.FromNumber(segment.yRatio),
+		bd.fromNumber(segment.yRatio),
 	);
 
 	const addOrSubtract: Function = segmentInfo.forward ? bd.add : bd.subtract;

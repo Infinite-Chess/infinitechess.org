@@ -7,18 +7,19 @@
 import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 import type { Color } from '../../../../shared/util/math/math.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import { createRenderable } from '../webgl/Renderable.js';
 import space from '../game/misc/space.js';
-import bd, { BigDecimal } from '../../../../shared/util/bigdecimal/bigdecimal.js';
 import boardpos from '../game/rendering/boardpos.js';
 
 // Constants ------------------------------------------------------
 
-const ZERO = bd.FromBigInt(0n);
-const ONE = bd.FromBigInt(1n);
-const TWO = bd.FromBigInt(2n);
-const THREE = bd.FromBigInt(3n);
-const FOUR = bd.FromBigInt(4n);
+const ZERO = bd.fromBigInt(0n);
+const ONE = bd.fromBigInt(1n);
+const TWO = bd.fromBigInt(2n);
+const THREE = bd.fromBigInt(3n);
+const FOUR = bd.fromBigInt(4n);
 
 // Functions ---------------------------------------------------------------
 
@@ -33,20 +34,20 @@ function generateCubicSplineCoefficients(
 	const n = points.length;
 	if (n < 2) return [];
 
-	const a: BigDecimal[] = points.slice(0, -1).map((p) => bd.FromBigInt(p));
+	const a: BigDecimal[] = points.slice(0, -1).map((p) => bd.fromBigInt(p));
 	const b: BigDecimal[] = new Array(n - 1).fill(ZERO);
 	const c: BigDecimal[] = new Array(n).fill(ZERO);
 	const d: BigDecimal[] = new Array(n - 1).fill(ZERO);
 
 	if (n === 2) {
-		b[0] = bd.FromBigInt(points[1]! - points[0]!);
+		b[0] = bd.fromBigInt(points[1]! - points[0]!);
 		return [{ a: a[0]!, b: b[0]!, c: c[0]!, d: d[0]! }];
 	}
 
 	// Setup tridiagonal system
 	const rhs: BigDecimal[] = [];
 	for (let i = 0; i < n - 2; i++) {
-		rhs.push(bd.FromBigInt(3n * (points[i]! + points[i + 2]! - 2n * points[i + 1]!)));
+		rhs.push(bd.fromBigInt(3n * (points[i]! + points[i + 2]! - 2n * points[i + 1]!)));
 	}
 
 	const subDiag: BigDecimal[] = new Array(n - 3).fill(ONE);
@@ -58,11 +59,11 @@ function generateCubicSplineCoefficients(
 
 	// Compute d and b coefficients
 	for (let i = 0; i < n - 1; i++) {
-		d[i] = bd.divide_fixed(bd.subtract(c[i + 1]!, c[i]!), THREE); // d[i] = (c[i + 1] - c[i]) / 3;
+		d[i] = bd.divide(bd.subtract(c[i + 1]!, c[i]!), THREE); // d[i] = (c[i + 1] - c[i]) / 3;
 		// (points[i + 1]! - points[i]!) - (2 * c[i]! + c[i + 1]!) / 3
-		const b_subtrahend = bd.FromBigInt(points[i + 1]! - points[i]!); // points[i + 1]! - points[i]!
-		const dividend = bd.add(bd.multiply_fixed(c[i]!, TWO), c[i + 1]!); // 2 * c[i]! + c[i + 1]!
-		const quotient = bd.divide_fixed(dividend, THREE); // (2 * c[i]! + c[i + 1]!) / 3
+		const b_subtrahend = bd.fromBigInt(points[i + 1]! - points[i]!); // points[i + 1]! - points[i]!
+		const dividend = bd.add(bd.multiply(c[i]!, TWO), c[i + 1]!); // 2 * c[i]! + c[i + 1]!
+		const quotient = bd.divide(dividend, THREE); // (2 * c[i]! + c[i + 1]!) / 3
 		b[i] = bd.subtract(b_subtrahend, quotient); // // (points[i + 1]! - points[i]!) - (2 * c[i]! + c[i + 1]!) / 3
 	}
 
@@ -90,28 +91,28 @@ function thomasAlgorithm(
 	// In this case, 'a' and 'c' are empty, and 'b' and 'd' have one element.
 	// The system is simply b[0]*x[0] = d[0], so x[0] = d[0]/b[0].
 	// Without this, a crash happens if you move the rose 2 hops in one move.
-	if (n === 1) return [bd.divide_fixed(d[0]!, b[0]!)];
+	if (n === 1) return [bd.divide(d[0]!, b[0]!)];
 
 	const cp: BigDecimal[] = [...c];
 	const dp: BigDecimal[] = [...d];
 
-	cp[0] = bd.divide_fixed(cp[0]!, b[0]!);
-	dp[0] = bd.divide_fixed(dp[0]!, b[0]!);
+	cp[0] = bd.divide(cp[0]!, b[0]!);
+	dp[0] = bd.divide(dp[0]!, b[0]!);
 
 	for (let i = 1; i < n; i++) {
-		const m_denominator = bd.subtract(b[i]!, bd.multiply_fixed(a[i - 1]!, cp[i - 1]!)); // (b[i]! - a[i - 1]! * cp[i - 1]!)
-		const m = bd.divide_fixed(ONE, m_denominator); // 1 / (b[i]! - a[i - 1]! * cp[i - 1]!)
+		const m_denominator = bd.subtract(b[i]!, bd.multiply(a[i - 1]!, cp[i - 1]!)); // (b[i]! - a[i - 1]! * cp[i - 1]!)
+		const m = bd.divide(ONE, m_denominator); // 1 / (b[i]! - a[i - 1]! * cp[i - 1]!)
 
 		const c_i = c[i] || ZERO; // Handle case where c might be shorter
-		cp[i] = bd.multiply_fixed(c_i, m); // (c[i] || 0) * m
+		cp[i] = bd.multiply(c_i, m); // (c[i] || 0) * m
 
-		const dp_subtrahend = bd.multiply_fixed(a[i - 1]!, dp[i - 1]!);
+		const dp_subtrahend = bd.multiply(a[i - 1]!, dp[i - 1]!);
 		const dp_term = bd.subtract(d[i]!, dp_subtrahend);
-		dp[i] = bd.multiply_fixed(dp_term, m);
+		dp[i] = bd.multiply(dp_term, m);
 	}
 
 	for (let i = n - 2; i >= 0; i--) {
-		const subtractor = bd.multiply_fixed(cp[i]!, dp[i + 1]!);
+		const subtractor = bd.multiply(cp[i]!, dp[i + 1]!);
 		dp[i] = bd.subtract(dp[i]!, subtractor);
 	}
 
@@ -132,14 +133,14 @@ function evaluateSplineAt(
 	const { a, b, c, d } = coefficients[i]!;
 
 	// Convert dt to a BigDecimal for high-precision calculations
-	const dt = bd.FromNumber(t - i);
-	const dt2 = bd.multiply_fixed(dt, dt);
-	const dt3 = bd.multiply_fixed(dt2, dt);
+	const dt = bd.fromNumber(t - i);
+	const dt2 = bd.multiply(dt, dt);
+	const dt3 = bd.multiply(dt2, dt);
 
 	// Evaluate polynomial: a + b*dt + c*dt^2 + d*dt^3
-	const termB = bd.multiply_fixed(b, dt);
-	const termC = bd.multiply_fixed(c, dt2);
-	const termD = bd.multiply_fixed(d, dt3);
+	const termB = bd.multiply(b, dt);
+	const termC = bd.multiply(c, dt2);
+	const termD = bd.multiply(d, dt3);
 
 	return bd.add(a, bd.add(termB, bd.add(termC, termD)));
 }
@@ -153,7 +154,7 @@ function evaluateSplineAt(
 function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoords[] {
 	// A straight line already has infinite precision
 	if (controlPoints.length < 3)
-		return controlPoints.map(([x, y]) => [bd.FromBigInt(x), bd.FromBigInt(y)]);
+		return controlPoints.map(([x, y]) => [bd.fromBigInt(x), bd.fromBigInt(y)]);
 
 	// Extract the bigint x and y components into separate arrays.
 	const xPoints = controlPoints.map((point) => point[0]);
@@ -193,8 +194,8 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoor
 			 */
 			if (isLastSegment && k === resolution) {
 				const finalPoint = controlPoints[controlPoints.length - 1]!;
-				x = bd.FromBigInt(finalPoint[0]);
-				y = bd.FromBigInt(finalPoint[1]);
+				x = bd.fromBigInt(finalPoint[0]);
+				y = bd.fromBigInt(finalPoint[1]);
 			} else {
 				// Evaluate the spline at parameter 't' to get the interpolated coordinates.
 				x = evaluateSplineAt(t, xSpline);

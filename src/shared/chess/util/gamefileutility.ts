@@ -11,7 +11,7 @@ import type { Vec2 } from '../../util/math/vectors.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!

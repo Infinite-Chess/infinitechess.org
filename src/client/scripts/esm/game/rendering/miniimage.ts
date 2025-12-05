@@ -9,6 +9,8 @@ import type {
 	DoubleCoords,
 } from '../../../../../shared/chess/util/coordutil.js';
 
+import bd from '@naviary/bigdecimal';
+
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 import webgl from './webgl.js';
@@ -27,7 +29,6 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import boardtiles from './boardtiles.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import perspective from './perspective.js';
 import premoves from '../chess/premoves.js';
 import { Color } from '../../../../../shared/util/math/math.js';
@@ -38,6 +39,7 @@ import {
 	AttributeInfoInstanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
 // Variables --------------------------------------------------------------
 
@@ -49,7 +51,7 @@ const pieceCountToDisableMiniImages = 40_000;
 
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
-const MAX_ANIM_DIST_VPIXELS = bd.FromBigInt(2300n);
+const MAX_ANIM_DIST_VPIXELS = bd.fromBigInt(2300n);
 
 /** The attribute info for all mini image vertex & attribute data. */
 const attribInfo: AttributeInfoInstanced = {
@@ -94,7 +96,7 @@ function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => 
 	const pieces = gamefile.boardsim.pieces;
 
 	// Animated pieces
-	const maxDistB4Teleport = bd.divide_floating(
+	const maxDistB4Teleport = bd.divideFloating(
 		MAX_ANIM_DIST_VPIXELS,
 		boardtiles.gtileWidth_Pixels(),
 	);
@@ -109,7 +111,7 @@ function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => 
 		callback(currentAnimationPosition, a.type);
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, (pieces) =>
 			pieces.forEach((p) => {
-				const pieceBDCoords = bd.FromCoords(p.coords);
+				const pieceBDCoords = bdcoords.FromCoords(p.coords);
 				callback(pieceBDCoords, p.type);
 			}),
 		);
@@ -131,7 +133,7 @@ function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => 
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
-			const coordsBD = bd.FromCoords(coords);
+			const coordsBD = bdcoords.FromCoords(coords);
 			callback(coordsBD, type);
 		});
 	});
@@ -168,7 +170,7 @@ function getImageInstanceData(): {
 		// Disabled (too many pieces) => Only process pieces on highlights or being animated
 		const piecesToRender = getAllPiecesBelowAnnotePoints();
 		piecesToRender.forEach((p) => {
-			const coordsBD = bd.FromCoords(p.coords);
+			const coordsBD = bdcoords.FromCoords(p.coords);
 			processPiece(coordsBD, p.type);
 		}); // Calculate their instance data
 	}
@@ -208,7 +210,7 @@ function getImagesBelowWorld(
 		// Disabled (too many pieces) => Only process pieces on highlights or being animated
 		const piecesToConsider = getAllPiecesBelowAnnotePoints();
 		piecesToConsider.forEach((p) => {
-			const coordsBD = bd.FromCoords(p.coords);
+			const coordsBD = bdcoords.FromCoords(p.coords);
 			processPiece(coordsBD);
 		}); // Calculate if their underneath the world coords
 	}
@@ -216,7 +218,7 @@ function getImagesBelowWorld(
 	function processPiece(coords: BDCoords): void {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
-			const integerCoords = bd.coordsToBigInt(coords);
+			const integerCoords = bdcoords.coordsToBigInt(coords);
 			imagesHovered.push(integerCoords);
 			// Upgrade the distance to euclidean
 			if (trackDists) dists.push(vectors.euclideanDistanceDoubles(coordsWorld, world));
@@ -248,7 +250,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const mesh = gameslot.getMesh();
 
 	// 1. Process all animations and add pieces relevant to the current move
-	const maxDistB4Teleport = bd.divide_floating(
+	const maxDistB4Teleport = bd.divideFloating(
 		MAX_ANIM_DIST_VPIXELS,
 		boardtiles.gtileWidth_Pixels(),
 	);
@@ -262,7 +264,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		);
 		// Add the main animated piece
 		pushPieceNoDuplicatesOrVoids({
-			coords: bd.coordsToBigInt(currentAnimationPosition),
+			coords: bdcoords.coordsToBigInt(currentAnimationPosition),
 			type: a.type,
 			index: -1,
 		});
@@ -280,7 +282,9 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	premoves.rewindPremoves(gamefile, mesh);
 
 	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
-	const annotePoints: Coords[] = snapping.getAnnoteSnapPoints(true).map(bd.coordsToBigInt);
+	const annotePoints: Coords[] = snapping
+		.getAnnoteSnapPoints(true)
+		.map((p) => bdcoords.coordsToBigInt(p));
 	annotePoints.forEach((ap) => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight

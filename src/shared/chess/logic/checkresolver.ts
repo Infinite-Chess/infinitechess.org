@@ -24,12 +24,12 @@ import { players } from '../util/typeutil.js';
 import typeutil from '../util/typeutil.js';
 import checkdetection from './checkdetection.js';
 import legalmoves from './legalmoves.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 import specialdetect from './specialdetect.js';
 import vectors, { Vec2Key } from '../../util/math/vectors.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 import geometry from '../../util/math/geometry.js';
-import bd from '../../util/bigdecimal/bigdecimal.js';
+import bdcoords from '../util/bdcoords.js';
 
 // Functions ------------------------------------------------------------------------------
 
@@ -428,8 +428,8 @@ function appendBlockingMoves(
 		}
 
 		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
-		if (!bd.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
-		const blockPointInt = bd.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
+		if (!bdcoords.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
+		const blockPointInt = bdcoords.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
 		if (!bounds.boxContainsSquare(box, blockPointInt)) continue; // Intersection point not between our 2 points, but outside of them.
 		if (coordutil.areCoordsEqual(blockPointInt, square1)) continue; // Can't move onto our piece that's in check..
 		if (coordutil.areCoordsEqual(blockPointInt, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!

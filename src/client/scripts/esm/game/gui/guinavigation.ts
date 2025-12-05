@@ -1,5 +1,7 @@
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
@@ -22,9 +24,9 @@ import guiboardeditor from './boardeditor/guiboardeditor.js';
 import premoves from '../chess/premoves.js';
 import Transition from '../rendering/transitions/Transition.js';
 import space from '../misc/space.js';
-import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
+import bimath from '../../../../../shared/util/math/bimath.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
-import bd, { BigDecimal } from '../../../../../shared/util/bigdecimal/bigdecimal.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -425,8 +427,8 @@ function callback_CoordsChange(index: 0 | 1): void {
 		return;
 	}
 
-	if (index === 0) teleportX = bd.FromBigInt(proposed);
-	else teleportY = bd.FromBigInt(proposed);
+	if (index === 0) teleportX = bd.fromBigInt(proposed);
+	else teleportY = bd.fromBigInt(proposed);
 
 	const newPos: BDCoords = [teleportX, teleportY];
 	boardpos.setBoardPos(newPos);
@@ -445,7 +447,7 @@ function callback_Expand(): void {
 	// I don't think it matters to much.
 	const annoteSnapPoints = snapping
 		.getAnnoteSnapPoints(false)
-		.map((point) => bd.coordsToBigInt(point));
+		.map((point) => bdcoords.coordsToBigInt(point));
 
 	allCoords.push(...annoteSnapPoints);
 	if (allCoords.length === 0) allCoords.push([1n, 1n], [8n, 8n]); // use the [1,1]-[8,8] area as a fallback

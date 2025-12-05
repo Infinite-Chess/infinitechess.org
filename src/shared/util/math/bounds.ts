@@ -6,8 +6,9 @@
 
 import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 
-import bd, { BigDecimal } from '../bigdecimal/bigdecimal.js';
-import bimath from '../bigdecimal/bimath.js';
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
+import bimath from './bimath.js';
 
 // Type Definitions --------------------------------------------------------------
 
@@ -50,7 +51,7 @@ interface DoubleBoundingBox {
 
 // Constants -----------------------------------------
 
-const TWO = bd.FromNumber(2.0);
+const TWO = bd.fromNumber(2.0);
 
 // Construction --------------------------------------------------------
 
@@ -77,19 +78,19 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 
 function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
 	return {
-		left: bd.FromNumber(box.left),
-		right: bd.FromNumber(box.right),
-		bottom: bd.FromNumber(box.bottom),
-		top: bd.FromNumber(box.top),
+		left: bd.fromNumber(box.left),
+		right: bd.fromNumber(box.right),
+		bottom: bd.fromNumber(box.bottom),
+		top: bd.fromNumber(box.top),
 	};
 }
 
 function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
 	return {
-		left: bd.FromBigInt(box.left),
-		right: bd.FromBigInt(box.right),
-		bottom: bd.FromBigInt(box.bottom),
-		top: bd.FromBigInt(box.top),
+		left: bd.fromBigInt(box.left),
+		right: bd.fromBigInt(box.right),
+		bottom: bd.fromBigInt(box.bottom),
+		top: bd.fromBigInt(box.top),
 	};
 }
 
@@ -239,7 +240,7 @@ function boxContainsSquareDouble(box: DoubleBoundingBox, square: DoubleCoords): 
 function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 	const xSum = bd.add(box.left, box.right);
 	const ySum = bd.add(box.bottom, box.top);
-	return [bd.divide_fixed(xSum, TWO), bd.divide_fixed(ySum, TWO)];
+	return [bd.divide(xSum, TWO), bd.divide(ySum, TWO)];
 }
 
 // Debugging --------------------------------------------------------

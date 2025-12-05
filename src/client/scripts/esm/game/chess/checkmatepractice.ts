@@ -26,7 +26,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import enginegame from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
+import bimath from '../../../../../shared/util/math/bimath.js';
 
 // Variables ----------------------------------------------------------------------------
 

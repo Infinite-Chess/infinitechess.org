@@ -2,6 +2,8 @@
  * This script calculates legal moves
  */
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import specialdetect from './specialdetect.js';
 import winconutil from '../util/winconutil.js';
 import movepiece from './movepiece.js';
@@ -15,7 +17,6 @@ import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
 import bounds from '../../util/math/bounds.js';
-import bd, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
@@ -29,6 +30,7 @@ import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import bdcoords from '../util/bdcoords.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -456,8 +458,8 @@ function enforceWorldBorderOnSlideLimit(
 	if (boardsim.playableRegion === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
-	const coordsBD = bd.FromCoords(coords);
-	const stepBD = bd.FromCoords(step);
+	const coordsBD = bdcoords.FromCoords(coords);
+	const stepBD = bdcoords.FromCoords(step);
 	const negatedStepBD = vectors.negateBDVector(stepBD);
 
 	// These are in order of ascending dot product.
@@ -491,7 +493,7 @@ function enforceWorldBorderOnSlideLimit(
 		// How many steps would it take to reach this point?
 		const distanceToPoint: BigDecimal = bd.subtract(destination[axis], origin[axis]);
 		// The maximum number of steps we can take before exceeding the point (inclusive to the point)
-		return bd.toBigInt(bd.floor(bd.divide_fixed(distanceToPoint, step[axis]))); // Always positive
+		return bd.toBigInt(bd.floor(bd.divide(distanceToPoint, step[axis]))); // Always positive
 	}
 
 	// Shorten our slide limit to not exceed the world border

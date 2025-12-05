@@ -6,6 +6,8 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
+import bd from '@naviary/bigdecimal';
+
 import preferences from '../../../../components/header/preferences.js';
 import snapping from '../snapping.js';
 import space from '../../../misc/space.js';
@@ -16,7 +18,6 @@ import annotations from './annotations.js';
 import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 import variant from '../../../../../../../shared/chess/variants/variant.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
-import bd from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import legalmovemodel from '../legalmovemodel.js';
 import meshes from '../../meshes.js';
 import highlightline, { Line } from '../highlightline.js';
@@ -27,6 +28,7 @@ import coordutil, {
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
 import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 
 // Variables -----------------------------------------------------------------
 
@@ -163,7 +165,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 
 	const lines: Line[] = [];
 	for (const ray of rays) {
-		const rayStartBD = bd.FromCoords(ray.start);
+		const rayStartBD = bdcoords.FromCoords(ray.start);
 
 		// Find the points it intersects the screen
 		const intersectionPoints = geometry.findLineBoxIntersectionsBD(
@@ -212,7 +214,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	const mouseTileCoords = space.convertWorldSpaceToCoords(pointerWorld);
 	const vector_unnormalized = coordutil.subtractBDCoords(
 		mouseTileCoords,
-		bd.FromCoords(drag_start!),
+		bdcoords.FromCoords(drag_start!),
 	);
 	const vector = findClosestPredefinedVector(
 		vector_unnormalized,
@@ -345,7 +347,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 	if (rays_all.length === 0) return intersections;
 
 	// First add the start coords of all rays to the list of intersections
-	for (const ray of rays_drawn) addSquare_NoDuplicates(bd.FromCoords(ray.start));
+	for (const ray of rays_drawn) addSquare_NoDuplicates(bdcoords.FromCoords(ray.start));
 
 	// Then add all the intersection points of the rays (drawn against drawn + preset, SKIP preset against preset)
 	for (let a = 0; a < rays_drawn.length; a++) {
@@ -358,7 +360,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (trimDecimals && !bd.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !bdcoords.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 			// OPTIONAL: Floor() the coords and add it anyway, even if not integer.
 			// intsect = space.roundCoords(intsect);
 
@@ -380,7 +382,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (trimDecimals && !bd.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !bdcoords.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);
@@ -391,7 +393,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (trimDecimals && !bd.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !bdcoords.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);

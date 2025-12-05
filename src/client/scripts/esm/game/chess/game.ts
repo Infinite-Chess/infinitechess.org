@@ -46,7 +46,7 @@ import camera from '../rendering/camera.js';
 import primitives from '../rendering/primitives.js';
 import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
-import bimath from '../../../../../shared/util/bigdecimal/bimath.js';
+import bimath from '../../../../../shared/util/math/bimath.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 import screenshake from '../rendering/screenshake.js';
 import webgl, { gl } from '../rendering/webgl.js';

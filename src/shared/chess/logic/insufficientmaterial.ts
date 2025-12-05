@@ -11,7 +11,7 @@ import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
 import { rawTypes as r, ext as e, players, TypeGroup } from '../util/typeutil.js';
-import bimath from '../../util/bigdecimal/bimath.js';
+import bimath from '../../util/math/bimath.js';
 
 import type { GameRules } from '../variants/gamerules.js';
 import type { Board } from './gamefile.js';

@@ -11,6 +11,8 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
+import bd from '@naviary/bigdecimal';
+
 import enginegame from '../misc/enginegame.js';
 import guinavigation from '../gui/guinavigation.js';
 import guipromotion from '../gui/guipromotion.js';
@@ -41,7 +43,6 @@ import premoves from './premoves.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import copygame from './copygame.js';
 import pastegame from './pastegame.js';
-import bd from '../../../../../shared/util/bigdecimal/bigdecimal.js';
 import board from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
@@ -270,8 +271,8 @@ function startStartingTransition(): void {
 	);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
-	const amount = bd.FromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
-	const startScale = bd.multiply_fixed(centerArea.scale, amount);
+	const amount = bd.fromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
+	const startScale = bd.multiply(centerArea.scale, amount);
 	boardpos.setBoardScale(startScale);
 	guinavigation.recenter();
 	Transition.eraseTelHist();

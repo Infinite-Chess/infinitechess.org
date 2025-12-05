@@ -16,9 +16,9 @@ import drawarrows from './drawarrows.js';
 import gameloader from '../../../chess/gameloader.js';
 import drawrays from './drawrays.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
-import bd from '../../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import keybinds from '../../../misc/keybinds.js';
 import { Mouse } from '../../../input.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions ------------------------------------------------------------
 
@@ -154,7 +154,7 @@ function Collapse(): void {
 		// Can map to integer Coords since the argument we pass in ensures we only get back integer intersections.
 		const additionalSquares = drawrays
 			.collapseRays(annotes.Rays, true)
-			.map((i) => bd.coordsToBigInt(i));
+			.map((i) => bdcoords.coordsToBigInt(i));
 		for (const newSquare of additionalSquares) {
 			// Avoid adding duplicates
 			if (annotes.Squares.every((s) => !coordutil.areCoordsEqual(s, newSquare)))

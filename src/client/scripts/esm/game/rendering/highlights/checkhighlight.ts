@@ -7,8 +7,8 @@ import space from '../../misc/space.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
-import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 import primitives from '../primitives.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Type Definitions ----------------------------------------------------------------
@@ -43,7 +43,7 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): Renderable {
 
 	const data: number[] = [];
 	for (let i = 0; i < royalsInCheck.length; i++) {
-		const thisRoyalInCheckCoordsBD: BDCoords = bd.FromCoords(royalsInCheck[i]!);
+		const thisRoyalInCheckCoordsBD: BDCoords = bdcoords.FromCoords(royalsInCheck[i]!);
 		// This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.getSquareCenter()
 		// Create a math function for returning the world-space point of the CENTER of the provided coordinate!
 		const worldSpaceCoord = space.convertCoordToWorldSpace(thisRoyalInCheckCoordsBD);

@@ -3,11 +3,12 @@
  * when it is your turn and your in another tab.
  */
 
+import bd from '@naviary/bigdecimal';
+
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../gamesound.js';
-import bd from '../../../../../../shared/util/bigdecimal/bigdecimal.js';
 // @ts-ignore
 import loadbalancer from '../loadbalancer.js';
 
@@ -74,7 +75,7 @@ function scheduleMoveSound_timeoutID(): void {
 	if (!loadbalancer.isPageHidden()) return; // Don't schedule it if the page is already visible
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!.basegame)) return;
 	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
-	const ZERO = bd.FromBigInt(0n);
+	const ZERO = bd.fromBigInt(0n);
 	moveSound_timeoutID = setTimeout(
 		() => gamesound.playMove(ZERO, false, false),
 		timeNextSoundFromNow,

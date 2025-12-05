@@ -11,16 +11,18 @@ import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
 import type { FullGame } from '../../../../../../../shared/chess/logic/gamefile';
 import type { Mesh } from '../../../rendering/piecemodels';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import boardutil, { LineKey, Piece } from '../../../../../../../shared/chess/util/boardutil';
-import bd, { BigDecimal } from '../../../../../../../shared/util/bigdecimal/bigdecimal';
 import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
 import boardeditor, { Edit } from '../../boardeditor';
 import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
 import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
 import bounds from '../../../../../../../shared/util/math/bounds';
 import selectiontool from './selectiontool';
-import bimath from '../../../../../../../shared/util/bigdecimal/bimath';
+import bimath from '../../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../../shared/chess/util/typeutil';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords';
 
 // Type Definitions ----------------------------------------------------------
 
@@ -31,10 +33,10 @@ interface StatePiece extends Piece {
 
 // Constants ------------------------------------------------------------------
 
-const NEGONE = bd.FromBigInt(-1n, 1);
-const HALF = bd.FromNumber(0.5, 1);
-const ONE = bd.FromBigInt(1n, 1);
-const TWO = bd.FromBigInt(2n, 1);
+const NEGONE = bd.fromBigInt(-1n, 1);
+const HALF = bd.fromNumber(0.5, 1);
+const ONE = bd.fromBigInt(1n, 1);
+const TWO = bd.fromBigInt(2n, 1);
 
 // State ------------------------------------------------------------------------
 
@@ -291,10 +293,10 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 
 	// Calculate the reflection line with BigDecimals, for decimal precision.
 	// 1 precision is enough to perfectly represent 1/2 increments, which is the finest we need.
-	const bound1BD: BigDecimal = bd.FromBigInt(bound1, 1);
-	const bound2BD: BigDecimal = bd.FromBigInt(bound2, 1);
+	const bound1BD: BigDecimal = bd.fromBigInt(bound1, 1);
+	const bound2BD: BigDecimal = bd.fromBigInt(bound2, 1);
 	const sum: BigDecimal = bd.add(bound1BD, bound2BD);
-	const reflectionLine: BigDecimal = bd.divide_fixed(sum, TWO, 0); // Working precision isn't needed because the quotient is rational
+	const reflectionLine: BigDecimal = bd.divide(sum, TWO, 0); // Working precision isn't needed because the quotient is rational
 
 	// These haven't changed from the original selection box
 	const selectionCorners: [Coords, Coords] = [
@@ -306,7 +308,7 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 	const transformer = (piece: Piece): { coords: Coords; type: number } => {
 		// Reflect the piece's coordinate on the chosen axis
 		const coordToReflect = piece.coords[axis];
-		const coordBD: BigDecimal = bd.FromBigInt(coordToReflect, 1);
+		const coordBD: BigDecimal = bd.fromBigInt(coordToReflect, 1);
 		const distanceFromLine: BigDecimal = bd.subtract(coordBD, reflectionLine);
 		const reflectedCoordBD: BigDecimal = bd.subtract(reflectionLine, distanceFromLine);
 		// We already know it's a perfect integer so this doesn't lose precision
@@ -336,12 +338,12 @@ function RotateRight(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 /** Rotates the selection 90 degrees clockwise or counter-clockwise. */
 function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boolean): void {
 	// Calculate the pivot point for rotation.
-	const sumXEdgesBD = bd.FromBigInt(box.left + box.right, 1);
-	const sumYEdgesBD = bd.FromBigInt(box.bottom + box.top, 1);
+	const sumXEdgesBD = bd.fromBigInt(box.left + box.right, 1);
+	const sumYEdgesBD = bd.fromBigInt(box.bottom + box.top, 1);
 
 	const pivot: BDCoords = [
-		bd.divide_fixed(sumXEdgesBD, TWO, 0), // Working precision isn't needed because the quotient is rational
-		bd.divide_fixed(sumYEdgesBD, TWO, 0),
+		bd.divide(sumXEdgesBD, TWO, 0), // Working precision isn't needed because the quotient is rational
+		bd.divide(sumYEdgesBD, TWO, 0),
 	];
 
 	// Adjust pivot for unstable rotations.
@@ -396,7 +398,7 @@ function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boo
  */
 function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords {
 	// Represent coord as BDCoords for high precision
-	const pointBD = bd.FromCoords(point, 1);
+	const pointBD = bdcoords.FromCoords(point, 1);
 
 	// 1. Translate to origin to get relative coordinates
 	const relativeX = bd.subtract(pointBD[0], pivot[0]);
@@ -408,9 +410,9 @@ function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords
 	const direction = clockwise ? NEGONE : ONE;
 
 	// rotatedRelativeX = -direction * relativeY
-	const rotatedRelativeX = bd.multiply_fixed(relativeY, bd.negate(direction));
+	const rotatedRelativeX = bd.multiply(relativeY, bd.negate(direction));
 	// rotatedRelativeY = direction * relativeX
-	const rotatedRelativeY = bd.multiply_fixed(relativeX, direction);
+	const rotatedRelativeY = bd.multiply(relativeX, direction);
 
 	// 3. Translate back from the origin
 	const finalX = bd.add(rotatedRelativeX, pivot[0]);

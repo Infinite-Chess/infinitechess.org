@@ -5,10 +5,12 @@
  * such as calculating angles, distances, and other operations.
  */
 
-import bimath from '../bigdecimal/bimath.js';
-import bd, { BigDecimal } from '../bigdecimal/bigdecimal.js';
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
+import bimath from './bimath.js';
 
 import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
+import bdcoords from '../../chess/util/bdcoords.js';
 
 // Type Definitions -----------------------------------------------------------
 
@@ -61,8 +63,8 @@ const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
 /** The positive/absolute knightrider hippogonals. */
 const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
 
-const ZERO: BigDecimal = bd.FromBigInt(0n);
-const ONE: BigDecimal = bd.FromBigInt(1n);
+const ZERO: BigDecimal = bd.fromBigInt(0n);
+const ONE: BigDecimal = bd.fromBigInt(1n);
 
 // Construction ----------------------------------------------------------------------
 
@@ -103,15 +105,15 @@ function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): LineC
  * {@link getLineGeneralFormFromCoordsAndVec} but for BigDecimal coordinates.
  */
 function getLineGeneralFormFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): LineCoefficientsBD {
-	const vectorBD = bd.FromCoords(vector);
+	const vectorBD = bdcoords.FromCoords(vector);
 
 	// General form: Ax + By + C = 0
 	const A: BigDecimal = bd.clone(vectorBD[1]);
 	const B: BigDecimal = bd.negate(vectorBD[0]);
 	// vector[0] * coords[1] - vector[1] * coords[0]
 	const C: BigDecimal = bd.subtract(
-		bd.multiply_fixed(vectorBD[0], coords[1]),
-		bd.multiply_fixed(vectorBD[1], coords[0]),
+		bd.multiply(vectorBD[0], coords[1]),
+		bd.multiply(vectorBD[1], coords[0]),
 	);
 
 	return [A, B, C];
@@ -155,10 +157,7 @@ function getLineGeneralFormFrom2CoordsBD(coords1: BDCoords, coords2: BDCoords): 
 	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
 	const A = bd.subtract(coords2[1], coords1[1]); // y2 - y1
 	const B = bd.subtract(coords1[0], coords2[0]); // x1 - x2
-	const C = bd.subtract(
-		bd.multiply_fixed(coords2[0], coords1[1]),
-		bd.multiply_fixed(coords1[0], coords2[1]),
-	); // x2*y1 - x1*y2
+	const C = bd.subtract(bd.multiply(coords2[0], coords1[1]), bd.multiply(coords1[0], coords2[1])); // x2*y1 - x1*y2
 
 	return [A, B, C];
 }
@@ -167,7 +166,7 @@ function getLineGeneralFormFrom2CoordsBD(coords1: BDCoords, coords2: BDCoords): 
  * Upgrades bigint line coefficients [A, B, C] to BigDecimals.
  */
 function convertCoeficcientsToBD(line: LineCoefficients): LineCoefficientsBD {
-	return [bd.FromBigInt(line[0]), bd.FromBigInt(line[1]), bd.FromBigInt(line[2])];
+	return [bd.fromBigInt(line[0]), bd.fromBigInt(line[1]), bd.fromBigInt(line[2])];
 }
 
 /**
@@ -199,12 +198,9 @@ function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
  * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
  */
 function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): BigDecimal {
-	const vectorBD = bd.FromCoords(vector);
+	const vectorBD = bdcoords.FromCoords(vector);
 	// Coords first since they are likely higher precision.
-	return bd.subtract(
-		bd.multiply_fixed(coords[1], vectorBD[0]),
-		bd.multiply_fixed(coords[0], vectorBD[1]),
-	);
+	return bd.subtract(bd.multiply(coords[1], vectorBD[0]), bd.multiply(coords[0], vectorBD[1]));
 }
 
 // Operations -----------------------------------------------------------------------------
@@ -247,7 +243,7 @@ function dotProduct(v1: Vec2, v2: Vec2): bigint {
  * WILL BE POSITIVE if they roughly point in the same direction.
  */
 function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
-	return bd.add(bd.multiply_fixed(v1[0], v2[0]), bd.multiply_fixed(v1[1], v2[1]));
+	return bd.add(bd.multiply(v1[0], v2[0]), bd.multiply(v1[1], v2[1]));
 }
 
 /**
@@ -319,8 +315,8 @@ function normalizeVectorBD(vec2: BDCoords): DoubleCoords {
 	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
 	const targetLength = bd.max(bd.abs(vec2[0]), bd.abs(vec2[1]));
 	return [
-		bd.toNumber(bd.divide_floating(vec2[0], targetLength)),
-		bd.toNumber(bd.divide_floating(vec2[1], targetLength)),
+		bd.toNumber(bd.divideFloating(vec2[0], targetLength)),
+		bd.toNumber(bd.divideFloating(vec2[1], targetLength)),
 	];
 }
 
@@ -353,8 +349,8 @@ function getPerpendicularLine(lineCoeffs: LineCoefficients, point: BDCoords): Li
 	// C2 = -(A2*xp + B2*yp)
 	// C2 = -((-B1)*xp + A1*yp)
 	// C2 = B1*xp - A1*yp
-	const term1 = bd.multiply_fixed(B1, point[0]);
-	const term2 = bd.multiply_fixed(A1, point[1]);
+	const term1 = bd.multiply(B1, point[0]);
+	const term2 = bd.multiply(A1, point[1]);
 	const C2 = bd.subtract(term1, term2);
 
 	return [A2, B2, C2];
@@ -373,8 +369,8 @@ function degreesToRadians(angleDegrees: number): number {
  * Returns the euclidean (hypotenuse) distance between 2 bigint points.
  */
 function euclideanDistance(point1: Coords, point2: Coords): BigDecimal {
-	const point1BD: BDCoords = bd.FromCoords(point1);
-	const point2BD: BDCoords = bd.FromCoords(point2);
+	const point1BD: BDCoords = bdcoords.FromCoords(point1);
+	const point2BD: BDCoords = bdcoords.FromCoords(point2);
 	return euclideanDistanceBD(point1BD, point2BD);
 }
 
