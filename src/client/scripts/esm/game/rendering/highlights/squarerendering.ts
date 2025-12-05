@@ -30,7 +30,7 @@ function genModel(highlights: Coords[], color: Color): RenderableInstanced {
 	const instanceData: number[] = [];
 
 	highlights.forEach((coords) => {
-		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(bigdecimal.FromCoords(coords));
+		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(bd.FromCoords(coords));
 		const worldLoc = space.convertCoordToWorldSpace(bd.FromCoords(coords));
 		instanceData.push(...worldLoc);
 	});

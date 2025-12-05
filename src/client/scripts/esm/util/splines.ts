@@ -6,11 +6,10 @@
 
 import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 import type { Color } from '../../../../shared/util/math/math.js';
-import type { BigDecimal } from '../../../../shared/util/bigdecimal/bigdecimal.js';
 
 import { createRenderable } from '../webgl/Renderable.js';
 import space from '../game/misc/space.js';
-import bd from '../../../../shared/util/bigdecimal/bigdecimal.js';
+import bd, { BigDecimal } from '../../../../shared/util/bigdecimal/bigdecimal.js';
 import boardpos from '../game/rendering/boardpos.js';
 
 // Constants ------------------------------------------------------

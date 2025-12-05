@@ -4,10 +4,9 @@
  * This script contains methods for constructing and operating on bounding boxes.
  */
 
-import type { BigDecimal } from '../bigdecimal/bigdecimal.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 
-import bd from '../bigdecimal/bigdecimal.js';
+import bd, { BigDecimal } from '../bigdecimal/bigdecimal.js';
 import bimath from '../bigdecimal/bimath.js';
 
 // Type Definitions --------------------------------------------------------------

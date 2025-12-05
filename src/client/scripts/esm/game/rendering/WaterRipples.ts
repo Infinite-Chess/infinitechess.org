@@ -10,7 +10,7 @@ import type { ProgramManager } from '../../webgl/ProgramManager';
 import frametracker from './frametracker';
 import camera from './camera';
 import space from '../misc/space';
-import bigdecimal from '../../../../../shared/util/bigdecimal/bigdecimal';
+import bd from '../../../../../shared/util/bigdecimal/bigdecimal';
 import boardpos from './boardpos';
 import drawrays from './highlights/annotations/drawrays';
 import bounds from '../../../../../shared/util/math/bounds';
@@ -77,7 +77,7 @@ function updateRippleLifetime(width: number, height: number): void {
  */
 function addRipple(sourceCoords: Coords): void {
 	// Convert coords to world space
-	const sourceWorldSpace = space.convertCoordToWorldSpace(bigdecimal.FromCoords(sourceCoords));
+	const sourceWorldSpace = space.convertCoordToWorldSpace(bd.FromCoords(sourceCoords));
 
 	const screenHeight = camera.canvas.height / window.devicePixelRatio;
 	const pixelPadding = RIPPLE_DIST_FROM_EDGE * screenHeight;
@@ -99,7 +99,7 @@ function addRipple(sourceCoords: Coords): void {
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
 		// console.log("Ripple source outside of padded screen.");
 		const vectorToSource = coordutil.subtractBDCoords(
-			bigdecimal.FromCoords(sourceCoords),
+			bd.FromCoords(sourceCoords),
 			boardpos.getBoardPos(),
 		);
 		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
