@@ -228,13 +228,7 @@ function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefine
  * Renders everthing in-game, and applies post processing effects to the final image.
  */
 function render(): void {
-	// Tell the pipeline to begin. All subsequent rendering will go to a texture.
-	pipeline.begin();
-
-	// Render the game scene
-	renderScene();
-
-	// Gather all post processing effects
+	// First gather all post processing effects this frame
 	const passes: PostProcessPass[] = [];
 	// Append water ripples of really far moves!
 	passes.push(...WaterRipples.getPass());
@@ -243,9 +237,18 @@ function render(): void {
 	// Set them in the pipeline
 	pipeline.setPasses(passes);
 
+	// Only use the pipeline if there are any current effects,
+	// as it increases gpu usage by roughly 1.3x
+
+	// Tell the pipeline to begin. All subsequent rendering will go to a texture.
+	if (passes.length > 0) pipeline.begin();
+
+	// Render the game scene
+	renderScene();
+
 	// Tell the pipeline we are finished drawing the scene.
 	// It will handle drawing the result to the screen.
-	pipeline.end();
+	if (passes.length > 0) pipeline.end();
 }
 
 /** Renders all in our scene. */
