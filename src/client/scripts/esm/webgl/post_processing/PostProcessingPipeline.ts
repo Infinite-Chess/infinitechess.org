@@ -200,6 +200,12 @@ export class PostProcessingPipeline {
 		lastPass.render(gl, this.readTexture);
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6); // 6 vertices (2 triangles)
+
+		// RESTORE THE STATE of the gl context before ever using the pipeline!
+		// This prevents texture alpha issues on frames where the pipeline is not used.
+		gl.enable(gl.DEPTH_TEST);
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	}
 
 	/**
