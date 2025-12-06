@@ -472,15 +472,21 @@ function callback__Collapse(): void {
 
 document.addEventListener('ray-count-change', (e) => {
 	const rayCount = e.detail;
-	if (rayCount > 0) {
-		element_EraseContainer.classList.add('hidden');
-		element_CollapseContainer.classList.remove('hidden');
-	} else {
-		// Zero rays
-		element_EraseContainer.classList.remove('hidden');
-		element_CollapseContainer.classList.add('hidden');
-	}
+	if (rayCount > 0) showCollapse();
+	else hideCollapse();
 });
+
+/** Replaces eraser svg with collapse svg. */
+function showCollapse(): void {
+	element_EraseContainer.classList.add('hidden');
+	element_CollapseContainer.classList.remove('hidden');
+}
+
+/** Replaces collapse svg with eraser svg. */
+function hideCollapse(): void {
+	element_EraseContainer.classList.remove('hidden');
+	element_CollapseContainer.classList.add('hidden');
+}
 
 // =====================================================================
 
@@ -875,6 +881,8 @@ function onGameUnload(): void {
 	annotationsEnabled = false;
 	listener_overlay.setTreatLeftasRight(false);
 	element_Annotations.classList.remove('enabled');
+
+	hideCollapse();
 }
 
 export default {
