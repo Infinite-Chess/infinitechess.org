@@ -135,7 +135,7 @@ async function startLocalGame(options: {
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
 
-	gameslot
+	await gameslot
 		.loadGamefile({
 			metadata,
 			viewWhitePerspective: true,
@@ -190,7 +190,7 @@ async function startOnlineGame(options: {
 		clockValues: options.clockValues,
 	};
 
-	gameslot
+	await gameslot
 		.loadGamefile({
 			metadata: options.metadata,
 			viewWhitePerspective: options.youAreColor === players.WHITE,
@@ -313,7 +313,7 @@ async function startBoardEditor(): Promise<void> {
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
 
-	gameslot
+	await gameslot
 		.loadGamefile({
 			metadata,
 			viewWhitePerspective: true,
@@ -388,7 +388,7 @@ async function pasteGame(options: {
 
 	gameslot.unloadGame();
 
-	gameslot
+	await gameslot
 		.loadGamefile({
 			metadata: options.metadata,
 			viewWhitePerspective,

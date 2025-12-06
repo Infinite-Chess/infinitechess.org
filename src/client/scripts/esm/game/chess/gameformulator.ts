@@ -46,7 +46,12 @@ function formulateGame(longformIn: LongFormatIn): FullGame {
 		},
 	};
 
-	return gamefile.initFullGame(longformIn.metadata, { variantOptions, moves });
+	const loadingGame: any = {
+		events: {},
+		components: new Set(),
+	};
+
+	return gamefile.initFullGame(loadingGame, longformIn.metadata, { variantOptions, moves });
 }
 
 /**
@@ -95,12 +100,17 @@ function ICNToGamefile(ICN: string): FullGame {
 			return move;
 		}) ?? [];
 
+	const loadingGame: any = {
+		events: {},
+		components: new Set(),
+	};
+
 	/**
 	 * This automatically forwards all moves to the front of the game.
 	 * It will throw an Error if there's any move with a startCoords that doesn't have any piece on it!
 	 * Some illegal moves may pass, but those aren't what we care about. We care about crashing moves!
 	 */
-	return gamefile.initFullGame(longformOut.metadata, { variantOptions, moves });
+	return gamefile.initFullGame(loadingGame, longformOut.metadata, { variantOptions, moves });
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string): string | undefined {

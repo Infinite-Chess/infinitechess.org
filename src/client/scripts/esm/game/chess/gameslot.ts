@@ -10,6 +10,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Construction, ComponentName, Modname } from '../../../../../mods/modmanager.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -52,6 +53,7 @@ import meshes from '../rendering/meshes.js';
 import starfield from '../rendering/starfield.js';
 import screenshake from '../rendering/screenshake.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import modmanager from '../../../../../mods/modmanager.js';
 import { animateMove } from './graphicalchanges.js';
 import { gl } from '../rendering/webgl.js';
 // @ts-ignore
@@ -61,6 +63,7 @@ import guipause from '../gui/guipause.js';
 
 /** Options for loading a game. */
 interface LoadOptions {
+	modlist?: Modname[];
 	/** The metadata of the game */
 	metadata: MetaData;
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
@@ -124,19 +127,27 @@ function isLoadedGameViewingWhitePerspective(): boolean {
  * This loads the logical stuff first, then returns a PROMISE that resolves
  * when the GRAPHICAL stuff is finished loading (such as the spritesheet).
  */
-function loadGamefile(loadOptions: LoadOptions): Promise<void> {
+async function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
 	// console.log("Loading gamefile...");
 
 	// console.log('Started loading game...');
-
+	const loadingGamefile: Construction<FullGame> = {
+		events: {},
+		components: new Set<ComponentName>(['game', 'board', 'atomic', 'client']),
+	};
 	// The game should be considered loaded once the LOGICAL stuff is finished,
 	// but the loading animation should only be closed when
 	// both the LOGICAL and GRAPHICAL stuff are finished.
 
+	await modmanager.loadModList(loadingGamefile.components);
+	modmanager.setupModifierComponents(loadingGamefile);
+
 	// First load the LOGICAL stuff...
-	loadLogical(loadOptions);
+	loadLogical(loadingGamefile, loadOptions);
 	// console.log('Finished loading LOGICAL game stuff.');
+	loadingGamefile.events = {}; // clear all loading events
+	modmanager.setupModifierSystems(loadedGamefile!);
 
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
@@ -153,8 +164,12 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadOptions: LoadOptions): void {
-	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
+function loadLogical(loadingGamefile: Construction<FullGame>, loadOptions: LoadOptions): void {
+	loadedGamefile = gamefile.initFullGame(
+		loadingGamefile,
+		loadOptions.metadata,
+		loadOptions.additional,
+	);
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 

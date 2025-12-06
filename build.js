@@ -53,6 +53,7 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/admin.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
+
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
 	ignore: ['**/*.test.{ts,js}'],
 });
