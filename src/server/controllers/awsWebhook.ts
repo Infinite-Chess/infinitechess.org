@@ -116,11 +116,12 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 						addToBlacklist(email, 'bounce');
 					});
 				}
-			} else
+			} else {
 				logEventsAndPrint(
 					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${bounce.bounceType}`,
 					'awsNotifications.txt',
 				);
+			}
 		}
 
 		// Handle Complaints (Spam Reports)
@@ -133,16 +134,18 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 					addToBlacklist(email, 'spam_report');
 				});
 			}
-		} else
+		} else {
 			logEventsAndPrint(
 				`[AWS WEBHOOK] Unknown notification type: ${type}`,
 				'awsNotifications.txt',
 			);
-	} else
+		}
+	} else {
 		logEventsAndPrint(
 			`[AWS WEBHOOK] Unknown message type: ${messageType}`,
 			'awsNotifications.txt',
 		);
+	}
 
 	// Always return 200 OK.
 	// If we return 500, AWS will keep retrying to send us the same bounce event.
