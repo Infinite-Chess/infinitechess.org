@@ -152,11 +152,6 @@ function close(): void {
 	closeListeners_Navigation();
 	navigationOpen = false;
 	stats.updateStatsCSS();
-
-	// Disable annotations mode
-	annotationsEnabled = false;
-	listener_overlay.setTreatLeftasRight(false);
-	element_Annotations.classList.remove('enabled');
 }
 
 // =============================== Coordinate Fields ===============================
@@ -871,6 +866,17 @@ function callback_RedoEdit(): void {
 	boardeditor.redo();
 }
 
+/**
+ * Resets state without closing the Navigation Bar.
+ * Trigger on LOGICAL gameslot game unload, not gameloader UI unload.
+ */
+function onGameUnload(): void {
+	// Disable annotations mode
+	annotationsEnabled = false;
+	listener_overlay.setTreatLeftasRight(false);
+	element_Annotations.classList.remove('enabled');
+}
+
 export default {
 	isOpen,
 	open,
@@ -888,4 +894,5 @@ export default {
 	isAnnotationsButtonEnabled,
 	areCoordsAllowedToBeEdited,
 	getHeightOfNavBar,
+	onGameUnload,
 };
