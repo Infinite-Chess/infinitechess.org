@@ -7,14 +7,17 @@
 
 import gameloader from '../chess/gameloader.js';
 
-/** Target framerate when not in a game (30fps) */
-const TARGET_FPS_OUT_OF_GAME = 100;
+// Variables -------------------------------------------------
 
-/** Time per frame in milliseconds for 30fps */
-const MS_PER_FRAME_OUT_OF_GAME = 1000 / TARGET_FPS_OUT_OF_GAME;
+/** Target framerate when not in a game (30fps) */
+const TARGET_FPS_TITLE_SCREEN = 30;
+
+// State -----------------------------------------------------
 
 /** Timestamp of the last frame that was actually rendered */
 let lastFrameTime = 0;
+
+// Functions -------------------------------------------------
 
 /**
  * Request an animation frame, with throttling applied when not in a game.
@@ -31,12 +34,23 @@ function requestFrame(callback: FrameRequestCallback): void {
 
 	// Not in a game - throttle to 30fps using a wrapper function
 	const throttledCallback = (timestamp: number): void => {
-		// Calculate time elapsed since last frame
+		// On the very first frame, or after a long pause (e.g. tab was inactive),
+		// reset the timer to the current time.
+		if (lastFrameTime === 0 || timestamp - lastFrameTime > 200) {
+			lastFrameTime = timestamp;
+		}
+
+		// Calculate time elapsed since the last scheduled frame
 		const elapsed = timestamp - lastFrameTime;
 
 		// If enough time has passed, execute the callback
-		if (elapsed >= MS_PER_FRAME_OUT_OF_GAME) {
-			lastFrameTime = timestamp;
+		const millisPerFrame = 1000 / TARGET_FPS_TITLE_SCREEN;
+		if (elapsed >= millisPerFrame) {
+			// Instead of resetting lastFrameTime to the current 'timestamp',
+			// we advance it by a fixed interval. This creates a steady "tick"
+			// that is not affected by the monitor's specific refresh rate, fixing frame-skipping.
+			lastFrameTime += millisPerFrame;
+
 			callback(timestamp);
 		} else {
 			// Not enough time has passed - schedule another check directly with requestAnimationFrame
@@ -46,6 +60,8 @@ function requestFrame(callback: FrameRequestCallback): void {
 
 	requestAnimationFrame(throttledCallback);
 }
+
+// Exports --------------------------------------------------
 
 export default {
 	requestFrame,
