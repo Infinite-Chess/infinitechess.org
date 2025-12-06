@@ -82,8 +82,8 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		sendSocketMessage(
 			ws,
 			'general',
-			'notifyerror',
-			'Invalid websocket message parameters. This is a bug, please report it!',
+			'notify',
+			'Your browser is running outdated code, please hard refresh the page!',
 		);
 		const logText = `INVALID PARAMETERS - Message contents:
 ${JSON.stringify(parsedUnvalidatedMessage, null, 2)}
