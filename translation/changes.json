@@ -1,4 +1,8 @@
 {
+  "81": {
+    "note": "Split inactive_players on line 174 into an array with two quotes.",
+    "changes": []
+  },
   "80": {
     "note": "Renamed ws-you_are_banned to ws-email_blacklisted on line 639, and edited its message.",
     "changes": []
