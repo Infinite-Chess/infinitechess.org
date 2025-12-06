@@ -30,8 +30,8 @@ function requestFrame(callback: FrameRequestCallback): void {
 		return;
 	}
 
-	// Not in a game - throttle to 30fps
-	requestAnimationFrame((timestamp: number) => {
+	// Not in a game - throttle to 30fps using a wrapper function
+	const throttledCallback = (timestamp: number): void => {
 		// Calculate time elapsed since last frame
 		const elapsed = timestamp - lastFrameTime;
 
@@ -40,10 +40,12 @@ function requestFrame(callback: FrameRequestCallback): void {
 			lastFrameTime = timestamp;
 			callback(timestamp);
 		} else {
-			// Not enough time has passed - schedule another check
-			requestFrame(callback);
+			// Not enough time has passed - schedule another check directly with requestAnimationFrame
+			requestAnimationFrame(throttledCallback);
 		}
-	});
+	};
+
+	requestAnimationFrame(throttledCallback);
 }
 
 export default {
