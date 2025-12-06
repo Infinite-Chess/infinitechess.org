@@ -61,7 +61,7 @@ function gameLoop() {
 
 		loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 
-		// Loop again while app is running. Uses framerate limiter to throttle when not in a game.
+		// Loop again while app is running.
 		frameratelimiter.requestFrame(loop);
 	};
 

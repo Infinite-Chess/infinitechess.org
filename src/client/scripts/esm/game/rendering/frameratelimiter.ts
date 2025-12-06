@@ -9,7 +9,11 @@ import gameloader from '../chess/gameloader.js';
 
 // Variables -------------------------------------------------
 
-/** Target framerate when not in a game (30fps) */
+/**
+ * Target framerate when not in a game (30fps)
+ *
+ * I cannot actually tell a difference between 30fps and 240fps there.
+ */
 const TARGET_FPS_TITLE_SCREEN = 30;
 
 // State -----------------------------------------------------
@@ -20,19 +24,18 @@ let lastFrameTime = 0;
 // Functions -------------------------------------------------
 
 /**
- * Request an animation frame, with throttling applied when not in a game.
- * This replaces direct calls to requestAnimationFrame().
- *
+ * Request an animation frame, with throttling applied when on the title screen.
+ * This is a wrapper for calls to requestAnimationFrame().
  * @param callback - The callback function to execute on the next frame
  */
 function requestFrame(callback: FrameRequestCallback): void {
-	// If we're in a game, don't throttle at all - run at full speed
+	// If we're in a game, run at full speed.
 	if (gameloader.areInAGame()) {
 		requestAnimationFrame(callback);
 		return;
 	}
 
-	// Not in a game - throttle to 30fps using a wrapper function
+	// Not in a game (title screen), throttle.
 	const throttledCallback = (timestamp: number): void => {
 		// On the very first frame, or after a long pause (e.g. tab was inactive),
 		// reset the timer to the current time.
