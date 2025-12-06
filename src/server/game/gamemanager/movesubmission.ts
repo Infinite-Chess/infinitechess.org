@@ -100,12 +100,13 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 	if (!isMoveWithinDistanceCap(moveDraft, game.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(
+		sendSocketMessage(
 			ws,
 			'general',
-			'printerror',
-			'Move distance exceeds allowed limit for game duration.',
+			'notifyerror',
+			'Move not accepted. Distance exceeds allowed limit for game duration.',
 		);
+		return;
 	}
 
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
