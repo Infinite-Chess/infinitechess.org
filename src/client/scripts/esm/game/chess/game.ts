@@ -238,7 +238,7 @@ function render(): void {
 	pipeline.setPasses(passes);
 
 	// Only use the pipeline if there are any current effects,
-	// as it increases gpu usage by roughly 33%
+	// as a completely empty pipeline still increases gpu usage by roughly 33%
 
 	// Tell the pipeline to begin. All subsequent rendering will go to a texture.
 	if (passes.length > 0) pipeline.begin();
