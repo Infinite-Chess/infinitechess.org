@@ -108,7 +108,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 	if (isBlacklisted(memberData.email)) {
 		logEventsAndPrint(
 			`[BLOCKED] Skipping email confirmation to ${memberData.email} (Blacklisted)`,
-			'emailLog.txt',
+			'blacklistLog.txt',
 		);
 		return;
 	}
