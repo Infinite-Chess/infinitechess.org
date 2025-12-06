@@ -87,7 +87,7 @@ function configureMiddleware(app) {
 			contentSecurityPolicy: {
 				directives: {
 					defaultSrc: ["'self'"],
-					scriptSrc: ["'self'", "'unsafe-inline'"], // Allows inline scripts
+					scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"], // Allows inline scripts
 					scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
 					objectSrc: ["'none'"],
 					frameSrc: ["'self'", 'https://www.youtube.com'],
