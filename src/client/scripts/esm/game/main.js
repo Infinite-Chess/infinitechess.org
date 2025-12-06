@@ -14,6 +14,7 @@ import camera from './rendering/camera.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
+import frameratelimiter from './rendering/frameratelimiter.js';
 // Import End
 
 ('use strict');
@@ -60,11 +61,11 @@ function gameLoop() {
 
 		loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 
-		// Loop again while app is running. This automatically won't be called more times than your screen can refresh per second.
-		requestAnimationFrame(loop);
+		// Loop again while app is running.
+		frameratelimiter.requestFrame(loop);
 	};
 
-	requestAnimationFrame(loop); // Calls the very first frame. Subsequent loops are called in the loop() function
+	frameratelimiter.requestFrame(loop); // Calls the very first frame. Subsequent loops are called in the loop() function
 }
 
 function render() {
