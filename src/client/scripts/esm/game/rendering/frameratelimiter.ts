@@ -1,15 +1,14 @@
 /**
- * This module manages the framerate of the canvas WebGL game.
- * It wraps requestAnimationFrame() and throttles it to 30fps when not in a game.
- * When in a game, it does not throttle at all.
+ * This module manages the framerate of the game.
  *
- * ZERO dependencies (other than gameloader for game state checking).
+ * When on the title screen, the framerate (frequency of requestAnimationFrame calls)
+ * is limited to 30fps to save GPU resources.
  */
 
 import gameloader from '../chess/gameloader.js';
 
 /** Target framerate when not in a game (30fps) */
-const TARGET_FPS_OUT_OF_GAME = 30;
+const TARGET_FPS_OUT_OF_GAME = 100;
 
 /** Time per frame in milliseconds for 30fps */
 const MS_PER_FRAME_OUT_OF_GAME = 1000 / TARGET_FPS_OUT_OF_GAME;
