@@ -6,10 +6,6 @@
  */
 
 import gameformulator from '../gameformulator.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import specialdetect from '../../../../../../shared/chess/logic/specialdetect.js';
 
 // Import WASM glue code statically so esbuild can bundle it and handle the .wasm file
 import init, * as wasmBindings from './hydrochess-wasm/pkg/hydrochess_wasm.js';
@@ -108,21 +104,21 @@ self.onmessage = async function (e) {
 			return;
 		}
 
-		// Convert WASM move format {from: "x,y", to: "x,y", promotion: "q"}
-		// to MoveDraft format {startCoords: [BigInt, BigInt], endCoords: [BigInt, BigInt], promotion?: number}
-		const moveDraft = convertWasmMoveToMoveDraft(bestMoveResult, engineColor);
-
-		// Reconstruct special move flags (en passant, castling, etc.)
-		try {
-			attachSpecialFlagsToMoveDraft(current_gamefile, moveDraft);
-		} catch (err) {
-			console.error('[Engine] Failed to attach special flags to moveDraft:', err);
+		// Format: "x,y>x,y" or "x,y>x,y=Q" (promotion)
+		const from = bestMoveResult.from; // "x,y"
+		const to = bestMoveResult.to; // "x,y"
+		let moveString = `${from}>${to}`;
+		if (bestMoveResult.promotion) {
+			// Promotion is a single-letter piece code from Rust (e.g. "q").
+			// Encode it as an upper-case letter after '=' for the consumer.
+			const promoChar = String(bestMoveResult.promotion).toUpperCase();
+			moveString += `=${promoChar}`;
 		}
 
-		console.debug('[Engine] Best move:', moveDraft);
+		console.debug('[Engine] Best move:', moveString);
 
-		// return the best move
-		postMessage(moveDraft);
+		// return the best move as a string
+		postMessage(moveString);
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);
 		postMessage(null);
@@ -430,90 +426,4 @@ function getPlayerCodeFromColor(color) {
 		2: 'b', // Black
 	};
 	return colorMap[color] || 'n';
-}
-
-/**
- * Convert WASM move format to JS MoveDraft format
- * WASM: { from: "x,y", to: "x,y", promotion: "q" | null }
- * JS MoveDraft: { startCoords: [BigInt, BigInt], endCoords: [BigInt, BigInt], promotion?: number }
- */
-function convertWasmMoveToMoveDraft(wasmMove, engineColor) {
-	const fromParts = wasmMove.from.split(',');
-	const toParts = wasmMove.to.split(',');
-
-	const startCoords = [BigInt(fromParts[0]), BigInt(fromParts[1])];
-	const endCoords = [BigInt(toParts[0]), BigInt(toParts[1])];
-
-	const moveDraft = { startCoords, endCoords };
-
-	// Handle promotion if present
-	if (wasmMove.promotion) {
-		// Convert piece letter to full typed code (includes color)
-		moveDraft.promotion = promotionStringToType(wasmMove.promotion, engineColor);
-	}
-
-	return moveDraft;
-}
-
-/**
- * Attach special move flags (en passant, castling, etc.) to minimal MoveDraft.
- */
-function attachSpecialFlagsToMoveDraft(gamefile, moveDraft) {
-	if (!gamefile || !moveDraft) return;
-	if (!gamefile.boardsim || !gamefile.boardsim.pieces) return;
-
-	// Find the moving piece on the board
-	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.startCoords);
-	if (!piece) return;
-
-	// Get moveset and special moves for this piece
-	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
-	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves, false);
-
-	// Find the special-move coordinate matching our endCoords and transfer its flags
-	for (const coord of legalSpecialMoves.individual) {
-		if (!coordutil.areCoordsEqual(coord, moveDraft.endCoords)) continue;
-		specialdetect.transferSpecialFlags_FromCoordsToMove(coord, moveDraft);
-		break;
-	}
-}
-
-/**
- * Convert promotion piece letter to integer
- */
-function promotionStringToType(promotion, engineColor) {
-	const promotionMap = {
-		v: 0, // Void
-		x: 1, // Obstacle
-		k: 2, // King
-		i: 3, // Giraffe
-		l: 4, // Camel
-		z: 5, // Zebra
-		s: 6, // Knightrider
-		m: 7, // Amazon
-		q: 8, // Queen
-		y: 9, // RoyalQueen
-		h: 10, // Hawk
-		c: 11, // Chancellor
-		a: 12, // Archbishop
-		e: 13, // Centaur
-		d: 14, // RoyalCentaur
-		o: 15, // Rose
-		n: 16, // Knight
-		g: 17, // Guard
-		u: 18, // Huygen
-		r: 19, // Rook
-		b: 20, // Bishop
-		p: 21, // Pawn
-	};
-
-	// raw piece kind (0–21)
-	const rawType = promotionMap[promotion.toLowerCase()] ?? 8; // default queen
-
-	// engineColor is 1 (White) or 2 (Black)
-	const color = engineColor === 2 ? 2 : 1;
-
-	// Full typed piece code = color * NUM_TYPES + rawType
-	return color * NUM_TYPES + rawType;
 }
