@@ -56,6 +56,8 @@ let premoves: Premove[] = [];
  *
  * THIS SHOULD ONLY TEMPORARILY ever be false!! If it is, it means we just
  * need to do something like calculating legal moves, then reapply the premoves.
+ *
+ * This can even be true when there's no premoves queued.
  */
 let applied: boolean = true;
 

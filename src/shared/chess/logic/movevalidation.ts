@@ -30,7 +30,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 	// Safety check: Make sure premoves are not applied.
 	// They should be unapplied before calling this function and reapplied afterwards.
 	if (premoves.arePremovesApplied()) {
-		throw new Error('Cannot run validation while premoves are applied.');
+		throw new Error('Cannot run validation while premoves are applied. Rewind them first.');
 	}
 
 	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
@@ -87,12 +87,14 @@ function isOpponentsMoveLegal(
 /**
  * Tests if the provided compact move string is legal to play.
  * @param gamefile - The gamefile
- * @param compact - The move in compact string format (e.g. "x,y>x,y=Q")
+ * @param compact - The move that SHOULD be in compact string format (e.g. "x,y>x,y=Q"), but we can't trust all enginess response contents.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function isEnginesMoveLegal(gamefile: FullGame, compact: string): MoveValidationResult {
+function isEnginesMoveLegal(gamefile: FullGame, compact: unknown): MoveValidationResult {
+	if (typeof compact !== 'string') return { valid: false, reason: 'Not a string.' };
+
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
 	let move_compact: MoveDraft;
 	try {
@@ -242,6 +244,6 @@ function validateConclusion(
 }
 
 export default {
-	checkCompactMoveValidity: isEnginesMoveLegal,
+	isEnginesMoveLegal,
 	isOpponentsMoveLegal,
 };

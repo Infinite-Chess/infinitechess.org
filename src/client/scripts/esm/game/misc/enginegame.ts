@@ -1,6 +1,5 @@
 // This module keeps track of the data of the engine game we are currently in.
 
-import type { MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import selection from '../chess/selection.js';
@@ -13,6 +12,8 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 import premoves from '../chess/premoves.js';
 import perspective from '../rendering/perspective.js';
+import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -155,8 +156,9 @@ function onMovePlayed(): void {
 /**
  * This method takes care of all the logic involved in making an engine move
  * It gets called after the engine finishes its calculation
+ * @param move - The move that SHOULD be a string in compact format "x,y>x,y=P"
  */
-function makeEngineMove(moveDraft: MoveDraft): void {
+function makeEngineMove(compactMove: unknown): void {
 	if (!inEngineGame) return;
 	if (!currentEngine)
 		return console.error('Attempting to make engine move, but no engine loaded!');
@@ -166,6 +168,16 @@ function makeEngineMove(moveDraft: MoveDraft): void {
 
 	// Rewind all premoves to get the real game state before making any other board changes
 	premoves.rewindPremoves(gamefile, mesh);
+
+	const moveValidationResults = movevalidation.isEnginesMoveLegal(gamefile, compactMove);
+
+	if (!moveValidationResults.valid) {
+		statustext.showStatus(`Engine submitted an illegal move.`, true, 2);
+		console.error(
+			`Engine move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
+		);
+		return;
+	}
 
 	// Go to latest move before making a new move
 	movesequence.viewFront(gamefile, mesh);
@@ -178,7 +190,7 @@ function makeEngineMove(moveDraft: MoveDraft): void {
 	// const endCoordsToAppendSpecial: CoordsSpecial = jsutil.deepCopyObject(move.endCoords);
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+	const move = movesequence.makeMove(gamefile, mesh, moveValidationResults.draft);
 	if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	// We should probably have this last, since this will make another move AFTER handling our engine's move here.

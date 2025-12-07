@@ -28,6 +28,9 @@ import type {
 	CoordsKey,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
+import icnconverter, {
+	_Move_Compact,
+} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
@@ -1755,16 +1758,18 @@ function mulberry32(a: number): () => number {
 /**
  * Converts a target square for the black king to move to into a Move Object, taking into account gamefile_royal_coords
  */
-function move_to_gamefile_move(target_square: DoubleCoords): MoveDraft {
+function move_to_gamefile_move(target_square: DoubleCoords): string {
 	const endCoords: DoubleCoords = [
 		gamefile_royal_coords[0] + target_square[0],
 		gamefile_royal_coords[1] + target_square[1],
 	];
 	// Convert the floating point numbers to BigInt coordinates before passing the move to the game
-	return {
+	const moveDraft: _Move_Compact = {
 		startCoords: [BigInt(gamefile_royal_coords[0]), BigInt(gamefile_royal_coords[1])],
 		endCoords: [BigInt(endCoords[0]!), BigInt(endCoords[1]!)],
 	};
+	// Now convert to most compact string notation: "x,y>x,y=Q" that the engine API accepts.
+	return icnconverter.getCompactMoveFromDraft(moveDraft);
 }
 
 function doesTypeExist(boardsim: Board, type: number): boolean {
