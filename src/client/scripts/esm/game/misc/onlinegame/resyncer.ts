@@ -26,11 +26,11 @@ import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movesequence from '../../chess/movesequence.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import animation from '../../rendering/animation.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
 // Functions -----------------------------------------------------------------------------
 
@@ -176,18 +176,19 @@ function synchronizeMovesList(
 			// Perform legality checks
 			// If not legal, this will be a string for why it is illegal.
 			// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-			const moveIsLegal = legalmoves.isOpponentsMoveLegal(
+			const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 				gamefile,
 				moveDraft,
 				claimedGameConclusion,
 			);
-			if (moveIsLegal !== true)
+			if (!moveValidationResult.valid) {
 				console.log(
-					`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`,
+					`Buddy made an illegal play: "${thisShortmove.compact}". Reason: ${moveValidationResult.reason} Move number: ${i + 1}`,
 				);
-			if (moveIsLegal !== true && !onlinegame.getIsPrivate()) {
-				// Allow illegal moves in private games
-				onlinegame.reportOpponentsMove(moveIsLegal);
+			}
+			if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
+				// Only report cheating in non-private games
+				onlinegame.reportOpponentsMove(moveValidationResult.reason);
 				return { opponentPlayedIllegalMove: true };
 			}
 		}
