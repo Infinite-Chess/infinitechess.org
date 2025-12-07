@@ -10,7 +10,7 @@ import gameloader from '../chess/gameloader.js';
 // Variables -------------------------------------------------
 
 /**
- * Target framerate when not in a game (30fps)
+ * Target framerate when not in a game.
  *
  * I cannot actually tell a difference between 30fps and 240fps there.
  */
