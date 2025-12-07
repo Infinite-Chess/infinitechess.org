@@ -44,6 +44,7 @@ function copyToClipboard(text: string): void {
 function isMouseSupported(): boolean {
 	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
 	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
+	// USING "any-pointer" CAUSES false positives on mobile devices!
 	return window.matchMedia('(pointer: fine)').matches;
 }
 
