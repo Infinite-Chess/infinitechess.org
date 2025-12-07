@@ -41,7 +41,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 	// Run the specific logic (move validation, conclusion check, etc)
 	const result = action();
 
-	// Rewind to original spot (Always runs, even if action throws error)
+	// Rewind to original state
 	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
 		movepiece.applyMove(gamefile, move, false),
 	);
