@@ -78,6 +78,11 @@ function hasAtleastOnePremove(): boolean {
 	return premoves.length > 0;
 }
 
+/** Whether premove board changes are applied (can be true even when there's zero queued premoves) */
+function arePremovesApplied(): boolean {
+	return applied;
+}
+
 /** Adds an premove and applies its changes to the board. */
 function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDraft): Premove {
 	// console.log("Adding premove");
@@ -415,6 +420,7 @@ function render(): void {
 
 export default {
 	hasAtleastOnePremove,
+	arePremovesApplied,
 	addPremove,
 	cancelPremoves,
 	rewindPremoves,

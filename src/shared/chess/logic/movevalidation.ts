@@ -1,7 +1,6 @@
 import premoves from '../../../client/scripts/esm/game/chess/premoves';
 import jsutil from '../../util/jsutil';
 import boardutil, { Piece } from '../util/boardutil';
-import moveutil from '../util/moveutil';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil';
 import winconutil from '../util/winconutil';
 import { FullGame } from './gamefile';
@@ -9,6 +8,13 @@ import icnconverter, { _Move_Compact } from './icn/icnconverter';
 import legalmoves from './legalmoves';
 import movepiece, { CoordsSpecial, MoveDraft } from './movepiece';
 import specialdetect from './specialdetect';
+
+// Type Definitions ------------------------------------------------------------
+
+type MoveValidationResult = { valid: true; draft: MoveDraft } | { valid: false; reason: string };
+type ConclusionValidityResult = { valid: true } | { valid: false; reason: string };
+
+// Functions -------------------------------------------------------------------
 
 /**
  * UTILITY: Runs a specific validation action while the game is temporarily
@@ -22,85 +28,75 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 	const originalMoveIndex = boardsim.state.local.moveIndex;
 
 	// Safety check: Make sure premoves are not applied.
+	// They should be unapplied before calling this function and reapplied afterwards.
 	if (premoves.arePremovesApplied()) {
 		throw new Error('Cannot run validation while premoves are applied.');
 	}
 
-	try {
-		// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
-		movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
-			movepiece.applyMove(gamefile, move, true),
-		);
+	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
+	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
+		movepiece.applyMove(gamefile, move, true),
+	);
 
-		// 2. Run the specific logic (move validation, conclusion check, etc)
-		return action();
-	} finally {
-		// Rewind to original spot (Always runs, even if action throws error)
-		movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-			movepiece.applyMove(gamefile, move, false),
-		);
-	}
+	// Run the specific logic (move validation, conclusion check, etc)
+	const result = action();
+
+	// Rewind to original spot (Always runs, even if action throws error)
+	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
+		movepiece.applyMove(gamefile, move, false),
+	);
+
+	return result;
 }
 
 /**
  * Tests if the provided move is legal to play in this game,
  * including whether the claimed game conclusion is correct.
- *
- * MODIFIES THE MOVE DRAFT to attach any special move flags it needs!
  * @param gamefile - The gamefile
- * @param move_compact - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`. This will be mutated to attach any special move flags!
- * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
+ * @param move_compact - The move in compact JSON format
+ * @param claimedGameConclusion - The opponent's claimed game conclusion
+ * @returns An object containing either:
+ * - `valid: true` and the `draft` of the move with any special flags attached.
+ * - `valid: false` and a `reason` string explaining why it is illegal.
  */
 function isOpponentsMoveLegal(
 	gamefile: FullGame,
 	move_compact: _Move_Compact,
 	claimedGameConclusion: string | undefined,
 ): MoveValidationResult {
-	const moveValidationResult: MoveValidationResult = checkMoveDraftValidity(
-		gamefile,
-		move_compact,
-	);
-	if (!moveValidationResult.valid) return moveValidationResult;
-	// Move is legal so far, with any special flags attached to moveDraft
+	// We run both move and conclusion checks when at the front of the game
+	return runActionAtGameFront(gamefile, () => {
+		// 1. Check Move Legality
+		const moveResult = validateMove(gamefile, move_compact);
+		if (!moveResult.valid) return moveResult;
 
-	// Now, simulate the move to see if the resulting game conclusion matches their claim.
-	// Used to prevent cheating by claiming a win when they didn't actually achieve it.
+		// 2. Check Conclusion Validity (using the draft with special flags attached)
+		const conclusionResult = validateConclusion(
+			gamefile,
+			moveResult.draft,
+			claimedGameConclusion,
+		);
 
-	const conclusionValidationResult = checkConclusionValidity(
-		gamefile,
-		moveValidationResult.draft,
-		claimedGameConclusion,
-	);
-	if (!conclusionValidationResult.valid) return conclusionValidationResult;
+		if (!conclusionResult.valid) return conclusionResult;
 
-	// By this point, the move is legal and the claimed conclusion is valid!
-
-	return { valid: true, draft: moveValidationResult.draft };
+		// At this stage, both move and conclusion are valid!
+		return { valid: true, draft: moveResult.draft };
+	});
 }
 
-type MoveValidationResult = { valid: true; draft: MoveDraft } | { valid: false; reason: string };
-
 /**
- * Tests if the provided move is legal to play.
- * If so, returns the special flags that go with it, if it is a special move.
- * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
+ * Tests if the provided compact move string is legal to play.
  * @param gamefile - The gamefile
- * @param compact - The move in the most compact string notation (e.g. 'x,y>x,y=Q')
+ * @param compact - The move in compact string format (e.g. "x,y>x,y=Q")
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function checkCompactMoveValidity(gamefile: FullGame, compact: string): MoveValidationResult {
-	// Safety check: Make sure premoves are not applied.
-	if (premoves.arePremovesApplied())
-		throw new Error(
-			'Cannot check move validity while premoves are applied. Rewind them first.',
-		);
-
-	// Convert the move from compact short format "x,y>x,y=N"
-	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
+function isEnginesMoveLegal(gamefile: FullGame, compact: string): MoveValidationResult {
+	// Convert the move from compact short format "x,y>x,y=N" to JSON format
+	let move_compact: MoveDraft;
 	try {
-		moveDraft = icnconverter.parseMoveFromShortFormMove(compact); // { startCoords, endCoords, promotion }
+		move_compact = icnconverter.parseMoveFromShortFormMove(compact);
 	} catch (error: unknown) {
 		const msg = error instanceof Error ? error.message : String(error);
 		console.error(`Invalid format error when parsing compact move "${compact}": ${msg}`);
@@ -108,73 +104,41 @@ function checkCompactMoveValidity(gamefile: FullGame, compact: string): MoveVali
 		return { valid: false, reason: 'Incorrect format.' };
 	}
 
-	return checkMoveDraftValidity(gamefile, moveDraft);
-}
-
-function checkMoveDraftValidity(
-	gamefile: FullGame,
-	move_compact: _Move_Compact,
-): MoveValidationResult {
-	const { boardsim } = gamefile;
-
-	// Used to return to this move after we're done simulating
-	const originalMoveIndex = boardsim.state.local.moveIndex;
-	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating for validity)
-	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
-		movepiece.applyMove(gamefile, move, true),
-	);
-
-	const validationResult: MoveValidationResult = moveValidityWrapper(gamefile, move_compact);
-
-	// Rewind the game back to the index we were originally on before simulating
-	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-		movepiece.applyMove(gamefile, move, false),
-	);
-
-	return validationResult;
+	return runActionAtGameFront(gamefile, () => {
+		return validateMove(gamefile, move_compact);
+	});
 }
 
 /**
- * Checks the validity of the move, attaching any special flags to the moveDraft if valid.
- * REQUIRES us to be at the front of the game already!
+ * CORE LOGIC: Checks validity of a move.
  * @param gamefile - The gamefile
- * @param move_compact - The move draft to validate, without special flags attached yet.
+ * @param move_compact - The move to validate in compact JSON format, without special flags attached.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function moveValidityWrapper(
-	gamefile: FullGame,
-	move_compact: _Move_Compact,
-): MoveValidationResult {
+function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveValidationResult {
 	const { boardsim, basegame } = gamefile;
 
-	// Safety checks: Make sure we're at the front of the game, with no premoves applied.
-	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim))
-		throw new Error('Checking move validity requires us to be at the front of the game!');
-	if (premoves.arePremovesApplied())
-		throw new Error(
-			'Checking move validity requires premoves to not be applied. Rewind them first.',
-		);
-
-	// Make sure a piece exists on the start coords
 	const piecemoved: Piece | undefined = boardutil.getPieceFromCoords(
 		boardsim.pieces,
 		move_compact.startCoords,
 	);
+
+	// Make sure a piece exists on the start coords
 	if (!piecemoved) return { valid: false, reason: 'No piece at start coords.' };
-	const rawTypeMoved = typeutil.getRawType(piecemoved.type);
 
 	// Make sure it matches the color of whos turn it is.
 	const colorOfPieceMoved: Player = typeutil.getColorFromType(piecemoved.type);
 	if (colorOfPieceMoved !== basegame.whosTurn)
-		return { valid: false, reason: 'Incorrect color.' }; // Can only move pieces of the color of whos turn it is.
+		return { valid: false, reason: 'Incorrect color.' };
 
-	// If there is a promotion, make sure that's legal
+	const rawTypeMoved = typeutil.getRawType(piecemoved.type);
+
 	promotion: if (move_compact.promotion !== undefined) {
+		// User IS promoting
 		if (!basegame.gameRules.promotionRanks)
 			return { valid: false, reason: 'Game has no promotion ranks.' };
-
 		if (rawTypeMoved !== r.PAWN) return { valid: false, reason: "Can't promote non-pawn." };
 
 		const promotionRanks: bigint[] | undefined =
@@ -199,7 +163,8 @@ function moveValidityWrapper(
 		if (!promotionsAllowed.includes(rawPromotion))
 			return { valid: false, reason: 'Illegal promotion type.' };
 	} else {
-		// No promotion, make sure they AREN'T moving to a promotion rank WITHOUT promoting! That's also illegal.
+		// User is NOT promoting
+		// Make sure they aren't moving to a promotion rank WITHOUT promoting! That's also illegal.
 		if (!basegame.gameRules.promotionRanks) break promotion; // This game doesn't have promotion.
 
 		if (rawTypeMoved !== r.PAWN) break promotion; // Not a pawn, not forced to promote.
@@ -210,16 +175,17 @@ function moveValidityWrapper(
 
 		if (!promotionRanks.includes(move_compact.endCoords[1])) break promotion; // Not on a promotion rank, not forced to promote.
 
+		// If we are here: They moved a pawn to a promotion rank but didn't promote.
 		return { valid: false, reason: 'Did not promote.' };
 	}
 
-	// Test if that piece's legal moves contain the destinationCoords.
+	// Test if that piece's legal moves contain the destination coords.
 	const legalMoves = legalmoves.calculateAll(gamefile, piecemoved);
 
-	// This should pass on any special moves tags at the same time.
 	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(
 		move_compact.endCoords,
 	);
+	// This should pass on any special moves tags to endCoordsToAppendSpecialsTo at the same time.
 	if (
 		!legalmoves.checkIfMoveLegal(
 			gamefile,
@@ -228,39 +194,31 @@ function moveValidityWrapper(
 			endCoordsToAppendSpecialsTo,
 			colorOfPieceMoved,
 		)
-	)
+	) {
 		return { valid: false, reason: 'Illegal destination coords.' };
+	}
 
-	// Transfer the special move flags to the moveDraft
+	// Now transfer the special move flags from the coords to the move draft
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, move_compact);
 
 	// If we reach here, the move is valid!
 	return { valid: true, draft: move_compact };
 }
 
-type ConclusionValidityResult = { valid: true } | { valid: false; reason: string };
-
 /**
- * Checks if the claimed game conclusion after the provided moveDraft is correct.
- * REQUIRES us to be at the front of the game already!
+ * Checks if the claimed game conclusion is the expected one after simulating the move.
  * @param gamefile - The gamefile
- * @param moveDraft - The move draft to simulate the conclusion for, WITH the special flags attached.
- * @param claimedGameConclusion - The claimed game conclusion to test against.
- * @returns - An object containing either:
- * - `valid: true` if the claimed conclusion is correct.
+ * @param moveDraft - The move draft, WITH special flags attached!
+ * @param claimedGameConclusion - The opponent's claimed game conclusion
+ * @returns An object containing either:
+ * - `valid: true`
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function checkConclusionValidity(
+function validateConclusion(
 	gamefile: FullGame,
 	moveDraft: MoveDraft,
 	claimedGameConclusion: string | undefined,
 ): ConclusionValidityResult {
-	// Safety check: Make sure premoves are not applied.
-	if (premoves.arePremovesApplied())
-		throw new Error(
-			'Cannot check conclusion validity while premoves are applied. Rewind them first.',
-		);
-
 	if (
 		claimedGameConclusion !== undefined &&
 		!winconutil.isGameConclusionDecisive(claimedGameConclusion)
@@ -269,66 +227,21 @@ function checkConclusionValidity(
 		return { valid: true };
 	}
 
-	const { boardsim } = gamefile;
-
-	// Used to return to this move after we're done simulating
-	const originalMoveIndex = boardsim.state.local.moveIndex;
-	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating for validity)
-	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
-		movepiece.applyMove(gamefile, move, true),
-	);
-
-	const validityResult: ConclusionValidityResult = conclusionValidityWrapper(
-		gamefile,
-		moveDraft,
-		claimedGameConclusion,
-	);
-
-	// Rewind the game back to the index we were originally on before simulating
-	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-		movepiece.applyMove(gamefile, move, false),
-	);
-
-	return validityResult;
-}
-
-/**
- * Checks the validity of the claimed game conclusion after the provided moveDraft.
- * REQUIRES us to be at the front of the game already!
- * MOVE DRAFT MUST have special flags attached already!
- * @param gamefile - The gamefile
- * @param moveDraft - The move draft to validate, WITH the special flags attached!
- * @param claimedGameConclusion - The claimed game conclusion to test against.
- * @returns - An object containing either:
- * - `valid: true` if the claimed conclusion is correct.
- * - `valid: false` and a `reason` string explaining why it is illegal.
- */
-function conclusionValidityWrapper(
-	gamefile: FullGame,
-	moveDraft: MoveDraft,
-	claimedGameConclusion: string | undefined,
-): ConclusionValidityResult {
-	// Safety checks: Make sure we're at the front of the game, with no premoves applied.
-	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim))
-		throw new Error('Checking conclusion validity requires us to be at the front of the game!');
-	if (premoves.arePremovesApplied())
-		throw new Error(
-			'Checking conclusion validity requires premoves to not be applied. Rewind them first.',
-		);
-
-	// Now, simulate the move to see if the resulting game conclusion matches their claim.
-	// Used to prevent cheating by claiming a win when they didn't actually achieve it.
-
 	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 	const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
-	if (simulatedConclusion !== claimedGameConclusion)
+
+	if (simulatedConclusion !== claimedGameConclusion) {
+		console.error(
+			`Conclusion mismatch! Simulated: ${simulatedConclusion}, Claimed: ${claimedGameConclusion}`,
+		);
 		return { valid: false, reason: 'Wrong conclusion.' };
+	}
 
 	// If we reach here, the claimed conclusion is valid!
 	return { valid: true };
 }
 
 export default {
-	checkCompactMoveValidity,
+	checkCompactMoveValidity: isEnginesMoveLegal,
 	isOpponentsMoveLegal,
 };
