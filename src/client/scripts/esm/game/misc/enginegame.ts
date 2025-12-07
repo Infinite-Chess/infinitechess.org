@@ -13,6 +13,7 @@ import { animateMove } from '../chess/graphicalchanges.js';
 import premoves from '../chess/premoves.js';
 import perspective from '../rendering/perspective.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+// @ts-ignore
 import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
