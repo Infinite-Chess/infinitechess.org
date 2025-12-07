@@ -56,6 +56,8 @@ let premoves: Premove[] = [];
  *
  * THIS SHOULD ONLY TEMPORARILY ever be false!! If it is, it means we just
  * need to do something like calculating legal moves, then reapply the premoves.
+ *
+ * This can even be true when there's no premoves queued.
  */
 let applied: boolean = true;
 
@@ -76,6 +78,11 @@ document.addEventListener('premoves-toggle', (_e) => {
 /** Gets all pending premoves. */
 function hasAtleastOnePremove(): boolean {
 	return premoves.length > 0;
+}
+
+/** Whether premove board changes are applied (can be true even when there's zero queued premoves) */
+function arePremovesApplied(): boolean {
+	return applied;
 }
 
 /** Adds an premove and applies its changes to the board. */
@@ -415,6 +422,7 @@ function render(): void {
 
 export default {
 	hasAtleastOnePremove,
+	arePremovesApplied,
 	addPremove,
 	cancelPremoves,
 	rewindPremoves,

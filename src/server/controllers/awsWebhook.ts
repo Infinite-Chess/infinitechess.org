@@ -74,8 +74,14 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 	// -------------------------------------------------------------------------
 	// CASE 2: Notification
 	// -------------------------------------------------------------------------
-	if (messageType === 'Notification') {
-		console.log('[AWS WEBHOOK] Processing notification...');
+	else if (messageType === 'Notification') {
+		// console.log('[AWS WEBHOOK] Processing notification...');
+		// Log entire message so we can learn unexpected structures
+		logEventsAndPrint(
+			`[AWS WEBHOOK] Received Notification: ${body.Message}`,
+			'awsNotifications.txt',
+		);
+
 		let sesMessage;
 		try {
 			// AWS SNS wraps the actual SES JSON inside a string called "Message"
@@ -83,7 +89,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			sesMessage = JSON.parse(body.Message);
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : String(err);
-			logEventsAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'awsNotifications.txt');
+			logEventsAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'errLog.txt');
 			res.status(400).send('Bad JSON');
 			return;
 		}
@@ -96,7 +102,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			// We strictly ban Permanent bounces (User Unknown, etc)
 			// Transient bounces (Mailbox Full) are usually safe to retry later, but banning them is safer.
 			if (bounce.bounceType === 'Permanent') {
-				// // 'Permanent' or 'Transient'
+				// 'Permanent' or 'Transient'
 				const recipients = bounce.bouncedRecipients;
 				if (Array.isArray(recipients)) {
 					recipients.forEach((recipient: any) => {
@@ -110,11 +116,16 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 						addToBlacklist(email, 'bounce');
 					});
 				}
+			} else {
+				logEventsAndPrint(
+					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${bounce.bounceType}`,
+					'awsNotifications.txt',
+				);
 			}
 		}
 
 		// Handle Complaints (Spam Reports)
-		if (type === 'Complaint') {
+		else if (type === 'Complaint') {
 			const recipients = sesMessage.complaint.complainedRecipients;
 			if (Array.isArray(recipients)) {
 				recipients.forEach((recipient: any) => {
@@ -123,7 +134,17 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 					addToBlacklist(email, 'spam_report');
 				});
 			}
+		} else {
+			logEventsAndPrint(
+				`[AWS WEBHOOK] Unknown notification type: ${type}`,
+				'awsNotifications.txt',
+			);
 		}
+	} else {
+		logEventsAndPrint(
+			`[AWS WEBHOOK] Unknown message type: ${messageType}`,
+			'awsNotifications.txt',
+		);
 	}
 
 	// Always return 200 OK.

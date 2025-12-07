@@ -19,6 +19,7 @@ import pl from 'date-fns/locale/pl/index.js';
 import { fileURLToPath } from 'node:url';
 import { insertScriptIntoHTML } from '../utility/HTMLScriptInjector.js';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { UNCERTAIN_LEADERBOARD_RD } from '../game/gamemanager/ratingcalculation.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -357,6 +358,9 @@ function translateStaticTemplates(translations) {
 						language: language,
 						newsHTML: translations[language].news,
 						viewsfolder: path.join(__dirname, '../../client/views'),
+
+						// Custom included variables
+						ratingDeviationUncertaintyThreshold: UNCERTAIN_LEADERBOARD_RD,
 					},
 				),
 			);

@@ -254,6 +254,7 @@ function unloadGame(): void {
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
 	annotations.onGameUnload(); // Clear all user-drawn highlights
+	guinavigation.onGameUnload(); // Reset Annotations mode button state
 	premoves.onGameUnload(); // Clear all premoves
 
 	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)

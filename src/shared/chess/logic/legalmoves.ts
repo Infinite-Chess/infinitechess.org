@@ -5,11 +5,8 @@
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import specialdetect from './specialdetect.js';
-import winconutil from '../util/winconutil.js';
-import movepiece from './movepiece.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
-import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import movesets from './movesets.js';
 import variant from '../variants/variant.js';
@@ -18,7 +15,7 @@ import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
 import bounds from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import bdcoords from '../util/bdcoords.js';
 
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
@@ -26,11 +23,10 @@ import type { CoordsKey, Coords, BDCoords } from '../util/coordutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
-import type { CoordsSpecial, MoveDraft } from './movepiece.js';
+import type { CoordsSpecial } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import bdcoords from '../util/bdcoords.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -606,154 +602,6 @@ function checkIfMoveLegal(
 }
 
 /**
- * Tests if the provided move is legal to play in this game.
- * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
- *
- * MODIFIES THE MOVE DRAFT to attach any special move flags it needs!
- * @param gamefile - The gamefile
- * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`. This will be mutated to attach any special move flags!
- * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
- */
-function isOpponentsMoveLegal(
-	gamefile: FullGame,
-	moveDraft: MoveDraft,
-	claimedGameConclusion: string | undefined,
-): string | true {
-	const { boardsim, basegame } = gamefile;
-
-	if (!moveDraft) {
-		console.log(
-			'Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.',
-		);
-		return 'Move is not defined. Probably an error in converting it to long format.';
-	}
-
-	const inCheckB4Forwarding = jsutil.deepCopyObject(boardsim.state.local.inCheck);
-
-	const originalMoveIndex = boardsim.state.local.moveIndex; // Used to return to this move after we're done simulating
-	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
-	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
-		movepiece.applyMove(gamefile, move, true),
-	);
-
-	// Make sure a piece exists on the start coords
-	const piecemoved = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords); // { type, index, coords }
-	if (!piecemoved) {
-		console.log(
-			`Opponent's move is illegal because no piece exists at the startCoords: ${String(moveDraft.startCoords)}`,
-		);
-		return rewindGameAndReturnReason('No piece exists at start coords.');
-	}
-
-	// Make sure it's the same color as your opponent.
-	const colorOfPieceMoved = typeutil.getColorFromType(piecemoved.type);
-	if (colorOfPieceMoved !== basegame.whosTurn) {
-		console.log(
-			`Opponent's move is illegal because you can't move a non-friendly piece: ${String(moveDraft.startCoords)}`,
-		);
-		return rewindGameAndReturnReason("Can't move a non-friendly piece.");
-	}
-
-	// If there is a promotion, make sure that's legal
-	if (moveDraft.promotion !== undefined) {
-		if (typeutil.getRawType(piecemoved.type) !== r.PAWN) {
-			console.log(
-				`Opponent's move is illegal because you can't promote a non-pawn: ${String(moveDraft.startCoords)}`,
-			);
-			return rewindGameAndReturnReason("Can't promote a non-pawn.");
-		}
-		const colorPromotedTo = typeutil.getColorFromType(moveDraft.promotion);
-		if (basegame.whosTurn !== colorPromotedTo) {
-			console.log(
-				`Opponent's move is illegal because they promoted to the opposite color: ${typeutil.debugType(moveDraft.promotion)}`,
-			);
-			return rewindGameAndReturnReason("Can't promote to opposite color.");
-		}
-		const rawPromotion = typeutil.getRawType(moveDraft.promotion);
-		if (!basegame.gameRules.promotionsAllowed![basegame.whosTurn]!.includes(rawPromotion)) {
-			console.log(
-				`Opponent's move is illegal because the specified promotion is illegal: ${typeutil.debugType(moveDraft.promotion)}`,
-			);
-			return rewindGameAndReturnReason('Specified promotion is illegal.');
-		}
-	} else {
-		// No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
-		if (specialdetect.isPawnPromotion(basegame, piecemoved.type, moveDraft.endCoords)) {
-			console.log(
-				`Opponent's move is illegal because they didn't promote at the promotion line: ${String(moveDraft.endCoords)}`,
-			);
-			return rewindGameAndReturnReason("Didn't promote when moved to promotion line.");
-		}
-	}
-
-	// Test if that piece's legal moves contain the destinationCoords.
-	const legalMoves = calculateAll(gamefile, piecemoved);
-
-	// This should pass on any special moves tags at the same time.
-	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
-	if (
-		!checkIfMoveLegal(
-			gamefile,
-			legalMoves,
-			piecemoved.coords,
-			endCoordsToAppendSpecialsTo,
-			colorOfPieceMoved,
-		)
-	) {
-		// Illegal move
-		console.log(
-			`Opponent's move is illegal because the destination coords are illegal: ${String(moveDraft.endCoords)}`,
-		);
-		return rewindGameAndReturnReason(
-			`Destination coordinates are illegal. inCheck: ${String(boardsim.state.local.inCheck)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}`,
-		);
-	}
-	// Transfer the special move flag to the moveDraft
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveDraft);
-
-	// Check the resulting game conclusion from the move and if that lines up with the opponents claim.
-	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
-	// such as time, aborted, resignation, disconnect)
-	if (
-		claimedGameConclusion === undefined ||
-		winconutil.isGameConclusionDecisive(claimedGameConclusion)
-	) {
-		const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
-		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
-		if (simulatedConclusion !== claimedGameConclusion) {
-			console.log(
-				`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}"`,
-			);
-			return rewindGameAndReturnReason(
-				`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`,
-			);
-		}
-	}
-
-	// Did they have enough time to zoom out as far as they moved?
-	// IMPLEMENT AFTER BIG DECIMALS.
-	// The gamefile's metadata contains the start time of the game.
-	// Use that to determine if they've had enough time to zoom as
-	// far as they did since the game began
-	// ...
-
-	// Rewind the game back to the index we were originally on before simulating
-	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-		movepiece.applyMove(gamefile, move, false),
-	);
-
-	return true; // By this point, nothing illegal!
-
-	function rewindGameAndReturnReason(reasonIllegal: string): string {
-		// Rewind the game back to the index we were originally on
-		movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-			movepiece.applyMove(gamefile, move, false),
-		);
-		return reasonIllegal;
-	}
-}
-
-/**
  * Tests if the piece's precalculated slideMoveset is able to reach the provided coords.
  * ASSUMES the coords are on the direction of travel!!!
  * @param slideMoveset - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
@@ -832,7 +680,6 @@ export default {
 	calcPiecesLegalSlideLimitOnSpecificLine,
 
 	checkIfMoveLegal,
-	isOpponentsMoveLegal,
 	doesSlidingMovesetContainSquare,
 	hasAtleast1Move,
 };

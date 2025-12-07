@@ -8,8 +8,6 @@ import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
-import bd from '@naviary/bigdecimal';
-
 import { gl } from './webgl.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';

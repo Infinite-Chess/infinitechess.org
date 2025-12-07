@@ -15,12 +15,14 @@ import selection from '../../chess/selection.js';
 import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movesequence from '../../chess/movesequence.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnconverter, {
+	_Move_Compact,
+} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import guiclock from '../../gui/guiclock.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import premoves from '../../chess/premoves.js';
 import specialrighthighlights from '../../rendering/highlights/specialrighthighlights.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
 // @ts-ignore
@@ -76,10 +78,10 @@ function handleOpponentsMove(
 		return onlinegame.resyncToGame();
 	}
 
-	// Convert the move from compact short format "x,y>x,yN"
-	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
+	// Convert the move from compact short format "x,y>x,y=N" to JSON
+	let move_compact: _Move_Compact;
 	try {
-		moveDraft = icnconverter.parseMoveFromShortFormMove(message.move.compact); // { startCoords, endCoords, promotion }
+		move_compact = icnconverter.parseMoveFromShortFormMove(message.move.compact); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(
 			`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move.compact)}`,
@@ -93,17 +95,31 @@ function handleOpponentsMove(
 
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(
+	const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 		gamefile,
-		moveDraft,
+		move_compact,
 		message.gameConclusion,
 	);
-	if (moveIsLegal !== true)
+	if (!moveValidationResult.valid) {
 		console.log(
-			`Buddy made an illegal play: ${JSON.stringify(message.move.compact)}. Move number: ${message.moveNumber}`,
+			`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
 		);
-	if (moveIsLegal !== true && !onlinegame.getIsPrivate())
-		return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
+	}
+	if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
+		// Only report cheating in non-private games
+		return onlinegame.reportOpponentsMove(moveValidationResult.reason);
+	}
+
+	// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
+
+	/**
+	 * The move draft WITH SPECIAL FLAGS attached!
+	 *
+	 * Fallback to no special flags if it's an illegal move in a private game (allowed).
+	 */
+	const moveDraft: MoveDraft = moveValidationResult.valid
+		? moveValidationResult.draft
+		: move_compact;
 
 	movesequence.viewFront(gamefile, mesh);
 

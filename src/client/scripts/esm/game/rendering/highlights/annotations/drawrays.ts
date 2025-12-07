@@ -6,8 +6,6 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
-import bd from '@naviary/bigdecimal';
-
 import preferences from '../../../../components/header/preferences.js';
 import snapping from '../snapping.js';
 import space from '../../../misc/space.js';

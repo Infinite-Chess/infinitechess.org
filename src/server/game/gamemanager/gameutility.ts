@@ -252,9 +252,13 @@ function newGame(
 	}
 
 	const players: Game['players'] = {};
-	// Set the colors
-	const player1 = player1Socket?.metadata.memberInfo; // { member/browser }  The invite owner
-	const player2 = player2Socket.metadata.memberInfo; // { member/browser }  The invite accepter
+
+	// Grab the players member info
+	// Invite Owner - GRAB FROM THE INVITE since their socket may have since closed!
+	const player1: AuthMemberInfo = invite.owner;
+	// Invite accepter
+	const player2: AuthMemberInfo = player2Socket.metadata.memberInfo;
+
 	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(
 		invite.color,
 		player1,
@@ -307,42 +311,47 @@ function newGame(
 
 /**
  * Assigns which player is what color, depending on the `color` property of the invite.
- * @param color - The color property of the invite. "Random" / "White" / "Black"
- * @param playerlist - A list of data relevent to the player.
+ *
+ * WE MUST EXPLICITLY have arguments for each player, as otherwise a bug is introduced
+ * if this is called with only 1 player!! And type safety doesn't catch it.
+ * @param inviteColor - The color property of the invite. "Random" / "White" / "Black"
+ * @param player1 - The first player (the invite owner).
+ * @param player2 - The second player (the invite accepter).
  * @returns An object with 2 properties:
  * - `colorData`: An object mapping player color to player info
- * - `playerColors`: the colors of each player. 1:1 with `playerlist`
+ * - `playerColors`: the colors of each player, in order of ascending player number.
  */
-function assignWhiteBlackPlayersFromInvite<PT>(
-	color: Player,
-	...playerlist: Array<PT>
+function assignWhiteBlackPlayersFromInvite(
+	inviteColor: Player,
+	player1: AuthMemberInfo,
+	player2: AuthMemberInfo,
 ): {
-	colorData: PlayerGroup<PT>;
+	colorData: PlayerGroup<AuthMemberInfo>;
 	playerColors: Player[];
 } {
 	// { id, owner, variant, clock, color, rated, publicity }
-	const colorData: PlayerGroup<PT> = {};
+	const colorData: PlayerGroup<AuthMemberInfo> = {};
 	const playerColors: Player[] = [];
-	if (color === players.WHITE) {
+	if (inviteColor === players.WHITE) {
 		playerColors.push(players.WHITE, players.BLACK);
-		colorData[players.WHITE] = playerlist[0]!;
-		colorData[players.BLACK] = playerlist[1]!;
-	} else if (color === players.BLACK) {
-		colorData[players.WHITE] = playerlist[1]!;
-		colorData[players.BLACK] = playerlist[0]!;
+		colorData[players.WHITE] = player1;
+		colorData[players.BLACK] = player2;
+	} else if (inviteColor === players.BLACK) {
+		colorData[players.WHITE] = player2;
+		colorData[players.BLACK] = player1;
 		playerColors.push(players.BLACK, players.WHITE);
-	} else if (color === players.NEUTRAL) {
+	} else if (inviteColor === players.NEUTRAL) {
 		// Random
 		if (Math.random() > 0.5) {
-			colorData[players.WHITE] = playerlist[0]!;
-			colorData[players.BLACK] = playerlist[1]!;
+			colorData[players.WHITE] = player1;
+			colorData[players.BLACK] = player2;
 			playerColors.push(players.WHITE, players.BLACK);
 		} else {
-			colorData[players.WHITE] = playerlist[1]!;
-			colorData[players.BLACK] = playerlist[0]!;
+			colorData[players.WHITE] = player2;
+			colorData[players.BLACK] = player1;
 			playerColors.push(players.BLACK, players.WHITE);
 		}
-	} else throw Error(`Unsupported color ${color} when assigning players to game.`);
+	} else throw Error(`Unsupported color ${inviteColor} when assigning players to game.`);
 	return { playerColors, colorData };
 }
 

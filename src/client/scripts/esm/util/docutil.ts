@@ -42,15 +42,10 @@ function copyToClipboard(text: string): void {
  * Returns true if the current device has a mouse pointer.
  */
 function isMouseSupported(): boolean {
-	// Check if ANY connected input is capable of fine pointing (Mouse/Trackpad)
-	const hasFinePointer = window.matchMedia('(any-pointer: fine)').matches;
-
-	// Safety net in case the driver reports the mouse weirdly:
-	// Check if ANY connected input can hover
-	const hasHover = window.matchMedia('(any-hover: hover)').matches;
-
-	// If either is true, the user has hardware capable of acting like a mouse.
-	return hasFinePointer || hasHover;
+	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
+	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
+	// USING "any-pointer" CAUSES false positives on mobile devices!
+	return window.matchMedia('(pointer: fine)').matches;
 }
 
 /**
