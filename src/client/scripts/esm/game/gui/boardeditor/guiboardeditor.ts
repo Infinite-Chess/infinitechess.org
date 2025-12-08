@@ -435,6 +435,10 @@ function handleStartEngineGame(): void {
 	// TODO: Forbid the user from starting engine games in positions with more than one king per side,
 	// since hydrochess does not currently support this
 
+	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
+	// since it stronger and faster for single king endgames.
+	// Rememember to also set checkmateSelectedID if applicable
+
 	// Start the engine game as requested
 	if (result) eactions.startEngineGame(TimeControl, youAreColor, currentEngine);
 }
