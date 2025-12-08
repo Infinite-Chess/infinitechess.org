@@ -24,6 +24,7 @@
   "include": ["src"],
   "exclude": [
     "node_modules", // Don't look in node_modules
-    "dist" // Don't look in the output directory
+    "dist", // Don't look in the output directory
+    "**/chess/engines/**/*" // Don't look in the chess engines directory (pre-compiled javascript stuff)
   ]
 }

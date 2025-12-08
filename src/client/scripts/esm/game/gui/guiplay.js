@@ -74,6 +74,31 @@ const indexOf10m = 5;
 const indexOfInfiniteTime = 12;
 
 /**
+ * Variants that the engine officially supports well enough for the engine tab.
+ * When on the Computer tab, the variant dropdown will be restricted to this set.
+ */
+const engineSupportedVariants = new Set([
+	'Classical',
+	'Confined_Classical',
+	'Classical_Plus',
+	'Core',
+	'CoaIP',
+	'CoaIP_HO',
+	'CoaIP_RO',
+	'CoaIP_NO',
+	'Palace',
+	'Pawndard',
+	'Standarch',
+	'Space_Classic',
+	'Space',
+	'Abundance',
+	'Pawn_Horde',
+	'Knightline',
+	'Obstocean',
+	'Chess',
+]);
+
+/**
  * Whether the create invite button is currently locked.
  * When we create an invite, the button is disabled until we hear back from the server.
  */
@@ -141,8 +166,8 @@ function initListeners() {
 	element_playBack.addEventListener('click', callback_playBack);
 	element_online.addEventListener('click', callback_online);
 	element_local.addEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
-	// element_computer.addEventListener('click', callback_computer);
+	// element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_computer.addEventListener('click', callback_computer);
 	element_createInvite.addEventListener('click', callback_createInvite);
 	element_optionVariant.addEventListener('change', callback_updateOptions);
 	element_optionColor.addEventListener('change', callback_updateOptions);
@@ -158,8 +183,8 @@ function closeListeners() {
 	element_playBack.removeEventListener('click', callback_playBack);
 	element_online.removeEventListener('click', callback_online);
 	element_local.removeEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
-	// element_computer.removeEventListener('click', callback_computer);
+	// element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_computer.removeEventListener('click', callback_computer);
 	element_createInvite.removeEventListener('click', callback_createInvite);
 	element_optionVariant.removeEventListener('change', callback_updateOptions);
 	element_optionColor.removeEventListener('change', callback_updateOptions);
@@ -199,6 +224,10 @@ function changePlayMode(mode) {
 		const localStorageRated = localstorage.loadItem('preferred_rated_invite_value');
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
 		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
+		// In non-engine modes, all variants remain available.
+		for (const option of element_optionVariant.options) {
+			option.hidden = false;
+		}
 	} else if (mode === 'local') {
 		// Enabling the button doesn't necessarily unlock it. It's enabled for "local" so that we
 		// can click "Start Game" at any point. But it will be re-disabled if we click "online" rapidly,
@@ -222,6 +251,10 @@ function changePlayMode(mode) {
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
+		// In non-engine modes, all variants remain available.
+		for (const option of element_optionVariant.options) {
+			option.hidden = false;
+		}
 	} else if (mode === 'computer') {
 		// For now, until engines become stronger, time is not customizable.
 		enableCreateInviteButton();
@@ -236,12 +269,17 @@ function changePlayMode(mode) {
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
-		element_optionCardClock.classList.add('hidden');
-		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
+		element_optionCardClock.classList.remove('hidden');
+		const localStorageClock = localstorage.loadItem('preferred_computer_clock_invite_value');
 		element_optionClock.selectedIndex =
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
+		// Restrict the variant dropdown to the variants that HydroChess officially supports.
+		for (const option of element_optionVariant.options) {
+			// Keep options whose value is in the supported set; hide the rest.
+			option.hidden = !engineSupportedVariants.has(option.value);
+		}
 	}
 }
 
@@ -258,9 +296,9 @@ function callback_local() {
 	changePlayMode('local');
 }
 
-// function callback_computer() {
-// 	changePlayMode('computer');
-// }
+function callback_computer() {
+	changePlayMode('computer');
+}
 
 // Also starts local games
 function callback_createInvite() {
@@ -284,10 +322,10 @@ function callback_createInvite() {
 		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
+			TimeControl: inviteOptions.clock,
 			youAreColor: ourColor,
-			currentEngine: 'engineCheckmatePractice',
-			// engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
-			engineConfig: { engineTimeLimitPerMoveMillis: 500 }, // Half a second for dev testing
+			currentEngine: 'hydrochess',
+			engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
 		});
 	}
 }

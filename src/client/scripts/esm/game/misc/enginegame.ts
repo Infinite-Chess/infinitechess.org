@@ -8,7 +8,7 @@ import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 import premoves from '../chess/premoves.js';
 import perspective from '../rendering/perspective.js';
@@ -144,12 +144,33 @@ function onMovePlayed(): void {
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
+
+	// Derive clock times for both colors in milliseconds, similar to UCI wtime/btime/winc/binc
+	let wtime: number | undefined;
+	let btime: number | undefined;
+	let winc: number | undefined;
+	let binc: number | undefined;
+	const basegame = gamefile.basegame;
+	const clocks = basegame.clocks;
+	if (!basegame.untimed && clocks) {
+		wtime = clocks.currentTime[players.WHITE];
+		btime = clocks.currentTime[players.BLACK];
+		const incSeconds = clocks.startTime.increment;
+		winc = incSeconds * 1000;
+		binc = incSeconds * 1000;
+	}
+
 	if (engineWorker)
 		engineWorker.postMessage({
 			stringGamefile,
 			lf: longformIn,
 			engineConfig: engineConfig,
 			youAreColor: engineColor,
+			// Time + increment state
+			wtime,
+			btime,
+			winc,
+			binc,
 		});
 	else console.error('User made a move in an engine game but no engine webworker is loaded!');
 }

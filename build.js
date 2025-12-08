@@ -9,6 +9,8 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import swc from '@swc/core';
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
@@ -29,6 +31,123 @@ import { DEV_BUILD } from './src/server/config/config.js';
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
 const cssTargets = browserslistToTargets(browserslist('defaults'));
+
+// Absolute path to the HydroChess WASM engine submodule (if present)
+const HYDROCHESS_WASM_DIR = path.join(
+	process.cwd(),
+	'src',
+	'client',
+	'scripts',
+	'esm',
+	'game',
+	'chess',
+	'engines',
+	'hydrochess-wasm',
+);
+
+// URL to the pre-built HydroChess WASM binaries
+const WASM_RELEASE_URL =
+	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm_bg.wasm';
+const JS_RELEASE_URL =
+	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm.js';
+
+function hasCommand(cmd) {
+	try {
+		const res = spawnSync(cmd, ['--version'], { stdio: 'ignore' });
+		return res.status === 0;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Ensures the HydroChess WASM engine is available.
+ * - DEFAULT: Automatically downloads the pre-built WASM from the verified nightly release.
+ * - DEVELOPER OPT-IN: If BUILD_WASM_LOCAL=true is set, it attempts to build from local source.
+ */
+async function ensureHydroChessWasmBuilt() {
+	const label = '[hydrochess-wasm]';
+	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
+	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
+	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
+
+	// OPT-IN: Build from local source (allows rapid iteration during development)
+	if (process.env.BUILD_WASM_LOCAL === 'true') {
+		console.log(`${label} BUILD_WASM_LOCAL is true, attempting to build from source...`);
+
+		if (
+			!fs.existsSync(HYDROCHESS_WASM_DIR) ||
+			fs.readdirSync(HYDROCHESS_WASM_DIR).length === 0
+		) {
+			console.warn(`${label} Engine submodule directory at ${HYDROCHESS_WASM_DIR} is empty.`);
+			console.warn(`${label} Run 'git submodule update --init', then rebuild.`);
+			return;
+		}
+
+		if (fs.existsSync(wasmFile)) {
+			console.log(`${label} Local build already exists.`);
+			return;
+		}
+
+		if (!hasCommand('cargo') || !hasCommand('wasm-pack')) {
+			console.error(`${label} 'cargo' or 'wasm-pack' not found. Cannot build locally.`);
+			console.error(
+				`${label} Install Rust from https://rustup.rs and wasm-pack with 'cargo install wasm-pack'.`,
+			);
+			console.error(`${label} Or, unset BUILD_WASM_LOCAL to download the pre-built binary.`);
+			return;
+		}
+
+		console.log(`${label} Building WASM engine with wasm-pack...`);
+		const result = spawnSync('wasm-pack', ['build', '--target', 'web', '--out-dir', 'pkg'], {
+			cwd: HYDROCHESS_WASM_DIR,
+			stdio: 'inherit',
+		});
+
+		if (result.status !== 0) {
+			console.error(`${label} Local build failed. Check wasm-pack output above.`);
+		} else {
+			console.log(`${label} Local build complete.`);
+		}
+		return;
+	}
+
+	// Default: Download pre-built binary
+	if (fs.existsSync(wasmFile)) {
+		return; // Already exists, nothing to do.
+	}
+
+	console.log(`${label} Pre-built engine not found. Downloading release...`);
+
+	try {
+		await fs.promises.mkdir(pkgDir, { recursive: true });
+
+		const downloadFile = async (url, dest) => {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Failed to download ${url}: ${response.statusText}`);
+			}
+			const buffer = Buffer.from(await response.arrayBuffer());
+			await fs.promises.writeFile(dest, buffer);
+			console.log(`${label} Downloaded ${path.basename(dest)}`);
+		};
+
+		await Promise.all([
+			downloadFile(WASM_RELEASE_URL, wasmFile),
+			downloadFile(JS_RELEASE_URL, jsFile),
+		]);
+
+		console.log(`${label} Hydrochess engine is ready.`);
+	} catch (error) {
+		console.error(`${label} Automatic download failed:`, error.message);
+		console.error(`${label} You can try building from source as a fallback:`);
+		console.error(`${label}   1. Install Rust: https://rustup.rs`);
+		console.error(`${label}   2. Install wasm-pack: cargo install wasm-pack`);
+		console.error(
+			`${label}   3. Run with local build enabled: BUILD_WASM_LOCAL=true npm run build`,
+		);
+	}
+}
 
 /**
  * Any ES Module that any HTML document IMPORTS directly!
@@ -52,6 +171,7 @@ const clientEntryPoints = [
 	'src/client/scripts/esm/views/guide.js',
 	'src/client/scripts/esm/views/admin.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+	'src/client/scripts/esm/game/chess/engines/hydrochess.js',
 ];
 const serverEntryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
 	ignore: ['**/*.test.{ts,js}'],
@@ -128,6 +248,7 @@ const esbuildClientOptions = {
 	// allowOverwrite: true, // Not needed?
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	plugins: [esbuildClientRebuildPlugin, GLSLMinifyPlugin],
+	loader: { '.wasm': 'file' },
 };
 
 const esbuildServerOptions = {
@@ -255,6 +376,10 @@ async function minifyCSSFiles() {
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 if (USE_DEVELOPMENT_BUILD && !DEV_BUILD)
 	throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
+
+// Fetch the pre-built HydroChess engine if not already present.
+// Optionally build it manually from the source code.
+await ensureHydroChessWasmBuilt();
 
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
