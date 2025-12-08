@@ -197,7 +197,7 @@ function startEngineGame(
 
 	const variantOptions = getCurrentPositionInformation();
 	if (variantOptions.position.size === 0) {
-		statustext.showStatus('Cannot start local game from empty position!', true);
+		statustext.showStatus('Cannot start engine game from empty position!', true);
 		return;
 	}
 
