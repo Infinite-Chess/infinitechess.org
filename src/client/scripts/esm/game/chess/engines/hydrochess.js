@@ -109,10 +109,8 @@ self.onmessage = async function (e) {
 		const to = bestMoveResult.to; // "x,y"
 		let moveString = `${from}>${to}`;
 		if (bestMoveResult.promotion) {
-			// Promotion is a single-letter piece code from Rust (e.g. "q").
-			// Encode it as an upper-case letter after '=' for the consumer.
-			const promoChar = String(bestMoveResult.promotion).toUpperCase();
-			moveString += `=${promoChar}`;
+			const promoAbbr = mapRustPromotionToSiteAbbr(bestMoveResult.promotion, engineColor);
+			moveString += `=${promoAbbr}`;
 		}
 
 		console.debug('[Engine] Best move:', moveString);
@@ -426,4 +424,37 @@ function getPlayerCodeFromColor(color) {
 		2: 'b', // Black
 	};
 	return colorMap[color] || 'n';
+}
+
+/**
+ * Map Rust promotion letter to site-specific promotion abbreviation (ICN-style) based on engineColor
+ */
+function mapRustPromotionToSiteAbbr(promotion, engineColor) {
+	const code = String(promotion).toLowerCase();
+	const isWhite = engineColor === 1;
+	const map = {
+		q: { w: 'Q', b: 'q' },
+		r: { w: 'R', b: 'r' },
+		b: { w: 'B', b: 'b' },
+		n: { w: 'N', b: 'n' },
+		m: { w: 'AM', b: 'am' },
+		h: { w: 'HA', b: 'ha' },
+		c: { w: 'CH', b: 'ch' },
+		a: { w: 'AR', b: 'ar' },
+		e: { w: 'CE', b: 'ce' },
+		g: { w: 'GU', b: 'gu' },
+		l: { w: 'CA', b: 'ca' },
+		i: { w: 'GI', b: 'gi' },
+		z: { w: 'ZE', b: 'ze' },
+		y: { w: 'RQ', b: 'rq' },
+		d: { w: 'RC', b: 'rc' },
+		s: { w: 'NR', b: 'nr' },
+		u: { w: 'HU', b: 'hu' },
+		o: { w: 'RO', b: 'ro' },
+		k: { w: 'K', b: 'k' },
+		p: { w: 'P', b: 'p' },
+	};
+	const entry = map[code];
+	if (!entry) return isWhite ? 'Q' : 'q';
+	return isWhite ? entry.w : entry.b;
 }
