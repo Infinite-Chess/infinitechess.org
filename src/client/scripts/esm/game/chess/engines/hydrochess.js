@@ -11,7 +11,7 @@ import gameformulator from '../gameformulator.js';
 import init, * as wasmBindings from './hydrochess-wasm/pkg/hydrochess_wasm.js';
 import wasmUrl from './hydrochess-wasm/pkg/hydrochess_wasm_bg.wasm';
 
-let wasm = wasmBindings;
+const wasm = wasmBindings;
 let wasmInitialized = false;
 let wasmInitPromise = null;
 
