@@ -2,7 +2,6 @@
 import localstorage from '../../util/localstorage.js';
 import statustext from './statustext.js';
 import invites from '../misc/invites.js';
-import gui from './gui.js';
 import guititle from './guititle.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import docutil from '../../util/docutil.js';
@@ -10,6 +9,7 @@ import gameloader from '../chess/gameloader.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 // Import End
 
 // Type Definitions --------------------------------------------------------------------
@@ -319,13 +319,17 @@ function callback_createInvite() {
 		close(); // Close the invite creation screen
 		// prettier-ignore
 		const ourColor = inviteOptions.color !== players.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? players.WHITE : players.BLACK;
+		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
 			TimeControl: inviteOptions.clock,
 			youAreColor: ourColor,
-			currentEngine: 'hydrochess',
-			engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
+			currentEngine,
+			engineConfig: {
+				engineTimeLimitPerMoveMillis:
+					engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			}, // default think time of engine
 		});
 	}
 }

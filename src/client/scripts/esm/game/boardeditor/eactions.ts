@@ -45,6 +45,7 @@ import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
+import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
 
@@ -204,6 +205,8 @@ function startEngineGame(): void {
 		UTCTime,
 	};
 
+	const currentEngine = 'hydrochess';
+
 	gameloader.unloadGame();
 	gameloader.startCustomEngineGame({
 		metadata,
@@ -211,9 +214,9 @@ function startEngineGame(): void {
 			variantOptions,
 		},
 		youAreColor: players.WHITE,
-		currentEngine: 'hydrochess',
+		currentEngine,
 		engineConfig: {
-			engineTimeLimitPerMoveMillis: 4000,
+			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
 		},
 	});
 }

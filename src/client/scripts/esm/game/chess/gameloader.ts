@@ -28,7 +28,7 @@ import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import enginegame from '../misc/enginegame.js';
+import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -274,7 +274,7 @@ async function startEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
-			worldBorder: enginegame.engineWorldBorderDict[options.currentEngine],
+			worldBorder: engineWorldBorderDict[options.currentEngine],
 		},
 	});
 
@@ -390,7 +390,7 @@ async function startCustomEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
-			worldBorder: enginegame.engineWorldBorderDict[options.currentEngine],
+			worldBorder: engineWorldBorderDict[options.currentEngine],
 		},
 	});
 

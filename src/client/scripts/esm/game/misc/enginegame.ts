@@ -41,6 +41,16 @@ const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
 	hydrochess: BigInt(1e15),
 };
 
+/**
+ * Default engine think time config.
+ * This is the number of milliseconds that each engine thinks when Time Control is unlimited.
+ * May vary from engine to engine because of different engine speeds and requirements.
+ */
+const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: number } = {
+	engineCheckmatePractice: 500,
+	hydrochess: 4000,
+};
+
 // Variables --------------------------------------------------------------------
 
 /** Whether we are currently in an engine game. */
@@ -247,8 +257,9 @@ function onGameConclude(): void {
 
 // Export ---------------------------------------------------------------------------------
 
+export { engineWorldBorderDict, engineDefaultTimeLimitPerMoveMillisDict };
+
 export default {
-	engineWorldBorderDict,
 	areInEngineGame,
 	getOurColor,
 	isItOurTurn,
