@@ -18,6 +18,8 @@ import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanag
 import type { MetaData } from '../../../../../shared/chess/util/metadata';
 import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
+import type { Player } from '../../../../../shared/chess/util/typeutil';
+import type { validEngineName } from '../misc/enginegame';
 
 // @ts-ignore
 import statustext from '../gui/statustext';
@@ -44,7 +46,7 @@ import guinavigation from '../gui/guinavigation';
 import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
+import typeutil from '../../../../../shared/chess/util/typeutil';
 import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
@@ -186,7 +188,11 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(): void {
+function startEngineGame(
+	TimeControl: MetaData['TimeControl'],
+	youAreColor: Player,
+	currentEngine: validEngineName,
+): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const variantOptions = getCurrentPositionInformation();
@@ -199,13 +205,11 @@ function startEngineGame(): void {
 	const metadata: MetaData = {
 		Event: 'Position created using ingame board editor',
 		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
+		TimeControl,
 		Round: '-',
 		UTCDate,
 		UTCTime,
 	};
-
-	const currentEngine = 'hydrochess';
 
 	gameloader.unloadGame();
 	gameloader.startCustomEngineGame({
@@ -213,7 +217,7 @@ function startEngineGame(): void {
 		additional: {
 			variantOptions,
 		},
-		youAreColor: players.WHITE,
+		youAreColor,
 		currentEngine,
 		engineConfig: {
 			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],

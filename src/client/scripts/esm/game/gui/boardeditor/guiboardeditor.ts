@@ -426,8 +426,14 @@ function handleStartEngineGame(): void {
 	const result = confirm(
 		'Do you want to leave the board editor and start an engine game from this position? Changes will be saved.',
 	); // PLANNED to save changes
-	// Start the local game as requested
-	if (result) eactions.startEngineGame();
+
+	// TODO: Allow the user to configure these values in improved confirmation dialogue
+	const TimeControl = '-';
+	const youAreColor = players.WHITE;
+	const currentEngine = 'hydrochess';
+
+	// Start the engine game as requested
+	if (result) eactions.startEngineGame(TimeControl, youAreColor, currentEngine);
 }
 
 /** Swaps the color of pieces being drawn. */
