@@ -44,7 +44,7 @@ import guinavigation from '../gui/guinavigation';
 import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
-import typeutil from '../../../../../shared/chess/util/typeutil';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
 
 // Constants ----------------------------------------------------------------------
 
@@ -181,6 +181,39 @@ function startLocalGame(): void {
 		metadata,
 		additional: {
 			variantOptions,
+		},
+	});
+}
+
+function startEngineGame(): void {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	const variantOptions = getCurrentPositionInformation();
+	if (variantOptions.position.size === 0) {
+		statustext.showStatus('Cannot start local game from empty position!', true);
+		return;
+	}
+
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata: MetaData = {
+		Event: 'Position created using ingame board editor',
+		Site: 'https://www.infinitechess.org/',
+		TimeControl: '-',
+		Round: '-',
+		UTCDate,
+		UTCTime,
+	};
+
+	gameloader.unloadGame();
+	gameloader.startCustomEngineGame({
+		metadata,
+		additional: {
+			variantOptions,
+		},
+		youAreColor: players.WHITE,
+		currentEngine: 'hydrochess',
+		engineConfig: {
+			engineTimeLimitPerMoveMillis: 4000,
 		},
 	});
 }
@@ -345,4 +378,5 @@ export default {
 	save,
 	load,
 	startLocalGame,
+	startEngineGame,
 };

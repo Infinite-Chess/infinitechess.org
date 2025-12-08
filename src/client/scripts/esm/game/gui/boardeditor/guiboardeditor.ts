@@ -45,7 +45,8 @@ const elements_actions = [
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
-	document.getElementById('start-game')!,
+	document.getElementById('start-local-game')!,
+	document.getElementById('start-engine-game')!,
 	// Selection
 	document.getElementById('select-all')!,
 	document.getElementById('delete-selection')!,
@@ -347,8 +348,11 @@ function callback_Action(e: Event): void {
 		case 'gamerules':
 			guigamerules.toggleGameRules();
 			return;
-		case 'start-game':
+		case 'start-local-game':
 			handleStartLocalGame();
+			return;
+		case 'start-engine-game':
+			handleStartEngineGame();
 			return;
 		// Selection (buttons that are always active)
 		case 'select-all':
@@ -414,6 +418,16 @@ function handleStartLocalGame(): void {
 	); // PLANNED to save changes
 	// Start the local game as requested
 	if (result) eactions.startLocalGame();
+}
+
+/** Called when users click the "Start engine game from position" button. */
+function handleStartEngineGame(): void {
+	// Show a dialog box to confirm they want to leave the editor
+	const result = confirm(
+		'Do you want to leave the board editor and start an engine game from this position? Changes will be saved.',
+	); // PLANNED to save changes
+	// Start the local game as requested
+	if (result) eactions.startEngineGame();
 }
 
 /** Swaps the color of pieces being drawn. */
