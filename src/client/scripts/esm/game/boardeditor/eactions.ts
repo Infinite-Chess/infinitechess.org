@@ -18,6 +18,8 @@ import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanag
 import type { MetaData } from '../../../../../shared/chess/util/metadata';
 import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
+import type { Player } from '../../../../../shared/chess/util/typeutil';
+import type { validEngineName } from '../misc/enginegame';
 
 // @ts-ignore
 import statustext from '../gui/statustext';
@@ -45,6 +47,7 @@ import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
 import typeutil from '../../../../../shared/chess/util/typeutil';
+import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
 
@@ -181,6 +184,43 @@ function startLocalGame(): void {
 		metadata,
 		additional: {
 			variantOptions,
+		},
+	});
+}
+
+function startEngineGame(
+	TimeControl: MetaData['TimeControl'],
+	youAreColor: Player,
+	currentEngine: validEngineName,
+): void {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	const variantOptions = getCurrentPositionInformation();
+	if (variantOptions.position.size === 0) {
+		statustext.showStatus('Cannot start engine game from empty position!', true);
+		return;
+	}
+
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const metadata: MetaData = {
+		Event: 'Position created using ingame board editor',
+		Site: 'https://www.infinitechess.org/',
+		TimeControl,
+		Round: '-',
+		UTCDate,
+		UTCTime,
+	};
+
+	gameloader.unloadGame();
+	gameloader.startCustomEngineGame({
+		metadata,
+		additional: {
+			variantOptions,
+		},
+		youAreColor,
+		currentEngine,
+		engineConfig: {
+			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
 		},
 	});
 }
@@ -345,4 +385,5 @@ export default {
 	save,
 	load,
 	startLocalGame,
+	startEngineGame,
 };

@@ -23,7 +23,7 @@ import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js
 import docutil from '../../util/docutil.js';
 import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import enginegame from '../misc/enginegame.js';
+import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -97,14 +97,15 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		state_global: { specialRights },
 		gameRules: variant.getBareMinimumGameRules(),
 	};
+	const currentEngine = 'engineCheckmatePractice' as const;
 
 	const options = {
 		Event: 'Infinite chess checkmate practice',
 		youAreColor: players.WHITE,
-		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
+		currentEngine,
 		engineConfig: {
 			checkmateSelectedID: checkmateSelectedID,
-			engineTimeLimitPerMoveMillis: 500,
+			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
 		},
 		variantOptions,
 		showGameControlButtons: true as true,

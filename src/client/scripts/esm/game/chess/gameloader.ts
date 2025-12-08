@@ -17,7 +17,7 @@ import type {
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { EngineConfig } from '../misc/enginegame.js';
+import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
@@ -28,7 +28,7 @@ import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import enginegame from '../misc/enginegame.js';
+import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -231,7 +231,7 @@ async function startEngineGame(options: {
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
 	TimeControl?: MetaData['TimeControl'];
 	youAreColor: Player;
-	currentEngine: 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
+	currentEngine: validEngineName;
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
@@ -274,11 +274,7 @@ async function startEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
-			// Engine games have a world border enabled so as to keep
-			// the position within safe floating point range.
-			// If the variant's world border is smaller, that will be used instead.
-			// worldBorder: BigInt(Number.MAX_SAFE_INTEGER) // FREEZES practice checkmate engine if you move to the border
-			worldBorder: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
+			worldBorder: engineWorldBorderDict[options.currentEngine],
 		},
 	});
 
@@ -364,6 +360,54 @@ async function startCustomLocalGame(options: {
 	// because the gui DEPENDS on the other stuff.
 
 	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+}
+
+/** Starts an engine game according to the options provided. */
+async function startCustomEngineGame(options: {
+	metadata: MetaData;
+	additional: {
+		moves?: ServerGameMoveMessage[];
+		variantOptions: VariantOptions;
+	};
+	presetAnnotes?: PresetAnnotes;
+	TimeControl?: MetaData['TimeControl'];
+	youAreColor: Player;
+	currentEngine: validEngineName;
+	engineConfig: EngineConfig;
+	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
+	showGameControlButtons?: true;
+}): Promise<void> {
+	typeOfGameWeAreIn = 'engine';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
+	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
+		metadata: options.metadata,
+		viewWhitePerspective: options.youAreColor === players.WHITE,
+		allowEditCoords: false,
+		additional: {
+			variantOptions: options.additional.variantOptions,
+			worldBorder: engineWorldBorderDict[options.currentEngine],
+		},
+	});
+
+	/** A promise that resolves when the engine script has been fetched. */
+	const enginePromise: Promise<void> = enginegame
+		.initEngineGame(options)
+		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+
+	/**
+	 * This resolves when BOTH the graphical and engine promises resolve,
+	 * OR rejects immediately when one of them rejects!
+	 */
+	Promise.all([graphicalPromise, enginePromise])
+		.then((_results: any[]) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
 }
 
 /**
@@ -480,6 +524,7 @@ export default {
 	startEngineGame,
 	startBoardEditor,
 	startCustomLocalGame,
+	startCustomEngineGame,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,

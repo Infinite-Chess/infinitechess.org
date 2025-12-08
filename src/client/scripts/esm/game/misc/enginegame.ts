@@ -18,12 +18,38 @@ import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
+/** List of valid engines */
+type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
+
 interface EngineConfig {
 	/** Hard time limit for the engine to think in milliseconds */
 	engineTimeLimitPerMoveMillis: number;
 	// If you are using a checkmate practice engine, this is required.
 	checkmateSelectedID?: string;
 }
+
+// Constants --------------------------------------------------------------------
+
+/**
+ * World border config for each individual engine.
+ * Engine games have a world border enabled so as to keep the position within safe floating point range.
+ * If the variant's world border is smaller, that will be used instead.
+ */
+const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
+	// engineCheckmatePractice: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
+	engineCheckmatePractice: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
+	hydrochess: BigInt(1e15),
+};
+
+/**
+ * Default engine think time config.
+ * This is the number of milliseconds that each engine thinks when Time Control is unlimited.
+ * May vary from engine to engine because of different engine speeds and requirements.
+ */
+const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: number } = {
+	engineCheckmatePractice: 500,
+	hydrochess: 4000,
+};
 
 // Variables --------------------------------------------------------------------
 
@@ -231,6 +257,8 @@ function onGameConclude(): void {
 
 // Export ---------------------------------------------------------------------------------
 
+export { engineWorldBorderDict, engineDefaultTimeLimitPerMoveMillisDict };
+
 export default {
 	areInEngineGame,
 	getOurColor,
@@ -243,4 +271,4 @@ export default {
 	onGameConclude,
 };
 
-export type { EngineConfig };
+export type { EngineConfig, validEngineName };
