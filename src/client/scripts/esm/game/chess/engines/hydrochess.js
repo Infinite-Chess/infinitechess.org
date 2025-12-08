@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/engines/hydrochess.js
+
 /**
  * HydroChess Engine - Rust WASM Version
  * A JavaScript wrapper for the Rust WASM implementation of HydroChess
