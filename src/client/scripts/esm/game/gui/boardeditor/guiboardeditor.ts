@@ -432,6 +432,9 @@ function handleStartEngineGame(): void {
 	const youAreColor = players.WHITE;
 	const currentEngine = 'hydrochess';
 
+	// TODO: Forbid the user from starting engine games in positions with more than one king per side,
+	// since hydrochess does not currently support this
+
 	// Start the engine game as requested
 	if (result) eactions.startEngineGame(TimeControl, youAreColor, currentEngine);
 }
