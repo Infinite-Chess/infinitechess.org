@@ -45,6 +45,12 @@ const HYDROCHESS_WASM_DIR = path.join(
 	'hydrochess-wasm',
 );
 
+// URL to the verified WASM binary built by your CI
+const WASM_RELEASE_URL =
+	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm_bg.wasm';
+const JS_RELEASE_URL =
+	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm.js';
+
 function hasCommand(cmd) {
 	try {
 		const res = spawnSync(cmd, ['--version'], { stdio: 'ignore' });
@@ -55,81 +61,91 @@ function hasCommand(cmd) {
 }
 
 /**
- * Ensure the hydrochess-wasm submodule (if present) has a built web WASM in pkg/.
- * - If the directory is missing or empty: log info about initializing the submodule.
- * - If pkg/hydrochess_wasm_bg.wasm is missing: try to build with wasm-pack.
- *   If cargo/wasm-pack are missing, log guidance.
- * This never throws; it only logs and returns so normal JS builds still work.
+ * Ensures the HydroChess WASM engine is available.
+ * - DEFAULT: Automatically downloads the pre-built WASM from the verified nightly release.
+ * - DEVELOPER OPT-IN: If BUILD_WASM_LOCAL=true is set, it attempts to build from local source.
  */
-function ensureHydroChessWasmBuilt() {
+async function ensureHydroChessWasmBuilt() {
 	const label = '[hydrochess-wasm]';
-
-	if (!fs.existsSync(HYDROCHESS_WASM_DIR)) {
-		console.warn(`${label} Engine submodule directory not found at ${HYDROCHESS_WASM_DIR}`);
-		console.warn(`${label} If you want the Rust WASM engine, run:`);
-		console.warn(`${label}   git submodule update --init --remote`);
-		console.warn(`${label} Then restart the dev server or rebuild.`);
-		console.warn(`${label} Alternatively, you can download a prebuilt 'pkg' directory from:`);
-		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
-		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
-		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
-		return;
-	}
-
-	const entries = fs.readdirSync(HYDROCHESS_WASM_DIR).filter((name) => !name.startsWith('.'));
-	if (entries.length === 0) {
-		console.warn(`${label} Engine submodule directory is empty.`);
-		console.warn(`${label} If you cloned without submodules, run:`);
-		console.warn(`${label}   git submodule update --init --remote`);
-		console.warn(`${label} Then restart the dev server or rebuild.`);
-		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
-		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
-		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
-		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
-		return;
-	}
-
 	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
 	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
+	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
+
+	// OPT-IN: Build from local source (allows rapid iteration during development)
+	if (process.env.BUILD_WASM_LOCAL === 'true') {
+		console.log(`${label} BUILD_WASM_LOCAL is true, attempting to build from source...`);
+
+		if (
+			!fs.existsSync(HYDROCHESS_WASM_DIR) ||
+			fs.readdirSync(HYDROCHESS_WASM_DIR).length === 0
+		) {
+			console.warn(`${label} Engine submodule directory at ${HYDROCHESS_WASM_DIR} is empty.`);
+			console.warn(`${label} Run 'git submodule update --init', then rebuild.`);
+			return;
+		}
+
+		if (fs.existsSync(wasmFile)) {
+			console.log(`${label} Local build already exists.`);
+			return;
+		}
+
+		if (!hasCommand('cargo') || !hasCommand('wasm-pack')) {
+			console.error(`${label} 'cargo' or 'wasm-pack' not found. Cannot build locally.`);
+			console.error(
+				`${label} Install Rust from https://rustup.rs and wasm-pack with 'cargo install wasm-pack'.`,
+			);
+			console.error(`${label} Or, unset BUILD_WASM_LOCAL to download the pre-built binary.`);
+			return;
+		}
+
+		console.log(`${label} Building WASM engine with wasm-pack...`);
+		const result = spawnSync('wasm-pack', ['build', '--target', 'web', '--out-dir', 'pkg'], {
+			cwd: HYDROCHESS_WASM_DIR,
+			stdio: 'inherit',
+		});
+
+		if (result.status !== 0) {
+			console.error(`${label} Local build failed. Check wasm-pack output above.`);
+		} else {
+			console.log(`${label} Local build complete.`);
+		}
+		return;
+	}
+
+	// Default: Download pre-built binary
 	if (fs.existsSync(wasmFile)) {
-		// Already built; nothing to do.
-		return;
+		return; // Already exists, nothing to do.
 	}
 
-	if (!hasCommand('cargo')) {
-		console.warn(`${label} 'cargo' was not found on PATH.`);
-		console.warn(
-			`${label} Install Rust (which includes cargo) from https://rustup.rs, then rerun the build.`,
-		);
-		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
-		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
-		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
-		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
-		return;
-	}
+	console.log(`${label} Pre-built engine not found. Downloading from verified release...`);
 
-	if (!hasCommand('wasm-pack')) {
-		console.warn(`${label} 'wasm-pack' was not found on PATH.`);
-		console.warn(`${label} Install it with: cargo install wasm-pack`);
-		console.warn(`${label} Then rerun the build.`);
-		console.warn(`${label} Alternatively, download a prebuilt 'pkg' directory from:`);
-		console.warn(`${label}   https://github.com/FirePlank/infinite-chess-engine/releases`);
-		console.warn(`${label} Unpack it and copy the 'pkg' folder into:`);
-		console.warn(`${label}   ${HYDROCHESS_WASM_DIR}`);
-		return;
-	}
+	try {
+		await fs.promises.mkdir(pkgDir, { recursive: true });
 
-	console.log(`${label} Building WASM engine with wasm-pack (target=web -> pkg)...`);
-	const result = spawnSync('wasm-pack', ['build', '--target', 'web', '--out-dir', 'pkg'], {
-		cwd: HYDROCHESS_WASM_DIR,
-		stdio: 'inherit',
-	});
-	if (result.status !== 0) {
+		const downloadFile = async (url, dest) => {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Failed to download ${url}: ${response.statusText}`);
+			}
+			const buffer = Buffer.from(await response.arrayBuffer());
+			await fs.promises.writeFile(dest, buffer);
+			console.log(`${label} Downloaded ${path.basename(dest)}`);
+		};
+
+		await Promise.all([
+			downloadFile(WASM_RELEASE_URL, wasmFile),
+			downloadFile(JS_RELEASE_URL, jsFile),
+		]);
+
+		console.log(`${label} Verified engine is ready.`);
+	} catch (error) {
+		console.error(`${label} Automatic download failed:`, error.message);
+		console.error(`${label} You can try building from source as a fallback:`);
+		console.error(`${label}   1. Install Rust: https://rustup.rs`);
+		console.error(`${label}   2. Install wasm-pack: cargo install wasm-pack`);
 		console.error(
-			`${label} wasm-pack build failed with exit code ${result.status}. See output above.`,
+			`${label}   3. Run with local build enabled: BUILD_WASM_LOCAL=true npm run build`,
 		);
-	} else {
-		console.log(`${label} Build complete (pkg/).`);
 	}
 }
 
@@ -363,7 +379,7 @@ if (USE_DEVELOPMENT_BUILD && !DEV_BUILD)
 
 // Optionally build the HydroChess Rust WASM engine submodule if available.
 // This is best-effort and will only emit warnings if tools/submodule are missing.
-ensureHydroChessWasmBuilt();
+await ensureHydroChessWasmBuilt();
 
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);

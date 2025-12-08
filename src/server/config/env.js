@@ -45,6 +45,8 @@ HTTPSPORT_LOCAL=3443
 GITHUB_API_KEY=
 GITHUB_REPO=Infinite-Chess/infinitechess.org
 APP_BASE_URL=https://www.infinitechess.org
+# Whether to build the Rust WASM engine locally instead of downloading it. Requires Rust to be installed.
+BUILD_WASM_LOCAL=false
     `;
 	fs.writeFileSync(envPath, content.trim());
 	console.log('Generated .env file');
