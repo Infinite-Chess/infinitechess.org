@@ -59,7 +59,11 @@ function setClearColor(newClearColor: Vec3): void {
  */
 function init(): void {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	const newContext = camera.canvas.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
+	const newContext = camera.canvas.getContext('webgl2', {
+		alpha: false,
+		stencil: true,
+		preserveDrawingBuffer: true, // Reduces likelihood of context lost?
+	}); // Stencil required for masking world border stuff
 	if (!newContext) {
 		// WebGL2 not supported
 		alert(translations['webgl_unsupported']);
