@@ -97,7 +97,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		state_global: { specialRights },
 		gameRules: variant.getBareMinimumGameRules(),
 	};
-	const currentEngine = 'engineCheckmatePractice' as 'engineCheckmatePractice';
+	const currentEngine = 'engineCheckmatePractice' as const;
 
 	const options = {
 		Event: 'Infinite chess checkmate practice',
