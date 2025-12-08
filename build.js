@@ -45,7 +45,7 @@ const HYDROCHESS_WASM_DIR = path.join(
 	'hydrochess-wasm',
 );
 
-// URL to the verified WASM binary built by your CI
+// URL to the pre-built HydroChess WASM binaries
 const WASM_RELEASE_URL =
 	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm_bg.wasm';
 const JS_RELEASE_URL =
@@ -117,7 +117,7 @@ async function ensureHydroChessWasmBuilt() {
 		return; // Already exists, nothing to do.
 	}
 
-	console.log(`${label} Pre-built engine not found. Downloading from verified release...`);
+	console.log(`${label} Pre-built engine not found. Downloading release...`);
 
 	try {
 		await fs.promises.mkdir(pkgDir, { recursive: true });
@@ -137,7 +137,7 @@ async function ensureHydroChessWasmBuilt() {
 			downloadFile(JS_RELEASE_URL, jsFile),
 		]);
 
-		console.log(`${label} Verified engine is ready.`);
+		console.log(`${label} Hydrochess engine is ready.`);
 	} catch (error) {
 		console.error(`${label} Automatic download failed:`, error.message);
 		console.error(`${label} You can try building from source as a fallback:`);
@@ -377,8 +377,8 @@ const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 if (USE_DEVELOPMENT_BUILD && !DEV_BUILD)
 	throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
 
-// Optionally build the HydroChess Rust WASM engine submodule if available.
-// This is best-effort and will only emit warnings if tools/submodule are missing.
+// Fetch the pre-built HydroChess engine if not already present.
+// Optionally build it manually from the source code.
 await ensureHydroChessWasmBuilt();
 
 // Await all so the script doesn't finish and node terminate before esbuild is done.
