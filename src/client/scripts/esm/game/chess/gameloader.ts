@@ -231,7 +231,7 @@ async function startEngineGame(options: {
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
 	TimeControl?: MetaData['TimeControl'];
 	youAreColor: Player;
-	currentEngine: 'engineCheckmatePractice' | 'classicEngine' | 'hydrochess'; // Add more union types when more engines are added
+	currentEngine: 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
