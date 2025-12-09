@@ -13,12 +13,14 @@ import { refreshGitHubContributorsList } from './GitHub.js';
 import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { addToBlacklist } from '../database/blacklistManager.js';
 
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
 const validCommands = [
 	'ban',
+	'blacklistemail',
 	'delete',
 	'username',
 	'logout',
@@ -47,6 +49,9 @@ function processCommand(req: IdentifiedRequest, res: Response): void {
 	// TODO prevent affecting accounts with equal or higher roles
 	switch (commandAndArgs[0]) {
 		case 'ban':
+			return;
+		case 'blacklistemail':
+			blacklistEmailCommand(command, commandAndArgs, req, res);
 			return;
 		case 'delete':
 			deleteCommand(command, commandAndArgs, req, res);
@@ -142,6 +147,31 @@ function deleteCommand(
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		sendAndLogResponse(res, 500, `Failed to delete user (${username}): ${errorMessage}`);
+	}
+}
+
+function blacklistEmailCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: IdentifiedRequest,
+	res: Response,
+): void {
+	if (commandAndArgs.length < 2) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return;
+	}
+	// Valid Syntax
+	logCommand(command, req);
+	const email = commandAndArgs[1]!;
+
+	try {
+		addToBlacklist(email, 'banned');
+		sendAndLogResponse(res, 200, `Successfully added ${email} to the email blacklist.`);
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		sendAndLogResponse(res, 500, `Failed to blacklist email (${email}): ${errorMessage}`);
 	}
 }
 
@@ -312,6 +342,11 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 		case 'ban':
 			res.status(200).send(
 				'Syntax: ban <username> [days]\nBans a user for a duration or permanently.',
+			);
+			return;
+		case 'blacklistemail':
+			res.status(200).send(
+				'Syntax: blacklistemail <email>\nAdds an email to the blacklist with reason "banned".',
 			);
 			return;
 		case 'unban':
