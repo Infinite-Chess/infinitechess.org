@@ -41,7 +41,6 @@ const distToRenderBoard = 1500; // Default 1500. When changing this, also change
 
 // Crosshair
 const crosshairThickness = 2.5; // Default: 2.5
-const crosshairWidth = 18; // Default: 16.7
 const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
 /** The buffer model of the mouse crosshair when in perspective mode. */
 let crosshairModel: Renderable;
@@ -209,56 +208,19 @@ function initCrosshairModel(): void {
 
 	const innerSide =
 		((crosshairThickness / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
-	const outerSide = ((crosshairWidth / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
 
 	const [r, g, b, a] = crosshairColor;
 
 	// prettier-ignore
 	const data = new Float32Array([
 		//       Vertex         Color
-		//              MEDICAL PLUS sign cross hair
-		// Horz bar
-            -outerSide, -innerSide,       r, g, b, a,
-            -outerSide,  innerSide,       r, g, b, a,
-            outerSide,  innerSide,        r, g, b, a,
+            -innerSide, -innerSide,       r, g, b, a,
+            -innerSide,  innerSide,       r, g, b, a,
+            innerSide,  innerSide,        r, g, b, a,
 
-            outerSide,  innerSide,        r, g, b, a,
-            outerSide,  -innerSide,       r, g, b, a,
-            -outerSide,  -innerSide,      r, g, b, a,
-		// Vert bar
-            -innerSide, -outerSide,       r, g, b, a,
-            -innerSide,  outerSide,       r, g, b, a,
-            innerSide,  outerSide,        r, g, b, a,
-
-            innerSide,  outerSide,        r, g, b, a,
-            innerSide,  -outerSide,       r, g, b, a,
-            -innerSide,  -outerSide,      r, g, b, a,
-            -outerSide, -innerSide,       r, g, b, a,
-		//              CROSS crosshair
-		// Horz bar
-		//     -outerSide, -innerSide,       r, g, b, a,
-		//     -outerSide,  innerSide,       r, g, b, a,
-		//     outerSide,  innerSide,        r, g, b, a,
-
-		//     outerSide,  innerSide,        r, g, b, a,
-		//     outerSide,  -innerSide,       r, g, b, a,
-		//     -outerSide,  -innerSide,      r, g, b, a,
-		// // Vert bar, top half
-		//     -innerSide, innerSide,       r, g, b, a,
-		//     -innerSide,  outerSide,       r, g, b, a,
-		//     innerSide,  outerSide,        r, g, b, a,
-
-		//     innerSide,  outerSide,        r, g, b, a,
-		//     innerSide,  innerSide,       r, g, b, a,
-		//     -innerSide,  innerSide,      r, g, b, a,
-		//     // Vert bar, bottom half
-		//     -innerSide, -innerSide,       r, g, b, a,
-		//     -innerSide,  -outerSide,       r, g, b, a,
-		//     innerSide,  -outerSide,        r, g, b, a,
-
-		//     innerSide,  -outerSide,        r, g, b, a,
-		//     innerSide,  -innerSide,       r, g, b, a,
-		//     -innerSide,  -innerSide,      r, g, b, a,
+            innerSide,  innerSide,        r, g, b, a,
+            innerSide,  -innerSide,       r, g, b, a,
+            -innerSide,  -innerSide,      r, g, b, a,
 	]);
 	crosshairModel = createRenderable(data, 2, 'TRIANGLES', 'color', true);
 }
