@@ -89,10 +89,9 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 	for (const match of matches) {
 		const commandName = match[1]! as Command; // e.g., "clk"
 		const commandValue = match[2]!; // e.g., "0:09:56.7"
-		// Validate the command name
-		if (!validCommands.includes(commandName))
-			throw Error(`Invalid command sequence found in comment: [%${commandName} ...]`);
-		commands.push({ command: commandName, value: commandValue });
+		// Only parse valid commands, simply ignore and discard all others
+		if (validCommands.includes(commandName))
+			commands.push({ command: commandName, value: commandValue });
 	}
 
 	// Second, remove all command sequences from the original string to get the raw comment.
