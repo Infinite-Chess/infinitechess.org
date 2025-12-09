@@ -387,44 +387,6 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 	};
 }
 
-function pickMoveFromMultiPv(lines, strengthLevel) {
-	if (!Array.isArray(lines) || lines.length === 0) return null;
-	const moves = [];
-	for (const entry of lines) {
-		const move = extractMoveFromMultiPvEntry(entry);
-		if (move && move.from && move.to) moves.push(move);
-	}
-	if (!moves.length) return null;
-	const maxStrength = 20;
-	const clamped = Math.max(1, Math.min(maxStrength, Math.floor(strengthLevel)));
-	const t = (clamped - 1) / (maxStrength - 1);
-	const lambda = 0.1 + t * (3.0 - 0.1);
-	const weights = [];
-	for (let i = 0; i < moves.length; i++) {
-		weights.push(Math.exp(-lambda * i));
-	}
-	let total = 0;
-	for (let i = 0; i < weights.length; i++) total += weights[i];
-	if (!(total > 0)) return moves[0];
-	let r = Math.random() * total;
-	for (let i = 0; i < moves.length; i++) {
-		r -= weights[i];
-		if (r <= 0) return moves[i];
-	}
-	return moves[moves.length - 1];
-}
-
-function extractMoveFromMultiPvEntry(entry) {
-	if (!entry || typeof entry !== 'object') return null;
-	if (entry.from && entry.to) return entry;
-	if (entry.best && entry.best.from && entry.best.to) return entry.best;
-	if (Array.isArray(entry.pv) && entry.pv.length > 0) {
-		const first = entry.pv[0];
-		if (first && first.from && first.to) return first;
-	}
-	return null;
-}
-
 const NUM_TYPES = 22;
 
 function decodeType(type) {
