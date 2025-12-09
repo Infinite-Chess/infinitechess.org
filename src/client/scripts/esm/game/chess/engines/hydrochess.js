@@ -86,7 +86,7 @@ self.onmessage = async function (e) {
 			timeLimit = data.engineConfig.engineTimeLimitPerMoveMillis;
 		}
 
-		// Strength level from UI: 1 = Relaxed, 2 = Standard, 3 = Maximum.
+		// Strength level from UI: 1 = Easy, 2 = Medium, 3 = Hard.
 		let strengthLevel = 3;
 		if (typeof engineOptions.strengthLevel === 'number') {
 			strengthLevel = engineOptions.strengthLevel;
