@@ -307,6 +307,9 @@ join = "Join"
 copy = "Copy"
 back = "Back"
 code = "Code"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
 
 [play.gamebuttontooltips]
 undo_transition = "Undo transition"

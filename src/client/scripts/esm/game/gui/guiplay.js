@@ -58,6 +58,10 @@ const element_optionPrivate = document.getElementById('option-private');
 const element_optionRated = document.getElementById('option-rated');
 const element_optionRatedYes = document.getElementById('option-rated-yes');
 
+const element_optionCardStrength = document.getElementById('option-card-strength');
+const element_optionDifficulty = document.getElementById('option-difficulty');
+const element_optionCardMultiPv = document.getElementById('option-card-multipv');
+
 const element_joinPrivate = document.getElementById('join-private');
 const element_inviteCode = document.getElementById('invite-code');
 const element_copyInviteCode = document.getElementById('copy-button');
@@ -224,6 +228,8 @@ function changePlayMode(mode) {
 		const localStorageRated = localstorage.loadItem('preferred_rated_invite_value');
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
 		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
+		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
+		if (element_optionCardMultiPv) element_optionCardMultiPv.classList.add('hidden');
 		// In non-engine modes, all variants remain available.
 		for (const option of element_optionVariant.options) {
 			option.hidden = false;
@@ -251,6 +257,8 @@ function changePlayMode(mode) {
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
+		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
+		if (element_optionCardMultiPv) element_optionCardMultiPv.classList.add('hidden');
 		// In non-engine modes, all variants remain available.
 		for (const option of element_optionVariant.options) {
 			option.hidden = false;
@@ -275,10 +283,21 @@ function changePlayMode(mode) {
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
+		if (element_optionCardStrength) element_optionCardStrength.classList.remove('hidden');
+		if (element_optionCardMultiPv) element_optionCardMultiPv.classList.add('hidden');
 		// Restrict the variant dropdown to the variants that HydroChess officially supports.
 		for (const option of element_optionVariant.options) {
 			// Keep options whose value is in the supported set; hide the rest.
 			option.hidden = !engineSupportedVariants.has(option.value);
+		}
+		const selectedVariant = element_optionVariant.value;
+		if (!engineSupportedVariants.has(selectedVariant)) {
+			for (const option of element_optionVariant.options) {
+				if (!option.hidden && engineSupportedVariants.has(option.value)) {
+					element_optionVariant.value = option.value;
+					break;
+				}
+			}
 		}
 	}
 }
@@ -319,6 +338,7 @@ function callback_createInvite() {
 		close(); // Close the invite creation screen
 		// prettier-ignore
 		const ourColor = inviteOptions.color !== players.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? players.WHITE : players.BLACK;
+		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
@@ -329,7 +349,8 @@ function callback_createInvite() {
 			engineConfig: {
 				engineTimeLimitPerMoveMillis:
 					engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
-			}, // default think time of engine
+				strengthLevel,
+			}, // default think time of engine with adjustable strength and Multi-PV
 		});
 	}
 }
@@ -349,6 +370,22 @@ function getInviteOptions() {
 		private: element_optionPrivate.value,
 		rated: element_optionRated.value,
 	};
+}
+
+function getEngineDifficultyConfig() {
+	if (!element_optionDifficulty) {
+		return { strengthLevel: 3 };
+	}
+	const value = element_optionDifficulty.value;
+	switch (value) {
+		case 'easy':
+			return { strengthLevel: 1 };
+		case 'medium':
+			return { strengthLevel: 2 };
+		case 'hard':
+		default:
+			return { strengthLevel: 3 };
+	}
 }
 
 // Call whenever the Variant, Clock, Color or Private inputs change, or play mode changes

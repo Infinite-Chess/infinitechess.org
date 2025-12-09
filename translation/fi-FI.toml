@@ -308,6 +308,9 @@ join = "Liity"
 copy = "Kopioi"
 back = "Takaisin"
 code = "Koodi"
+easy = "Helppo"
+medium = "Keskitaso"
+hard = "Vaikea"
 
 [play.gamebuttontooltips]
 undo_transition = "Kumoa siirtymä"
