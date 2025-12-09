@@ -211,6 +211,7 @@ export default {
 	// Mathematical Operations
 	abs,
 	countDigits,
+	bitLength_bisection,
 	// Big Length Algorithms
 	estimateBigIntSize,
 	posMod,
