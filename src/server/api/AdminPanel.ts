@@ -14,6 +14,7 @@ import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { addToBlacklist } from '../database/blacklistManager.js';
+import validators from '../../shared/util/validators.js';
 
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
@@ -162,9 +163,23 @@ function blacklistEmailCommand(
 		);
 		return;
 	}
+	if (commandAndArgs.length > 2) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return;
+	}
 	// Valid Syntax
 	logCommand(command, req);
 	const email = commandAndArgs[1]!;
+
+	// Validate email format
+	const validationResult = validators.validateEmail(email);
+	if (validationResult !== validators.EmailValidationResult.Ok) {
+		const errorKey = validators.getEmailErrorTranslation(validationResult);
+		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
+		return;
+	}
 
 	try {
 		addToBlacklist(email, 'banned');
