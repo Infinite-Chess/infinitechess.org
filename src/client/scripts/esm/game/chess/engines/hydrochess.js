@@ -119,7 +119,7 @@ self.onmessage = async function (e) {
 		let bestMoveResult;
 		const engine = new wasm.Engine(rustGameState);
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
-			bestMoveResult = engine.get_best_move_with_time(timeLimit, false, undefined);
+			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
 		} else {
 			bestMoveResult = engine.get_best_move();
 		}
