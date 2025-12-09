@@ -61,9 +61,9 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
-	// Honeypot Bot Catcher: recovery_email — if present, return generic success.
+	// Honeypot Bot Catcher: `recovery` — if present, return generic success.
 	const recoveryEmail: string =
-		typeof req.body.recovery_email === 'string' ? req.body.recovery_email.trim() : '';
+		typeof req.body.recovery === 'string' ? req.body.recovery.trim() : '';
 	if (recoveryEmail.length > 0) {
 		const username = typeof req.body.username === 'string' ? req.body.username : '[empty]';
 		logEventsAndPrint(
