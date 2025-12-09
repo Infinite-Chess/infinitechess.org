@@ -157,13 +157,7 @@ function blacklistEmailCommand(
 	req: IdentifiedRequest,
 	res: Response,
 ): void {
-	if (commandAndArgs.length < 2) {
-		res.status(422).send(
-			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
-		);
-		return;
-	}
-	if (commandAndArgs.length > 2) {
+	if (commandAndArgs.length !== 2) {
 		res.status(422).send(
 			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
 		);
