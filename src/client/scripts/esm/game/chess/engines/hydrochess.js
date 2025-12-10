@@ -74,47 +74,41 @@ self.onmessage = async function (e) {
 		// engineColor is only used on the JS side to decide when to call the engine;
 		// the Rust side just needs the current side-to-move from whosTurn.
 		// Also pass through timing information (wtime/btime/winc/binc) if provided.
-		const timingFromOptions = data.engineOptions && data.engineOptions.timing;
-		const engineOptions = data.engineOptions || {};
 		let timeLimit = null;
-		if (typeof engineOptions.timeLimitMs === 'number') {
-			timeLimit = engineOptions.timeLimitMs;
-		} else if (
-			data.engineConfig &&
-			typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
-		) {
+		if (data.engineConfig && typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number') {
 			timeLimit = data.engineConfig.engineTimeLimitPerMoveMillis;
 		}
 
 		// Strength level from UI: 1 = Easy, 2 = Medium, 3 = Hard.
 		let strengthLevel = 3;
-		if (typeof engineOptions.strengthLevel === 'number') {
-			strengthLevel = engineOptions.strengthLevel;
-		} else if (data.engineConfig && typeof data.engineConfig.strengthLevel === 'number') {
+		if (data.engineConfig && typeof data.engineConfig.strengthLevel === 'number') {
 			strengthLevel = data.engineConfig.strengthLevel;
 		}
 		if (!Number.isFinite(strengthLevel)) strengthLevel = 3;
 		strengthLevel = Math.max(1, Math.min(3, Math.floor(strengthLevel)));
 
 		let multiPv = 1;
-		if (typeof engineOptions.multiPv === 'number') {
-			multiPv = engineOptions.multiPv;
-		} else if (data.engineConfig && typeof data.engineConfig.multiPv === 'number') {
+		if (data.engineConfig && typeof data.engineConfig.multiPv === 'number') {
 			multiPv = data.engineConfig.multiPv;
 		}
 		if (!Number.isFinite(multiPv)) multiPv = 1;
 		multiPv = Math.max(1, Math.min(10, Math.floor(multiPv)));
 		// Build the Rust-facing game state JSON, including strength_level hint.
-		const rustGameState = convertGameToRustFormat(
-			current_gamefile,
-			timingFromOptions || {
-				wtime: data.wtime,
-				btime: data.btime,
-				winc: data.winc,
-				binc: data.binc,
-			},
-			strengthLevel,
-		);
+		const hasTiming =
+			Number.isFinite(data.wtime) &&
+			Number.isFinite(data.btime) &&
+			data.wtime >= 0 &&
+			data.btime >= 0;
+		const timing = hasTiming
+			? {
+					wtime: data.wtime,
+					btime: data.btime,
+					winc: Number.isFinite(data.winc) ? data.winc : 0,
+					binc: Number.isFinite(data.binc) ? data.binc : 0,
+				}
+			: undefined;
+
+		const rustGameState = convertGameToRustFormat(current_gamefile, timing, strengthLevel);
 
 		let bestMoveResult;
 		const engine = new wasm.Engine(rustGameState);

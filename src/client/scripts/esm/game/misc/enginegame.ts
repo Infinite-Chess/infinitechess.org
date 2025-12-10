@@ -204,12 +204,10 @@ function onMovePlayed(): void {
 			lf: longformIn,
 			engineConfig: engineConfig,
 			youAreColor: engineColor,
-			engineOptions: {
-				timeLimitMs: engineConfig?.engineTimeLimitPerMoveMillis,
-				strengthLevel: engineConfig?.strengthLevel,
-				multiPv: engineConfig?.multiPv,
-				timing,
-			},
+			wtime: timing?.wtime,
+			btime: timing?.btime,
+			winc: timing?.winc,
+			binc: timing?.binc,
 		});
 	else console.error('User made a move in an engine game but no engine webworker is loaded!');
 }

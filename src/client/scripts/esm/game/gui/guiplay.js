@@ -60,7 +60,6 @@ const element_optionRatedYes = document.getElementById('option-rated-yes');
 
 const element_optionCardStrength = document.getElementById('option-card-strength');
 const element_optionDifficulty = document.getElementById('option-difficulty');
-const element_optionCardMultiPv = document.getElementById('option-card-multipv');
 
 const element_joinPrivate = document.getElementById('join-private');
 const element_inviteCode = document.getElementById('invite-code');
@@ -229,7 +228,6 @@ function changePlayMode(mode) {
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
 		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
 		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
-		if (element_optionCardMultiPv) element_optionCardMultiPv.classList.add('hidden');
 		// In non-engine modes, all variants remain available.
 		for (const option of element_optionVariant.options) {
 			option.hidden = false;
@@ -258,7 +256,6 @@ function changePlayMode(mode) {
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
-		if (element_optionCardMultiPv) element_optionCardMultiPv.classList.add('hidden');
 		// In non-engine modes, all variants remain available.
 		for (const option of element_optionVariant.options) {
 			option.hidden = false;
@@ -284,7 +281,6 @@ function changePlayMode(mode) {
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 		if (element_optionCardStrength) element_optionCardStrength.classList.remove('hidden');
-		if (element_optionCardMultiPv) element_optionCardMultiPv.classList.add('hidden');
 		// Restrict the variant dropdown to the variants that HydroChess officially supports.
 		for (const option of element_optionVariant.options) {
 			// Keep options whose value is in the supported set; hide the rest.
@@ -292,12 +288,7 @@ function changePlayMode(mode) {
 		}
 		const selectedVariant = element_optionVariant.value;
 		if (!engineSupportedVariants.has(selectedVariant)) {
-			for (const option of element_optionVariant.options) {
-				if (!option.hidden && engineSupportedVariants.has(option.value)) {
-					element_optionVariant.value = option.value;
-					break;
-				}
-			}
+			element_optionVariant.value = 'Classical';
 		}
 	}
 }
@@ -350,7 +341,7 @@ function callback_createInvite() {
 				engineTimeLimitPerMoveMillis:
 					engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
 				strengthLevel,
-			}, // default think time of engine with adjustable strength and Multi-PV
+			},
 		});
 	}
 }
