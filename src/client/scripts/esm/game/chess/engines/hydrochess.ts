@@ -261,7 +261,7 @@ function convertGameToRustFormat(
 			});
 		});
 	} else if (piecesObj && piecesObj.coords) {
-		for (const [coordsKey, idx] of piecesObj.coords as Map<string, number>) {
+		for (const [coordsKey, idx] of piecesObj.coords) {
 			const type = piecesObj.types[idx];
 			const coords = coordsKey.split(',');
 			const { rawType, color } = decodeType(type);
@@ -346,7 +346,7 @@ function convertGameToRustFormat(
 
 	const move_history: RustMoveHistoryItem[] = [];
 	const moves = gamefile.basegame?.moves ?? [];
-	for (const move of moves as any[]) {
+	for (const move of moves) {
 		if (move.startCoords && move.endCoords) {
 			move_history.push({
 				from: `${move.startCoords[0]},${move.startCoords[1]}`,
