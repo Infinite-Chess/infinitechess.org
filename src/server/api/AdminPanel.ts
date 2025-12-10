@@ -13,12 +13,15 @@ import { refreshGitHubContributorsList } from './GitHub.js';
 import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { addToBlacklist, removeFromBlacklist } from '../database/blacklistManager.js';
+import validators from '../../shared/util/validators.js';
 
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
 const validCommands = [
 	'ban',
+	'unban',
 	'delete',
 	'username',
 	'logout',
@@ -47,6 +50,10 @@ function processCommand(req: IdentifiedRequest, res: Response): void {
 	// TODO prevent affecting accounts with equal or higher roles
 	switch (commandAndArgs[0]) {
 		case 'ban':
+			banEmailCommand(command, commandAndArgs, req, res);
+			return;
+		case 'unban':
+			unbanEmailCommand(command, commandAndArgs, req, res);
 			return;
 		case 'delete':
 			deleteCommand(command, commandAndArgs, req, res);
@@ -142,6 +149,72 @@ function deleteCommand(
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		sendAndLogResponse(res, 500, `Failed to delete user (${username}): ${errorMessage}`);
+	}
+}
+
+function banEmailCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: IdentifiedRequest,
+	res: Response,
+): void {
+	if (commandAndArgs.length !== 2) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return;
+	}
+	// Valid Syntax
+	logCommand(command, req);
+	const email = commandAndArgs[1]!;
+
+	// Validate email format
+	const validationResult = validators.validateEmail(email);
+	if (validationResult !== validators.EmailValidationResult.Ok) {
+		const errorKey = validators.getEmailErrorTranslation(validationResult);
+		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
+		return;
+	}
+
+	try {
+		addToBlacklist(email, 'banned');
+		sendAndLogResponse(res, 200, `Successfully banned ${email}.`);
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		sendAndLogResponse(res, 500, `Failed to ban email (${email}): ${errorMessage}`);
+	}
+}
+
+function unbanEmailCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: IdentifiedRequest,
+	res: Response,
+): void {
+	if (commandAndArgs.length !== 2) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return;
+	}
+	// Valid Syntax
+	logCommand(command, req);
+	const email = commandAndArgs[1]!;
+
+	// Validate email format
+	const validationResult = validators.validateEmail(email);
+	if (validationResult !== validators.EmailValidationResult.Ok) {
+		const errorKey = validators.getEmailErrorTranslation(validationResult);
+		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
+		return;
+	}
+
+	try {
+		removeFromBlacklist(email);
+		sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		sendAndLogResponse(res, 500, `Failed to unban email (${email}): ${errorMessage}`);
 	}
 }
 
@@ -310,12 +383,10 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 	}
 	switch (commandAndArgs[1]) {
 		case 'ban':
-			res.status(200).send(
-				'Syntax: ban <username> [days]\nBans a user for a duration or permanently.',
-			);
+			res.status(200).send('Syntax: ban <email>\nBans the given email address.');
 			return;
 		case 'unban':
-			res.status(200).send('Syntax: unban <email>\nUnbans the given email.');
+			res.status(200).send('Syntax: unban <email>\nUnbans the given email address.');
 			return;
 		case 'delete':
 			res.status(200).send(
