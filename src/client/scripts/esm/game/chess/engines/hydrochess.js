@@ -274,7 +274,7 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 	// Move clocks - moveRuleState is the halfmove counter for 50-move rule
 	const halfmove_clock =
 		gamefile.boardsim?.state?.global?.moveRuleState ??
-		gamefile.startSnapshot?.state_global?.moveRuleState ??
+		gamefile.boardsim?.startSnapshot?.state_global?.moveRuleState ??
 		0;
 
 	// fullMove is on basegame, not boardsim.state
@@ -319,6 +319,10 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 					game_rules.promotions_allowed.push(code);
 				}
 			}
+		}
+
+		if (typeof gameRules.moveRule !== 'undefined') {
+			game_rules.move_rule = Number(gameRules.moveRule);
 		}
 	}
 
