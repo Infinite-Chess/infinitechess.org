@@ -20,6 +20,8 @@ describe('gamecompressor', () => {
 			} as const;
 
 			const mockGame: FullGame = {
+				events: {},
+				components: new Set(),
 				basegame: {
 					metadata: mockMetaData,
 					// The game rules are essential for the compressor to know the turn order
