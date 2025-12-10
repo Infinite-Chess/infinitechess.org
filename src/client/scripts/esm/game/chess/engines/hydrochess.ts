@@ -7,6 +7,7 @@
 
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import gameformulator from '../gameformulator.js';
 
 // Import WASM glue code statically so esbuild can bundle it and handle the .wasm file
@@ -305,7 +306,7 @@ function convertGameToRustFormat(
 
 	// Derive the current fullmove number from the starting fullMove and number of moves played.
 	const startFullMove = gamefile.boardsim.startSnapshot.fullMove;
-	const plyPerFullMove = gamefile.basegame.gameRules.turnOrder?.length ?? 2;
+	const plyPerFullMove = gamefile.basegame.gameRules.turnOrder.length ?? 2;
 	const fullmove_number =
 		startFullMove + Math.floor(gamefile.basegame.moves.length / plyPerFullMove);
 
@@ -352,10 +353,10 @@ function convertGameToRustFormat(
 
 	let turn: 'w' | 'b' = 'w';
 	if (gameRules && Array.isArray(gameRules.turnOrder) && gameRules.turnOrder.length > 0) {
-		const first: any = gameRules.turnOrder[0];
-		if (first === 2 || first === 'black') {
+		const first = gameRules.turnOrder[0];
+		if (first === p.BLACK) {
 			turn = 'b';
-		} else if (first === 1 || first === 'white') {
+		} else if (first === p.WHITE) {
 			turn = 'w';
 		}
 	}
