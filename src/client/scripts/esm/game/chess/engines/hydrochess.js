@@ -75,7 +75,10 @@ self.onmessage = async function (e) {
 		// the Rust side just needs the current side-to-move from whosTurn.
 		// Also pass through timing information (wtime/btime/winc/binc) if provided.
 		let timeLimit = null;
-		if (data.engineConfig && typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number') {
+		if (
+			data.engineConfig &&
+			typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
+		) {
 			timeLimit = data.engineConfig.engineTimeLimitPerMoveMillis;
 		}
 
@@ -113,7 +116,7 @@ self.onmessage = async function (e) {
 		let bestMoveResult;
 		const engine = new wasm.Engine(rustGameState);
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
-			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
+			bestMoveResult = engine.get_best_move_with_time(timeLimit, false, undefined);
 		} else {
 			bestMoveResult = engine.get_best_move();
 		}
