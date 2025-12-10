@@ -74,27 +74,48 @@ self.onmessage = async function (e) {
 		// engineColor is only used on the JS side to decide when to call the engine;
 		// the Rust side just needs the current side-to-move from whosTurn.
 		// Also pass through timing information (wtime/btime/winc/binc) if provided.
-		const rustGameState = convertGameToRustFormat(current_gamefile, {
+		let timeLimit = null;
+		if (
+			data.engineConfig &&
+			typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
+		) {
+			timeLimit = data.engineConfig.engineTimeLimitPerMoveMillis;
+		}
+
+		// Strength level from UI: 1 = Easy, 2 = Medium, 3 = Hard.
+		let strengthLevel = 3;
+		if (data.engineConfig && typeof data.engineConfig.strengthLevel === 'number') {
+			strengthLevel = data.engineConfig.strengthLevel;
+		}
+		if (!Number.isFinite(strengthLevel)) strengthLevel = 3;
+		strengthLevel = Math.max(1, Math.min(3, Math.floor(strengthLevel)));
+
+		let multiPv = 1;
+		if (data.engineConfig && typeof data.engineConfig.multiPv === 'number') {
+			multiPv = data.engineConfig.multiPv;
+		}
+		if (!Number.isFinite(multiPv)) multiPv = 1;
+		multiPv = Math.max(1, Math.min(10, Math.floor(multiPv)));
+		// Build the Rust-facing game state JSON, including strength_level hint.
+		const hasTiming =
+			Number.isFinite(data.wtime) &&
+			Number.isFinite(data.btime) &&
+			data.wtime >= 0 &&
+			data.btime >= 0;
+		// prettier-ignore
+		const timing = hasTiming ? {
 			wtime: data.wtime,
 			btime: data.btime,
-			winc: data.winc,
-			binc: data.binc,
-		});
+			winc: Number.isFinite(data.winc) ? data.winc : 0,
+			binc: Number.isFinite(data.binc) ? data.binc : 0,
+		} : undefined;
 
-		console.debug('[Engine] Creating engine with game state:', rustGameState);
+		const rustGameState = convertGameToRustFormat(current_gamefile, timing, strengthLevel);
 
-		// Find the best move. If a time limit is provided via engineConfig,
-		// use the timed search entry point so the Rust engine obeys the
-		// same per-move limit as the JS engines.
 		let bestMoveResult;
-		const timeLimit =
-			data.engineConfig && typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
-				? data.engineConfig.engineTimeLimitPerMoveMillis
-				: null;
-
 		const engine = new wasm.Engine(rustGameState);
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
-			bestMoveResult = engine.get_best_move_with_time(timeLimit);
+			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
 		} else {
 			bestMoveResult = engine.get_best_move();
 		}
@@ -115,8 +136,6 @@ self.onmessage = async function (e) {
 			moveString += `=${promoAbbr}`;
 		}
 
-		console.debug('[Engine] Best move:', moveString);
-
 		// return the best move as a string
 		postMessage(moveString);
 	} catch (error) {
@@ -131,11 +150,10 @@ self.onmessage = async function (e) {
  * - All pieces including neutral/blocker pieces
  * - All special rights (castling + pawn double-move)
  * - Game rules (promotion ranks, allowed promotions)
+ * - Optional strength_level hint for depth limiting
  * Side-to-move is taken directly from gamefile.basegame.whosTurn.
  */
-function convertGameToRustFormat(gamefile, timing) {
-	console.debug('[Engine] Converting gamefile. Keys:', Object.keys(gamefile));
-
+function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 	const pieces = [];
 
 	// Prefer the true START position for reconstruction:
@@ -180,8 +198,6 @@ function convertGameToRustFormat(gamefile, timing) {
 		console.error('[Engine] No position found in gamefile');
 		throw new Error('No position found in gamefile');
 	}
-
-	console.debug(`[Engine] Extracted ${pieces.length} pieces`);
 
 	// Extract INITIAL special rights - includes both castling (kings/rooks)
 	// AND pawn double-move rights. These come from the START position; the
@@ -363,6 +379,7 @@ function convertGameToRustFormat(gamefile, timing) {
 		world_bounds,
 		clock,
 		variant,
+		strength_level: strengthLevel,
 	};
 }
 

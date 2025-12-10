@@ -26,6 +26,8 @@ interface EngineConfig {
 	engineTimeLimitPerMoveMillis: number;
 	// If you are using a checkmate practice engine, this is required.
 	checkmateSelectedID?: string;
+	strengthLevel?: number;
+	multiPv?: number;
 }
 
 // Constants --------------------------------------------------------------------
@@ -186,17 +188,24 @@ function onMovePlayed(): void {
 		binc = incSeconds * 1000;
 	}
 
+	// prettier-ignore
+	const timing = wtime !== undefined && btime !== undefined ? {
+		wtime,
+		btime,
+		winc,
+		binc,
+	} : undefined;
+
 	if (engineWorker)
 		engineWorker.postMessage({
 			stringGamefile,
 			lf: longformIn,
 			engineConfig: engineConfig,
 			youAreColor: engineColor,
-			// Time + increment state
-			wtime,
-			btime,
-			winc,
-			binc,
+			wtime: timing?.wtime,
+			btime: timing?.btime,
+			winc: timing?.winc,
+			binc: timing?.binc,
 		});
 	else console.error('User made a move in an engine game but no engine webworker is loaded!');
 }

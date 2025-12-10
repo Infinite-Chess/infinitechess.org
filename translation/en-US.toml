@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "81"
+version = "82"
 maintainer = "Naviary"
 
 [header]
@@ -299,6 +299,9 @@ no = "No"
 yes = "Yes"
 rated = "Rated"
 casual = "Casual"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
 join_games = "Join Existing - Active Games:"
 private_invite = "Private Invite:"
 your_invite = "Your Invite Code:"
