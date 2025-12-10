@@ -127,7 +127,7 @@ async function initWasm(): Promise<boolean> {
 				return false;
 			});
 	}
-	return await wasmInitPromise;
+	return wasmInitPromise!;
 }
 
 // Initialize WASM when the module is loaded
@@ -209,7 +209,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 		let bestMoveResult: WasmBestMoveResult | null;
 		const engine = new wasm.Engine(rustGameState as any);
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
-			bestMoveResult = engine.get_best_move_with_time(timeLimit, false, undefined);
+			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
 		} else {
 			bestMoveResult = engine.get_best_move();
 		}
@@ -244,13 +244,10 @@ function convertGameToRustFormat(
 ): RustGameState {
 	const pieces: RustPieceEntry[] = [];
 
-	const startPosition =
-		gamefile.boardsim?.startSnapshot?.position ||
-		gamefile.startSnapshot?.position ||
-		gamefile.position;
-	const piecesObj = gamefile.boardsim?.pieces;
+	const startPosition = gamefile.boardsim.startSnapshot.position;
+	const piecesObj = gamefile.boardsim.pieces;
 
-	if (startPosition && typeof startPosition.forEach === 'function') {
+	if (startPosition && typeof (startPosition as Map<string, number>).forEach === 'function') {
 		startPosition.forEach((pieceValue: number, coordsKey: string) => {
 			const coords = coordsKey.split(',');
 			const { rawType, color } = decodeType(pieceValue);
@@ -263,8 +260,9 @@ function convertGameToRustFormat(
 			});
 		});
 	} else if (piecesObj && piecesObj.coords) {
-		for (const [coordsKey, idx] of piecesObj.coords) {
-			const type = piecesObj.types[idx];
+		// coords is a Map from CoordsKey (string) to piece index
+		for (const [coordsKey, idx] of piecesObj.coords as Map<string, number>) {
+			const type = piecesObj.types[idx]!;
 			const coords = coordsKey.split(',');
 			const { rawType, color } = decodeType(type);
 
@@ -281,10 +279,7 @@ function convertGameToRustFormat(
 	}
 
 	const special_rights: string[] = [];
-	const specialRightsData =
-		gamefile.boardsim?.startSnapshot?.state_global?.specialRights ||
-		gamefile.startSnapshot?.state_global?.specialRights ||
-		gamefile.specialRights;
+	const specialRightsData = gamefile.boardsim.startSnapshot.state_global.specialRights;
 
 	if (specialRightsData && typeof specialRightsData.forEach === 'function') {
 		specialRightsData.forEach((coordsKey: string) => {
@@ -293,58 +288,26 @@ function convertGameToRustFormat(
 	}
 
 	let en_passant: RustEnPassantInfo | null = null;
-	const enpassantData = gamefile.startSnapshot?.state_global?.enpassant || gamefile.enpassant;
+	const enpassantData = gamefile.boardsim.startSnapshot.state_global.enpassant;
 
 	if (enpassantData) {
-		let square: string | undefined;
-		let pawnSquare: string | undefined;
-
-		if (Array.isArray(enpassantData)) {
-			const x = String(enpassantData[0]);
-			const y = String(enpassantData[1]);
-			square = `${x},${y}`;
-			const yNum = Number(enpassantData[1]);
-			const pawnY = yNum > 4 ? yNum - 1 : yNum + 1;
-			pawnSquare = `${x},${pawnY}`;
-		} else if (typeof enpassantData === 'string') {
-			const parts = enpassantData.split(',');
-			square = enpassantData;
-			const yNum = parseInt(parts[1]!);
-			const pawnY = yNum > 4 ? yNum - 1 : yNum + 1;
-			pawnSquare = `${parts[0]},${pawnY}`;
-		} else if (enpassantData.square) {
-			if (Array.isArray(enpassantData.square)) {
-				square = `${enpassantData.square[0]},${enpassantData.square[1]}`;
-			} else {
-				square = enpassantData.square;
-			}
-
-			if (enpassantData.pawn) {
-				if (Array.isArray(enpassantData.pawn)) {
-					pawnSquare = `${enpassantData.pawn[0]},${enpassantData.pawn[1]}`;
-				} else {
-					pawnSquare = enpassantData.pawn;
-				}
-			} else {
-				const parts = (square as string).split(',');
-				const yNum = parseInt(parts[1]!);
-				const pawnY = yNum > 4 ? yNum - 1 : yNum + 1;
-				pawnSquare = `${parts[0]},${pawnY}`;
-			}
-		}
-
-		if (square && pawnSquare) {
-			en_passant = {
-				square,
-				pawn_square: pawnSquare,
-			};
-		}
+		const [sqX, sqY] = enpassantData.square;
+		const [pawnX, pawnY] = enpassantData.pawn;
+		const square = `${sqX},${sqY}`;
+		const pawnSquare = `${pawnX},${pawnY}`;
+		en_passant = {
+			square,
+			pawn_square: pawnSquare,
+		};
 	}
 
-	const halfmove_clock: number = gamefile.boardsim?.state?.global?.moveRuleState ?? 0;
+	const halfmove_clock: number = gamefile.boardsim.state.global.moveRuleState ?? 0;
 
-	const fullmove_number: number =
-		gamefile.basegame?.fullMove ?? gamefile.startSnapshot?.fullMove ?? 1;
+	// Derive the current fullmove number from the starting fullMove and number of moves played.
+	const startFullMove = gamefile.boardsim.startSnapshot.fullMove;
+	const plyPerFullMove = gamefile.basegame.gameRules.turnOrder?.length ?? 2;
+	const fullmove_number =
+		startFullMove + Math.floor(gamefile.basegame.moves.length / plyPerFullMove);
 
 	const move_history: RustMoveHistoryItem[] = [];
 	const moves = gamefile.basegame?.moves ?? [];
@@ -358,7 +321,7 @@ function convertGameToRustFormat(
 		}
 	}
 
-	const gameRules = gamefile.basegame?.gameRules;
+	const gameRules = gamefile.basegame.gameRules;
 	let game_rules: RustGameRules | null = null;
 
 	if (gameRules) {
@@ -389,7 +352,7 @@ function convertGameToRustFormat(
 
 	let turn: 'w' | 'b' = 'w';
 	if (gameRules && Array.isArray(gameRules.turnOrder) && gameRules.turnOrder.length > 0) {
-		const first = gameRules.turnOrder[0];
+		const first: any = gameRules.turnOrder[0];
 		if (first === 2 || first === 'black') {
 			turn = 'b';
 		} else if (first === 1 || first === 'white') {
