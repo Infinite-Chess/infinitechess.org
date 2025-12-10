@@ -1,8 +1,8 @@
 {
   "82": {
-	"note": "Added difficulty settings lines 303-305",
-	"changes": []
-  }
+    "note": "Added difficulty settings lines 303-305",
+    "changes": []
+  },
   "81": {
     "note": "Split inactive_players on line 174 into an array with two quotes.",
     "changes": []
