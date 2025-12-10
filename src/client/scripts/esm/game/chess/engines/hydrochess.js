@@ -102,14 +102,13 @@ self.onmessage = async function (e) {
 			Number.isFinite(data.btime) &&
 			data.wtime >= 0 &&
 			data.btime >= 0;
-		const timing = hasTiming
-			? {
-					wtime: data.wtime,
-					btime: data.btime,
-					winc: Number.isFinite(data.winc) ? data.winc : 0,
-					binc: Number.isFinite(data.binc) ? data.binc : 0,
-				}
-			: undefined;
+		// prettier-ignore
+		const timing = hasTiming ? {
+			wtime: data.wtime,
+			btime: data.btime,
+			winc: Number.isFinite(data.winc) ? data.winc : 0,
+			binc: Number.isFinite(data.binc) ? data.binc : 0,
+		} : undefined;
 
 		const rustGameState = convertGameToRustFormat(current_gamefile, timing, strengthLevel);
 

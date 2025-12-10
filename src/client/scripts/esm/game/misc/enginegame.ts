@@ -188,15 +188,13 @@ function onMovePlayed(): void {
 		binc = incSeconds * 1000;
 	}
 
-	const timing =
-		wtime !== undefined && btime !== undefined
-			? {
-					wtime,
-					btime,
-					winc,
-					binc,
-				}
-			: undefined;
+	// prettier-ignore
+	const timing = wtime !== undefined && btime !== undefined ? {
+		wtime,
+		btime,
+		winc,
+		binc,
+	} : undefined;
 
 	if (engineWorker)
 		engineWorker.postMessage({
