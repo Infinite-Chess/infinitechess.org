@@ -247,7 +247,7 @@ function convertGameToRustFormat(
 	const startPosition = gamefile.boardsim.startSnapshot.position;
 	const piecesObj = gamefile.boardsim.pieces;
 
-	if (startPosition && typeof (startPosition as Map<string, number>).forEach === 'function') {
+	if (startPosition && typeof startPosition.forEach === 'function') {
 		startPosition.forEach((pieceValue: number, coordsKey: string) => {
 			const coords = coordsKey.split(',');
 			const { rawType, color } = decodeType(pieceValue);
@@ -261,7 +261,7 @@ function convertGameToRustFormat(
 		});
 	} else if (piecesObj && piecesObj.coords) {
 		// coords is a Map from CoordsKey (string) to piece index
-		for (const [coordsKey, idx] of piecesObj.coords as Map<string, number>) {
+		for (const [coordsKey, idx] of piecesObj.coords) {
 			const type = piecesObj.types[idx]!;
 			const coords = coordsKey.split(',');
 			const { rawType, color } = decodeType(type);
