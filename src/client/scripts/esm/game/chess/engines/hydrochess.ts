@@ -1,8 +1,6 @@
-// src/client/scripts/esm/game/chess/engines/hydrochess.js
-
 /**
- * HydroChess Engine - Rust WASM Version
- * A JavaScript wrapper for the Rust WASM implementation of HydroChess
+ * HydroChess Engine - WASM Version
+ * A JavaScript wrapper for the WASM implementation of HydroChess
  *
  * @author FirePlank
  */
@@ -13,13 +11,102 @@ import gameformulator from '../gameformulator.js';
 import init, * as wasmBindings from './hydrochess-wasm/pkg/hydrochess_wasm.js';
 import wasmUrl from './hydrochess-wasm/pkg/hydrochess_wasm_bg.wasm';
 
-const wasm = wasmBindings;
+const wasm = wasmBindings as typeof wasmBindings;
 let wasmInitialized = false;
-let wasmInitPromise = null;
+let wasmInitPromise: Promise<boolean> | null = null;
+
+interface EngineConfig {
+	engineTimeLimitPerMoveMillis?: number;
+	strengthLevel?: number;
+	multiPv?: number;
+}
+
+interface EngineWorkerMessage {
+	stringGamefile: string;
+	lf: unknown;
+	engineConfig?: EngineConfig;
+	youAreColor: number;
+	wtime?: number;
+	btime?: number;
+	winc?: number;
+	binc?: number;
+}
+
+interface RustClockTiming {
+	wtime: number;
+	btime: number;
+	winc: number;
+	binc: number;
+}
+
+interface RustEnPassantInfo {
+	square: string;
+	pawn_square: string;
+}
+
+interface RustMoveHistoryItem {
+	from: string;
+	to: string;
+	promotion: string | null;
+}
+
+interface RustGameRules {
+	promotion_ranks?: {
+		white: string[];
+		black: string[];
+	};
+	promotions_allowed?: string[];
+	move_rule?: number;
+}
+
+interface RustWorldBounds {
+	left: string;
+	right: string;
+	bottom: string;
+	top: string;
+}
+
+interface RustClockInfo {
+	wtime: number;
+	btime: number;
+	winc: number;
+	binc: number;
+}
+
+interface RustPieceEntry {
+	x: string;
+	y: string;
+	piece_type: string;
+	player: string;
+}
+
+interface RustGameState {
+	board: { pieces: RustPieceEntry[] };
+	turn: 'w' | 'b';
+	special_rights: string[];
+	en_passant: RustEnPassantInfo | null;
+	halfmove_clock: number;
+	fullmove_number: number;
+	move_history: RustMoveHistoryItem[];
+	game_rules: RustGameRules | null;
+	world_bounds: RustWorldBounds | null;
+	clock: RustClockInfo | null;
+	variant: string | null;
+	strength_level: number;
+}
+
+interface WasmBestMoveResult {
+	from: string;
+	to: string;
+	promotion?: string | null;
+	// eval and depth are present but not used here
+	// eval?: number;
+	// depth?: number;
+}
 
 // Initializes the WASM module.
-// @returns {Promise} Promise that resolves when the WASM module is initialized
-async function initWasm() {
+// @returns Promise that resolves when the WASM module is initialized
+async function initWasm(): Promise<boolean> {
 	if (!wasmInitPromise) {
 		console.debug('[Engine] Initializing HydroChess WASM module');
 		wasmInitPromise = init({ module_or_path: wasmUrl })
@@ -27,24 +114,23 @@ async function initWasm() {
 				console.debug('[Engine] HydroChess WASM module initialized');
 				wasmInitialized = true;
 
-				postMessage('readyok'); // Signal that the engine is ready
+				postMessage('readyok');
 				return true;
 			})
-			.catch((err) => {
+			.catch((err: unknown) => {
 				console.error('[Engine] Failed to initialize HydroChess WASM module', err);
 				wasmInitialized = false;
 				return false;
 			});
 	}
-	// Ensure the promise is awaited and the boolean result is returned
 	return await wasmInitPromise;
 }
 
 // Initialize WASM when the module is loaded
-initWasm();
+void initWasm();
 
 // Main entry point for the engine
-self.onmessage = async function (e) {
+self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<void> {
 	const data = e.data;
 
 	// Ensure WASM is initialized before processing commands
@@ -59,7 +145,7 @@ self.onmessage = async function (e) {
 
 	try {
 		// Formulate gamefile from logical format
-		const current_gamefile = gameformulator.formulateGame(data.lf);
+		const current_gamefile = gameformulator.formulateGame(data.lf as any);
 
 		if (!current_gamefile) {
 			console.error('[Engine] Failed to formulate gamefile from data.lf');
@@ -74,7 +160,7 @@ self.onmessage = async function (e) {
 		// engineColor is only used on the JS side to decide when to call the engine;
 		// the Rust side just needs the current side-to-move from whosTurn.
 		// Also pass through timing information (wtime/btime/winc/binc) if provided.
-		let timeLimit = null;
+		let timeLimit: number | null = null;
 		if (
 			data.engineConfig &&
 			typeof data.engineConfig.engineTimeLimitPerMoveMillis === 'number'
@@ -96,26 +182,30 @@ self.onmessage = async function (e) {
 		}
 		if (!Number.isFinite(multiPv)) multiPv = 1;
 		multiPv = Math.max(1, Math.min(10, Math.floor(multiPv)));
-		// Build the Rust-facing game state JSON, including strength_level hint.
+
 		const hasTiming =
 			Number.isFinite(data.wtime) &&
 			Number.isFinite(data.btime) &&
-			data.wtime >= 0 &&
-			data.btime >= 0;
+			(data.wtime as number) >= 0 &&
+			(data.btime as number) >= 0;
 		// prettier-ignore
-		const timing = hasTiming ? {
-			wtime: data.wtime,
-			btime: data.btime,
-			winc: Number.isFinite(data.winc) ? data.winc : 0,
-			binc: Number.isFinite(data.binc) ? data.binc : 0,
+		const timing: RustClockTiming | undefined = hasTiming ? {
+			wtime: data.wtime as number,
+			btime: data.btime as number,
+			winc: Number.isFinite(data.winc) ? (data.winc as number) : 0,
+			binc: Number.isFinite(data.binc) ? (data.binc as number) : 0,
 		} : undefined;
 
-		const rustGameState = convertGameToRustFormat(current_gamefile, timing, strengthLevel);
+		const rustGameState: RustGameState = convertGameToRustFormat(
+			current_gamefile,
+			timing,
+			strengthLevel,
+		);
 
-		let bestMoveResult;
-		const engine = new wasm.Engine(rustGameState);
+		let bestMoveResult: WasmBestMoveResult | null;
+		const engine = new wasm.Engine(rustGameState as any);
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
-			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
+			bestMoveResult = engine.get_best_move_with_time(timeLimit, false, undefined);
 		} else {
 			bestMoveResult = engine.get_best_move();
 		}
@@ -128,15 +218,14 @@ self.onmessage = async function (e) {
 		}
 
 		// Format: "x,y>x,y" or "x,y>x,y=Q" (promotion)
-		const from = bestMoveResult.from; // "x,y"
-		const to = bestMoveResult.to; // "x,y"
+		const from = bestMoveResult.from;
+		const to = bestMoveResult.to;
 		let moveString = `${from}>${to}`;
 		if (bestMoveResult.promotion) {
 			const promoAbbr = mapRustPromotionToSiteAbbr(bestMoveResult.promotion, engineColor);
 			moveString += `=${promoAbbr}`;
 		}
 
-		// return the best move as a string
 		postMessage(moveString);
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);
@@ -144,22 +233,13 @@ self.onmessage = async function (e) {
 	}
 };
 
-/**
- * Convert FullGame format to the Rust WASM expected format
- * Now includes:
- * - All pieces including neutral/blocker pieces
- * - All special rights (castling + pawn double-move)
- * - Game rules (promotion ranks, allowed promotions)
- * - Optional strength_level hint for depth limiting
- * Side-to-move is taken directly from gamefile.basegame.whosTurn.
- */
-function convertGameToRustFormat(gamefile, timing, strengthLevel) {
-	const pieces = [];
+function convertGameToRustFormat(
+	gamefile: any,
+	timing: RustClockTiming | undefined,
+	strengthLevel: number,
+): RustGameState {
+	const pieces: RustPieceEntry[] = [];
 
-	// Prefer the true START position for reconstruction:
-	//   - boardsim.startSnapshot.position (normal FullGame)
-	//   - gamefile.startSnapshot.position (older formats)
-	//   - gamefile.position (very simple/legacy formats)
 	const startPosition =
 		gamefile.boardsim?.startSnapshot?.position ||
 		gamefile.startSnapshot?.position ||
@@ -167,29 +247,26 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 	const piecesObj = gamefile.boardsim?.pieces;
 
 	if (startPosition && typeof startPosition.forEach === 'function') {
-		// Iterate over start position map (keys are "x,y").
-		startPosition.forEach((pieceValue, coordsKey) => {
+		startPosition.forEach((pieceValue: number, coordsKey: string) => {
 			const coords = coordsKey.split(',');
 			const { rawType, color } = decodeType(pieceValue);
 
 			pieces.push({
-				x: coords[0],
-				y: coords[1],
+				x: coords[0]!,
+				y: coords[1]!,
 				piece_type: getPieceTypeCodeFromRaw(rawType),
 				player: getPlayerCodeFromColor(color),
 			});
 		});
 	} else if (piecesObj && piecesObj.coords) {
-		// Fallback: derive starting position from boardsim.pieces (current pieces)
-		for (const [coordsKey, idx] of piecesObj.coords) {
+		for (const [coordsKey, idx] of piecesObj.coords as Map<string, number>) {
 			const type = piecesObj.types[idx];
 			const coords = coordsKey.split(',');
-
 			const { rawType, color } = decodeType(type);
 
 			pieces.push({
-				x: coords[0],
-				y: coords[1],
+				x: coords[0]!,
+				y: coords[1]!,
 				piece_type: getPieceTypeCodeFromRaw(rawType),
 				player: getPlayerCodeFromColor(color),
 			});
@@ -199,49 +276,39 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 		throw new Error('No position found in gamefile');
 	}
 
-	// Extract INITIAL special rights - includes both castling (kings/rooks)
-	// AND pawn double-move rights. These come from the START position; the
-	// Rust engine will update them itself when replaying moves.
-	const special_rights = [];
+	const special_rights: string[] = [];
 	const specialRightsData =
 		gamefile.boardsim?.startSnapshot?.state_global?.specialRights ||
 		gamefile.startSnapshot?.state_global?.specialRights ||
 		gamefile.specialRights;
 
 	if (specialRightsData && typeof specialRightsData.forEach === 'function') {
-		specialRightsData.forEach((coordsKey) => {
-			// Add ALL special rights - Rust engine will handle them appropriately
+		specialRightsData.forEach((coordsKey: string) => {
 			special_rights.push(coordsKey);
 		});
 	}
 
-	// Extract INITIAL en passant - only from the starting snapshot / gamefile,
-	// not from the current boardsim state. For normal games this will be null;
-	// the Rust engine will recompute en passant squares by replaying moves.
-	let en_passant = null;
+	let en_passant: RustEnPassantInfo | null = null;
 	const enpassantData = gamefile.startSnapshot?.state_global?.enpassant || gamefile.enpassant;
 
 	if (enpassantData) {
-		let square, pawnSquare;
+		let square: string | undefined;
+		let pawnSquare: string | undefined;
 
 		if (Array.isArray(enpassantData)) {
-			// Legacy format: [x, y] - just the en passant square
 			const x = String(enpassantData[0]);
 			const y = String(enpassantData[1]);
 			square = `${x},${y}`;
-			// Infer pawn square (one rank behind the en passant capture square)
 			const yNum = Number(enpassantData[1]);
 			const pawnY = yNum > 4 ? yNum - 1 : yNum + 1;
 			pawnSquare = `${x},${pawnY}`;
 		} else if (typeof enpassantData === 'string') {
-			// Format: "x,y"
 			const parts = enpassantData.split(',');
 			square = enpassantData;
-			const yNum = parseInt(parts[1]);
+			const yNum = parseInt(parts[1]!);
 			const pawnY = yNum > 4 ? yNum - 1 : yNum + 1;
 			pawnSquare = `${parts[0]},${pawnY}`;
 		} else if (enpassantData.square) {
-			// Proper format: { square: [x,y] or "x,y", pawn: [x,y] or "x,y" }
 			if (Array.isArray(enpassantData.square)) {
 				square = `${enpassantData.square[0]},${enpassantData.square[1]}`;
 			} else {
@@ -255,9 +322,8 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 					pawnSquare = enpassantData.pawn;
 				}
 			} else {
-				// Infer pawn square if not provided
-				const parts = square.split(',');
-				const yNum = parseInt(parts[1]);
+				const parts = (square as string).split(',');
+				const yNum = parseInt(parts[1]!);
 				const pawnY = yNum > 4 ? yNum - 1 : yNum + 1;
 				pawnSquare = `${parts[0]},${pawnY}`;
 			}
@@ -265,25 +331,20 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 
 		if (square && pawnSquare) {
 			en_passant = {
-				square: square,
+				square,
 				pawn_square: pawnSquare,
 			};
 		}
 	}
 
-	// Move clocks - moveRuleState is the halfmove counter for 50-move rule
-	const halfmove_clock =
-		gamefile.boardsim?.state?.global?.moveRuleState ??
-		gamefile.boardsim?.startSnapshot?.state_global?.moveRuleState ??
-		0;
+	const halfmove_clock: number = gamefile.boardsim?.state?.global?.moveRuleState ?? 0;
 
-	// fullMove is on basegame, not boardsim.state
-	const fullmove_number = gamefile.basegame?.fullMove ?? gamefile.startSnapshot?.fullMove ?? 1;
+	const fullmove_number: number =
+		gamefile.basegame?.fullMove ?? gamefile.startSnapshot?.fullMove ?? 1;
 
-	// Extract move history for proper repetition detection
-	const move_history = [];
+	const move_history: RustMoveHistoryItem[] = [];
 	const moves = gamefile.basegame?.moves ?? [];
-	for (const move of moves) {
+	for (const move of moves as any[]) {
 		if (move.startCoords && move.endCoords) {
 			move_history.push({
 				from: `${move.startCoords[0]},${move.startCoords[1]}`,
@@ -293,23 +354,19 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 		}
 	}
 
-	// Extract game rules for variant-specific behavior
 	const gameRules = gamefile.basegame?.gameRules;
-	let game_rules = null;
+	let game_rules: RustGameRules | null = null;
 
 	if (gameRules) {
 		game_rules = {};
 
-		// Promotion ranks - where pawns promote
 		if (gameRules.promotionRanks) {
 			game_rules.promotion_ranks = {
-				// Convert BigInts to strings for JSON serialization
-				white: (gameRules.promotionRanks[1] || []).map((r) => String(r)),
-				black: (gameRules.promotionRanks[2] || []).map((r) => String(r)),
+				white: (gameRules.promotionRanks[1] || []).map((r: bigint) => String(r)),
+				black: (gameRules.promotionRanks[2] || []).map((r: bigint) => String(r)),
 			};
 		}
 
-		// Allowed promotion piece types
 		if (gameRules.promotionsAllowed) {
 			game_rules.promotions_allowed = [];
 			const whitePromos = gameRules.promotionsAllowed[1] || [];
@@ -326,10 +383,7 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 		}
 	}
 
-	// Starting side for the game: derive from gameRules.turnOrder[0] when present.
-	// 1 = White, 2 = Black. This is the color that moved first; the Rust side
-	// will reconstruct the current turn by replaying move history.
-	let turn = 'w';
+	let turn: 'w' | 'b' = 'w';
 	if (gameRules && Array.isArray(gameRules.turnOrder) && gameRules.turnOrder.length > 0) {
 		const first = gameRules.turnOrder[0];
 		if (first === 2 || first === 'black') {
@@ -339,10 +393,7 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 		}
 	}
 
-	// World bounds from playableRegion (BigInt values). These define the
-	// effective "world border" for this game and are used by the Rust side
-	// to clamp move generation. Small rounding differences are harmless.
-	let world_bounds = null;
+	let world_bounds: RustWorldBounds | null = null;
 	const playable = gamefile.boardsim?.playableRegion;
 	if (playable && typeof playable.left === 'bigint') {
 		world_bounds = {
@@ -353,8 +404,7 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 		};
 	}
 
-	// Optional clock info, similar to UCI wtime/btime/winc/binc, passed through from JS.
-	let clock = null;
+	let clock: RustClockInfo | null = null;
 	if (timing && typeof timing === 'object') {
 		const { wtime, btime, winc, binc } = timing;
 		if (Number.isFinite(wtime) && Number.isFinite(btime) && wtime >= 0 && btime >= 0) {
@@ -367,9 +417,7 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 		}
 	}
 
-	// Variant code (internal ID), used by the Rust engine to select
-	// variant-specific evaluation parameters.
-	const variant = gamefile.basegame?.metadata?.Variant || null;
+	const variant: string | null = gamefile.basegame?.metadata?.Variant || null;
 
 	return {
 		board: { pieces },
@@ -389,73 +437,62 @@ function convertGameToRustFormat(gamefile, timing, strengthLevel) {
 
 const NUM_TYPES = 22;
 
-function decodeType(type) {
+function decodeType(type: number): { rawType: number; color: number } {
 	return {
 		rawType: type % NUM_TYPES,
 		color: Math.floor(type / NUM_TYPES),
 	};
 }
 
-/**
- * Convert raw piece type to single-character code for Rust engine
- * Must match PieceType::from_str() in Rust
- */
-function getPieceTypeCodeFromRaw(rawType) {
-	const typeMap = {
-		0: 'v', // Void
-		1: 'x', // Obstacle (blocker)
-		2: 'k', // King
-		3: 'i', // Giraffe
-		4: 'l', // Camel
-		5: 'z', // Zebra
-		6: 's', // Knightrider
-		7: 'm', // Amazon
-		8: 'q', // Queen
-		9: 'y', // RoyalQueen
-		10: 'h', // Hawk
-		11: 'c', // Chancellor
-		12: 'a', // Archbishop
-		13: 'e', // Centaur
-		14: 'd', // RoyalCentaur
-		15: 'o', // Rose
-		16: 'n', // Knight
-		17: 'g', // Guard
-		18: 'u', // Huygen
-		19: 'r', // Rook
-		20: 'b', // Bishop
-		21: 'p', // Pawn
+function getPieceTypeCodeFromRaw(rawType: number): string {
+	const typeMap: Record<number, string> = {
+		0: 'v',
+		1: 'x',
+		2: 'k',
+		3: 'i',
+		4: 'l',
+		5: 'z',
+		6: 's',
+		7: 'm',
+		8: 'q',
+		9: 'y',
+		10: 'h',
+		11: 'c',
+		12: 'a',
+		13: 'e',
+		14: 'd',
+		15: 'o',
+		16: 'n',
+		17: 'g',
+		18: 'u',
+		19: 'r',
+		20: 'b',
+		21: 'p',
 	};
 	return typeMap[rawType] || 'p';
 }
 
-/**
- * Convert raw type number to string code (for promotions)
- */
-function getRawTypeStr(typeCode) {
+function getRawTypeStr(typeCode: number): string {
 	const { rawType } = decodeType(typeCode);
 	return getPieceTypeCodeFromRaw(rawType);
 }
 
-/**
- * Convert player color number to single-character code
- * 0 = Neutral, 1 = White, 2 = Black
- */
-function getPlayerCodeFromColor(color) {
-	const colorMap = {
-		0: 'n', // Neutral (blockers/obstacles)
-		1: 'w', // White
-		2: 'b', // Black
+function getPlayerCodeFromColor(color: number): string {
+	const colorMap: Record<number, string> = {
+		0: 'n',
+		1: 'w',
+		2: 'b',
 	};
 	return colorMap[color] || 'n';
 }
 
-/**
- * Map Rust promotion letter to site-specific promotion abbreviation (ICN-style) based on engineColor
- */
-function mapRustPromotionToSiteAbbr(promotion, engineColor) {
-	const code = String(promotion).toLowerCase();
+function mapRustPromotionToSiteAbbr(
+	promotion: string | null | undefined,
+	engineColor: number,
+): string {
+	const code = String(promotion ?? '').toLowerCase();
 	const isWhite = engineColor === 1;
-	const map = {
+	const map: Record<string, { w: string; b: string }> = {
 		q: { w: 'Q', b: 'q' },
 		r: { w: 'R', b: 'r' },
 		b: { w: 'B', b: 'b' },
@@ -481,3 +518,5 @@ function mapRustPromotionToSiteAbbr(promotion, engineColor) {
 	if (!entry) return isWhite ? 'Q' : 'q';
 	return isWhite ? entry.w : entry.b;
 }
+
+export {};
