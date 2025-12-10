@@ -5,6 +5,7 @@
  * @author FirePlank
  */
 
+import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../gameformulator.js';
 
 // Import WASM glue code statically so esbuild can bundle it and handle the .wasm file
@@ -23,7 +24,7 @@ interface EngineConfig {
 
 interface EngineWorkerMessage {
 	stringGamefile: string;
-	lf: unknown;
+	lf: LongFormatIn;
 	engineConfig?: EngineConfig;
 	youAreColor: number;
 	wtime?: number;
@@ -145,7 +146,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 
 	try {
 		// Formulate gamefile from logical format
-		const current_gamefile = gameformulator.formulateGame(data.lf as any);
+		const current_gamefile = gameformulator.formulateGame(data.lf);
 
 		if (!current_gamefile) {
 			console.error('[Engine] Failed to formulate gamefile from data.lf');
