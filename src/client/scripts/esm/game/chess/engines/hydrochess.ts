@@ -5,6 +5,7 @@
  * @author FirePlank
  */
 
+import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../gameformulator.js';
 
@@ -235,7 +236,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 };
 
 function convertGameToRustFormat(
-	gamefile: any,
+	gamefile: FullGame,
 	timing: RustClockTiming | undefined,
 	strengthLevel: number,
 ): RustGameState {
