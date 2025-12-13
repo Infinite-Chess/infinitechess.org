@@ -216,8 +216,6 @@ function synchronizeMovesList(
 		premoves.applyPremoves(gamefile, mesh); // Doesn't submit the first premove, but reapplies all of them.
 	}
 
-	// Basically, the ONLY TIME that premoves aren't canceled, is if no moves were changed at all, we are already PERFECTLY in sync.
-
 	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
