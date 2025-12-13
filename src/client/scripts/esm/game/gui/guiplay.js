@@ -158,6 +158,7 @@ function close() {
 	pageIsOpen = false;
 	element_PlaySelection.classList.add('hidden');
 	element_menuExternalLinks.classList.add('hidden');
+	element_textboxPrivate.value = ''; // clear invite code
 	hideElement_inviteCode();
 	closeListeners();
 	// This will auto-cancel our existing invite
