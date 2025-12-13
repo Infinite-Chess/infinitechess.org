@@ -125,23 +125,23 @@ export async function verifyAccount(req: IdentifiedRequest, res: Response): Prom
 }
 
 /**
- * Manually verifies a user by their username. DOES NOT CHECK PERMISSIONS.
- * @param usernameCaseInsensitive The username to verify.
+ * Manually verifies a user by their email. DOES NOT CHECK PERMISSIONS.
+ * @param email The email of the account to verify.
  * @returns A success or failure object.
  */
 export function manuallyVerifyUser(
-	usernameCaseInsensitive: string,
+	email: string,
 ): { success: true; username: string } | { success: false; reason: string } {
 	const { user_id, username, is_verified } = getMemberDataByCriteria(
 		['user_id', 'username', 'is_verified'],
-		'username',
-		usernameCaseInsensitive,
+		'email',
+		email,
 		true,
 	) as Partial<MemberVerificationData>;
 
 	if (user_id === undefined || username === undefined) {
 		// User not found
-		return { success: false, reason: `User "${usernameCaseInsensitive}" doesn't exist.` };
+		return { success: false, reason: `User with email "${email}" doesn't exist.` };
 	}
 
 	if (is_verified === 1) {
