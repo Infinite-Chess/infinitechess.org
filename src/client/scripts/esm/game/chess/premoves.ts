@@ -248,7 +248,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 /**
  * Processes the premoves array after the opponent's move.
- * Attempts to play the first premove in the list.
+ * Attempts to play the first premove in the list, then applies the remaining premoves.
  * A. Legal => Plays it, submits it, then applies the remaining premoves.
  * B. Illegal => Clears all premoves.
  */
@@ -349,6 +349,8 @@ function premoveIsLegal(
  *
  * Shouldn't care whether the game is over, as all premoves should have been cleared,
  * and not to mention we still need applied to be set to true.
+ *
+ * Similar to {@link applyPremoves}, but before applying premoves, it attempts to play the first premove in the list if legal.
  */
 function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
 	// Process the next premove, will reapply the premoves
