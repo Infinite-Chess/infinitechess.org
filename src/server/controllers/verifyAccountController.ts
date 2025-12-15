@@ -145,7 +145,7 @@ export function manuallyVerifyUser(
 	}
 
 	if (is_verified === 1) {
-		return { success: false, reason: `User "${username}" is already verified.` };
+		return { success: false, reason: `User with email "${email}" is already verified.` };
 	}
 
 	// VERIFY THEM..
@@ -153,7 +153,7 @@ export function manuallyVerifyUser(
 
 	if (result.success) {
 		logEventsAndPrint(
-			`Manually verified member ${username}'s account! ID ${user_id}`,
+			`Manually verified account of user with email "${email}"! ID ${user_id}`,
 			'loginAttempts.txt',
 		);
 		return { success: true, username };
