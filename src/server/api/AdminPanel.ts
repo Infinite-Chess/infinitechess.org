@@ -166,7 +166,7 @@ function banEmailCommand(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const email = commandAndArgs[1]!;
+	const email = commandAndArgs[1]!.toLowerCase();
 
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
@@ -199,7 +199,7 @@ function unbanEmailCommand(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const email = commandAndArgs[1]!;
+	const email = commandAndArgs[1]!.toLowerCase();
 
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
@@ -318,7 +318,7 @@ function verify(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const email = commandAndArgs[1]!;
+	const email = commandAndArgs[1]!.toLowerCase();
 
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
