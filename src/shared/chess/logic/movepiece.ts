@@ -24,6 +24,7 @@ import legalmoves from './legalmoves.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
 import wincondition from './wincondition.js';
+import events from './events.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
@@ -195,6 +196,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 		// Delete all special rights that should be revoked from the move.
 		queueSpecialRightDeletionStateChanges(boardsim, move);
 	}
+	events.runEvent(gamefile.events, 'draftmoves', gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;

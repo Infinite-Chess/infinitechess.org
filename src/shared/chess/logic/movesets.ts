@@ -312,6 +312,9 @@ export default {
 	defaultIgnoreFunction,
 	getPieceDefaultMovesets,
 	getPossibleSlides,
+
+	generateLeaperMoves,
+	generateCompassMoves,
 };
 
 export type { Movesets, PieceMoveset, BlockingFunction, IgnoreFunction, SpecialFunction };
