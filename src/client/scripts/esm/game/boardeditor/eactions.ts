@@ -46,7 +46,7 @@ import guinavigation from '../gui/guinavigation';
 import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
-import typeutil from '../../../../../shared/chess/util/typeutil';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
 import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
@@ -205,8 +205,16 @@ function startEngineGame(
 	const metadata: MetaData = {
 		Event: 'Position created using ingame board editor',
 		Site: 'https://www.infinitechess.org/',
-		TimeControl,
 		Round: '-',
+		TimeControl,
+		White:
+			youAreColor === players.WHITE
+				? translations['you_indicator']
+				: translations['engine_indicator'],
+		Black:
+			youAreColor === players.BLACK
+				? translations['you_indicator']
+				: translations['engine_indicator'],
 		UTCDate,
 		UTCTime,
 	};

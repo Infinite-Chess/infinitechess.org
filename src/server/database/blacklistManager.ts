@@ -18,6 +18,21 @@ export function addToBlacklist(email: string, reason: string): void {
 	}
 }
 
+/** Removes an email from the blacklist, if it exists. */
+export function removeFromBlacklist(email: string): void {
+	try {
+		// Won't error if the email doesn't exist.
+		db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email]);
+		logEventsAndPrint(`Removed ${email} from blacklist`, 'blacklistLog.txt');
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		logEventsAndPrint(
+			`Database error when removing email ${email} from blacklist: ${msg}`,
+			'errLog.txt',
+		);
+	}
+}
+
 /**
  * Checks if an email is in the blacklist.
  * Returns true if blacklisted, false otherwise.

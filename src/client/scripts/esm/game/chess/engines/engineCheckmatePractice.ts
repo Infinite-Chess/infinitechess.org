@@ -43,8 +43,12 @@ import icnconverter, {
 postMessage('readyok');
 
 // Here, the engine webworker received messages from the outside
+
 self.onmessage = function (e: MessageEvent): void {
-	const message = e.data;
+	const message = e.data as {
+		stringGamefile: string;
+		engineConfig: { checkmateSelectedID: string; engineTimeLimitPerMoveMillis: number };
+	};
 	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
 	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;

@@ -159,12 +159,13 @@ function synchronizeMovesList(
 
 	// i is now the index of the latest move that MATCHES in both ours and the server's moves lists.
 
+	// Unapply premoves before making board changes
+	premoves.rewindPremoves(gamefile, mesh);
+
 	const ourColor = onlinegame.getOurColor();
 	while (i < moves.length - 1) {
 		// Increment i, adding the server's correct moves to our moves list
 		i++;
-
-		premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 
 		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 		const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
@@ -189,6 +190,9 @@ function synchronizeMovesList(
 			if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
 				// Only report cheating in non-private games
 				onlinegame.reportOpponentsMove(moveValidationResult.reason);
+				// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
+				premoves.applyPremoves(gamefile, mesh);
+				premoves.cancelPremoves(gamefile, mesh);
 				return { opponentPlayedIllegalMove: true };
 			}
 		}
@@ -205,7 +209,12 @@ function synchronizeMovesList(
 		aChangeWasMade = true;
 	}
 
-	// Basically, the ONLY TIME that premoves aren't canceled, is if no moves were changed at all, we are already PERFECTLY in sync.
+	// Whether we call applyPremoves(), or onYourMove() depends on whether it is our turn or not.
+	if (ourColor === gamefile.basegame.whosTurn) {
+		premoves.onYourMove(gamefile, mesh); // Submits the next premove, if legal, and reapplies the remaining ones.
+	} else {
+		premoves.applyPremoves(gamefile, mesh); // Doesn't submit the first premove, but reapplies all of them.
+	}
 
 	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
