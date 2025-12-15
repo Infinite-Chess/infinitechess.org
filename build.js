@@ -45,11 +45,13 @@ const HYDROCHESS_WASM_DIR = path.join(
 	'hydrochess-wasm',
 );
 
-// URL to the pre-built HydroChess WASM binaries
+// URLs for the pre-built HydroChess WASM binaries
 const WASM_RELEASE_URL =
 	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm_bg.wasm';
 const JS_RELEASE_URL =
 	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm.js';
+const NIGHTLY_TAG_API_URL =
+	'https://api.github.com/repos/Infinite-Chess/hydrochess/git/refs/tags/nightly';
 
 function hasCommand(cmd) {
 	try {
@@ -61,17 +63,18 @@ function hasCommand(cmd) {
 }
 
 /**
- * Ensures the HydroChess WASM engine is available.
- * - DEFAULT: Automatically downloads the pre-built WASM from the verified nightly release.
- * - DEVELOPER OPT-IN: If BUILD_WASM_LOCAL=true is set, it attempts to build from local source.
+ * Ensures the HydroChess WASM engine is available and up-to-date.
+ * - DEFAULT: Automatically downloads the pre-built WASM if the remote version is newer.
+ * - DEVELOPER OPT-IN: If BUILD_WASM_LOCAL=true, it attempts to build from local source.
  */
 async function ensureHydroChessWasmBuilt() {
 	const label = '[hydrochess-wasm]';
 	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
 	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
 	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
+	const versionFile = path.join(pkgDir, '.engine-version');
 
-	// OPT-IN: Build from local source (allows rapid iteration during development)
+	// DEVELOPER OPT-IN: Build from local source (allows rapid iteration)
 	if (process.env.BUILD_WASM_LOCAL === 'true') {
 		console.log(`${label} BUILD_WASM_LOCAL is true, attempting to build from source...`);
 
@@ -81,11 +84,6 @@ async function ensureHydroChessWasmBuilt() {
 		) {
 			console.warn(`${label} Engine submodule directory at ${HYDROCHESS_WASM_DIR} is empty.`);
 			console.warn(`${label} Run 'git submodule update --init', then rebuild.`);
-			return;
-		}
-
-		if (fs.existsSync(wasmFile)) {
-			console.log(`${label} Local build already exists.`);
 			return;
 		}
 
@@ -112,21 +110,43 @@ async function ensureHydroChessWasmBuilt() {
 		return;
 	}
 
-	// Default: Download pre-built binary
-	if (fs.existsSync(wasmFile)) {
-		return; // Already exists, nothing to do.
+	// DEFAULT: Download pre-built binary if new version available
+	let localHash = '';
+	if (fs.existsSync(versionFile)) {
+		localHash = fs.readFileSync(versionFile, 'utf-8').trim();
 	}
 
-	console.log(`${label} Pre-built engine not found. Downloading release...`);
+	let remoteHash = '';
+	try {
+		const response = await fetch(NIGHTLY_TAG_API_URL, {
+			headers: { 'User-Agent': 'Infinite-Chess-Build-Script' },
+		});
+		if (!response.ok) throw new Error(`GitHub API failed: ${response.statusText}`);
+		const data = await response.json();
+		remoteHash = data.object.sha;
+	} catch (error) {
+		console.warn(`${label} Could not check for new version:`, error.message);
+		if (fs.existsSync(wasmFile)) {
+			console.log(`${label} Using existing local version.`);
+			return;
+		}
+		// If we can't check and have no local copy, fail and inform the user.
+		console.error(`${label} Automatic download failed and no local copy exists.`);
+		return;
+	}
 
+	if (localHash && localHash === remoteHash && fs.existsSync(wasmFile)) {
+		console.log(`${label} Engine is up-to-date.`);
+		return; // Already have the latest version.
+	}
+
+	console.log(`${label} New engine version detected. Downloading release...`);
 	try {
 		await fs.promises.mkdir(pkgDir, { recursive: true });
 
 		const downloadFile = async (url, dest) => {
 			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error(`Failed to download ${url}: ${response.statusText}`);
-			}
+			if (!response.ok) throw new Error(`Failed to download ${url}: ${response.statusText}`);
 			const buffer = Buffer.from(await response.arrayBuffer());
 			await fs.promises.writeFile(dest, buffer);
 			console.log(`${label} Downloaded ${path.basename(dest)}`);
@@ -136,6 +156,9 @@ async function ensureHydroChessWasmBuilt() {
 			downloadFile(WASM_RELEASE_URL, wasmFile),
 			downloadFile(JS_RELEASE_URL, jsFile),
 		]);
+
+		// Stamp the downloaded version with the remote commit hash
+		await fs.promises.writeFile(versionFile, remoteHash);
 
 		console.log(`${label} Hydrochess engine is ready.`);
 	} catch (error) {
@@ -377,7 +400,7 @@ const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 if (USE_DEVELOPMENT_BUILD && !DEV_BUILD)
 	throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
 
-// Fetch the pre-built HydroChess engine if not already present.
+// Fetch the pre-built HydroChess engine if not already present or if outdated.
 // Optionally build it manually from the source code.
 await ensureHydroChessWasmBuilt();
 
