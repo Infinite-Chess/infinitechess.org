@@ -451,6 +451,31 @@ function reselectPiece(): void {
 		pieceSelected.coords,
 	)!;
 	initSelectedPieceInfo(gamefile, mesh, pieceToReselect);
+
+	// FIXES BUG where if you premove a promotion, but leave the promotion UI open,
+	// then your opponent moves, resulting in that promotion being illegal,
+	// the promotion UI remains open, allowing you to make that illegal promotion,
+	// resulting in the game being aborted from an illegal move played!
+
+	// Close the promotion UI if it's open, ONLY if the square being promoted to is now illegal.
+	if (pawnIsPromotingOn) {
+		const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
+		// Use a copy so special flags aren't attached to the original pawnIsPromotingOn
+		const endCoordsCopy: Coords = coordutil.copyCoords(pawnIsPromotingOn);
+		const legal = legalmoves.checkIfMoveLegal(
+			gamefile,
+			legalMoves!,
+			pieceSelected.coords,
+			endCoordsCopy,
+			colorOfSelectedPiece,
+		);
+		if (!legal) {
+			// Cancel promotion (but can still leave the piece selected)
+			pawnIsPromotingOn = undefined;
+			promoteTo = undefined; // Just in case a promotion was selected same frame
+			guipromotion.close();
+		}
+	}
 }
 
 /** Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
