@@ -166,7 +166,7 @@ function banEmailCommand(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const email = commandAndArgs[1]!;
+	const email = commandAndArgs[1]!.toLowerCase();
 
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
@@ -199,7 +199,7 @@ function unbanEmailCommand(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const email = commandAndArgs[1]!;
+	const email = commandAndArgs[1]!.toLowerCase();
 
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
@@ -318,9 +318,18 @@ function verify(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const usernameArgument = commandAndArgs[1];
+	const email = commandAndArgs[1]!.toLowerCase();
+
+	// Validate email format
+	const validationResult = validators.validateEmail(email);
+	if (validationResult !== validators.EmailValidationResult.Ok) {
+		const errorKey = validators.getEmailErrorTranslation(validationResult);
+		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
+		return;
+	}
+
 	// This method works without us having to confirm they exist first
-	const result = manuallyVerifyUser(usernameArgument!); // { success, username, reason }
+	const result = manuallyVerifyUser(email); // { success, username, reason }
 	if (result.success)
 		sendAndLogResponse(res, 200, 'User ' + result.username + ' has been verified!');
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
@@ -405,7 +414,7 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 			return;
 		case 'verify':
 			res.status(200).send(
-				'Syntax: verify <username>\nVerifies the account of the given username.',
+				'Syntax: verify <email>\nVerifies the account with the given email address.',
 			);
 			return;
 		case 'post':
