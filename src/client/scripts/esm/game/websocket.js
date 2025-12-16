@@ -509,7 +509,7 @@ function onclose(event) {
 			break;
 		default:
 			statustext.showStatus(
-				`${translations.websocket.connection_closed} "${trimmedReason}" ${translations.websocket.please_report_bug}`,
+				`${translations.websocket.connection_closed} "${trimmedReason}". Code: ${event.code}. ${translations.websocket.please_report_bug}`,
 				true,
 				100,
 			);
