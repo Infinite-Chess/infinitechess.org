@@ -116,8 +116,7 @@ function update(): void {
 	)
 		return;
 	// Atleast one mouse button was clicked-down OUTSIDE of the promotion UI
-	selection.unselectPiece();
-	close();
+	selection.unselectPiece(); // Already closes
 }
 
 export default {
