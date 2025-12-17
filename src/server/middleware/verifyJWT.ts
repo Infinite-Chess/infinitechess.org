@@ -91,7 +91,7 @@ function verifyRefreshToken(req: IdentifiedRequest, res: Response): void {
 	if (!result.isValid) {
 		// Token was expired or tampered, or manually invalidated.
 		console.log(
-			`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`,
+			`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}"`,
 		);
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		revokeSession(res);
