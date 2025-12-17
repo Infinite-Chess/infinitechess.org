@@ -27,7 +27,7 @@
     "helmet": "^8.1.0",
     "i18next": "^23.12.1",
     "i18next-http-middleware": "^3.6.0",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "lightningcss": "^1.25.1",
     "marked": "^14.1.2",
     "node-email-verifier": "^2.0.0",
