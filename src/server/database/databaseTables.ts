@@ -310,31 +310,8 @@ function generateTables(): void {
 // }
 // deleteTable('test');
 
-/**
- * Adds the last_read_news_date column to the members table if it doesn't exist.
- * This migration sets the default value to current date for existing users so they don't see all old news as unread.
- *
- * DELETE AFTER PROD DB MIGRATES!
- */
-function migrateAddLastReadNewsDate(): void {
-	if (!db.columnExists('members', 'last_read_news_date')) {
-		console.log('Adding last_read_news_date column to members table...');
-		db.run('ALTER TABLE members ADD COLUMN last_read_news_date TEXT');
-
-		// Set default value to current date for existing users
-		const currentDate = new Date().toISOString().split('T')[0]!; // 'YYYY-MM-DDThh:mm:ss.sssZ' -> 'YYYY-MM-DD'
-		console.log(`Setting last_read_news_date to ${currentDate} for existing users...`);
-		db.run('UPDATE members SET last_read_news_date = ? WHERE last_read_news_date IS NULL', [
-			currentDate,
-		]);
-
-		console.log('Successfully added and initialized last_read_news_date column.');
-	}
-}
-
 function initDatabase(): void {
 	generateTables();
-	migrateAddLastReadNewsDate(); // Add news tracking column. DELETE AFTER PROD DB MIGRATES!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }
