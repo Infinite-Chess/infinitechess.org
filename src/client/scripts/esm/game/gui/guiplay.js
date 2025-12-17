@@ -220,6 +220,8 @@ function changePlayMode(mode) {
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.remove('hidden');
 		element_optionCardPrivate.classList.remove('hidden');
+		// Patches bugs on some browsers where invite creations are sometimes sent with a blank "" private field.
+		if (!element_optionPrivate.value) element_optionPrivate.value = 'public';
 		const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
 		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex =
