@@ -42,10 +42,6 @@ export function freshenSession(
 	// Create the new token.
 	const newToken = signRefreshToken(user_id, username, roles);
 
-	// Atomically swap the old token for the new one.
-	// In a high-concurrency environment, this should be a single transaction.
-	// For now, sequential operations are acceptable.
-
 	// Mark old token as consumed so it has a short grace period before it is fully invalidated.
 	markRefreshTokenAsConsumed(tokenRecord.token);
 	// Add the new token to the database.
