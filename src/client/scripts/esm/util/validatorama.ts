@@ -14,7 +14,7 @@ import docutil from './docutil.js';
 
 /** Expiration time for the access tokens. */
 const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 60 * 15; // 15 minutes
-// const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 30; // 30 seconds - CUSHION_MILLIS
+// const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 20; // 20 seconds - CUSHION_MILLIS
 /** Cushion time in milliseconds before considering the token expired. */
 const CUSHION_MILLIS: number = 10_000;
 
