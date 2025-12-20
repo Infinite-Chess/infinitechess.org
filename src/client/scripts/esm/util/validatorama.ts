@@ -20,6 +20,8 @@ const CUSHION_MILLIS: number = 10_000;
 
 let reqIsOut: boolean = false;
 const resolvers: (() => void)[] = [];
+/** The timeout ID for the timer to check session expiry. */
+let sessionExpiryTimer: number | undefined;
 
 let memberInfo: {
 	signedIn: boolean;
@@ -159,11 +161,56 @@ function readMemberInfoCookie(): void {
 	const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
 	memberInfo = JSON.parse(memberInfoStringified); // { user_id, username, issued (timestamp), expires (timestamp) }
 	memberInfo.signedIn = true;
+
+	scheduleSessionLogout();
 }
 
 /** Resets our member info variables as if we were logged out. */
 function resetMemberInfo(): void {
+	clearTimeout(sessionExpiryTimer); // Prevent ghost logout events after we've manually reset
 	memberInfo = { signedIn: false };
+}
+
+/** Calculates time until session expiry and sets a timer to check session status. */
+function scheduleSessionLogout(): void {
+	clearTimeout(sessionExpiryTimer);
+	if (!memberInfo.signedIn || !memberInfo.expires) return;
+
+	const timeUntilExpiry = memberInfo.expires - Date.now();
+	sessionExpiryTimer = window.setTimeout(() => checkSessionExpiry(), timeUntilExpiry);
+}
+
+/**
+ * Callback for the session expiry timer.
+ * Re-verifies cookie existence/expiry before deciding to dispatch logout event or reschedule.
+ */
+function checkSessionExpiry(): void {
+	// If a refresh request is currently out, trust that logic to handle the outcome instead of forcing a logout here.
+	if (reqIsOut) return;
+
+	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
+
+	// If cookie is gone, or we can't parse it, we are definitely logged out.
+	if (!encodedMemberInfo) {
+		// Only dispatch logout if we thought we were signed in
+		if (memberInfo.signedIn) {
+			console.log('Detected session expired. Dispatching logout event. - 1');
+			document.dispatchEvent(new CustomEvent('logout'));
+		}
+		return;
+	}
+
+	const info = JSON.parse(decodeURIComponent(encodedMemberInfo));
+
+	// Final check: Is it actually in the future? (has since been renewed)
+	if (info.expires && info.expires > Date.now()) {
+		// It was renewed! Update our local state and reschedule.
+		readMemberInfoCookie();
+	} else {
+		// Still expired. Dispatch logout.
+		console.log('Detected session expired. Dispatching logout event. - 2');
+		document.dispatchEvent(new CustomEvent('logout'));
+	}
 }
 
 function deleteMemberInfoCookie(): void {
