@@ -256,6 +256,7 @@ function generateTables(): void {
 			user_id INTEGER NOT NULL,
 			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			consumed_at INTEGER,           -- Allows a grace period for using old tokens when renewing sessions
 			ip_address TEXT,
 
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
@@ -266,6 +267,14 @@ function generateTables(): void {
 	db.run(
 		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`,
 	);
+
+	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Ensure the consumed_at column exists
+	if (!db.columnExists('refresh_tokens', 'consumed_at')) {
+		console.log('Adding consumed_at column to refresh_tokens table...');
+		db.run('ALTER TABLE refresh_tokens ADD COLUMN consumed_at INTEGER');
+		console.log('Successfully added consumed_at column.');
+	}
 
 	// Editor Saves table
 	// db.run(`
