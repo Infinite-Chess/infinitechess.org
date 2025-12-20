@@ -360,7 +360,7 @@ function modPowBigint(base: bigint, exponent: bigint, modulus: bigint): bigint {
  * @param options - optional arguments passed along to primalityTestBigint() if necessary
  * @returns true if all the primality tests passed, false otherwise
  */
-function primalityTest(n: BigIntResolvable, options?: PrimalityTestOptions): boolean {
+export function primalityTest(n: BigIntResolvable, options?: PrimalityTestOptions): boolean {
 	if (typeof n === 'number') return primalityTestNumber(n);
 	else if (typeof n === 'string') n = BigInt(n);
 
@@ -644,7 +644,3 @@ function test_program(){
 }
 test_program();
 */
-
-export default {
-	primalityTest,
-};

@@ -6,8 +6,7 @@ import vectors from '../../util/math/vectors.js';
 import { rawTypes } from '../util/typeutil.js';
 import specialdetect from './specialdetect.js';
 import legalmoves from './legalmoves.js';
-// @ts-ignore
-import isprime from '../../util/isprime.js';
+import { primalityTest } from '../../util/isprime.js';
 
 // Type definitions...
 
@@ -276,13 +275,13 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				premove: boolean,
 			): 0 | 1 | 2 => {
 				const distance = vectors.chebyshevDistance(coords, blockingPiece.coords);
-				const isPrime = isprime.primalityTest(distance);
+				const isPrime = primalityTest(distance);
 				if (!isPrime) return 0; // Doesn't block, not even if it's a void. It hops over it!
 				return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);
 			},
 			ignore: (startCoords: Coords, endCoords: Coords): boolean => {
 				const distance = vectors.chebyshevDistance(startCoords, endCoords);
-				const isPrime = isprime.primalityTest(distance);
+				const isPrime = primalityTest(distance);
 				return isPrime;
 			},
 		},
