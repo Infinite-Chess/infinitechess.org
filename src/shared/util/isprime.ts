@@ -30,9 +30,50 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // The chance of false positives can further be reduced by modifying getAdaptiveNumRounds() to do more checks.
 // -----------------------------------------------------------------------------------------------
 
-'use strict';
-
 import bimath from './math/bimath.js';
+
+/**
+ * A type containing precalculated values needed to efficiently reduce numbers to/from their Montgomery forms
+ * and perform Montgomery-reduced arithmetic, modulo a given `base`.
+ */
+interface MontgomeryReductionContext {
+	/** The modulus of the reduction context */
+	base: bigint;
+	/** The exponent of the power of 2 used for `r` (i.e., `r = 2^shift`) */
+	shift: bigint;
+	/** The auxiliary modulus for Montgomery reduction, defined as the smallest power of two greater than `base` */
+	r: bigint;
+	/** The modular inverse of `r` (mod `base`) */
+	rInv: bigint;
+	/** The modular inverse of `base` (mod `r`) */
+	baseInv: bigint;
+}
+
+/** A union of types that can be resolved to a primitive bigint: `number`, `string`, or `bigint` itself. */
+type BigIntResolvable = number | string | bigint;
+
+/** The available options to the primalityTest function. */
+interface PrimalityTestOptions {
+	/**
+	 * A positive integer specifying the number of random bases to test against.
+	 * If none is provided, a reasonable number of rounds will be chosen automatically to balance speed and accuracy.
+	 */
+	numRounds?: number;
+	/**
+	 * An array of integers (or string representations thereof) to use as the
+	 * bases for Miller-Rabin testing. If this option is specified, the `numRounds` option will be ignored,
+	 * and the maximum number of testing rounds will equal `bases.length` (one round for each given base).
+	 *
+	 * Every base provided must lie within the range [2, n-2] (inclusive) or a RangeError will be thrown.
+	 * If `bases` is specified but is not an array, a TypeError will be thrown.
+	 */
+	bases?: BigIntResolvable[];
+	/**
+	 * Whether to calculate and return a divisor of `n` in certain cases where this is possible (not guaranteed).
+	 * Set this to false to avoid extra calculations if a divisor is not needed. Defaults to `true`.
+	 */
+	findDivisor?: boolean;
+}
 
 // Some useful BigInt constants
 const ZERO = 0n;
@@ -60,17 +101,16 @@ const SAFE_SQRT = Math.sqrt(Number.MAX_SAFE_INTEGER);
 // See https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Testing_against_small_sets_of_bases
 // and: https://oeis.org/A014233
 // and: https://miller-rabin.appspot.com/
-const INT_BASES = [2, 3, 5, 7, 11, 13, 17, 19, 23];
-const BIGINT_BASES = [2n, 325n, 9375n, 28178n, 450775n, 9780504n, 1795265022n];
+const INT_BASES = [2, 3, 5, 7, 11, 13, 17, 19, 23] as const;
+const BIGINT_BASES = [2n, 325n, 9375n, 28178n, 450775n, 9780504n, 1795265022n] as const;
 
 /**
  * Calculates the inverse of `2^exp` modulo the given odd `base`.
- *
- * @param {number} exp The exponent of the power of 2 that should be inverted (_not_ the power of 2 itself!)
- * @param {bigint} base The modulus to invert with respect to
- * @returns {bigint}
+ * @param exp The exponent of the power of 2 that should be inverted (_not_ the power of 2 itself!)
+ * @param base The modulus to invert with respect to
+ * @returns The modular inverse of `2^exp` modulo `base`
  */
-function invertPowerOfTwo(exp, base) {
+function invertPowerOfTwo(exp: number, base: bigint): bigint {
 	// Penk's rshift inversion method, but restricted to powers of 2 and odd bases (which is all we require for Miller-Rabin)
 	// Just start from 1 and repeatedly halve, adding the base whenever necessary to remain even.
 	let inv = ONE;
@@ -85,11 +125,10 @@ function invertPowerOfTwo(exp, base) {
 /**
  * Calculates the multiplicity of 2 in the prime factorization of `n` -- i.e., how many factors of 2 `n` contains.
  * So if `n = 2^k * d` and `d` is odd, the returned value would be `k`.
- *
- * @param {bigint} n Any number
- * @returns {bigint} The multiplicity of 2 in the prime factorization of `n`
+ * @param n Any number
+ * @returns The multiplicity of 2 in the prime factorization of `n`
  */
-function twoMultiplicity(n) {
+function twoMultiplicity(n: bigint): bigint {
 	if (n === ZERO) return ZERO;
 
 	let m = ZERO;
@@ -103,11 +142,10 @@ function twoMultiplicity(n) {
 /**
  * Produces a string of random bits with the specified length.
  * Mainly useful as input to BigInt constructors that take digit strings of arbitrary length.
- *
- * @param {number} numBits How many random bits to return.
- * @returns {string} A string of `numBits` random bits.
+ * @param numBits How many random bits to return.
+ * @returns A string of `numBits` random bits.
  */
-function getRandomBitString(numBits) {
+function getRandomBitString(numBits: number): string {
 	let bits = '';
 	while (bits.length < numBits) {
 		bits += Math.random().toString(2).substring(2, 50);
@@ -118,11 +156,10 @@ function getRandomBitString(numBits) {
 /**
  * Produces a Montgomery reduction context that can be used to define and operate on numbers in Montgomery form
  * for the given base.
- *
- * @param {bigint} base The modulus of the reduction context. Must be an odd number.
- * @returns {MontgomeryReductionContext}
+ * @param base The modulus of the reduction context. Must be an odd number.
+ * @returns A Montgomery reduction context for the given base.
  */
-function getReductionContext(base) {
+function getReductionContext(base: bigint): MontgomeryReductionContext {
 	if (!(base & ONE)) throw new Error(`base must be odd`);
 
 	// Select the auxiliary modulus r to be the smallest power of two greater than the base modulus
@@ -140,12 +177,11 @@ function getReductionContext(base) {
 
 /**
  * Convert the given number into its Montgomery form, according to the given Montgomery reduction context.
- *
- * @param {bigint} n Any number
- * @param {MontgomeryReductionContext} ctx The Montgomery reduction context to reduce into
- * @returns {bigint} The Montgomery form of `n`
+ * @param n Any number
+ * @param ctx The Montgomery reduction context to reduce into
+ * @returns The Montgomery form of `n`
  */
-function montgomeryReduce(n, ctx) {
+function montgomeryReduce(n: bigint, ctx: MontgomeryReductionContext): bigint {
 	return (n << ctx.shift) % ctx.base;
 }
 
@@ -162,24 +198,22 @@ function montgomeryReduce(n, ctx) {
 
 /**
  * Squares a number in Montgomery form.
- *
- * @param {bigint} n A number in Montgomery form
- * @param {MontgomeryReductionContext} ctx The Montgomery reduction context to square within
- * @returns {bigint} The Montgomery-reduced square of `n`
+ * @param n A number in Montgomery form
+ * @param ctx The Montgomery reduction context to square within
+ * @returns The Montgomery-reduced square of `n`
  */
-function montgomerySqr(n, ctx) {
+function montgomerySqr(n: bigint, ctx: MontgomeryReductionContext): bigint {
 	return montgomeryMul(n, n, ctx);
 }
 
 /**
  * Multiplies two numbers in Montgomery form.
- *
- * @param {bigint} a A number in Montgomery form
- * @param {bigint} b A number in Montgomery form
- * @param {MontgomeryReductionContext} ctx The Montgomery reduction context to multiply within
- * @returns {bigint} The Montgomery-reduced product of `a` and `b`
+ * @param a A number in Montgomery form
+ * @param b A number in Montgomery form
+ * @param ctx The Montgomery reduction context to multiply within
+ * @returns The Montgomery-reduced product of `a` and `b`
  */
-function montgomeryMul(a, b, ctx) {
+function montgomeryMul(a: bigint, b: bigint, ctx: MontgomeryReductionContext): bigint {
 	if (a === ZERO || b === ZERO) return ZERO;
 
 	const rm1 = ctx.r - ONE;
@@ -197,13 +231,12 @@ function montgomeryMul(a, b, ctx) {
 /**
  * Calculates `n` to the power of `exp` in Montgomery form.
  * While `n` must be in Montgomery form, `exp` should not.
- *
- * @param {bigint} n A number in Montgomery form; the base of the exponentiation
- * @param {bigint} exp Any number (_not_ in Montgomery form)
- * @param {MontgomeryReductionContext} ctx The Montgomery reduction context to exponentiate within
- * @returns {bigint} The Montgomery-reduced result of taking `n` to exponent `exp`
+ * @param n A number in Montgomery form; the base of the exponentiation
+ * @param exp Any number (_not_ in Montgomery form)
+ * @param ctx The Montgomery reduction context to exponentiate within
+ * @returns The Montgomery-reduced result of taking `n` to exponent `exp`
  */
-function montgomeryPow(n, exp, ctx) {
+function montgomeryPow(n: bigint, exp: bigint, ctx: MontgomeryReductionContext): bigint {
 	// Exponentiation by squaring
 	const expLen = BigInt(bimath.bitLength_bisection(exp));
 	let result = montgomeryReduce(ONE, ctx);
@@ -234,11 +267,14 @@ function montgomeryPow(n, exp, ctx) {
  * Otherwise, a RangeError will be thrown if any of the bases are outside the valid range, or a TypeError will
  * be thrown if `bases` is neither an array nor null/undefined.
  *
- * @param {BigIntResolvable[] | null | undefined} bases The array of bases to validate
- * @param {bigint} nSub One less than the number being primality tested
- * @returns {bigint[] | null} An array of BigInts provided all bases were valid, or null if the input was null
+ * @param bases The array of bases to validate
+ * @param nSub One less than the number being primality tested
+ * @returns An array of BigInts provided all bases were valid, or null if the input was null
  */
-function validateBases(bases, nSub) {
+function validateBases(
+	bases: BigIntResolvable[] | null | undefined,
+	nSub: bigint,
+): bigint[] | null {
 	if (!bases) return null;
 	if (!Array.isArray(bases)) throw new TypeError(`invalid bases option (must be an array)`);
 	// Ensure all bases are valid BigInts within [2, n-2]
@@ -252,12 +288,12 @@ function validateBases(bases, nSub) {
 
 /**
  * Computes (p1 * p2) mod modulus for numbers
- * @param {Number} p1 - base
- * @param {Number} p2 - base
- * @param {Number} modulus - modulus
- * @returns - return value: (p1 * p2) % modulus
+ * @param p1 - base
+ * @param p2 - base
+ * @param  modulus - modulus
+ * @returns (p1 * p2) % modulus
  */
-function modProductNumber(p1, p2, modulus) {
+function modProductNumber(p1: number, p2: number, modulus: number): number {
 	if (p1 > SAFE_SQRT || p2 > SAFE_SQRT)
 		return Number((BigInt(p1) * BigInt(p2)) % BigInt(modulus));
 	else return (p1 * p2) % modulus;
@@ -265,23 +301,23 @@ function modProductNumber(p1, p2, modulus) {
 
 /**
  * Computes (base ^ 2) mod modulus for numbers
- * @param {Number} base - base
- * @param {Number} modulus - modulus
- * @returns - return value: (base ** 2) % modulus
+ * @param base - base
+ * @param modulus - modulus
+ * @returns (base ** 2) % modulus
  */
-function modSquaredNumber(base, modulus) {
+function modSquaredNumber(base: number, modulus: number): number {
 	if (base > SAFE_SQRT) return Number(BigInt(base) ** TWO % BigInt(modulus));
 	else return base ** 2 % modulus;
 }
 
 /**
  * Computes (base ^ exponent) mod modulus for numbers, avoiding recursion because of large exponent
- * @param {Number} base - base
- * @param {Number} exponent - exponent
- * @param {Number} modulus - modulus
- * @returns - return value: (base ** exponent) % modulus
+ * @param base - base
+ * @param exponent - exponent
+ * @param modulus - modulus
+ * @returns (base ** exponent) % modulus
  */
-function modPowNumber(base, exponent, modulus) {
+function modPowNumber(base: number, exponent: number, modulus: number): number {
 	let accumulator = 1;
 	while (exponent !== 0) {
 		if (exponent % 2 === 0) {
@@ -297,12 +333,12 @@ function modPowNumber(base, exponent, modulus) {
 
 /**
  * Computes (base ^ exponent) mod modulus for BigInts, avoiding recursion because of large exponent
- * @param {bigint} base - base
- * @param {bigint} exponent - exponent
- * @param {bigint} modulus - modulus
- * @returns - return value: (base ** exponent) % modulus
+ * @param base - base
+ * @param exponent - exponent
+ * @param modulus - modulus
+ * @returns (base ** exponent) % modulus
  */
-function modPowBigint(base, exponent, modulus) {
+function modPowBigint(base: bigint, exponent: bigint, modulus: bigint): bigint {
 	let accumulator = ONE;
 	while (exponent !== ZERO) {
 		if (exponent % TWO === ZERO) {
@@ -320,11 +356,11 @@ function modPowBigint(base, exponent, modulus) {
  * Runs Miller-Rabin primality tests on `n` which can be a number, string, or a bigint.
  * If `n` is a number/string smaller than Number.MAX_SAFE_INTEGER, then primalityTestNumber() is called.
  * If `n` is a bigint/string larger than Number.MAX_SAFE_INTEGER, then primalityTestBigint() is called.
- * @param {number|string|bigint} n - A number or bigint integer to be tested for primality.
- * @param {PrimalityTestOptions?} [options] optional arguments passed along to primalityTestBigint() if necessary
- * @returns {boolean} true if all the primality tests passed, false otherwise
+ * @param n - A number or bigint integer to be tested for primality.
+ * @param options - optional arguments passed along to primalityTestBigint() if necessary
+ * @returns true if all the primality tests passed, false otherwise
  */
-function primalityTest(n, options) {
+function primalityTest(n: BigIntResolvable, options?: PrimalityTestOptions): boolean {
 	if (typeof n === 'number') return primalityTestNumber(n);
 	else if (typeof n === 'string') n = BigInt(n);
 
@@ -334,11 +370,11 @@ function primalityTest(n, options) {
 
 /**
  * Runs deterministic Miller-Rabin primality test on number `n`
- * @param {Number} n - A number be tested for primality.
- * @returns {boolean} true if all the primality tests passed, false otherwise
+ * @param n - A number be tested for primality.
+ * @returns true if all the primality tests passed, false otherwise
  */
-function primalityTestNumber(n) {
-	let bases;
+function primalityTestNumber(n: number): boolean {
+	let bases: number[];
 	// Handle some small special cases
 	if (n < 2)
 		return false; // n = 0 or 1
@@ -364,7 +400,7 @@ function primalityTestNumber(n) {
 	}
 
 	for (let round = 0; round < bases.length; round++) {
-		const base = bases[round];
+		const base = bases[round]!;
 
 		// Normal Miller-Rabin method => FAST for smaller numbers!
 		const modularpower = modPowNumber(base, d, n);
@@ -381,8 +417,8 @@ function primalityTestNumber(n) {
 /**
  * Runs probabilistic Miller-Rabin primality tests on bigint `n` using randomly-chosen bases, to determine with high probability whether `n` is a prime number.
  *
- * @param {bigint} n A Bigint integer to be tested for primality.
- * @param {PrimalityTestOptions?} options An object specifying the `numRounds` and/or `findDivisor` options.
+ * @param n A Bigint integer to be tested for primality.
+ * @param options An object specifying the `numRounds` and/or `findDivisor` options.
  *   - `numRounds` is a positive integer specifying the number of random bases to test against.
  *    If none is provided, a reasonable number of rounds will be chosen automatically to balance speed and accuracy.
  *   - `bases` is an array of integers to use as the bases for Miller-Rabin testing. If this option
@@ -393,9 +429,15 @@ function primalityTestNumber(n) {
  *    easily possible (not guaranteed). Set this to false to avoid extra calculations if a divisor is not needed. Defaults to `true`.
  *   - `useMontgomery` specifies whether the Montgomery reduction context for faster modular exponentiation should be used.
  *     If left undefined, it is set automatically (recommended).
- * @returns {boolean} true if all the primality tests passed, false otherwise
+ * @returns true if all the primality tests passed, false otherwise
  */
-function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontgomery } = {}) {
+function primalityTestBigint(
+	n: bigint,
+	options?: PrimalityTestOptions & { useMontgomery?: boolean },
+): boolean {
+	// eslint-disable-next-line prefer-const
+	let { numRounds, bases, findDivisor = true, useMontgomery } = options || {};
+
 	// Handle some small special cases
 	if (n < TWO)
 		return false; // n = 0 or 1
@@ -403,7 +445,7 @@ function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontg
 		return true; // n = 2 or 3
 	else if (!(n & ONE))
 		return false; // Quick short-circuit for other even n
-	else if (n < LIMIT_DETERMINISM) bases = BIGINT_BASES;
+	else if (n < LIMIT_DETERMINISM) bases = BIGINT_BASES.slice(0, BIGINT_BASES.length);
 
 	const nBits = bimath.bitLength_bisection(n);
 	const nSub = n - ONE;
@@ -437,10 +479,10 @@ function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontg
 		const nSubReduced = montgomeryReduce(nSub, reductionContext); // The number n-1 in the reduction context
 
 		for (let round = 0; round < numRounds; round++) {
-			let base;
+			let base: bigint;
 			if (validBases !== null) {
 				// Use the next user-specified base
-				base = validBases[baseIndex];
+				base = validBases[baseIndex]!;
 				baseIndex++;
 			} else {
 				// Select a random base to test
@@ -460,7 +502,7 @@ function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontg
 			if (x === oneReduced || x === nSubReduced) continue; // The test passed: base^d = +/-1 (mod n)
 
 			// Perform the actual Miller-Rabin loop
-			let i, y;
+			let i: bigint, y: bigint;
 			for (i = ZERO; i < r; i++) {
 				y = montgomerySqr(x, reductionContext);
 
@@ -482,10 +524,10 @@ function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontg
 	} else {
 		// Use Miller-Robin method (faster for smaller numbers, like below 1e30)
 		for (let round = 0; round < numRounds; round++) {
-			let base;
+			let base: bigint;
 			if (validBases !== null) {
 				// Use the next user-specified base
-				base = validBases[baseIndex];
+				base = validBases[baseIndex]!;
 				baseIndex++;
 			} else {
 				// Select a random base to test
@@ -516,11 +558,10 @@ function primalityTestBigint(n, { numRounds, bases, findDivisor = true, useMontg
  * Determines an appropriate number of Miller-Rabin testing rounds to perform based on the size of the
  * input number being tested. Larger numbers generally require fewer rounds to maintain a given level
  * of accuracy.
- *
- * @param {number} inputBits The number of bits in the input number.
- * @returns {number} How many rounds of testing to perform.
+ * @param inputBits The number of bits in the input number.
+ * @returns How many rounds of testing to perform.
  */
-function getAdaptiveNumRounds(inputBits) {
+function getAdaptiveNumRounds(inputBits: number): number {
 	if (inputBits > 1000) return 2;
 	else if (inputBits > 500) return 3;
 	else if (inputBits > 250) return 4;
