@@ -17,7 +17,7 @@ import {
 } from '../../database/refreshTokenManager.js';
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 
-import type { TokenPayload } from './tokenSigner.js';
+import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
 
 if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
@@ -115,9 +115,21 @@ function resolveRefreshTokenRecord(token: string, IP?: string): RefreshTokenReco
 
 	if (!tokenRecord) return; // Token must have been manually invalidated by the user logging out, or deleting their account.
 
-	// Check if it is expired.
-	if (tokenRecord.expires_at < Date.now()) {
+	const now = Date.now();
+
+	// Check if it is naturally expired.
+	if (tokenRecord.expires_at < now) {
 		// The token is expired, remove it from the database for cleanup.
+		deleteRefreshToken(token);
+		return;
+	}
+
+	// Check if it was consumed (replaced) and the grace period has ended.
+	if (
+		tokenRecord.consumed_at !== null &&
+		now - tokenRecord.consumed_at > refreshTokenGracePeriodMillis
+	) {
+		// The token is "dead" (grace period over). Remove it from the database.
 		deleteRefreshToken(token);
 		return;
 	}

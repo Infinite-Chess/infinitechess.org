@@ -12,9 +12,6 @@ import docutil from './docutil.js';
 
 // Variables ----------------------------------------------------------------------------
 
-const minTimeToRenewSession: number = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToRenewSession: number = 1000 * 30; // 30 seconds
-
 /** Expiration time for the access tokens. */
 const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 60 * 15; // 15 minutes
 // const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 30; // 30 seconds - CUSHION_MILLIS
@@ -57,31 +54,12 @@ let tokenInfo: {
 	readMemberInfoCookie();
 	// Most of the time we don't need an immediate access token
 	// refreshToken();
-
-	// Renew the session
-	renewSession();
 })();
 
 function initListeners(): void {
 	document.addEventListener('logout', resetMemberInfo);
 	document.addEventListener('logout', onLogout);
 	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
-}
-
-/**
- * Renews the session if it is older than the specified time to renew.
- */
-function renewSession(): void {
-	if (!memberInfo.signedIn) return;
-
-	// Convert the ISO 8601 issued time to a timestamp
-	const timeSinceSessionIssued = Date.now() - (memberInfo.issued || 0);
-
-	// Check if the session is older than 1 day (minTimeToRenewSession)
-	if (timeSinceSessionIssued < minTimeToRenewSession) return; // Still a freshly issued session!
-
-	console.log('Session is older than 1 day, refreshing by requesting access token...');
-	refreshToken(); // Refresh token if the session is too old
 }
 
 /**

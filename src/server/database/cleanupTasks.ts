@@ -12,13 +12,14 @@ import { deleteAccount } from '../controllers/deleteAccountController.js';
 import db from './database.js'; // Adjust path
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
+import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 // const CLEANUP_INTERVAL_MS = 1000 * 20; // 20 seconds for dev testing
 
 function startPeriodicDatabaseCleanupTasks(): void {
 	performCleanupTasks(); // Run immediately to clean up now.
-	setInterval(performCleanupTasks, CLEANUP_INTERVAL_MS);
+	setInterval(() => performCleanupTasks(), CLEANUP_INTERVAL_MS);
 }
 
 function performCleanupTasks(): void {
@@ -69,17 +70,27 @@ function deleteExpiredPasswordResetTokens(): void {
 	}
 }
 
-/** Deletes all expired refresh tokens from the database in a single, efficient query. */
+/**
+ * Deletes invalid refresh tokens:
+ * 1. Tokens that have naturally expired.
+ * 2. Tokens that were consumed (replaced) more than a short grace period ago.
+ */
 function cleanUpExpiredRefreshTokens(): void {
-	// console.log('Running cleanup of expired refresh tokens.');
 	try {
 		const now = Date.now();
+		const consumptionThreshold = now - refreshTokenGracePeriodMillis;
 
-		const result = db.run('DELETE FROM refresh_tokens WHERE expires_at < ?', [now]);
+		const query = `
+            DELETE FROM refresh_tokens 
+            WHERE expires_at < ?
+			   OR (consumed_at IS NOT NULL AND consumed_at < ?)
+        `;
+
+		const result = db.run(query, [now, consumptionThreshold]);
 
 		if (result.changes > 0) {
 			logEventsAndPrint(
-				`Cleanup: Deleted ${result.changes} expired refresh tokens.`,
+				`Cleanup: Deleted ${result.changes} expired/consumed refresh tokens.`,
 				'tokenCleanupLog.txt',
 			);
 		}
