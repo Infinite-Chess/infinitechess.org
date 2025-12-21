@@ -8,6 +8,11 @@ declare global {
 		[key: string]: any; // Allows other dynamic keys if needed
 	};
 
+	/** Main script that starts the game loop. Called from htmlscript.js */
+	const main: {
+		start: () => void;
+	};
+
 	// Our Custom Events
 	interface DocumentEventMap {
 		ping: CustomEvent<number>;
