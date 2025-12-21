@@ -375,7 +375,7 @@ function click(element) {
 		if (!guiplay.isCreateInviteButtonLocked()) cancel(invite.id);
 	} else {
 		// Not our invite, accept the one we clicked
-		if (!guiplay.isAcceptInviteButtonLocked()) accept(invite.id, true);
+		if (!guiplay.isAcceptInviteButtonLocked()) accept(invite.id, false);
 	}
 }
 

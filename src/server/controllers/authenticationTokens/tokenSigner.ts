@@ -26,7 +26,10 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
+// const refreshTokenExpiryMillis = 1000 * 20; // 20 seconds
+
+/** The window where a "consumed" token is still accepted. */
+const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
 
 // Signing Tokens ------------------------------------------------------------------------------------
 
@@ -54,6 +57,12 @@ function generatePayload(user_id: number, username: string, roles: string[] | nu
 	return { user_id, username, roles };
 }
 
-export { accessTokenExpiryMillis, refreshTokenExpiryMillis, signAccessToken, signRefreshToken };
+export {
+	accessTokenExpiryMillis,
+	refreshTokenExpiryMillis,
+	refreshTokenGracePeriodMillis,
+	signAccessToken,
+	signRefreshToken,
+};
 
 export type { TokenPayload };

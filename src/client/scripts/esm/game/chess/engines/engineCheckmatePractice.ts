@@ -6,8 +6,7 @@
  * @author Andreas Tsevas
  */
 
-// @ts-ignore
-import isprime from '../../../../../../shared/util/isprime.js';
+import { primalityTest } from '../../../../../../shared/util/isprime.js';
 import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import {
 	rawTypes as r,
@@ -22,7 +21,6 @@ import jsutil from '../../../../../../shared/util/jsutil.js';
  * here doesn't actually mean adding dependancies.
  */
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -33,7 +31,6 @@ import icnconverter, {
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
-// type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
 // type Coords = import("../../chess/util/coordutil").Coords;
 
 /**
@@ -652,7 +649,7 @@ function rider_threatens(
 		direction,
 	);
 	if (!works) return false;
-	if (is_huygen && !isprime.primalityTest(distance)) return false;
+	if (is_huygen && !primalityTest(distance)) return false;
 	if (ignore_blockers) return true;
 	// loop over all potential blockers
 	for (let i = 0; i < coordlist.length; i++) {
@@ -665,7 +662,7 @@ function rider_threatens(
 			direction,
 		);
 		if (!collinear) continue;
-		else if (is_huygen && !isprime.primalityTest(thispiecedistance)) continue;
+		else if (is_huygen && !primalityTest(thispiecedistance)) continue;
 		else if (thispiecedistance < distance) return false;
 	}
 	return true;
@@ -1005,7 +1002,7 @@ function add_suitable_squares_to_candidate_list(
 		const is_huygen = pieceTypeDictionary[piecelist[piece_index]!]!.is_huygen ? true : false;
 		if (is_huygen) {
 			const distance = manhattanDistance(piece_square, target_square);
-			if (!isprime.primalityTest(distance)) continue candidates_loop;
+			if (!primalityTest(distance)) continue candidates_loop;
 		}
 
 		const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));

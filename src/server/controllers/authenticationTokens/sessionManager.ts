@@ -1,3 +1,5 @@
+// src/server/controllers/authenticationTokens/sessionManager.ts
+
 /**
  * This module handles the creation, renewal, and revocation of user login sessions.
  * It uses secure cookies and interacts with the `refreshTokenManager` for database operations.
@@ -7,13 +9,13 @@
 import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
-import { addRefreshToken, deleteRefreshToken } from '../../database/refreshTokenManager.js';
+import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
 
 import type { Request, Response } from 'express';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
+// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 10; // 10s
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
 
@@ -26,6 +28,10 @@ export function freshenSession(
 	roles: string[] | null,
 	tokenRecord: RefreshTokenRecord,
 ): void {
+	// If the token is already consumed (a new one was issued),
+	// do not renew it again. Let this request finish using the "dying" token.
+	if (tokenRecord.consumed_at) return;
+
 	const timeSinceCreated = Date.now() - tokenRecord.created_at;
 	if (timeSinceCreated < minTimeToWaitToRenewRefreshTokensMillis) return;
 
@@ -33,13 +39,12 @@ export function freshenSession(
 		`Renewing member "${username}"s session by issuing them new login cookies! -------`,
 	);
 
-	// Create the new token BEFORE touching the database.
+	// Create the new token.
 	const newToken = signRefreshToken(user_id, username, roles);
 
-	// Atomically swap the old token for the new one.
-	// In a high-concurrency environment, this should be a single transaction.
-	// For now, sequential operations are acceptable.
-	deleteRefreshToken(tokenRecord.token);
+	// Mark old token as consumed so it has a short grace period before it is fully invalidated.
+	markRefreshTokenAsConsumed(tokenRecord.token);
+	// Add the new token to the database.
 	addRefreshToken(req, user_id, newToken);
 
 	// Send the new token to the user in their cookies.

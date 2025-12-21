@@ -25,6 +25,11 @@ export type RefreshTokenRecord = {
 	expires_at: number;
 	/** The last known IP address the user used this refresh token from. */
 	ip_address: string | null;
+	/**
+	 * The Unix timestamp, in milliseconds, when the token was consumed for a session renewal.
+	 * Allow a small grace period for using old tokens when renewing sessions.
+	 */
+	consumed_at: number | null;
 };
 
 /**
@@ -35,8 +40,8 @@ export type RefreshTokenRecord = {
  */
 export function findRefreshToken(token: string): RefreshTokenRecord | undefined {
 	const query = `
-        SELECT token, user_id, created_at, expires_at, ip_address 
-        FROM refresh_tokens 
+        SELECT token, user_id, created_at, expires_at, consumed_at, ip_address
+        FROM refresh_tokens
         WHERE token = ?
     `;
 	try {
@@ -155,6 +160,27 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Database error while updating refresh token IP: ${message}`,
+			'errLog.txt',
+		);
+		throw new Error('A database error occurred while processing the refresh token.');
+	}
+}
+
+/**
+ * Marks a token as consumed (soft delete).
+ * Used during rotation to allow a short grace period for concurrent requests.
+ * @param token - The token to mark as consumed.
+ * @throws {Error} Throws a generic error if a database error occurs.
+ */
+export function markRefreshTokenAsConsumed(token: string): void {
+	const now = Date.now();
+	const query = `UPDATE refresh_tokens SET consumed_at = ? WHERE token = ?`;
+	try {
+		db.run(query, [now, token]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Database error while marking refresh token as consumed: ${message}`,
 			'errLog.txt',
 		);
 		throw new Error('A database error occurred while processing the refresh token.');
