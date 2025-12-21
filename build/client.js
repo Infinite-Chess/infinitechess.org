@@ -27,7 +27,7 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
-const entryPoints = [
+const ESMEntryPoints = [
 	'src/client/scripts/esm/game/main.js',
 	'src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.ts',
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
@@ -45,11 +45,19 @@ const entryPoints = [
 	'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
 ];
 
+/** CommonJS modules imported by html pages. */
+const CJSEntryPoints = ['src/client/scripts/cjs/game/htmlscript.ts'];
+
 // ================================= PLUGINS ===================================
 
-const esbuildClientRebuildPlugin = getESBuildLogStatusLogger(
-	'✅ Client Build successful.',
-	'❌ Client Build failed.',
+const ESMBuildPlugin = getESBuildLogStatusLogger(
+	'✅ Client ESM Build successful.',
+	'❌ Client ESM Build failed.',
+);
+
+const CJSBuildPlugin = getESBuildLogStatusLogger(
+	'✅ Client CJS Build successful.',
+	'❌ Client CJS Build failed.',
 );
 
 /** An esbuild plugin object that minifies GLSL shader files by stripping comments. */
@@ -82,9 +90,9 @@ const GLSLMinifyPlugin = {
 	},
 };
 
-const esbuildOptions = {
+const ESMBuildOptions = {
 	bundle: true,
-	entryPoints: entryPoints,
+	entryPoints: ESMEntryPoints,
 	outdir: './dist/client/scripts/esm',
 	/**
 	 * Enable code splitting, which means if multiple entry points require the same module,
@@ -95,12 +103,21 @@ const esbuildOptions = {
 	 * each belonging to a separate entry point module.
 	 */
 	splitting: true,
-	format: 'esm', // or 'cjs' for Common JS
+	format: 'esm',
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
-	// allowOverwrite: true, // Not needed?
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
-	plugins: [esbuildClientRebuildPlugin, GLSLMinifyPlugin],
+	plugins: [ESMBuildPlugin, GLSLMinifyPlugin],
 	loader: { '.wasm': 'file' },
+};
+
+const CJSBuildOptions = {
+	bundle: true,
+	entryPoints: CJSEntryPoints,
+	outdir: './dist/client/scripts/cjs',
+	outbase: 'src/client/scripts/cjs', // Without this, htmlscript.js gets put in cjs/ instead of cjs/game/
+	format: 'cjs',
+	sourcemap: true,
+	plugins: [CJSBuildPlugin, GLSLMinifyPlugin],
 };
 
 // ================================= BUILDING ===================================
@@ -109,14 +126,19 @@ const esbuildOptions = {
 export async function buildClient(isDev) {
 	// console.log(`Building client in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
 
-	const context = await esbuild.context({
-		...esbuildOptions,
+	const ESMContext = await esbuild.context({
+		...ESMBuildOptions,
+		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
+	});
+
+	const CJSContext = await esbuild.context({
+		...CJSBuildOptions,
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
 	});
 
 	if (isDev) {
-		await context.watch();
-		// console.log('esbuild is watching for CLIENT changes...');
+		await ESMContext.watch();
+		await CJSContext.watch();
 	} else {
 		/**
 		 * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
@@ -126,9 +148,11 @@ export async function buildClient(isDev) {
 		 */
 		// Production
 		// Build once and exit if not in watch mode
-		await context.rebuild();
-		context.dispose();
-		// console.log('Client esbuild bundling complete.');
+		await ESMContext.rebuild();
+		ESMContext.dispose();
+
+		await CJSContext.rebuild();
+		CJSContext.dispose();
 
 		// Minify JS and CSS
 		// console.log('Minifying production assets...');

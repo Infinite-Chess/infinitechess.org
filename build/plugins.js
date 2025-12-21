@@ -4,7 +4,7 @@
  * Contains shared esbuild plugins used in both client and server builds.
  */
 
-/** An esbuild plugin that logs whenever a build is finished. */
+/** Returns an esbuild plugin that logs whenever a build finishes/fails. */
 export function getESBuildLogStatusLogger(successMessage, failureMessage) {
 	return {
 		name: 'log-rebuild',
