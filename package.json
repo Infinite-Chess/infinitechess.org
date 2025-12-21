@@ -82,13 +82,13 @@
   "scripts": {
     "clean": "rimraf dist",
     "prod": "npm run build && tsc --noEmit && npm run start",
-    "build": "npm run clean && npm run prod:assets && npm run prod:assets-cjs && node build.js",
+    "build": "npm run clean && npm run prod:assets && npm run prod:assets-cjs && node build/index.js",
     "start": "node dist/server/server.js",
     "prod:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,toml,md}\" dist",
     "prod:assets-cjs": "cpx \"src/client/scripts/cjs/**/*.js\" dist/client/scripts/cjs",
     "copy:views": "cpx \"src/client/views/**/*\" dist/client/views",
     "dev": "npm run clean && concurrently -k \"npm:dev:*\" --prefix-colors \"green,blue,grey,white\"",
-    "dev:build": "node build.js --dev",
+    "dev:build": "node build/index.js --dev",
     "dev:tsc": "tsc --noEmit --watch --preserveWatchOutput",
     "dev:server": "npm run copy:views && wait-on dist/server/server.js && nodemon",
     "dev:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,toml,md}\" dist --watch",
@@ -97,9 +97,9 @@
     "generate-dependency-graph": "node src/server/utility/generateDependancyGraph.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier src build.js --write",
-    "format:check": "prettier src build.js --check",
-    "lint": "eslint src build.js",
+    "format": "prettier src build --write",
+    "format:check": "prettier src build --check",
+    "lint": "eslint src build",
     "prepare": "husky"
   },
   "lint-staged": {
