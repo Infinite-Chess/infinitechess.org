@@ -8,8 +8,16 @@ declare global {
 		[key: string]: any; // Allows other dynamic keys if needed
 	};
 
+	/** htmlscript injected inline inside the game page. It handles the loading animation. */
+	var htmlscript: {
+		/** Called on failure to load a page asset. */
+		callback_LoadingError: () => void;
+		/** Removes this specific html element's listener for a loading error. */
+		removeOnerror: (this: HTMLElement) => void;
+	};
+
 	/** Main script that starts the game loop. Called from htmlscript.js */
-	const main: {
+	var main: {
 		start: () => void;
 	};
 
