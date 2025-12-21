@@ -21,7 +21,6 @@ import jsutil from '../../../../../../shared/util/jsutil.js';
  * here doesn't actually mean adding dependancies.
  */
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -32,7 +31,6 @@ import icnconverter, {
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
-// type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
 // type Coords = import("../../chess/util/coordutil").Coords;
 
 /**
