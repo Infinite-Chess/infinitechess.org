@@ -1,5 +1,11 @@
 // build/engine-wasm.js
 
+/**
+ * HydroChess WASM Engine Setup Script
+ *
+ * This ensures that the HydroChess WASM engine is available.
+ */
+
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
