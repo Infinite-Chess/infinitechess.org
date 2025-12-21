@@ -1,5 +1,3 @@
-'use strict';
-
 /* global main */
 
 /**
@@ -11,8 +9,7 @@
  *
  * This is also what calls our main() function when the page fully loads.
  */
-// eslint-disable-next-line no-unused-vars
-const htmlscript = (function () {
+globalThis.htmlscript = (function () {
 	// Listen for the first user gesture...
 
 	// If there's an error in loading, stop the loading animation
@@ -21,7 +18,8 @@ const htmlscript = (function () {
 	let loadingErrorOcurred = false;
 	let lostNetwork = false;
 
-	function callback_LoadingError(_event) {
+	/** Called on failure to load a page asset. */
+	function callback_LoadingError(): void {
 		// const type = event.type; // Event type: "error"/"abort"
 		// const target = event.target; // Element that triggered the event
 		// const elementType = target?.tagName.toLowerCase();
@@ -32,46 +30,51 @@ const htmlscript = (function () {
 		loadingErrorOcurred = true;
 
 		// Hide the "LOADING" text
-		const element_loadingText = document.getElementById('loading-text');
+		const element_loadingText = document.getElementById('loading-text')!;
 		element_loadingText.classList.add('hidden'); // This applies a 'display: none' rule
 
 		// Show the ERROR text
 		const element_loadingError = document.getElementById('loading-error');
 		const element_loadingErrorText = document.getElementById('loading-error-text');
+		const element_loadingGlow = document.getElementById('loading-glow');
+		if (!element_loadingError || !element_loadingErrorText || !element_loadingGlow) {
+			console.error('Loading error elements not found in document.');
+			return;
+		}
+
 		element_loadingError.classList.remove('hidden');
 		element_loadingErrorText.textContent = lostNetwork
-			? translations.lost_network
-			: translations.failed_to_load;
+			? translations['lost_network']
+			: translations['failed_to_load'];
 
 		// Remove the glowing in the background animation
-		const element_loadingGlow = document.getElementById('loading-glow');
 		element_loadingGlow.classList.remove('loadingGlowAnimation');
 		element_loadingGlow.classList.add('loading-glow-error');
 	}
 
-	// Removes the onerror event listener from the "this" object.
-	function removeOnerror() {
+	/** Removes this specific html element's listener for a loading error. It must be the "this" object. */
+	function removeOnerror(this: HTMLElement): void {
 		this.removeAttribute('onerror');
 		this.removeAttribute('onload');
 	}
 
 	// Add event listeners for when connection is dropped when loading
 
-	(function initLoadingScreenListeners() {
+	(function initLoadingScreenListeners(): void {
 		window.addEventListener('offline', callback_Offline);
 		window.addEventListener('online', callback_Online);
 	})();
-	function closeLoadingScreenListeners() {
+	function closeLoadingScreenListeners(): void {
 		window.removeEventListener('offline', callback_Offline);
 		window.removeEventListener('online', callback_Online);
 	}
 
-	function callback_Offline() {
+	function callback_Offline(): void {
 		console.log('Network connection lost');
 		lostNetwork = true;
 		callback_LoadingError();
 	}
-	function callback_Online() {
+	function callback_Online(): void {
 		console.log('Network connection regained');
 		lostNetwork = false;
 		if (loadingErrorOcurred) window.location.reload(); // Refresh the page
