@@ -7,8 +7,8 @@
                 ...t('play.play-menu', {returnObjects: true})
             })%>;
         </script>
-        <!-- Do not modify the next line under any circumstances!! It is used by build.js as a reference point of where to inject js -->
-        <!-- htmlscript inject here -->
+        <!-- Htmlscript inserted inline into the html is in charge of managing the loading animation before the page is fully loaded. -->
+        <%- include(`${distfolder}/client/scripts/cjs/game/htmlscript.js`) %>
 
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />

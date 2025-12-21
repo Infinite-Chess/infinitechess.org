@@ -17,8 +17,6 @@ import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
 import { fileURLToPath } from 'node:url';
-import { insertScriptIntoHTML } from '../utility/HTMLScriptInjector.js';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { UNCERTAIN_LEADERBOARD_RD } from '../game/gamemanager/ratingcalculation.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -357,7 +355,8 @@ function translateStaticTemplates(translations) {
 						languages: languages_list,
 						language: language,
 						newsHTML: translations[language].news,
-						viewsfolder: path.join(__dirname, '../../client/views'),
+						distfolder: path.join(__dirname, '../..'), // '/workspaces/infinitechess.org/dist'
+						viewsfolder: path.join(__dirname, '../../client/views'), // '/workspaces/infinitechess.org/dist/client/views'
 
 						// Custom included variables
 						ratingDeviationUncertaintyThreshold: UNCERTAIN_LEADERBOARD_RD,
@@ -373,9 +372,6 @@ function translateStaticTemplates(translations) {
  * **Should be ran only once**.
  */
 function initTranslations() {
-	// NEEDS TO BE BEFORE EJS RENDERING as it copies play.ejs into every language!
-	injectHTMLScriptIntoPlayEJS(); // Inject htmlscript.js into play.ejs
-
 	const translations = loadTranslationsFolder(translationsFolder);
 
 	i18next.use(middleware.LanguageDetector).init({
@@ -388,22 +384,6 @@ function initTranslations() {
 	});
 
 	translateStaticTemplates(translations); // Compiles static files
-}
-
-function injectHTMLScriptIntoPlayEJS() {
-	// Overwrite play.ejs, directly inserting htmlscript.js into it.
-	/** The relative path to play.ejs */
-	const playEJS = readFileSync(path.join(__dirname, '../../../src/client/views/play.ejs'));
-	const htmlscriptJS = readFileSync(
-		path.join(__dirname, '../../client/scripts/cjs/game/htmlscript.js'),
-	);
-	const newPlayEJS = insertScriptIntoHTML(
-		playEJS,
-		htmlscriptJS,
-		{},
-		'<!-- htmlscript inject here -->',
-	);
-	writeFileSync(path.join(__dirname, '../../client/views/play.ejs'), newPlayEJS);
 }
 
 export { initTranslations };
