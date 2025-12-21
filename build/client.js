@@ -8,7 +8,8 @@ import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
 import stripComments from 'glsl-strip-comments';
 
-// Local imports (Relative path updated to go up one level)
+// Local imports
+import { getESBuildLogStatusLogger } from './plugins.js';
 import {
 	getAllFilesInDirectoryWithExtension,
 	writeFile_ensureDirectory,
@@ -46,21 +47,7 @@ const entryPoints = [
 
 // ================================= PLUGINS ===================================
 
-/** An esbuild plugin that logs whenever a build is finished. */
-function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
-	return {
-		name: 'log-rebuild',
-		setup(build) {
-			// This hook runs when a build has finished
-			build.onEnd((result) => {
-				if (result.errors.length > 0) console.error(failureMessage);
-				else console.log(successMessage);
-			});
-		},
-	};
-}
-
-const esbuildClientRebuildPlugin = getESBuildLogRebuildPlugin(
+const esbuildClientRebuildPlugin = getESBuildLogStatusLogger(
 	'✅ Client Build successful.',
 	'❌ Client Build failed.',
 );

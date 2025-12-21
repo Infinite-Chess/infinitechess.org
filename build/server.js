@@ -3,6 +3,9 @@
 import esbuild from 'esbuild';
 import { glob } from 'glob';
 
+// Local imports
+import { getESBuildLogStatusLogger } from './plugins.js';
+
 // ================================= CONSTANTS =================================
 
 const entryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
@@ -11,21 +14,7 @@ const entryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,
 
 // ================================= BUILDING ===================================
 
-/** An esbuild plugin that logs whenever a build is finished. */
-function getESBuildLogRebuildPlugin(successMessage, failureMessage) {
-	return {
-		name: 'log-rebuild',
-		setup(build) {
-			// This hook runs when a build has finished
-			build.onEnd((result) => {
-				if (result.errors.length > 0) console.error(failureMessage);
-				else console.log(successMessage);
-			});
-		},
-	};
-}
-
-const esbuildServerRebuildPlugin = getESBuildLogRebuildPlugin(
+const esbuildServerRebuildPlugin = getESBuildLogStatusLogger(
 	'✅ Server Build successful.',
 	'❌ Server Build failed.',
 );
