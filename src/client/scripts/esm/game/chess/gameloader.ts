@@ -410,6 +410,55 @@ async function startCustomEngineGame(options: {
 	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
 }
 
+/** Starts an engine game according to the options provided. */
+async function startCustomDualEngineGame(options: {
+	metadata: MetaData;
+	additional: {
+		moves?: ServerGameMoveMessage[];
+		variantOptions: VariantOptions;
+	};
+	presetAnnotes?: PresetAnnotes;
+	TimeControl?: MetaData['TimeControl'];
+	engine1: validEngineName;
+	engine2: validEngineName;
+	engineConfig1: EngineConfig;
+	engineConfig2: EngineConfig;
+	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
+	showGameControlButtons?: true;
+}): Promise<void> {
+	typeOfGameWeAreIn = 'engine';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
+	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
+		metadata: options.metadata,
+		viewWhitePerspective: true,
+		allowEditCoords: false,
+		additional: {
+			variantOptions: options.additional.variantOptions,
+			worldBorder: engineWorldBorderDict['hydrochess'],
+		},
+	});
+
+	/** A promise that resolves when the engine script has been fetched. */
+	const enginePromise: Promise<void | [void, void]> = enginegame
+		.initDualEngineGame(options)
+		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+
+	/**
+	 * This resolves when BOTH the graphical and engine promises resolve,
+	 * OR rejects immediately when one of them rejects!
+	 */
+	Promise.all([graphicalPromise, enginePromise])
+		.then((_results: any[]) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
+}
+
 /**
  * Reloads the current local or online game from the provided metadata, existing moves, and variant options.
  */
@@ -525,6 +574,7 @@ export default {
 	startBoardEditor,
 	startCustomLocalGame,
 	startCustomEngineGame,
+	startCustomDualEngineGame,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,

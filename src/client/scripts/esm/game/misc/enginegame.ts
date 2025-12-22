@@ -50,7 +50,7 @@ const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
  */
 const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: number } = {
 	engineCheckmatePractice: 500,
-	hydrochess: 4000,
+	hydrochess: 500,
 };
 
 // Variables --------------------------------------------------------------------
@@ -133,6 +133,86 @@ function initEngineGame(options: {
 	});
 }
 
+let currentEngine2: string | undefined; // name of the second engine used
+let engineConfig2: EngineConfig | undefined; // json that is sent to the second engine, giving it extra config information
+let engineWorker2: Worker | undefined;
+/**
+ * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
+ * This method launches an engine webworker for the current game.
+ * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
+ */
+function initDualEngineGame(options: {
+	engine1: string;
+	engine2: string;
+	engineConfig1: EngineConfig;
+	engineConfig2: EngineConfig;
+}): Promise<[void, void]> {
+	console.log(`Starting engine game with engines "${options.engine1}" and "${options.engine2}".`);
+
+	inEngineGame = true;
+	engineColor = players.WHITE;
+	currentEngine = options.engine1;
+	currentEngine2 = options.engine2;
+	engineConfig = options.engineConfig1;
+	engineConfig2 = options.engineConfig2;
+
+	// Initialize the engine as a webworker
+	if (!window.Worker) {
+		alert("Your browser doesn't support web workers. Cannot play against an engine.");
+		// Reject the promise returned by this function
+		return Promise.reject(
+			new Error("Cannot finish loading engine game because web workers aren't supported."),
+		);
+	}
+	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, {
+		type: 'module',
+	}); // module type allows the web worker to import methods and types from other scripts.
+	engineWorker2 = new Worker(`../scripts/esm/game/chess/engines/${currentEngine2}.js`, {
+		type: 'module',
+	}); // module type allows the web worker to import methods and types from other scripts.
+
+	return Promise.all([
+		new Promise<void>((resolve, reject): void => {
+			// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
+			// We have to manually send this message at the top of our engines.
+			engineWorker!.onmessage = (e: MessageEvent): void => {
+				if (e.data === 'readyok') {
+					console.log('Engine 1 is ready');
+					resolve(); // Engine is ready!
+				}
+			};
+			engineWorker!.onerror = (e: ErrorEvent): void => {
+				reject(new Error('Worker 1 failed to load: ' + e.message));
+			};
+		}).then((_result: any) => {
+			// After the promise resolves, we know the worker is ready
+			// Overwrite the onmessage listener to listen for move submissions
+			engineWorker!.onmessage = (e: MessageEvent): void => makeEngineMove(e.data);
+			// Remove the error handler (no longer needed after worker is ready)
+			engineWorker!.onerror = null;
+		}),
+		new Promise<void>((resolve, reject): void => {
+			// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
+			// We have to manually send this message at the top of our engines.
+			engineWorker2!.onmessage = (e: MessageEvent): void => {
+				if (e.data === 'readyok') {
+					console.log('Engine 2 is ready');
+					resolve(); // Engine is ready!
+				}
+			};
+			engineWorker2!.onerror = (e: ErrorEvent): void => {
+				reject(new Error('Worker 2 failed to load: ' + e.message));
+			};
+		}).then((_result: any) => {
+			// After the promise resolves, we know the worker is ready
+			// Overwrite the onmessage listener to listen for move submissions
+			engineWorker2!.onmessage = (e: MessageEvent): void => makeEngineMove(e.data);
+			// Remove the error handler (no longer needed after worker is ready)
+			engineWorker2!.onerror = null;
+		}),
+	]);
+}
+
 // Call when we leave an engine game
 function closeEngineGame(): void {
 	inEngineGame = false;
@@ -165,7 +245,7 @@ function onMovePlayed(): void {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
-	if (gamefile.basegame.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
+	// if (gamefile.basegame.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.basegame.gameConclusion) return; // Don't do anything if the game is over
 	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
@@ -196,18 +276,22 @@ function onMovePlayed(): void {
 		binc,
 	} : undefined;
 
-	if (engineWorker)
-		engineWorker.postMessage({
+	const nextTurnworker =
+		gamefile.basegame.whosTurn === engineColor ? engineWorker : engineWorker2;
+
+	if (nextTurnworker) {
+		const message = {
 			stringGamefile,
 			lf: longformIn,
-			engineConfig: engineConfig,
-			youAreColor: engineColor,
+			engineConfig: gamefile.basegame.whosTurn === engineColor ? engineConfig : engineConfig2,
+			youAreColor: gamefile.basegame.whosTurn,
 			wtime: timing?.wtime,
 			btime: timing?.btime,
 			winc: timing?.winc,
 			binc: timing?.binc,
-		});
-	else console.error('User made a move in an engine game but no engine webworker is loaded!');
+		};
+		nextTurnworker.postMessage(message);
+	} else console.error('User made a move in an engine game but no engine webworker is loaded!');
 }
 
 /**
@@ -263,6 +347,8 @@ function makeEngineMove(compactMove: unknown): void {
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
+
+	onMovePlayed();
 }
 
 function onGameConclude(): void {
@@ -280,6 +366,7 @@ export default {
 	isItOurTurn,
 	getCurrentEngine,
 	initEngineGame,
+	initDualEngineGame,
 	closeEngineGame,
 	areWeColor,
 	onMovePlayed,
