@@ -219,16 +219,22 @@ function startEngineGame(
 		UTCTime,
 	};
 
+	const engine1: validEngineName = 'hydrochess';
+	const engine2: validEngineName = 'hydrochess';
+
 	gameloader.unloadGame();
-	gameloader.startCustomEngineGame({
+	gameloader.startCustomDualEngineGame({
 		metadata,
 		additional: {
 			variantOptions,
 		},
-		youAreColor,
-		currentEngine,
-		engineConfig: {
-			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+		engine1,
+		engine2,
+		engineConfig1: {
+			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[engine1],
+		},
+		engineConfig2: {
+			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[engine2],
 		},
 	});
 }
