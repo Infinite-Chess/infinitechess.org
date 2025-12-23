@@ -26,9 +26,10 @@ import timeutil from '../../../shared/util/timeutil.js';
 import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
+import gameutility from './gameutility.js';
 
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
-import type { ServerGame, MatchInfo } from './gameutility.js';
+import type { ServerGame } from './gameutility.js';
 
 /**
  * Potential red flags (already implemented checks are marked with an X at the start of the line):
@@ -147,9 +148,8 @@ async function measureRatingAbuseAfterGame({ match, basegame }: ServerGame): Pro
 
 	for (const [playerStr, player] of Object.entries(match.playerData)) {
 		if (!player.identifier.signedIn) {
-			// TODO: remember to use proper stringification
 			await logEventsAndPrint(
-				`Unexpected: Player "${playerStr}" is not signed in. Game: ${JSON.stringify('')}`,
+				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameutility.getSimplifiedGameString({ match, basegame })}`,
 				'errLog.txt',
 			);
 			continue;
@@ -158,7 +158,7 @@ async function measureRatingAbuseAfterGame({ match, basegame }: ServerGame): Pro
 		const username = player.identifier.username;
 		if (user_id === undefined || username === undefined) {
 			await logEventsAndPrint(
-				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${''}`,
+				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${gameutility.getSimplifiedGameString({ match, basegame })}`,
 				'errLog.txt',
 			);
 			continue;
