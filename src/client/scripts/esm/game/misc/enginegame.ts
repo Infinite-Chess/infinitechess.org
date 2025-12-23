@@ -237,6 +237,8 @@ function makeEngineMove(compactMove: unknown): void {
 		console.error(
 			`Engine move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
 		);
+		// Don't forget to reapply premoves before exiting
+		premoves.applyPremoves(gamefile, mesh);
 		return;
 	}
 
