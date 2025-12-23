@@ -36,19 +36,4 @@ function ensureDirectoryOfFile(filePath) {
 	ensureDirectoryExists(dirPath);
 }
 
-/**
- * Writes content to a file, ensuring that all required directories are created.
- * @param {string} filePath - The path to the file
- * @param {string|Buffer} content - The content to write to the file.
- */
-function writeFile_ensureDirectory(filePath, content) {
-	ensureDirectoryOfFile(filePath); // Ensure the directory exists
-	fs.writeFileSync(filePath, content); // Write the file
-}
-
-export {
-	readFileIfExists,
-	ensureDirectoryOfFile,
-	ensureDirectoryExists,
-	writeFile_ensureDirectory,
-};
+export { readFileIfExists, ensureDirectoryOfFile, ensureDirectoryExists };

@@ -2,8 +2,6 @@ import path from 'path';
 import fs from 'fs';
 
 import { readFile } from '../utility/lockFile.js';
-// @ts-ignore
-import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
 const bannedPath = path.resolve('database/banned.json');
 
@@ -19,7 +17,10 @@ ensureBannedFileExists: {
 		null,
 		2,
 	);
-	writeFile_ensureDirectory(bannedPath, content);
+
+	fs.mkdirSync(path.dirname(bannedPath), { recursive: true });
+	fs.writeFileSync(bannedPath, content);
+
 	console.log('Generated banned file');
 }
 
