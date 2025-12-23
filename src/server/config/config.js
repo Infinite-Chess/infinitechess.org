@@ -5,7 +5,7 @@
  * as it's what compiles all typescript files into javascript.
  */
 
-import { NODE_ENV } from './env.js';
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 // Variables -----------------------------------------------------------
 
@@ -14,7 +14,7 @@ import { NODE_ENV } from './env.js';
  * It will be hosted on a different port for local host,
  * and a few other minor adjustments.
  */
-const DEV_BUILD = NODE_ENV === 'development';
+const DEV_BUILD = process.env.NODE_ENV === 'development';
 
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
