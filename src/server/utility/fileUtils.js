@@ -47,34 +47,9 @@ function writeFile_ensureDirectory(filePath, content) {
 	fs.writeFileSync(filePath, content); // Write the file
 }
 
-/**
- * Recursively retrieves all files with a specific extension from a directory and its subdirectories.
- * @param {string} path - The directory path where the search will start.
- * @param {string} ext - The file extension to filter by (e.g., '.js', '.txt').
- * @returns {Promise<string[]>} - A promise that resolves to an array of file paths with the specified extension.
- */
-async function getAllFilesInDirectoryWithExtension(path, ext) {
-	const filesNFolder = await readdir(path);
-	const folders = filesNFolder.filter((v) => !v.endsWith(ext));
-	const files = filesNFolder.filter((v) => v.endsWith(ext));
-
-	for (const folder of folders) {
-		try {
-			const newFiles = await getAllFilesInDirectoryWithExtension(`${path}/${folder}`, ext);
-			files.push(...newFiles.map((v) => `${folder}/${v}`));
-		} catch (e) {
-			if (e.code) continue;
-			console.log(e);
-		}
-	}
-
-	return files;
-}
-
 export {
 	readFileIfExists,
 	ensureDirectoryOfFile,
 	ensureDirectoryExists,
 	writeFile_ensureDirectory,
-	getAllFilesInDirectoryWithExtension,
 };

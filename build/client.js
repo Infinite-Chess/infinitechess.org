@@ -1,6 +1,7 @@
 // build/client.js
 
 import { readFile } from 'node:fs/promises';
+import { glob } from 'glob';
 import path from 'node:path';
 import esbuild from 'esbuild';
 import swc from '@swc/core';
@@ -10,10 +11,7 @@ import stripComments from 'glsl-strip-comments';
 
 // Local imports
 import { getESBuildLogStatusLogger } from './plugins.js';
-import {
-	getAllFilesInDirectoryWithExtension,
-	writeFile_ensureDirectory,
-} from '../src/server/utility/fileUtils.js';
+import { writeFile_ensureDirectory } from '../src/server/utility/fileUtils.js';
 
 // ================================= CONSTANTS =================================
 
@@ -179,7 +177,7 @@ export async function buildClient(isDev) {
  * @returns {Promise<void>} Resolves when all files are minified.
  */
 async function minifyScriptDirectory(inputDir, outputDir, isModule) {
-	const files = await getAllFilesInDirectoryWithExtension(inputDir, '.js');
+	const files = await glob('**/*.js', { cwd: inputDir, nodir: true });
 
 	for (const file of files) {
 		const inputFilePath = path.join(inputDir, file);
@@ -206,7 +204,7 @@ async function minifyScriptDirectory(inputDir, outputDir, isModule) {
  */
 async function minifyCSSFiles() {
 	// Bundle and compress all css files
-	const cssFiles = await getAllFilesInDirectoryWithExtension('./dist/client/css', '.css');
+	const cssFiles = await glob('**/*.css', { cwd: './dist/client/css', nodir: true });
 	for (const file of cssFiles) {
 		// Minify css files
 		const { code } = transform({
