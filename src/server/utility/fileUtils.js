@@ -4,7 +4,6 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 
 /**
  * Reads a file if it exists, otherwise returns null.
@@ -25,15 +24,4 @@ function ensureDirectoryExists(dirPath) {
 	}
 }
 
-/**
- * Ensures that the directory for a given file path exists. If the directory
- * does not exist, it will create the necessary parent directories.
- * @param {string} filePath - The path of the file for which the directory should be created.
- */
-function ensureDirectoryOfFile(filePath) {
-	// Ensure the directory exists
-	const dirPath = path.dirname(filePath);
-	ensureDirectoryExists(dirPath);
-}
-
-export { readFileIfExists, ensureDirectoryOfFile, ensureDirectoryExists };
+export { readFileIfExists, ensureDirectoryExists };
