@@ -1,6 +1,9 @@
+// src/server/config/certOptions.js
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 import path from 'path';
 import fs from 'fs';
-import { DEV_BUILD } from './config.js';
 const pathToCertFolder = path.resolve('cert'); // Resolve results in an absolute path
 
 /**
@@ -8,7 +11,7 @@ const pathToCertFolder = path.resolve('cert'); // Resolve results in an absolute
  * @returns {Object} SSL/TLS certificate options, including the certificate and private key.
  */
 function getCertOptions() {
-	if (DEV_BUILD) {
+	if (process.env.NODE_ENV !== 'production') {
 		// Use self-signed certificates for development environment
 		return {
 			key: fs.readFileSync(path.join(pathToCertFolder, 'cert.key')),

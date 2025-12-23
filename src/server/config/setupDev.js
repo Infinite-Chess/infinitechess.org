@@ -1,4 +1,7 @@
-import { DEV_BUILD } from './config.js';
+// src/server/config/setupDev.js
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 import { ensureSelfSignedCertificate } from './generateCert.js';
 import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
@@ -6,7 +9,7 @@ import { giveRole } from '../controllers/roles.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
 function initDevEnvironment() {
-	if (!DEV_BUILD) return; // Production
+	if (process.env.NODE_ENV === 'production') return;
 
 	if (ensureSelfSignedCertificate()) {
 		// Let's also display the url to the page!

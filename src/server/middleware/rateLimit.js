@@ -1,8 +1,11 @@
+// src/server/middleware/rateLimit.js
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 import { logEvents, logEventsAndPrint } from './logEvents.js';
 import { getClientIP } from '../utility/IP.js';
-
 import { isIPBanned } from './banned.js';
-import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
+import { ARE_RATE_LIMITING } from '../config/config.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 /** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
@@ -10,7 +13,7 @@ import jsutil from '../../shared/util/jsutil.js';
 // For rate limiting a client...
 
 /** The maximum number of requests/messages allowed per IP address, per minute. */
-const maxRequestsPerMinute = DEV_BUILD ? 400 : 200; // Default: 400 / 200
+const maxRequestsPerMinute = process.env.NODE_ENV === 'development' ? 400 : 200; // Default: 400 / 200
 const minuteInMillis = 60000;
 
 /**

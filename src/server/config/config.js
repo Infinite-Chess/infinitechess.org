@@ -71,7 +71,6 @@ const printIncomingAndClosingSockets = false;
 const printIncomingAndOutgoingMessages = false;
 
 export {
-	DEV_BUILD,
 	ARE_RATE_LIMITING,
 	simulatedWebsocketLatencyMillis,
 	GAME_VERSION,
