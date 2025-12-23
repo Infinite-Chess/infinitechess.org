@@ -5,7 +5,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { readdir } from 'node:fs/promises';
 
 /**
  * Reads a file if it exists, otherwise returns null.
