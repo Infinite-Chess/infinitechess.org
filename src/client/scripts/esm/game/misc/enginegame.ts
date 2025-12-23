@@ -229,7 +229,11 @@ function makeEngineMove(compactMove: unknown): void {
 	const moveValidationResults = movevalidation.isEnginesMoveLegal(gamefile, compactMove);
 
 	if (!moveValidationResults.valid) {
-		statustext.showStatus(`Engine submitted an illegal move.`, true, 2);
+		statustext.showStatus(
+			`Engine submitted an illegal move. Please report this bug!`,
+			true,
+			100,
+		);
 		console.error(
 			`Engine move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
 		);
