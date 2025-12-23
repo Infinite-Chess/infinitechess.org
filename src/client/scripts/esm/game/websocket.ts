@@ -1,9 +1,9 @@
 // Import Start
-// @ts-ignore when this is converted to .ts typescript will stop complaining
+// @ts-ignore
 import statustext from './gui/statustext.js';
-// @ts-ignore when this is converted to .ts typescript will stop complaining
+// @ts-ignore
 import invites from './misc/invites.js';
-// @ts-ignore when this is converted to .ts typescript will stop complaining
+// @ts-ignore
 import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
 import localstorage from '../util/localstorage.js';
