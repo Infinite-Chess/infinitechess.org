@@ -2,12 +2,11 @@ import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 import { promises as fsPromises } from 'fs';
 import path from 'path';
+import fs from 'fs';
 
 // @ts-ignore
 import { getClientIP } from '../utility/IP.js';
 import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
-// @ts-ignore
-import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,7 +32,7 @@ async function logEvents(message: string, logName: string): Promise<void> {
 
 	try {
 		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
-		ensureDirectoryExists(logsPath);
+		fs.mkdirSync(logsPath, { recursive: true });
 		await fsPromises.appendFile(path.join(logsPath, logName), logItem);
 	} catch (err: unknown) {
 		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);

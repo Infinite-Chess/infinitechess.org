@@ -14,14 +14,4 @@ function readFileIfExists(filePath) {
 	return fs.existsSync(filePath) ? fs.readFileSync(filePath) : null;
 }
 
-/**
- * Ensures that a directory exists, creating it if necessary.
- * @param {string} dirPath - The path to the directory.
- */
-function ensureDirectoryExists(dirPath) {
-	if (!fs.existsSync(dirPath)) {
-		fs.mkdirSync(dirPath, { recursive: true });
-	}
-}
-
-export { readFileIfExists, ensureDirectoryExists };
+export { readFileIfExists };

@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import forge from 'node-forge';
-import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -56,7 +55,7 @@ function generateSelfSignedCertificate() {
  */
 function ensureSelfSignedCertificate() {
 	// Create the cert directory if it doesn't exist
-	ensureDirectoryExists(certDir);
+	fs.mkdirSync(certDir, { recursive: true });
 
 	if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
 		// Self-signed certificate already exists
