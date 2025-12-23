@@ -1,6 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 
+/**
+ * BLACKLISTED EMAILS are now handled in the email_blacklist database table!
+ */
+
 import { readFile } from '../utility/lockFile.js';
 
 const bannedPath = path.resolve('database/banned.json');
