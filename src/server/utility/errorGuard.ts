@@ -7,10 +7,10 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
  * Executes a callback function with provided arguments and catches any errors that occur.
- * @param {Function} callback - The function to execute safely.
- * @param {string} errorMessage - A custom error message to log if an error occurs.
- * @param {...any} args - Arguments to pass to the callback function.
- * @returns {boolean} true if the callback executed without error.
+ * @param callback - The function to execute safely.
+ * @param errorMessage - A custom error message to log if an error occurs.
+ * @param args - Arguments to pass to the callback function.
+ * @returns true if the callback executed without error.
  */
 function executeSafely<F extends (...args: any[]) => any>(
 	callback: F,
@@ -32,10 +32,10 @@ function executeSafely<F extends (...args: any[]) => any>(
  * A variant of {@link executeSafely} that works with an async function.
  *
  * Executes a callback function with provided arguments and catches any errors that occur.
- * @param {Function} callback - The function to execute safely.
- * @param {string} errorMessage - A custom error message to log if an error occurs.
- * @param {...any} args - Arguments to pass to the callback function.
- * @returns {Promise<boolean>} true if the callback executed without error.
+ * @param callback - The function to execute safely.
+ * @param errorMessage - A custom error message to log if an error occurs.
+ * @param args - Arguments to pass to the callback function.
+ * @returns true if the callback executed without error.
  */
 async function executeSafely_async<F extends (...args: any[]) => any>(
 	callback: F,
