@@ -99,7 +99,7 @@ function onAFK_Return(ws: CustomWebSocket, { match, basegame }: ServerGame): voi
 			'Client submitted they are back from being afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.',
 		);
 
-	cancelAutoAFKResignTimer(match, true);
+	cancelAutoAFKResignTimer(match, true, basegame.whosTurn);
 }
 
 export { onAFK, onAFK_Return };
