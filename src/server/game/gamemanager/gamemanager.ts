@@ -69,12 +69,12 @@ const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Creates a new game when an invite is accepted.
+ * Creates the `ServerGame` object and subscibes each player to the game
  * Auto-subscribes the players to receive game updates.
  * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
- * @param player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
- * @param player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
- * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
+ * @param assignments - The color each player has
+ * @param actingPlayer - The color of the player that started the game and sent the socket message
+ * @param replyto - The ID of the incoming socket message of the player that started the game. This is used for the `replyto` property on our response.
  */
 function createGame(
 	invite: Invite,

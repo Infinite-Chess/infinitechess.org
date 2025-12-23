@@ -152,6 +152,7 @@ interface PlayerData {
 	);
 }
 
+/** The info for the server hosting the game */
 interface MatchInfo {
 	/** The match's unique ID */
 	id: number;
@@ -164,7 +165,7 @@ interface MatchInfo {
 	publicity: 'public' | 'private';
 	/** Whether the match is rated. */
 	rated: boolean;
-	/** */
+	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
 
 	/** The ID of the timeout which will auto-lose the player
@@ -193,21 +194,13 @@ interface MatchInfo {
 	positionPasted: boolean;
 }
 
+/** The game stored in the server */
 type ServerGame = { basegame: Game; match: MatchInfo };
 
 // Functions --------------------------------------------------------------------------------------
 
 /**
- * Construct a new online game from the invite options,
- * and subscribe the players to the game for receiving updates.
- *
- * Descriptions for each property can be found in the {@link Game} type definition.
- * @param invite - The invite that contain various settings for the game.
- * @param id - The unique identifier to give this game.
- * @param player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
- * @param player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
- * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
- * @returns The new game.
+ * Construct the match bject based on the invite options and how players have been assigned
  */
 function initMatch(
 	invite: Invite,
@@ -394,10 +387,6 @@ function getRatingDataForGamePlayers(
 
 /**
  * Generates metadata for a game including event details, player information, and timestamps.
- * @param game - The game object containing details about the game.
- * @param ratings - Each players rating. Used to enter WhiteElo & BlackElo in the metadata.
- * @param ratingdata The rating data after their elos are changed after the game. Required IF you want WhiteRatingDiff & BlackRatingDiff in the metadata!
- * @returns An object containing metadata for the game including event name, players, time control, and UTC timestamps.
  */
 function constructMetadataOfGame(
 	rated: boolean,

@@ -39,8 +39,6 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  * Cancels the timer that automatically resigns a player due to being AFK (Away From Keyboard).
  * This function should be called when the "AFK-Return" websocket action is received, indicating
  * that the player has returned, OR when a client refreshes the page!
- * @param game - The game
- * @param options.alertOpponent - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned. [false]
  */
 function cancelAutoAFKResignTimer(
 	match: MatchInfo,
@@ -126,7 +124,7 @@ function startDisconnectTimer(
 /**
  * Cancels both players timers to auto-resign them from disconnection if they were disconnected.
  * Typically called when a game ends.
- * @param game - The game
+ * @param match - The match
  */
 function cancelDisconnectTimers(match: MatchInfo): void {
 	for (const color of Object.keys(match.playerData)) {

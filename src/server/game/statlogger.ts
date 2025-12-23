@@ -62,7 +62,7 @@ try {
 }
 
 /**
- *
+ * Saves and increments the stats for the played variant
  * @param game - The game to log
  * @returns
  */

@@ -23,7 +23,7 @@ import type { ServerGame } from './gameutility.js';
 /**
  * Called when client wants to offer a draw. Sends confirmation to opponent.
  * @param ws - The socket
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  */
 function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	console.log('Client offers a draw.');
@@ -53,7 +53,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 /**
  * Called when client accepts a draw. Ends the game.
  * @param ws - The socket
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  */
 function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	console.log('Client accepts a draw.');
@@ -76,7 +76,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 /**
  * Called when client declines a draw. Alerts opponent.
  * @param ws - The socket
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  */
 function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;

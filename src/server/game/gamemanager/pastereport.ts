@@ -16,7 +16,7 @@ import type { ServerGame } from './gameutility.js';
  * because we don't know their starting position, the game
  * would crash if we attempted to paste it.
  * @param ws - The socket
- * @param game - The game they belong in, if they belong in one.
+ * @param servergame - The game they belong in, if they belong in one.
  */
 function onPaste(ws: CustomWebSocket, servergame: ServerGame): void {
 	// { reason, opponentsMoveNumber }

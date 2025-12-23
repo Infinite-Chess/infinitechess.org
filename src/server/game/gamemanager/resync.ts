@@ -26,7 +26,6 @@ import type { ServerGame } from './gameutility.js';
  * knows the game id and much other information. We only need to send
  * them the current move list, player timers, and game conclusion.
  * @param ws - Their websocket
- * @param game - The game, if already known. If not specified we will find from the id they gave us.
  * @param gameID - The game id they requested to sync to. They SHOULD have provided this as a number, but they may tamper it.
  * @param replyToMessageID - If specified, the id of the incoming socket message this resync will be the reply to
  */

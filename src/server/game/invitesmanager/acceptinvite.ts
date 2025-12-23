@@ -101,6 +101,7 @@ function acceptInvite(
 	const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
 	const player2Socket = ws;
 
+	// Assign each player a color based on their invite info. Add their socket just encase
 	const assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
 	let actingPlayer: Player = 0;
 	for (const [strcolor, identifier] of Object.entries(

@@ -26,7 +26,7 @@ const durationOfAutoResignTimerMillis = 1000 * 20; // 20 seconds.
  * Called when a client alerts us they have gone AFK.
  * Alerts their opponent, and starts a timer to auto-resign.
  * @param ws - The socket
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  */
 function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
 	const { match, basegame } = servergame;
@@ -77,7 +77,7 @@ function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
  * Called when a client alerts us they have returned from being AFK.
  * Alerts their opponent, and cancels the timer to auto-resign.
  * @param ws - The socket
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  */
 function onAFK_Return(ws: CustomWebSocket, { match, basegame }: ServerGame): void {
 	// console.log("Client alerted us they no longer AFK.")
