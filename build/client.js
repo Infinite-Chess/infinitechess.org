@@ -173,10 +173,10 @@ export async function buildClient(isDev) {
  * Minifies all JavaScript files in a directory and writes them to an output directory.
  * @param {string} inputDir - The directory to scan for scripts.
  * @param {string} outputDir - The directory where the minified files will be written.
- * @param {boolean} isModule - True if the scripts are ES Modules instead of CommonJS.
+ * @param {boolean} module - True if the scripts are ES Modules instead of CommonJS.
  * @returns {Promise<void>} Resolves when all files are minified.
  */
-async function minifyScriptDirectory(inputDir, outputDir, isModule) {
+async function minifyScriptDirectory(inputDir, outputDir, module) {
 	const files = await glob('**/*.js', { cwd: inputDir, nodir: true });
 
 	for (const file of files) {
@@ -188,7 +188,7 @@ async function minifyScriptDirectory(inputDir, outputDir, isModule) {
 			mangle: true, // Enable variable name mangling
 			compress: true, // Enable compression
 			sourceMap: false,
-			module: isModule, // Include if we're minifying ES Modules instead of Common JS
+			module, // Include if we're minifying ES Modules instead of Common JS
 		});
 
 		// Write the minified file to the output directory
