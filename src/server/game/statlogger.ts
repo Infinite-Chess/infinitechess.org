@@ -1,5 +1,7 @@
 import path from 'path';
 import fs from 'fs';
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
