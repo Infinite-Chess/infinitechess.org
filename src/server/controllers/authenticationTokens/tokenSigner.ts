@@ -9,7 +9,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import dotenv from 'dotenv';
 
 /** The payload of the JWT token, containing user information. */
 interface TokenPayload {
@@ -17,6 +17,9 @@ interface TokenPayload {
 	username: string;
 	roles: string[] | null;
 }
+
+// Refresh the values from process.env
+dotenv.config();
 
 if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
