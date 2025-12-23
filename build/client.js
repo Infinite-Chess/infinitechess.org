@@ -3,15 +3,14 @@
 import { readFile } from 'node:fs/promises';
 import { glob } from 'glob';
 import path from 'node:path';
+import fs from 'fs';
 import esbuild from 'esbuild';
 import swc from '@swc/core';
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
 import stripComments from 'glsl-strip-comments';
 
-// Local imports
 import { getESBuildLogStatusLogger } from './plugins.js';
-import { writeFile_ensureDirectory } from '../src/server/utility/fileUtils.js';
 
 // ================================= CONSTANTS =================================
 
@@ -192,7 +191,8 @@ async function minifyScriptDirectory(inputDir, outputDir, module) {
 		});
 
 		// Write the minified file to the output directory
-		writeFile_ensureDirectory(outputFilePath, minified.code);
+		fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+		fs.writeFileSync(outputFilePath, minified.code);
 		// console.log(`Minified: ${outputFilePath}`);
 	}
 }
@@ -207,12 +207,14 @@ async function minifyCSSFiles() {
 	const cssFiles = await glob('**/*.css', { cwd: './dist/client/css', nodir: true });
 	for (const file of cssFiles) {
 		// Minify css files
+		const outputFilePath = `./dist/client/css/${file}`;
 		const { code } = transform({
 			targets: cssTargets,
-			code: Buffer.from(await readFile(`./dist/client/css/${file}`, 'utf8')),
+			code: Buffer.from(await readFile(outputFilePath, 'utf8')),
 			minify: true,
 		});
 		// Write into /dist
-		writeFile_ensureDirectory(`./dist/client/css/${file}`, code);
+		fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+		fs.writeFileSync(outputFilePath, code);
 	}
 }
