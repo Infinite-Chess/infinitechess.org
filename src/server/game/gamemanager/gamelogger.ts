@@ -30,9 +30,10 @@ import winconutil from '../../../shared/chess/util/winconutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 
+import type { ServerGame } from './gameutility.js';
 import type { MetaData } from '../../../shared/chess/util/metadata.js';
 import type { RatingData } from './ratingcalculation.js';
-import type { Game } from './gameutility.js';
+import type { Game } from '../../../shared/chess/logic/gamefile.js';
 
 // Functions -------------------------------------------------------------------------------
 
@@ -44,13 +45,13 @@ import type { Game } from './gameutility.js';
  * @param game - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  */
-async function logGame(game: Game): Promise<RatingData | undefined> {
-	if (game.moves.length === 0) return undefined; // Don't log games with zero moves
+async function logGame(game: ServerGame): Promise<RatingData | undefined> {
+	if (game.basegame.moves.length === 0) return undefined; // Don't log games with zero moves
 
 	try {
 		// Create the transaction by wrapping our orchestrator function.
 		// We no longer need to pass any parameters here.
-		const transaction = db.transaction<[Game], RatingData | undefined>((g) => {
+		const transaction = db.transaction<[ServerGame], RatingData | undefined>((g) => {
 			return logGame_orchestrator(g);
 		});
 
@@ -64,7 +65,7 @@ async function logGame(game: Game): Promise<RatingData | undefined> {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
 		await logEventsAndPrint(
-			`FATAL: Game log transaction failed and was rolled back for Game ID ${game.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
+			`FATAL: Game log transaction failed and was rolled back for Game ID ${game.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
 			'errLog.txt',
 		);
 		await logEvents(`Game: ${gameutility.getSimplifiedGameString(game)}`, 'unloggedGames.txt');
@@ -78,9 +79,9 @@ async function logGame(game: Game): Promise<RatingData | undefined> {
  * It is designed to throw an error on any failure to trigger a rollback of the database.
  * Either ALL operations succeed, or NONE do.
  */
-function logGame_orchestrator(game: Game): RatingData | undefined {
+function logGame_orchestrator(game: ServerGame): RatingData | undefined {
 	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(
-		game.gameConclusion!,
+		game.basegame.gameConclusion!,
 	);
 
 	// --- Part 1: Handle Rating Updates ---
@@ -103,24 +104,24 @@ function logGame_orchestrator(game: Game): RatingData | undefined {
  * @throws An error if any database write fails.
  */
 function updateLeaderboardsInTransaction(
-	game: Game,
+	{ match, basegame }: ServerGame,
 	victor: Player | undefined,
 ): RatingData | undefined {
-	if (!game.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
+	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[game.variant];
+	const leaderboard_id = VariantLeaderboards[basegame.metadata.Variant!];
 	if (leaderboard_id === undefined) return undefined; // This should never happen. If it does it means the game should not have been rated.
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};
-	for (const playerStr in game.players) {
+	for (const playerStr in match.playerData) {
 		const player: Player = Number(playerStr) as Player;
-		const user_id = game.players[player]!.identifier.signedIn
-			? game.players[player]!.identifier.user_id
+		const user_id = match.playerData[player]?.identifier.signedIn
+			? match.playerData[player].identifier.user_id
 			: undefined;
 		if (user_id === undefined)
 			throw new Error(
-				`Attempted to process rating for player ${playerStr} in rated game ${game.id} without a user_id.`,
+				`Attempted to process rating for player ${playerStr} in rated game ${match.id} without a user_id.`,
 			);
 
 		// If a player isn't on the leaderboard, add them first.
@@ -155,8 +156,8 @@ function updateLeaderboardsInTransaction(
 	for (const playerStr in ratingdata) {
 		const player: Player = Number(playerStr) as Player;
 		// TS is annoying sometimes, we already know all the players have user_ids
-		const user_id = game.players[player]!.identifier.signedIn
-			? game.players[player]!.identifier.user_id
+		const user_id = match.playerData[player]!.identifier.signedIn
+			? match.playerData[player]!.identifier.user_id
 			: undefined;
 		const data = ratingdata[player]!;
 		// We use the _core version to ensure errors propagate and roll back the transaction.
@@ -176,23 +177,22 @@ function updateLeaderboardsInTransaction(
  * @returns The new game_id.
  */
 function addGameRecordsInTransaction(
-	game: Game,
+	{ match, basegame }: ServerGame,
 	victor: Player | undefined,
 	termination: string,
 	ratingData: RatingData | undefined,
 ): void {
-	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(game.clock);
+	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(
+		basegame.metadata.TimeControl,
+	);
 
 	// --- Prepare ICN ---
 	// WE CAN'T CALL gameutility.getRatingDataForGamePlayers() here if rating changes were calculated,
 	// as the player's ratings in the leaderboard no longer represent their ratings at the start of the game.
-	const playerRatings = ratingData
-		? transformRatingDataToRatingsAtGame(ratingData)
-		: gameutility.getRatingDataForGamePlayers(game);
-	const metadata = gameutility.getMetadataOfGame(game, playerRatings, ratingData);
-	const icn = getICNOfGame(game, metadata); // This will throw on failure.
+	const metadata = basegame.metadata;
+	const icn = getICNOfGame(basegame, metadata); // This will throw on failure.
 
-	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);
+	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
 	// 1. Insert the main record into the 'games' table.
 	const gameQuery = `
@@ -203,18 +203,18 @@ function addGameRecordsInTransaction(
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 	const gameResult = db.run(gameQuery, [
-		game.id,
+		match.id,
 		dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		game.variant,
-		game.rated ? 1 : 0,
-		VariantLeaderboards[game.variant] ?? null,
-		game.publicity === 'private' ? 1 : 0,
+		metadata.Variant!,
+		match.rated ? 1 : 0,
+		VariantLeaderboards[basegame.metadata.Variant!] ?? null,
+		match.publicity === 'private' ? 1 : 0,
 		metadata.Result!,
 		termination,
-		game.moves.length,
-		game.timeEnded ? game.timeEnded - game.timeCreated : null,
+		basegame.moves.length,
+		match.timeEnded ? match.timeEnded - match.timeCreated : null,
 		icn, // Use the pre-generated ICN
 	]);
 	const game_id = gameResult.lastInsertRowid as number;
@@ -226,11 +226,13 @@ function addGameRecordsInTransaction(
 			clock_at_end_millis, elo_at_game, elo_change_from_game
 		) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-	const ending_clocks = gameutility.getGameClockValues(game).clocks;
-	for (const playerStr in game.players) {
+	const ending_clocks = !basegame.untimed
+		? gameutility.getGameClockValues(basegame).clocks
+		: undefined;
+	for (const playerStr in match.playerData) {
 		const player = Number(playerStr) as Player;
-		const user_id = game.players[player]!.identifier.signedIn
-			? game.players[player]!.identifier.user_id
+		const user_id = match.playerData[player]!.identifier.signedIn
+			? match.playerData[player]!.identifier.user_id
 			: undefined;
 		if (!user_id) continue;
 
@@ -240,7 +242,7 @@ function addGameRecordsInTransaction(
 			game_id,
 			player,
 			victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0,
-			ending_clocks[player] ?? null,
+			!basegame.untimed ? ending_clocks![player]! : null,
 			ratingData?.[player]?.elo_at_game ?? null,
 			ratingData?.[player]?.elo_change_from_game ?? null,
 		]);
@@ -269,13 +271,16 @@ function transformRatingDataToRatingsAtGame(ratingData: RatingData): PlayerGroup
  * [INTERNAL] Loops through all players in a game and updates their stats by calling
  * the single-player update function.
  */
-function updateAllPlayerStatsInTransaction(game: Game, victor: Player | undefined): void {
-	const playerMoveCounts = getPlayerMoveCountsInGame(game);
+function updateAllPlayerStatsInTransaction(
+	{ basegame, match }: ServerGame,
+	victor: Player | undefined,
+): void {
+	const playerMoveCounts = getPlayerMoveCountsInGame({ basegame, match });
 
-	for (const playerStr in game.players) {
+	for (const playerStr in match.playerData) {
 		const player = Number(playerStr) as Player;
-		const user_id = game.players[player]!.identifier.signedIn
-			? game.players[player]!.identifier.user_id
+		const user_id = match.playerData[player]!.identifier.signedIn
+			? match.playerData[player]!.identifier.user_id
 			: undefined;
 		if (!user_id) continue; // Guests dono't have any stats to update.
 
@@ -283,8 +288,8 @@ function updateAllPlayerStatsInTransaction(game: Game, victor: Player | undefine
 		updateSinglePlayerStatsInTransaction(user_id, {
 			moves_played_increment: playerMoveCounts[player]!,
 			outcome: victor === undefined ? 'aborted' : victor === player ? "wins" : victor === players.NEUTRAL ? "draws" : "losses",
-			is_rated: game.rated,
-			publicity: game.publicity,
+			is_rated: match.rated,
+			publicity: match.publicity,
 		});
 	}
 }
@@ -349,35 +354,32 @@ function updateSinglePlayerStatsInTransaction(
 
 /** Converts a server-side {@link Game} into an ICN */
 function getICNOfGame(game: Game, metadata: MetaData): string {
-	// We need to prime the gamefile for the format converter to get the ICN of the game.
-	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const longformIn: LongFormatIn = {
-		metadata,
-		state_global: {
-			moveRuleState: gameRules.moveRule !== undefined ? 0 : undefined,
-		},
-		fullMove: 1,
-		moves: game.moves,
-		gameRules,
-	};
-
 	// Get ICN of game
 	let ICN: string;
 	try {
-		ICN = icnconverter.LongToShort_Format(longformIn, {
-			skipPosition: true,
-			compact: true,
-			spaces: false,
-			comments: true,
-			make_new_lines: false,
-			move_numbers: false,
-		});
+		ICN = icnconverter.LongToShort_Format(
+			{
+				...game,
+				fullMove: 1,
+				state_global: {
+					moveRuleState: game.gameRules.moveRule !== undefined ? 0 : undefined,
+				},
+			},
+			{
+				skipPosition: true,
+				compact: true,
+				spaces: false,
+				comments: true,
+				make_new_lines: false,
+				move_numbers: false,
+			},
+		);
 	} catch (error: unknown) {
 		const errMessage = error instanceof Error ? error.message : String(error);
 		const errStack = error instanceof Error ? error.stack : 'No stack trace available';
 		// Re-throw error with additional context, the orchestrator will catch it and roll back the transaction.
 		throw Error(
-			`Error converting game to ICN: ${errMessage}\nThe primed gamefile:\n${JSON.stringify(longformIn)}\n${errStack}`,
+			`Error converting game to ICN: ${errMessage}\nThe primed gamefile:\n${JSON.stringify(game)}\n${errStack}`,
 		);
 	}
 
@@ -389,19 +391,19 @@ function getICNOfGame(game: Game, metadata: MetaData): string {
  *
  * TODO: Move to moveutil script, once its dependancies are healthy!!!
  */
-function getPlayerMoveCountsInGame(game: Game): PlayerGroup<number> {
+function getPlayerMoveCountsInGame({ match, basegame }: ServerGame): PlayerGroup<number> {
 	// Optimized to not require iterating through each move in the list.
 	const playerMoveCounts: PlayerGroup<number> = {};
 	const fullmoves_completed_total = Math.floor(
-		game.moves.length / game.gameRules.turnOrder.length,
+		basegame.moves.length / basegame.gameRules.turnOrder.length,
 	);
-	const last_partial_move_length = game.moves.length % game.gameRules.turnOrder.length;
-	for (const playerStr in game.players) {
+	const last_partial_move_length = basegame.moves.length % basegame.gameRules.turnOrder.length;
+	for (const playerStr in match.playerData) {
 		const player: Player = Number(playerStr) as Player;
 		playerMoveCounts[player] =
 			fullmoves_completed_total *
-			game.gameRules.turnOrder.filter((p: Player) => p === player).length;
-		playerMoveCounts[player] += game.gameRules.turnOrder
+			basegame.gameRules.turnOrder.filter((p: Player) => p === player).length;
+		playerMoveCounts[player] += basegame.gameRules.turnOrder
 			.slice(0, last_partial_move_length)
 			.filter((p: Player) => p === player).length;
 	}

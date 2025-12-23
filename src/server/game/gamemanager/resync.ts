@@ -19,7 +19,7 @@ import { getGameData } from '../../database/gamesManager.js';
 import jsutil from '../../../shared/util/jsutil.js';
 import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import type { Game } from './gameutility.js';
+import type { ServerGame } from './gameutility.js';
 
 /**
  * Resyncs a client's websocket to a game. The client already
@@ -49,7 +49,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 	}
 
 	// 1. Check if the game is still live => Resync them
-	const game: Game | undefined = getGameByID(gameID);
+	const game: ServerGame | undefined = getGameByID(gameID);
 
 	// 2. Not live => Send game results from database
 	if (!game) {
@@ -60,7 +60,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 	// Verify
 	const colorPlayingAs =
 		ws.metadata.subscriptions.game?.color ??
-		gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+		gameutility.doesSocketBelongToGame_ReturnColor(game.match, ws);
 	if (!colorPlayingAs) {
 		sendSocketMessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
 		return;
@@ -68,7 +68,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 
 	gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID);
 
-	cancelDisconnectTimer(game, colorPlayingAs);
+	cancelDisconnectTimer(game.match, colorPlayingAs);
 }
 
 /** Sends a client a game from the database. */

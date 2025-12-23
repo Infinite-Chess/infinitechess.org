@@ -3,9 +3,10 @@
  */
 
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import gameutility, { Game } from './gameutility.js';
+import gameutility from './gameutility.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { ServerGame } from './gameutility.js';
 
 /**
  * Called when a player submits a websocket message informing us they
@@ -17,28 +18,28 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * @param ws - The socket
  * @param game - The game they belong in, if they belong in one.
  */
-function onPaste(ws: CustomWebSocket, game: Game): void {
+function onPaste(ws: CustomWebSocket, servergame: ServerGame): void {
 	// { reason, opponentsMoveNumber }
 	console.log('Client pasted a game.');
 
 	const ourColor =
 		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws);
 
-	if (game.publicity !== 'private') {
-		const errString = `Player reported pasting in a non-private game. Reporter color: ${ourColor}. Number of moves played: ${game.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+	if (servergame.match.publicity !== 'private') {
+		const errString = `Player reported pasting in a non-private game. Reporter color: ${ourColor}. Number of moves played: ${servergame.basegame.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEventsAndPrint(errString, 'errLog.txt');
 		return;
 	}
 
-	if (game.rated) {
-		const errString = `Player reported pasting in a rated game. Reporter color: ${ourColor}. Number of moves played: ${game.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+	if (servergame.match.rated) {
+		const errString = `Player reported pasting in a rated game. Reporter color: ${ourColor}. Number of moves played: ${servergame.basegame.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEventsAndPrint(errString, 'errLog.txt');
 		return;
 	}
 
 	// Flag the game to not be logged
-	game.positionPasted = true;
+	servergame.match.positionPasted = true;
 }
 
 export { onPaste };

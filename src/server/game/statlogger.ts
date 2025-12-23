@@ -9,7 +9,7 @@ import timeutil from '../../shared/util/timeutil.js';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import type { Game } from './gamemanager/gameutility.js';
+import type { Game } from '../../shared/chess/logic/gamefile.js';
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists(): void {
@@ -78,7 +78,7 @@ async function logGame(game: Game): Promise<void> {
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
 	// What variant was played?
-	const variant = game.variant;
+	const variant = game.metadata.Variant!;
 
 	// Now record the number of moves played
 

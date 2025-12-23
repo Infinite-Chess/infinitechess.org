@@ -18,12 +18,12 @@ function onJoinGame(ws: CustomWebSocket): void {
 	const game = getGameBySocket(ws);
 	if (!game) return; // They don't belong in a game, don't join them in one.
 
-	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
+	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game.match, ws)!;
 	gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 
 	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
-	if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
-	cancelDisconnectTimer(game, colorPlayingAs);
+	if (game.basegame.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game.match, true);
+	cancelDisconnectTimer(game.match, colorPlayingAs);
 }
 
 export { onJoinGame };

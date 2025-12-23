@@ -12,11 +12,16 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
  * @param {...any} args - Arguments to pass to the callback function.
  * @returns {boolean} true if the callback executed without error.
  */
-function executeSafely(callback, errorMessage, ...args) {
+function executeSafely<F extends (...args: any[]) => any>(
+	callback: F,
+	errorMessage: string,
+	...args: Parameters<F>
+): boolean {
 	try {
 		callback(...args);
 	} catch (e) {
-		const errText = `${errorMessage}\n${e.stack}`;
+		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
+		const errText = `${errorMessage}\n${stack}`;
 		logEventsAndPrint(errText, 'errLog.txt');
 		return false; // Yes error
 	}
@@ -32,11 +37,16 @@ function executeSafely(callback, errorMessage, ...args) {
  * @param {...any} args - Arguments to pass to the callback function.
  * @returns {Promise<boolean>} true if the callback executed without error.
  */
-async function executeSafely_async(callback, errorMessage, ...args) {
+async function executeSafely_async<F extends (...args: any[]) => any>(
+	callback: F,
+	errorMessage: string,
+	...args: Parameters<F>
+): Promise<boolean> {
 	try {
 		await callback(...args);
 	} catch (e) {
-		const errText = `${errorMessage}\n${e.stack}`;
+		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
+		const errText = `${errorMessage}\n${stack}`;
 		await logEventsAndPrint(errText, 'errLog.txt');
 		return false; // Yes error
 	}

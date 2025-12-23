@@ -166,7 +166,7 @@ function addListenersToSocket(req: Request, ws: CustomWebSocket): void {
 			'Error caught within websocket on-message event:',
 			req,
 			ws,
-			message,
+			message as Buffer<ArrayBufferLike>,
 		);
 	});
 	ws.on('close', (code, reason) => {

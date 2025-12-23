@@ -23,7 +23,8 @@ function start(httpsServer: HttpsServer): void {
 			onConnectionRequest,
 			'Error caught within websocket on-connection request:',
 			socket,
-			req,
+			// TODO: idk what type this is
+			req as any,
 		);
 	}); // Event handler for new WebSocket connections
 }

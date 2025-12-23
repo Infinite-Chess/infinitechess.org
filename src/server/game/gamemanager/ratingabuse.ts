@@ -28,7 +28,7 @@ import winconutil from '../../../shared/chess/util/winconutil.js';
 import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
 
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
-import type { Game } from './gameutility.js';
+import type { ServerGame, MatchInfo } from './gameutility.js';
 
 /**
  * Potential red flags (already implemented checks are marked with an X at the start of the line):
@@ -130,25 +130,26 @@ type SuspicionLevelRecord = {
 /**
  * Monitor suspicion levels for all players who played a particular game in a particular leaderboard
  */
-async function measureRatingAbuseAfterGame(game: Game): Promise<void> {
+async function measureRatingAbuseAfterGame({ match, basegame }: ServerGame): Promise<void> {
 	// Do not monitor suspicion levels, if game was unrated
-	if (!game.rated) return;
+	if (!match.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
 	// the game will NOT have added an entry in the leaderboards table for the players!
 	if (
-		winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion!).victor ===
+		winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion!).victor ===
 		undefined
 	)
 		return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = VariantLeaderboards[game.variant];
+	const leaderboard_id = VariantLeaderboards[basegame.metadata.Variant!];
 	if (leaderboard_id === undefined) return;
 
-	for (const [playerStr, player] of Object.entries(game.players)) {
+	for (const [playerStr, player] of Object.entries(match.playerData)) {
 		if (!player.identifier.signedIn) {
+			// TODO: remember to use proper stringification
 			await logEventsAndPrint(
-				`Unexpected: Player "${playerStr}" is not signed in. Game: ${JSON.stringify(game)}`,
+				`Unexpected: Player "${playerStr}" is not signed in. Game: ${JSON.stringify('')}`,
 				'errLog.txt',
 			);
 			continue;
@@ -157,7 +158,7 @@ async function measureRatingAbuseAfterGame(game: Game): Promise<void> {
 		const username = player.identifier.username;
 		if (user_id === undefined || username === undefined) {
 			await logEventsAndPrint(
-				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`,
+				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${''}`,
 				'errLog.txt',
 			);
 			continue;

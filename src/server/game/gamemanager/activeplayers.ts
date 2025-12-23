@@ -3,7 +3,7 @@
  */
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { Game } from './gameutility.js';
+import type { MatchInfo } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -84,14 +84,14 @@ function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
  * @param game
  * @param color
  */
-function hasColorInGameSeenConclusion(game: Game, color: Player): boolean {
-	const player = game.players[color]; // { member, user_id }  OR  { browser }   (only contains one)
+function hasColorInGameSeenConclusion(match: MatchInfo, color: Player): boolean {
+	const player = match.playerData[color]; // { member, user_id }  OR  { browser }   (only contains one)
 	if (!player)
 		throw new Error(
 			`Invalid color "${color}" when checking if color in game has seen game conclusion!`,
 		);
 
-	return getIDOfGamePlayerIsIn(player.identifier) !== game.id;
+	return getIDOfGamePlayerIsIn(player.identifier) !== match.id;
 }
 
 /**
