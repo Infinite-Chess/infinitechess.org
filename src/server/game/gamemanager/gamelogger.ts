@@ -6,7 +6,6 @@
  * It also updates the players' stats in the "players_stats" table
  */
 
-import jsutil from '../../../shared/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../shared/chess/util/typeutil.js';
 import {
 	addUserToLeaderboard_core,
@@ -22,7 +21,7 @@ import {
 	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
 } from './ratingcalculation.js';
-import icnconverter, { LongFormatIn } from '../../../shared/chess/logic/icn/icnconverter.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import gameutility from './gameutility.js';
 import db from '../../database/database.js';
@@ -187,10 +186,7 @@ function addGameRecordsInTransaction(
 	);
 
 	// --- Prepare ICN ---
-	// WE CAN'T CALL gameutility.getRatingDataForGamePlayers() here if rating changes were calculated,
-	// as the player's ratings in the leaderboard no longer represent their ratings at the start of the game.
-	const metadata = basegame.metadata;
-	const icn = getICNOfGame(basegame, metadata); // This will throw on failure.
+	const icn = getICNOfGame(basegame); // This will throw on failure.
 
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
@@ -207,11 +203,11 @@ function addGameRecordsInTransaction(
 		dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		metadata.Variant!,
+		basegame.metadata.Variant!,
 		match.rated ? 1 : 0,
 		VariantLeaderboards[basegame.metadata.Variant!] ?? null,
 		match.publicity === 'private' ? 1 : 0,
-		metadata.Result!,
+		basegame.metadata.Result!,
 		termination,
 		basegame.moves.length,
 		match.timeEnded ? match.timeEnded - match.timeCreated : null,
@@ -247,24 +243,6 @@ function addGameRecordsInTransaction(
 			ratingData?.[player]?.elo_change_from_game ?? null,
 		]);
 	}
-}
-
-/**
- * Transforms a RatingData object into the PlayerGroup<Rating> shape
- * which only contains the `value` and `confident` properties for each player
- * as they were at the start of the game.
- * @param {RatingData} ratingData - The detailed rating data from the leaderboard calculations.
- * @returns {PlayerGroup<Rating>} An object mapping player numbers to their ratings at the start of the game.
- */
-function transformRatingDataToRatingsAtGame(ratingData: RatingData): PlayerGroup<Rating> {
-	const ratings: PlayerGroup<Rating> = {};
-	for (const [playerStr, data] of Object.entries(ratingData)) {
-		ratings[Number(playerStr) as Player] = {
-			value: data.elo_at_game,
-			confident: data.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
-		};
-	}
-	return ratings;
 }
 
 /**
@@ -353,7 +331,7 @@ function updateSinglePlayerStatsInTransaction(
 }
 
 /** Converts a server-side {@link Game} into an ICN */
-function getICNOfGame(game: Game, metadata: MetaData): string {
+function getICNOfGame(game: Game): string {
 	// Get ICN of game
 	let ICN: string;
 	try {

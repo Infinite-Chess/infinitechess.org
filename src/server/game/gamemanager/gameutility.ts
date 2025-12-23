@@ -404,7 +404,6 @@ function constructMetadataOfGame(
 	variant: string,
 	clock: MetaData['TimeControl'],
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
-	ratingdata?: RatingData,
 ): MetaData {
 	const RatedOrCasual = rated ? 'Rated' : 'Casual';
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
@@ -435,20 +434,6 @@ function constructMetadataOfGame(
 		gameMetadata.BlackID = base62;
 		if (playerdata[players.BLACK])
 			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[players.BLACK]!.rating!);
-	}
-
-	if (ratingdata) {
-		// console.log("Rating data: ", ratingdata);
-		// Include WhiteRatingDiff & BlackRatingDiff
-		// Players may not be defined in the rating data if the game was aborted (no ratings changed)
-		if (ratingdata[players.WHITE])
-			gameMetadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
-				ratingdata[players.WHITE]!.elo_change_from_game!,
-			);
-		if (ratingdata[players.BLACK])
-			gameMetadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
-				ratingdata[players.BLACK]!.elo_change_from_game!,
-			);
 	}
 
 	return gameMetadata;
