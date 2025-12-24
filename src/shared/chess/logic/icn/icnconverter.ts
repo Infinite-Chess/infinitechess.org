@@ -566,9 +566,12 @@ function LongToShort_Format(
 	 * Move rule
 	 * Full move counter
 	 * Promotion lines
+	 * World border
 	 * Win conditions
-	 * Extra gamerules
+	 * Preset Square Highlights
+	 * Preset Ray Highlights
 	 * Position
+	 * Moves
 	 *
 	 * As an example:
 	 *
