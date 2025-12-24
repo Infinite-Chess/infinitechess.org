@@ -26,6 +26,7 @@ import type { GameRules } from '../../variants/gamerules.js';
 import type { MetaData } from '../../util/metadata.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
 import type { BaseRay } from '../../../util/math/geometry.js';
+import { BoundingBox } from '../../../util/math/bounds.js';
 
 // Type Definitions -------------------------------------------------------------------
 
@@ -393,6 +394,15 @@ const promotionsRegex = new RegExp(
 	'y',
 );
 
+/**
+ * Matches the world border segment in ICN: 'left,right,bottom,top'
+ * Example: '-7,16,-7,16'
+ */
+const worldBorderRegex = new RegExp(
+	String.raw`(?<worldBorder>${integerSource},${integerSource},${integerSource},${integerSource})${whiteSpaceOrEnd}`,
+	'y',
+);
+
 const singleWinConSource = '[a-z]{3,100}'; // 'royalcapture'   Minimum of 3 characters so it's impossible to confuse with turn order.
 const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
 /** Captures the win conditions section in the ICN. */
@@ -693,6 +703,12 @@ function LongToShort_Format(
 			);
 	}
 
+	// World Border
+	if (longformat.gameRules.worldBorder) {
+		const { left, right, bottom, top } = longformat.gameRules.worldBorder;
+		positionSegments.push(`${left},${right},${bottom},${top}`);
+	}
+
 	// Win conditions
 	const playerWinConSegments: string[] = []; // ['checkmate','checkmate|allpiecescaptured']
 	// Sort by ascending player number
@@ -798,6 +814,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let promotionRanks: PlayerGroup<bigint[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
+	let worldBorder: BoundingBox | undefined;
 	let presetSquares: Coords[] | undefined;
 	let presetRays: BaseRay[] | undefined;
 	let position: Map<CoordsKey, number> | undefined;
@@ -957,6 +974,20 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		}
 
 		lastIndex = promotionsRegex.lastIndex; // Update the ICN index being observed
+	}
+
+	// World Border
+	// Test if the world border lies at our current index being observed
+	worldBorderRegex.lastIndex = lastIndex;
+
+	const borderResult = worldBorderRegex.exec(icn);
+	if (borderResult) {
+		const [left, right, bottom, top] = borderResult
+			.groups!['worldBorder']!.split(',')
+			.map(BigInt);
+		worldBorder = { left, right, bottom, top };
+
+		lastIndex = worldBorderRegex.lastIndex; // Update the ICN index being observed
 	}
 
 	// Win conditions
@@ -1134,6 +1165,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	if (promotionRanks) gameRules.promotionRanks = promotionRanks;
 	if (promotionsAllowed) gameRules.promotionsAllowed = promotionsAllowed;
 	if (moveRule !== undefined) gameRules.moveRule = moveRule;
+	if (worldBorder) gameRules.worldBorder = worldBorder;
 
 	const state_global: Partial<GlobalGameState> = {};
 	if (enpassant) state_global.enpassant = enpassant;
