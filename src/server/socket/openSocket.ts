@@ -134,7 +134,7 @@ function closeIfInvalidAndAddMetadata(
 
 	const cookies = socketUtility.getCookiesFromWebsocket(req);
 	if (cookies['browser-id'] === undefined) {
-		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
+		console.log(`Authentication needed for WebSocket connection request!!`);
 		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
 		return;
 	}
