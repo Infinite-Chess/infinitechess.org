@@ -8,17 +8,16 @@ import { request } from 'node:https';
 import AbortController from 'abort-controller';
 import process from 'node:process';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { join } from 'node:path';
-import { readFileIfExists } from '../utility/fileUtils.js';
 import { writeFile } from 'node:fs/promises';
 import path from 'path';
+import fs from 'fs';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Variables ---------------------------------------------------------------------------
 
-const PATH_TO_CONTRIBUTORS_FILE = '../../../database/contributors.json';
+const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
  * This should be periodically refreshed. @type {object[]} 
@@ -30,15 +29,15 @@ const PATH_TO_CONTRIBUTORS_FILE = '../../../database/contributors.json';
   }
  */
 let contributors = (() => {
-	const fileIfExists = readFileIfExists(join(__dirname, PATH_TO_CONTRIBUTORS_FILE));
-	if (fileIfExists) return JSON.parse(fileIfExists);
-	return [];
+	if (!fs.existsSync(PATH_TO_CONTRIBUTORS_FILE)) return [];
+	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE);
+	return JSON.parse(file);
 })();
 // console.log(contributors);
 
 /** The interval, in milliseconds, to use GitHub's API to refresh the contributor list. */
 const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
-// const intervalToRefreshContributorsMillis = 1000 * 20; // 20s for dev testing
+// const intervalToRefreshContributorsMillis = 1000 * 5; // 5s for dev testing
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
 const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
@@ -112,7 +111,7 @@ function refreshGitHubContributorsList() {
 				if (currentContributors.length > 0) {
 					contributors = currentContributors;
 					await writeFile(
-						join(__dirname, PATH_TO_CONTRIBUTORS_FILE),
+						PATH_TO_CONTRIBUTORS_FILE,
 						JSON.stringify(contributors, null, 2),
 					);
 					console.log('Contributors updated!');

@@ -23,13 +23,9 @@ const HYDROCHESS_WASM_DIR = path.join(
 	'hydrochess-wasm',
 );
 
-// URLs for the pre-built HydroChess WASM binaries
-const WASM_RELEASE_URL =
-	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm_bg.wasm';
-const JS_RELEASE_URL =
-	'https://github.com/Infinite-Chess/hydrochess/releases/download/nightly/hydrochess_wasm.js';
-const NIGHTLY_TAG_API_URL =
-	'https://api.github.com/repos/Infinite-Chess/hydrochess/git/refs/tags/nightly';
+// API URL to check the latest released version
+const LATEST_RELEASE_API_URL =
+	'https://api.github.com/repos/Infinite-Chess/hydrochess/releases/latest';
 
 function hasCommand(cmd) {
 	try {
@@ -42,7 +38,7 @@ function hasCommand(cmd) {
 
 /**
  * Ensures the HydroChess WASM engine is available and up-to-date.
- * - DEFAULT: Automatically downloads the pre-built WASM if the remote version is newer.
+ * - DEFAULT: Automatically downloads the pre-built WASM if there is a new release.
  * - DEVELOPER OPT-IN: If BUILD_WASM_LOCAL=true, it attempts to build from local source.
  */
 export async function setupEngineWasm() {
@@ -89,19 +85,19 @@ export async function setupEngineWasm() {
 	}
 
 	// DEFAULT: Download pre-built binary if new version available
-	let localHash = '';
+	let localVersion = '';
 	if (fs.existsSync(versionFile)) {
-		localHash = fs.readFileSync(versionFile, 'utf-8').trim();
+		localVersion = fs.readFileSync(versionFile, 'utf-8').trim();
 	}
 
-	let remoteHash = '';
+	let releaseData = null;
+
 	try {
-		const response = await fetch(NIGHTLY_TAG_API_URL, {
+		const response = await fetch(LATEST_RELEASE_API_URL, {
 			headers: { 'User-Agent': 'Infinite-Chess-Build-Script' },
 		});
 		if (!response.ok) throw new Error(`GitHub API failed: ${response.statusText}`);
-		const data = await response.json();
-		remoteHash = data.object.sha;
+		releaseData = await response.json();
 	} catch (error) {
 		console.warn(`${label} Could not check for new version:`, error.message);
 		if (fs.existsSync(wasmFile)) {
@@ -113,12 +109,24 @@ export async function setupEngineWasm() {
 		return;
 	}
 
-	if (localHash && localHash === remoteHash && fs.existsSync(wasmFile)) {
-		console.log(`${label} Engine is up-to-date.`);
-		return; // Already have the latest version.
+	const remoteVersion = releaseData.tag_name;
+
+	if (localVersion && localVersion === remoteVersion && fs.existsSync(wasmFile)) {
+		console.log(`${label} Engine is up-to-date (${localVersion}).`);
+		return;
 	}
 
-	console.log(`${label} New engine version detected. Downloading release...`);
+	console.log(`${label} New version detected (${remoteVersion}). Downloading release...`);
+
+	// Extract dynamic download URLs from the API response
+	const wasmAsset = releaseData.assets.find((a) => a.name === 'hydrochess_wasm_bg.wasm');
+	const jsAsset = releaseData.assets.find((a) => a.name === 'hydrochess_wasm.js');
+
+	if (!wasmAsset || !jsAsset) {
+		console.error(`${label} Release ${remoteVersion} is missing required asset files.`);
+		return;
+	}
+
 	try {
 		await fs.promises.mkdir(pkgDir, { recursive: true });
 
@@ -131,14 +139,14 @@ export async function setupEngineWasm() {
 		};
 
 		await Promise.all([
-			downloadFile(WASM_RELEASE_URL, wasmFile),
-			downloadFile(JS_RELEASE_URL, jsFile),
+			downloadFile(wasmAsset.browser_download_url, wasmFile),
+			downloadFile(jsAsset.browser_download_url, jsFile),
 		]);
 
-		// Stamp the downloaded version with the remote commit hash
-		await fs.promises.writeFile(versionFile, remoteHash);
+		// Stamp the downloaded version
+		await fs.promises.writeFile(versionFile, remoteVersion);
 
-		console.log(`${label} Hydrochess engine is ready.`);
+		console.log(`${label} Hydrochess engine is ready (${remoteVersion}).`);
 	} catch (error) {
 		console.error(`${label} Automatic download failed:`, error.message);
 		console.error(`${label} You can try building from source as a fallback:`);

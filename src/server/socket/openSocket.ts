@@ -4,6 +4,8 @@
  * This script handles socket upgrade connection requests, and creating new sockets.
  */
 
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 import socketUtility from './socketUtility.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import {
@@ -18,7 +20,7 @@ import { onclose } from './closeSocket.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
-import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
+import { GAME_VERSION } from '../config/config.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
@@ -113,8 +115,8 @@ function closeIfInvalidAndAddMetadata(
 	}
 
 	// Make sure the origin is our website
-	if (!DEV_BUILD && origin !== process.env['APP_BASE_URL']) {
-		// In DEV_BUILD, allow all origins.
+	// In DEV_BUILD, allow all origins.
+	if (process.env['NODE_ENV'] !== 'development' && origin !== process.env['APP_BASE_URL']) {
 		logEvents(
 			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
 			'hackLog.txt',

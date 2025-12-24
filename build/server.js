@@ -3,7 +3,6 @@
 import esbuild from 'esbuild';
 import { glob } from 'glob';
 
-// Local imports
 import { getESBuildLogStatusLogger } from './plugins.js';
 
 // ================================= CONSTANTS =================================

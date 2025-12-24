@@ -8,19 +8,23 @@
  * 					Further, all css files are minified by lightningcss.
  */
 
-// Local imports
-import { DEV_BUILD } from '../src/server/config/config.js';
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-// Build modules
+import { setupEnv } from './env.js';
 import { buildClient } from './client.js';
 import { buildServer } from './server.js';
 import { setupEngineWasm } from './engine-wasm.js';
 
+// Ensure .env file exists and has valid contents
+setupEnv();
+
 /** Whether additional minifying of bundled scripts and css files should be skipped. */
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 
-if (USE_DEVELOPMENT_BUILD && !DEV_BUILD) {
-	throw Error("Cannot run `npm run dev` when NODE_ENV environment variable is 'production'!");
+if (USE_DEVELOPMENT_BUILD && process.env.NODE_ENV === 'production') {
+	throw new Error(
+		"Cannot run build process with --dev flag when NODE_ENV environment variable is 'production'!",
+	);
 }
 
 // Ensure the HydroChess WASM engine is available

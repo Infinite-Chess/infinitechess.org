@@ -1,4 +1,6 @@
-import { DEV_BUILD } from '../config/config.js';
+// src/server/middleware/secureRedirect.js
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /**
  * Middleware that redirects all http requests to https
@@ -14,7 +16,8 @@ const secureRedirect = (req, res, next) => {
 
 	// Force redirect to https...
 
-	const httpsPort = DEV_BUILD ? ':' + (process.env.HTTPSPORT_LOCAL || '3443') : '';
+	const httpsPort =
+		process.env.NODE_ENV !== 'production' ? ':' + (process.env.HTTPSPORT_LOCAL || '3443') : '';
 	res.redirect(`https://${req.hostname}${httpsPort}${req.url}`);
 };
 

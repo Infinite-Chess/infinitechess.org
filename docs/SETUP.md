@@ -24,9 +24,7 @@ This guide will use VSCode, which is **highly** recommended, but you may use ano
 
 ## Step 3: Install Node.js
 
-[Go here](https://nodejs.org/en/download/package-manager) to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
-
-<img width="916" alt="22 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/9f0b5cab-f372-45f6-b648-cefef99e68a0">
+[Go here](https://nodejs.org/en/download) to download and install Node. Select version `v22.21.1 (LTS)`, `x64` for the architecture, then download the Installer (.msi on Windows or .pkg on Mac). Then run the installer.
 
 ## Step 4: Forking the repository
 

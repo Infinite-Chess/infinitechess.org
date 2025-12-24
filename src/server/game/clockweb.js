@@ -1,5 +1,6 @@
-// @ts-ignore
-import { DEV_BUILD } from '../config/config.js';
+// src/server/game/clockweb.js
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /** These are the allowed time controls in production. */
 const validTimeControls = [
@@ -30,7 +31,7 @@ const devTimeControls = ['15+2'];
 function isClockValueValid(time_control) {
 	return (
 		validTimeControls.includes(time_control) ||
-		(DEV_BUILD && devTimeControls.includes(time_control))
+		(process.env.NODE_ENV === 'development' && devTimeControls.includes(time_control))
 	);
 }
 

@@ -16,8 +16,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // Custom imports
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
 // @ts-ignore
-import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
-// @ts-ignore
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -39,7 +37,10 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
 		null,
 		2,
 	);
-	writeFile_ensureDirectory(allowinvitesPath, content);
+
+	fs.mkdirSync(path.dirname(allowinvitesPath), { recursive: true });
+	fs.writeFileSync(allowinvitesPath, content);
+
 	console.log('Generated allowinvites file');
 })();
 

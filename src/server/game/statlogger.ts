@@ -1,11 +1,10 @@
 import path from 'path';
 import fs from 'fs';
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
-
-// @ts-ignore
-import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,7 +26,10 @@ const statsPath = path.resolve('database/stats.json');
 		null,
 		2,
 	);
-	writeFile_ensureDirectory(statsPath, content);
+
+	fs.mkdirSync(path.dirname(statsPath), { recursive: true });
+	fs.writeFileSync(statsPath, content);
+
 	console.log('Generated stats file');
 })();
 

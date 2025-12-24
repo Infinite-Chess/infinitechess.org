@@ -1,34 +1,31 @@
-// src/server/config/env.js
+// build/env.js
+
+/**
+ * Ensures the .env file exists, generating it with default values if it doesn't.
+ * And ensures its contents are valid.
+ */
 
 import fs from 'fs';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 
-ensureEnvFile();
+const envPath = '.env';
 
-// Load the .env file contents into process.env
-// This needs to be as early as possible
-dotenv.config();
+/** Ensure .env file exists and is valid. */
+export function setupEnv() {
+	ensureExists();
+	ensureValid();
+}
 
-/**
- * The environment variable. @type {'development'|'production'|'test'}
- * 'test' only appears during Vitest unit testing.
- */
-const NODE_ENV = process.env.NODE_ENV;
-if (NODE_ENV !== 'development' && NODE_ENV !== 'production' && NODE_ENV !== 'test')
-	throw new Error(
-		`NODE_ENV environment variable must be either "development", "production", or "test", received "${NODE_ENV}".`,
-	);
+/** Ensure .env exists, generating it with default values if it doesn't. */
+function ensureExists() {
+	if (fs.existsSync(envPath)) return;
 
-/**
- * Ensures the .env file exists, creating it with default values if it doesn't.
- */
-function ensureEnvFile() {
-	const envPath = '.env';
-	if (fs.existsSync(envPath)) return; // Already exists
+	// Doesn't exist, generate it with default values
 
 	const ACCESS_TOKEN_SECRET = generateSecret(32); // 32 bytes = 64 characters in hex
 	const REFRESH_TOKEN_SECRET = generateSecret(32);
+
 	const content = `
 NODE_ENV=development
 ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
@@ -47,9 +44,14 @@ GITHUB_REPO=Infinite-Chess/infinitechess.org
 APP_BASE_URL=https://www.infinitechess.org
 # Whether to build the Rust WASM engine locally instead of downloading it. Requires Rust to be installed.
 BUILD_WASM_LOCAL=false
-    `;
+	`;
+
 	fs.writeFileSync(envPath, content.trim());
+
 	console.log('Generated .env file');
+
+	// Immediately UPDATE the contents of process.env
+	dotenv.config();
 }
 
 /**
@@ -61,4 +63,14 @@ function generateSecret(length) {
 	return crypto.randomBytes(length).toString('hex');
 }
 
-export { NODE_ENV };
+/** Ensures some existing environment variables are valid. */
+function ensureValid() {
+	const NODE_ENV = process.env.NODE_ENV;
+	const validValues = ['development', 'production', 'test']; // 'test' only appears during Vitest unit testing.
+
+	if (!validValues.includes(NODE_ENV)) {
+		throw new Error(
+			`NODE_ENV environment variable must be either 'development', 'production', or 'test', received '${NODE_ENV}'.`,
+		);
+	}
+}
