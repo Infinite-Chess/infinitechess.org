@@ -355,8 +355,8 @@ function convertGameToRustFormat(
 		}
 
 		game_rules.win_conditions = {
-			white: gameRules.winConditions[1] || [],
-			black: gameRules.winConditions[2] || [],
+			white: gameRules.winConditions[p.WHITE] || [],
+			black: gameRules.winConditions[p.BLACK] || [],
 		};
 	}
 
