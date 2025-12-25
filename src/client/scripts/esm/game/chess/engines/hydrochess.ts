@@ -62,6 +62,10 @@ interface RustGameRules {
 	};
 	promotions_allowed?: string[];
 	move_rule?: number;
+	win_conditions?: {
+		white: string[];
+		black: string[];
+	};
 }
 
 interface RustWorldBounds {
@@ -349,6 +353,11 @@ function convertGameToRustFormat(
 		if (typeof gameRules.moveRule !== 'undefined') {
 			game_rules.move_rule = Number(gameRules.moveRule);
 		}
+
+		game_rules.win_conditions = {
+			white: gameRules.winConditions[p.WHITE] || [],
+			black: gameRules.winConditions[p.BLACK] || [],
+		};
 	}
 
 	let turn: 'w' | 'b' = 'w';
