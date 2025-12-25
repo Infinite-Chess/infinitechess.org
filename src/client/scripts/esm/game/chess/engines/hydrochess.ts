@@ -354,12 +354,10 @@ function convertGameToRustFormat(
 			game_rules.move_rule = Number(gameRules.moveRule);
 		}
 
-		if (gameRules.winConditions) {
-			game_rules.win_conditions = {
-				white: gameRules.winConditions[1] || [],
-				black: gameRules.winConditions[2] || [],
-			};
-		}
+		game_rules.win_conditions = {
+			white: gameRules.winConditions[1] || [],
+			black: gameRules.winConditions[2] || [],
+		};
 	}
 
 	let turn: 'w' | 'b' = 'w';
