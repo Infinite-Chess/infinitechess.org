@@ -334,14 +334,14 @@ function convertGameToRustFormat(
 
 		if (gameRules.promotionRanks) {
 			game_rules.promotion_ranks = {
-				white: (gameRules.promotionRanks[1] || []).map((r: bigint) => String(r)),
-				black: (gameRules.promotionRanks[2] || []).map((r: bigint) => String(r)),
+				white: (gameRules.promotionRanks[p.WHITE] || []).map((r: bigint) => String(r)),
+				black: (gameRules.promotionRanks[p.BLACK] || []).map((r: bigint) => String(r)),
 			};
 		}
 
 		if (gameRules.promotionsAllowed) {
 			game_rules.promotions_allowed = [];
-			const whitePromos = gameRules.promotionsAllowed[1] || [];
+			const whitePromos = gameRules.promotionsAllowed[p.WHITE] || [];
 			for (const rawType of whitePromos) {
 				const code = getPieceTypeCodeFromRaw(rawType);
 				if (!game_rules.promotions_allowed.includes(code)) {
