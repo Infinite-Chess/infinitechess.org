@@ -45,7 +45,9 @@ self.onmessage = function (e: MessageEvent): void {
 	const message = e.data as {
 		stringGamefile: string;
 		engineConfig: { checkmateSelectedID: string; engineTimeLimitPerMoveMillis: number };
+		requestGeneratedMoves: boolean;
 	};
+	if (message.requestGeneratedMoves) return; // ignore generated moves requests in this engine, this doesn't support sending them
 	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
 	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
