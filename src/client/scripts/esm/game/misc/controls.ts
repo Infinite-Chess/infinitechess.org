@@ -32,6 +32,7 @@ import miniimage from '../rendering/miniimage.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 import Transition from '../rendering/transitions/Transition.js';
+import enginegame from './enginegame.js';
 import { listener_document } from '../chess/game.js';
 
 import type { Mesh } from '../rendering/piecemodels.js';
@@ -215,6 +216,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
 	if (listener_document.isKeyDown('Digit4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (listener_document.isKeyDown('Digit7')) enginegame.toggleDebug(); // Render engine generated legal moves
 	if (listener_document.isKeyDown('KeyM')) stats.toggleFPS();
 }
 

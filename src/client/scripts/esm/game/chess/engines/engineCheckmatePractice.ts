@@ -1907,7 +1907,7 @@ async function runEngine(): Promise<void> {
 				setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)),
 			);
 		}
-		postMessage(move_to_gamefile_move(globallyBestVariation[0]![1]!));
+		postMessage({ type: 'move', data: move_to_gamefile_move(globallyBestVariation[0]![1]!) });
 	} catch (e) {
 		console.error('An error occured in the engine computation of the checkmate practice');
 		console.error(e);
