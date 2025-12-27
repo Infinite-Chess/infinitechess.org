@@ -113,6 +113,7 @@ function getCurrentGamerulesAndState(): {
 		promotionRanks,
 		promotionsAllowed,
 		winConditions,
+		worldBorder: gamerulesGUIinfo.worldBorder,
 	};
 
 	const moveRuleState =
@@ -192,6 +193,14 @@ function setGamerulesGUIinfo(
 		]),
 	].filter((wincon) => winconutil.isWinConditionValid(wincon));
 
+	// Update pawn double push specialrights of position, if necessary
+	gamerulesGUIinfo.pawnDoublePush = pawnDoublePush;
+	// Update castling with rooks specialrights of position, if necessary
+	gamerulesGUIinfo.castling = castling;
+
+	// Read World Border from the gamefile
+	gamerulesGUIinfo.worldBorder = gameRules.worldBorder;
+
 	// Update gamefile properties for rendering purposes and correct legal move calculation
 	// prettier-ignore
 	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
@@ -201,15 +210,6 @@ function setGamerulesGUIinfo(
 		gamerulesGUIinfo.playerToMove,
 		gamerulesGUIinfo.worldBorder,
 	);
-
-	// Update pawn double push specialrights of position, if necessary
-	gamerulesGUIinfo.pawnDoublePush = pawnDoublePush;
-	// Update castling with rooks specialrights of position, if necessary
-	gamerulesGUIinfo.castling = castling;
-
-	// Read World Border from the gamefile
-	const gamefile = gameslot.getGamefile()!;
-	gamerulesGUIinfo.worldBorder = gamefile.basegame.gameRules.worldBorder;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
