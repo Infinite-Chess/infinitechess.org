@@ -8,7 +8,33 @@ home = "Accueil"
 play = "Jouer"
 news = "Actualités"
 login = "Connexion"
+profile = "Profile"
 createaccount = "Créer un compte"
+logout = "Déconnexion"
+leaderboard = "Classement"
+
+[header.settings]
+language = "Langue"
+appearance = "Apparance" # Board color/theme and visual effects
+appearance-theme = "Thème"
+appearance-starfield = "Nuit étoilée" # The Starfield space animation underneath void
+appearance-advanced-effects = "Éffets avancés" # Post processing and board tile effects at extreme distances
+legalmoves = "Mouvements Légaux" # Legal moves shape
+legalmoves-squares = "Carrés"
+legalmoves-dots = "Points" # Dots and 4 corner triangles
+selection = "Sélection"
+selection-drag = "Glisser les pièces"
+selection-premove = "Pré-moves"
+selection-animations = "Animations"
+selection-lingering_annotations = "Annotations persistantes" 
+perspective = "Perspéctive" # Perspective-mode
+perspective-mouse-sensitivity = "Sensibilité de la souris"
+perspective-fov = "Champ de vision"
+sound = "Son"
+sound-master-volume = "Volume Principal"
+sound-ambience = "Ambiance"
+ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Rénitialiser les options"
 
 [footer]
 contact = "Contactez nous"
@@ -16,15 +42,21 @@ terms_of_service = "Conditions d'utilisation"
 source_code = "Code Source"
 language = "Langue"
 
-[header.javascript]
-js-profile = "Profil"
-js-logout = "Déconnexion"
-js-login = "Connexion"
-js-createaccount = "Créer un compte"
+#[header.javascript]		Got removed in the update
+#js-profile = "Profil"
+#js-logout = "Déconnexion"
+#js-login = "Connexion"
+#js-createaccount = "Créer un compte"
 
 [member.javascript]
 js-confirm_delete = "Êtes vous sûr de vouloir supprimer votre compte ? Cette action est DÉFINITIVE ! Cliquez sur 'OK' pour rentrer votre mot de passe."
 js-enter_password = "Entrez votre mot de passe pour supprimer votre compte DÉFINITIVEMENT:"
+
+[leaderboard.javascript]
+supported_variants = "Ce classement est utilisé pour les variantes suivantes :"
+rank = "Rank"
+player = "Joueur"
+rating = "Classement"
 
 [index]
 title = "Infinite Chess | Accueil - Le Site Officiel" # The tab title
@@ -43,6 +75,11 @@ about_paragraphs = [
 ["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour du jeu. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu et j'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder ce site gratuit, la vie a un coût et pour aider à me supporter financiérement vous pouvez rejoindre mon ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Contributeurs Patreons"
+github_title = "Contributeurs Github"
+
+[index.javascript]
+contribution_count_singular = ["", " contribution"] # A number is inserted between these 2 strings.
+contribution_count_plural = ["", " contributions"]
 
 [credits]
 title = "Credits"
@@ -96,11 +133,20 @@ verify_confirm = "Merci ! Votre compte est désormais vérifié."
 rating = "Classement elo:"
 joined = "A rejoint le:"
 seen = ["Vu il y a:", ""]
+practice_progress = "Progrès du mode Entrainement :"
+ranked_elo = "Classement elo :"
+infinity_leaderboard_position = "Classement global :"
+infinity_leaderboard_rating_deviation = "Déviation du classement elo :"
 reveal_info = "Voir les informations du compte"
 account_info_heading = "Informations"
 email = "Email:"
 delete_account = "Supprimer le compte"
 password_reset_message = ["Pour changer votre nom d'utilisateur, votre mot de passe ou votre email vous pouvez, ", "nous contacter."]
+
+[member.badge-tooltips]
+checkmate_bronze = "Vétéran des échecs : Complète 50% de tous les entrainements."
+checkmate_silver = "Professionel des échecs : Complète 75% de tous les entrainements."
+checkmate_gold = "Maitre des échecs : Complète 100% de tous les entrainements.."
 
 [create-account]
 title = "Créer un compte"
@@ -117,9 +163,23 @@ js-username_wrongenc = "Le nom d'utilisateur ne peut contenir que des lettres ou
 js-email_invalid = "Cette adresse mail est invalide"
 js-email_inuse = "Cette adresse mail est déjà utilisée"
 js-pwd_incorrect_format = "Le mot de passe est dans un format incorrect"
+
+[reset-password.javascript]
+js-pwd_no_match = "Les mots de passes ne sont pas les mêmes."
+reset-password = "Rénitialiser le mot de passe"
+processing = "Chargement..."
+network-error = "Une érreur réseau est apparue, éssayez encore."
+
+[password-validation]
 js-pwd_too_short = "Le mot de passe doit contenir au moins 6 caractères"
 js-pwd_too_long = "Le mot de passe doit contenir moins de 72 caractères"
 js-pwd_not_pwd = "Le mot de passe ne doit pas être 'password'"
+
+[leaderboard]
+title = "Classement"
+inactive_players = ["Les joueurs inactifs avec une dérivation elo de plus de  ", " sont exclus du classement."] # A number is inserted between these two quotes
+your_global_ranking = "Ton classement global :"
+show_more = "Voir plus..."
 
 [play]
 title = "Infinite Chess - Jouer"
