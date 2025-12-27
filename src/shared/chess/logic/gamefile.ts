@@ -129,7 +129,7 @@ interface Additional {
 	 * If present, the resulting gamefile will have a world border at this distance on all sides from the origin (0,0).
 	 * It is NOT equidistant from all sides of the current position.
 	 */
-	worldBorder?: bigint;
+	worldBorderDist?: bigint;
 }
 
 /** Creates a new {@link Game} object from provided arguments */
@@ -309,7 +309,7 @@ function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame
 		basegame.metadata,
 		additional.variantOptions,
 		additional.editor,
-		additional.worldBorder,
+		additional.worldBorderDist,
 	);
 	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
 }

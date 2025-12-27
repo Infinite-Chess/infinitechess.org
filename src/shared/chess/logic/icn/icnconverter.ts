@@ -984,7 +984,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	if (borderResult) {
 		const [left, right, bottom, top] = borderResult
 			.groups!['worldBorder']!.split(',')
-			.map(BigInt);
+			.map(BigInt) as [bigint, bigint, bigint, bigint];
 		worldBorder = { left, right, bottom, top };
 
 		lastIndex = worldBorderRegex.lastIndex; // Update the ICN index being observed
