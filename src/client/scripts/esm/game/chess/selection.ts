@@ -231,6 +231,7 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 		(editMode &&
 			legalmoves.testSquareValidity(
 				gamefile.boardsim,
+				gamefile.basegame.gameRules.worldBorder,
 				hoverSquare,
 				colorOfSelectedPiece,
 				false,
