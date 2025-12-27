@@ -321,11 +321,11 @@ function readGameRules(): void {
 		const leftValid = integerRegex.test(element_borderLeft.value);
 		const rightValid =
 			integerRegex.test(element_borderRight.value) &&
-			(!leftValid || BigInt(element_borderRight.value) > BigInt(element_borderLeft.value));
+			(!leftValid || BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value));
 		const bottomValid = integerRegex.test(element_borderBottom.value);
 		const topValid =
 			integerRegex.test(element_borderTop.value) &&
-			(!bottomValid || BigInt(element_borderTop.value) > BigInt(element_borderBottom.value));
+			(!bottomValid || BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value));
 
 		if (leftValid && rightValid && bottomValid && topValid) {
 			borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
