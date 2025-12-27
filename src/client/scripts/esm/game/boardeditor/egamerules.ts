@@ -11,6 +11,7 @@ import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
 import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 import type { Edit } from './boardeditor';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
+import type { BoundingBox } from '../../../../../shared/util/math/bounds';
 
 import typeutil, { players, rawTypes } from '../../../../../shared/chess/util/typeutil';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
@@ -39,9 +40,10 @@ interface GameRulesGUIinfo {
 		black?: bigint[];
 	};
 	promotionsAllowed?: RawType[];
-	winConditions: string[];
 	pawnDoublePush?: boolean;
 	castling?: boolean;
+	winConditions: string[];
+	worldBorder?: BoundingBox;
 }
 
 // Constants -------------------------------------------------------------
@@ -197,12 +199,17 @@ function setGamerulesGUIinfo(
 		enpassantSquare,
 		gamerulesGUIinfo.promotionRanks,
 		gamerulesGUIinfo.playerToMove,
+		gamerulesGUIinfo.worldBorder,
 	);
 
 	// Update pawn double push specialrights of position, if necessary
 	gamerulesGUIinfo.pawnDoublePush = pawnDoublePush;
 	// Update castling with rooks specialrights of position, if necessary
 	gamerulesGUIinfo.castling = castling;
+
+	// Read World Border from the gamefile
+	const gamefile = gameslot.getGamefile()!;
+	gamerulesGUIinfo.worldBorder = gamefile.boardsim.worldBorder;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -216,7 +223,7 @@ function setGamerulesGUIinfoUponPositionClearing(): void {
 		castling: false,
 	};
 
-	updateGamefileProperties(undefined, undefined, 'white');
+	updateGamefileProperties(undefined, undefined, 'white', undefined);
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
@@ -315,6 +322,7 @@ function updateGamefileProperties(
 	enpassantCoords: Coords | undefined,
 	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
 	playerToMove: 'white' | 'black',
+	worldBorder: BoundingBox | undefined,
 ): void {
 	const gamefile = gameslot.getGamefile()!;
 
@@ -342,6 +350,9 @@ function updateGamefileProperties(
 	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [players.WHITE, players.BLACK] : playerToMove === 'black' ? [players.BLACK, players.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
 	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
+
+	// Update World Border
+	gamefile.boardsim.worldBorder = worldBorder;
 }
 
 // Exports -------------------------------------------------------------
