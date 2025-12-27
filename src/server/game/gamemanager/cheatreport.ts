@@ -8,10 +8,11 @@ import * as z from 'zod';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
-import gameutility, { Game } from './gameutility.js';
+import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
+import type { ServerGame } from './gameutility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
@@ -30,20 +31,20 @@ type ReportMessage = z.infer<typeof reportschem>;
  * @param game - The game they belong in.
  * @param messageContents - The contents of the socket report message
  */
-function onReport(ws: CustomWebSocket, game: Game, messageContents: ReportMessage): void {
+function onReport(ws: CustomWebSocket, game: ServerGame, messageContents: ReportMessage): void {
 	// { reason, opponentsMoveNumber }
 	console.log('Client reported hacking!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
 	const ourColor =
 		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
+		gameutility.doesSocketBelongToGame_ReturnColor(game.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
-	if (game.publicity === 'private') {
+	if (game.match.publicity === 'private') {
 		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
-			game,
+			game.match,
 			ourColor,
 			'general',
 			'printerror',
@@ -52,16 +53,16 @@ function onReport(ws: CustomWebSocket, game: Game, messageContents: ReportMessag
 		return;
 	}
 
-	const perpetratingMoveIndex = game.moves.length - 1;
+	const perpetratingMoveIndex = game.basegame.moves.length - 1;
 	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(
-		game,
+		game.basegame,
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
-			game,
+			game.match,
 			ourColor,
 			'general',
 			'printerror',
@@ -70,7 +71,7 @@ function onReport(ws: CustomWebSocket, game: Game, messageContents: ReportMessag
 		return;
 	}
 	// Remove the last move played.
-	const perpetratingMove = game.moves.pop();
+	const perpetratingMove = game.basegame.moves.pop();
 	if (!perpetratingMove) return;
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
@@ -79,9 +80,9 @@ function onReport(ws: CustomWebSocket, game: Game, messageContents: ReportMessag
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
 
-	for (const player in game.players) {
+	for (const player in game.match.playerData) {
 		gameutility.sendMessageToSocketOfColor(
-			game,
+			game.match,
 			Number(player) as Player,
 			'general',
 			'notify',
@@ -91,7 +92,7 @@ function onReport(ws: CustomWebSocket, game: Game, messageContents: ReportMessag
 	// Cheating report was valid, terminate the game..
 
 	setGameConclusion(game, 'aborted');
-	gameutility.sendGameUpdateToBothPlayers(game);
+	gameutility.broadcastGameUpdate(game);
 }
 
 export { onReport, reportschem };

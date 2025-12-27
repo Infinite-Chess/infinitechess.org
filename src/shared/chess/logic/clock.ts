@@ -149,6 +149,12 @@ function push(basegame: Game, clocks: ClockData): number | undefined {
 
 	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
 	if (clocks.timeAtTurnStart !== undefined) {
+		// Update current values
+		const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
+
+		clocks.currentTime[clocks.colorTicking] = Math.ceil(
+			clocks.timeRemainAtTurnStart - timePassedSinceTurnStart,
+		);
 		// 3+ moves
 		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
@@ -161,12 +167,27 @@ function push(basegame: Game, clocks: ClockData): number | undefined {
 	return clocks.currentTime[prevcolor];
 }
 
+function stop(basegame: Game): void {
+	if (basegame.untimed) return;
+	const clocks = basegame.clocks;
+
+	if (clocks.colorTicking === undefined) return;
+
+	const timeSpent = Date.now() - clocks.timeAtTurnStart!;
+	let newTime = clocks.timeRemainAtTurnStart! - timeSpent;
+	if (newTime < 0) newTime = 0;
+
+	clocks.currentTime[clocks.colorTicking]! = newTime;
+
+	endGame(basegame);
+}
+
 function endGame(basegame: Game): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
-	clocks.timeRemainAtTurnStart = undefined;
-	clocks.timeAtTurnStart = undefined;
-	clocks.colorTicking = undefined;
+	delete clocks.timeRemainAtTurnStart;
+	delete clocks.timeAtTurnStart;
+	delete clocks.colorTicking;
 }
 
 /**
@@ -224,9 +245,24 @@ function printClocks(basegame: Game): void {
 	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);
 }
 
+function createEdit(clocks: ClockData): ClockValues {
+	const tickingData: Omit<ClockValues, 'clocks'> = {};
+	if (clocks.colorTicking !== undefined) {
+		tickingData.colorTicking = clocks.colorTicking;
+		tickingData.timeColorTickingLosesAt = clocks.timeAtTurnStart + clocks.timeRemainAtTurnStart;
+	}
+
+	return {
+		clocks: clocks.currentTime,
+		...tickingData,
+	};
+}
+
 export default {
 	init,
+	createEdit,
 	edit,
+	stop,
 	endGame,
 	update,
 	push,
