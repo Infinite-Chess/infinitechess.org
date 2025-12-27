@@ -189,8 +189,8 @@ function onMovePlayed(): void {
 
 /**
  * Sends the current position to the engine web worker.
- * If the {@link requestGeneratedMoves} flag is false, then the engine will perform a best move calculation.
- * Else it will send us the list of generated legal moves for debugging purposes.
+ * If the {@link requestGeneratedMoves} flag is false, then the engine should perform a best move calculation.
+ * Else it should send us the list of generated legal moves for debugging purposes.
  */
 function sendPositionToEngine(requestGeneratedMoves: boolean): void {
 	if (!inEngineGame) return;
@@ -319,9 +319,7 @@ function onGameConclude(): void {
 	checkmatepractice.onEngineGameConclude();
 }
 
-/**
- * Toggles the rendering of engine generated legal moves for debugging purposes.
- */
+/** Toggles the rendering of engine generated legal moves for debugging purposes. */
 function toggleDebug(): void {
 	move_gen_debug = !move_gen_debug;
 	statustext.showStatus(`Toggled engine move gen highlights: ${move_gen_debug}`);
