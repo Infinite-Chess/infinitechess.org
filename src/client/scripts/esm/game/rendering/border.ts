@@ -23,14 +23,14 @@ function drawPlayableRegionMask(boardsim: Board): void {
 	// No border, and in perspective mode => This is the best mask we can get!
 	// This is crucial for making as if the board goes infinitely into the horizon.
 	// Otherwise without this the solid cover isn't visible.
-	if (!boardsim.playableRegion && perspective.getEnabled()) return boardtiles.renderSolidCover();
+	if (!boardsim.worldBorder && perspective.getEnabled()) return boardtiles.renderSolidCover();
 
 	const screenBox = camera.getRespectiveScreenBox();
 
 	let worldBox: DoubleBoundingBox;
-	if (boardsim.playableRegion) {
+	if (boardsim.worldBorder) {
 		const boundingBoxBD = meshes.expandTileBoundingBoxToEncompassWholeSquare(
-			boardsim.playableRegion,
+			boardsim.worldBorder,
 		);
 		worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD);
 

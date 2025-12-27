@@ -295,8 +295,8 @@ function testSquareValidity(
 ): 0 | 1 | 2 {
 	// Test whether the given square lies out of bounds of the position.
 	if (
-		boardsim.playableRegion !== undefined &&
-		!bounds.boxContainsSquare(boardsim.playableRegion, coords)
+		boardsim.worldBorder !== undefined &&
+		!bounds.boxContainsSquare(boardsim.worldBorder, coords)
 	)
 		return 2;
 
@@ -451,7 +451,7 @@ function enforceWorldBorderOnSlideLimit(
 	step: Vec2,
 	axis: 0 | 1,
 ): void {
-	if (boardsim.playableRegion === undefined) return; // No world border, skip
+	if (boardsim.worldBorder === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
 	const coordsBD = bdcoords.FromCoords(coords);
@@ -460,7 +460,7 @@ function enforceWorldBorderOnSlideLimit(
 
 	// These are in order of ascending dot product.
 	const intersections = geometry
-		.findLineBoxIntersections(coords, step, boardsim.playableRegion)
+		.findLineBoxIntersections(coords, step, boardsim.worldBorder)
 		.map((i) => i.coords);
 	if (intersections.length < 1)
 		throw Error('Slide direction made zero intersections with border!'); // Would happen if the piece somehow gets outside the border

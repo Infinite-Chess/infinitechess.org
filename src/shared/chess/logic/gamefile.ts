@@ -91,7 +91,7 @@ type Board = {
 	 * playing area, not on or outside the world border.
 	 * All pieces must be within this box.
 	 */
-	playableRegion?: BoundingBox;
+	worldBorder?: BoundingBox;
 
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor: boolean;
@@ -252,7 +252,7 @@ function initBoard(
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
-		playableRegion: worldBorder,
+		worldBorder,
 		editor,
 		startSnapshot,
 	};

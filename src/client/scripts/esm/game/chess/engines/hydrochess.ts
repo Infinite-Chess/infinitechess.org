@@ -362,13 +362,13 @@ function convertGameToRustFormat(
 	}
 
 	let world_bounds: RustWorldBounds | null = null;
-	const playable = gamefile.boardsim?.playableRegion;
-	if (playable && typeof playable.left === 'bigint') {
+	const worldBorder = gamefile.boardsim.worldBorder;
+	if (worldBorder && typeof worldBorder.left === 'bigint') {
 		world_bounds = {
-			left: String(playable.left),
-			right: String(playable.right),
-			bottom: String(playable.bottom),
-			top: String(playable.top),
+			left: String(worldBorder.left),
+			right: String(worldBorder.right),
+			bottom: String(worldBorder.bottom),
+			top: String(worldBorder.top),
 		};
 	}
 
