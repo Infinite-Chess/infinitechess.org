@@ -85,14 +85,6 @@ type Board = {
 	specialVicinity: Record<CoordsKey, RawType[]>;
 	vicinity: Record<CoordsKey, RawType[]>;
 
-	/**
-	 * IF a world border is present, this is a bounding box
-	 * containing all integer coordinates that are inside the
-	 * playing area, not on or outside the world border.
-	 * All pieces must be within this box.
-	 */
-	worldBorder?: BoundingBox;
-
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor: boolean;
 
@@ -169,9 +161,8 @@ function initBoard(
 	metadata: MetaData,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
+	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
-	/** OVERRIDES {@link worldBorderDist} */
-	worldBorder?: BoundingBox,
 ): Board {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
 		gameRules,
@@ -214,9 +205,9 @@ function initBoard(
 		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
 	}
 
-	if (worldBorder === undefined && worldBorderProperty !== undefined) {
+	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
 		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		worldBorder = {
+		gameRules.worldBorder = {
 			left: startingPositionBox.left - worldBorderProperty,
 			right: startingPositionBox.right + worldBorderProperty,
 			bottom: startingPositionBox.bottom - worldBorderProperty,
@@ -252,7 +243,6 @@ function initBoard(
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
-		worldBorder,
 		editor,
 		startSnapshot,
 	};
@@ -312,7 +302,6 @@ function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
-		additional.worldBorder,
 	);
 	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
 }

@@ -209,7 +209,7 @@ function setGamerulesGUIinfo(
 
 	// Read World Border from the gamefile
 	const gamefile = gameslot.getGamefile()!;
-	gamerulesGUIinfo.worldBorder = gamefile.boardsim.worldBorder;
+	gamerulesGUIinfo.worldBorder = gamefile.basegame.gameRules.worldBorder;
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -352,7 +352,7 @@ function updateGamefileProperties(
 	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
 
 	// Update World Border
-	gamefile.boardsim.worldBorder = worldBorder;
+	gamefile.basegame.gameRules.worldBorder = worldBorder;
 }
 
 // Exports -------------------------------------------------------------

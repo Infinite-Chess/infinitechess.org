@@ -284,11 +284,11 @@ function couldStarfieldEverBeVisible(): boolean {
 	// On mobile...
 
 	// If voids can be present in the game, the starfield could be visible.
-	const { boardsim } = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
-	if (boardsim.existingRawTypes.includes(r.VOID)) return true; // Voids are PRESENT (or can be added in the editor)
+	const gamefile = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
+	if (gamefile.boardsim.existingRawTypes.includes(r.VOID)) return true; // Voids are PRESENT (or can be added in the editor)
 
 	// If there is a world border, the starfield could be visible.
-	if (boardsim.worldBorder !== undefined) return true;
+	if (gamefile.basegame.gameRules.worldBorder !== undefined) return true;
 
 	return false;
 }
@@ -305,18 +305,18 @@ function isStarfieldVisible(): boolean {
 	// we can see the starfield underneath them.
 	// It would take too much effort to determine if the void mesh
 	// overlaps with the screen, so just assume the're visible.
-	const { boardsim } = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
-	if (boardutil.getPieceCountOfType(boardsim.pieces, r.VOID) > 0) return true; // Voids are PRESENT
+	const gamefile = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
+	if (boardutil.getPieceCountOfType(gamefile.boardsim.pieces, r.VOID) > 0) return true; // Voids are PRESENT
 
 	// At this point, if there isn't a world border, we know starfield is NOT visible.
-	if (boardsim.worldBorder === undefined) return false;
+	if (gamefile.basegame.gameRules.worldBorder === undefined) return false;
 
 	// There IS a world border...
 
 	// Last check is whether our screen is entirely contained within the worldBorder box.
 	// If so, the starfield is NOT visible.
 	const screenBox = boardtiles.gboundingBox(false);
-	return !bounds.boxContainsBox(boardsim.worldBorder, screenBox);
+	return !bounds.boxContainsBox(gamefile.basegame.gameRules.worldBorder, screenBox);
 }
 
 // Rendering ----------------------------------------------------------------------

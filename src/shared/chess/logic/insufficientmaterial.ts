@@ -15,6 +15,7 @@ import bimath from '../../util/math/bimath.js';
 
 import type { GameRules } from '../variants/gamerules.js';
 import type { Board } from './gamefile.js';
+import { BoundingBox } from '../../util/math/bounds.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
 type PieceCount = number | [number, number];
@@ -235,12 +236,12 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 
 	// Check if the world border exists and is closer than boundForWorldBorderConsideration in any direction
 	const worldBorderNearOrigin =
-		boardsim.worldBorder === undefined
+		gameRules.worldBorder === undefined
 			? false
-			: -boardsim.worldBorder.bottom <= boundForWorldBorderConsideration ||
-				-boardsim.worldBorder.left <= boundForWorldBorderConsideration ||
-				boardsim.worldBorder.right <= boundForWorldBorderConsideration ||
-				boardsim.worldBorder.top <= boundForWorldBorderConsideration;
+			: -gameRules.worldBorder.bottom <= boundForWorldBorderConsideration ||
+				-gameRules.worldBorder.left <= boundForWorldBorderConsideration ||
+				gameRules.worldBorder.right <= boundForWorldBorderConsideration ||
+				gameRules.worldBorder.top <= boundForWorldBorderConsideration;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};

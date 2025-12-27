@@ -28,10 +28,16 @@ interface GameRules {
 	 * Also known as the "50-move rule".
 	 */
 	moveRule?: number;
-	/** The inclusive playable region of the board, if a world border is present. */
-	worldBorder?: BoundingBox;
 	/** The maximum number of steps any sliding piece can take. */
 	slideLimit?: bigint;
+	/**
+	 * IF a world border is present, this is a bounding box
+	 * containing all integer coordinates that are inside the
+	 * playing area, not on or outside the world border.
+	 * All pieces must be within this box.
+	 * The inclusive playable region of the board.
+	 */
+	worldBorder?: BoundingBox;
 }
 
 /** Checks if a specified color has a given win condition. */
