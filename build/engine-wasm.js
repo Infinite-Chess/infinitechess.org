@@ -8,7 +8,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 
 // Absolute path to the HydroChess WASM engine submodule (if present)
 const HYDROCHESS_WASM_DIR = path.join(
@@ -27,19 +26,9 @@ const HYDROCHESS_WASM_DIR = path.join(
 const LATEST_RELEASE_API_URL =
 	'https://api.github.com/repos/Infinite-Chess/hydrochess/releases/latest';
 
-function hasCommand(cmd) {
-	try {
-		const res = spawnSync(cmd, ['--version'], { stdio: 'ignore' });
-		return res.status === 0;
-	} catch {
-		return false;
-	}
-}
-
 /**
  * Ensures the HydroChess WASM engine is available and up-to-date.
- * - DEFAULT: Automatically downloads the pre-built WASM if there is a new release.
- * - DEVELOPER OPT-IN: If BUILD_WASM_LOCAL=true, it attempts to build from local source.
+ * Automatically downloads the pre-built WASM if there is a new release.
  */
 export async function setupEngineWasm() {
 	const label = '[hydrochess-wasm]';
@@ -48,43 +37,7 @@ export async function setupEngineWasm() {
 	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
 	const versionFile = path.join(pkgDir, '.engine-version');
 
-	// DEVELOPER OPT-IN: Build from local source (allows rapid iteration)
-	if (process.env.BUILD_WASM_LOCAL === 'true') {
-		console.log(`${label} BUILD_WASM_LOCAL is true, attempting to build from source...`);
-
-		if (
-			!fs.existsSync(HYDROCHESS_WASM_DIR) ||
-			fs.readdirSync(HYDROCHESS_WASM_DIR).length === 0
-		) {
-			console.warn(`${label} Engine submodule directory at ${HYDROCHESS_WASM_DIR} is empty.`);
-			console.warn(`${label} Run 'git submodule update --init', then rebuild.`);
-			return;
-		}
-
-		if (!hasCommand('cargo') || !hasCommand('wasm-pack')) {
-			console.error(`${label} 'cargo' or 'wasm-pack' not found. Cannot build locally.`);
-			console.error(
-				`${label} Install Rust from https://rustup.rs and wasm-pack with 'cargo install wasm-pack'.`,
-			);
-			console.error(`${label} Or, unset BUILD_WASM_LOCAL to download the pre-built binary.`);
-			return;
-		}
-
-		console.log(`${label} Building WASM engine with wasm-pack...`);
-		const result = spawnSync('wasm-pack', ['build', '--target', 'web', '--out-dir', 'pkg'], {
-			cwd: HYDROCHESS_WASM_DIR,
-			stdio: 'inherit',
-		});
-
-		if (result.status !== 0) {
-			console.error(`${label} Local build failed. Check wasm-pack output above.`);
-		} else {
-			console.log(`${label} Local build complete.`);
-		}
-		return;
-	}
-
-	// DEFAULT: Download pre-built binary if new version available
+	// Download pre-built binary if new version available
 	let localVersion = '';
 	if (fs.existsSync(versionFile)) {
 		localVersion = fs.readFileSync(versionFile, 'utf-8').trim();
@@ -149,11 +102,5 @@ export async function setupEngineWasm() {
 		console.log(`${label} Hydrochess engine is ready (${remoteVersion}).`);
 	} catch (error) {
 		console.error(`${label} Automatic download failed:`, error.message);
-		console.error(`${label} You can try building from source as a fallback:`);
-		console.error(`${label}   1. Install Rust: https://rustup.rs`);
-		console.error(`${label}   2. Install wasm-pack: cargo install wasm-pack`);
-		console.error(
-			`${label}   3. Run with local build enabled: BUILD_WASM_LOCAL=true npm run build`,
-		);
 	}
 }
