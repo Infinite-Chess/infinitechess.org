@@ -263,8 +263,6 @@ function renderScene(): void {
 		return;
 	}
 
-	const boardsim = gamefile.boardsim;
-
 	// Star Field Animation: Appears in border & voids
 	webgl.executeMaskedDraw(
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids

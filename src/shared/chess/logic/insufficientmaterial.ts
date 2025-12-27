@@ -15,7 +15,6 @@ import bimath from '../../util/math/bimath.js';
 
 import type { GameRules } from '../variants/gamerules.js';
 import type { Board } from './gamefile.js';
-import { BoundingBox } from '../../util/math/bounds.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
 type PieceCount = number | [number, number];
