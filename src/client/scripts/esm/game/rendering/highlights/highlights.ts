@@ -15,6 +15,7 @@ import premoves from '../../chess/premoves.js';
 import preferences from '../../../components/header/preferences.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import squarerendering from './squarerendering.js';
+import enginegame from '../../misc/enginegame.js';
 
 import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
@@ -39,6 +40,7 @@ function render(boardsim: Board): void {
 	premoves.render(); // Premove highlights
 	// Needs to render EVEN if zoomed out (different mode)
 	annotations.render_belowPieces(); // The square highlights added by the user
+	enginegame.render(); // Engine games can render a debug of engine generated moves
 }
 
 /** Highlights the start and end squares of the most recently played move. */

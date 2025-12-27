@@ -35,6 +35,7 @@ interface EngineWorkerMessage {
 	btime?: number;
 	winc?: number;
 	binc?: number;
+	requestGeneratedMoves?: boolean;
 }
 
 interface RustClockTiming {
@@ -147,7 +148,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 		const initialized = await initWasm();
 		if (!initialized) {
 			console.error('[Engine] WASM module failed to initialize');
-			postMessage(null);
+			postMessage({ type: 'move', data: null });
 			return;
 		}
 	}
@@ -158,7 +159,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 
 		if (!current_gamefile) {
 			console.error('[Engine] Failed to formulate gamefile from data.lf');
-			postMessage(null);
+			postMessage({ type: 'move', data: null });
 			return;
 		}
 
@@ -213,6 +214,18 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 
 		let bestMoveResult: WasmBestMoveResult | null;
 		const engine = new wasm.Engine(rustGameState as any);
+
+		// If the main code requested the generated moves for debugging, send those here.
+		if (data.requestGeneratedMoves === true) {
+			const legalMoves: WasmBestMoveResult[] = engine.get_legal_moves_js();
+			// console.log('Rust legal moves: ', legalMoves);
+			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`); // ["x,y>x,y", ...]
+			// Send the generated moves back to the main thread for rendering
+			postMessage({ type: 'generatedMoves', data: formattedMoves });
+			engine.free();
+			return;
+		}
+
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
 			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
 		} else {
@@ -235,10 +248,10 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 			moveString += `=${promoAbbr}`;
 		}
 
-		postMessage(moveString);
+		postMessage({ type: 'move', data: moveString });
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);
-		postMessage(null);
+		postMessage({ type: 'move', data: null });
 	}
 };
 
