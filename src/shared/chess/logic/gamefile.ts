@@ -125,11 +125,10 @@ interface Additional {
 	clockValues?: ClockValues;
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor?: boolean;
-	/**
-	 * If present, the resulting gamefile will have a world border at this distance on all sides from the origin (0,0).
-	 * It is NOT equidistant from all sides of the current position.
-	 */
+	/** If present, the resulting gamefile will have a world border this distance away from the starting position's bounding box. */
 	worldBorderDist?: bigint;
+	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
+	worldBorder?: BoundingBox;
 }
 
 /** Creates a new {@link Game} object from provided arguments */
@@ -170,7 +169,9 @@ function initBoard(
 	metadata: MetaData,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
-	worldBorder?: bigint,
+	worldBorderDist?: bigint,
+	/** OVERRIDES {@link worldBorderDist} */
+	worldBorder?: BoundingBox,
 ): Board {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
 		gameRules,
@@ -202,25 +203,26 @@ function initBoard(
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
-	if (worldBorder !== undefined) {
-		if (worldBorderProperty === undefined)
-			worldBorderProperty = worldBorder; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorder < worldBorderProperty) worldBorderProperty = worldBorder; // Use the smaller of the two if both exist.
-	}
-
 	const coordsOfAllPieces = boardutil.getCoordsOfAllPieces(pieces);
 	const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
-	const playableRegion =
-		worldBorderProperty !== undefined
-			? {
-					left: startingPositionBox.left - worldBorderProperty,
-					right: startingPositionBox.right + worldBorderProperty,
-					bottom: startingPositionBox.bottom - worldBorderProperty,
-					top: startingPositionBox.top + worldBorderProperty,
-				}
-			: undefined;
+
+	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
+	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
+	if (worldBorderDist !== undefined) {
+		if (worldBorderProperty === undefined)
+			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
+		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
+	}
+
+	if (worldBorder === undefined && worldBorderProperty !== undefined) {
+		// No override for exact world border dimensions provided, calculate it using the provided distance.
+		worldBorder = {
+			left: startingPositionBox.left - worldBorderProperty,
+			right: startingPositionBox.right + worldBorderProperty,
+			bottom: startingPositionBox.bottom - worldBorderProperty,
+			top: startingPositionBox.top + worldBorderProperty,
+		};
+	}
 
 	const startSnapshot: Snapshot = {
 		position,
@@ -250,7 +252,7 @@ function initBoard(
 		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
-		playableRegion,
+		playableRegion: worldBorder,
 		editor,
 		startSnapshot,
 	};
@@ -310,6 +312,7 @@ function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
+		additional.worldBorder,
 	);
 	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
 }
