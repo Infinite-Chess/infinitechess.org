@@ -19,7 +19,7 @@ import docutil from '../util/docutil.js';
 
 // Custom type definitions...
 
-type WebsocketMessageValue = any;
+type WebsocketMessageValue = MessageEvent['data'];
 
 /**
  * An incoming websocket server message.
