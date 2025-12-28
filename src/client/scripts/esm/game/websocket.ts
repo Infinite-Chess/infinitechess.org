@@ -606,7 +606,16 @@ async function sendmessage(
 
 	resetTimerToCloseSocket();
 
-	let payload;
+	let payload: {
+		route: string;
+		contents:
+			| WebsocketMessageValue
+			| {
+					action: string;
+					value: WebsocketMessageValue;
+			  };
+		id?: number;
+	};
 	if (action === 'echo') {
 		payload = {
 			route: 'echo',
@@ -627,17 +636,17 @@ async function sendmessage(
 
 		// Set a timer. At the end, just assume we've disconnected and start again.
 		// This will be canceled if we here the echo in time.
-		echoTimers[payload.id] = {
+		echoTimers[payload.id!] = {
 			timeSent: Date.now(),
 			timeoutID: window.setTimeout(
-				() => renewConnection(payload.id),
+				() => renewConnection(payload.id!),
 				timeToWaitForEchoMillis,
 				payload.id,
 			) as unknown as number,
 		};
 		//console.log(`Set timer of message id "${payload.id}"`)
 
-		scheduleOnreplyFunc(payload.id, onreplyFunc);
+		scheduleOnreplyFunc(payload.id!, onreplyFunc);
 	}
 
 	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
