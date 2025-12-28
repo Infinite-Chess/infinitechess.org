@@ -231,7 +231,7 @@ function httpLostConnection(): void {
 		translations['websocket'].no_connection,
 		timeToWaitForHTTPMillis,
 	);
-	reqOut = window.setTimeout(httpLostConnection, timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
+	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
 	//console.log("Reset http timer")
 }
 
