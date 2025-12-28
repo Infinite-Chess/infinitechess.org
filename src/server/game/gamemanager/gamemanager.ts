@@ -121,7 +121,7 @@ function createGame(
 	}
 
 	for (const data of Object.values(match.playerData)) {
-		addUserToActiveGames((data as PlayerData).identifier, servergame.match.id);
+		addUserToActiveGames(data.identifier, servergame.match.id);
 	}
 
 	addGameToActiveGames(servergame);
