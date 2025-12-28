@@ -42,7 +42,7 @@ import gamefile from '../../../shared/chess/logic/gamefile.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 
-import type { ServerGame, PlayerData } from './gameutility.js';
+import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { AuthMemberInfo } from '../../types.js';
