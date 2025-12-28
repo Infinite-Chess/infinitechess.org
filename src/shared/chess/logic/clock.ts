@@ -152,12 +152,10 @@ function push(basegame: Game, clocks: ClockData): number | undefined {
 		// Update current values
 		const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
 
-		((clocks.currentTime[clocks.colorTicking] =
-			clocks.timeRemainAtTurnStart - timePassedSinceTurnStart),
-			// 3+ moves
-			(clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(
-				clocks.startTime.increment!,
-			)));
+		clocks.currentTime[clocks.colorTicking] =
+			clocks.timeRemainAtTurnStart - timePassedSinceTurnStart;
+		// 3+ moves
+		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
 
 	// Set up clocksticking for the new turn.
