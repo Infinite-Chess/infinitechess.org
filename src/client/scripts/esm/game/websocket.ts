@@ -212,7 +212,7 @@ async function openSocket(): Promise<boolean> {
  */
 function onSocketUpgradeReqLeave(): void {
 	dispatchOpeningSocketCustomEvent();
-	reqOut = window.setTimeout(httpLostConnection, timeToWaitForHTTPMillis);
+	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
 }
 
 /** Cancels the timer that assumes we've lost connection a few seconds after requesting an open socket. */
