@@ -180,7 +180,7 @@ interface MatchInfo {
 	autoAFKResignTime?: number;
 
 	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise null. */
-	drawstate?: Player;
+	drawOfferState?: Player;
 
 	/** The ID of the timer to delete the match after it has ended.
 	 * This can be used to cancel it in case a hacking was reported. */

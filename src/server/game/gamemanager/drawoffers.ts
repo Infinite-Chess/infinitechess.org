@@ -30,7 +30,7 @@ const movesBetweenDrawOffers = 2;
  * If so, players are not allowed to extend another.
  */
 function isDrawOfferOpen(match: MatchInfo): boolean {
-	return match.drawstate !== undefined;
+	return match.drawOfferState !== undefined;
 }
 
 /**
@@ -38,7 +38,7 @@ function isDrawOfferOpen(match: MatchInfo): boolean {
  * @param color - The color who extended the draw offer
  */
 function doesColorHaveExtendedDrawOffer(match: MatchInfo, color: Player): boolean {
-	return match.drawstate === color;
+	return match.drawOfferState === color;
 }
 
 /**
@@ -71,7 +71,7 @@ function openDrawOffer({ match, basegame }: ServerGame, color: Player): void {
 	}
 	const playerdata = match.playerData[color]!;
 	playerdata.lastOfferPly = basegame.moves.length;
-	match.drawstate = color;
+	match.drawOfferState = color;
 	return;
 }
 
@@ -80,7 +80,7 @@ function openDrawOffer({ match, basegame }: ServerGame, color: Player): void {
  * DOES NOT INFORM the opponent.
  */
 function closeDrawOffer(match: MatchInfo): void {
-	match.drawstate = undefined;
+	match.drawOfferState = undefined;
 }
 
 /**
