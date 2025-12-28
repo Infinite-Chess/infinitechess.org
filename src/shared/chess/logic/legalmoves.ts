@@ -13,7 +13,7 @@ import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
-import bounds from '../../util/math/bounds.js';
+import bounds, { BoundingBox } from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 
@@ -210,6 +210,7 @@ function appendSpecialMoves(
  */
 function removeObstructedMoves(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	legalmoves: LegalMoves,
@@ -218,11 +219,19 @@ function removeObstructedMoves(
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Remove obstructed jumping/individual moves
-	removeInvalidIndividualMoves(boardsim, legalmoves.individual, color, premove);
+	removeInvalidIndividualMoves(boardsim, worldBorder, legalmoves.individual, color, premove);
 
 	// Block sliding moves according to obstructions
 	if (moveset.sliding)
-		removeObstructedSlidingMoves(boardsim, piece, moveset, legalmoves.sliding, color, premove);
+		removeObstructedSlidingMoves(
+			boardsim,
+			worldBorder,
+			piece,
+			moveset,
+			legalmoves.sliding,
+			color,
+			premove,
+		);
 }
 
 /**
@@ -231,13 +240,21 @@ function removeObstructedMoves(
  */
 function removeInvalidIndividualMoves(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	individualMoves: Coords[],
 	color: Player,
 	premove: boolean,
 ): Coords[] {
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		const thisMove = individualMoves[i]!;
-		const moveValidity = testSquareValidity(boardsim, thisMove, color, premove, false);
+		const moveValidity = testSquareValidity(
+			boardsim,
+			worldBorder,
+			thisMove,
+			color,
+			premove,
+			false,
+		);
 		if (moveValidity === 2) individualMoves.splice(i, 1); // Not legal to land on
 	}
 
@@ -249,6 +266,7 @@ function removeInvalidIndividualMoves(
  */
 function removeObstructedSlidingMoves(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	slidingMoves: Record<Vec2Key, SlideLimits>,
@@ -263,6 +281,7 @@ function removeObstructedSlidingMoves(
 		const key = organizedpieces.getKeyFromLine(line, piece.coords);
 		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(
 			boardsim,
+			worldBorder,
 			blockingFunc,
 			boardsim.pieces,
 			lines.get(key)!,
@@ -288,17 +307,14 @@ function removeObstructedSlidingMoves(
  */
 function testSquareValidity(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	coords: Coords,
 	friendlyColor: Player,
 	premove: boolean,
 	capturing: boolean,
 ): 0 | 1 | 2 {
 	// Test whether the given square lies out of bounds of the position.
-	if (
-		boardsim.playableRegion !== undefined &&
-		!bounds.boxContainsSquare(boardsim.playableRegion, coords)
-	)
-		return 2;
+	if (worldBorder !== undefined && !bounds.boxContainsSquare(worldBorder, coords)) return 2;
 
 	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, coords);
 
@@ -347,7 +363,14 @@ function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(gamefile.boardsim, piece, moveset, moves, false);
+	removeObstructedMoves(
+		gamefile.boardsim,
+		gamefile.basegame.gameRules.worldBorder,
+		piece,
+		moveset,
+		moves,
+		false,
+	);
 	appendSpecialMoves(gamefile, piece, moveset, moves, false);
 	checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
 	return moves;
@@ -363,7 +386,14 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(gamefile.boardsim, piece, moveset, moves, true); // true to only remove void and world border obstructions
+	removeObstructedMoves(
+		gamefile.boardsim,
+		gamefile.basegame.gameRules.worldBorder,
+		piece,
+		moveset,
+		moves,
+		true,
+	); // true to only remove void and world border obstructions
 	appendSpecialMoves(gamefile, piece, moveset, moves, true); // true to add all possible moves
 	// SKIP removing check invalids!
 	return moves;
@@ -382,6 +412,7 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  */
 function slide_CalcLegalLimit(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	blockingFunc: BlockingFunction,
 	o: OrganizedPieces,
 	line: number[],
@@ -400,7 +431,7 @@ function slide_CalcLegalLimit(
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
-	enforceWorldBorderOnSlideLimit(boardsim, limit, coords, step, axis); // Mutating
+	enforceWorldBorderOnSlideLimit(boardsim, worldBorder, limit, coords, step, axis); // Mutating
 	// else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
@@ -446,12 +477,13 @@ function slide_CalcLegalLimit(
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	limit: SlideLimits,
 	coords: Coords,
 	step: Vec2,
 	axis: 0 | 1,
 ): void {
-	if (boardsim.playableRegion === undefined) return; // No world border, skip
+	if (worldBorder === undefined) return; // No world border, skip
 
 	// What are the intersections this step makes with the playable region box?
 	const coordsBD = bdcoords.FromCoords(coords);
@@ -460,7 +492,7 @@ function enforceWorldBorderOnSlideLimit(
 
 	// These are in order of ascending dot product.
 	const intersections = geometry
-		.findLineBoxIntersections(coords, step, boardsim.playableRegion)
+		.findLineBoxIntersections(coords, step, worldBorder)
 		.map((i) => i.coords);
 	if (intersections.length < 1)
 		throw Error('Slide direction made zero intersections with border!'); // Would happen if the piece somehow gets outside the border
@@ -510,6 +542,7 @@ function enforceWorldBorderOnSlideLimit(
  */
 function calcPiecesLegalSlideLimitOnSpecificLine(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	piece: Piece,
 	slide: Vec2,
 	slideKey: Vec2Key,
@@ -524,6 +557,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
 	const friendlyColor = typeutil.getColorFromType(piece.type);
 	return slide_CalcLegalLimit(
 		boardsim,
+		worldBorder,
 		blockingFunc,
 		boardsim.pieces,
 		organizedLine,
@@ -669,7 +703,6 @@ export default {
 	getEmptyLegalMoves,
 	appendPotentialMoves,
 	appendSpecialMoves,
-	removeObstructedMoves,
 	testSquareValidity,
 	testCaptureValidity,
 

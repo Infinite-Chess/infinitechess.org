@@ -202,6 +202,7 @@ function render(highlights: Square[]): void {
 // Exports -------------------------------------------------------------------
 
 export default {
+	PRESET_SQUARE_COLOR,
 	update,
 	getSquaresBelowWorld,
 	setPresetOverrides,

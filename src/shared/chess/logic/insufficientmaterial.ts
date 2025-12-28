@@ -25,7 +25,7 @@ type Scenario = TypeGroup<PieceCount>;
  * If the world border exists and is closer than this number in any direction,
  * then take the world border under consideration when doing insuffmat checks
  */
-const playableRegionBoundForWorldBorderConsideration = 1_000_000n;
+const boundForWorldBorderConsideration = 1_000_000n;
 
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
@@ -233,14 +233,14 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	)
 		return undefined;
 
-	// Check if the world border exists and is closer than playableRegionBoundForWorldBorderConsideration in any direction
+	// Check if the world border exists and is closer than boundForWorldBorderConsideration in any direction
 	const worldBorderNearOrigin =
-		boardsim.playableRegion === undefined
+		gameRules.worldBorder === undefined
 			? false
-			: -boardsim.playableRegion.bottom <= playableRegionBoundForWorldBorderConsideration ||
-				-boardsim.playableRegion.left <= playableRegionBoundForWorldBorderConsideration ||
-				boardsim.playableRegion.right <= playableRegionBoundForWorldBorderConsideration ||
-				boardsim.playableRegion.top <= playableRegionBoundForWorldBorderConsideration;
+			: -gameRules.worldBorder.bottom <= boundForWorldBorderConsideration ||
+				-gameRules.worldBorder.left <= boundForWorldBorderConsideration ||
+				gameRules.worldBorder.right <= boundForWorldBorderConsideration ||
+				gameRules.worldBorder.top <= boundForWorldBorderConsideration;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};

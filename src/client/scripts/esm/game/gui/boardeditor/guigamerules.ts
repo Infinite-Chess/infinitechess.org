@@ -6,6 +6,7 @@
 
 import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { Edit } from '../../boardeditor/boardeditor';
+import type { BoundingBox } from '../../../../../../shared/util/math/bounds';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 import { RawType } from '../../../../../../shared/chess/util/typeutil';
@@ -55,6 +56,11 @@ const element_allpiecescaptured = document.getElementById(
 const element_pawnDoublePush = document.getElementById('rules-doublepush')! as HTMLInputElement;
 const element_castling = document.getElementById('rules-castling')! as HTMLInputElement;
 
+const element_borderLeft = document.getElementById('rules-border-left')! as HTMLInputElement;
+const element_borderRight = document.getElementById('rules-border-right')! as HTMLInputElement;
+const element_borderBottom = document.getElementById('rules-border-bottom')! as HTMLInputElement;
+const element_borderTop = document.getElementById('rules-border-top')! as HTMLInputElement;
+
 const elements_selectionList: HTMLInputElement[] = [
 	element_white,
 	element_black,
@@ -71,6 +77,10 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_allpiecescaptured,
 	element_pawnDoublePush,
 	element_castling,
+	element_borderLeft,
+	element_borderRight,
+	element_borderBottom,
+	element_borderTop,
 ];
 
 // Constants --------------------------------------------------------------
@@ -292,6 +302,55 @@ function readGameRules(): void {
 	let castling: boolean | undefined = undefined;
 	if (!element_castling.indeterminate) castling = element_castling.checked;
 
+	// World Border
+	let worldBorder: BoundingBox | undefined = undefined;
+	const borderInputs = [
+		{ el: element_borderLeft, val: element_borderLeft.value },
+		{ el: element_borderRight, val: element_borderRight.value },
+		{ el: element_borderBottom, val: element_borderBottom.value },
+		{ el: element_borderTop, val: element_borderTop.value },
+	];
+
+	const anyBorderSet = borderInputs.some((input) => input.val !== '');
+	if (!anyBorderSet) {
+		// All empty -> Valid (Undefined)
+		borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
+		worldBorder = undefined;
+	} else {
+		// At least one is set, so ALL must be valid integers, and must be ascending
+		const leftValid = integerRegex.test(element_borderLeft.value);
+		const rightValid =
+			integerRegex.test(element_borderRight.value) &&
+			(!leftValid || BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value));
+		const bottomValid = integerRegex.test(element_borderBottom.value);
+		const topValid =
+			integerRegex.test(element_borderTop.value) &&
+			(!bottomValid || BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value));
+
+		if (leftValid && rightValid && bottomValid && topValid) {
+			borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
+			worldBorder = {
+				left: BigInt(element_borderLeft.value),
+				right: BigInt(element_borderRight.value),
+				bottom: BigInt(element_borderBottom.value),
+				top: BigInt(element_borderTop.value),
+			};
+		} else {
+			// Invalid: Either partial data or non-integer data or invalid ranges
+			// Mark invalid fields as invalid.
+			if (!leftValid) element_borderLeft.classList.add('invalid-input');
+			else element_borderLeft.classList.remove('invalid-input');
+			if (!rightValid) element_borderRight.classList.add('invalid-input');
+			else element_borderRight.classList.remove('invalid-input');
+			if (!bottomValid) element_borderBottom.classList.add('invalid-input');
+			else element_borderBottom.classList.remove('invalid-input');
+			if (!topValid) element_borderTop.classList.add('invalid-input');
+			else element_borderTop.classList.remove('invalid-input');
+
+			worldBorder = undefined;
+		}
+	}
+
 	const gameRules: GameRulesGUIinfo = {
 		playerToMove,
 		enPassant,
@@ -301,6 +360,7 @@ function readGameRules(): void {
 		winConditions,
 		pawnDoublePush,
 		castling,
+		worldBorder,
 	};
 
 	// Update gamefile properties for rendering purposes and correct legal move calculation
@@ -310,6 +370,7 @@ function readGameRules(): void {
 		enpassantSquare,
 		gameRules.promotionRanks,
 		gameRules.playerToMove,
+		gameRules.worldBorder,
 	);
 
 	const gamefile = gameslot.getGamefile()!;
@@ -403,6 +464,19 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 		element_castling.checked = gamerulesGUIinfo.castling;
 	}
 
+	// World Border
+	if (gamerulesGUIinfo.worldBorder !== undefined) {
+		element_borderLeft.value = String(gamerulesGUIinfo.worldBorder.left);
+		element_borderRight.value = String(gamerulesGUIinfo.worldBorder.right);
+		element_borderBottom.value = String(gamerulesGUIinfo.worldBorder.bottom);
+		element_borderTop.value = String(gamerulesGUIinfo.worldBorder.top);
+	} else {
+		element_borderLeft.value = '';
+		element_borderRight.value = '';
+		element_borderBottom.value = '';
+		element_borderTop.value = '';
+	}
+
 	// Since we manually set all inputs in this function, they are all valid
 	element_enPassantX.classList.remove('invalid-input');
 	element_enPassantY.classList.remove('invalid-input');
@@ -411,6 +485,11 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	element_promotionranksWhite.classList.remove('invalid-input');
 	element_promotionranksBlack.classList.remove('invalid-input');
 	element_promotionpieces.classList.remove('invalid-input');
+
+	element_borderLeft.classList.remove('invalid-input');
+	element_borderRight.classList.remove('invalid-input');
+	element_borderBottom.classList.remove('invalid-input');
+	element_borderTop.classList.remove('invalid-input');
 }
 
 // Utilities ------------------------------------------------------------

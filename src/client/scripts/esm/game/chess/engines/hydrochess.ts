@@ -35,6 +35,7 @@ interface EngineWorkerMessage {
 	btime?: number;
 	winc?: number;
 	binc?: number;
+	requestGeneratedMoves?: boolean;
 }
 
 interface RustClockTiming {
@@ -62,6 +63,10 @@ interface RustGameRules {
 	};
 	promotions_allowed?: string[];
 	move_rule?: number;
+	win_conditions?: {
+		white: string[];
+		black: string[];
+	};
 }
 
 interface RustWorldBounds {
@@ -143,7 +148,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 		const initialized = await initWasm();
 		if (!initialized) {
 			console.error('[Engine] WASM module failed to initialize');
-			postMessage(null);
+			postMessage({ type: 'move', data: null });
 			return;
 		}
 	}
@@ -154,7 +159,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 
 		if (!current_gamefile) {
 			console.error('[Engine] Failed to formulate gamefile from data.lf');
-			postMessage(null);
+			postMessage({ type: 'move', data: null });
 			return;
 		}
 
@@ -209,6 +214,18 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 
 		let bestMoveResult: WasmBestMoveResult | null;
 		const engine = new wasm.Engine(rustGameState as any);
+
+		// If the main code requested the generated moves for debugging, send those here.
+		if (data.requestGeneratedMoves === true) {
+			const legalMoves: WasmBestMoveResult[] = engine.get_legal_moves_js();
+			// console.log('Rust legal moves: ', legalMoves);
+			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`); // ["x,y>x,y", ...]
+			// Send the generated moves back to the main thread for rendering
+			postMessage({ type: 'generatedMoves', data: formattedMoves });
+			engine.free();
+			return;
+		}
+
 		if (timeLimit !== null && Number.isFinite(timeLimit) && timeLimit > 0) {
 			bestMoveResult = engine.get_best_move_with_time(timeLimit, true, undefined);
 		} else {
@@ -231,10 +248,10 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 			moveString += `=${promoAbbr}`;
 		}
 
-		postMessage(moveString);
+		postMessage({ type: 'move', data: moveString });
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);
-		postMessage(null);
+		postMessage({ type: 'move', data: null });
 	}
 };
 
@@ -330,14 +347,14 @@ function convertGameToRustFormat(
 
 		if (gameRules.promotionRanks) {
 			game_rules.promotion_ranks = {
-				white: (gameRules.promotionRanks[1] || []).map((r: bigint) => String(r)),
-				black: (gameRules.promotionRanks[2] || []).map((r: bigint) => String(r)),
+				white: (gameRules.promotionRanks[p.WHITE] || []).map((r: bigint) => String(r)),
+				black: (gameRules.promotionRanks[p.BLACK] || []).map((r: bigint) => String(r)),
 			};
 		}
 
 		if (gameRules.promotionsAllowed) {
 			game_rules.promotions_allowed = [];
-			const whitePromos = gameRules.promotionsAllowed[1] || [];
+			const whitePromos = gameRules.promotionsAllowed[p.WHITE] || [];
 			for (const rawType of whitePromos) {
 				const code = getPieceTypeCodeFromRaw(rawType);
 				if (!game_rules.promotions_allowed.includes(code)) {
@@ -349,6 +366,11 @@ function convertGameToRustFormat(
 		if (typeof gameRules.moveRule !== 'undefined') {
 			game_rules.move_rule = Number(gameRules.moveRule);
 		}
+
+		game_rules.win_conditions = {
+			white: gameRules.winConditions[p.WHITE] || [],
+			black: gameRules.winConditions[p.BLACK] || [],
+		};
 	}
 
 	let turn: 'w' | 'b' = 'w';
@@ -362,13 +384,13 @@ function convertGameToRustFormat(
 	}
 
 	let world_bounds: RustWorldBounds | null = null;
-	const playable = gamefile.boardsim?.playableRegion;
-	if (playable && typeof playable.left === 'bigint') {
+	const worldBorder = gamefile.basegame.gameRules.worldBorder;
+	if (worldBorder) {
 		world_bounds = {
-			left: String(playable.left),
-			right: String(playable.right),
-			bottom: String(playable.bottom),
-			top: String(playable.top),
+			left: String(worldBorder.left),
+			right: String(worldBorder.right),
+			bottom: String(worldBorder.bottom),
+			top: String(worldBorder.top),
 		};
 	}
 

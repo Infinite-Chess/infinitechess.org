@@ -45,7 +45,9 @@ self.onmessage = function (e: MessageEvent): void {
 	const message = e.data as {
 		stringGamefile: string;
 		engineConfig: { checkmateSelectedID: string; engineTimeLimitPerMoveMillis: number };
+		requestGeneratedMoves: boolean;
 	};
+	if (message.requestGeneratedMoves) return; // ignore generated moves requests in this engine, this doesn't support sending them
 	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
 	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
@@ -1907,7 +1909,7 @@ async function runEngine(): Promise<void> {
 				setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)),
 			);
 		}
-		postMessage(move_to_gamefile_move(globallyBestVariation[0]![1]!));
+		postMessage({ type: 'move', data: move_to_gamefile_move(globallyBestVariation[0]![1]!) });
 	} catch (e) {
 		console.error('An error occured in the engine computation of the checkmate practice');
 		console.error(e);
