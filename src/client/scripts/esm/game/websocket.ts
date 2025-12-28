@@ -630,7 +630,7 @@ async function sendmessage(
 		echoTimers[payload.id] = {
 			timeSent: Date.now(),
 			timeoutID: window.setTimeout(
-				renewConnection,
+				() => renewConnection(payload.id),
 				timeToWaitForEchoMillis,
 				payload.id,
 			) as unknown as number,
