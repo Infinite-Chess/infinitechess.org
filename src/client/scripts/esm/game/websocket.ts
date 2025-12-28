@@ -818,7 +818,7 @@ async function onAuthenticationNeeded(): Promise<void> {
 	// we just have to request a new browser-id cookie before we
 	// reopen our socket.
 
-	// await validatorama.refreshToken();
+	await validatorama.refreshToken();
 	resubAll();
 }
 
