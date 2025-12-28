@@ -26,8 +26,8 @@ interface SafeInvite {
 	id: string; // A unique identifier, containing lowercase letters a-z and numbers 0-9.
 	usernamecontainer: ServerUsernameContainer; // The type of the owner (guest/player), their username, and elo if applicable.
 	tag: string; // Used to verify if an invite is your own.
-	variant: MetaData['Variant'] & string;
-	clock: MetaData['Termination'];
+	variant: string;
+	clock: MetaData['TimeControl'];
 	color: Player;
 	rated: 'casual' | 'rated';
 	publicity: 'public' | 'private';

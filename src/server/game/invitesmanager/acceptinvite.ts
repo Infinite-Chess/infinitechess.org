@@ -103,7 +103,7 @@ function acceptInvite(
 
 	// Assign each player a color based on their invite info. Add their socket just encase
 	const assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
-	let actingPlayer: Player = 0;
+	let invite_acceptor: Player | undefined;
 	for (const [strcolor, identifier] of Object.entries(
 		gameutility.assignWhiteBlackPlayersFromInvite(
 			invite.color,
@@ -112,15 +112,18 @@ function acceptInvite(
 		),
 	)) {
 		const player = Number(strcolor) as Player;
-		const is_secondary_player = memberInfoEq(identifier, player2Socket.metadata.memberInfo);
-		if (is_secondary_player) actingPlayer = player;
+		const is_invite_acceptor = memberInfoEq(identifier, player2Socket.metadata.memberInfo);
+		if (is_invite_acceptor) invite_acceptor = player;
 		assignments[player] = {
 			identifier,
-			socket: is_secondary_player ? player2Socket : player1Socket,
+			socket: is_invite_acceptor ? player2Socket : player1Socket,
 		};
 	}
 
-	createGame(invite, assignments, actingPlayer, replyto);
+	if (invite_acceptor === undefined)
+		throw Error("Invite accpetor doesn't exist on accepted 2 player invite");
+
+	createGame(invite, assignments, invite_acceptor, replyto);
 
 	// Unsubscribe them both from the invites subscription list.
 	if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally

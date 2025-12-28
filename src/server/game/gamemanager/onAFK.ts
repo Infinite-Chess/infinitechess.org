@@ -61,10 +61,8 @@ function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	// Start a 20s timer to auto terminate the game by abandonment.
 	match.autoAFKResignTimeoutID = setTimeout(
-		onPlayerLostByAbandonment,
+		() => onPlayerLostByAbandonment(servergame, opponentColor),
 		durationOfAutoResignTimerMillis,
-		servergame,
-		opponentColor,
 	); // The auto resign function should have 2 arguments: The game, and the color that won.
 	match.autoAFKResignTime = Date.now() + durationOfAutoResignTimerMillis;
 
@@ -79,27 +77,27 @@ function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
  * @param ws - The socket
  * @param servergame - The game they are in.
  */
-function onAFK_Return(ws: CustomWebSocket, { match, basegame }: ServerGame): void {
+function onAFK_Return(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log("Client alerted us they no longer AFK.")
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws);
+	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws);
 
-	if (gameutility.isGameOver(basegame))
+	if (gameutility.isGameOver(servergame.basegame))
 		return console.error(
 			'Client submitted they are back from being afk when the game is already over. Ignoring.',
 		);
 
 	// Verify it's their turn (can't lose by afk if not)
-	if (basegame.whosTurn !== color)
+	if (servergame.basegame.whosTurn !== color)
 		return console.error(
 			"Client submitted they are back from being afk when it's not their turn. Ignoring.",
 		);
 
-	if (!basegame.untimed && gameutility.isGameResignable(basegame))
+	if (!servergame.basegame.untimed && gameutility.isGameResignable(servergame.basegame))
 		return console.error(
 			'Client submitted they are back from being afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.',
 		);
 
-	cancelAutoAFKResignTimer(match, true, basegame.whosTurn);
+	cancelAutoAFKResignTimer(servergame, true);
 }
 
 export { onAFK, onAFK_Return };

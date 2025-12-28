@@ -20,11 +20,9 @@ function start(httpsServer: HttpsServer): void {
 	// WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
 	WebSocketServer.on('connection', (socket: WebSocket, req: IncomingMessage) => {
 		executeSafely(
-			onConnectionRequest,
-			'Error caught within websocket on-connection request:',
-			socket,
 			// TODO: idk what type this is
-			req as any,
+			() => onConnectionRequest(socket, req as any),
+			'Error caught within websocket on-connection request:',
 		);
 	}); // Event handler for new WebSocket connections
 }

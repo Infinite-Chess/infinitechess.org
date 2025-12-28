@@ -81,11 +81,11 @@ function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
 /**
  * Returns true if the player behind the socket is not in an active game
  * of the provided ID (has seen the game conclusion).
- * @param game
+ * @param match
  * @param color
  */
 function hasColorInGameSeenConclusion(match: MatchInfo, color: Player): boolean {
-	const player = match.playerData[color]; // { member, user_id }  OR  { browser }   (only contains one)
+	const player = match.playerData[color];
 	if (!player)
 		throw new Error(
 			`Invalid color "${color}" when checking if color in game has seen game conclusion!`,

@@ -162,18 +162,18 @@ function closeIfInvalidAndAddMetadata(
 function addListenersToSocket(req: Request, ws: CustomWebSocket): void {
 	ws.on('message', (message) => {
 		executeSafely(
-			onmessage,
+			() => onmessage(req, ws, message as Buffer<ArrayBufferLike>),
 			'Error caught within websocket on-message event:',
-			req,
-			ws,
-			message as Buffer<ArrayBufferLike>,
 		);
 	});
 	ws.on('close', (code, reason) => {
-		executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason);
+		executeSafely(
+			() => onclose(ws, code, reason),
+			'Error caught within websocket on-close event:',
+		);
 	});
 	ws.on('error', (error) => {
-		executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error);
+		executeSafely(() => onerror(ws, error), 'Error caught within websocket on-error event:');
 	});
 }
 

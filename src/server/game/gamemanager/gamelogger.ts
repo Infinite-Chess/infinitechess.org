@@ -41,11 +41,11 @@ import type { Game } from '../../../shared/chess/logic/gamefile.js';
  * Adds to and updates tables: games, player_games, player_stats, and leaderboards.
  * Either all database queries succeed, or none do (rollback on error).
  * This ensures data integrity and consistency.
- * @param game - The game to log
+ * @param servergame - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  */
-async function logGame(game: ServerGame): Promise<RatingData | undefined> {
-	if (game.basegame.moves.length === 0) return undefined; // Don't log games with zero moves
+async function logGame(servergame: ServerGame): Promise<RatingData | undefined> {
+	if (servergame.basegame.moves.length === 0) return undefined; // Don't log games with zero moves
 
 	try {
 		// Create the transaction by wrapping our orchestrator function.
@@ -55,7 +55,7 @@ async function logGame(game: ServerGame): Promise<RatingData | undefined> {
 		});
 
 		// Execute the transaction. Typically takes 2-8 milliseconds when using NVME storage.
-		const ratingData = transaction(game);
+		const ratingData = transaction(servergame);
 
 		// If we reach here, the transaction was successful.
 		return ratingData;
@@ -64,10 +64,13 @@ async function logGame(game: ServerGame): Promise<RatingData | undefined> {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
 		await logEventsAndPrint(
-			`FATAL: Game log transaction failed and was rolled back for Game ID ${game.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
+			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
 			'errLog.txt',
 		);
-		await logEvents(`Game: ${gameutility.getSimplifiedGameString(game)}`, 'unloggedGames.txt');
+		await logEvents(
+			`Game: ${gameutility.getSimplifiedGameString(servergame)}`,
+			'unloggedGames.txt',
+		);
 		return undefined;
 	}
 }
@@ -78,19 +81,19 @@ async function logGame(game: ServerGame): Promise<RatingData | undefined> {
  * It is designed to throw an error on any failure to trigger a rollback of the database.
  * Either ALL operations succeed, or NONE do.
  */
-function logGame_orchestrator(game: ServerGame): RatingData | undefined {
+function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
 	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(
-		game.basegame.gameConclusion!,
+		servergame.basegame.gameConclusion!,
 	);
 
 	// --- Part 1: Handle Rating Updates ---
-	const ratingData = updateLeaderboardsInTransaction(game, victor);
+	const ratingData = updateLeaderboardsInTransaction(servergame, victor);
 
 	// --- Part 2: Create Game Records in games and player_games tables ---
-	addGameRecordsInTransaction(game, victor, termination, ratingData);
+	addGameRecordsInTransaction(servergame, victor, termination, ratingData);
 
 	// --- Part 3: Update Player Stats ---
-	updateAllPlayerStatsInTransaction(game, victor);
+	updateAllPlayerStatsInTransaction(servergame, victor);
 
 	// If all steps succeed, return the rating data.
 	return ratingData;

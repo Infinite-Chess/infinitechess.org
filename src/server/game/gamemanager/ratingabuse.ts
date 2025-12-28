@@ -131,25 +131,25 @@ type SuspicionLevelRecord = {
 /**
  * Monitor suspicion levels for all players who played a particular game in a particular leaderboard
  */
-async function measureRatingAbuseAfterGame({ match, basegame }: ServerGame): Promise<void> {
+async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void> {
 	// Do not monitor suspicion levels, if game was unrated
-	if (!match.rated) return;
+	if (!servergame.match.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
 	// the game will NOT have added an entry in the leaderboards table for the players!
 	if (
-		winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion!).victor ===
-		undefined
+		winconutil.getVictorAndConditionFromGameConclusion(servergame.basegame.gameConclusion!)
+			.victor === undefined
 	)
 		return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = VariantLeaderboards[basegame.metadata.Variant!];
+	const leaderboard_id = VariantLeaderboards[servergame.basegame.metadata.Variant!];
 	if (leaderboard_id === undefined) return;
 
-	for (const [playerStr, player] of Object.entries(match.playerData)) {
+	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {
 		if (!player.identifier.signedIn) {
 			await logEventsAndPrint(
-				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameutility.getSimplifiedGameString({ match, basegame })}`,
+				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 				'errLog.txt',
 			);
 			continue;
@@ -158,7 +158,7 @@ async function measureRatingAbuseAfterGame({ match, basegame }: ServerGame): Pro
 		const username = player.identifier.username;
 		if (user_id === undefined || username === undefined) {
 			await logEventsAndPrint(
-				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${gameutility.getSimplifiedGameString({ match, basegame })}`,
+				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 				'errLog.txt',
 			);
 			continue;

@@ -12,13 +12,9 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
  * @param args - Arguments to pass to the callback function.
  * @returns true if the callback executed without error.
  */
-function executeSafely<F extends (...args: any[]) => any>(
-	callback: F,
-	errorMessage: string,
-	...args: Parameters<F>
-): boolean {
+function executeSafely(callback: () => void, errorMessage: string): boolean {
 	try {
-		callback(...args);
+		callback();
 	} catch (e) {
 		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
 		const errText = `${errorMessage}\n${stack}`;
@@ -37,13 +33,12 @@ function executeSafely<F extends (...args: any[]) => any>(
  * @param args - Arguments to pass to the callback function.
  * @returns true if the callback executed without error.
  */
-async function executeSafely_async<F extends (...args: any[]) => any>(
-	callback: F,
+async function executeSafely_async(
+	callback: () => Promise<void>,
 	errorMessage: string,
-	...args: Parameters<F>
 ): Promise<boolean> {
 	try {
-		await callback(...args);
+		await callback();
 	} catch (e) {
 		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
 		const errText = `${errorMessage}\n${stack}`;

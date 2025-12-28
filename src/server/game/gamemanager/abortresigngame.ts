@@ -14,50 +14,54 @@ import type { ServerGame } from './gameutility.js';
 /**
  * Called when a client tries to abort a game.
  * @param ws - The websocket
- * @param game - The game they are in..
+ * @param servergame - The game they are in..
  */
-function abortGame(_ws: CustomWebSocket, game: ServerGame): void {
+function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
 	// Is it legal?...
 
-	if (gameutility.isGameOver(game.basegame)) {
+	if (gameutility.isGameOver(servergame.basegame)) {
 		// Return if game is already over
-		console.log(`Player tried to abort game ${game.match.id} when the game is already over!`);
+		console.log(
+			`Player tried to abort game ${servergame.match.id} when the game is already over!`,
+		);
 		return;
-	} else if (gameutility.isGameBorderlineResignable(game.basegame)) {
+	} else if (gameutility.isGameBorderlineResignable(servergame.basegame)) {
 		// A player might try to abort a game after his opponent has just played the second move due to latency issues...
 		// In doubt, be lenient and allow him to abort here. DO NOT RETURN
 		console.log(
-			`Player tried to abort game ${game.match.id} when there's been exactly 2 moves played! Aborting game anyways...`,
+			`Player tried to abort game ${servergame.match.id} when there's been exactly 2 moves played! Aborting game anyways...`,
 		);
-	} else if (gameutility.isGameResignable(game.basegame)) {
+	} else if (gameutility.isGameResignable(servergame.basegame)) {
 		// Return if player tries to abort when he does not have the right
 		console.error(
-			`Player tried to abort game ${game.match.id} when there's been at least 3 moves played!`,
+			`Player tried to abort game ${servergame.match.id} when there's been at least 3 moves played!`,
 		);
 		return;
 	}
 
 	// Abort
-	setGameConclusion(game, 'aborted');
-	gameutility.broadcastGameUpdate(game);
+	setGameConclusion(servergame, 'aborted');
+	gameutility.broadcastGameUpdate(servergame);
 }
 
 /**
  * Called when a client tries to resign a game.
  * @param ws - The websocket
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  */
-function resignGame(ws: CustomWebSocket, game: ServerGame): void {
+function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Is it legal?...
 
-	if (gameutility.isGameOver(game.basegame)) {
+	if (gameutility.isGameOver(servergame.basegame)) {
 		// Return if game is already over
-		console.log(`Player resign to resign game ${game.match.id} when the game is already over!`);
+		console.log(
+			`Player resign to resign game ${servergame.match.id} when the game is already over!`,
+		);
 		return;
-	} else if (!gameutility.isGameResignable(game.basegame)) {
+	} else if (!gameutility.isGameResignable(servergame.basegame)) {
 		// Return if player tries to resign when he does not have the right
 		console.error(
-			`Player tried to resign game ${game.match.id} when there's less than 2 moves played! Ignoring..`,
+			`Player tried to resign game ${servergame.match.id} when there's less than 2 moves played! Ignoring..`,
 		);
 		return;
 	}
@@ -65,11 +69,11 @@ function resignGame(ws: CustomWebSocket, game: ServerGame): void {
 	// Resign
 	const ourColor =
 		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(game.match, ws)!;
+		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
-	setGameConclusion(game, gameConclusion);
-	gameutility.broadcastGameUpdate(game);
+	setGameConclusion(servergame, gameConclusion);
+	gameutility.broadcastGameUpdate(servergame);
 }
 
 export { abortGame, resignGame };

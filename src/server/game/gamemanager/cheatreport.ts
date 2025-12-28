@@ -28,23 +28,27 @@ type ReportMessage = z.infer<typeof reportschem>;
 /**
  *
  * @param ws - The socket
- * @param game - The game they belong in.
+ * @param servergame - The game they belong in.
  * @param messageContents - The contents of the socket report message
  */
-function onReport(ws: CustomWebSocket, game: ServerGame, messageContents: ReportMessage): void {
+function onReport(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: ReportMessage,
+): void {
 	// { reason, opponentsMoveNumber }
 	console.log('Client reported hacking!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 
 	const ourColor =
 		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(game.match, ws)!;
+		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
-	if (game.match.publicity === 'private') {
-		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+	if (servergame.match.publicity === 'private') {
+		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
-			game.match,
+			servergame.match,
 			ourColor,
 			'general',
 			'printerror',
@@ -53,16 +57,16 @@ function onReport(ws: CustomWebSocket, game: ServerGame, messageContents: Report
 		return;
 	}
 
-	const perpetratingMoveIndex = game.basegame.moves.length - 1;
+	const perpetratingMoveIndex = servergame.basegame.moves.length - 1;
 	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(
-		game.basegame,
+		servergame.basegame,
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
-		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
-			game.match,
+			servergame.match,
 			ourColor,
 			'general',
 			'printerror',
@@ -71,18 +75,18 @@ function onReport(ws: CustomWebSocket, game: ServerGame, messageContents: Report
 		return;
 	}
 	// Remove the last move played.
-	const perpetratingMove = game.basegame.moves.pop();
+	const perpetratingMove = servergame.basegame.moves.pop();
 	if (!perpetratingMove) return;
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.compact}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason}. Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.compact}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason}. Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
 
-	for (const player in game.match.playerData) {
+	for (const player in servergame.match.playerData) {
 		gameutility.sendMessageToSocketOfColor(
-			game.match,
+			servergame.match,
 			Number(player) as Player,
 			'general',
 			'notify',
@@ -91,8 +95,8 @@ function onReport(ws: CustomWebSocket, game: ServerGame, messageContents: Report
 	}
 	// Cheating report was valid, terminate the game..
 
-	setGameConclusion(game, 'aborted');
-	gameutility.broadcastGameUpdate(game);
+	setGameConclusion(servergame, 'aborted');
+	gameutility.broadcastGameUpdate(servergame);
 }
 
 export { onReport, reportschem };
