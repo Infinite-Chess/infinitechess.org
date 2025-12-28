@@ -250,10 +250,10 @@ function handleEngineMessage(data: any): void {
 		// Message contains the engine's best move suggestion
 		makeEngineMove(data.data);
 	} else if (data.type === 'generatedMoves') {
-		// Store the moves for the current position
+		// Always store the moves at the latest ply (front of the game)
 		const gamefile = gameslot.getGamefile()!;
-		const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
-		moveHistoryLegalMoves.set(currentMoveIndex, [...data.data]);
+		const latestMoveIndex = gamefile.boardsim.moves.length - 1;
+		moveHistoryLegalMoves.set(latestMoveIndex, [...data.data]);
 		// console.log('Received generated moves from engine worker:', data.data);
 		frametracker.onVisualChange(); // Ensure the frame is rendered
 	} else {
@@ -319,16 +319,6 @@ function makeEngineMove(compactMove: unknown): void {
 	if (move_gen_debug) sendPositionToEngine(true);
 }
 
-/**
- * Updates the legal moves display based on the current position in move history.
- * This should be called when navigating through moves.
- */
-function updateLegalMovesDisplay(): void {
-	if (!inEngineGame || !move_gen_debug) return;
-
-	frametracker.onVisualChange(); // Ensure the frame is rendered
-}
-
 function onGameConclude(): void {
 	if (!inEngineGame) return;
 	checkmatepractice.onEngineGameConclude();
@@ -339,14 +329,14 @@ function toggleDebug(): void {
 	move_gen_debug = !move_gen_debug;
 	statustext.showStatus(`Toggled engine move gen highlights: ${move_gen_debug}`);
 
-	if (move_gen_debug) {
-		// Update the display to show moves for the current position
-		updateLegalMovesDisplay();
-		// If no moves are cached for current position, request them
-		const gamefile = gameslot.getGamefile()!;
-		const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
-		if (!moveHistoryLegalMoves.has(currentMoveIndex)) {
-			sendPositionToEngine(true);
+	if (move_gen_debug && inEngineGame) {
+		// If no moves are cached for the latest ply, request them
+		const gamefile = gameslot.getGamefile();
+		if (gamefile) {
+			const latestMoveIndex = gamefile.boardsim.moves.length - 1;
+			if (!moveHistoryLegalMoves.has(latestMoveIndex)) {
+				sendPositionToEngine(true);
+			}
 		}
 	}
 }
@@ -399,7 +389,6 @@ export default {
 	onGameConclude,
 	toggleDebug,
 	render,
-	updateLegalMovesDisplay,
 };
 
 export type { EngineConfig, validEngineName };
