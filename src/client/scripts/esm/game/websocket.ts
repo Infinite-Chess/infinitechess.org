@@ -183,7 +183,6 @@ async function establishSocket(): Promise<boolean> {
 
 /**
  * Attempts to open our web socket to the server.
- * @param {boolean} isFirstTry - If *false*, then a successful open will display "Reconnected". ||TODO
  * @returns *true* if the socket was opened successfully.
  */
 async function openSocket(): Promise<boolean> {
