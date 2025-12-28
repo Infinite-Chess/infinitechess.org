@@ -40,6 +40,7 @@ import ratingabuse from './ratingabuse.js';
 import clock from '../../../shared/chess/logic/clock.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 
 import type { ServerGame, PlayerData } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -84,14 +85,14 @@ function createGame(
 ): void {
 	const ratinginfo: typeof assignments & PlayerGroup<{ rating?: Rating }> = {};
 	for (const [color, data] of Object.entries(assignments)) {
-		const player = Number(color) as Player;
+		const player: Player = Number(color) as Player;
 
 		ratinginfo[player] = data;
 
 		if (data.identifier.signedIn) {
-			ratinginfo[Number(color) as Player]!.rating = getEloOfPlayerInLeaderboard(
+			ratinginfo[player].rating = getEloOfPlayerInLeaderboard(
 				data.identifier.user_id,
-				0,
+				Leaderboards.INFINITY,
 			);
 		}
 	}
