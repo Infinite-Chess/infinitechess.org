@@ -59,9 +59,8 @@ let socket: WebSocket | undefined;
 let openingSocket = false; // True if currently repeatedly trying to create a socket, until network is back.
 /** The timeout ID of the timer to display we've lost connection
  * (by http) if we don't hear back after 5 seconds of trying to open a socket.
- * There is a NodeJS.Timeout type here because the VS Code thinks that the return type of setTimeout() is
- * a NodeJS.Timeout. This should probably be fixed in the future. */
-let reqOut: boolean | NodeJS.Timeout = false; // True if a SINGLE attempt is out to create a socket!
+ */
+let reqOut: false | number = false; // True if a SINGLE attempt is out to create a socket!
 /** True if we are having trouble connecting. If this is true, and we reconnect,
  * then we'll display "Reconnected." */
 let noConnection = false;
@@ -71,7 +70,7 @@ let inTimeout = false; // true when the server tells us too many requests. Don't
 const cushionBeforeAutoCloseMillis = 10000;
 /** The timeout ID that can be used to cancel the timer to auto-close
  * the websocket when we're not subscribed to anything for at least {@link cushionBeforeAutoCloseMillis} */
-let timeoutIDToAutoClose: NodeJS.Timeout; // another NodeJS.Timeout
+let timeoutIDToAutoClose: number;
 
 const validSubs = ['invites', 'game'] as const;
 const subs = {
@@ -214,7 +213,7 @@ async function openSocket(): Promise<boolean> {
  */
 function onSocketUpgradeReqLeave(): void {
 	dispatchOpeningSocketCustomEvent();
-	reqOut = setTimeout(httpLostConnection, timeToWaitForHTTPMillis);
+	reqOut = window.setTimeout(httpLostConnection, timeToWaitForHTTPMillis);
 }
 
 /** Cancels the timer that assumes we've lost connection a few seconds after requesting an open socket. */
@@ -233,7 +232,7 @@ function httpLostConnection(): void {
 		translations['websocket'].no_connection,
 		timeToWaitForHTTPMillis,
 	);
-	reqOut = setTimeout(httpLostConnection, timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
+	reqOut = window.setTimeout(httpLostConnection, timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
 	//console.log("Reset http timer")
 }
 
@@ -521,7 +520,7 @@ function onclose(event: CloseEvent): void {
 				true,
 				3,
 			);
-			setTimeout(resubAll, timeToResubAfterTooManyRequestsMillis);
+			window.setTimeout(resubAll, timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Origin Error':
 			statustext.showStatus(
@@ -567,7 +566,7 @@ function enterTimeout(timeMillis: number): void {
 		return console.error('Cannot enter timeout for an undefined amount of time!');
 	if (inTimeout) return; // Already in timeout, don't spam timers!
 	inTimeout = true;
-	setTimeout(leaveTimeout, timeMillis);
+	window.setTimeout(leaveTimeout, timeMillis);
 	invites.clearIfOnPlayPage();
 }
 
@@ -625,7 +624,7 @@ async function sendmessage(
 		// This will be canceled if we here the echo in time.
 		echoTimers[payload.id] = {
 			timeSent: Date.now(),
-			timeoutID: setTimeout(
+			timeoutID: window.setTimeout(
 				renewConnection,
 				timeToWaitForEchoMillis,
 				payload.id,
@@ -642,7 +641,10 @@ async function sendmessage(
 
 	if (DEBUG) {
 		// Add a simulated delay to the message
-		setTimeout(() => socket!.send(stringifiedMessage), simulatedWebsocketLatencyMillis_Debug);
+		window.setTimeout(
+			() => socket!.send(stringifiedMessage),
+			simulatedWebsocketLatencyMillis_Debug,
+		);
 	} else socket.send(stringifiedMessage);
 
 	return true;
@@ -717,7 +719,8 @@ function closeSocket(): void {
 /** If we have zero subscriptions, reset the 10 second timer to terminate the socket connection. */
 function resetTimerToCloseSocket(): void {
 	clearTimeout(timeoutIDToAutoClose);
-	if (zeroSubs()) timeoutIDToAutoClose = setTimeout(closeSocket, cushionBeforeAutoCloseMillis);
+	if (zeroSubs())
+		timeoutIDToAutoClose = window.setTimeout(closeSocket, cushionBeforeAutoCloseMillis);
 }
 
 /** Returns true if we're currently not subscribed to anything */
