@@ -25,6 +25,7 @@ import clock from '../../../../../shared/chess/logic/clock.js';
 import frametracker from '../rendering/frametracker.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
+import enginegame from '../misc/enginegame.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
 
@@ -105,6 +106,9 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile.basegame)) gameslot.unConcludeGame();
 	updateGui(false); // GUI changes
+
+	// Update engine legal moves display if in an engine game
+	enginegame.updateLegalMovesDisplay();
 }
 
 // Local Moving ----------------------------------------------------------------------------------------------------------
@@ -135,6 +139,9 @@ function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): v
 		viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex),
 	);
 	updateGui(false);
+
+	// Update engine legal moves display if in an engine game
+	enginegame.updateLegalMovesDisplay();
 }
 
 /**
@@ -169,6 +176,9 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
 	updateGui(true);
+
+	// Update engine legal moves display if in an engine game
+	enginegame.updateLegalMovesDisplay();
 }
 
 /**
