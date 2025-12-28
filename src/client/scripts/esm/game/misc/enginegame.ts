@@ -187,18 +187,10 @@ function onMovePlayed(): void {
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.basegame.gameConclusion) return; // Don't do anything if the game is over
 
-	if (move_gen_debug) requestMovesForCurrentPosition(); // Request generated moves for debugging FIRST (doesn't perform best move calculation)
-	sendPositionToEngine(false); // Perform normal best move calculation
-}
+	requestMovesForCurrentPosition(); // Request generated moves for debugging FIRST
 
-/**
- * Sends the current position to the engine web worker.
- * If the {@link requestGeneratedMoves} flag is false, then the engine should perform a best move calculation.
- * Else it should send us the list of generated legal moves for debugging purposes.
- */
-function sendPositionToEngine(requestGeneratedMoves: boolean): void {
-	if (!inEngineGame) return;
-	const gamefile = gameslot.getGamefile()!;
+	// Request the engine to perform a best move calculation...
+
 	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
@@ -237,7 +229,6 @@ function sendPositionToEngine(requestGeneratedMoves: boolean): void {
 			btime: timing?.btime,
 			winc: timing?.winc,
 			binc: timing?.binc,
-			requestGeneratedMoves,
 		});
 	else console.error('User made a move in an engine game but no engine webworker is loaded!');
 }
