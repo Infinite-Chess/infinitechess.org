@@ -43,7 +43,7 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
 function cancelAutoAFKResignTimer(servergame: ServerGame, alertOpponent: boolean = false): void {
 	if (servergame.match.autoAFKResignTime !== undefined && alertOpponent) {
 		// Alert their opponent
-		const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn!);
+		const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn);
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			opponentColor,
