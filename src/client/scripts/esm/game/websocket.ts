@@ -21,6 +21,12 @@ import docutil from '../util/docutil.js';
 
 type WebsocketMessageValue = MessageEvent['data'];
 
+type HardRefreshInfo = {
+	timeLastHardRefreshed: number;
+	expectedVersion: string;
+	sentNotSupported?: boolean;
+};
+
 /**
  * An incoming websocket server message.
  */
@@ -403,7 +409,7 @@ function handleHardRefresh(GAME_VERSION: string): void {
 		timeLastHardRefreshed: Date.now(),
 		expectedVersion: GAME_VERSION,
 	};
-	const preexistingHardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
+	const preexistingHardRefreshInfo: HardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
 	if (preexistingHardRefreshInfo?.expectedVersion === GAME_VERSION) {
 		// Don't hard-refresh, we've already tried for this version.
 		if (!preexistingHardRefreshInfo.sentNotSupported)
@@ -418,7 +424,7 @@ function handleHardRefresh(GAME_VERSION: string): void {
 	// @ts-expect-error This parameter does indeed exist -> https://developer.mozilla.org/en-US/docs/Web/API/Location/reload
 	location.reload(true);
 
-	function saveInfo(info: any): void {
+	function saveInfo(info: HardRefreshInfo): void {
 		localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 }));
 	}
 }
