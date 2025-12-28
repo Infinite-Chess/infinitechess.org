@@ -145,7 +145,7 @@ function initEngineGame(options: {
 		engineWorker!.onerror = null;
 		// Ensures if the debug mode was on before starting an engine game,
 		// the engine generated legal moves are rendered as soon as the engine is ready.
-		if (move_gen_debug) requestMovesForCurrentPosition();
+		requestMovesForCurrentPosition();
 	});
 }
 
@@ -313,7 +313,7 @@ function makeEngineMove(compactMove: unknown): void {
 	checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 
 	// If the debug mode is on, request the generated moves for the new position after playing the engine's move
-	if (move_gen_debug) requestMovesForCurrentPosition();
+	requestMovesForCurrentPosition();
 }
 
 function onGameConclude(): void {
@@ -331,50 +331,11 @@ function toggleDebug(): void {
 		pendingDebugRequests.length = 0;
 	} else if (inEngineGame) {
 		// Always request moves when turning debug mode on
-		const gamefile = gameslot.getGamefile();
-		if (gamefile) {
-			const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
-			if (!moveHistoryLegalMoves.has(currentMoveIndex)) {
-				// Add to pending queue
-				pendingDebugRequests.push(currentMoveIndex);
+		const gamefile = gameslot.getGamefile()!;
+		const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
+		if (moveHistoryLegalMoves.has(currentMoveIndex)) return; // Already have move gen for this position
 
-				// Compress the gamefile as a single position (not including future moves)
-				// This ensures the engine analyzes the currently viewed position
-				const longformIn = gamecompressor.compressGamefile(gamefile, true);
-				const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
-
-				if (engineWorker)
-					engineWorker.postMessage({
-						stringGamefile,
-						lf: longformIn,
-						engineConfig: engineConfig,
-						youAreColor: engineColor,
-						requestGeneratedMoves: true,
-					});
-			}
-		}
-	}
-}
-
-/** Callback for enginegame actions when a new local move is viewed. */
-function onViewMove(): void {
-	// Request the move gen for the current ply, if debug mode is on
-	requestMovesForCurrentPosition();
-}
-
-/**
- * Requests legal moves for the currently viewed position if not already cached.
- * Should be called when navigating through move history with debug mode on.
- */
-function requestMovesForCurrentPosition(): void {
-	if (!inEngineGame || !move_gen_debug) return;
-
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-
-	const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
-	if (!moveHistoryLegalMoves.has(currentMoveIndex)) {
-		// Add to pending queue
+		// Add a new move gen request to pending queue
 		pendingDebugRequests.push(currentMoveIndex);
 
 		// Compress the gamefile as a single position (not including future moves)
@@ -393,6 +354,41 @@ function requestMovesForCurrentPosition(): void {
 	}
 }
 
+/** Callback for enginegame actions when a new local move is viewed. */
+function onViewMove(): void {
+	// Request the move gen for the current ply, if debug mode is on
+	requestMovesForCurrentPosition();
+}
+
+/**
+ * Requests legal moves for the currently viewed position if not already cached.
+ * Should be called when navigating through move history with debug mode on.
+ */
+function requestMovesForCurrentPosition(): void {
+	if (!inEngineGame || !move_gen_debug) return;
+
+	const gamefile = gameslot.getGamefile()!;
+	const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
+	if (moveHistoryLegalMoves.has(currentMoveIndex)) return; // Already have move gen for this position
+
+	// Add a new move gen request to pending queue
+	pendingDebugRequests.push(currentMoveIndex);
+
+	// Compress the gamefile as a single position (not including future moves)
+	// This ensures the engine analyzes the currently viewed position
+	const longformIn = gamecompressor.compressGamefile(gamefile, true);
+	const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
+
+	if (engineWorker)
+		engineWorker.postMessage({
+			stringGamefile,
+			lf: longformIn,
+			engineConfig: engineConfig,
+			youAreColor: engineColor,
+			requestGeneratedMoves: true,
+		});
+}
+
 /** Renders a debug preview of the engine's generated legal moves for the current position. */
 function render(): void {
 	if (!inEngineGame) return;
@@ -403,14 +399,13 @@ function render(): void {
 	const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
 	const currentMoves = moveHistoryLegalMoves.get(currentMoveIndex) || [];
 
+	if (currentMoves.length === 0) return; // No moves to render
+
 	// Map moves to squares
 	const coordsKeys: CoordsKey[] = currentMoves.flatMap((moveStr: string) => {
 		const [_from, to] = moveStr.split('>');
 		return [to]; // We only care about the destination square for highlighting
 	}) as CoordsKey[]; // ["x,y", ...]
-
-	// Early exit if no drawn-squares to draw
-	if (coordsKeys.length === 0) return;
 
 	const coords: Coords[] = coordsKeys.map((s) => coordutil.getCoordsFromKey(s)); // [[x,y], ...]
 
