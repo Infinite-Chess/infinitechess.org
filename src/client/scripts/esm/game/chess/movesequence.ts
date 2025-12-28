@@ -136,7 +136,6 @@ function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): v
 		viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex),
 	);
 	updateGui(false);
-	enginegame.requestMovesForCurrentPosition(); // Request legal moves for debug mode if enabled
 }
 
 /**
