@@ -525,7 +525,7 @@ function onclose(event: CloseEvent): void {
 				true,
 				3,
 			);
-			window.setTimeout(resubAll, timeToResubAfterTooManyRequestsMillis);
+			window.setTimeout(() => resubAll(), timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Origin Error':
 			statustext.showStatus(
