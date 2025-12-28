@@ -13,13 +13,14 @@ import { animateMove } from '../chess/graphicalchanges.js';
 import premoves from '../chess/premoves.js';
 import perspective from '../rendering/perspective.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+import frametracker from '../rendering/frametracker.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -251,6 +252,7 @@ function handleEngineMessage(data: any): void {
 	} else if (data.type === 'generatedMoves') {
 		moves_generated = data.data; // ["x,y>x,y", ...]
 		// console.log('Received generated moves from engine worker:', moves_generated);
+		frametracker.onVisualChange(); // Ensure the frame is rendered
 	} else {
 		console.error('Received unknown message from engine worker:', data);
 	}
@@ -340,7 +342,7 @@ function render(): void {
 
 	// Map moves to squares
 	const coordsKeys: CoordsKey[] = moves_generated.flatMap((moveStr: string) => {
-		const [from, to] = moveStr.split('>');
+		const [_from, to] = moveStr.split('>');
 		return [to]; // We only care about the destination square for highlighting
 	}) as CoordsKey[]; // ["x,y", ...]
 
