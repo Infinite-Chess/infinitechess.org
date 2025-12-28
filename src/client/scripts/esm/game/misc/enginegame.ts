@@ -340,7 +340,7 @@ function render(): void {
 
 	// Map moves to squares
 	const coordsKeys: CoordsKey[] = moves_generated.flatMap((moveStr: string) => {
-		const [from, to] = moveStr.split('>');
+		const [_from, to] = moveStr.split('>');
 		return [to]; // We only care about the destination square for highlighting
 	}) as CoordsKey[]; // ["x,y", ...]
 
