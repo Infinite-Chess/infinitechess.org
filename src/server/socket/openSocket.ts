@@ -32,13 +32,13 @@ import { executeSafely } from '../utility/errorGuard.js';
 
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
-import type { Request } from 'express';
+import type { IncomingMessage } from 'http';
 
 // Variables ---------------------------------------------------------------------------
 
 // Functions ---------------------------------------------------------------------------
 
-function onConnectionRequest(socket: WebSocket, req: Request): void {
+function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
 
@@ -102,7 +102,7 @@ function onConnectionRequest(socket: WebSocket, req: Request): void {
 
 function closeIfInvalidAndAddMetadata(
 	socket: WebSocket,
-	req: Request,
+	req: IncomingMessage,
 ): CustomWebSocket | undefined {
 	// Make sure the connection is secure https
 	const origin = req.headers.origin;
@@ -159,10 +159,10 @@ function closeIfInvalidAndAddMetadata(
 /**
  * Adds the 'message', 'close', and 'error' event listeners to the socket
  */
-function addListenersToSocket(req: Request, ws: CustomWebSocket): void {
-	ws.on('message', (message) => {
+function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
+	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
 		executeSafely(
-			() => onmessage(req, ws, message as Buffer<ArrayBufferLike>),
+			() => onmessage(req, ws, message),
 			'Error caught within websocket on-message event:',
 		);
 	});
