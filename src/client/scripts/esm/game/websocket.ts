@@ -21,6 +21,7 @@ import docutil from '../util/docutil.js';
 
 type WebsocketMessageValue = MessageEvent['data'];
 
+/** Information about the last hard refresh we attempted. */
 type HardRefreshInfo = {
 	timeLastHardRefreshed: number;
 	expectedVersion: string;
@@ -31,25 +32,15 @@ type HardRefreshInfo = {
  * An incoming websocket server message.
  */
 interface WebsocketMessage {
-	/**
-	 * What subscription the message should be forwarded to (e.g. "general", "invites", "game").
-	 */
+	/** What subscription the message should be forwarded to (e.g. "general", "invites", "game"). */
 	sub: string;
-	/**
-	 * What action to perform with this message's data.
-	 */
+	/** What action to perform with this message's data. */
 	action: string;
-	/**
-	 * The message contents.
-	 */
+	/** The message contents. */
 	value: WebsocketMessageValue;
-	/**
-	 * The ID of the message to echo, so the server knows we've received it.
-	 */
+	/** The ID of the message to echo, so the server knows we've received it. */
 	id: number;
-	/**
-	 * The ID of the message this message is the reply to, if specified.
-	 */
+	/** The ID of the message this message is the reply to, if specified. */
 	replyto: number;
 }
 
@@ -89,7 +80,7 @@ const timeToResubAfterMessageTooBigMillis = timeToResubAfterNetworkLossMillis;
 
 const timeToWaitForHTTPMillis = 5000; // Milliseconds to assume http isn't connecting
 const timeToWaitForEchoMillis = 5000; // 3 seconds until we assume we've disconnected!
-let echoTimers: { [key: MessageID]: { timeSent: number; timeoutID: number } } = {}; // A list of setTimeout id's that are currently out.
+let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {}; // A list of setTimeout id's that are currently out.
 
 // List of functions to execute when we get specified reply back
 let onreplyFuncs: { [key: MessageID]: Function } = {}; // { messageID: onreplyFunc }
@@ -223,9 +214,7 @@ function onSocketUpgradeReqLeave(): void {
 
 /** Cancels the timer that assumes we've lost connection a few seconds after requesting an open socket. */
 function onReqBack(): void {
-	if (typeof reqOut !== 'boolean') {
-		clearTimeout(reqOut);
-	}
+	if (typeof reqOut !== 'boolean') clearTimeout(reqOut);
 	reqOut = false;
 }
 
@@ -571,7 +560,7 @@ function enterTimeout(timeMillis: number): void {
 		return console.error('Cannot enter timeout for an undefined amount of time!');
 	if (inTimeout) return; // Already in timeout, don't spam timers!
 	inTimeout = true;
-	window.setTimeout(leaveTimeout, timeMillis);
+	window.setTimeout(() => leaveTimeout(), timeMillis);
 	invites.clearIfOnPlayPage();
 }
 
@@ -608,12 +597,10 @@ async function sendmessage(
 
 	let payload: {
 		route: string;
-		contents:
-			| WebsocketMessageValue
-			| {
-					action: string;
-					value: WebsocketMessageValue;
-			  };
+		contents: {
+			action: string;
+			value: WebsocketMessageValue;
+		};
 		id?: number;
 	};
 	if (action === 'echo') {
@@ -641,8 +628,7 @@ async function sendmessage(
 			timeoutID: window.setTimeout(
 				() => renewConnection(payload.id!),
 				timeToWaitForEchoMillis,
-				payload.id,
-			) as unknown as number,
+			),
 		};
 		//console.log(`Set timer of message id "${payload.id}"`)
 
@@ -667,12 +653,8 @@ async function sendmessage(
 /** Cancels all timers that assume we've disconnected if we don't hear an echo back.
  * Call this when the socket connection is terminated, because we obviously won't hear any more echos. */
 function cancelAllEchoTimers(): void {
-	const echoTimersKeys: (keyof typeof echoTimers)[] = Object.keys(
-		echoTimers,
-	) as unknown as number[];
-	for (const timeoutIDKey of echoTimersKeys) {
-		const timeoutIDValue = echoTimers[timeoutIDKey]!.timeoutID;
-		clearTimeout(timeoutIDValue);
+	for (const echoTimerEntry of Object.values(echoTimers)) {
+		clearTimeout(echoTimerEntry.timeoutID);
 	}
 	echoTimers = {};
 }
@@ -682,7 +664,7 @@ function cancelAllEchoTimers(): void {
  * @param messageID - The ID of the outgoing message
  * @param onreplyFunc - The function to execute when we receive the server's response, or never if the socket closes before then.
  */
-function scheduleOnreplyFunc(messageID: MessageID, onreplyFunc?: Function): void {
+function scheduleOnreplyFunc(messageID: MessageID, onreplyFunc?: () => void): void {
 	if (!onreplyFunc) return;
 	onreplyFuncs[messageID] = onreplyFunc;
 }
@@ -734,7 +716,7 @@ function closeSocket(): void {
 function resetTimerToCloseSocket(): void {
 	clearTimeout(timeoutIDToAutoClose);
 	if (zeroSubs())
-		timeoutIDToAutoClose = window.setTimeout(closeSocket, cushionBeforeAutoCloseMillis);
+		timeoutIDToAutoClose = window.setTimeout(() => closeSocket(), cushionBeforeAutoCloseMillis);
 }
 
 /** Returns true if we're currently not subscribed to anything */
@@ -754,7 +736,7 @@ function zeroSubs(): boolean {
  * the socket and resubscribe to everything that we were subscribed to.
  * Games will have to be resynced.
  */
-async function resubAll(): Promise<boolean | void> {
+async function resubAll(): Promise<void> {
 	if (config.DEV_BUILD) console.log('Resubbing all..');
 
 	if (zeroSubs()) {
@@ -763,7 +745,7 @@ async function resubAll(): Promise<boolean | void> {
 		return;
 	} else {
 		// 1+ subs
-		if (!(await establishSocket())) return false; // this only returns false when it fails AND there's no subs to sub to.
+		if (!(await establishSocket())) return; // this only returns false when it fails AND there's no subs to sub to.
 	}
 
 	for (const sub of validSubs) {
@@ -779,7 +761,6 @@ async function resubAll(): Promise<boolean | void> {
 				console.error(
 					`Cannot resub to all subs after an unexpected socket closure with strange sub ${sub}!`,
 				);
-				return undefined;
 		}
 	}
 }
