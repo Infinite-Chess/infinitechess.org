@@ -341,6 +341,12 @@ function toggleDebug(): void {
 	}
 }
 
+/** Callback for enginegame actions when a new local move is viewed. */
+function onViewMove(): void {
+	// Request the move gen for the current ply, if debug mode is on
+	requestMovesForCurrentPosition();
+}
+
 /**
  * Requests legal moves for the currently viewed position if not already cached.
  * Should be called when navigating through move history with debug mode on.
@@ -419,7 +425,7 @@ export default {
 	onGameConclude,
 	toggleDebug,
 	render,
-	requestMovesForCurrentPosition,
+	onViewMove,
 };
 
 export type { EngineConfig, validEngineName };

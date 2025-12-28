@@ -125,6 +125,7 @@ function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move, forwar
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
+	enginegame.onViewMove();
 }
 
 /**
@@ -170,7 +171,6 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
 	updateGui(true);
-	enginegame.requestMovesForCurrentPosition(); // Request legal moves for debug mode if enabled
 }
 
 /**
