@@ -25,10 +25,25 @@ type WebsocketMessageValue = any;
  * An incoming websocket server message.
  */
 interface WebsocketMessage {
+	/**
+	 * What subscription the message should be forwarded to (e.g. "general", "invites", "game").
+	 */
 	sub: string;
+	/**
+	 * What action to perform with this message's data.
+	 */
 	action: string;
+	/**
+	 * The message contents.
+	 */
 	value: WebsocketMessageValue;
+	/**
+	 * The ID of the message to echo, so the server knows we've received it.
+	 */
 	id: number;
+	/**
+	 * The ID of the message this message is the reply to, if specified.
+	 */
 	replyto: number;
 }
 
