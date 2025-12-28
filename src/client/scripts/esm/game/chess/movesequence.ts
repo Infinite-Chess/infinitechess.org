@@ -23,6 +23,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import guiclock from '../gui/guiclock.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import frametracker from '../rendering/frametracker.js';
+import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
 
@@ -135,6 +136,7 @@ function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): v
 		viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex),
 	);
 	updateGui(false);
+	enginegame.requestMovesForCurrentPosition(); // Request legal moves for debug mode if enabled
 }
 
 /**
@@ -169,6 +171,7 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
 	updateGui(true);
+	enginegame.requestMovesForCurrentPosition(); // Request legal moves for debug mode if enabled
 }
 
 /**
