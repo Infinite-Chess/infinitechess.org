@@ -11,7 +11,6 @@ import {
 	addUserToLeaderboard_core,
 	getPlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
-	Rating,
 	updatePlayerLeaderboardRating_core,
 } from '../../database/leaderboardsManager.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
@@ -19,7 +18,6 @@ import {
 	computeRatingDataChanges,
 	DEFAULT_LEADERBOARD_ELO,
 	DEFAULT_LEADERBOARD_RD,
-	UNCERTAIN_LEADERBOARD_RD,
 } from './ratingcalculation.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -30,7 +28,6 @@ import clockutil from '../../../shared/chess/util/clockutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 
 import type { ServerGame } from './gameutility.js';
-import type { MetaData } from '../../../shared/chess/util/metadata.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { Game } from '../../../shared/chess/logic/gamefile.js';
 
