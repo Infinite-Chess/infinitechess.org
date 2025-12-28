@@ -326,32 +326,9 @@ function toggleDebug(): void {
 	move_gen_debug = !move_gen_debug;
 	statustext.showStatus(`Toggled engine move gen highlights: ${move_gen_debug}`);
 
-	// If turning off debug mode, clear all pending requests
-	if (!move_gen_debug) {
-		pendingDebugRequests.length = 0;
-	} else if (inEngineGame) {
-		// Always request moves when turning debug mode on
-		const gamefile = gameslot.getGamefile()!;
-		const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
-		if (moveHistoryLegalMoves.has(currentMoveIndex)) return; // Already have move gen for this position
-
-		// Add a new move gen request to pending queue
-		pendingDebugRequests.push(currentMoveIndex);
-
-		// Compress the gamefile as a single position (not including future moves)
-		// This ensures the engine analyzes the currently viewed position
-		const longformIn = gamecompressor.compressGamefile(gamefile, true);
-		const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
-
-		if (engineWorker)
-			engineWorker.postMessage({
-				stringGamefile,
-				lf: longformIn,
-				engineConfig: engineConfig,
-				youAreColor: engineColor,
-				requestGeneratedMoves: true,
-			});
-	}
+	if (!move_gen_debug)
+		pendingDebugRequests.length = 0; // Turning off: Clear pending requests.
+	else requestMovesForCurrentPosition(); // Turning on: Request moves for current position.
 }
 
 /** Callback for enginegame actions when a new local move is viewed. */
