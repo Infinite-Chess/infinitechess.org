@@ -122,7 +122,7 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
 		if (clockValues.timeColorTickingLosesAt === undefined)
 			throw Error(
-				'clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()',
+				'clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() before edit()',
 			);
 		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - now;
 		clockValues.clocks[colorTicking] = colorTickingTrueTimeRemaining;
@@ -223,17 +223,6 @@ function update(basegame: Game): Player | undefined {
 	return; // Without this, typescript complains not all code paths return a value.
 }
 
-/**
- * Returns the true time remaining for the player whos clock is ticking.
- * Independant of reading clocks.currentTime, because that isn't updated
- * every frame if the user unfocuses the window.
- */
-function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
-	if (clocks.colorTicking === undefined) return;
-	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
-	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
-}
-
 function printClocks(basegame: Game): void {
 	if (basegame.untimed) return console.log('Game is untimed.');
 	const clocks = basegame.clocks!;
@@ -265,7 +254,6 @@ export default {
 	endGame,
 	update,
 	push,
-	getColorTickingTrueTimeRemaining,
 	printClocks,
 };
 

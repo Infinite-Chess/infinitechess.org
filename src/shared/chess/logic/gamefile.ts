@@ -11,6 +11,7 @@ import type { VariantOptions } from './initvariant.js';
 import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
+import type { Gamefile, Construction } from '../../../mods/modmanager.js';
 
 import organizedpieces from './organizedpieces.js';
 import initvariant from './initvariant.js';
@@ -26,6 +27,7 @@ import gamerules from '../variants/gamerules.js';
 import wincondition from './wincondition.js';
 import bounds from '../../util/math/bounds.js';
 import variant from '../variants/variant.js';
+import events from './events.js';
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -69,7 +71,7 @@ type ClockDependant =
  * Use by client always, may not be used by the server.
  */
 type Board = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+	/** An array of all types of pieces that are in this game, with their color extension */
 	existingTypes: number[];
 	/** An array of all RAW piece types that are in this game. */
 	existingRawTypes: RawType[];
@@ -94,15 +96,17 @@ type Board = {
 	startSnapshot: Snapshot;
 };
 
+type Gamesim = {
+	basegame: Game;
+	boardsim: Board;
+};
+
 /**
  * Both game data AND board state used on the client-side,
  * and in the future *sometimes* used on the server-side,
  * when the server starts doing legal move validation.
  */
-type FullGame = {
-	basegame: Game;
-	boardsim: Board;
-};
+type FullGame = Gamefile<Gamesim>;
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
@@ -124,18 +128,19 @@ interface Additional {
 }
 
 /** Creates a new {@link Game} object from provided arguments */
-function initGame(
+function initGame<T extends { basegame: Game }>(
+	gamefile: Construction<T>,
 	metadata: MetaData,
 	variantOptions?: VariantOptions,
 	gameConclusion?: string,
 	clockValues?: ClockValues,
-): Game {
+): void {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(
 		new Set(gameRules.turnOrder),
 		metadata.TimeControl,
 	);
-	const game: Game = {
+	gamefile.basegame = {
 		metadata,
 		moves: [],
 		gameRules,
@@ -145,25 +150,25 @@ function initGame(
 	};
 
 	if (clockValues) {
-		if (game.untimed)
+		if (gamefile.basegame.untimed)
 			throw Error(
 				'Cannot set clock values for untimed game. Should not have specified clockValues.',
 			);
-		clock.edit(game.clocks, clockValues);
+		clock.edit(gamefile.basegame.clocks, clockValues);
 	}
-
-	return game;
+	events.runEvent(gamefile.events, 'gameloaded', gamefile, gamefile.basegame);
 }
 
 /** Creates a new {@link Board} object from provided arguements */
-function initBoard(
+function initBoard<T extends { boardsim: Board }>(
+	gamefile: Construction<T>,
 	gameRules: GameRules,
 	metadata: MetaData,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
-): Board {
+): void {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
 		gameRules,
 		metadata,
@@ -232,7 +237,19 @@ function initBoard(
 		pieces.slides,
 	);
 
-	return {
+	// Have to assign it this weird way to make typescript happy.
+	// We don't have to cast to EditorDependent this way.
+	const editorDependentVars: EditorDependent = editor
+		? {
+				editor: true,
+				startSnapshot: undefined,
+			}
+		: {
+				editor: false,
+				startSnapshot,
+			};
+
+	gamefile.boardsim = {
 		pieces,
 		existingTypes,
 		existingRawTypes,
@@ -246,16 +263,16 @@ function initBoard(
 		editor,
 		startSnapshot,
 	};
+	events.runEvent(gamefile.events, 'boardloaded', gamefile, gamefile.boardsim);
 }
 
 /** Attaches a board to a specific game. Used for loading a game after it was started. */
 function loadGameWithBoard(
-	basegame: Game,
-	boardsim: Board,
+	gamefile: FullGame,
 	moves: ServerGameMoveMessage[] = [],
 	gameConclusion?: string,
 ): FullGame {
-	const gamefile = { basegame, boardsim };
+	const { basegame, boardsim } = gamefile;
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(gamefile))
@@ -289,24 +306,30 @@ function loadGameWithBoard(
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
  */
-function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame {
-	const basegame = initGame(
+function initFullGame(
+	gamefile: Construction<FullGame>,
+	metadata: MetaData,
+	additional: Additional = {},
+): FullGame {
+	initGame(
+		gamefile,
 		metadata,
 		additional.variantOptions,
 		additional.gameConclusion,
 		additional.clockValues,
 	);
-	const boardsim = initBoard(
-		basegame.gameRules,
-		basegame.metadata,
+	initBoard(
+		gamefile,
+		gamefile.basegame!.gameRules,
+		gamefile.basegame!.metadata,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
+	return loadGameWithBoard(gamefile as FullGame, additional.moves, additional.gameConclusion);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
+export type { Gamesim, Game, Board, FullGame, Snapshot, ClockDependant, Additional };
 
 export default {
 	initGame,

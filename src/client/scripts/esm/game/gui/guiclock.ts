@@ -3,7 +3,6 @@ import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
-import clock from '../../../../../shared/chess/logic/clock.js';
 
 import type { SoundObject } from '../../audio/AudioManager.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -81,6 +80,16 @@ const countdown: {
 		fadeOutDuration: 100,
 	},
 };
+/**
+ * Returns the true time remaining for the player whos clock is ticking.
+ * Independant of reading clocks.currentTime, because that isn't updated
+ * every frame if the user unfocuses the window.
+ */
+function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
+	if (clocks.colorTicking === undefined) return;
+	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
+	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
+}
 
 function hideClocks(): void {
 	for (const clockElements of Object.values(element_timers)) {
@@ -275,7 +284,7 @@ function push(clocks: ClockData): void {
 function scheduleDrum(clocks: ClockData): void {
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
-	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
+	const playerTrueTimeRemaining = getColorTickingTrueTimeRemaining(clocks)!;
 	const timeUntil10SecsRemain = playerTrueTimeRemaining - 10000;
 	let timeNextDrum = timeUntil10SecsRemain;
 	let secsRemaining = 10;
@@ -295,7 +304,7 @@ function scheduleTicking(clocks: ClockData): void {
 	if (clocks.timeAtTurnStart! < 10000) return;
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
-	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
+	const playerTrueTimeRemaining = getColorTickingTrueTimeRemaining(clocks)!;
 	const timeRemain = playerTrueTimeRemaining - countdown.ticking.timeToStartFromEnd;
 	if (timeRemain > 0)
 		countdown.ticking.timeoutID = setTimeout(() => playTickingEffect(0), timeRemain);
@@ -309,7 +318,7 @@ function scheduleTicking(clocks: ClockData): void {
 function scheduleTick(clocks: ClockData): void {
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
-	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
+	const playerTrueTimeRemaining = getColorTickingTrueTimeRemaining(clocks)!;
 	const timeRemain = playerTrueTimeRemaining - countdown.tick.timeToStartFromEnd;
 	if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(() => playTickEffect(0), timeRemain);
 	else {
@@ -324,7 +333,7 @@ function playDrumAndQueueNext(clocks: ClockData, secsRemaining: number): void {
 
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
-	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
+	const playerTrueTimeRemaining = getColorTickingTrueTimeRemaining(clocks)!;
 
 	if (playerTrueTimeRemaining < 1500) return;
 

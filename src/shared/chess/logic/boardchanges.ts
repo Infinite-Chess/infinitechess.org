@@ -24,7 +24,7 @@ const oneWayActions: string[] = ['capture', 'delete'];
 import type { Move } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Piece } from '../util/boardutil.js';
-import type { FullGame } from './gamefile.js';
+import type { Gamesim } from './gamefile.js';
 
 /**
  * Generic type to describe any changes to the board
@@ -84,7 +84,7 @@ interface ChangeApplication<F extends CallableFunction> {
 /**
  * An object mapping move changes to a function that performs the piece list changes for that action.
  */
-const changeFuncs: ChangeApplication<genericChangeFunc<FullGame>> = {
+const changeFuncs: ChangeApplication<genericChangeFunc<Gamesim>> = {
 	forward: {
 		add: addPiece,
 		delete: deletePiece,
@@ -220,7 +220,7 @@ function applyChanges<T>(
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  */
-function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
+function addPiece({ boardsim, basegame }: Gamesim, change: Change): void {
 	// desiredIndex optional
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
@@ -271,7 +271,7 @@ function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
  * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
  * from the organized lists.
  */
-function deletePiece({ boardsim }: FullGame, change: Change): void {
+function deletePiece({ boardsim }: Gamesim, change: Change): void {
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
@@ -300,7 +300,7 @@ function deletePiece({ boardsim }: FullGame, change: Change): void {
  * @param gamefile - The gamefile
  * @param change - the move data
  */
-function movePiece({ boardsim }: FullGame, change: Change): void {
+function movePiece({ boardsim }: Gamesim, change: Change): void {
 	if (change.action !== 'move')
 		throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
@@ -316,7 +316,7 @@ function movePiece({ boardsim }: FullGame, change: Change): void {
 /**
  * Reverses `movePiece`
  */
-function returnPiece({ boardsim }: FullGame, change: Change): void {
+function returnPiece({ boardsim }: Gamesim, change: Change): void {
 	if (change.action !== 'move')
 		throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
