@@ -10,11 +10,12 @@ import process from 'node:process';
 import { writeFile } from 'node:fs/promises';
 import path from 'path';
 import fs from 'fs';
-import { z } from 'zod';
+import * as z from 'zod';
+import { fileURLToPath } from 'node:url';
 
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logZodError } from '../utility/zodlogger.js';
 
-import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** A GitHub contributor on the infinitechess.org repository. */
@@ -138,18 +139,11 @@ function refreshGitHubContributorsList(): void {
 
 			const zod_result = GitHubContributorSchema.safeParse(unvalidatedJson);
 			if (!zod_result.success) {
-				const messageContents = JSON.stringify(unvalidatedJson, null, 2);
-				const treeifiedErrors = JSON.stringify(z.treeifyError(zod_result.error), null, 2);
-				const logText = `Invalid GitHub API Parameters. Message contents:
-${messageContents}
-
-Zod treeified errors:
-${treeifiedErrors}
-
-===================================================================
-
-				`;
-				logEventsAndPrint(logText, 'errLog.txt');
+				logZodError(
+					unvalidatedJson,
+					zod_result.error,
+					'Invalid GitHub API response for contributors.',
+				);
 				return;
 			}
 
