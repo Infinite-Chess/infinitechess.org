@@ -54,7 +54,7 @@ const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
 const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
 // refreshGitHubContributorsList(); // Initial refreshal for dev testing
 
-if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === undefined)
+if (process.env['GITHUB_API_KEY'] === undefined || process.env['GITHUB_REPO'] === undefined)
 	throw new Error(
 		'.env file is missing GITHUB_API_KEY or GITHUB_REPO, please regenerate the file or add the lines manually.',
 	);
@@ -95,7 +95,7 @@ function refreshGitHubContributorsList(): void {
 			Accept: 'application/vnd.github+json',
 			Authorization: `Bearer ${GITHUB_API_KEY}`,
 			'X-GitHub-Api-Version': '2022-11-28',
-			'User-Agent': process.env.APP_BASE_URL,
+			'User-Agent': process.env['APP_BASE_URL'],
 			// "Content-Length": "0"
 		},
 		signal, // Pass the signal to the request options
@@ -118,12 +118,19 @@ function refreshGitHubContributorsList(): void {
 			try {
 				const json = JSON.parse(response);
 
-				const currentContributors = json.map((contributor) => ({
-					name: contributor.login,
-					iconUrl: contributor.avatar_url,
-					linkUrl: contributor.html_url,
-					contributionCount: contributor.contributions,
-				}));
+				const currentContributors = json.map(
+					(contributor: {
+						login: string;
+						avatar_url: string;
+						html_url: string;
+						contributions: number;
+					}) => ({
+						name: contributor.login,
+						iconUrl: contributor.avatar_url,
+						linkUrl: contributor.html_url,
+						contributionCount: contributor.contributions,
+					}),
+				);
 
 				if (currentContributors.length > 0) {
 					contributors = currentContributors;
