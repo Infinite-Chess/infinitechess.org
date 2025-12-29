@@ -80,7 +80,7 @@ function onReport(
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.compact}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason}. Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
+	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.compact}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
 
