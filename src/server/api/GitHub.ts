@@ -15,20 +15,31 @@ import fs from 'fs';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+interface Contributor {
+	name: string;
+	iconUrl: string;
+	linkUrl: string;
+	contributionCount: number;
+}
+
 // Variables ---------------------------------------------------------------------------
 
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
  * This should be periodically refreshed.
- * example contributor {
-    name: 'Naviary2',
+ * 
+ * example contributor:
+ * ```js
+ * {
+	name: 'Naviary2',
     iconUrl: 'https://avatars.githubusercontent.com/u/163621561?v=4',
     linkUrl: 'https://github.com/Naviary2',
     contributionCount: 1502
   }
+  ```
  */
-let contributors: object[] = (() => {
+let contributors: Contributor[] = (() => {
 	if (!fs.existsSync(PATH_TO_CONTRIBUTORS_FILE)) return [];
 	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString();
 	return JSON.parse(file);
@@ -159,9 +170,8 @@ function refreshGitHubContributorsList(): void {
 /**
  * Returns a list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * updated every {@link intervalToRefreshContributorsMillis}.
- * @returns {object[]}
  */
-function getContributors(): typeof contributors {
+function getContributors(): Contributor[] {
 	return contributors;
 }
 
