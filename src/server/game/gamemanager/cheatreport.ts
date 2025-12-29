@@ -84,14 +84,26 @@ function onReport(
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
 
-	for (const player in servergame.match.playerData) {
-		gameutility.sendMessageToSocketOfColor(
-			servergame.match,
-			Number(player) as Player,
-			'general',
-			'notify',
-			'server.javascript.ws-game_aborted_cheating',
-		);
+	for (const playerStr in servergame.match.playerData) {
+		const player: Player = Number(playerStr) as Player;
+		const isSuspectedCheater = player === opponentColor;
+		if (isSuspectedCheater) {
+			gameutility.sendMessageToSocketOfColor(
+				servergame.match,
+				player,
+				'general',
+				'notifyerror',
+				'server.javascript.ws-you_cheated',
+			);
+		} else {
+			gameutility.sendMessageToSocketOfColor(
+				servergame.match,
+				player,
+				'general',
+				'notify',
+				'server.javascript.ws-opponent_cheated',
+			);
+		}
 	}
 	// Cheating report was valid, terminate the game..
 

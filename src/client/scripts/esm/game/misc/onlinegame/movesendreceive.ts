@@ -107,7 +107,11 @@ function handleOpponentsMove(
 	}
 	if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
 		// Only report cheating in non-private games
-		return onlinegame.reportOpponentsMove(moveValidationResult.reason);
+		onlinegame.reportOpponentsMove(moveValidationResult.reason);
+		// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
+		premoves.applyPremoves(gamefile, mesh);
+		premoves.cancelPremoves(gamefile, mesh);
+		return;
 	}
 
 	// At this stage, the move is legal, or allowed anyway in a private game. Apply it.

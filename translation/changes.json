@@ -1,4 +1,8 @@
 {
+  "83": {
+    "note": "Replaced ws-game_aborted_cheating on line 659 with ws-you_cheated and ws-opponent_cheated.",
+    "changes": []
+  },
   "82": {
     "note": "Added easy, medium, and hard, lines 302-304",
     "changes": []

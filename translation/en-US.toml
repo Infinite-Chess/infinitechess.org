@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "82"
+version = "83"
 maintainer = "Naviary"
 
 [header]
@@ -656,7 +656,8 @@ ws-server_restarting = "The server is restarting in" # The server inserts a numb
 ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
-ws-game_aborted_cheating = "Game aborted for probable cheating."
+ws-you_cheated = "Oops! You played something illegal. Game has been aborted. If this was a mistake, please report this bug!"
+ws-opponent_cheated = "We caught your opponent playing something illegal. Game has been aborted."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
