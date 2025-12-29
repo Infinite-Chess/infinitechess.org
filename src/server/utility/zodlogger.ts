@@ -22,10 +22,6 @@ ${treeifiedErrors}
 ===================================================================
 
 	`;
-
 	logEvents(logText, 'zodLog.txt');
-	logEventsAndPrint(
-		`Received malformed json message. Check zodLog.txt for more details.`,
-		'errLog.txt',
-	);
+	logEventsAndPrint(`${contextMessage} - Check zodLog.txt for more details.`, 'errLog.txt');
 }
