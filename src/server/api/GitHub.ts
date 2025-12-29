@@ -4,33 +4,56 @@
  * probably below our patron donors.
  */
 
-import { request } from 'node:https';
+import { request, RequestOptions } from 'node:https';
 import AbortController from 'abort-controller';
 import process from 'node:process';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { writeFile } from 'node:fs/promises';
 import path from 'path';
 import fs from 'fs';
+import { z } from 'zod';
+
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/** A GitHub contributor on the infinitechess.org repository. */
+interface Contributor {
+	name: string;
+	iconUrl: string;
+	linkUrl: string;
+	contributionCount: number;
+}
+
 // Variables ---------------------------------------------------------------------------
+
+const GitHubContributorSchema = z.array(
+	z.object({
+		login: z.string(),
+		avatar_url: z.string(),
+		html_url: z.string(),
+		contributions: z.number(),
+	}),
+);
 
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
- * This should be periodically refreshed. @type {object[]} 
- * example contributor {
-    name: 'Naviary2',
+ * This should be periodically refreshed.
+ * 
+ * example contributor:
+ * ```js
+ * {
+	name: 'Naviary2',
     iconUrl: 'https://avatars.githubusercontent.com/u/163621561?v=4',
     linkUrl: 'https://github.com/Naviary2',
     contributionCount: 1502
   }
+  ```
  */
-let contributors = (() => {
+let contributors: Contributor[] = (() => {
 	if (!fs.existsSync(PATH_TO_CONTRIBUTORS_FILE)) return [];
-	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE);
+	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString();
 	return JSON.parse(file);
 })();
 // console.log(contributors);
@@ -43,7 +66,7 @@ const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
 const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
 // refreshGitHubContributorsList(); // Initial refreshal for dev testing
 
-if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === undefined)
+if (process.env['GITHUB_API_KEY'] === undefined || process.env['GITHUB_REPO'] === undefined)
 	throw new Error(
 		'.env file is missing GITHUB_API_KEY or GITHUB_REPO, please regenerate the file or add the lines manually.',
 	);
@@ -54,10 +77,15 @@ if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === unde
  * Uses GitHub's API to fetch all contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * and updates our list!
  */
-function refreshGitHubContributorsList() {
+function refreshGitHubContributorsList(): void {
 	const { GITHUB_API_KEY, GITHUB_REPO } = process.env;
 
-	if (GITHUB_API_KEY.length === 0 || GITHUB_REPO.length === 0) {
+	if (
+		GITHUB_API_KEY === undefined ||
+		GITHUB_REPO === undefined ||
+		GITHUB_API_KEY.length === 0 ||
+		GITHUB_REPO.length === 0
+	) {
 		logEventsAndPrint(
 			'Either Github API key not detected, or repository not specified. Stopping updating contributor list.',
 			'errLog.txt',
@@ -68,9 +96,9 @@ function refreshGitHubContributorsList() {
 
 	// Create an AbortController for the request
 	const controller = new AbortController();
-	const signal = controller.signal;
+	const signal: AbortSignal = controller.signal as AbortSignal;
 
-	const options = {
+	const options: RequestOptions = {
 		method: 'GET',
 		hostname: 'api.github.com',
 		// "port": null,
@@ -79,14 +107,15 @@ function refreshGitHubContributorsList() {
 			Accept: 'application/vnd.github+json',
 			Authorization: `Bearer ${GITHUB_API_KEY}`,
 			'X-GitHub-Api-Version': '2022-11-28',
-			'User-Agent': process.env.APP_BASE_URL,
+			'User-Agent': process.env['APP_BASE_URL'],
 			// "Content-Length": "0"
 		},
 		signal, // Pass the signal to the request options
 	};
 
 	const req = request(options, function (res) {
-		const chunks = [];
+		// The type of this is Uint8Array because Buffer.concat() expects it.
+		const chunks: Uint8Array[] = [];
 
 		res.on('data', (chunk) => chunks.push(chunk));
 		res.on('end', async () => {
@@ -98,27 +127,42 @@ function refreshGitHubContributorsList() {
 				);
 
 			const response = body.toString();
+			let unvalidatedJson: any;
 			try {
-				const json = JSON.parse(response);
-
-				const currentContributors = json.map((contributor) => ({
-					name: contributor.login,
-					iconUrl: contributor.avatar_url,
-					linkUrl: contributor.html_url,
-					contributionCount: contributor.contributions,
-				}));
-
-				if (currentContributors.length > 0) {
-					contributors = currentContributors;
-					await writeFile(
-						PATH_TO_CONTRIBUTORS_FILE,
-						JSON.stringify(contributors, null, 2),
-					);
-					console.log('Contributors updated!');
-				}
-			} catch {
-				logEventsAndPrint('Error parsing contributors JSON: ' + response, 'errLog.txt');
+				unvalidatedJson = JSON.parse(response);
+			} catch (error: unknown) {
+				const errMsg = error instanceof Error ? error.message : String(error);
+				logEventsAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog.txt');
+				return;
 			}
+
+			const zod_result = GitHubContributorSchema.safeParse(unvalidatedJson);
+			if (!zod_result.success) {
+				const messageContents = JSON.stringify(unvalidatedJson, null, 2);
+				const treeifiedErrors = JSON.stringify(z.treeifyError(zod_result.error), null, 2);
+				const logText = `Invalid GitHub API Parameters. Message contents:
+${messageContents}
+
+Zod treeified errors:
+${treeifiedErrors}
+
+===================================================================
+
+				`;
+				logEventsAndPrint(logText, 'errLog.txt');
+				return;
+			}
+
+			const currentContributors: Contributor[] = zod_result.data.map((c) => ({
+				name: c.login,
+				iconUrl: c.avatar_url,
+				linkUrl: c.html_url,
+				contributionCount: c.contributions,
+			}));
+
+			contributors = currentContributors;
+			await writeFile(PATH_TO_CONTRIBUTORS_FILE, JSON.stringify(contributors, null, 2));
+			console.log('Contributors updated!');
 		});
 	});
 
@@ -153,9 +197,8 @@ function refreshGitHubContributorsList() {
 /**
  * Returns a list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * updated every {@link intervalToRefreshContributorsMillis}.
- * @returns {object[]}
  */
-function getContributors() {
+function getContributors(): Contributor[] {
 	return contributors;
 }
 

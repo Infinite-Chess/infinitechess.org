@@ -69,7 +69,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		// Parse the stringified JSON message.
 		// Incoming message is in binary data, which can also be parsed into JSON
 		parsedUnvalidatedMessage = JSON.parse(messageStr);
-	} catch (error) {
+	} catch (error: unknown) {
 		if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt');
@@ -85,11 +85,12 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 			'notify',
 			'Your browser is running outdated code, please hard refresh the page!',
 		);
+		const treeifiedErrors = JSON.stringify(z.treeifyError(zod_result.error), null, 2);
 		const logText = `INVALID PARAMETERS - Message contents:
 ${JSON.stringify(parsedUnvalidatedMessage, null, 2)}
 
 Zod treeified errors:
-${zod_result.error instanceof z.ZodError ? JSON.stringify(z.treeifyError(zod_result.error), null, 2) : String(zod_result.error)}
+${treeifiedErrors}
 
 Websocket metadata:
 ${socketUtility.stringifySocketMetadata(ws)}
