@@ -7,14 +7,17 @@
 import { request, RequestOptions } from 'node:https';
 import AbortController from 'abort-controller';
 import process from 'node:process';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { writeFile } from 'node:fs/promises';
 import path from 'path';
 import fs from 'fs';
+import { z } from 'zod';
+
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/** A GitHub contributor on the infinitechess.org repository. */
 interface Contributor {
 	name: string;
 	iconUrl: string;
@@ -23,6 +26,15 @@ interface Contributor {
 }
 
 // Variables ---------------------------------------------------------------------------
+
+const GitHubContributorSchema = z.array(
+	z.object({
+		login: z.string(),
+		avatar_url: z.string(),
+		html_url: z.string(),
+		contributions: z.number(),
+	}),
+);
 
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
@@ -84,7 +96,7 @@ function refreshGitHubContributorsList(): void {
 
 	// Create an AbortController for the request
 	const controller = new AbortController();
-	const signal = controller.signal as AbortSignal;
+	const signal: AbortSignal = controller.signal as AbortSignal;
 
 	const options: RequestOptions = {
 		method: 'GET',
@@ -115,34 +127,42 @@ function refreshGitHubContributorsList(): void {
 				);
 
 			const response = body.toString();
+			let unvalidatedJson: any;
 			try {
-				const json = JSON.parse(response);
-
-				const currentContributors = json.map(
-					(contributor: {
-						login: string;
-						avatar_url: string;
-						html_url: string;
-						contributions: number;
-					}) => ({
-						name: contributor.login,
-						iconUrl: contributor.avatar_url,
-						linkUrl: contributor.html_url,
-						contributionCount: contributor.contributions,
-					}),
-				);
-
-				if (currentContributors.length > 0) {
-					contributors = currentContributors;
-					await writeFile(
-						PATH_TO_CONTRIBUTORS_FILE,
-						JSON.stringify(contributors, null, 2),
-					);
-					console.log('Contributors updated!');
-				}
-			} catch {
-				logEventsAndPrint('Error parsing contributors JSON: ' + response, 'errLog.txt');
+				unvalidatedJson = JSON.parse(response);
+			} catch (error: unknown) {
+				const errMsg = error instanceof Error ? error.message : String(error);
+				logEventsAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog.txt');
+				return;
 			}
+
+			const zod_result = GitHubContributorSchema.safeParse(unvalidatedJson);
+			if (!zod_result.success) {
+				const messageContents = JSON.stringify(unvalidatedJson, null, 2);
+				const treeifiedErrors = JSON.stringify(z.treeifyError(zod_result.error), null, 2);
+				const logText = `Invalid GitHub API Parameters. Message contents:
+${messageContents}
+
+Zod treeified errors:
+${treeifiedErrors}
+
+===================================================================
+
+				`;
+				logEventsAndPrint(logText, 'errLog.txt');
+				return;
+			}
+
+			const currentContributors: Contributor[] = zod_result.data.map((c) => ({
+				name: c.login,
+				iconUrl: c.avatar_url,
+				linkUrl: c.html_url,
+				contributionCount: c.contributions,
+			}));
+
+			contributors = currentContributors;
+			await writeFile(PATH_TO_CONTRIBUTORS_FILE, JSON.stringify(contributors, null, 2));
+			console.log('Contributors updated!');
 		});
 	});
 
