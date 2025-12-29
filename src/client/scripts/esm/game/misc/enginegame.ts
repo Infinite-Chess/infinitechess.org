@@ -278,7 +278,7 @@ function makeEngineMove(compactMove: unknown): void {
 
 	if (!moveValidationResults.valid) {
 		statustext.showStatus(
-			`Engine submitted an illegal move. Please report this bug!`,
+			`Engine submitted an illegal move. Please report this bug! Move ${compactMove} is illegal for reason: ${moveValidationResults.reason}`,
 			true,
 			100,
 		);
