@@ -702,6 +702,7 @@ export default {
 
 	getEmptyLegalMoves,
 	appendPotentialMoves,
+	removeObstructedMoves,
 	appendSpecialMoves,
 	testSquareValidity,
 	testCaptureValidity,
