@@ -6,7 +6,7 @@
 import jsutil from '../../../shared/util/jsutil.js';
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { Game } from '../gamemanager/gameutility.js';
+import type { MetaData } from '../../../shared/chess/util/metadata.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
@@ -26,8 +26,8 @@ interface SafeInvite {
 	id: string; // A unique identifier, containing lowercase letters a-z and numbers 0-9.
 	usernamecontainer: ServerUsernameContainer; // The type of the owner (guest/player), their username, and elo if applicable.
 	tag: string; // Used to verify if an invite is your own.
-	variant: Game['variant'];
-	clock: Game['clock'];
+	variant: string;
+	clock: MetaData['TimeControl'];
 	color: Player;
 	rated: 'casual' | 'rated';
 	publicity: 'public' | 'private';

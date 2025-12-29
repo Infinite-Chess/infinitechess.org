@@ -55,8 +55,8 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 			return;
 	}
 
-	const game = getGameBySocket(ws); // The game they belong in, if they belong in one.
-	if (!game) {
+	const servergame = getGameBySocket(ws); // The game they belong in, if they belong in one.
+	if (!servergame) {
 		// This is rare but can happen if the game is deleted on the server while their message is in transit.
 		console.log(
 			`Received game message of action "${contents.action}" when player is not in a game. Maybe it was just deleted?`,
@@ -67,37 +67,37 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 	// All remaining actions requiring the game they're in
 	switch (contents.action) {
 		case 'submitmove':
-			submitMove(ws, game, contents.value);
+			submitMove(ws, servergame, contents.value);
 			break;
 		case 'removefromplayersinactivegames':
-			onRequestRemovalFromPlayersInActiveGames(ws, game);
+			onRequestRemovalFromPlayersInActiveGames(ws, servergame);
 			break;
 		case 'abort':
-			abortGame(ws, game);
+			abortGame(ws, servergame);
 			break;
 		case 'resign':
-			resignGame(ws, game);
+			resignGame(ws, servergame);
 			break;
 		case 'offerdraw':
-			offerDraw(ws, game);
+			offerDraw(ws, servergame);
 			break;
 		case 'acceptdraw':
-			acceptDraw(ws, game);
+			acceptDraw(ws, servergame);
 			break;
 		case 'declinedraw':
-			declineDraw(ws, game);
+			declineDraw(ws, servergame);
 			break;
 		case 'AFK':
-			onAFK(ws, game);
+			onAFK(ws, servergame);
 			break;
 		case 'AFK-Return':
-			onAFK_Return(ws, game);
+			onAFK_Return(ws, servergame);
 			break;
 		case 'report':
-			onReport(ws, game, contents.value);
+			onReport(ws, servergame, contents.value);
 			break;
 		case 'paste':
-			onPaste(ws, game);
+			onPaste(ws, servergame);
 			break;
 		default:
 			// @ts-ignore

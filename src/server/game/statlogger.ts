@@ -9,7 +9,7 @@ import timeutil from '../../shared/util/timeutil.js';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import type { Game } from './gamemanager/gameutility.js';
+import type { Game } from '../../shared/chess/logic/gamefile.js';
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists(): void {
@@ -62,27 +62,27 @@ try {
 }
 
 /**
- *
- * @param game - The game to log
+ * Saves and increments the stats for the played variant
+ * @param basegame - The game to log
  * @returns
  */
-async function logGame(game: Game): Promise<void> {
-	if (!game) return console.error('Cannot log a null game!');
+async function logGame(basegame: Game): Promise<void> {
+	if (!basegame) return console.error('Cannot log a null game!');
 
 	// Only log the game if at least 2 moves were played! (resignable)
 	// Black-moves-first games are logged if at least 1 move is played!
-	if (game.moves.length < 2) return;
+	if (basegame.moves.length < 2) return;
 
 	// What is the current month?
 	const month = timeutil.getCurrentMonth(); // 'yyyy-mm'
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
 	// What variant was played?
-	const variant = game.variant;
+	const variant = basegame.metadata.Variant!;
 
 	// Now record the number of moves played
 
-	const plyCount = game.moves.length;
+	const plyCount = basegame.moves.length;
 	if (stats.moveCount['all'] === undefined) stats.moveCount['all'] = 0;
 	stats.moveCount['all'] += plyCount;
 	if (stats.moveCount[variant] === undefined) stats.moveCount[variant] = 0;

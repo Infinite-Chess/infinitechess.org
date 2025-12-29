@@ -15,15 +15,15 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * @param ws - Their new websocket
  */
 function onJoinGame(ws: CustomWebSocket): void {
-	const game = getGameBySocket(ws);
-	if (!game) return; // They don't belong in a game, don't join them in one.
+	const servergame = getGameBySocket(ws);
+	if (!servergame) return; // They don't belong in a game, don't join them in one.
 
-	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
-	gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
+	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	gameutility.subscribeClientToGame(servergame, ws, colorPlayingAs);
 
 	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
-	if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
-	cancelDisconnectTimer(game, colorPlayingAs);
+	if (servergame.basegame.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(servergame, true);
+	cancelDisconnectTimer(servergame.match, colorPlayingAs);
 }
 
 export { onJoinGame };

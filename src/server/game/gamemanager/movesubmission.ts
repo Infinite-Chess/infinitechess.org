@@ -14,7 +14,7 @@ import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import gameutility, { Game } from './gameutility.js';
+import gameutility, { ServerGame } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import socketUtility from '../../socket/socketUtility.js';
@@ -43,10 +43,14 @@ const DIGITS_PER_SECOND = 4.5;
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
  * @param ws - The websocket submitting the move.
- * @param game - The game they are in.
+ * @param servergame - The game they are in.
  * @param messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
-function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMoveMessage): void {
+function submitMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: SubmitMoveMessage,
+): void {
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
 		console.error(
@@ -68,19 +72,19 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 	// If the game is already over, don't accept it.
 	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
 	// The ACTUAL game conclusion SHOULD already be on the way to them so....
-	if (gameutility.isGameOver(game)) return;
+	if (gameutility.isGameOver(servergame.basegame)) return;
 
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
-	const expectedMoveNumber = game.moves.length + 1;
+	const expectedMoveNumber = servergame.basegame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		console.error(
 			`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
 		);
-		return resyncToGame(ws, game.id);
+		return resyncToGame(ws, servergame.match.id);
 	}
 
 	// Make sure it's their turn
-	if (game.whosTurn !== color)
+	if (servergame.basegame.whosTurn !== color)
 		return sendSocketMessage(
 			ws,
 			'general',
@@ -97,7 +101,7 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 	}
 
 	// Check if the move exceeds the soft distance cap based on game duration
-	if (!isMoveWithinDistanceCap(moveDraft, game.timeCreated)) {
+	if (!isMoveWithinDistanceCap(moveDraft, servergame.match.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		sendSocketMessage(
@@ -123,22 +127,23 @@ function submitMove(ws: CustomWebSocket, game: Game, messageContents: SubmitMove
 	};
 	if (moveDraft.promotion !== undefined) move.promotion = moveDraft.promotion;
 	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
-	game.moves.push(move); // Add the move to the list!
+	servergame.basegame.moves.push(move); // Add the move to the list!
 	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
-	const clockStamp = pushGameClock(game); // Flip whos turn and adjust the game properties
+	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
 	if (clockStamp !== undefined) move.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
-	setGameConclusion(game, messageContents.gameConclusion);
+	setGameConclusion(servergame, messageContents.gameConclusion);
 
 	// console.log(`Accepted a move! Their websocket message data:`)
 	// console.log(messageContents)
 	// console.log("New move list:")
 	// console.log(game.moves);
 
-	declineDraw(ws, game); // Auto-decline any open draw offer on move submissions
+	declineDraw(ws, servergame); // Auto-decline any open draw offer on move submissions
 
-	if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color);
-	else gameutility.sendUpdatedClockToColor(game, color);
-	gameutility.sendMoveToColor(game, opponentColor, move); // Send their move to their opponent.
+	if (gameutility.isGameOver(servergame.basegame))
+		gameutility.sendGameUpdateToColor(servergame, color);
+	else gameutility.sendUpdatedClockToColor(servergame, color);
+	gameutility.sendMoveToColor(servergame, opponentColor, move); // Send their move to their opponent.
 }
 
 /**
