@@ -33,8 +33,6 @@ function renderNukeSites<T extends Gamesim & AtomicData>(gamefile: T): false {
 	return false;
 }
 
-function setupSystems(gamefile: FullGame & AtomicData): void {
+export function setupSystems(gamefile: FullGame & AtomicData): void {
 	events.addEventListener(gamefile.events, 'renderabovepieces', renderNukeSites);
 }
-
-export default [null, setupSystems];

@@ -82,7 +82,7 @@ function draftHook<T extends FullGame & AtomicData>(gamefile: T, move: Move): bo
 	return false;
 }
 
-function setupComponents(gamefile: Construction<FullGame & AtomicData>): void {
+export function setupComponents(gamefile: Construction<FullGame & AtomicData>): void {
 	gamefile.atomic = {
 		nukeRange: [...movesets.generateCompassMoves(1n)],
 		bunkeredPieces: new Set([rawTypes.PAWN]),
@@ -96,7 +96,7 @@ function setupComponents(gamefile: Construction<FullGame & AtomicData>): void {
 	});
 }
 
-function setupSystems(gamefile: FullGame & AtomicData): void {
+export function setupSystems(gamefile: FullGame & AtomicData): void {
 	events.addEventListener(gamefile.events, 'draftmoves', draftHook);
 }
 
@@ -106,5 +106,5 @@ type AtomicData = {
 		bunkeredPieces: Set<RawType>;
 	};
 };
+
 export type { AtomicData };
-export default [setupComponents, setupSystems];

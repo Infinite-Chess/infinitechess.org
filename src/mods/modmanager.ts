@@ -4,6 +4,7 @@
  * @author Idontuse
  */
 import type { GameEvents, LoadingEvents } from '../shared/chess/logic/events.js';
+import type { Additional } from '../shared/chess/logic/gamefile.js';
 
 interface Eventable {
 	events: GameEvents<this>;
@@ -27,16 +28,17 @@ type ComponentName = Modname | 'game' | 'board' | 'match' | 'client' | 'events' 
  * Since imports are dynamic ts has no clue what the setup function index signatures are actually
  * It allows for some very funny things
  */
-// eslint-disable-next-line no-unused-vars
-type SetupPair = [(gamefile: Construction<any>) => void | null, (gamefile: any) => void | null];
-const SETUPLENGTH = 2;
+interface SetupFunctions {
+	setupComponents?: (gamefile: Construction<any>, addition: Additional) => void;
+	setupSystems?: (gamefile: any) => void;
+}
 
-const loadDict: { [name: string]: () => Promise<any> } = {
+const IMPORTS: { [name: string]: () => Promise<any> } = {
 	'atomic/base': () => import('./atomic/base.js'),
 	'atomic/graphics': () => import('./atomic/graphics.js'),
 };
 
-const ModBundles: [string, ComponentName[]][] = [
+const MOD_BUNDLES: [string, ComponentName[]][] = [
 	['atomic/base', ['atomic', 'board', 'game']],
 	['atomic/graphics', ['atomic', 'board', 'game', 'client']],
 ];
@@ -47,34 +49,43 @@ function isSubset<T>(s1: Iterable<T>, s2: Iterable<T>): boolean {
 }
 
 function getBundles(componenets: Iterable<ComponentName>): string[] {
-	return ModBundles.filter((v) => isSubset(componenets, v[1])).map((v) => v[0]);
+	return MOD_BUNDLES.filter((v) => isSubset(componenets, v[1])).map((v) => v[0]);
 }
 
 let modCache: {
-	[name: string]: SetupPair;
+	[name: string]: SetupFunctions;
 } = {};
 
 function clearModCache(): void {
 	modCache = {};
 }
 
-function isSetupValid(setup: unknown): setup is SetupPair {
-	if (!Array.isArray(setup)) return false;
-	if (setup.length !== SETUPLENGTH) return false;
-	for (let i = 0; i < SETUPLENGTH; i++) {
-		if (typeof setup[i] === 'function' || setup[i] === null) continue;
+function isSetupValid(setup: unknown): setup is SetupFunctions {
+	if (Array.isArray(setup) || typeof setup !== 'object' || setup === null) return false;
+
+	let canbesetup = false;
+
+	for (const i of ['setupSystems', 'setupComponents']) {
+		// @ts-ignore While this may look sus we are expecting it sometimes not match our type
+		const test = setup[i];
+		if (test === undefined) continue;
+		if (typeof test === 'function') {
+			canbesetup = true;
+			continue;
+		}
+
 		return false;
 	}
-	return true;
+	return canbesetup;
 }
 
 async function loadModList(complist: Set<ComponentName>): Promise<void> {
 	await Promise.all(
 		getBundles(complist).map(async (mod: string) => {
 			if (mod in modCache) return;
-			if (!(mod in loadDict)) throw Error();
+			if (!(mod in IMPORTS)) throw Error();
 
-			const { default: setup } = await loadDict[mod]!();
+			const setup = await IMPORTS[mod]!();
 			if (!isSetupValid(setup)) throw Error(`Modifier at ${mod} is in invalid format`);
 			modCache[mod] = setup;
 		}),
@@ -84,18 +95,18 @@ async function loadModList(complist: Set<ComponentName>): Promise<void> {
 function setupModifierComponents(gamefile: Construction<unknown>): void {
 	for (const mod of getBundles(gamefile.components)) {
 		if (modCache[mod] === undefined) throw Error('Mod has not been loaded into cache');
-		if (modCache[mod][0] === null) continue;
+		if (modCache[mod].setupComponents === undefined) continue;
 		console.log(`Setting up components for ${mod}`);
-		modCache[mod][0](gamefile);
+		modCache[mod].setupComponents(gamefile, {});
 	}
 }
 
 function setupModifierSystems(gamefile: Construction<unknown>): void {
 	for (const mod of getBundles(gamefile.components)) {
 		if (modCache[mod] === undefined) throw Error('Mod has not been loaded into cache');
-		if (modCache[mod][1] === null) continue;
+		if (modCache[mod].setupSystems === undefined) continue;
 		console.log(`Setting up systems for ${mod}`);
-		modCache[mod][1](gamefile);
+		modCache[mod].setupSystems(gamefile);
 	}
 }
 
