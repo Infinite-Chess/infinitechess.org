@@ -238,13 +238,19 @@ function cancelTimerOfMessageID(message: WebsocketMessage): void {
 	// { sub, action, value, id }
 	const echoMessageID = message.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
 
+	const echoTimer = echoTimers[echoMessageID];
+	if (!echoTimer) {
+		console.error('Could not find echo timer for message.');
+		return;
+	}
+
 	// How long did it take the message to return round trip?
 	// Let's update the Ping meter
-	const timeTaken = Date.now() - echoTimers[echoMessageID]!.timeSent;
+	const timeTaken = Date.now() - echoTimer.timeSent;
 	const detail = timeTaken;
 	document.dispatchEvent(new CustomEvent('ping', { detail }));
 
-	const timeoutID = echoTimers[echoMessageID]!.timeoutID;
+	const timeoutID = echoTimer.timeoutID;
 
 	clearTimeout(timeoutID);
 	delete echoTimers[echoMessageID];
