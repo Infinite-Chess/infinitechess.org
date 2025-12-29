@@ -237,18 +237,6 @@ function initBoard<T extends { boardsim: Board }>(
 		pieces.slides,
 	);
 
-	// Have to assign it this weird way to make typescript happy.
-	// We don't have to cast to EditorDependent this way.
-	const editorDependentVars: EditorDependent = editor
-		? {
-				editor: true,
-				startSnapshot: undefined,
-			}
-		: {
-				editor: false,
-				startSnapshot,
-			};
-
 	gamefile.boardsim = {
 		pieces,
 		existingTypes,

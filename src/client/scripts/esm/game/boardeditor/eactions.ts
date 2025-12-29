@@ -74,7 +74,10 @@ function reset(): void {
 		UTCDate,
 		UTCTime,
 	};
-	const classicalGamefile = gamefile.initFullGame(metadata);
+	const classicalGamefile = gamefile.initFullGame(
+		{ events: {}, components: new Set() },
+		metadata,
+	);
 	const longformat = gamecompressor.compressGamefile(classicalGamefile);
 	loadFromLongformat(longformat);
 	selectiontool.resetState(); // Clear current selection
@@ -314,7 +317,13 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = gamefile.initFullGame(longformOut.metadata, additional);
+		// TODO: allow loading with modifiers from long format
+		// Wrong module maybe?
+		const loadedGamefile = gamefile.initFullGame(
+			{ events: {}, components: new Set() },
+			longformOut.metadata,
+			additional,
+		);
 		const gamestate: SimplifiedGameState = {
 			position,
 			state_global,
