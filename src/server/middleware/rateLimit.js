@@ -136,7 +136,7 @@ function rateLimit(req, res, next) {
 /**
  * Counts this IP address's recent connections,
  * and returns false if they've sent too many requests/messages.
- * @param {Object} req - The request object
+ * @param {IncomingMessage} req - The request object
  * @param {CustomWebSocket} ws - The websocket object
  * @returns {boolean} false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
  */

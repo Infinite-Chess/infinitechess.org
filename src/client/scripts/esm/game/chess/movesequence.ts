@@ -23,6 +23,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import guiclock from '../gui/guiclock.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import frametracker from '../rendering/frametracker.js';
+import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
 
@@ -124,6 +125,7 @@ function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move, forwar
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
+	enginegame.onViewMove();
 }
 
 /**

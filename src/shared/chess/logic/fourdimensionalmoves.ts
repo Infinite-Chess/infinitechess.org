@@ -12,6 +12,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { Game, Board, FullGame } from './gamefile.js';
 import type { MoveDraftEdit } from './specialmove.js';
+import type { BoundingBox } from '../../util/math/bounds.js';
 
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
@@ -69,6 +70,7 @@ function pawnLegalMoves(
 	const singlePushCoord: Coords = [coords[0], coords[1] + yDistanceParity];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
+		basegame.gameRules.worldBorder,
 		singlePushCoord,
 		color,
 		premove,
@@ -91,6 +93,7 @@ function pawnLegalMoves(
 		];
 		moveValidity = legalmoves.testSquareValidity(
 			boardsim,
+			basegame.gameRules.worldBorder,
 			doublePushCoord,
 			color,
 			premove,
@@ -130,6 +133,7 @@ function pawnLegalMoves(
 	for (const captureCoords of coordsToCapture) {
 		const moveValidity = legalmoves.testSquareValidity(
 			boardsim,
+			basegame.gameRules.worldBorder,
 			captureCoords,
 			color,
 			premove,
@@ -293,6 +297,7 @@ function fourDimensionalKnightMove(
 						if (
 							legalmoves.testSquareValidity(
 								gamefile.boardsim,
+								gamefile.basegame.gameRules.worldBorder,
 								endCoords,
 								color,
 								premove,
@@ -339,7 +344,13 @@ function fourDimensionalKingMove(
 	color: Player,
 	premove: boolean,
 ): Coords[] {
-	const legalMoves: Coords[] = kingLegalMoves(gamefile.boardsim, coords, color, premove);
+	const legalMoves: Coords[] = kingLegalMoves(
+		gamefile.boardsim,
+		gamefile.basegame.gameRules.worldBorder,
+		coords,
+		color,
+		premove,
+	);
 	legalMoves.push(...specialdetect.kings(gamefile, coords, color, premove)); // Adds legal castling
 	return legalMoves;
 }
@@ -352,6 +363,7 @@ function fourDimensionalKingMove(
  */
 function kingLegalMoves(
 	boardsim: Board,
+	worldBorder: BoundingBox | undefined,
 	coords: Coords,
 	color: Player,
 	premove: boolean,
@@ -379,6 +391,7 @@ function kingLegalMoves(
 					if (
 						legalmoves.testSquareValidity(
 							boardsim,
+							worldBorder,
 							endCoords,
 							color,
 							premove,

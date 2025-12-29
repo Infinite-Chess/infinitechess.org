@@ -85,7 +85,7 @@ function isSquareBeingAttacked(
 	}
 
 	// 2. We check every orthogonal and diagonal to see if there's any attacking pieces.
-	if (doesSlideAttackSquare(gamefile.boardsim, coord, colorOfFriendly, attackers)) {
+	if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) {
 		if (attackers)
 			atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
 		else return true; // Not keeping track of attackers, exit early
@@ -218,20 +218,20 @@ function doesSpecialAttackSquare(
  * @returns true if the square is being attacked by at least one opponent slider.
  */
 function doesSlideAttackSquare(
-	boardsim: Board,
+	gamefile: FullGame,
 	square: Coords,
 	friendlyColor: Player,
 	attackers?: Attacker[],
 ): boolean {
 	let atleast1Attacker = false;
 
-	for (const [directionkey, lineSet] of boardsim.pieces.lines) {
+	for (const [directionkey, lineSet] of gamefile.boardsim.pieces.lines) {
 		// [dx,dy]
 		const direction = coordutil.getCoordsFromKey(directionkey);
 		const key = organizedpieces.getKeyFromLine(direction, square);
 		if (
 			doesLineAttackSquare(
-				boardsim,
+				gamefile,
 				lineSet.get(key),
 				direction,
 				square,
@@ -259,7 +259,7 @@ function doesSlideAttackSquare(
  * @returns true if the square is under threat
  */
 function doesLineAttackSquare(
-	boardsim: Board,
+	gamefile: FullGame,
 	line: number[] | undefined,
 	direction: Vec2,
 	coords: Coords,
@@ -274,21 +274,22 @@ function doesLineAttackSquare(
 	// Iterate through every piece on the line, and test if they can attack our square
 	for (const thisPieceIdx of line) {
 		// { coords, type }
-		const thisPiece = boardutil.getPieceFromIdx(boardsim.pieces, thisPieceIdx)!;
+		const thisPiece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, thisPieceIdx)!;
 		const thisPieceColor = typeutil.getColorFromType(thisPiece.type);
 		if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
 		if (thisPieceColor === players.NEUTRAL) continue; // Neutrals can't move, that means they can't make captures, right?
 
-		const thisPieceMoveset = legalmoves.getPieceMoveset(boardsim, thisPiece.type);
+		const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile.boardsim, thisPiece.type);
 
 		if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
 		const moveset = thisPieceMoveset.sliding[directionKey];
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
 		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(
-			boardsim,
+			gamefile.boardsim,
+			gamefile.basegame.gameRules.worldBorder,
 			blockingFunc,
-			boardsim.pieces,
+			gamefile.boardsim.pieces,
 			line,
 			direction,
 			moveset,

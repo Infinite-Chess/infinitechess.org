@@ -294,6 +294,7 @@ function throwBoard(time: number): void {
 	const deltaX = bd.subtract(lastBoardState.boardPos[0], firstBoardState.boardPos[0]);
 	const deltaY = bd.subtract(lastBoardState.boardPos[1], firstBoardState.boardPos[1]);
 	const deltaT = bd.fromNumber((lastBoardState.time - firstBoardState.time) / 1000);
+	if (bd.isZero(deltaT)) return; // Prevent division by zero
 	const boardScale = lastBoardState.boardScale;
 	const newPanVel: DoubleCoords = [
 		bd.toNumber(bd.multiply(bd.divide(deltaX, deltaT), boardScale)),
@@ -316,6 +317,7 @@ function throwScale(time: number): void {
 		bd.divideFloating(lastBoardState.boardScale, firstBoardState.boardScale),
 	);
 	const deltaTime = (lastBoardState.time - firstBoardState.time) / 1000;
+	if (deltaTime === 0) return; // Prevent division by zero
 	boardpos.setScaleVel((ratio - 1) / deltaTime);
 }
 

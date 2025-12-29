@@ -267,4 +267,5 @@ export default {
 	getOurUsername,
 	getOurUserId,
 	getAccessToken,
+	refreshToken,
 };

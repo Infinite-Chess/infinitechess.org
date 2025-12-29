@@ -17,7 +17,7 @@ import type { LineKey } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
-import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -448,7 +448,7 @@ function generateArrowsDraft(
 
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLineDraft(
-				gamefile.boardsim,
+				gamefile,
 				boundingBoxInt,
 				boundingBoxFloat,
 				slide,
@@ -473,7 +473,7 @@ function generateArrowsDraft(
  * can jump/skip over other pieces.
  */
 function calcArrowsLineDraft(
-	boardsim: Board,
+	gamefile: FullGame,
 	boundingBoxInt: BoundingBox,
 	boundingBoxFloat: BoundingBoxBD,
 	slideDir: Vec2,
@@ -490,7 +490,7 @@ function calcArrowsLineDraft(
 
 	const axis = slideDir[0] === 0n ? 1 : 0;
 
-	const firstPiece = boardutil.getPieceFromIdx(boardsim.pieces, organizedline[0]!)!;
+	const firstPiece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, organizedline[0]!)!;
 
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
@@ -507,7 +507,7 @@ function calcArrowsLineDraft(
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
 	organizedline.forEach((idx) => {
-		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
+		const piece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, idx)!;
 		const arrowPiece: ArrowPiece = {
 			type: piece.type,
 			coords: bdcoords.FromCoords(piece.coords),
@@ -554,7 +554,8 @@ function calcArrowsLineDraft(
 		 */
 
 		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(
-			boardsim,
+			gamefile.boardsim,
+			gamefile.basegame.gameRules.worldBorder,
 			piece,
 			slideDir,
 			slideKey,
@@ -1144,11 +1145,11 @@ function executeArrowShifts(): void {
 	shifts.forEach((shift) => {
 		if (shift.kind === 'delete' || shift.kind === 'move' || shift.kind === 'animate') {
 			// Recalculate the lines through the start coordinate
-			recalculateLinesThroughCoords(gamefile.boardsim, shift.start);
+			recalculateLinesThroughCoords(gamefile, shift.start);
 		}
 		if (shift.kind === 'add' || shift.kind === 'move') {
 			// Recalculate the lines through the end coordinate
-			recalculateLinesThroughCoords(gamefile.boardsim, shift.end);
+			recalculateLinesThroughCoords(gamefile, shift.end);
 		}
 	});
 
@@ -1163,7 +1164,7 @@ function executeArrowShifts(): void {
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLinesThroughCoords(boardsim: Board, coords: Coords): void {
+function recalculateLinesThroughCoords(gamefile: FullGame, coords: Coords): void {
 	// console.log("Recalculating lines through coords: ", coords);
 	// Recalculate every single line it is on.
 
@@ -1171,7 +1172,7 @@ function recalculateLinesThroughCoords(boardsim: Board, coords: Coords): void {
 	// the currently animated arrow indicator when hovering over its destination
 	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual(hoveredArrow.piece.coords, coords));
 
-	for (const [slideKey, linegroup] of boardsim.pieces.lines) {
+	for (const [slideKey, linegroup] of gamefile.boardsim.pieces.lines) {
 		// For each slide direction in the game...
 		const slide = coordutil.getCoordsFromKey(slideKey);
 
@@ -1190,7 +1191,7 @@ function recalculateLinesThroughCoords(boardsim: Board, coords: Coords): void {
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
 		const arrowsLineDraft = calcArrowsLineDraft(
-			boardsim,
+			gamefile,
 			boundingBoxInt!,
 			boundingBoxFloat!,
 			slide,

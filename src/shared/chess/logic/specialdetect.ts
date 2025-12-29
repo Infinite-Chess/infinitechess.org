@@ -201,6 +201,7 @@ function pawns(
 	const singlePushCoord: Coords = [coords[0], coords[1] + yOneorNegOne];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
+		gamefile.basegame.gameRules.worldBorder,
 		singlePushCoord,
 		color,
 		premove,
@@ -218,6 +219,7 @@ function pawns(
 		];
 		moveValidity = legalmoves.testSquareValidity(
 			boardsim,
+			gamefile.basegame.gameRules.worldBorder,
 			doublePushCoord,
 			color,
 			premove,
@@ -245,6 +247,7 @@ function pawns(
 	for (const captureCoords of coordsToCapture) {
 		const moveValidity = legalmoves.testSquareValidity(
 			boardsim,
+			gamefile.basegame.gameRules.worldBorder,
 			captureCoords,
 			color,
 			premove,
@@ -344,7 +347,7 @@ function appendPawnMoveAndAttachPromoteFlag(
  * @returns
  */
 function roses(
-	{ boardsim }: FullGame,
+	gamefile: FullGame,
 	coords: Coords,
 	color: Player,
 	premove: boolean,
@@ -367,7 +370,8 @@ function roses(
 				path.push(coordutil.copyCoords(currentCoord));
 
 				const moveValidity = legalmoves.testSquareValidity(
-					boardsim,
+					gamefile.boardsim,
+					gamefile.basegame.gameRules.worldBorder,
 					currentCoord,
 					color,
 					premove,
@@ -413,7 +417,7 @@ function roses(
 				const newCoordPathBD = bdcoords.FromCoords(newCoord.path[1]!);
 
 				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(
-					boardsim.startSnapshot.box,
+					gamefile.boardsim.startSnapshot.box,
 				);
 				const centerOfPlay = bounds.calcCenterOfBoundingBox(startingBoxBD);
 				const vectorToCenter = vectors.calculateVectorFromBDPoints(coordsBD, centerOfPlay);

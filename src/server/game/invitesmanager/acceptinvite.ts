@@ -25,9 +25,12 @@ import {
 	onPublicInvitesChange,
 	IDLengthOfInvites,
 } from './invitesmanager.js';
+import gameutility from '../gamemanager/gameutility.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 /** The zod schema for validating the contents of the acceptinvite message. */
@@ -97,7 +100,30 @@ function acceptInvite(
 
 	const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
 	const player2Socket = ws;
-	createGame(invite, player1Socket, player2Socket, replyto);
+
+	// Assign each player a color based on their invite info. Add their socket just encase
+	const assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
+	let invite_accepter: Player | undefined;
+	for (const [strcolor, identifier] of Object.entries(
+		gameutility.assignWhiteBlackPlayersFromInvite(
+			invite.color,
+			invite.owner,
+			ws.metadata.memberInfo,
+		),
+	)) {
+		const player = Number(strcolor) as Player;
+		const is_invite_accepter = memberInfoEq(identifier, player2Socket.metadata.memberInfo);
+		if (is_invite_accepter) invite_accepter = player;
+		assignments[player] = {
+			identifier,
+			socket: is_invite_accepter ? player2Socket : player1Socket,
+		};
+	}
+
+	if (invite_accepter === undefined)
+		throw Error("Invite accepter doesn't exist on accepted 2 player invite");
+
+	createGame(invite, assignments, invite_accepter, replyto);
 
 	// Unsubscribe them both from the invites subscription list.
 	if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally

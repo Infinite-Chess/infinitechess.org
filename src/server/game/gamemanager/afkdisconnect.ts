@@ -10,7 +10,7 @@ import gameutility from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 // Type imports
-import type { Game } from './gameutility.js';
+import type { MatchInfo, ServerGame } from './gameutility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -39,40 +39,43 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  * Cancels the timer that automatically resigns a player due to being AFK (Away From Keyboard).
  * This function should be called when the "AFK-Return" websocket action is received, indicating
  * that the player has returned, OR when a client refreshes the page!
- * @param game - The game
- * @param options.alertOpponent - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned. [false]
  */
-function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}): void {
-	if (game.autoAFKResignTime !== undefined && alertOpponent) {
+function cancelAutoAFKResignTimer(servergame: ServerGame, alertOpponent: boolean = false): void {
+	if (servergame.match.autoAFKResignTime !== undefined && alertOpponent) {
 		// Alert their opponent
-		const opponentColor = typeutil.invertPlayer(game.whosTurn!);
-		gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn');
+		const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn);
+		gameutility.sendMessageToSocketOfColor(
+			servergame.match,
+			opponentColor,
+			'game',
+			'opponentafkreturn',
+		);
 	}
 
-	clearTimeout(game.autoAFKResignTimeoutID);
-	game.autoAFKResignTimeoutID = undefined;
-	game.autoAFKResignTime = undefined;
+	clearTimeout(servergame.match.autoAFKResignTimeoutID);
+	servergame.match.autoAFKResignTimeoutID = undefined;
+	servergame.match.autoAFKResignTime = undefined;
 }
 
 //--------------------------------------------------------------------------------------------------------
 
 /**
  * Starts a timer to auto-resign a player from disconnection.
- * @param game - The game
+ * @param servergame - The game
  * @param color - The color to start the auto-resign timer for
  * @param closureNotByChoice - True if the player didn't close the connection on purpose.
  * @param onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
  */
 function startDisconnectTimer(
-	game: Game,
+	servergame: ServerGame,
 	color: Player,
 	closureNotByChoice: boolean,
-	onAutoResignFunc: (_game: Game, _winner: Player) => void,
+	onAutoResignFunc: (_game: ServerGame, _winner: Player) => void,
 ): void {
 	console.log(`Starting disconnect timer to auto resign player ${color}.`);
 
 	const now = Date.now();
-	const resignable = gameutility.isGameResignable(game);
+	const resignable = gameutility.isGameResignable(servergame.basegame);
 
 	let timeBeforeAutoResign =
 		closureNotByChoice && resignable
@@ -85,21 +88,24 @@ function startDisconnectTimer(
 	// If so, delete it, transferring it's time remaining to this disconnect timer.
 	// We can do this because if player is disconnected, they are afk anyway.
 	// And if if they reconnect, then they're not afk anymore either.
-	if (game.whosTurn === color && game.autoAFKResignTime !== undefined) {
-		if (game.autoAFKResignTime > timeToAutoLoss)
+	if (
+		servergame.basegame.whosTurn === color &&
+		servergame.match.autoAFKResignTime !== undefined
+	) {
+		if (servergame.match.autoAFKResignTime > timeToAutoLoss)
 			console.error(
 				"The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.",
 			);
-		timeToAutoLoss = game.autoAFKResignTime;
+		timeToAutoLoss = servergame.match.autoAFKResignTime;
 		timeBeforeAutoResign = timeToAutoLoss - now;
-		cancelAutoAFKResignTimer(game);
+		cancelAutoAFKResignTimer(servergame);
 	}
 
-	const playerdata = game.players[color]!;
+	const playerdata = servergame.match.playerData[color]!;
 	const opponentColor = typeutil.invertPlayer(color);
 
 	playerdata.disconnect.timeoutID = setTimeout(
-		() => onAutoResignFunc(game, opponentColor),
+		() => onAutoResignFunc(servergame, opponentColor),
 		timeBeforeAutoResign,
 	);
 	playerdata.disconnect.timeToAutoLoss = timeToAutoLoss;
@@ -111,7 +117,7 @@ function startDisconnectTimer(
 		wasByChoice: !closureNotByChoice,
 	};
 	gameutility.sendMessageToSocketOfColor(
-		game,
+		servergame.match,
 		opponentColor,
 		'game',
 		'opponentdisconnect',
@@ -122,34 +128,34 @@ function startDisconnectTimer(
 /**
  * Cancels both players timers to auto-resign them from disconnection if they were disconnected.
  * Typically called when a game ends.
- * @param game - The game
+ * @param match - The match
  */
-function cancelDisconnectTimers(game: Game): void {
-	for (const color of Object.keys(game.players)) {
-		cancelDisconnectTimer(game, Number(color) as Player, { dontNotifyOpponent: true });
+function cancelDisconnectTimers(match: MatchInfo): void {
+	for (const color of Object.keys(match.playerData)) {
+		cancelDisconnectTimer(match, Number(color) as Player, true);
 	}
 }
 
 /**
  * Cancels the player's timer to auto-resign them from disconnection if they were disconnected.
  * This is called when they reconnect/refresh.
- * @param game - The game
+ * @param match - The game
  * @param color - The color to cancel the timer for
  */
 function cancelDisconnectTimer(
-	game: Game,
+	match: MatchInfo,
 	color: Player,
-	{ dontNotifyOpponent = false } = {},
+	dontNotifyOpponent: boolean = false,
 ): void {
 	// console.log(`Canceling disconnect timer for player ${color}!`)
 
 	/** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
 	const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(
-		game,
+		match,
 		color,
 	);
 
-	const playerdata = game.players[color]!;
+	const playerdata = match.playerData[color]!;
 
 	clearTimeout(playerdata.disconnect.startID);
 	clearTimeout(playerdata.disconnect.timeoutID);
@@ -165,7 +171,12 @@ function cancelDisconnectTimer(
 	if (!autoResignTimerWasRunning) return; // Opponent was never notified their opponent was afk, skip telling them their opponent has returned.
 
 	const opponentColor = typeutil.invertPlayer(color);
-	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn');
+	gameutility.sendMessageToSocketOfColor(
+		match,
+		opponentColor,
+		'game',
+		'opponentdisconnectreturn',
+	);
 }
 
 //--------------------------------------------------------------------------------------------------------

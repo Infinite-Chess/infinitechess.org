@@ -263,12 +263,10 @@ function renderScene(): void {
 		return;
 	}
 
-	const boardsim = gamefile.boardsim;
-
 	// Star Field Animation: Appears in border & voids
 	webgl.executeMaskedDraw(
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
-		() => border.drawPlayableRegionMask(boardsim), // EXCLUSION MASK is our playable region
+		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
 		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
@@ -276,7 +274,7 @@ function renderScene(): void {
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
 	webgl.executeMaskedDraw(
-		() => border.drawPlayableRegionMask(boardsim), // INCLUSION MASK containing playable region
+		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.

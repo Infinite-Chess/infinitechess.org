@@ -3,6 +3,7 @@
  * and contains utility methods for working with them.
  */
 
+import type { BoundingBox } from '../../util/math/bounds.js';
 import type { Player, RawType, PlayerGroup } from '../util/typeutil.js';
 
 interface GameRules {
@@ -29,6 +30,14 @@ interface GameRules {
 	moveRule?: number;
 	/** The maximum number of steps any sliding piece can take. */
 	slideLimit?: bigint;
+	/**
+	 * IF a world border is present, this is a bounding box
+	 * containing all integer coordinates that are inside the
+	 * playing area, not on or outside the world border.
+	 * All pieces must be within this box.
+	 * The inclusive playable region of the board.
+	 */
+	worldBorder?: BoundingBox;
 }
 
 /** Checks if a specified color has a given win condition. */

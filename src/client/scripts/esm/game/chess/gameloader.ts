@@ -274,7 +274,7 @@ async function startEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
-			worldBorder: engineWorldBorderDict[options.currentEngine],
+			worldBorderDist: engineWorldBorderDict[options.currentEngine],
 		},
 	});
 
@@ -390,7 +390,7 @@ async function startCustomEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
-			worldBorder: engineWorldBorderDict[options.currentEngine],
+			worldBorderDist: engineWorldBorderDict[options.currentEngine],
 		},
 	});
 

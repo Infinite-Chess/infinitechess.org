@@ -11,7 +11,8 @@ import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import type { IncomingMessage } from 'node:http';
 
 const giveLoggedItemsUUID = false;
 
@@ -79,7 +80,7 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
  * @param req - The request object
  * @param ws - The websocket object
  */
-function logWebsocketStart(req: Request, ws: CustomWebSocket): void {
+function logWebsocketStart(req: IncomingMessage, ws: CustomWebSocket): void {
 	const socketID = ws.metadata.id;
 	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
 	const userAgent = req.headers['user-agent'];

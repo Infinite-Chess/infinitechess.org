@@ -3,6 +3,7 @@ import jsutil from '../../util/jsutil';
 import boardutil, { Piece } from '../util/boardutil';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil';
 import winconutil from '../util/winconutil';
+import checkresolver from './checkresolver';
 import { FullGame } from './gamefile';
 import icnconverter, { _Move_Compact } from './icn/icnconverter';
 import legalmoves from './legalmoves';
@@ -181,12 +182,29 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 		return { valid: false, reason: 'Did not promote.' };
 	}
 
-	// Test if that piece's legal moves contain the destination coords.
-	const legalMoves = legalmoves.calculateAll(gamefile, piecemoved);
+	// Test if that piece's legal moves contain the destination coords...
 
 	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(
 		move_compact.endCoords,
 	);
+
+	// This logic is pulled out of legalmoves.calculateAll(), so we can observe
+	// it at each step to find the earliest illegality point of the move submission.
+
+	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piecemoved.type);
+	const legalMoves = legalmoves.getEmptyLegalMoves(moveset);
+	legalmoves.appendPotentialMoves(piecemoved, moveset, legalMoves);
+	legalmoves.removeObstructedMoves(
+		gamefile.boardsim,
+		gamefile.basegame.gameRules.worldBorder,
+		piecemoved,
+		moveset,
+		legalMoves,
+		false,
+	);
+	legalmoves.appendSpecialMoves(gamefile, piecemoved, moveset, legalMoves, false);
+
+	// Check if even the non-check-respecting move is legal first
 	// This should pass on any special moves tags to endCoordsToAppendSpecialsTo at the same time.
 	if (
 		!legalmoves.checkIfMoveLegal(
@@ -197,7 +215,22 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 			colorOfPieceMoved,
 		)
 	) {
-		return { valid: false, reason: 'Illegal destination coords.' };
+		return { valid: false, reason: 'Invalid destination coords.' };
+	}
+
+	checkresolver.removeCheckInvalidMoves(gamefile, piecemoved, legalMoves);
+
+	// Now check if the check-respecting move is legal
+	if (
+		!legalmoves.checkIfMoveLegal(
+			gamefile,
+			legalMoves,
+			piecemoved.coords,
+			endCoordsToAppendSpecialsTo,
+			colorOfPieceMoved,
+		)
+	) {
+		return { valid: false, reason: 'Puts self in check.' };
 	}
 
 	// Now transfer the special move flags from the coords to the move draft
