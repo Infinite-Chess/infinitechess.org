@@ -80,10 +80,8 @@ function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
 		'icn',
 	]);
 	if (!logged_game_info) {
-		logEventsAndPrint(
-			`Unable to send player game results after game of id (${gameID}) was logged, because we weren't able to retrieve it from the games table! (Potential they just requested a non-existent game id)`,
-			'errLog.txt',
-		);
+		// This happens if the user requests a game that was aborted before
+		// any moves were made, as those games are not stored in the database.
 		sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page
 		return;
 	}
