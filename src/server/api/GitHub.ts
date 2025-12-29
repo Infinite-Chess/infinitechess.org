@@ -4,7 +4,7 @@
  * probably below our patron donors.
  */
 
-import { request } from 'node:https';
+import { request, RequestOptions } from 'node:https';
 import AbortController from 'abort-controller';
 import process from 'node:process';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
- * This should be periodically refreshed. @type {object[]} 
+ * This should be periodically refreshed.
  * example contributor {
     name: 'Naviary2',
     iconUrl: 'https://avatars.githubusercontent.com/u/163621561?v=4',
@@ -28,9 +28,9 @@ const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contri
     contributionCount: 1502
   }
  */
-let contributors = (() => {
+let contributors: object[] = (() => {
 	if (!fs.existsSync(PATH_TO_CONTRIBUTORS_FILE)) return [];
-	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE);
+	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString();
 	return JSON.parse(file);
 })();
 // console.log(contributors);
@@ -54,10 +54,15 @@ if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === unde
  * Uses GitHub's API to fetch all contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * and updates our list!
  */
-function refreshGitHubContributorsList() {
+function refreshGitHubContributorsList(): void {
 	const { GITHUB_API_KEY, GITHUB_REPO } = process.env;
 
-	if (GITHUB_API_KEY.length === 0 || GITHUB_REPO.length === 0) {
+	if (
+		GITHUB_API_KEY === undefined ||
+		GITHUB_REPO === undefined ||
+		GITHUB_API_KEY.length === 0 ||
+		GITHUB_REPO.length === 0
+	) {
 		logEventsAndPrint(
 			'Either Github API key not detected, or repository not specified. Stopping updating contributor list.',
 			'errLog.txt',
@@ -68,9 +73,9 @@ function refreshGitHubContributorsList() {
 
 	// Create an AbortController for the request
 	const controller = new AbortController();
-	const signal = controller.signal;
+	const signal = controller.signal as AbortSignal;
 
-	const options = {
+	const options: RequestOptions = {
 		method: 'GET',
 		hostname: 'api.github.com',
 		// "port": null,
@@ -86,7 +91,8 @@ function refreshGitHubContributorsList() {
 	};
 
 	const req = request(options, function (res) {
-		const chunks = [];
+		// The type of this is Uint8Array because Buffer.concat() expects it.
+		const chunks: Uint8Array[] = [];
 
 		res.on('data', (chunk) => chunks.push(chunk));
 		res.on('end', async () => {
@@ -155,7 +161,7 @@ function refreshGitHubContributorsList() {
  * updated every {@link intervalToRefreshContributorsMillis}.
  * @returns {object[]}
  */
-function getContributors() {
+function getContributors(): typeof contributors {
 	return contributors;
 }
 
