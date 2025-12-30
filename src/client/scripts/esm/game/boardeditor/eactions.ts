@@ -19,7 +19,6 @@ import type { MetaData } from '../../../../../shared/chess/util/metadata';
 import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
 import type { Player } from '../../../../../shared/chess/util/typeutil';
-import type { validEngineName } from '../misc/enginegame';
 
 // @ts-ignore
 import statustext from '../gui/statustext';
@@ -47,6 +46,7 @@ import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
+import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
@@ -188,16 +188,37 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(
-	TimeControl: MetaData['TimeControl'],
-	youAreColor: Player,
-	currentEngine: validEngineName,
-): void {
+function startEngineGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
+	// TODO: Allow the user to configure these values
+	const TimeControl = '-';
+	const youAreColor: Player = players.WHITE as Player;
+	const currentEngine = 'hydrochess';
+
+	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
+	// since it is far stronger and faster for single king endgames.
+	// Rememember to also set checkmateSelectedID if applicable
+
+	// TODO: If the world border isn't set, query the user as to whether they want it automatically set.
+
+	// Get current position
 	const variantOptions = getCurrentPositionInformation();
+
+	// Determine whether it's not supported...
+
 	if (variantOptions.position.size === 0) {
 		statustext.showStatus('Cannot start engine game from empty position!', true);
+		return;
+	}
+
+	// Does the engine support it?
+	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
+	if (!supported_result.supported) {
+		statustext.showStatus(
+			`Position is not supported for reason: ${supported_result.reason}`,
+			true,
+		);
 		return;
 	}
 
