@@ -26,9 +26,6 @@ const validCommands = [
 	'username',
 	'logout',
 	'verify',
-	'post',
-	'invites',
-	'announce',
 	'userinfo',
 	'updatecontributors',
 	'help',
@@ -66,12 +63,6 @@ function processCommand(req: IdentifiedRequest, res: Response): void {
 			return;
 		case 'verify':
 			verify(command, commandAndArgs, req, res);
-			return;
-		case 'post':
-			return;
-		case 'invites':
-			return;
-		case 'announce':
 			return;
 		case 'userinfo':
 			getUserInfo(command, commandAndArgs, req, res);
@@ -416,12 +407,6 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 			res.status(200).send(
 				'Syntax: verify <email>\nVerifies the account with the given email address.',
 			);
-			return;
-		case 'post':
-			return;
-		case 'invites':
-			return;
-		case 'announce':
 			return;
 		case 'userinfo':
 			res.status(200).send('Syntax: userinfo <username>\nPrints info about a user.');
