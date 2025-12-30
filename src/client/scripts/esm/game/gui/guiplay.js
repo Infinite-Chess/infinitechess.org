@@ -99,6 +99,7 @@ const engineSupportedVariants = new Set([
 	'Knightline',
 	'Obstocean',
 	'Chess',
+	'Omega',
 ]);
 
 /**
