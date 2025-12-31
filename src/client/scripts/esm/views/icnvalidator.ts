@@ -4,7 +4,7 @@ import { players as p } from '../../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import gameformulator from '../game/chess/gameformulator.js';
 
-import * as zod from 'zod';
+import * as z from 'zod';
 
 // Type definitions
 interface VariantStats {
@@ -39,15 +39,15 @@ interface ValidationError {
 
 type LogType = 'info' | 'success' | 'warning' | 'error';
 
-const SPRTGamesSchema = zod.object({
-	games: zod.array(
-		zod.object({
-			rawICN: zod.string(),
+const SPRTGamesSchema = z.object({
+	games: z.array(
+		z.object({
+			rawICN: z.string(),
 		}),
 	),
 });
 
-let gamesData: zod.infer<typeof SPRTGamesSchema> | null = null;
+let gamesData: z.infer<typeof SPRTGamesSchema> | null = null;
 // Used for cancelling ongoing validation when a new file is selected
 let currentValidationId = 0;
 
