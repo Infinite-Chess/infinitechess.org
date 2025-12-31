@@ -40,6 +40,8 @@ const SPRTGamesSchema = zod.object({
 });
 
 let gamesData: zod.infer<typeof SPRTGamesSchema> | null = null;
+// Used for cancelling ongoing validation when a new file is selected
+let currentValidationId = 0;
 
 // File upload handling
 const fileInput = document.getElementById('file-input')! as HTMLInputElement;
@@ -70,6 +72,9 @@ uploadSection.addEventListener('drop', (e) => {
 function handleFileSelect(): void {
 	const file = fileInput.files?.[0];
 	if (file) {
+		// Cancel any existing validation loop immediately
+		currentValidationId++;
+
 		fileName.textContent = `Selected: ${file.name}`;
 		addLog(`File selected: ${file.name}`, 'info');
 
@@ -105,6 +110,9 @@ function handleFileSelect(): void {
 }
 
 async function validateGames(): Promise<void> {
+	// Capture the ID specific to THIS run
+	const runId = currentValidationId;
+
 	if (!gamesData) {
 		addLog('✗ Cannot validate: missing data or modules', 'error');
 		return;
@@ -130,6 +138,9 @@ async function validateGames(): Promise<void> {
 	addLog(`Starting validation of ${results.total} games...`, 'info');
 
 	for (let i = 0; i < gamesData.games.length; i++) {
+		// Stop if a new file has been selected (ID mismatch)
+		if (runId !== currentValidationId) return;
+
 		const gameICN = gamesData.games[i]!.rawICN!;
 		const progress = (((i + 1) / results.total) * 100).toFixed(1);
 
