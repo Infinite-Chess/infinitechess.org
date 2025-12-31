@@ -7,6 +7,14 @@ import gameformulator from '../game/chess/gameformulator.js';
 import * as zod from 'zod';
 
 // Type definitions
+interface VariantStats {
+	total: number;
+	icn: number;
+	formulator: number;
+	illegal: number;
+	termination: number;
+}
+
 interface ValidationResults {
 	total: number;
 	successful: number;
@@ -15,7 +23,7 @@ interface ValidationResults {
 	illegalMoveErrors: number;
 	terminationMismatchErrors: number;
 	errors: ValidationError[];
-	variantErrors: Record<string, number>;
+	variantErrors: Record<string, VariantStats>;
 }
 
 interface ValidationError {
@@ -153,6 +161,21 @@ async function validateGames(): Promise<void> {
 		variantErrors: {},
 	};
 
+	// Helper to track errors by variant
+	const incrementVariantError = (variantName: string, type: keyof VariantStats): void => {
+		if (!results.variantErrors[variantName]) {
+			results.variantErrors[variantName] = {
+				total: 0,
+				icn: 0,
+				formulator: 0,
+				illegal: 0,
+				termination: 0,
+			};
+		}
+		results.variantErrors[variantName]!.total++;
+		results.variantErrors[variantName]![type]++;
+	};
+
 	// Reset UI state (Clear previous run's errors)
 	document.getElementById('summary-section')!.style.display = 'none';
 
@@ -195,6 +218,7 @@ async function validateGames(): Promise<void> {
 					error: message,
 					icn: gameICN,
 				});
+				incrementVariantError('Unknown (ICN Parse Failed)', 'icn');
 				continue;
 			}
 
@@ -217,12 +241,7 @@ async function validateGames(): Promise<void> {
 					variant: variant,
 					icn: gameICN,
 				});
-
-				// Track errors by variant
-				if (!results.variantErrors[variant]) {
-					results.variantErrors[variant] = 0;
-				}
-				results.variantErrors[variant]++;
+				incrementVariantError(variant, 'formulator');
 				continue;
 			}
 
@@ -240,12 +259,7 @@ async function validateGames(): Promise<void> {
 					variant: variant,
 					icn: gameICN,
 				});
-
-				// Track errors by variant
-				if (!results.variantErrors[variant]) {
-					results.variantErrors[variant] = 0;
-				}
-				results.variantErrors[variant]++;
+				incrementVariantError(variant, 'illegal');
 				continue;
 			}
 
@@ -265,12 +279,7 @@ async function validateGames(): Promise<void> {
 					gameConclusion: game.basegame.gameConclusion,
 					icn: gameICN,
 				});
-
-				// Track errors by variant
-				if (!results.variantErrors[variant]) {
-					results.variantErrors[variant] = 0;
-				}
-				results.variantErrors[variant]++;
+				incrementVariantError(variant, 'termination');
 				continue;
 			}
 
@@ -462,14 +471,43 @@ function displayResults(results: ValidationResults): void {
 		const variantStats = document.getElementById('variant-stats')!;
 		variantStats.innerHTML = '';
 
-		const sortedVariants = Object.entries(results.variantErrors).sort((a, b) => b[1] - a[1]);
+		const sortedVariants = Object.entries(results.variantErrors).sort(
+			(a, b) => b[1].total - a[1].total,
+		);
 
-		for (const [variant, count] of sortedVariants) {
+		for (const [variant, stats] of sortedVariants) {
 			const variantItem = document.createElement('div');
 			variantItem.className = 'variant-item';
+
+			// Build the stats HTML
+			const buildStat = (
+				label: string,
+				count: number,
+				isAlwaysWarn: boolean = false,
+			): string => {
+				if (count === 0) return '';
+
+				// Logic: Red ('err') if > 3, otherwise Orange ('warn')
+				// Exception: ICN is always 'warn' if isAlwaysWarn is true
+				let type = 'warn';
+				if (!isAlwaysWarn && count > 3) {
+					type = 'err';
+				}
+
+				return `<div class="v-stat ${type} active"><span>${count}</span> ${label}</div>`;
+			};
+
 			variantItem.innerHTML = `
-                <span class="variant-name">${variant}</span>
-                <span class="variant-errors">${count} error(s)</span>
+                <div class="variant-header">
+                    <span class="variant-name">${variant}</span>
+                    <span class="variant-errors">${stats.total} total error(s)</span>
+                </div>
+                <div class="variant-details">
+                    ${buildStat('ICN', stats.icn, true)}
+                    ${buildStat('Formulator', stats.formulator)}
+                    ${buildStat('Illegal', stats.illegal)}
+                    ${buildStat('Mismatch', stats.termination)}
+                </div>
             `;
 			variantStats.appendChild(variantItem);
 		}

@@ -313,15 +313,49 @@ button:disabled {
 
 .variant-item {
 	display: flex;
-	justify-content: space-between;
-	padding: 0.5rem;
+	flex-direction: column;
+	padding: 0.75rem;
 	margin-bottom: 0.5rem;
 	background-color: var(--bg-color);
 	border-radius: 4px;
 }
 
-.variant-name {
+.variant-header {
+	display: flex;
+	justify-content: space-between;
 	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.variant-details {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	font-size: 0.85em;
+}
+
+.v-stat {
+	background-color: #333;
+	padding: 2px 8px;
+	border-radius: 4px;
+	color: #aaa;
+}
+
+.v-stat.active {
+	background-color: rgba(255, 255, 255, 0.1);
+	color: var(--text-color);
+}
+
+.v-stat span {
+	font-weight: bold;
+}
+
+.v-stat.warn span {
+	color: var(--warning-color);
+}
+
+.v-stat.err span {
+	color: var(--danger-color);
 }
 
 .variant-errors {
