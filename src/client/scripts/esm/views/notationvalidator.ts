@@ -4,6 +4,8 @@ import { players as p } from '../../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import gameformulator from '../game/chess/gameformulator.js';
 
+import * as zod from 'zod';
+
 // Type definitions
 interface ValidationResults {
 	total: number;
@@ -29,7 +31,15 @@ interface ValidationError {
 
 type LogType = 'info' | 'success' | 'error';
 
-let gamesData: string[] | null = null;
+const SPRTGamesSchema = zod.object({
+	games: zod.array(
+		zod.object({
+			rawICN: zod.string(),
+		}),
+	),
+});
+
+let gamesData: zod.infer<typeof SPRTGamesSchema> | null = null;
 
 // File upload handling
 const fileInput = document.getElementById('file-input')! as HTMLInputElement;
@@ -67,17 +77,13 @@ function handleFileSelect(): void {
 
 		const reader = new FileReader();
 		reader.onload = (e) => {
+			let unvalidatedJSON: any;
 			try {
 				const result = e.target?.result;
 				if (typeof result !== 'string') {
 					throw new Error('Failed to read file');
 				}
-				gamesData = JSON.parse(result);
-				if (!Array.isArray(gamesData)) {
-					throw new Error('JSON file must contain an array of game notations');
-				}
-				addLog(`✓ Loaded ${gamesData.length} game notation(s)`, 'success');
-				validateBtn.disabled = false;
+				unvalidatedJSON = JSON.parse(result);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				addLog(`✗ Error parsing JSON: ${message}`, 'error');
@@ -85,6 +91,16 @@ function handleFileSelect(): void {
 				gamesData = null;
 				validateBtn.disabled = true;
 			}
+
+			const parseResult = SPRTGamesSchema.safeParse(unvalidatedJSON);
+			if (!parseResult.success) {
+				throw new Error(
+					'JSON does not match expected schema: ' + parseResult.error.message,
+				);
+			}
+			gamesData = parseResult.data;
+			addLog(`✓ Loaded ${gamesData.games.length} game notation(s)`, 'success');
+			validateBtn.disabled = false;
 		};
 		reader.readAsText(file);
 	}
@@ -99,7 +115,7 @@ async function validateGames(): Promise<void> {
 	validateBtn.disabled = true;
 
 	const results: ValidationResults = {
-		total: gamesData.length,
+		total: gamesData.games.length,
 		successful: 0,
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
@@ -117,8 +133,8 @@ async function validateGames(): Promise<void> {
 
 	addLog(`Starting validation of ${results.total} games...`, 'info');
 
-	for (let i = 0; i < gamesData.length; i++) {
-		const gameICN = gamesData[i]!;
+	for (let i = 0; i < gamesData.games.length; i++) {
+		const gameICN = gamesData.games[i]!.rawICN!;
 		const progress = (((i + 1) / results.total) * 100).toFixed(1);
 
 		progressFill.style.width = progress + '%';
