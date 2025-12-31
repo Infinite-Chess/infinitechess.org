@@ -51,6 +51,7 @@ While in-game, there are a few keys that will activate useful debugging modes-
 - `4`: Simulates 1 second of websocket message latency. This helps you to catch bugs caused by low ping, something you have zero of when developing.
 - `5`: Copies the currently loaded game as a single position, according to the move you are viewing. This strips the moves list from the resulting notation.
 - `6`: Toggles specialrights highlights. This displays a `+` sign next to what pieces still have their special ability (pawns that can double push, kings/rooks that can castle). In addition, this also highlights the square enpassant capture is legal on, if possible.
+- `7`: Toggles engine move generation highlights. This indicates all the moves the engine will consider in the position. Only works for the HydroChess engine.
 
 ## Making changes to the repository
 
