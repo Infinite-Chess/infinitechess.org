@@ -79,6 +79,12 @@ function handleFileSelect(): void {
 		// Cancel any existing validation loop immediately
 		currentValidationId++;
 
+		// Reset UI: Hide progress bar and results from any previous run
+		document.getElementById('progress-section')!.style.display = 'none';
+		document.getElementById('summary-section')!.style.display = 'none';
+		document.getElementById('variant-section')!.style.display = 'none';
+		document.getElementById('errors-section')!.style.display = 'none';
+
 		fileName.textContent = `Selected: ${file.name}`;
 		addLog(`File selected: ${file.name}`, 'info');
 
