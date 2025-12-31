@@ -44,11 +44,9 @@ let gamesData: zod.infer<typeof SPRTGamesSchema> | null = null;
 // File upload handling
 const fileInput = document.getElementById('file-input')! as HTMLInputElement;
 const fileName = document.getElementById('file-name')! as HTMLParagraphElement;
-const validateBtn = document.getElementById('validate-btn')! as HTMLButtonElement;
 const uploadSection = document.getElementById('upload-section')! as HTMLDivElement;
 
 fileInput.addEventListener('change', handleFileSelect);
-validateBtn.addEventListener('click', validateGames);
 
 // Drag and drop
 uploadSection.addEventListener('dragover', (e) => {
@@ -89,7 +87,6 @@ function handleFileSelect(): void {
 				addLog(`✗ Error parsing JSON: ${message}`, 'error');
 				fileName.textContent += ' (Invalid JSON)';
 				gamesData = null;
-				validateBtn.disabled = true;
 			}
 
 			const parseResult = SPRTGamesSchema.safeParse(unvalidatedJSON);
@@ -100,7 +97,8 @@ function handleFileSelect(): void {
 			}
 			gamesData = parseResult.data;
 			addLog(`✓ Loaded ${gamesData.games.length} game notation(s)`, 'success');
-			validateBtn.disabled = false;
+			// Automatically start the validation process
+			validateGames();
 		};
 		reader.readAsText(file);
 	}
@@ -111,8 +109,6 @@ async function validateGames(): Promise<void> {
 		addLog('✗ Cannot validate: missing data or modules', 'error');
 		return;
 	}
-
-	validateBtn.disabled = true;
 
 	const results: ValidationResults = {
 		total: gamesData.games.length,
@@ -256,7 +252,6 @@ async function validateGames(): Promise<void> {
 	// Hide progress, show results
 	progressSection.style.display = 'none';
 	displayResults(results);
-	validateBtn.disabled = false;
 
 	addLog(
 		`✓ Validation complete: ${results.successful}/${results.total} successful`,
