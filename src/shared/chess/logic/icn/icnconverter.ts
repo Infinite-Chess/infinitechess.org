@@ -359,7 +359,7 @@ const whiteSpaceOrEnd = String.raw`(?:\s+|$)`; // Matches whitespace or end of s
 const whiteSpaceOrEndRegex = new RegExp(whiteSpaceOrEnd, 'y');
 
 /** Regex source that matches and captures a single metadata entry. */
-const singleMetadataSource = String.raw`\[([a-zA-Z]+)\s+"([^"]{1,100})"\]`; // Max metadata value length of 100 chars for safety. This prevents, if we forget a closing ", the regex consuming the entirity of the ICN
+const singleMetadataSource = String.raw`\[([a-zA-Z]+)\s+"([^"]{1,200})"\]`; // Max metadata value length of 200 chars for safety. This prevents, if we forget a closing ", the regex consuming the entirity of the ICN
 const metadataRegex = new RegExp(
 	String.raw`${singleMetadataSource}(?:\s+${singleMetadataSource})*${whiteSpaceOrEnd}`,
 	'y',

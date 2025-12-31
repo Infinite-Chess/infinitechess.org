@@ -1,14 +1,15 @@
-import premoves from '../../../client/scripts/esm/game/chess/premoves';
-import jsutil from '../../util/jsutil';
-import boardutil, { Piece } from '../util/boardutil';
-import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil';
-import winconutil from '../util/winconutil';
-import checkresolver from './checkresolver';
-import { FullGame } from './gamefile';
-import icnconverter, { _Move_Compact } from './icn/icnconverter';
-import legalmoves from './legalmoves';
-import movepiece, { CoordsSpecial, MoveDraft } from './movepiece';
-import specialdetect from './specialdetect';
+// src/shared/chess/logic/movevalidation.ts
+
+import jsutil from '../../util/jsutil.js';
+import boardutil, { Piece } from '../util/boardutil.js';
+import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
+import winconutil from '../util/winconutil.js';
+import checkresolver from './checkresolver.js';
+import { FullGame } from './gamefile.js';
+import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
+import legalmoves from './legalmoves.js';
+import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
+import specialdetect from './specialdetect.js';
 
 // Type Definitions ------------------------------------------------------------
 
@@ -27,12 +28,6 @@ type ConclusionValidityResult = { valid: true } | { valid: false; reason: string
 function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 	const { boardsim } = gamefile;
 	const originalMoveIndex = boardsim.state.local.moveIndex;
-
-	// Safety check: Make sure premoves are not applied.
-	// They should be unapplied before calling this function and reapplied afterwards.
-	if (premoves.arePremovesApplied()) {
-		throw new Error('Cannot run validation while premoves are applied. Rewind them first.');
-	}
 
 	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
 	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
