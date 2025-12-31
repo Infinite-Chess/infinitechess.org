@@ -208,6 +208,14 @@
 				border-left-color: var(--danger-color);
 			}
 
+			.error-item.illegal-move {
+				border-left-color: #e91e63;
+			}
+
+			.error-item.termination-mismatch {
+				border-left-color: #9c27b0;
+			}
+
 			.error-header {
 				font-weight: bold;
 				margin-bottom: 0.5rem;
@@ -230,6 +238,16 @@
 
 			.error-type.formulator {
 				background-color: var(--danger-color);
+				color: white;
+			}
+
+			.error-type.illegal-move {
+				background-color: #e91e63;
+				color: white;
+			}
+
+			.error-type.termination-mismatch {
+				background-color: #9c27b0;
 				color: white;
 			}
 
@@ -367,6 +385,14 @@
 					<div class="stat-card">
 						<h3>Formulator Errors</h3>
 						<p class="stat-value error" id="formulator-errors">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>Illegal Move Errors</h3>
+						<p class="stat-value error" id="illegal-move-errors">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>Termination Mismatch</h3>
+						<p class="stat-value error" id="termination-mismatch-errors">0</p>
 					</div>
 				</div>
 			</div>

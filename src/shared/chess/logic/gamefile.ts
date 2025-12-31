@@ -121,6 +121,8 @@ interface Additional {
 	worldBorderDist?: bigint;
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
+	/** If true, validates that each move is actually legal during formulation. */
+	validateMoves?: boolean;
 }
 
 /** Creates a new {@link Game} object from provided arguments */
@@ -254,6 +256,7 @@ function loadGameWithBoard(
 	boardsim: Board,
 	moves: ServerGameMoveMessage[] = [],
 	gameConclusion?: string,
+	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };
 
@@ -277,7 +280,7 @@ function loadGameWithBoard(
 		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
 	}
 
-	movepiece.makeAllMovesInGame(gamefile, moves);
+	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) basegame.gameConclusion = gameConclusion;
@@ -303,7 +306,13 @@ function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
+	return loadGameWithBoard(
+		basegame,
+		boardsim,
+		additional.moves,
+		additional.gameConclusion,
+		additional.validateMoves,
+	);
 }
 
 export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };

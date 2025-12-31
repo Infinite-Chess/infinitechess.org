@@ -4,6 +4,8 @@
 let gamesData = null;
 let icnconverter = null;
 let gameformulator = null;
+let winconutil = null;
+let typeutil = null;
 
 // Load the required modules
 async function loadModules() {
@@ -14,6 +16,8 @@ async function loadModules() {
 		// Try to load from the built distribution first
 		let icnLoaded = false;
 		let gameformulatorLoaded = false;
+		let winconutilLoaded = false;
+		let typeutilLoaded = false;
 
 		try {
 			const icnModule = await import('../../dist/shared/chess/logic/icn/icnconverter.js');
@@ -35,6 +39,24 @@ async function loadModules() {
 				'⚠ Could not load game formulator from dist, will try from dev server...',
 				'info',
 			);
+		}
+
+		try {
+			const winconutilModule = await import('../../dist/shared/chess/util/winconutil.js');
+			winconutil = winconutilModule.default;
+			addLog('✓ Winconutil module loaded from dist', 'success');
+			winconutilLoaded = true;
+		} catch (e) {
+			addLog('⚠ Could not load winconutil from dist, will try from dev server...', 'info');
+		}
+
+		try {
+			const typeutilModule = await import('../../dist/shared/chess/util/typeutil.js');
+			typeutil = typeutilModule.default;
+			addLog('✓ Typeutil module loaded from dist', 'success');
+			typeutilLoaded = true;
+		} catch (e) {
+			addLog('⚠ Could not load typeutil from dist, will try from dev server...', 'info');
 		}
 
 		// If either module is missing, try loading from dev server paths
@@ -61,7 +83,29 @@ async function loadModules() {
 			}
 		}
 
-		if (icnLoaded && gameformulatorLoaded) {
+		if (!winconutilLoaded) {
+			try {
+				const winconutilModule = await import('/dist/shared/chess/util/winconutil.js');
+				winconutil = winconutilModule.default;
+				addLog('✓ Winconutil module loaded from dev server', 'success');
+				winconutilLoaded = true;
+			} catch (e) {
+				addLog('✗ Failed to load winconutil from dev server', 'error');
+			}
+		}
+
+		if (!typeutilLoaded) {
+			try {
+				const typeutilModule = await import('/dist/shared/chess/util/typeutil.js');
+				typeutil = typeutilModule.default;
+				addLog('✓ Typeutil module loaded from dev server', 'success');
+				typeutilLoaded = true;
+			} catch (e) {
+				addLog('✗ Failed to load typeutil from dev server', 'error');
+			}
+		}
+
+		if (icnLoaded && gameformulatorLoaded && winconutilLoaded && typeutilLoaded) {
 			addLog('All modules loaded successfully!', 'success');
 			return true;
 		} else {
@@ -142,7 +186,7 @@ function handleFileSelect() {
 }
 
 async function validateGames() {
-	if (!gamesData || !icnconverter || !gameformulator) {
+	if (!gamesData || !icnconverter || !gameformulator || !winconutil || !typeutil) {
 		addLog('✗ Cannot validate: missing data or modules', 'error');
 		return;
 	}
@@ -154,6 +198,8 @@ async function validateGames() {
 		successful: 0,
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
+		illegalMoveErrors: 0,
+		terminationMismatchErrors: 0,
 		errors: [],
 		variantErrors: {},
 	};
@@ -175,7 +221,7 @@ async function validateGames() {
 		progressText.textContent = `Processing game ${i + 1} of ${results.total}`;
 
 		try {
-			// Step 1: Convert ICN to long format
+			// Stage 1: Convert ICN to long format
 			let longFormat;
 			try {
 				longFormat = icnconverter.ShortToLong_Format(gameICN);
@@ -190,13 +236,15 @@ async function validateGames() {
 				continue;
 			}
 
-			// Extract variant from metadata for error tracking
+			// Extract variant and termination from metadata for error tracking
 			const variant = longFormat.metadata?.Variant || 'Unknown';
+			const termination = longFormat.metadata?.Termination;
+			const result = longFormat.metadata?.Result;
 
-			// Step 2: Formulate the game
+			// Stage 2: Formulate the game (without move validation)
+			let game;
 			try {
-				const game = gameformulator.formulateGame(longFormat);
-				results.successful++;
+				game = gameformulator.formulateGame(longFormat, false);
 			} catch (error) {
 				results.formulatorErrors++;
 				results.errors.push({
@@ -212,7 +260,57 @@ async function validateGames() {
 					results.variantErrors[variant] = 0;
 				}
 				results.variantErrors[variant]++;
+				continue;
 			}
+
+			// Stage 3: Validate move legality
+			try {
+				// Re-formulate with move validation enabled
+				gameformulator.formulateGame(longFormat, true);
+			} catch (error) {
+				results.illegalMoveErrors++;
+				results.errors.push({
+					gameIndex: i + 1,
+					phase: 'illegal-move',
+					error: error.message,
+					variant: variant,
+					icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+				});
+
+				// Track errors by variant
+				if (!results.variantErrors[variant]) {
+					results.variantErrors[variant] = 0;
+				}
+				results.variantErrors[variant]++;
+				continue;
+			}
+
+			// Stage 4: Validate termination matches game conclusion
+			try {
+				validateTermination(termination, result, game.basegame.gameConclusion);
+			} catch (error) {
+				results.terminationMismatchErrors++;
+				results.errors.push({
+					gameIndex: i + 1,
+					phase: 'termination-mismatch',
+					error: error.message,
+					variant: variant,
+					termination: termination,
+					result: result,
+					gameConclusion: game.basegame.gameConclusion,
+					icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+				});
+
+				// Track errors by variant
+				if (!results.variantErrors[variant]) {
+					results.variantErrors[variant] = 0;
+				}
+				results.variantErrors[variant]++;
+				continue;
+			}
+
+			// All stages passed!
+			results.successful++;
 		} catch (error) {
 			// Unexpected error
 			addLog(`✗ Unexpected error processing game ${i + 1}: ${error.message}`, 'error');
@@ -240,12 +338,106 @@ async function validateGames() {
 	);
 }
 
+// Helper function to validate termination metadata
+function validateTermination(termination, result, gameConclusion) {
+	// Check mappings before running through getVictorAndConditionFromGameConclusion
+	if (termination === 'Draw by maximum moves reached') {
+		if (gameConclusion !== undefined) {
+			throw new Error(
+				`Termination is "Draw by maximum moves reached" but gameConclusion is not undefined: ${gameConclusion}`,
+			);
+		}
+		return;
+	}
+
+	if (termination && termination.startsWith('Material adjudication')) {
+		if (gameConclusion !== undefined) {
+			throw new Error(
+				`Termination starts with "Material adjudication" but gameConclusion is not undefined: ${gameConclusion}`,
+			);
+		}
+		return;
+	}
+
+	if (termination === 'Loss on time') {
+		if (gameConclusion !== undefined) {
+			throw new Error(
+				`Termination is "Loss on time" but gameConclusion is not undefined: ${gameConclusion}`,
+			);
+		}
+		return;
+	}
+
+	// If gameConclusion is undefined at this point, and termination is specified, that's an error
+	if (gameConclusion === undefined) {
+		if (termination) {
+			throw new Error(
+				`gameConclusion is undefined but Termination metadata is specified: ${termination}`,
+			);
+		}
+		return; // Both undefined is OK (game not over)
+	}
+
+	// Parse the gameConclusion
+	const { victor, condition } =
+		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+
+	// Check condition mappings
+	const conditionMappings = {
+		Checkmate: 'checkmate',
+		'Draw by stalemate': 'stalemate',
+		'Draw by threefold repetition': 'repetition',
+		'Draw by fifty-move rule': 'moverule',
+		'Draw by insufficient material': 'insuffmat',
+	};
+
+	// Check if termination starts with specific patterns
+	if (termination && termination.startsWith('Win by capturing all')) {
+		if (condition !== 'allpiecescaptured') {
+			throw new Error(
+				`Termination starts with "Win by capturing all" but condition is "${condition}", expected "allpiecescaptured"`,
+			);
+		}
+	} else if (termination && termination in conditionMappings) {
+		if (condition !== conditionMappings[termination]) {
+			throw new Error(
+				`Termination "${termination}" does not match condition "${condition}", expected "${conditionMappings[termination]}"`,
+			);
+		}
+	} else if (termination) {
+		// No matching mapping found
+		throw new Error(`Unknown Termination metadata: "${termination}"`);
+	}
+
+	// Validate Result metadata matches victor
+	if (victor !== undefined && result) {
+		const resultMappings = {
+			'1-0': typeutil.players.WHITE,
+			'0-1': typeutil.players.BLACK,
+			'1/2-1/2': typeutil.players.NEUTRAL,
+		};
+
+		if (result in resultMappings) {
+			if (victor !== resultMappings[result]) {
+				throw new Error(
+					`Result "${result}" does not match victor ${victor}, expected victor ${resultMappings[result]}`,
+				);
+			}
+		} else {
+			throw new Error(`Unknown Result metadata: "${result}"`);
+		}
+	}
+}
+
 function displayResults(results) {
 	// Update summary
 	document.getElementById('total-games').textContent = results.total;
 	document.getElementById('successful-games').textContent = results.successful;
 	document.getElementById('icnconverter-errors').textContent = results.icnconverterErrors;
 	document.getElementById('formulator-errors').textContent = results.formulatorErrors;
+	document.getElementById('illegal-move-errors').textContent = results.illegalMoveErrors;
+	document.getElementById('termination-mismatch-errors').textContent =
+		results.terminationMismatchErrors;
 	document.getElementById('summary-section').style.display = 'block';
 
 	// Display variant errors
@@ -276,12 +468,26 @@ function displayResults(results) {
 		for (const error of results.errors) {
 			const errorItem = document.createElement('div');
 			errorItem.className = `error-item ${error.phase}`;
+
+			// Build additional metadata for termination mismatches
+			let metadataHtml = '';
+			if (error.phase === 'termination-mismatch') {
+				metadataHtml = `
+					<div style="margin-top: 0.5rem; font-size: 0.9em; color: var(--accent-color);">
+						<div><strong>Termination:</strong> ${error.termination || 'undefined'}</div>
+						<div><strong>Result:</strong> ${error.result || 'undefined'}</div>
+						<div><strong>Game Conclusion:</strong> ${error.gameConclusion || 'undefined'}</div>
+					</div>
+				`;
+			}
+
 			errorItem.innerHTML = `
                 <div class="error-header">
                     <span>Game #${error.gameIndex}${error.variant ? ` - ${error.variant}` : ''}</span>
                     <span class="error-type ${error.phase}">${error.phase}</span>
                 </div>
                 <div class="error-message">${error.error}</div>
+                ${metadataHtml}
                 <details style="margin-top: 0.5rem;">
                     <summary style="cursor: pointer; color: var(--accent-color);">View ICN snippet</summary>
                     <div class="error-message" style="margin-top: 0.5rem;">${error.icn}</div>

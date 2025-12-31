@@ -19,8 +19,9 @@ import type {
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.
  * @param longformIn - The return value of gamecompressor.compressGamefile()
+ * @param validateMoves - Optional flag to validate move legality during formulation
  */
-function formulateGame(longformIn: LongFormatIn): FullGame {
+function formulateGame(longformIn: LongFormatIn, validateMoves?: boolean): FullGame {
 	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
 		throw Error(
 			'Invalid longformIn when formulating game: Missing position or special rights.',
@@ -46,7 +47,7 @@ function formulateGame(longformIn: LongFormatIn): FullGame {
 		},
 	};
 
-	return gamefile.initFullGame(longformIn.metadata, { variantOptions, moves });
+	return gamefile.initFullGame(longformIn.metadata, { variantOptions, moves, validateMoves });
 }
 
 /**
