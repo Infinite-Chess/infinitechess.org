@@ -121,8 +121,6 @@ interface Additional {
 	worldBorderDist?: bigint;
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
-	/** If true, validates that each move is actually legal during formulation. */
-	validateMoves?: boolean;
 }
 
 /** Creates a new {@link Game} object from provided arguments */
@@ -291,8 +289,16 @@ function loadGameWithBoard(
 /**
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
+ * @param metadata
+ * @param additional
+ * @param validateMoves - During game construction, throws an error if any move played is illegal.
+ * @returns The fully initialized FullGame object.
  */
-function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame {
+function initFullGame(
+	metadata: MetaData,
+	additional: Additional = {},
+	validateMoves?: true,
+): FullGame {
 	const basegame = initGame(
 		metadata,
 		additional.variantOptions,
@@ -311,7 +317,7 @@ function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame
 		boardsim,
 		additional.moves,
 		additional.gameConclusion,
-		additional.validateMoves,
+		validateMoves,
 	);
 }
 

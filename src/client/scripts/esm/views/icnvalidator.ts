@@ -173,7 +173,7 @@ async function validateGames(): Promise<void> {
 			// Stage 2: Formulate the game (without move validation)
 			let game: any;
 			try {
-				game = gameformulator.formulateGame(longFormat, false);
+				game = gameformulator.formulateGame(longFormat);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				results.formulatorErrors++;
