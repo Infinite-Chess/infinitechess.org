@@ -38,6 +38,7 @@ const ESMEntryPoints = [
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/views/guide.js',
 	'src/client/scripts/esm/views/admin.ts',
+	'src/client/scripts/esm/views/notationvalidator.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 	'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
 ];
