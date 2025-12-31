@@ -1,8 +1,8 @@
 // Import the necessary modules directly
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import winconutil from '../../../../shared/chess/util/winconutil.js';
 import gameformulator from '../game/chess/gameformulator.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
 // Type definitions
 interface ValidationResults {
@@ -326,9 +326,9 @@ function validateTermination(
 	// Validate Result metadata matches victor
 	if (victor !== undefined && result) {
 		const resultMappings: Record<string, number> = {
-			'1-0': typeutil.players.WHITE,
-			'0-1': typeutil.players.BLACK,
-			'1/2-1/2': typeutil.players.NEUTRAL,
+			'1-0': p.WHITE,
+			'0-1': p.BLACK,
+			'1/2-1/2': p.NEUTRAL,
 		};
 
 		if (result in resultMappings) {
