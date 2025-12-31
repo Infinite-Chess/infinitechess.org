@@ -387,6 +387,7 @@ function createCheckState(gamefile: FullGame, move: Move): void {
  * **THROWS AN ERROR** if any move during the process is in an invalid format.
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
+ * @param validateMoves - If true, throws an error if any move is illegal.
  */
 function makeAllMovesInGame(
 	gamefile: FullGame,

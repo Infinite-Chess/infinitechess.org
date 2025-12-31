@@ -248,7 +248,10 @@ function initBoard(
 	};
 }
 
-/** Attaches a board to a specific game. Used for loading a game after it was started. */
+/**
+ * Attaches a board to a specific game. Used for loading a game after it was started.
+ * @param validateMoves - During game construction, throws an error if any move played is illegal.
+ */
 function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
@@ -289,10 +292,7 @@ function loadGameWithBoard(
 /**
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
- * @param metadata
- * @param additional
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
- * @returns The fully initialized FullGame object.
  */
 function initFullGame(
 	metadata: MetaData,
