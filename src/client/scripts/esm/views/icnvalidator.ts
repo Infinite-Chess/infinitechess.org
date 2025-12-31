@@ -399,9 +399,51 @@ function validateTermination(
 }
 
 function displayResults(results: ValidationResults): void {
-	// Update summary
-	document.getElementById('total-games')!.textContent = String(results.total);
-	document.getElementById('successful-games')!.textContent = String(results.successful);
+	// Calculate Percentage
+	const percentage = results.total > 0 ? (results.successful / results.total) * 100 : 0;
+
+	const percentageStr = Number.isInteger(percentage)
+		? percentage.toString() + '%'
+		: percentage.toFixed(1) + '%';
+
+	// Update Hero Stats
+	const ratioEl = document.getElementById('pass-ratio')!;
+	const percentEl = document.getElementById('pass-percentage')!;
+
+	ratioEl.textContent = `${results.successful} / ${results.total}`;
+	percentEl.textContent = percentageStr;
+
+	// Set colors based on score
+	ratioEl.className = 'hero-value'; // reset
+	percentEl.className = 'hero-value'; // reset
+
+	if (results.successful === results.total && results.total > 0) {
+		ratioEl.classList.add('perfect');
+		percentEl.classList.add('perfect');
+	} else if (percentage >= 90) {
+		ratioEl.classList.add('good');
+		percentEl.classList.add('good');
+	} else if (percentage >= 80) {
+		ratioEl.classList.add('bad');
+		percentEl.classList.add('bad');
+	} else {
+		ratioEl.classList.add('terrible');
+		percentEl.classList.add('terrible');
+	}
+
+	// Update Error Counts
+	document.getElementById('icnconverter-errors')!.textContent = String(
+		results.icnconverterErrors,
+	);
+	document.getElementById('formulator-errors')!.textContent = String(results.formulatorErrors);
+	document.getElementById('illegal-move-errors')!.textContent = String(results.illegalMoveErrors);
+	document.getElementById('termination-mismatch-errors')!.textContent = String(
+		results.terminationMismatchErrors,
+	);
+
+	document.getElementById('summary-section')!.style.display = 'block';
+
+	// Errors summary
 	document.getElementById('icnconverter-errors')!.textContent = String(
 		results.icnconverterErrors,
 	);

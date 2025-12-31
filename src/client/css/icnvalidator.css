@@ -131,9 +131,62 @@ button:disabled {
 	display: none;
 }
 
+.summary-hero {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--bg-color);
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	padding: 2rem;
+	margin-bottom: 2rem;
+	gap: 3rem;
+}
+
+.hero-stat {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.hero-value {
+	font-size: 3.5rem;
+	font-weight: 800;
+	line-height: 1;
+	margin-bottom: 0.5rem;
+}
+
+.hero-label {
+	color: var(--text-color);
+	opacity: 0.7;
+	font-size: 0.9rem;
+	font-weight: bold;
+	letter-spacing: 1px;
+}
+
+.hero-divider {
+	width: 2px;
+	height: 60px;
+	background-color: var(--border-color);
+}
+
+/* Dynamic colors for the percentage */
+.hero-value.perfect {
+	color: var(--success-color);
+}
+.hero-value.good {
+	color: var(--accent-color);
+}
+.hero-value.bad {
+	color: var(--warning-color);
+}
+.hero-value.terrible {
+	color: var(--danger-color);
+}
+
 .stat-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 1rem;
 	margin-top: 1rem;
 }
