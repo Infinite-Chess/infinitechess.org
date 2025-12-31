@@ -432,14 +432,28 @@ function displayResults(results: ValidationResults): void {
 	}
 
 	// Update Error Counts
-	document.getElementById('icnconverter-errors')!.textContent = String(
-		results.icnconverterErrors,
-	);
-	document.getElementById('formulator-errors')!.textContent = String(results.formulatorErrors);
-	document.getElementById('illegal-move-errors')!.textContent = String(results.illegalMoveErrors);
-	document.getElementById('termination-mismatch-errors')!.textContent = String(
-		results.terminationMismatchErrors,
-	);
+	// Helper function for dynamic coloring
+	const updateStat = (id: string, count: number): void => {
+		const el = document.getElementById(id)!;
+		el.textContent = String(count);
+
+		// Reset class to base
+		el.className = 'stat-value';
+
+		// Apply logic: 0 = Green, 1-9 = Orange, 10+ = Red
+		if (count === 0) {
+			el.classList.add('success');
+		} else if (count < 10) {
+			el.classList.add('warning');
+		} else {
+			el.classList.add('error');
+		}
+	};
+
+	updateStat('icnconverter-errors', results.icnconverterErrors);
+	updateStat('formulator-errors', results.formulatorErrors);
+	updateStat('illegal-move-errors', results.illegalMoveErrors);
+	updateStat('termination-mismatch-errors', results.terminationMismatchErrors);
 
 	document.getElementById('summary-section')!.style.display = 'block';
 
