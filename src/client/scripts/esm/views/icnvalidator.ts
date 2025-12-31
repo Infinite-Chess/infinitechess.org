@@ -86,6 +86,7 @@ function handleFileSelect(): void {
 		document.getElementById('errors-section')!.style.display = 'none';
 
 		fileName.textContent = `Selected: ${file.name}`;
+		fileName.style.color = 'var(--accent-color)';
 		addLog(`File selected: ${file.name}`, 'info');
 
 		const reader = new FileReader();
@@ -100,16 +101,29 @@ function handleFileSelect(): void {
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				addLog(`✗ Error parsing JSON: ${message}`, 'error');
-				fileName.textContent += ' (Invalid JSON)';
+
+				// Make error obvious
+				fileName.textContent = `❌ INVALID JSON SYNTAX: ${file.name}`;
+				fileName.style.color = 'var(--danger-color)';
+
 				gamesData = null;
+				return;
 			}
 
 			const parseResult = SPRTGamesSchema.safeParse(unvalidatedJSON);
 			if (!parseResult.success) {
-				throw new Error(
-					'JSON does not match expected schema: ' + parseResult.error.message,
-				);
+				addLog('✗ JSON schema validation failed', 'error');
+				const issues = parseResult.error.issues.map((i) => i.message).join(', ');
+				addLog(`Details: ${issues}`, 'error');
+
+				// Make error obvious
+				fileName.textContent = `❌ INVALID SCHEMA: ${file.name}`;
+				fileName.style.color = 'var(--danger-color)';
+
+				gamesData = null;
+				return;
 			}
+
 			gamesData = parseResult.data;
 			addLog(`✓ Loaded ${gamesData.games.length} game notation(s)`, 'success');
 			// Automatically start the validation process
