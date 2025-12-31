@@ -24,6 +24,7 @@ import legalmoves from './legalmoves.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
 import wincondition from './wincondition.js';
+import movevalidation from './movevalidation.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
@@ -386,16 +387,28 @@ function createCheckState(gamefile: FullGame, move: Move): void {
  * **THROWS AN ERROR** if any move during the process is in an invalid format.
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
+ * @param validateMoves - If true, throws an error if any move is illegal.
  */
-function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMoveMessage[]): void {
+function makeAllMovesInGame(
+	gamefile: FullGame,
+	moves: ServerGameMoveMessage[],
+	validateMoves?: boolean,
+): void {
 	if (gamefile.boardsim.moves.length > 0)
 		throw Error('Cannot make all moves in game when there are already moves played.');
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
-		if (!move)
-			throw Error(
-				`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`,
-			);
+
+		// If validateMoves flag is true, check if the move is actually legal
+		if (validateMoves) {
+			const validationResult = movevalidation.isEnginesMoveLegal(gamefile, shortmove.compact);
+			if (!validationResult.valid) {
+				throw Error(
+					`Move ${i + 1} is illegal: ${shortmove.compact}. Reason: ${validationResult.reason}`,
+				);
+			}
+		}
+
 		makeMove(gamefile, move);
 	});
 }

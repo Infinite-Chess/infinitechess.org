@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ICN Game Notation Validator</title>
+		<link rel="stylesheet" href="/css/icnvalidator.css" />
+	</head>
+	<body>
+		<div class="container">
+			<h1>ICN Game Notation Validator</h1>
+			<p>
+				This tool validates JSON files containing Infinite Chess Notation (ICN) game data.
+				Upload a JSON file to check if all game notations are valid and can be successfully
+				converted and formulated.
+			</p>
+
+			<div class="upload-section" id="upload-section">
+				<h2>Upload JSON File</h2>
+				<p>
+					Click to select or drag and drop a JSON file containing an array of game
+					notations
+				</p>
+				<label for="file-input" class="file-label">Choose File</label>
+				<input type="file" id="file-input" accept=".json" />
+				<p id="file-name" style="margin-top: 1rem; color: var(--accent-color)"></p>
+			</div>
+
+			<div class="progress-section" id="progress-section">
+				<h2>Processing...</h2>
+				<div class="progress-bar">
+					<div class="progress-fill" id="progress-fill">0%</div>
+				</div>
+				<p id="progress-text">Processing game 0 of 0</p>
+			</div>
+
+			<div class="summary-section" id="summary-section">
+				<h2>Validation Summary</h2>
+				<div class="stat-grid">
+					<div class="stat-card">
+						<h3>Total Games</h3>
+						<p class="stat-value" id="total-games">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>Successful</h3>
+						<p class="stat-value success" id="successful-games">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>ICN Converter Errors</h3>
+						<p class="stat-value warning" id="icnconverter-errors">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>Formulator Errors</h3>
+						<p class="stat-value error" id="formulator-errors">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>Illegal Move Errors</h3>
+						<p class="stat-value error" id="illegal-move-errors">0</p>
+					</div>
+					<div class="stat-card">
+						<h3>Termination Mismatch</h3>
+						<p class="stat-value error" id="termination-mismatch-errors">0</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="details-section" id="variant-section" style="display: none">
+				<h2>Errors by Variant</h2>
+				<div class="variant-stats" id="variant-stats"></div>
+			</div>
+
+			<div class="details-section" id="errors-section" style="display: none">
+				<h2>Error Details</h2>
+				<div class="error-list" id="error-list"></div>
+			</div>
+
+			<div class="log-section">
+				<h2>Activity Log</h2>
+				<div class="log-output" id="log-output"></div>
+			</div>
+		</div>
+
+		<script defer src="scripts/esm/views/icnvalidator.js" type="module"></script>
+	</body>
+</html>

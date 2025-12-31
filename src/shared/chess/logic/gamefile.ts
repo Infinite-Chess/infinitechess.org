@@ -248,12 +248,16 @@ function initBoard(
 	};
 }
 
-/** Attaches a board to a specific game. Used for loading a game after it was started. */
+/**
+ * Attaches a board to a specific game. Used for loading a game after it was started.
+ * @param validateMoves - During game construction, throws an error if any move played is illegal.
+ */
 function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
 	moves: ServerGameMoveMessage[] = [],
 	gameConclusion?: string,
+	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };
 
@@ -277,7 +281,7 @@ function loadGameWithBoard(
 		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
 	}
 
-	movepiece.makeAllMovesInGame(gamefile, moves);
+	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) basegame.gameConclusion = gameConclusion;
@@ -288,8 +292,13 @@ function loadGameWithBoard(
 /**
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
+ * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
-function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame {
+function initFullGame(
+	metadata: MetaData,
+	additional: Additional = {},
+	validateMoves?: true,
+): FullGame {
 	const basegame = initGame(
 		metadata,
 		additional.variantOptions,
@@ -303,7 +312,13 @@ function initFullGame(metadata: MetaData, additional: Additional = {}): FullGame
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(basegame, boardsim, additional.moves, additional.gameConclusion);
+	return loadGameWithBoard(
+		basegame,
+		boardsim,
+		additional.moves,
+		additional.gameConclusion,
+		validateMoves,
+	);
 }
 
 export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
