@@ -37,7 +37,7 @@ interface ValidationError {
 	gameConclusion?: string;
 }
 
-type LogType = 'info' | 'success' | 'error';
+type LogType = 'info' | 'success' | 'warning' | 'error';
 
 const SPRTGamesSchema = zod.object({
 	games: zod.array(
@@ -306,10 +306,17 @@ async function validateGames(): Promise<void> {
 	progressSection.style.display = 'none';
 	displayResults(results);
 
-	addLog(
-		`✓ Validation complete: ${results.successful}/${results.total} successful`,
-		results.successful === results.total ? 'success' : 'error',
-	);
+	// Determine log color based on success rate
+	const finalPercentage = results.total > 0 ? (results.successful / results.total) * 100 : 0;
+	let logType: LogType = 'error';
+
+	if (results.successful === results.total) {
+		logType = 'success'; // Green for 100%
+	} else if (finalPercentage >= 90) {
+		logType = 'warning'; // Orange for >= 90%
+	}
+
+	addLog(`✓ Validation complete: ${results.successful}/${results.total} successful`, logType);
 }
 
 // Helper function to validate termination metadata

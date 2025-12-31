@@ -409,6 +409,10 @@ pre {
 	color: var(--danger-color);
 }
 
+.log-entry.warning {
+	color: var(--warning-color);
+}
+
 .log-entry.success {
 	color: var(--success-color);
 }
