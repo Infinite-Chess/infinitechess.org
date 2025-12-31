@@ -216,6 +216,7 @@ function startEngineGame(): void {
 	}
 
 	// Ask the user if they want worldBorder set automatically
+	// TODO: Have a custom UI for starting an engine game from the board editor instead of using a prompt
 	if (!variantOptions.gameRules.worldBorder) {
 		const setWorldBorder = confirm('No world border specified. Set it automatically?');
 		if (!setWorldBorder) return;
