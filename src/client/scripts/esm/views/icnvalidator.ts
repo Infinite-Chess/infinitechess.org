@@ -71,6 +71,10 @@ uploadSection.addEventListener('drop', (e) => {
 
 function handleFileSelect(): void {
 	const file = fileInput.files?.[0];
+
+	// Reset the input so the 'change' event fires even if the same file is selected again
+	fileInput.value = '';
+
 	if (file) {
 		// Cancel any existing validation loop immediately
 		currentValidationId++;
