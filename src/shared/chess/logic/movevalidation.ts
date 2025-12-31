@@ -1,4 +1,5 @@
-import premoves from '../../../client/scripts/esm/game/chess/premoves';
+// src/shared/chess/logic/movevalidation.ts
+
 import jsutil from '../../util/jsutil';
 import boardutil, { Piece } from '../util/boardutil';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil';
@@ -27,12 +28,6 @@ type ConclusionValidityResult = { valid: true } | { valid: false; reason: string
 function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 	const { boardsim } = gamefile;
 	const originalMoveIndex = boardsim.state.local.moveIndex;
-
-	// Safety check: Make sure premoves are not applied.
-	// They should be unapplied before calling this function and reapplied afterwards.
-	if (premoves.arePremovesApplied()) {
-		throw new Error('Cannot run validation while premoves are applied. Rewind them first.');
-	}
 
 	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
 	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
