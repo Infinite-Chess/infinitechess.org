@@ -293,7 +293,8 @@ function validateTermination(
 	}
 
 	// Parse the gameConclusion
-	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+	const { victor, condition } =
+		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
 
 	// Check condition mappings
 	const conditionMappings: Record<string, string> = {
@@ -346,7 +347,9 @@ function displayResults(results: ValidationResults): void {
 	// Update summary
 	document.getElementById('total-games')!.textContent = String(results.total);
 	document.getElementById('successful-games')!.textContent = String(results.successful);
-	document.getElementById('icnconverter-errors')!.textContent = String(results.icnconverterErrors);
+	document.getElementById('icnconverter-errors')!.textContent = String(
+		results.icnconverterErrors,
+	);
 	document.getElementById('formulator-errors')!.textContent = String(results.formulatorErrors);
 	document.getElementById('illegal-move-errors')!.textContent = String(results.illegalMoveErrors);
 	document.getElementById('termination-mismatch-errors')!.textContent = String(
