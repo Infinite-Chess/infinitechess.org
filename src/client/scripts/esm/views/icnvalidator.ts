@@ -443,17 +443,6 @@ function displayResults(results: ValidationResults): void {
 
 	document.getElementById('summary-section')!.style.display = 'block';
 
-	// Errors summary
-	document.getElementById('icnconverter-errors')!.textContent = String(
-		results.icnconverterErrors,
-	);
-	document.getElementById('formulator-errors')!.textContent = String(results.formulatorErrors);
-	document.getElementById('illegal-move-errors')!.textContent = String(results.illegalMoveErrors);
-	document.getElementById('termination-mismatch-errors')!.textContent = String(
-		results.terminationMismatchErrors,
-	);
-	document.getElementById('summary-section')!.style.display = 'block';
-
 	// Display variant errors
 	if (Object.keys(results.variantErrors).length > 0) {
 		const variantStats = document.getElementById('variant-stats')!;
