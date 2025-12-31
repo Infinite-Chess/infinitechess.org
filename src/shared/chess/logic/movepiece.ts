@@ -398,10 +398,6 @@ function makeAllMovesInGame(
 		throw Error('Cannot make all moves in game when there are already moves played.');
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
-		if (!move)
-			throw Error(
-				`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`,
-			);
 
 		// If validateMoves flag is true, check if the move is actually legal
 		if (validateMoves) {
