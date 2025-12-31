@@ -40,8 +40,8 @@ This serves the transpiled JavaScript modules that the tool needs to import. The
     Wait for the server to start (you should see "Compiled successfully" or similar message)
 
 2. **Open the tool:**
-    - Navigate to `http://localhost:3000/dev-utils/ICNValidator.html` (adjust port if different)
-    - Or open `dev-utils/ICNValidator.html` directly in your browser if the server serves static files from dev-utils
+    - Navigate to `http://localhost:3000/dev-utils/icn-validator/` (adjust port if different)
+    - Or open `dev-utils/icn-validator/index.html` directly in your browser if the server serves static files from dev-utils
 
 3. **Upload your test data:**
     - Click "Choose File" or drag and drop a JSON file containing an array of ICN strings
@@ -70,7 +70,7 @@ Each string should be a complete ICN notation for a game.
 
 ### Example Test Data
 
-A sample test file is provided: `dev-utils/sample-icn-test.json`
+A sample test file is provided: `sample-test.json` (in the same directory as this tool)
 
 This file contains a few ICN notations for testing purposes. You can use it to verify the tool is working correctly.
 
@@ -123,7 +123,7 @@ The tool provides several types of information:
 **Module loading errors**:
 
 - **Most common issue**: The dev server is not running. Run `npm run dev` and wait for compilation to complete
-- Ensure you're accessing the tool through the dev server URL (e.g., `http://localhost:3000/dev-utils/ICNValidator.html`)
+- Ensure you're accessing the tool through the dev server URL (e.g., `http://localhost:3000/dev-utils/icn-validator/`)
 - Check the browser console for specific module loading errors
 - If the server is running but modules still fail to load, try refreshing the page
 
