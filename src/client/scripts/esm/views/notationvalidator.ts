@@ -153,7 +153,7 @@ async function validateGames(): Promise<void> {
 					gameIndex: i + 1,
 					phase: 'icnconverter',
 					error: message,
-					icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+					icn: gameICN,
 				});
 				continue;
 			}
@@ -175,7 +175,7 @@ async function validateGames(): Promise<void> {
 					phase: 'formulator',
 					error: message,
 					variant: variant,
-					icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+					icn: gameICN,
 				});
 
 				// Track errors by variant
@@ -198,7 +198,7 @@ async function validateGames(): Promise<void> {
 					phase: 'illegal-move',
 					error: message,
 					variant: variant,
-					icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+					icn: gameICN,
 				});
 
 				// Track errors by variant
@@ -223,7 +223,7 @@ async function validateGames(): Promise<void> {
 					termination: termination,
 					result: result,
 					gameConclusion: game.basegame.gameConclusion,
-					icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+					icn: gameICN,
 				});
 
 				// Track errors by variant
@@ -245,7 +245,7 @@ async function validateGames(): Promise<void> {
 				gameIndex: i + 1,
 				phase: 'unknown',
 				error: message,
-				icn: gameICN.substring(0, 100) + (gameICN.length > 100 ? '...' : ''),
+				icn: gameICN,
 			});
 		}
 
