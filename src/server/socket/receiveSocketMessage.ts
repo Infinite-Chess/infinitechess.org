@@ -10,12 +10,13 @@ import * as z from 'zod';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
-import { logEvents, logEventsAndPrint, logReqWebsocketIn } from '../middleware/logEvents.js';
+import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 // @ts-ignore
 import { printIncomingAndOutgoingMessages } from '../config/config.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
+import { logZodError } from '../utility/zodlogger.js';
 import socketUtility from './socketUtility.js';
 
 // Zod schemas
@@ -69,7 +70,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		// Parse the stringified JSON message.
 		// Incoming message is in binary data, which can also be parsed into JSON
 		parsedUnvalidatedMessage = JSON.parse(messageStr);
-	} catch (error) {
+	} catch (error: unknown) {
 		if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt');
@@ -85,22 +86,10 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 			'notify',
 			'Your browser is running outdated code, please hard refresh the page!',
 		);
-		const logText = `INVALID PARAMETERS - Message contents:
-${JSON.stringify(parsedUnvalidatedMessage, null, 2)}
-
-Zod treeified errors:
-${zod_result.error instanceof z.ZodError ? JSON.stringify(z.treeifyError(zod_result.error), null, 2) : String(zod_result.error)}
-
-Websocket metadata:
-${socketUtility.stringifySocketMetadata(ws)}
-
-===================================================================
-
-`;
-		logEvents(logText, 'wsInMalformedLog.txt');
-		logEventsAndPrint(
-			`Received malformed websocket in-message. Check wsInMalformedLog.txt for details.`,
-			'errLog.txt',
+		logZodError(
+			parsedUnvalidatedMessage,
+			zod_result.error,
+			'Received malformed websocket in-message.',
 		);
 		return;
 	}

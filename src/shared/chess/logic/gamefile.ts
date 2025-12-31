@@ -254,11 +254,15 @@ function initBoard<T extends { boardsim: Board }>(
 	events.runEvent(gamefile.events, 'boardloaded', gamefile, gamefile.boardsim);
 }
 
-/** Attaches a board to a specific game. Used for loading a game after it was started. */
+/**
+ * Attaches a board to a specific game. Used for loading a game after it was started.
+ * @param validateMoves - During game construction, throws an error if any move played is illegal.
+ */
 function loadGameWithBoard(
 	gamefile: FullGame,
 	moves: ServerGameMoveMessage[] = [],
 	gameConclusion?: string,
+	validateMoves?: boolean,
 ): FullGame {
 	const { basegame, boardsim } = gamefile;
 
@@ -282,7 +286,7 @@ function loadGameWithBoard(
 		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
 	}
 
-	movepiece.makeAllMovesInGame(gamefile, moves);
+	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) basegame.gameConclusion = gameConclusion;
@@ -293,11 +297,13 @@ function loadGameWithBoard(
 /**
  * Initiates both the base game and board of the FullGame at the same time.
  * Used on just the client.
+ * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 function initFullGame(
 	gamefile: Construction<FullGame>,
 	metadata: MetaData,
 	additional: Additional = {},
+	validateMoves?: true,
 ): FullGame {
 	initGame(
 		gamefile,
@@ -314,7 +320,12 @@ function initFullGame(
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(gamefile as FullGame, additional.moves, additional.gameConclusion);
+	return loadGameWithBoard(
+		gamefile as FullGame,
+		additional.moves,
+		additional.gameConclusion,
+		validateMoves,
+	);
 }
 
 export type { Gamesim, Game, Board, FullGame, Snapshot, ClockDependant, Additional };

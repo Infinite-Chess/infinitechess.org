@@ -19,7 +19,6 @@ import type { MetaData } from '../../../../../shared/chess/util/metadata';
 import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
 import type { Player } from '../../../../../shared/chess/util/typeutil';
-import type { validEngineName } from '../misc/enginegame';
 
 // @ts-ignore
 import statustext from '../gui/statustext';
@@ -47,7 +46,9 @@ import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
-import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame';
+import hydrochess_card from '../chess/enginecards/hydrochess_card';
+import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
+import bounds from '../../../../../shared/util/math/bounds';
 
 // Constants ----------------------------------------------------------------------
 
@@ -191,16 +192,62 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(
-	TimeControl: MetaData['TimeControl'],
-	youAreColor: Player,
-	currentEngine: validEngineName,
-): void {
+function startEngineGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
+	// Ask which color the user wants to play as
+	const playAsWhite = confirm('Play as White? (OK = White, Cancel = Black)');
+
+	const TimeControl = '-';
+	const youAreColor: Player = playAsWhite ? players.WHITE : players.BLACK;
+	const currentEngine = 'hydrochess';
+
+	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
+	// since it is far stronger and faster for single king endgames.
+	// Rememember to also set checkmateSelectedID if applicable
+
+	// TODO: If the world border isn't set, query the user as to whether they want it automatically set.
+
+	// Get current position
 	const variantOptions = getCurrentPositionInformation();
+
+	// Determine whether it's not supported...
+
 	if (variantOptions.position.size === 0) {
 		statustext.showStatus('Cannot start engine game from empty position!', true);
+		return;
+	}
+
+	// Ask the user if they want worldBorder set automatically
+	// TODO: Have a custom UI for starting an engine game from the board editor instead of using a prompt
+	if (!variantOptions.gameRules.worldBorder) {
+		const setWorldBorder = confirm('No world border specified. Set it automatically?');
+		if (!setWorldBorder) return;
+
+		// Calculate minimum bounding box of all pieces
+		const allCoordsKeys = variantOptions.position.keys();
+		const coordsOfAllPieces = Array.from(allCoordsKeys, (key) =>
+			coordutil.getCoordsFromKey(key),
+		);
+		const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
+
+		// Calculate it using the default distance
+		const worldBorderProperty = engineWorldBorderDict[currentEngine];
+		variantOptions.gameRules.worldBorder = {
+			left: startingPositionBox.left - worldBorderProperty,
+			right: startingPositionBox.right + worldBorderProperty,
+			bottom: startingPositionBox.bottom - worldBorderProperty,
+			top: startingPositionBox.top + worldBorderProperty,
+		};
+	}
+
+	// Does the engine support it?
+	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
+	if (!supported_result.supported) {
+		statustext.showStatus(
+			`Position is not supported for reason: ${supported_result.reason}`,
+			true,
+		);
 		return;
 	}
 

@@ -10,6 +10,7 @@ import type { Request, Response } from 'express';
 
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logZodError } from '../utility/zodlogger.js';
 
 // Constants ---------------------------------------------------------------------------------
 
@@ -116,6 +117,7 @@ function savePosition(req: Request, res: Response): void {
 		const firstError = parseResult.error.issues[0];
 		const errorMessage = firstError?.message || 'Invalid request body';
 		res.status(400).json({ error: errorMessage });
+		logZodError(req.body, parseResult.error, `Invalid save position request body.`);
 		return;
 	}
 
@@ -165,6 +167,7 @@ function getPosition(req: Request, res: Response): void {
 	const parseResult = PositionIdParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
 		res.status(400).json({ error: 'Invalid position_id' });
+		logZodError(req.params, parseResult.error, `Invalid get position request params.`);
 		return;
 	}
 
@@ -213,6 +216,7 @@ function deletePosition(req: Request, res: Response): void {
 	const parseResult = PositionIdParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
 		res.status(400).json({ error: 'Invalid position_id' });
+		logZodError(req.params, parseResult.error, `Invalid delete position request params.`);
 		return;
 	}
 
@@ -273,6 +277,7 @@ function renamePosition(req: Request, res: Response): void {
 		const firstError = bodyParseResult.error.issues[0];
 		const errorMessage = firstError?.message || 'Invalid request body';
 		res.status(400).json({ error: errorMessage });
+		logZodError(req.body, bodyParseResult.error, `Invalid rename position request body.`);
 		return;
 	}
 

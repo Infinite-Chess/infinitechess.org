@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "74"
+version = "83"
 maintainer = "xa31"
 
 [header]
@@ -15,7 +15,7 @@ leaderboard = "Clasificaciónes"
 
 [header.settings]
 language = "Idioma"
-appearance = "Apariencia" # Board color/theme
+appearance = "Apariencia" # Board color/theme and visual effects
 appearance-theme = "Tema"
 appearance-starfield = "Campo de Estrellas" # The Starfield space animation underneath void
 appearance-advanced-effects = "Efectos Avanzados" # Post processing and board tile effects at extreme distances
@@ -72,7 +72,8 @@ patreon_title = "Contribuidores en Patreon"
 github_title = "Contribuidores en Github"
 
 [index.javascript]
-contribution_count = ["", " contribuciones"] # A number is inserted between these 2 strings.
+contribution_count_singular = ["", " contribución"] # A number is inserted between these 2 strings.
+contribution_count_plural = ["", " contribuciones"]
 
 [credits]
 title = "Créditos"
@@ -151,10 +152,10 @@ create_button = "Crear Cuenta"
 agreement = ["Acepto los ", "Términos de Servicio", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
-js-username_specs = "El nombre de usuario debe tener como mínimo 3 caracteres, y solo puede contener las letras A-Z y los numeros 0-9"
 js-username_tooshort = "El nombre de usuario debe tener 3 caracteres como mínimo"
 js-username_wrongenc = "El nombre de usuario debe contener solo los caracteres A-Z y 0-9"
 js-email_invalid = "No es un e-mail válido"
+js-email_too_long = "El email es demasiado largo."
 js-email_inuse = "Este e-mail ya esta registrado con otra cuenta"
 
 [reset-password.javascript]
@@ -164,14 +165,13 @@ processing = "Procesando..."
 network-error = "Un error de red ha ocurrido. Pro favor prueba otra vez"
 
 [password-validation]
-js-pwd_incorrect_format = "La contraseña está en un formato incorrecto"
 js-pwd_too_short = "La contraseña debe tener 6 o más caracteres"
 js-pwd_too_long = "La contraseña no puede tener mas de 72 caracteres"
 js-pwd_not_pwd = "La contraseña no debe ser 'password'"
 
 [leaderboard]
 title = "Tabla de clasificaciones"
-inactive_players = "Jugadores inactivos con una gran incertidumbre de puntuación (RD) son omitidos de la tabla."
+inactive_players = ["Los jugadores inactivos con una incertidumbre de puntuación por encima de ", " son excluídos de la la tabla de clasificaciónes."] # A number is inserted between these two quotes
 your_global_ranking = "Tu clasificación global:"
 show_more = "Mostrar más..."
 
@@ -299,6 +299,9 @@ no = "No"
 yes = "Sí"
 rated = "Por puntos"
 casual = "Casual"
+easy = "Facil"
+medium = "Normal"
+hard = "Difícil"
 join_games = "Unirse a una partida existente - Partidas Activas:"
 private_invite = "Invitación privada:"
 your_invite = "Tu código de invitación:"
@@ -306,7 +309,7 @@ create_invite = "Crear invitación"
 join = "Unirse"
 copy = "Copiar"
 back = "Atrás"
-code = "Codigo"
+code = "Codigo Fuente"
 
 [play.gamebuttontooltips]
 undo_transition = "Deshacer transición"
@@ -317,8 +320,8 @@ erase = "Borrar anotaciones"
 collapse = "Ocultar anotaciones"
 rewind_move = "Deshacer movimiento"
 forward_move = "Rehacer movimiento"
-undo_edit = "Deshacer" # Board editor
-redo_edit = "Rehacer" # Board editor
+undo_edit = "Deshacer (Crtl+Z)" # Board editor
+redo_edit = "Rehacer (Ctrl+Y)" # Board editor
 pause = "Pausa"
 undo = "Deshacer movimiento" # Checkmate practice game
 restart = "Reiniciar posición" # Checkmate practice game
@@ -393,7 +396,7 @@ obstacle = "Obstáculo"
 king = "Rey"
 giraffe = "Girafa"
 camel = "Camello"
-zebra = "Zebra"
+zebra = "Cebra"
 knightrider = "Jinete"
 amazon = "Amazona"
 queen = "Dama"
@@ -556,10 +559,10 @@ fair_play_header = "Juego limpio"
 fair_play_paragraph1 = ["No puedes crear mas de una cuenta. Si te gustaría cambiar la dirección de email asociada con tu cuenta, ", "contacta con nosotros."]
 fair_play_paragraph2 = "Para mantener el juego limpio y justo para todos, NO debes:"
 fair_play_rules = [
-"Modificar o manipular el código de cualquier manera, incluyendo, pero no solo: Utilizar comandos de consola, controles locales, scripts personales, modificar peticiones http, etc. Esto puede hacerse intencionalmente para romper el juego, o para darte una ventaja.",
-"Abusar errores para abortar la partida, conseguir una ventaja, o hacer que el juego sea injugable. Esto puede incluír mover una pieza a distancias extremas, como a 10^15 casillas del origen.",
+"Modificar o manipular el código de cualquier manera, incluyendo, pero no solo: Utilizar comandos de consola, controles locales, scripts personales, modificar peticiones http, mandar mensajes de websocket, etc. Esto puede hacerse intencionalmente para romper el juego, jugar movimientos ilegales, o para darte una ventaja.",
+"Abusar errores para abortar la partida, conseguir una ventaja, o para darte una ventaja.",
 "En partidas por puntos, recibir ayuda/consejos de otra persona o programa sobre lo que deberías hacer. (Crear un bot está bien y te animamos a hacerlo, pero debes limitar su uso a partidas amistosas, sin puntos)",
-"intercambiar puntos elo con otras personas al perder de manera intencionada para subir su nivel, o recibiendo puntos elo de un oponente que quiere perder para subir tu nivel. Esto abusa el sistema y crea niveles de puntuación poco precisos que no representan tu nivel de habilidad."
+"Intercambiar puntos elo con otras personas al perder de manera intencionada para subir su nivel, o recibiendo puntos elo de un oponente que quiere perder para subir tu nivel. Esto abusa el sistema y crea niveles de puntuación poco precisos que no representan tu nivel de habilidad."
 ]
 cleanliness_header = "Lenguaje y imágenes"
 cleanliness_rules = [
@@ -632,15 +635,14 @@ ws-username_letters = "El nombre de usuario debe contener solo las letras A-Z y 
 ws-username_taken = "Ese nombre de usuario ya existe"
 ws-username_bad_word = "Ese nombre de usuario contiene una palabra que no está permitida"
 ws-username_reserved = "Ese nombre de usuario está reservado"
-ws-email_too_long = "Tu email es muuuuuuuuuuuuy largo"
+ws-email_too_long = "Tu email es demasiaaaaado largo"
 ws-email_invalid = "Eso no es un email válido"
 ws-email_in_use = "Ese email ya ha sido registrado"
 ws-email_domain_invalid = "Dominio no válido"
-ws-you_are_banned = "Estás baneado."
+ws-email_blacklisted = "Tu email está en la lista negra."
 ws-password_length = "La contraseña debe tener entre 6 y 72 caracteres"
-ws-password_format = "La contraseña está en un formato incorrecto"
 ws-password_password = "La contraseña no debe ser 'password'"
-ws-member_not_found = "No se ha encontrado ese miembro"
+ws-password-reset-link-sent = "Si una contraseña con ese email existe, un link de reinicio de contraseña ha sido enviado."
 ws-password-change-success = "La contraseña ha sido reiniciada correctamente. Serás redirigido a la página de inicio de sesión en breve."
 ws-password-reset-token-invalid = "El token de reinicio de contraseña no es válido o ha expirado."
 ws-forbidden_wrong_account = "Prohibido. Esta no es tu cuenta"
@@ -654,8 +656,12 @@ ws-server_restarting = "El servidor se reiniciará en" # The server inserts a nu
 ws-server_under_maintenance = "El servidor esta bajo mantenimiento. ¡Vuelve en un rato!" # Can be changed at will to change the display message.
 ws-minutes = "minutos" # unit of time
 ws-minute = "minuto" # unit of time
-ws-game_aborted_cheating = "Partida abortada por trampas probables.."
+ws-you_cheated = "¡Ups! Has jugado algo ilegal. La partida ha sido abortada. ¡Si esto ha sido un error, por favor reportalo!"
+ws-opponent_cheated = "Tu oponente ha hecho algo ilegal. La partida ha sido abortada."
 ws-cannot_resign_finished_game = "No se puede conceder la partida, ya ha acabado."
 ws-invalid_code = "¡Código invalido!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Partida abortada." # Invite was cancelled as you clicked on it
 ws-rated_invite_verification_needed = "Para jugar partidas por puntos, necesitas iniciar sesión con una cuenta verificada."
+
+[rate-limiting]
+generic = "Has hecho muchas peticiones, por favor intentalo mas tarde."

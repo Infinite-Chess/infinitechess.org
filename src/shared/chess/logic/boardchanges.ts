@@ -240,7 +240,7 @@ function addPiece({ boardsim, basegame }: Gamesim, change: Change): void {
 				) === 0
 			)
 				throw Error(
-					`Type: ${change.piece.type} is not expected to be added after initial position!`,
+					`Type: ${typeutil.debugType(change.piece.type)} is not expected to be added after initial position!`,
 				);
 			organizedpieces.regenerateLists(
 				boardsim.pieces,

@@ -425,23 +425,14 @@ function handleStartEngineGame(): void {
 	// Show a dialog box to confirm they want to leave the editor
 	const result = confirm(
 		'Do you want to leave the board editor and start an engine game from this position? Changes will be saved.',
-	); // PLANNED to save changes
+	);
 
-	// TODO: Allow the user to configure these values in improved confirmation dialogue
-	const TimeControl = '-';
-	const youAreColor = players.WHITE;
-	const currentEngine = 'hydrochess';
+	if (result) {
+		// Start the engine game as requested
+		// PLANNED to save changes...
 
-	// TODO: Forbid the user from starting engine games in positions with more than one king per side,
-	// since hydrochess does not currently support this
-	// AND: If there's too many pieces for the engine to play reasonably well at all.
-
-	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
-	// since it is far stronger and faster for single king endgames.
-	// Rememember to also set checkmateSelectedID if applicable
-
-	// Start the engine game as requested
-	if (result) eactions.startEngineGame(TimeControl, youAreColor, currentEngine);
+		eactions.startEngineGame();
+	}
 }
 
 /** Swaps the color of pieces being drawn. */
