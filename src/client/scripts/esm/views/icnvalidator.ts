@@ -497,10 +497,13 @@ function displayResults(results: ValidationResults): void {
 				return `<div class="v-stat ${type} active"><span>${count}</span> ${label}</div>`;
 			};
 
+			// Logic for total header: Red if > 5, Orange otherwise
+			const totalClass = stats.total > 4 ? 'err' : 'warn';
+
 			variantItem.innerHTML = `
                 <div class="variant-header">
                     <span class="variant-name">${variant}</span>
-                    <span class="variant-errors">${stats.total} total error(s)</span>
+                    <span class="variant-errors ${totalClass}">${stats.total} total error(s)</span>
                 </div>
                 <div class="variant-details">
                     ${buildStat('ICN', stats.icn, true)}

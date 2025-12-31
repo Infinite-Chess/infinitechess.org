@@ -358,7 +358,11 @@ button:disabled {
 	color: var(--danger-color);
 }
 
-.variant-errors {
+.variant-errors.warn {
+	color: var(--warning-color);
+}
+
+.variant-errors.err {
 	color: var(--danger-color);
 }
 
