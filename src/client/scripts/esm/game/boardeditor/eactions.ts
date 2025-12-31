@@ -191,9 +191,11 @@ function startLocalGame(): void {
 function startEngineGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	// TODO: Allow the user to configure these values
+	// Ask which color the user wants to play as
+	const playAsWhite = confirm('Play as White? (OK = White, Cancel = Black)');
+
 	const TimeControl = '-';
-	const youAreColor: Player = players.WHITE as Player;
+	const youAreColor: Player = playAsWhite ? players.WHITE : players.BLACK;
 	const currentEngine = 'hydrochess';
 
 	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
