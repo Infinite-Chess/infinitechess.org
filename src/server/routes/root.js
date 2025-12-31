@@ -47,6 +47,7 @@ router.get('/reset-password/:token', serveFile('resetpassword.html'));
 router.get('/termsofservice(.html)?', serveFile('termsofservice.html'));
 router.get('/member(.html)?/:member', serveFile('member.html'));
 router.get('/admin(.html)?', serveFile('admin.html', false));
+router.get('/notationvalidator(.html)?', serveFile('notationvalidator.html', false));
 
 // Error pages
 router.get('/400(.html)?', serveFile('errors/400.html', true));
