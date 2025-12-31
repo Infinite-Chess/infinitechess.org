@@ -9,25 +9,41 @@
 /* eslint-disable no-unused-vars */
 
 type ExtractArr<T> = T extends (infer U)[] ? U : never;
+type OmitInitArg<F> = F extends (i: any, ...args: infer P) => any ? P : never;
+type ExtractEventArg<F, T> = F extends (i: Event<T, infer N>, ...args: any) => any
+	? Event<T, N>
+	: never;
+
+type SimpleEvent<N extends EventName> = Event<undefined, N>;
+
+interface Event<T, N extends EventName> extends EventResult<T> {
+	target: N;
+}
+
+interface EventResult<T> {
+	workingvalues: T;
+	propagate: boolean;
+	default: boolean;
+}
 
 interface Eventlist {
-	[eventName: string]: ((...args: any[]) => boolean)[] | undefined;
+	[eventName: string]: ((event: Event<any, any>, ...args: any) => void)[] | undefined;
 }
 
 function runEvent<
-	E extends Eventlist,
-	N extends keyof E & EventName,
-	A extends Parameters<ExtractArr<E[N]>>,
->(eventlist: E, event: N, ...args: A): boolean {
-	const funcs = eventlist[event];
-	if (funcs === undefined) return false;
+	L extends Eventlist,
+	N extends keyof L & EventName,
+	T,
+	E extends ExtractEventArg<L[N], T>,
+	A extends OmitInitArg<ExtractArr<L[N]>>,
+>(eventlist: L, event: E, args: A): EventResult<T> {
+	const funcs = eventlist[event.target];
+	if (funcs === undefined) return event;
 	for (const f of funcs) {
-		// @ts-ignore ts thinks that the paramters of the function "could" not match the parameters of the function
-		if (f(...args)) {
-			return true;
-		}
+		f(event, ...args);
+		if (!event.propagate) break;
 	}
-	return false;
+	return event;
 }
 
 function addEventListener<
@@ -37,9 +53,7 @@ function addEventListener<
 >(eventlist: E, event: N, listener: L): void {
 	const listeners = eventlist[event];
 	if (listeners === undefined) {
-		// @ts-ignore it should work but ts thinks there could be a specific subtype where this errors
-		// IT WILL ONLY BE AN ARRAY OF FUNCTIONS NO SUBTYPES NEEDED
-		eventlist[event] = [listener];
+		eventlist[event] = [] as Function[] as E[N];
 		return;
 	}
 	listeners.push(listener);
@@ -68,26 +82,36 @@ function removeEvent<E extends Eventlist, N extends keyof E & EventName>(
 }
 
 import type { Move } from './movepiece';
-import type { Game } from './gamefile';
-import type { Board } from './gamefile';
+import type { Game, Board } from './gamefile';
+import type { Coords } from '../util/coordutil';
+import type { Player } from '../util/typeutil';
 
 type EventName =
 	| 'draftmoves'
-	| 'renderbelowpieces'
 	| 'renderabovepieces'
+	| 'renderbelowpieces'
 	| 'fullyloaded'
 	| 'gameloaded'
-	| 'boardloaded';
+	| 'boardloaded'
+	| 'legalmovecheck';
+//type EventStage = 'preprocess' | 'postprocess' | 'ontime';
 
 interface GameEvents<G> extends Eventlist {
-	draftmoves?: ((gamefile: G, move: Move) => boolean)[];
-	renderbelowpieces?: ((gamefile: G) => false)[];
-	renderabovepieces?: ((gamefile: G) => false)[];
+	draftmoves?: ((e: SimpleEvent<'draftmoves'>, gamefile: G, move: Move) => boolean)[];
+	renderbelowpieces?: ((e: SimpleEvent<'renderbelowpieces'>, gamefile: G) => false)[];
+	renderabovepieces?: ((e: SimpleEvent<'renderabovepieces'>, gamefile: G) => false)[];
+	legalmovecheck?: ((
+		e: Event<{ isLegal: boolean }, 'legalmovecheck'>,
+		gamefile: G,
+		startCoords: Coords,
+		endCoords: Coords,
+		colorOfFriendly: Player,
+	) => void)[];
 }
 
 interface LoadingEvents<T> extends Eventlist {
-	gameloaded?: ((gamefile: T, basegame: Game) => false)[];
-	boardloaded?: ((gamefile: T, boardsim: Board) => false)[];
+	gameloaded?: ((e: SimpleEvent<'gameloaded'>, gamefile: T, basegame: Game) => false)[];
+	boardloaded?: ((e: SimpleEvent<'boardloaded'>, gamefile: T, boardsim: Board) => false)[];
 }
 
 export type { GameEvents, LoadingEvents };
