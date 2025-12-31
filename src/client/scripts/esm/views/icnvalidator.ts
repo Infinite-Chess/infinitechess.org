@@ -129,6 +129,15 @@ async function validateGames(): Promise<void> {
 		variantErrors: {},
 	};
 
+	// Reset UI state (Clear previous run's errors)
+	document.getElementById('summary-section')!.style.display = 'none';
+
+	document.getElementById('variant-section')!.style.display = 'none';
+	document.getElementById('variant-stats')!.innerHTML = '';
+
+	document.getElementById('errors-section')!.style.display = 'none';
+	document.getElementById('error-list')!.innerHTML = '';
+
 	// Show progress section
 	const progressSection = document.getElementById('progress-section')! as HTMLDivElement;
 	const progressFill = document.getElementById('progress-fill')! as HTMLDivElement;
