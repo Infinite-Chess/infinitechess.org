@@ -5,9 +5,6 @@
  * @author Idontuse
  */
 
-// Disabling this  cause will be using func types lots
-/* eslint-disable no-unused-vars */
-
 type ExtractArr<T> = T extends (infer U)[] ? U : never;
 type OmitInitArg<F> = F extends (i: any, ...args: infer P) => any ? P : never;
 type ExtractEventArg<F, T> = F extends (i: Event<T, infer N>, ...args: any) => any
