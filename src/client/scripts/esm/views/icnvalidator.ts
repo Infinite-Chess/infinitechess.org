@@ -1,8 +1,4 @@
-// Import the necessary modules directly
-import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
-import winconutil from '../../../../shared/chess/util/winconutil.js';
-import gameformulator from '../game/chess/gameformulator.js';
+// src/client/scripts/esm/views/icnvalidator.ts
 
 import * as z from 'zod';
 
@@ -44,24 +40,26 @@ const SPRTGamesSchema = z.array(z.string());
 let gamesData: z.infer<typeof SPRTGamesSchema> | null = null;
 // Used for cancelling ongoing validation when a new file is selected
 let currentValidationId = 0;
+// Track active workers to terminate them if user cancels
+let activeWorkers: Worker[] = [];
 
 // File upload handling
 const fileInput = document.getElementById('file-input')! as HTMLInputElement;
 const fileName = document.getElementById('file-name')! as HTMLParagraphElement;
 const uploadSection = document.getElementById('upload-section')! as HTMLDivElement;
+const progressSection = document.getElementById('progress-section')! as HTMLDivElement;
+const progressFill = document.getElementById('progress-fill')! as HTMLDivElement;
+const progressText = document.getElementById('progress-text')! as HTMLParagraphElement;
 
+// Event Listeners
 fileInput.addEventListener('change', handleFileSelect);
-
-// Drag and drop
 uploadSection.addEventListener('dragover', (e) => {
 	e.preventDefault();
 	uploadSection.classList.add('drag-over');
 });
-
 uploadSection.addEventListener('dragleave', () => {
 	uploadSection.classList.remove('drag-over');
 });
-
 uploadSection.addEventListener('drop', (e) => {
 	e.preventDefault();
 	uploadSection.classList.remove('drag-over');
@@ -80,9 +78,10 @@ function handleFileSelect(): void {
 	if (file) {
 		// Cancel any existing validation loop immediately
 		currentValidationId++;
+		terminateWorkers(); // Kill any running threads
 
 		// Reset UI: Hide progress bar and results from any previous run
-		document.getElementById('progress-section')!.style.display = 'none';
+		progressSection.style.display = 'none';
 		document.getElementById('summary-section')!.style.display = 'none';
 		document.getElementById('variant-section')!.style.display = 'none';
 		document.getElementById('errors-section')!.style.display = 'none';
@@ -91,23 +90,19 @@ function handleFileSelect(): void {
 		fileName.style.color = 'var(--accent-color)';
 		addLog(`File selected: ${file.name}`, 'info');
 
+		// Read File
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			let unvalidatedJSON: any;
 			try {
 				const result = e.target?.result;
-				if (typeof result !== 'string') {
-					throw new Error('Failed to read file');
-				}
+				if (typeof result !== 'string') throw new Error('Failed to read file');
 				unvalidatedJSON = JSON.parse(result);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				addLog(`✗ Error parsing JSON: ${message}`, 'error');
-
-				// Make error obvious
 				fileName.textContent = `❌ INVALID JSON SYNTAX: ${file.name}`;
 				fileName.style.color = 'var(--danger-color)';
-
 				gamesData = null;
 				return;
 			}
@@ -117,35 +112,37 @@ function handleFileSelect(): void {
 				addLog('✗ JSON schema validation failed', 'error');
 				const issues = parseResult.error.issues.map((i) => i.message).join(', ');
 				addLog(`Details: ${issues}`, 'error');
-
-				// Make error obvious
 				fileName.textContent = `❌ INVALID SCHEMA: ${file.name}`;
 				fileName.style.color = 'var(--danger-color)';
-
 				gamesData = null;
 				return;
 			}
 
 			gamesData = parseResult.data;
 			addLog(`✓ Loaded ${gamesData.length} game notation(s)`, 'success');
-			// Automatically start the validation process
 			validateGames();
 		};
 		reader.readAsText(file);
 	}
 }
 
+function terminateWorkers(): void {
+	activeWorkers.forEach((w) => w.terminate());
+	activeWorkers = [];
+}
+
 async function validateGames(): Promise<void> {
-	// Capture the ID specific to THIS run
 	const runId = currentValidationId;
+	if (!gamesData) return;
 
-	if (!gamesData) {
-		addLog('✗ Cannot validate: missing data or modules', 'error');
-		return;
-	}
+	// -- Parallelization Setup --
+	// Use hardware concurrency (logic cores), default to 4 if unavailable
+	const threadCount = navigator.hardwareConcurrency || 4;
+	const totalGames = gamesData.length;
 
-	const results: ValidationResults = {
-		total: gamesData.length,
+	// Initialize Result Container
+	const globalResults: ValidationResults = {
+		total: totalGames,
 		successful: 0,
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
@@ -155,277 +152,137 @@ async function validateGames(): Promise<void> {
 		variantErrors: {},
 	};
 
-	// Helper to track errors by variant
-	const incrementVariantError = (variantName: string, type: keyof VariantStats): void => {
-		if (!results.variantErrors[variantName]) {
-			results.variantErrors[variantName] = {
-				total: 0,
-				icn: 0,
-				formulator: 0,
-				illegal: 0,
-				termination: 0,
-			};
-		}
-		results.variantErrors[variantName]!.total++;
-		results.variantErrors[variantName]![type]++;
-	};
-
-	// Reset UI state (Clear previous run's errors)
+	// Reset UI displays
 	document.getElementById('summary-section')!.style.display = 'none';
-
 	document.getElementById('variant-section')!.style.display = 'none';
 	document.getElementById('variant-stats')!.innerHTML = '';
-
 	document.getElementById('errors-section')!.style.display = 'none';
 	document.getElementById('error-list')!.innerHTML = '';
 
-	// Show progress section
-	const progressSection = document.getElementById('progress-section')! as HTMLDivElement;
-	const progressFill = document.getElementById('progress-fill')! as HTMLDivElement;
-	const progressText = document.getElementById('progress-text')! as HTMLParagraphElement;
 	progressSection.style.display = 'block';
+	addLog(`Starting parallel validation with ${threadCount} workers...`, 'info');
 
-	addLog(`Starting validation of ${results.total} games...`, 'info');
+	let gamesProcessed = 0;
+	let workersDone = 0;
 
-	for (let i = 0; i < gamesData.length; i++) {
-		// Stop if a new file has been selected (ID mismatch)
+	// Determine chunk size
+	const chunkSize = Math.ceil(totalGames / threadCount);
+
+	for (let i = 0; i < threadCount; i++) {
+		// Stop if cancelled during spawn loop
 		if (runId !== currentValidationId) return;
 
-		const gameICN = gamesData[i]!;
-		const progress = (((i + 1) / results.total) * 100).toFixed(1);
+		const start = i * chunkSize;
+		const end = Math.min(start + chunkSize, totalGames);
 
-		progressFill.style.width = progress + '%';
-		progressFill.textContent = progress + '%';
-		progressText.textContent = `Processing game ${i + 1} of ${results.total}`;
-
-		try {
-			// Stage 1: Convert ICN to long format
-			let longFormat: any;
-			try {
-				longFormat = icnconverter.ShortToLong_Format(gameICN);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				results.icnconverterErrors++;
-				results.errors.push({
-					gameIndex: i + 1,
-					phase: 'icnconverter',
-					error: message,
-					icn: gameICN,
-				});
-				incrementVariantError('Unknown (ICN Parse Failed)', 'icn');
-				continue;
-			}
-
-			// Extract variant and termination from metadata for error tracking
-			const variant = longFormat.metadata?.Variant || 'Unknown';
-			const termination = longFormat.metadata?.Termination;
-			const result = longFormat.metadata?.Result;
-
-			// Stage 2: Formulate the game (without move validation)
-			let game: any;
-			try {
-				game = gameformulator.formulateGame(longFormat);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				results.formulatorErrors++;
-				results.errors.push({
-					gameIndex: i + 1,
-					phase: 'formulator',
-					error: message,
-					variant: variant,
-					icn: gameICN,
-				});
-				incrementVariantError(variant, 'formulator');
-				continue;
-			}
-
-			// Stage 3: Validate move legality
-			try {
-				// Re-formulate with move validation enabled
-				gameformulator.formulateGame(longFormat, true);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				results.illegalMoveErrors++;
-				results.errors.push({
-					gameIndex: i + 1,
-					phase: 'illegal-move',
-					error: message,
-					variant: variant,
-					icn: gameICN,
-				});
-				incrementVariantError(variant, 'illegal');
-				continue;
-			}
-
-			// Stage 4: Validate termination matches game conclusion
-			try {
-				validateTermination(termination, result, game.basegame.gameConclusion);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				results.terminationMismatchErrors++;
-				results.errors.push({
-					gameIndex: i + 1,
-					phase: 'termination-mismatch',
-					error: message,
-					variant: variant,
-					termination: termination,
-					result: result,
-					gameConclusion: game.basegame.gameConclusion,
-					icn: gameICN,
-				});
-				incrementVariantError(variant, 'termination');
-				continue;
-			}
-
-			// All stages passed!
-			results.successful++;
-		} catch (error) {
-			// Unexpected error
-			const message = error instanceof Error ? error.message : String(error);
-			addLog(`✗ Unexpected error processing game ${i + 1}: ${message}`, 'error');
-			results.formulatorErrors++;
-			results.errors.push({
-				gameIndex: i + 1,
-				phase: 'unknown',
-				error: message,
-				icn: gameICN,
-			});
+		// If we ran out of games (e.g., 3 games, 4 threads), skip
+		if (start >= totalGames) {
+			workersDone++; // Count as done so we don't hang
+			continue;
 		}
 
-		// Allow UI to update
-		await new Promise((resolve) => setTimeout(resolve, 0));
-	}
+		// Prepare data slice (Add index so we know which game is which)
+		const slice = gamesData.slice(start, end).map((game, idx) => ({
+			index: start + idx + 1, // 1-based index for UI
+			icn: game,
+		}));
 
-	// Hide progress, show results
+		// Spawn Worker
+		const worker = new Worker('scripts/esm/workers/icnvalidator.worker.js', { type: 'module' });
+		activeWorkers.push(worker);
+
+		// Handle Messages
+		worker.onmessage = (e) => {
+			if (e.data.type === 'progress') {
+				// Incremental update (optional)
+				// You could animate the bar here if you want super-smooth updates
+			} else if (e.data.type === 'done') {
+				// Worker finished its batch
+				const { results } = e.data;
+
+				// Merge Counts
+				globalResults.successful += results.successfulCount;
+				globalResults.icnconverterErrors += results.icnconverterErrors;
+				globalResults.formulatorErrors += results.formulatorErrors;
+				globalResults.illegalMoveErrors += results.illegalMoveErrors;
+				globalResults.terminationMismatchErrors += results.terminationMismatchErrors;
+
+				// Merge Arrays/Objects
+				globalResults.errors.push(...results.errors);
+
+				// Merge Variant Stats
+				for (const [variant, stats] of Object.entries(
+					results.variantErrors as Record<string, VariantStats>,
+				)) {
+					if (!globalResults.variantErrors[variant]) {
+						globalResults.variantErrors[variant] = { ...stats };
+					} else {
+						const existing = globalResults.variantErrors[variant]!;
+						existing.total += stats.total;
+						existing.icn += stats.icn;
+						existing.formulator += stats.formulator;
+						existing.illegal += stats.illegal;
+						existing.termination += stats.termination;
+					}
+				}
+
+				// Update Progress UI
+				gamesProcessed += end - start;
+				workersDone++;
+
+				const pct = ((gamesProcessed / totalGames) * 100).toFixed(1);
+				progressFill.style.width = pct + '%';
+				progressFill.textContent = pct + '%';
+				progressText.textContent = `Processed ${gamesProcessed} / ${totalGames}`;
+
+				// Check completion
+				if (workersDone === threadCount) {
+					// Sort errors by index so they appear in order
+					globalResults.errors.sort((a, b) => a.gameIndex - b.gameIndex);
+
+					finishValidation(globalResults, runId);
+				}
+			}
+		};
+
+		// Start the worker
+		worker.postMessage({ chunkId: i, games: slice });
+	}
+}
+
+function finishValidation(results: ValidationResults, runId: number): void {
+	if (runId !== currentValidationId) return;
+
 	progressSection.style.display = 'none';
 	displayResults(results);
 
-	// Determine log color based on success rate
-	const finalPercentage = results.total > 0 ? (results.successful / results.total) * 100 : 0;
+	const pct = results.total > 0 ? (results.successful / results.total) * 100 : 0;
 	let logType: LogType = 'error';
-
-	if (results.successful === results.total) {
-		logType = 'success'; // Green for 100%
-	} else if (finalPercentage >= 90) {
-		logType = 'warning'; // Orange for >= 90%
-	}
+	if (results.successful === results.total) logType = 'success';
+	else if (pct >= 90) logType = 'warning';
 
 	addLog(`✓ Validation complete: ${results.successful}/${results.total} successful`, logType);
+	terminateWorkers(); // Clean up
 }
 
-// Helper function to validate termination metadata
-function validateTermination(
-	termination: string | undefined,
-	result: string | undefined,
-	gameConclusion: string | undefined,
-): void {
-	// Check mappings before running through getVictorAndConditionFromGameConclusion
-	if (termination === 'Draw by maximum moves reached') {
-		if (gameConclusion !== undefined) {
-			throw new Error(
-				`Termination is "Draw by maximum moves reached" but gameConclusion is not undefined: ${gameConclusion}`,
-			);
-		}
-		return;
-	}
-
-	if (termination && termination.startsWith('Material adjudication')) {
-		if (gameConclusion !== undefined) {
-			throw new Error(
-				`Termination starts with "Material adjudication" but gameConclusion is not undefined: ${gameConclusion}`,
-			);
-		}
-		return;
-	}
-
-	if (termination === 'Loss on time') {
-		if (gameConclusion !== undefined) {
-			throw new Error(
-				`Termination is "Loss on time" but gameConclusion is not undefined: ${gameConclusion}`,
-			);
-		}
-		return;
-	}
-
-	// If gameConclusion is undefined at this point, and termination is specified, that's an error
-	if (gameConclusion === undefined) {
-		if (termination) {
-			throw new Error(
-				`gameConclusion is undefined but Termination metadata is specified: ${termination}`,
-			);
-		}
-		return; // Both undefined is OK (game not over)
-	}
-
-	// Parse the gameConclusion
-	const { victor, condition } =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
-
-	// Check condition mappings
-	const conditionMappings: Record<string, string> = {
-		Checkmate: 'checkmate',
-		'Draw by stalemate': 'stalemate',
-		'Draw by threefold repetition': 'repetition',
-		'Draw by fifty-move rule': 'moverule',
-		'Draw by insufficient material': 'insuffmat',
-	};
-
-	// Check if termination starts with specific patterns
-	if (termination && termination.startsWith('Win by capturing all')) {
-		if (condition !== 'allpiecescaptured') {
-			throw new Error(
-				`Termination starts with "Win by capturing all" but condition is "${condition}", expected "allpiecescaptured"`,
-			);
-		}
-	} else if (termination && termination in conditionMappings) {
-		if (condition !== conditionMappings[termination]) {
-			throw new Error(
-				`Termination "${termination}" does not match condition "${condition}", expected "${conditionMappings[termination]}"`,
-			);
-		}
-	} else if (termination) {
-		// No matching mapping found
-		throw new Error(`Unknown Termination metadata: "${termination}"`);
-	}
-
-	// Validate Result metadata matches victor
-	if (victor !== undefined && result) {
-		const resultMappings: Record<string, number> = {
-			'1-0': p.WHITE,
-			'0-1': p.BLACK,
-			'1/2-1/2': p.NEUTRAL,
-		};
-
-		if (result in resultMappings) {
-			if (victor !== resultMappings[result]) {
-				throw new Error(
-					`Result "${result}" does not match victor ${victor}, expected victor ${resultMappings[result]}`,
-				);
-			}
-		} else {
-			throw new Error(`Unknown Result metadata: "${result}"`);
-		}
-	}
-}
+// --- Display Logic ---
 
 function displayResults(results: ValidationResults): void {
-	// Calculate Percentage
+	// Percentage Calculation
 	const percentage = results.total > 0 ? (results.successful / results.total) * 100 : 0;
-
 	const percentageStr = Number.isInteger(percentage)
 		? percentage.toString() + '%'
 		: percentage.toFixed(1) + '%';
 
-	// Update Hero Stats
+	// Hero Stats
 	const ratioEl = document.getElementById('pass-ratio')!;
 	const percentEl = document.getElementById('pass-percentage')!;
-
 	ratioEl.textContent = `${results.successful} / ${results.total}`;
 	percentEl.textContent = percentageStr;
 
 	// Set colors based on score
-	ratioEl.className = 'hero-value'; // reset
-	percentEl.className = 'hero-value'; // reset
+	ratioEl.className = 'hero-value';
+	percentEl.className = 'hero-value';
 
 	if (results.successful === results.total && results.total > 0) {
 		ratioEl.classList.add('perfect');
@@ -441,23 +298,14 @@ function displayResults(results: ValidationResults): void {
 		percentEl.classList.add('terrible');
 	}
 
-	// Update Error Counts
-	// Helper function for dynamic coloring
+	// Update Grid
 	const updateStat = (id: string, count: number): void => {
 		const el = document.getElementById(id)!;
 		el.textContent = String(count);
-
-		// Reset class to base
 		el.className = 'stat-value';
-
-		// Apply logic: 0 = Green, 1-9 = Orange, 10+ = Red
-		if (count === 0) {
-			el.classList.add('success');
-		} else if (count < 10) {
-			el.classList.add('warning');
-		} else {
-			el.classList.add('error');
-		}
+		if (count === 0) el.classList.add('success');
+		else if (count < 10) el.classList.add('warning');
+		else el.classList.add('error');
 	};
 
 	updateStat('icnconverter-errors', results.icnconverterErrors);
@@ -467,11 +315,10 @@ function displayResults(results: ValidationResults): void {
 
 	document.getElementById('summary-section')!.style.display = 'block';
 
-	// Display variant errors
+	// Variant Stats
 	if (Object.keys(results.variantErrors).length > 0) {
 		const variantStats = document.getElementById('variant-stats')!;
 		variantStats.innerHTML = '';
-
 		const sortedVariants = Object.entries(results.variantErrors).sort(
 			(a, b) => b[1].total - a[1].total,
 		);
@@ -480,27 +327,18 @@ function displayResults(results: ValidationResults): void {
 			const variantItem = document.createElement('div');
 			variantItem.className = 'variant-item';
 
-			// Build the stats HTML
 			const buildStat = (
 				label: string,
 				count: number,
 				isAlwaysWarn: boolean = false,
 			): string => {
 				if (count === 0) return '';
-
-				// Logic: Red ('err') if > 3, otherwise Orange ('warn')
-				// Exception: ICN is always 'warn' if isAlwaysWarn is true
 				let type = 'warn';
-				if (!isAlwaysWarn && count > 3) {
-					type = 'err';
-				}
-
+				if (!isAlwaysWarn && count > 3) type = 'err';
 				return `<div class="v-stat ${type} active"><span>${count}</span> ${label}</div>`;
 			};
 
-			// Logic for total header: Red if > 5, Orange otherwise
 			const totalClass = stats.total > 4 ? 'err' : 'warn';
-
 			variantItem.innerHTML = `
                 <div class="variant-header">
                     <span class="variant-name">${variant}</span>
@@ -515,20 +353,16 @@ function displayResults(results: ValidationResults): void {
             `;
 			variantStats.appendChild(variantItem);
 		}
-
 		document.getElementById('variant-section')!.style.display = 'block';
 	}
 
-	// Display error details
+	// Error List
 	if (results.errors.length > 0) {
 		const errorList = document.getElementById('error-list')!;
 		errorList.innerHTML = '';
-
 		for (const error of results.errors) {
 			const errorItem = document.createElement('div');
 			errorItem.className = `error-item ${error.phase}`;
-
-			// Build additional metadata for termination mismatches
 			let metadataHtml = '';
 			if (error.phase === 'termination-mismatch') {
 				metadataHtml = `
@@ -539,7 +373,6 @@ function displayResults(results: ValidationResults): void {
 					</div>
 				`;
 			}
-
 			errorItem.innerHTML = `
                 <div class="error-header">
                     <span>Game #${error.gameIndex}${error.variant ? ` - ${error.variant}` : ''}</span>
@@ -554,7 +387,6 @@ function displayResults(results: ValidationResults): void {
             `;
 			errorList.appendChild(errorItem);
 		}
-
 		document.getElementById('errors-section')!.style.display = 'block';
 	}
 }
@@ -563,8 +395,7 @@ function addLog(message: string, type: LogType = 'info'): void {
 	const logOutput = document.getElementById('log-output')!;
 	const entry = document.createElement('div');
 	entry.className = `log-entry ${type}`;
-	const timestamp = new Date().toLocaleTimeString();
-	entry.textContent = `[${timestamp}] ${message}`;
+	entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
 	logOutput.appendChild(entry);
 	logOutput.scrollTop = logOutput.scrollHeight;
 }

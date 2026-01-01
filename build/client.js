@@ -41,6 +41,7 @@ const ESMEntryPoints = [
 	'src/client/scripts/esm/views/icnvalidator.ts',
 	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 	'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
+	'src/client/scripts/esm/workers/icnvalidator.worker.ts',
 ];
 
 /** CommonJS modules imported by html pages. */
