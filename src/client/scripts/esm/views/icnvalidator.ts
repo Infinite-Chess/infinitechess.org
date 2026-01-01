@@ -39,13 +39,7 @@ interface ValidationError {
 
 type LogType = 'info' | 'success' | 'warning' | 'error';
 
-const SPRTGamesSchema = z.object({
-	games: z.array(
-		z.object({
-			rawICN: z.string(),
-		}),
-	),
-});
+const SPRTGamesSchema = z.array(z.string());
 
 let gamesData: z.infer<typeof SPRTGamesSchema> | null = null;
 // Used for cancelling ongoing validation when a new file is selected
