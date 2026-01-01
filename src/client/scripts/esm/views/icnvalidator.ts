@@ -127,7 +127,7 @@ function handleFileSelect(): void {
 			}
 
 			gamesData = parseResult.data;
-			addLog(`✓ Loaded ${gamesData.games.length} game notation(s)`, 'success');
+			addLog(`✓ Loaded ${gamesData.length} game notation(s)`, 'success');
 			// Automatically start the validation process
 			validateGames();
 		};
@@ -145,7 +145,7 @@ async function validateGames(): Promise<void> {
 	}
 
 	const results: ValidationResults = {
-		total: gamesData.games.length,
+		total: gamesData.length,
 		successful: 0,
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
@@ -187,11 +187,11 @@ async function validateGames(): Promise<void> {
 
 	addLog(`Starting validation of ${results.total} games...`, 'info');
 
-	for (let i = 0; i < gamesData.games.length; i++) {
+	for (let i = 0; i < gamesData.length; i++) {
 		// Stop if a new file has been selected (ID mismatch)
 		if (runId !== currentValidationId) return;
 
-		const gameICN = gamesData.games[i]!.rawICN!;
+		const gameICN = gamesData[i]!;
 		const progress = (((i + 1) / results.total) * 100).toFixed(1);
 
 		progressFill.style.width = progress + '%';
