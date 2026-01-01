@@ -159,7 +159,12 @@ async function validateGames(): Promise<void> {
 	document.getElementById('errors-section')!.style.display = 'none';
 	document.getElementById('error-list')!.innerHTML = '';
 
+	// Reset progress UI immediately
+	progressFill.style.width = '0%';
+	progressFill.textContent = '0%';
+	progressText.textContent = `Processed 0 / ${totalGames}`;
 	progressSection.style.display = 'block';
+
 	addLog(`Starting parallel validation with ${threadCount} workers...`, 'info');
 
 	let gamesProcessed = 0;
