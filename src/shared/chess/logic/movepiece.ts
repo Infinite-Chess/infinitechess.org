@@ -396,10 +396,13 @@ function makeAllMovesInGame(
 ): void {
 	if (gamefile.boardsim.moves.length > 0)
 		throw Error('Cannot make all moves in game when there are already moves played.');
-	moves.forEach((shortmove, i) => {
+
+	for (let i = 0; i < moves.length; i++) {
+		const shortmove = moves[i]!;
+
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
 
-		// If validateMoves flag is true, check if the move is actually legal
+		// If validateMoves flag is true, check if the move is actually legal!
 		if (validateMoves) {
 			const validationResult = movevalidation.isEnginesMoveLegal(gamefile, shortmove.compact);
 			if (!validationResult.valid) {
@@ -410,7 +413,18 @@ function makeAllMovesInGame(
 		}
 
 		makeMove(gamefile, move);
-	});
+
+		// Also if validateMoves flag is true, any move that comes AFTER
+		// when the game should have ended already is considered illegal!
+		const isLastIteration = i === moves.length - 1;
+		if (validateMoves && !isLastIteration) {
+			const conclusion = wincondition.getGameConclusion(gamefile);
+			if (conclusion)
+				throw new Error(
+					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by (${conclusion}).`,
+				);
+		}
+	}
 }
 
 /**
