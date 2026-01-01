@@ -150,8 +150,8 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 		}
 
 		// Report progress every 50 games (optional optimization to keep UI responsive)
-		if (localResults.successfulCount % 50 === 0) {
-			self.postMessage({ type: 'progress', chunkId, count: 50 });
+		if (localResults.successfulCount % 10 === 0) {
+			self.postMessage({ type: 'progress', chunkId, count: 10 });
 		}
 	}
 

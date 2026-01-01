@@ -196,11 +196,22 @@ async function validateGames(): Promise<void> {
 		const worker = new Worker('scripts/esm/workers/icnvalidator.worker.js', { type: 'module' });
 		activeWorkers.push(worker);
 
+		// Track progress specific to this worker to avoid double-counting at the end
+		let itemsProcessedInChunk = 0;
+
 		// Handle Messages
 		worker.onmessage = (e) => {
 			if (e.data.type === 'progress') {
-				// Incremental update (optional)
-				// You could animate the bar here if you want super-smooth updates
+				// Update counters
+				const count = e.data.count;
+				itemsProcessedInChunk += count;
+				gamesProcessed += count;
+
+				// Update UI immediately
+				const pct = ((gamesProcessed / totalGames) * 100).toFixed(1);
+				progressFill.style.width = pct + '%';
+				progressFill.textContent = pct + '%';
+				progressText.textContent = `Processed ${gamesProcessed} / ${totalGames}`;
 			} else if (e.data.type === 'done') {
 				// Worker finished its batch
 				const { results } = e.data;
@@ -231,10 +242,13 @@ async function validateGames(): Promise<void> {
 					}
 				}
 
-				// Update Progress UI
-				gamesProcessed += end - start;
+				// Calculate remaining items (errors or final batch < 50) that weren't reported in progress
+				const chunkTotal = end - start;
+				const remainder = chunkTotal - itemsProcessedInChunk;
+				gamesProcessed += remainder;
 				workersDone++;
 
+				// Final UI update for this chunk
 				const pct = ((gamesProcessed / totalGames) * 100).toFixed(1);
 				progressFill.style.width = pct + '%';
 				progressFill.textContent = pct + '%';
