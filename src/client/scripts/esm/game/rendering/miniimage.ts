@@ -40,7 +40,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Variables --------------------------------------------------------------
 

@@ -32,7 +32,7 @@ import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import camera from '../camera.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Variables --------------------------------------------------------------------------------------
 

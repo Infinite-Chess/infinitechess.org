@@ -3,7 +3,7 @@ import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import type { SoundObject } from '../../audio/AudioManager.js';

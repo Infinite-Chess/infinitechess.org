@@ -23,7 +23,7 @@ import guiclock from '../gui/guiclock.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import frametracker from '../rendering/frametracker.js';
 import enginegame from '../misc/enginegame.js';
-import { GameBus } from './GameBus.js';
+import { GameBus } from '../GameBus.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
 

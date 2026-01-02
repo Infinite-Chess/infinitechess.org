@@ -46,7 +46,7 @@ import starfield from '../rendering/starfield.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from './graphicalchanges.js';
 import { gl } from '../rendering/webgl.js';
-import { GameBus } from './GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions ----------------------------------------------------------
 

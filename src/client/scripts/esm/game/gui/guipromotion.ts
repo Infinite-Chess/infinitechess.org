@@ -11,7 +11,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Variables --------------------------------------------------------------------
 

@@ -19,7 +19,7 @@ import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
 import keybinds from '../../../misc/keybinds.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import { Mouse } from '../../../input.js';
-import { GameBus } from '../../../chess/GameBus.js';
+import { GameBus } from '../../../GameBus.js';
 
 // Type Definitions ------------------------------------------------------------
 

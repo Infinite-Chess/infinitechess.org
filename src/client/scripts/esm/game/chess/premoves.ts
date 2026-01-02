@@ -29,7 +29,7 @@ import movepiece, {
 } from '../../../../../shared/chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
 import { Mouse } from '../input.js';
-import { GameBus } from './GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions ---------------------------------------------
 

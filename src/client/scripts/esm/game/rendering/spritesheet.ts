@@ -12,7 +12,7 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions ---------------------------------------------------------------------
 

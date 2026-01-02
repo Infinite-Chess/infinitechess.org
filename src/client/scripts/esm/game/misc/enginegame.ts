@@ -19,7 +19,7 @@ import snapping from '../rendering/highlights/snapping.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import frametracker from '../rendering/frametracker.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 

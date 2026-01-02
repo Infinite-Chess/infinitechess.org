@@ -20,7 +20,7 @@ import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 

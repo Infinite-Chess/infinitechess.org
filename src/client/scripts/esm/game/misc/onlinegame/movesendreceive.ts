@@ -26,7 +26,7 @@ import movevalidation from '../../../../../../shared/chess/logic/movevalidation.
 import guipause from '../../gui/guipause.js';
 // @ts-ignore
 import websocket from '../../websocket.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Events ---------------------------------------------------------------------
 

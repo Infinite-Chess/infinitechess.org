@@ -24,7 +24,7 @@ import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
 import meshes from '../meshes.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------
 

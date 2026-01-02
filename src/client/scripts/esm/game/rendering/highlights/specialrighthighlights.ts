@@ -20,7 +20,7 @@ import piecemodels from '../piecemodels.js';
 import squarerendering from './squarerendering.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Variables -------------------------------------------------------------------------------------
 

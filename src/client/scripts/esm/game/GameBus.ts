@@ -1,9 +1,9 @@
 // src/client/scripts/esm/game/chess/GameBus.ts
 
-import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves';
-import type { Piece } from '../../../../../shared/chess/util/boardutil';
+import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';
+import type { Piece } from '../../../../shared/chess/util/boardutil';
 
-import { EventBus } from '../../../../../shared/util/EventBus';
+import { EventBus } from '../../../../shared/util/EventBus';
 
 interface GameBusEvents {
 	'game-loaded': void;

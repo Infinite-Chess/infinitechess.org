@@ -29,7 +29,7 @@ import coordutil, {
 } from '../../../../../../shared/chess/util/coordutil.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Type Definitions ----------------------------------------------------------------------
 

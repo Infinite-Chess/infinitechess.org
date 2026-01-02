@@ -12,7 +12,7 @@ import mat4 from './gl-matrix.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera';
 import frametracker from './frametracker.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Constants -----------------------------------------------------------------------
 

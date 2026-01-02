@@ -31,7 +31,7 @@ import perspective from './perspective.js';
 import math from '../../../../../shared/util/math/math.js';
 import webgl, { gl } from './webgl.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions ----------------------------------------------------------------
 

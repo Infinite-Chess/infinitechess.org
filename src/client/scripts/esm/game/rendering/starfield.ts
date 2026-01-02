@@ -25,7 +25,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
-import { GameBus } from '../chess/GameBus.js';
+import { GameBus } from '../GameBus.js';
 
 /** A sigle star particle. */
 type Star = {

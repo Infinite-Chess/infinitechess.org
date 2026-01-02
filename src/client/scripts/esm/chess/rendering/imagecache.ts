@@ -14,7 +14,7 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
-import { GameBus } from '../../game/chess/GameBus.js';
+import { GameBus } from '../../game/GameBus.js';
 
 // Variables ---------------------------------------------------------------------------
 

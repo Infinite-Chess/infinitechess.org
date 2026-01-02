@@ -41,7 +41,7 @@ import { animateMove } from './graphicalchanges.js';
 import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input.js';
-import { GameBus } from './GameBus.js';
+import { GameBus } from '../GameBus.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore

@@ -24,7 +24,7 @@ import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
-import { GameBus } from '../../chess/GameBus.js';
+import { GameBus } from '../../GameBus.js';
 
 // Variables -----------------------------------------------------------------------------
 
