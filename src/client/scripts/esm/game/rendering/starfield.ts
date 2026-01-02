@@ -25,6 +25,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+import { UIBus } from '../chess/UIBus.js';
 
 /** A sigle star particle. */
 type Star = {
@@ -54,7 +55,7 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 };
 
 /** Configuration variables for Star Field appearance. */
-export const CONFIG = {
+const CONFIG = {
 	/** The DENSITY of stars, measured in stars per square unit of world space. */
 	starDensity: 0.07, // Default: 0.07
 	// starDensity: 1,
@@ -127,6 +128,11 @@ document.addEventListener('starfield-toggle', (e) => {
 	const enabled: boolean = e.detail;
 	if (enabled) init();
 	else terminate();
+});
+
+UIBus.addEventListener('game-unloaded', () => {
+	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)
+	terminate();
 });
 
 /**
@@ -381,7 +387,6 @@ function render(): void {
 
 export default {
 	init,
-	terminate,
 	update,
 	render,
 };

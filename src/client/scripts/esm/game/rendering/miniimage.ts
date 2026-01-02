@@ -40,6 +40,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import { UIBus } from '../chess/UIBus.js';
 
 // Variables --------------------------------------------------------------
 
@@ -65,6 +66,13 @@ const attribInfo: AttributeInfoInstanced = {
 
 /** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
 let disabled: boolean = false; // Disabled when there's too many pieces
+
+// Events ---------------------------------------------------------------------
+
+UIBus.addEventListener('game-unloaded', () => {
+	// Re-enable them if the previous game turned them off due to too many pieces.
+	enable();
+});
 
 // Toggling --------------------------------------------------------------
 
@@ -413,7 +421,6 @@ export default {
 	pieceCountToDisableMiniImages,
 
 	isDisabled,
-	enable,
 	disable,
 	toggle,
 

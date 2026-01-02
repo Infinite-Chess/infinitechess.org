@@ -12,6 +12,7 @@ import mat4 from './gl-matrix.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera';
 import frametracker from './frametracker.js';
+import { UIBus } from '../chess/UIBus.js';
 
 // Constants -----------------------------------------------------------------------
 
@@ -28,6 +29,12 @@ const TRAUMA_DECAY = 1.2;
 // State ---------------------------------------------------------------------------
 
 let trauma = 0.0; // Current shake intensity, 0.0 to 1.0
+
+// Events --------------------------------------------------------------------------
+
+UIBus.addEventListener('game-unloaded', () => {
+	clear();
+});
 
 // Functions -----------------------------------------------------------------------
 
@@ -108,7 +115,6 @@ function getShakeMatrix(): Mat4 {
 
 export default {
 	trigger,
-	clear,
 	update,
 	getShakeMatrix,
 };

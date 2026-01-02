@@ -31,6 +31,7 @@ import perspective from './perspective.js';
 import math from '../../../../../shared/util/math/math.js';
 import webgl, { gl } from './webgl.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
+import { UIBus } from '../chess/UIBus.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -111,6 +112,14 @@ document.addEventListener('theme-change', (_event) => {
 	// Reinit the promotion UI
 	guipromotion.resetUI();
 	guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
+});
+
+UIBus.addEventListener('game-concluded', () => {
+	darkenColor();
+});
+UIBus.addEventListener('game-unloaded', () => {
+	// Resets the board color (the color changes when checkmate happens)
+	updateTheme();
 });
 
 /** Loads the tiles texture. */
@@ -549,7 +558,6 @@ export default {
 	getBoundingBoxOfBoard,
 	generatePerspectiveBoundingBox,
 	roundAwayBoundingBox,
-	updateTheme,
 	resetColor,
 	darkenColor,
 	// Rendering

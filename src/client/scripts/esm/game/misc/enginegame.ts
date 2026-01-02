@@ -19,6 +19,7 @@ import snapping from '../rendering/highlights/snapping.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import frametracker from '../rendering/frametracker.js';
+import { UIBus } from '../chess/UIBus.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -75,6 +76,16 @@ let move_gen_debug: boolean = false;
 const moveHistoryLegalMoves: Map<number, string[]> = new Map();
 /** Queue of pending debug requests with their move indices */
 const pendingDebugRequests: number[] = [];
+
+// Events -----------------------------------------------------------------------
+
+UIBus.addEventListener('user-move-played', () => {
+	onMovePlayed();
+});
+UIBus.addEventListener('game-concluded', () => {
+	if (!inEngineGame) return;
+	checkmatepractice.onEngineGameConclude();
+});
 
 // Functions ------------------------------------------------------------------------
 
@@ -302,6 +313,9 @@ function makeEngineMove(compactMove: unknown): void {
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
 	const move = movesequence.makeMove(gamefile, mesh, moveValidationResults.draft);
+
+	UIBus.dispatch('physical-move');
+
 	if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	// We should probably have this last, since this will make another move AFTER handling our engine's move here.
@@ -314,11 +328,6 @@ function makeEngineMove(compactMove: unknown): void {
 
 	// If the debug mode is on, request the generated moves for the new position after playing the engine's move
 	requestMovesForCurrentPosition();
-}
-
-function onGameConclude(): void {
-	if (!inEngineGame) return;
-	checkmatepractice.onEngineGameConclude();
 }
 
 /** Toggles the rendering of engine generated legal moves for debugging purposes. */
@@ -410,7 +419,6 @@ export default {
 	closeEngineGame,
 	areWeColor,
 	onMovePlayed,
-	onGameConclude,
 	toggleDebug,
 	render,
 	onViewMove,

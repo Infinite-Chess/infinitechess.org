@@ -2,8 +2,9 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
+import { UIBus } from '../chess/UIBus.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import type { SoundObject } from '../../audio/AudioManager.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -81,6 +82,15 @@ const countdown: {
 		fadeOutDuration: 100,
 	},
 };
+
+// Events ---------------------------------------------------------------------------
+
+UIBus.addEventListener('game-unloaded', () => {
+	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
+	resetClocks();
+});
+
+// Functions -----------------------------------------------------------------------
 
 function hideClocks(): void {
 	for (const clockElements of Object.values(element_timers)) {
@@ -352,7 +362,6 @@ export default {
 	hideClocks,
 	showClocks,
 	set,
-	resetClocks,
 	stopClocks,
 	edit,
 	push,

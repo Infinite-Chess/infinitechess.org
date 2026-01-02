@@ -9,17 +9,14 @@ import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 
-import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import movesequence from './movesequence.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
-import enginegame from '../misc/enginegame.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import boardpos from '../rendering/boardpos.js';
 import preferences from '../../components/header/preferences.js';
 import selection from './selection.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import gameslot from './gameslot.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
@@ -32,6 +29,7 @@ import movepiece, {
 } from '../../../../../shared/chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
 import { Mouse } from '../input.js';
+import { UIBus } from './UIBus.js';
 
 // Type Definitions ---------------------------------------------
 
@@ -61,7 +59,28 @@ let premoves: Premove[] = [];
  */
 let applied: boolean = true;
 
-// Processing Premoves ---------------------------------------------------------------------
+// Events ----------------------------------------------------------------------------------
+
+UIBus.addEventListener('game-concluded', () => {
+	// console.error("Game ended, clearing premoves");
+
+	// Erase pending premoves, leaving the `applied` state at what it was before
+	// so the rest of the code doesn't experience it changed randomly.
+
+	const originalApplied = applied; // Save the original applied state
+
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
+
+	if (applied) rewindPremoves(gamefile, mesh);
+	clearPremoves();
+
+	// Restore the original applied state, as the rest of the code will have expected it not to change.
+	applied = originalApplied;
+});
+UIBus.addEventListener('game-unloaded', () => {
+	clearPremoves();
+});
 
 /** Event listener for when we change the Premoves toggle */
 document.addEventListener('premoves-toggle', (_e) => {
@@ -75,6 +94,8 @@ document.addEventListener('premoves-toggle', (_e) => {
 	cancelPremoves(gamefile, mesh);
 });
 
+// Processing Premoves ---------------------------------------------------------------------
+
 /** Gets all pending premoves. */
 function hasAtleastOnePremove(): boolean {
 	return premoves.length > 0;
@@ -85,7 +106,7 @@ function arePremovesApplied(): boolean {
 	return applied;
 }
 
-/** Adds an premove and applies its changes to the board. */
+/** Similar to {@link movesequence.makeMove} Adds an premove and applies its changes to the board. */
 function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDraft): Premove {
 	// console.log("Adding premove");
 
@@ -97,6 +118,8 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveD
 
 	premoves.push(premove);
 	// console.log(premoves);
+
+	UIBus.dispatch('physical-move');
 
 	return premove;
 }
@@ -192,8 +215,6 @@ function rewindPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 	// console.error("Setting applied to false.");
 	applied = false;
-
-	specialrighthighlights.onMove();
 }
 
 /**
@@ -244,6 +265,8 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 	// console.error("Setting applied to true.");
 	applied = true;
+
+	UIBus.dispatch('physical-move');
 }
 
 /**
@@ -281,8 +304,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 		const move = movesequence.makeMove(gamefile, mesh, moveDraft); // Make move
 
-		movesendreceive.sendMove();
-		enginegame.onMovePlayed();
+		UIBus.dispatch('user-move-played');
 
 		premoves.shift(); // Remove premove
 
@@ -357,33 +379,6 @@ function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
 	processPremoves(gamefile, mesh);
 }
 
-/**
- * Call externally when the game is concluded after it ends.
- * Erases pending premoves, leaving the `applied` state at what it was before
- * so the rest of the code doesn't experience it changed randomly.
- */
-function onGameConclude(): void {
-	// console.error("Game ended, clearing premoves");
-
-	const originalApplied = applied; // Save the original applied state
-
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh();
-
-	if (applied) rewindPremoves(gamefile, mesh);
-	clearPremoves();
-
-	// Restore the original applied state, as the rest of the code will have expected it not to change.
-	applied = originalApplied;
-}
-
-/**
- * Call externally when the game is unloaded.
- */
-function onGameUnload(): void {
-	clearPremoves();
-}
-
 // Updating Premoves ------------------------------------------------
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
@@ -430,8 +425,6 @@ export default {
 	rewindPremoves,
 	applyPremoves,
 	onYourMove,
-	onGameConclude,
-	onGameUnload,
 	update,
 	render,
 };

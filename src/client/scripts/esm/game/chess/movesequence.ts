@@ -13,7 +13,6 @@ import guinavigation from '../gui/guinavigation.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
@@ -24,6 +23,7 @@ import guiclock from '../gui/guiclock.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import frametracker from '../rendering/frametracker.js';
 import enginegame from '../misc/enginegame.js';
+import { UIBus } from './UIBus.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
 
@@ -64,10 +64,7 @@ function makeMove(
 			gameslot.concludeGame();
 	}
 
-	// Whenever a move is made in the game, the color of the legal move highlights
-	// of the hovered arrows often changes.
-	// Erase the list so they can be regenerated next frame with the correct color.
-	arrowlegalmovehighlights.reset();
+	UIBus.dispatch('physical-move');
 
 	return move;
 }

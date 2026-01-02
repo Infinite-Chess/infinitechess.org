@@ -24,6 +24,7 @@ import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import { UIBus } from '../../chess/UIBus.js';
 
 // Variables -----------------------------------------------------------------------------
 
@@ -60,14 +61,15 @@ document.addEventListener('theme-change', regenerateAll);
 
 // On Events -------------------------------------------------------------------------------------
 
-/** Call this from selection.js when a piece is selected */
-function onPieceSelected(piece: Piece, legalMoves: LegalMoves): void {
-	pieceSelected = piece;
-	selectedPieceLegalMoves = legalMoves;
+UIBus.addEventListener('piece-selected', (event) => {
+	const detail = event.detail;
+	pieceSelected = detail.piece;
+	selectedPieceLegalMoves = detail.legalMoves;
+	// Generate the buffer model for the green legal move highlights.
 	regenSelectedPieceLegalMovesHighlightsModel();
-}
+});
 
-function onPieceUnselected(): void {
+UIBus.addEventListener('piece-unselected', () => {
 	pieceSelected = undefined;
 	selectedPieceLegalMoves = undefined;
 
@@ -75,7 +77,7 @@ function onPieceUnselected(): void {
 	model_SelectedPiece = undefined;
 	model_NonCapture = undefined;
 	model_Capture = undefined;
-}
+});
 
 // Rendering --------------------------------------------------------------------------------------
 
@@ -169,9 +171,6 @@ function renderSelectedPieceLegalMoves(): void {
 // Exports -----------------------------------------------------------------------------------
 
 export default {
-	// On Events
-	onPieceSelected,
-	onPieceUnselected,
 	// Rendering
 	render,
 };

@@ -115,7 +115,20 @@ let createInviteButtonIsLocked = false;
  */
 let acceptInviteButtonIsLocked = false;
 
-// Functions
+// Events --------------------------------------------------------------------------------
+
+document.addEventListener('socket-closed', () => {
+	/**
+	 * This unlocks the create invite and *virtual* accept invite buttons,
+	 * because we can't hope to receive their reply anytime soon, which
+	 * replyto number is what we look for to unlock these buttons,
+	 * we would never be able to click them again otherwise.
+	 */
+	unlockCreateInviteButton();
+	unlockAcceptInviteButton();
+});
+
+// Functions --------------------------------------------------------------------------------
 
 /**
  * Whether or not the play page is currently open, and the invites are visible.
@@ -562,18 +575,6 @@ function isAcceptInviteButtonLocked() {
 	return acceptInviteButtonIsLocked;
 }
 
-/**
- * Call when the socket closes, whether or not it was unexpected.
- * This unlocks the create invite and *virtual* accept invite buttons,
- * because we can't hope to receive their reply anytime soon, which
- * replyto number is what we look for to unlock these buttons,
- * we would never be able to click them again otherwise.
- */
-function onSocketClose() {
-	unlockCreateInviteButton();
-	unlockAcceptInviteButton();
-}
-
 export default {
 	isOpen,
 	hideElement_joinPrivate,
@@ -592,5 +593,4 @@ export default {
 	lockAcceptInviteButton,
 	unlockAcceptInviteButton,
 	isAcceptInviteButtonLocked,
-	onSocketClose,
 };

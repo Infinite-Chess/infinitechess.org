@@ -19,6 +19,7 @@ import boarddrag from '../rendering/boarddrag.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { listener_document } from '../chess/game.js';
 import { Mouse } from '../input.js';
+import { UIBus } from '../chess/UIBus.js';
 // Import End
 
 ('use strict');
@@ -44,7 +45,13 @@ const element_practicemenu = document.getElementById('practicemenu');
 const element_offerDraw = document.getElementById('offerdraw');
 const element_perspective = document.getElementById('toggleperspective');
 
-// Functions
+// Events -----------------------------------------------------------------------------------
+
+UIBus.addEventListener('game-concluded', () => {
+	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
+});
+
+// Functions --------------------------------------------------------------------------------
 
 /**
  * Returns *true* if the game is currently paused.
@@ -127,10 +134,6 @@ function updateDrawOfferButton() {
 function onReceiveOpponentsMove() {
 	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
 	updateDrawOfferButton();
-}
-
-function onReceiveGameConclusion() {
-	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
 }
 
 /**
@@ -286,8 +289,6 @@ export default {
 	toggle,
 	updateDrawOfferButton,
 	onReceiveOpponentsMove,
-	onReceiveGameConclusion,
-	updateTextOfMainMenuButton,
 	callback_Resume,
 	callback_ToggleArrows,
 };

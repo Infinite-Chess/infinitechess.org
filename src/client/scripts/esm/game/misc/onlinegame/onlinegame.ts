@@ -20,6 +20,7 @@ import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
+import { UIBus } from '../../chess/UIBus.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 
@@ -71,6 +72,20 @@ let playerHasPressedAbortOrResignButton: boolean | undefined;
  * If we aren't subbed to a game, then it's automatically assumed we are out of sync.
  */
 let inSync: boolean | undefined;
+
+// Events ------------------------------------------------------------------------------------------------------
+
+UIBus.addEventListener('game-concluded', () => {
+	if (!inOnlineGame) return; // The game concluded wasn't an online game.
+
+	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
+	afk.onGameClose();
+	tabnameflash.onGameClose();
+	serverrestart.onGameClose();
+	deleteCustomVariantOptions();
+	drawoffers.onGameClose();
+	requestRemovalFromPlayersInActiveGames();
+});
 
 // Getters --------------------------------------------------------------------------------------------------------------
 
@@ -356,19 +371,6 @@ function onMainMenuButtonPress(): void {
 	websocket.unsubFromSub('game');
 }
 
-/** Called when an online game is concluded (termination shown on-screen) */
-function onGameConclude(): void {
-	if (!inOnlineGame) return; // The game concluded wasn't an online game.
-
-	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
-	afk.onGameClose();
-	tabnameflash.onGameClose();
-	serverrestart.onGameClose();
-	deleteCustomVariantOptions();
-	drawoffers.onGameClose();
-	requestRemovalFromPlayersInActiveGames();
-}
-
 function deleteCustomVariantOptions(): void {
 	// Delete any custom pasted position in a private game.
 	if (isPrivate) localstorage.deleteItem(String(id!));
@@ -452,7 +454,6 @@ export default {
 	update,
 	onAbortOrResignButtonPress,
 	onMainMenuButtonPress,
-	onGameConclude,
 	hasServerConcludedGame,
 	reportOpponentsMove,
 	onMovePlayed,

@@ -20,13 +20,19 @@ import icnconverter, {
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
-import specialrighthighlights from '../../rendering/highlights/specialrighthighlights.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
 // @ts-ignore
 import websocket from '../../websocket.js';
+import { UIBus } from '../../chess/UIBus.js';
+
+// Events ---------------------------------------------------------------------
+
+UIBus.addEventListener('user-move-played', () => {
+	sendMove();
+});
 
 // Functions -------------------------------------------------------------------
 
@@ -130,6 +136,9 @@ function handleOpponentsMove(
 	// Forward the move...
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+
+	UIBus.dispatch('physical-move');
+
 	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
 
 	// Edit the clocks
@@ -153,7 +162,6 @@ function handleOpponentsMove(
 	// We should probably have this last, since this will make another move AFTER handling our opponent's move here.
 	// And it'd be weird to process that move before this opponent's move is fully processed.
 	premoves.onYourMove(gamefile, mesh);
-	specialrighthighlights.onMove(); // Updates the model after the opponent's move.
 
 	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
 	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.

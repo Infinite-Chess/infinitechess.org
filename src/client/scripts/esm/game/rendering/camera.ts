@@ -186,7 +186,8 @@ function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 function init(): void {
 	initFOV();
 	initMatrixes();
-	document.addEventListener('fov-change', onFOVChange as EventListener); // Custom Event
+	document.addEventListener('fov-change', () => onFOVChange());
+	document.addEventListener('canvas_resize', () => onScreenResize());
 }
 
 // Inits the matrix uniforms: viewMatrix (camera) & projMatrix
@@ -368,5 +369,4 @@ export default {
 	getZFar,
 	getScaleWhenTilesInvisible,
 	getScaleWhenZoomedOut,
-	onScreenResize,
 };

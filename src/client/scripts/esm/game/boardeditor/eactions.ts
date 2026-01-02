@@ -95,7 +95,7 @@ function clearAll(): void {
 	egamerules.setGamerulesGUIinfoUponPositionClearing();
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
-	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+	annotations.resetState(); // Clear all annotations
 	selectiontool.resetState(); // Clear current selection
 
 	statustext.showStatus(translations['copypaste'].clear_position);
@@ -427,7 +427,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	boardeditor.runEdit(thisGamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
-	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
+	annotations.resetState(); // Clear all annotations
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }
