@@ -58,6 +58,7 @@ import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
+import { GameBus } from '../GameBus.js';
 
 // Variables -------------------------------------------------------------------------------
 
@@ -103,8 +104,6 @@ function init(): void {
 }
 
 function onScreenResize(): void {
-	camera.onScreenResize();
-
 	pipeline.resize(gl.canvas.width, gl.canvas.height);
 
 	const detail = { width: gl.canvas.width, height: gl.canvas.height };
@@ -296,6 +295,7 @@ function renderScene(): void {
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		selectedpiecehighlightline.render();
 		highlights.render(gamefile.boardsim);
+		GameBus.dispatch('render-below-pieces');
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
@@ -313,6 +313,7 @@ function renderScene(): void {
 		arrows.render();
 		boardeditor.render();
 		annotations.render_abovePieces();
+		GameBus.dispatch('render-above-pieces');
 		perspective.renderCrosshair();
 	});
 }

@@ -446,8 +446,6 @@ function onclose(event: CloseEvent): void {
 	cancelAllEchoTimers(); // If the connection closed, we shouldn't expect any echo's for previous sent messages.
 	resetOnreplyFuncs(); // Immediately invoke all functions we wanted to execute upon hearing replies.
 
-	guiplay.onSocketClose();
-
 	const trimmedReason = event.reason.trim();
 	const notByChoice = wsutil.wasSocketClosureNotByTheirChoice(event.code, trimmedReason);
 	// Dispatch an event to let other code know that that a websocket closed

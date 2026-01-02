@@ -14,6 +14,7 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
+import { GameBus } from '../../game/GameBus.js';
 
 // Variables ---------------------------------------------------------------------------
 
@@ -22,6 +23,12 @@ import svgtoimageconverter from '../../util/svgtoimageconverter.js';
  * required by the current game. Keys are the numeric piece types.
  */
 let cachedImages: TypeGroup<HTMLImageElement> = {};
+
+// Events ---------------------------------------------------------------------------
+
+GameBus.addEventListener('game-unloaded', () => {
+	deleteImageCache();
+});
 
 // Functions ---------------------------------------------------------------------------
 

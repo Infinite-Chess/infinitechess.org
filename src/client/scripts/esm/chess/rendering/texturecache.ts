@@ -88,5 +88,4 @@ function getTexture(type: number): WebGLTexture {
 export default {
 	initTexturesForGame, // Add the init function to exports
 	getTexture,
-	// deleteTextureCache,
 };

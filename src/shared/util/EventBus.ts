@@ -23,7 +23,11 @@ export class EventBus<T extends Record<string, any>> {
 		this.target.removeEventListener(type, listener as any, options);
 	}
 
-	dispatch<K extends keyof T & string>(type: K, detail: T[K]): boolean {
+	dispatch<K extends keyof T & string>(
+		type: K,
+		...args: undefined extends T[K] ? [detail?: T[K]] : [detail: T[K]]
+	): boolean {
+		const [detail] = args;
 		const event = new CustomEvent(type, { detail, cancelable: true });
 		return this.target.dispatchEvent(event);
 	}

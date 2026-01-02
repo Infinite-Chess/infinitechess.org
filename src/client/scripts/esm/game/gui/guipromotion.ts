@@ -11,6 +11,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
+import { GameBus } from '../GameBus.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -26,6 +27,15 @@ const PromotionGUI: {
 };
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
+
+// Events -----------------------------------------------------------------------
+
+GameBus.addEventListener('piece-unselected', () => {
+	close();
+});
+GameBus.addEventListener('game-unloaded', () => {
+	resetUI();
+});
 
 // Functions --------------------------------------------------------------------
 
@@ -46,7 +56,7 @@ function open(color: Player): void {
 
 /** Closes the promotion UI */
 function close(): void {
-	// console.error("Closing promotion UI");
+	// console.error('Closing promotion UI');
 	selectionOpen = false;
 	for (const element of Object.values(PromotionGUI.players)) {
 		element.classList.add('hidden');
@@ -85,9 +95,7 @@ async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined): Pr
 	}
 }
 
-/**
- * Resets the promotion UI by clearing all promotion options.
- */
+/** Resets the promotion UI by clearing all promotion options. */
 function resetUI(): void {
 	for (const playerPromo of Object.values(PromotionGUI.players)) {
 		while (playerPromo.firstChild) {

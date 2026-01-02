@@ -17,8 +17,9 @@ import gameloader from '../../../chess/gameloader.js';
 import drawrays from './drawrays.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
 import keybinds from '../../../misc/keybinds.js';
-import { Mouse } from '../../../input.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import { Mouse } from '../../../input.js';
+import { GameBus } from '../../../GameBus.js';
 
 // Type Definitions ------------------------------------------------------------
 
@@ -58,6 +59,20 @@ interface Arrow {
 const annotes_plies: Annotes[] = [];
 /** The main list of annotations, when lingering annotations is ON. */
 let annotes_linger: Annotes = getEmptyAnnotes();
+
+// Events ---------------------------------------------------------------------
+
+GameBus.addEventListener('piece-selected', () => {
+	// Erase all the annotations of the current ply, if lingering annotations is OFF.
+	if (preferences.getLingeringAnnotationsMode()) return; // Don't clear annotations on piece selection in this mode
+	// Clear the annotations of the current ply
+	const annotes = getRelevantAnnotes();
+	clearAnnotes(annotes);
+});
+GameBus.addEventListener('game-unloaded', () => {
+	// Clear all user-drawn highlights
+	resetState();
+});
 
 // Getters ---------------------------------------------------------------------
 
@@ -165,18 +180,7 @@ function Collapse(): void {
 	} else clearAnnotes(annotes);
 }
 
-/**
- * Erases all the annotations of the current ply,
- * if lingering annotations is OFF.
- */
-function onPieceSelection(): void {
-	if (preferences.getLingeringAnnotationsMode()) return; // Don't clear annotations on piece selection in this mode
-	// Clear the annotations of the current ply
-	const annotes = getRelevantAnnotes();
-	clearAnnotes(annotes);
-}
-
-function onGameUnload(): void {
+function resetState(): void {
 	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
 	drawarrows.stopDrawing();
@@ -208,8 +212,7 @@ export default {
 
 	update,
 	Collapse,
-	onPieceSelection,
-	onGameUnload,
+	resetState,
 	render_belowPieces,
 	render_abovePieces,
 };

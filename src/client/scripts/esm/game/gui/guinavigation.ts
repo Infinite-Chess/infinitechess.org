@@ -25,8 +25,9 @@ import premoves from '../chess/premoves.js';
 import Transition from '../rendering/transitions/Transition.js';
 import space from '../misc/space.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
+import { GameBus } from '../GameBus.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -95,6 +96,19 @@ let navigationOpen = true;
  * If so, all left click actions are treated as right clicks.
  */
 let annotationsEnabled: boolean = false;
+
+// Events ----------------------------------------------------------------------------------
+
+GameBus.addEventListener('game-unloaded', () => {
+	// Reset Annotations mode button state, without closing the Navigation Bar.
+	annotationsEnabled = false;
+	listener_overlay.setTreatLeftasRight(false);
+	element_Annotations.classList.remove('enabled');
+
+	hideCollapse();
+});
+
+// =================================================================================
 
 // Functions
 
@@ -872,19 +886,6 @@ function callback_RedoEdit(): void {
 	boardeditor.redo();
 }
 
-/**
- * Resets state without closing the Navigation Bar.
- * Trigger on LOGICAL gameslot game unload, not gameloader UI unload.
- */
-function onGameUnload(): void {
-	// Disable annotations mode
-	annotationsEnabled = false;
-	listener_overlay.setTreatLeftasRight(false);
-	element_Annotations.classList.remove('enabled');
-
-	hideCollapse();
-}
-
 export default {
 	isOpen,
 	open,
@@ -902,5 +903,4 @@ export default {
 	isAnnotationsButtonEnabled,
 	areCoordsAllowedToBeEdited,
 	getHeightOfNavBar,
-	onGameUnload,
 };

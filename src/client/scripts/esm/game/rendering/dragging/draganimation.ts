@@ -32,6 +32,7 @@ import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import camera from '../camera.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import { GameBus } from '../../GameBus.js';
 
 // Variables --------------------------------------------------------------------------------------
 
@@ -199,6 +200,10 @@ function dropPiece(): void {
 	// If we don't claim it here, annotations will read it to Collapse annotations.
 	if (mouse.isMouseClicked(Mouse.LEFT)) mouse.claimMouseClick(Mouse.LEFT);
 }
+
+GameBus.addEventListener('piece-unselected', () => {
+	cancelDragging();
+});
 
 /** Puts the dragged piece back. Doesn't make a move. */
 function cancelDragging(): void {
@@ -414,7 +419,6 @@ export default {
 	getPointerIdDraggingPiece,
 	hasPointerReleased,
 	dropPiece,
-	cancelDragging,
 	renderTransparentSquare,
 	renderPiece,
 };

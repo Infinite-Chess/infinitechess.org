@@ -20,6 +20,7 @@ import piecemodels from '../piecemodels.js';
 import squarerendering from './squarerendering.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import { GameBus } from '../../GameBus.js';
 
 // Variables -------------------------------------------------------------------------------------
 
@@ -31,6 +32,19 @@ const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
 let model: RenderableInstanced | undefined;
+
+// Events ----------------------------------------------------------------------------------------
+
+GameBus.addEventListener('game-loaded', () => {
+	regenModel();
+});
+GameBus.addEventListener('game-unloaded', () => {
+	// Erase the model so it doesn't carry over to next loaded game
+	model = undefined;
+});
+GameBus.addEventListener('physical-move', () => {
+	regenModel();
+});
 
 // Functions -------------------------------------------------------------------------------------
 
@@ -117,11 +131,6 @@ function onMove(): void {
 	regenModel();
 }
 
-/** Erase the model so it doesn't carry over to next loaded game */
-function onGameClose(): void {
-	model = undefined;
-}
-
 // Exports -----------------------------------------------------------------------
 
 export default {
@@ -129,7 +138,5 @@ export default {
 	disable,
 	toggle,
 	render,
-	regenModel,
 	onMove,
-	onGameClose,
 };

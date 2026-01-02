@@ -28,6 +28,7 @@ import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -148,6 +149,13 @@ const animations: Animation[] = [];
 
 /** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
 let DEBUG = false;
+
+// Events ----------------------------------------------------------------------------------------
+
+GameBus.addEventListener('game-unloaded', () => {
+	// Clear all animations from the last game
+	clearAnimations();
+});
 
 // Adding / Clearing Animations -----------------------------------------------------------------------
 

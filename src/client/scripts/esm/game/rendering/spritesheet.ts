@@ -12,6 +12,7 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions ---------------------------------------------------------------------
 
@@ -48,6 +49,12 @@ let spritesheetData:
 			texLocs: { [type: number]: DoubleCoords };
 	  }
 	| undefined;
+
+// Events ---------------------------------------------------------------------------
+
+GameBus.addEventListener('game-unloaded', () => {
+	deleteSpritesheet();
+});
 
 // Functions ---------------------------------------------------------------------------
 
@@ -165,7 +172,6 @@ export default {
 	getSpritesheet,
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,
-	deleteSpritesheet,
 	// Texture Data
 	getTexDataOfType,
 	getTexDataGeneric,

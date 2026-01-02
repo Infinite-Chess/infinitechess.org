@@ -12,34 +12,27 @@ import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icncon
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bd from '@naviary/bigdecimal';
-
-import enginegame from '../misc/enginegame.js';
 import guinavigation from '../gui/guinavigation.js';
 import guipromotion from '../gui/guipromotion.js';
 import spritesheet from '../rendering/spritesheet.js';
 import movesequence from './movesequence.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import miniimage from '../rendering/miniimage.js';
-import animation from '../rendering/animation.js';
 import arrows from '../rendering/arrows/arrows.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import selection from './selection.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import boardpos from '../rendering/boardpos.js';
-import annotations from '../rendering/highlights/annotations/annotations.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import guiclock from '../gui/guiclock.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import premoves from './premoves.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import copygame from './copygame.js';
 import pastegame from './pastegame.js';
@@ -50,12 +43,10 @@ import area from '../rendering/area.js';
 import gamesound from '../misc/gamesound.js';
 import meshes from '../rendering/meshes.js';
 import starfield from '../rendering/starfield.js';
-import screenshake from '../rendering/screenshake.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from './graphicalchanges.js';
 import { gl } from '../rendering/webgl.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
+import { GameBus } from '../GameBus.js';
 
 // Type Definitions ----------------------------------------------------------
 
@@ -170,13 +161,13 @@ function loadLogical(loadOptions: LoadOptions): void {
 
 	initCopyPastGameListeners();
 
-	specialrighthighlights.regenModel();
-
 	// If custom preset rays are specified, initiate them in drawrays.ts
 	if (loadOptions.presetAnnotes?.squares)
 		drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
+
+	GameBus.dispatch('game-loaded');
 }
 
 /** Loads all of the graphical components of a game */
@@ -229,37 +220,13 @@ function unloadGame(): void {
 	loadedGamefile = undefined;
 	mesh = undefined;
 
-	imagecache.deleteImageCache();
-	// texturecache.deleteTextureCache(gl);
-	selection.unselectPiece();
-	Transition.eraseTelHist();
-	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
 	removeCopyPasteGameListeners();
-
-	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
-	guiclock.resetClocks();
-
-	spritesheet.deleteSpritesheet();
-	guipromotion.resetUI();
-	// Re-enable them if the previous game turned them off due to too many pieces.
-	miniimage.enable();
 
 	// Stop the timer that (animates the latest-played move when rejoining a game after a short delay)
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
-	// Clear all animations from the last game
-	animation.clearAnimations();
-
-	selection.disableEditMode();
-	specialrighthighlights.onGameClose();
-	annotations.onGameUnload(); // Clear all user-drawn highlights
-	guinavigation.onGameUnload(); // Reset Annotations mode button state
-	premoves.onGameUnload(); // Clear all premoves
-
-	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)
-	starfield.terminate();
-	screenshake.clear();
+	GameBus.dispatch('game-unloaded');
 }
 
 /**
@@ -308,12 +275,9 @@ function concludeGame(): void {
 
 	clock.endGame(basegame);
 	guiclock.stopClocks(basegame);
-	board.darkenColor();
 	guigameinfo.gameEnd(basegame.gameConclusion);
-	onlinegame.onGameConclude();
-	enginegame.onGameConclude();
-	premoves.onGameConclude();
-	guipause.onReceiveGameConclusion();
+
+	GameBus.dispatch('game-concluded');
 
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(
 		basegame.gameConclusion,
@@ -333,9 +297,6 @@ function concludeGame(): void {
 
 	// Set the Result and Condition metadata
 	gamefileutility.setTerminationMetadata(basegame);
-
-	selection.unselectPiece();
-	guipause.updateTextOfMainMenuButton();
 }
 
 /** Undoes the conclusion of the game. */
