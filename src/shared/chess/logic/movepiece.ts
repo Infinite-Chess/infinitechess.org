@@ -233,7 +233,7 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit): voi
 	edit.changes.forEach((change) => {
 		if (change.action === 'move' || change.action === 'capture' || change.action === 'delete') {
 			// Delete any special rights off the (start coords / captured piece coords / deleted piece coords).
-			cascadeSpecialRightDeletions(boardsim, change.piece.coords, edit);
+			cascadeDeleteSpecialRights(boardsim, change.piece.coords, edit);
 		}
 	});
 }
@@ -244,114 +244,79 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit): voi
  * no longer have a valid castling partner because of it,
  * and deleting their special rights too.
  */
-function cascadeSpecialRightDeletions(boardsim: Board, coords: Coords, edit: Edit): void {
+function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit): void {
 	const coordsKey = coordutil.getKeyFromCoords(coords);
 	const hasSpecialRight = boardsim.state.global.specialRights.has(coordsKey);
 	if (!hasSpecialRight) return; // No special right existed on square in first place.
 
-	// FIRST, remove the special rights of the main square the piece moved from/to.
+	// 1. Delete the rights of the specific piece that moved/died
 	state.createSpecialRightsState(edit, coordsKey, hasSpecialRight, false);
 
-	// What type of piece is this?
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, coords)!;
 	const [rawType, player] = typeutil.splitType(piece.type);
 
-	if (rawType === rawTypes.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others castling abilities.
+	if (rawType === rawTypes.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others.
 
-	const castlingInitiator: boolean = typeutil.jumpingRoyals.includes(rawType);
+	const isTrigger: boolean = typeutil.jumpingRoyals.includes(rawType); // Royals are the castling triggers
 
 	const key = organizedpieces.getKeyFromLine([1n, 0n], coords);
 	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
 
-	// Iterate through all pieces on this rank
-	// If they can't castle with any other piece, delete their special right too.
-	for (const thisIdx of row) {
-		const thisPiece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, thisIdx);
-		const [thisRawType, thisPlayer] = typeutil.splitType(thisPiece.type);
+	// 2. Iterate through all pieces on this rank.
+	// If they can no longer castle with any valid partner, delete their special right too.
+	for (const idx of row) {
+		const candidate = boardutil.getDefinedPieceFromIdx(boardsim.pieces, idx);
+		const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
 
-		// Make sure the player color matches (we can't affect opponent's castling rights)
-		if (thisPlayer !== player) continue;
+		// Basic Validity Checks
+		if (candPlayer !== player) continue; // Affects friends only
+		if (candRawType === rawTypes.PAWN) continue; // Pawns don't have castling rights
 
-		// Does this piece have special rights to even consider deleting?
-		const pieceCoordsKey = coordutil.getKeyFromCoords(thisPiece.coords);
-		if (!boardsim.state.global.specialRights.has(pieceCoordsKey)) continue; // No special right on this piece to consider deleting.
+		const candCoordsKey = coordutil.getKeyFromCoords(candidate.coords);
+		if (!boardsim.state.global.specialRights.has(candCoordsKey)) continue; // Already has no rights
 
-		if (thisRawType === rawTypes.PAWN) continue; // Pawns cannot castle.
+		const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
 
-		// Is this piece a king or rook?
-		const thisIsInitiator = typeutil.jumpingRoyals.includes(thisRawType);
+		// Optimization: If the piece being checked is the same "Role" as the piece that triggered this event,
+		// it is unaffected. (e.g. Left Rook moving doesn't stop Right Rook from *potential* castling).
+		if (candidateIsTrigger === isTrigger) continue;
 
-		if (thisIsInitiator === castlingInitiator) continue; // Both are same type, can't castle with each other. One losing its castling ability doesn't affect the other.
+		// 3. Search: Does this candidate have ANY valid partner remaining?
+		const hasValidPartner = row.some((partnerIdx) => {
+			const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
+			const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
 
-		if (thisIsInitiator) {
-			// This piece is a king or royal centaur.
-			// Check if there's any rook it can castle with that isn't the square whos special right is being deleted.
-			if (
-				row.some((otherIdx) => {
-					const otherPiece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, otherIdx);
-					const [otherRawType, otherPlayer] = typeutil.splitType(otherPiece.type);
+			// Partner Validation
+			if (partnerPlayer !== player) return false; // Affects friends only
+			if (partnerRawType === rawTypes.PAWN) return false; // Pawns don't have castling rights
 
-					// Make sure player color matches
-					if (otherPlayer !== player) return false;
+			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
+			if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
 
-					const otherPieceCoordsKey = coordutil.getKeyFromCoords(otherPiece.coords);
-					if (!boardsim.state.global.specialRights.has(otherPieceCoordsKey)) return false; // This piece can't castle with it
+			const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
 
-					if (otherRawType === rawTypes.PAWN) return false; // Pawns cannot castle.
+			// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
+			if (partnerIsTrigger === candidateIsTrigger) return false;
 
-					if (typeutil.jumpingRoyals.includes(otherRawType)) return false; // Not a participator piece
+			// The partner cannot be the piece that just moved/died
+			if (coordutil.areCoordsEqual(partner.coords, coords)) return false;
 
-					// Make sure it's not the same piece as who's losing their special rights
-					if (coordutil.areCoordsEqual(otherPiece.coords, coords)) return false;
+			// Distance Check: Must be at least 3 spaces away
+			const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
+			if (dist < 3n) return false;
 
-					// Is it atleast three spaces away?
-					const dist = bimath.abs(thisPiece.coords[0] - otherPiece.coords[0]);
-					if (dist < 3n) return false;
+			return true; // Found a valid partner!
+		});
 
-					return true; // Found a piece it can castle with!
-				})
-			) {
-				continue; // Found a piece it can castle with, skip deleting this piece's special right.
-			}
-		} else {
-			// This is a participator (rook)
-			// Check if there's any king it can castle with that isn't the square whos special right is being deleted.
-			if (
-				row.some((otherIdx) => {
-					const otherPiece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, otherIdx);
-					const [otherRawType, otherPlayer] = typeutil.splitType(otherPiece.type);
-
-					// Make sure player color matches
-					if (otherPlayer !== player) return false;
-
-					const otherPieceCoordsKey = coordutil.getKeyFromCoords(otherPiece.coords);
-					if (!boardsim.state.global.specialRights.has(otherPieceCoordsKey)) return false; // This piece can't castle with it
-
-					if (otherRawType === rawTypes.PAWN) return false; // Pawns cannot castle.
-
-					if (!typeutil.jumpingRoyals.includes(otherRawType)) return false; // Not an initiator piece
-
-					// Make sure it's not the same piece as who's losing their special rights
-					if (coordutil.areCoordsEqual(otherPiece.coords, coords)) return false;
-
-					// Is it atleast three spaces away?
-					const dist = bimath.abs(thisPiece.coords[0] - otherPiece.coords[0]);
-					if (dist < 3n) return false;
-
-					return true; // Found a piece it can castle with!
-				})
-			) {
-				continue; // Found a piece it can castle with, skip deleting this piece's special right.
-			}
+		// If no partners were found, this piece is now impotent. Revoke its rights.
+		if (!hasValidPartner) {
+			state.createSpecialRightsState(
+				edit,
+				candCoordsKey,
+				boardsim.state.global.specialRights.has(candCoordsKey),
+				false,
+			);
 		}
-
-		// No pieces found that this piece can castle with, delete its special right too.
-		state.createSpecialRightsState(
-			edit,
-			pieceCoordsKey,
-			boardsim.state.global.specialRights.has(pieceCoordsKey),
-			false,
-		);
 	}
 }
 
