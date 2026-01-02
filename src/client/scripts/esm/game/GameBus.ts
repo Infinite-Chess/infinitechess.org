@@ -1,5 +1,6 @@
 // src/client/scripts/esm/game/chess/GameBus.ts
 
+// import type { FullGame } from '../../../../shared/chess/logic/gamefile';
 import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';
 import type { Piece } from '../../../../shared/chess/util/boardutil';
 
@@ -13,6 +14,15 @@ interface GameBusEvents {
 	'game-concluded': void;
 	'piece-selected': { piece: Piece; legalMoves: LegalMoves };
 	'piece-unselected': void;
+	// /** Dispatched immediately before legal move generation. */
+	// 'pre-move-gen': {
+	// 	gamefile: FullGame;
+	// 	piece: Piece;
+	// 	/** Mod scripts should define this if they would like to totally override normal legal move gen. */
+	// 	moveOverrides: LegalMoves | undefined;
+	// };
+	// /** Dispatched immediately after legal move gen. Mods may add additional legal moves. */
+	// 'post-move-gen': { gamefile: FullGame; piece: Piece; legalMoves: LegalMoves };
 	/** Dispatched when a physical (not premove or simulated) move is made by us, NOT our opponent. */
 	'user-move-played': void;
 	/** Dispatched when a physical move is made on the board by any player, even our own premoves. */
