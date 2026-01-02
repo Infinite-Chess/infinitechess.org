@@ -25,6 +25,8 @@ import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
 import wincondition from './wincondition.js';
 import movevalidation from './movevalidation.js';
+import organizedpieces from './organizedpieces.js';
+import bimath from '../../util/math/bimath.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
@@ -226,43 +228,96 @@ function calcMovesChanges(
  * Queues gamefile state changes to delete all
  * special rights that should have been revoked from the move.
  * This includes the startCoords and endCoords of all move actions.
- *
- * TODO: ITERATE THROUGH all pieces with their special rights, and delete
- * the ones that are now useless (i.e. rooks have no royal they could ever castle with).
- * This will upgrade the repetition algorithm to not delay declaring a draw
- * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit): void {
 	edit.changes.forEach((change) => {
-		if (change.action === 'move') {
-			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
-			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+		if (change.action === 'move' || change.action === 'capture' || change.action === 'delete') {
+			// Delete any special rights off the (start coords / captured piece coords / deleted piece coords).
+			cascadeDeleteSpecialRights(boardsim, change.piece.coords, edit);
+		}
+	});
+}
+
+/**
+ * Helper for, when one square's special rights is deleted,
+ * scanning the entire row for all kings and rooks that can
+ * no longer have a valid castling partner because of it,
+ * and deleting their special rights too.
+ */
+function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit): void {
+	const coordsKey = coordutil.getKeyFromCoords(coords);
+	const hasSpecialRight = boardsim.state.global.specialRights.has(coordsKey);
+	if (!hasSpecialRight) return; // No special right existed on square in first place.
+
+	// 1. Delete the rights of the specific piece that moved/died
+	state.createSpecialRightsState(edit, coordsKey, hasSpecialRight, false);
+
+	const piece = boardutil.getPieceFromCoords(boardsim.pieces, coords)!;
+	const [rawType, player] = typeutil.splitType(piece.type);
+
+	if (rawType === rawTypes.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others.
+
+	const isTrigger: boolean = typeutil.jumpingRoyals.includes(rawType); // Royals are the castling triggers
+
+	const key = organizedpieces.getKeyFromLine([1n, 0n], coords);
+	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
+
+	// 2. Iterate through all pieces on this rank.
+	// If they can no longer castle with any valid partner, delete their special right too.
+	for (const idx of row) {
+		const candidate = boardutil.getDefinedPieceFromIdx(boardsim.pieces, idx);
+		const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
+
+		// Basic Validity Checks
+		if (candPlayer !== player) continue; // Affects friends only
+		if (candRawType === rawTypes.PAWN) continue; // Pawns don't have castling rights
+
+		const candCoordsKey = coordutil.getKeyFromCoords(candidate.coords);
+		if (!boardsim.state.global.specialRights.has(candCoordsKey)) continue; // Already has no rights
+
+		const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
+
+		// Optimization: If the piece being checked is the same "Role" as the piece that triggered this event,
+		// it is unaffected. (e.g. Left Rook moving doesn't stop Right Rook from *potential* castling).
+		if (candidateIsTrigger === isTrigger) continue;
+
+		// 3. Search: Does this candidate have ANY valid partner remaining?
+		const hasValidPartner = row.some((partnerIdx) => {
+			const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
+			const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
+
+			// Partner Validation
+			if (partnerPlayer !== player) return false; // Affects friends only
+			if (partnerRawType === rawTypes.PAWN) return false; // Pawns don't have castling rights
+
+			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
+			if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
+
+			const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
+
+			// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
+			if (partnerIsTrigger === candidateIsTrigger) return false;
+
+			// The partner cannot be the piece that just moved/died
+			if (coordutil.areCoordsEqual(partner.coords, coords)) return false;
+
+			// Distance Check: Must be at least 3 spaces away
+			const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
+			if (dist < 3n) return false;
+
+			return true; // Found a valid partner!
+		});
+
+		// If no partners were found, this piece is now impotent. Revoke its rights.
+		if (!hasValidPartner) {
 			state.createSpecialRightsState(
 				edit,
-				startCoordsKey,
-				boardsim.state.global.specialRights.has(startCoordsKey),
-				false,
-			);
-		} else if (change.action === 'capture') {
-			// Future protection if the captured piece is ever not on the move's endCoords
-			const captureCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(
-				edit,
-				captureCoordsKey,
-				boardsim.state.global.specialRights.has(captureCoordsKey),
-				false,
-			);
-		} else if (change.action === 'delete') {
-			// Delete the special rights of the coords, if there is one.
-			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(
-				edit,
-				coordsKey,
-				boardsim.state.global.specialRights.has(coordsKey),
+				candCoordsKey,
+				boardsim.state.global.specialRights.has(candCoordsKey),
 				false,
 			);
 		}
-	});
+	}
 }
 
 /**

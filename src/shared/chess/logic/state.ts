@@ -177,19 +177,19 @@ function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassan
 	else move.state.global.push(newStateChange); // EnPassant is a global state
 }
 
-/** Creates a specialrights global StateChange, queueing it by adding it to the Move. */
+/**
+ * Creates a specialrights global StateChange, queueing it by adding it to the Move.
+ * IN NORMAL GAMES (outside of board editor), `current` and `future` SHOULD NEVER BE EQUAL,
+ * otherwise it breaks the threefold repetition algorithm!!
+ * We can't just exit early if they are equal, because the board editor needs to be able to create
+ * multiple state changes with equal current and future values for accurate selection tool reflections.
+ */
 function createSpecialRightsState(
 	move: Edit,
 	coordsKey: CoordsKey,
 	current: boolean,
 	future: boolean,
 ): void {
-	// IF THIS IS ENABLED, It creates a bug in the board editor selection reflection tool,
-	// where the specialrights fail to correctly reflect. This is because normally,
-	// changes arrays don't contain two specialrights state changes for the same square,
-	// but may in the editor for selection actions. But this line prevents that second
-	// state change from being queued.
-	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'specialrights', current, future, coordsKey };
 	move.state.global.push(newStateChange); // Special Rights is a global state
 }
