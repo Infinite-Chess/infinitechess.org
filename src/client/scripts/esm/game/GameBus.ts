@@ -6,6 +6,7 @@ import type { Piece } from '../../../../shared/chess/util/boardutil';
 import { EventBus } from '../../../../shared/util/EventBus';
 
 interface GameBusEvents {
+	// =========== Logical Events ============
 	'game-loaded': void;
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */
@@ -16,6 +17,9 @@ interface GameBusEvents {
 	'user-move-played': void;
 	/** Dispatched when a physical move is made on the board by any player, even our own premoves. */
 	'physical-move': void;
+	// =========== Graphical Events ===========
+	'render-below-pieces': void;
+	'render-above-pieces': void;
 }
 
 export const GameBus: EventBus<GameBusEvents> = new EventBus<GameBusEvents>();
