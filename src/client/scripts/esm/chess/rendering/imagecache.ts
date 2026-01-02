@@ -14,7 +14,7 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
-import { UIBus } from '../../game/chess/UIBus.js';
+import { GameBus } from '../../game/chess/GameBus.js';
 
 // Variables ---------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ let cachedImages: TypeGroup<HTMLImageElement> = {};
 
 // Events ---------------------------------------------------------------------------
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	deleteImageCache();
 });
 

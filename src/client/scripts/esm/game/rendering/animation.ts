@@ -28,7 +28,7 @@ import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -152,7 +152,7 @@ let DEBUG = false;
 
 // Events ----------------------------------------------------------------------------------------
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Clear all animations from the last game
 	clearAnimations();
 });

@@ -1,11 +1,11 @@
-// src/client/scripts/esm/game/chess/UIBus.ts
+// src/client/scripts/esm/game/chess/GameBus.ts
 
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
 
 import { EventBus } from '../../../../../shared/util/EventBus';
 
-interface UIBusEvents {
+interface GameBusEvents {
 	'game-loaded': void;
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */
@@ -18,4 +18,4 @@ interface UIBusEvents {
 	'physical-move': void;
 }
 
-export const UIBus: EventBus<UIBusEvents> = new EventBus<UIBusEvents>();
+export const GameBus: EventBus<GameBusEvents> = new EventBus<GameBusEvents>();

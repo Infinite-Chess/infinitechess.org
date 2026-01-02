@@ -24,7 +24,7 @@ import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Variables -----------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ document.addEventListener('theme-change', regenerateAll);
 
 // On Events -------------------------------------------------------------------------------------
 
-UIBus.addEventListener('piece-selected', (event) => {
+GameBus.addEventListener('piece-selected', (event) => {
 	const detail = event.detail;
 	pieceSelected = detail.piece;
 	selectedPieceLegalMoves = detail.legalMoves;
@@ -69,7 +69,7 @@ UIBus.addEventListener('piece-selected', (event) => {
 	regenSelectedPieceLegalMovesHighlightsModel();
 });
 
-UIBus.addEventListener('piece-unselected', () => {
+GameBus.addEventListener('piece-unselected', () => {
 	pieceSelected = undefined;
 	selectedPieceLegalMoves = undefined;
 

@@ -32,7 +32,7 @@ import meshes from '../meshes.js';
 import perspective from '../perspective.js';
 import camera from '../camera.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Variables --------------------------------------------------------------------------------------
 
@@ -201,7 +201,7 @@ function dropPiece(): void {
 	if (mouse.isMouseClicked(Mouse.LEFT)) mouse.claimMouseClick(Mouse.LEFT);
 }
 
-UIBus.addEventListener('piece-unselected', () => {
+GameBus.addEventListener('piece-unselected', () => {
 	cancelDragging();
 });
 

@@ -46,7 +46,7 @@ import starfield from '../rendering/starfield.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from './graphicalchanges.js';
 import { gl } from '../rendering/webgl.js';
-import { UIBus } from './UIBus.js';
+import { GameBus } from './GameBus.js';
 
 // Type Definitions ----------------------------------------------------------
 
@@ -167,7 +167,7 @@ function loadLogical(loadOptions: LoadOptions): void {
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
 
-	UIBus.dispatch('game-loaded');
+	GameBus.dispatch('game-loaded');
 }
 
 /** Loads all of the graphical components of a game */
@@ -226,7 +226,7 @@ function unloadGame(): void {
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
-	UIBus.dispatch('game-unloaded');
+	GameBus.dispatch('game-unloaded');
 }
 
 /**
@@ -277,7 +277,7 @@ function concludeGame(): void {
 	guiclock.stopClocks(basegame);
 	guigameinfo.gameEnd(basegame.gameConclusion);
 
-	UIBus.dispatch('game-concluded');
+	GameBus.dispatch('game-concluded');
 
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(
 		basegame.gameConclusion,

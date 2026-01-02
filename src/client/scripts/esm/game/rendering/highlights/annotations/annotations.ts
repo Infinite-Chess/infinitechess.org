@@ -19,7 +19,7 @@ import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
 import keybinds from '../../../misc/keybinds.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import { Mouse } from '../../../input.js';
-import { UIBus } from '../../../chess/UIBus.js';
+import { GameBus } from '../../../chess/GameBus.js';
 
 // Type Definitions ------------------------------------------------------------
 
@@ -62,14 +62,14 @@ let annotes_linger: Annotes = getEmptyAnnotes();
 
 // Events ---------------------------------------------------------------------
 
-UIBus.addEventListener('piece-selected', () => {
+GameBus.addEventListener('piece-selected', () => {
 	// Erase all the annotations of the current ply, if lingering annotations is OFF.
 	if (preferences.getLingeringAnnotationsMode()) return; // Don't clear annotations on piece selection in this mode
 	// Clear the annotations of the current ply
 	const annotes = getRelevantAnnotes();
 	clearAnnotes(annotes);
 });
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Clear all user-drawn highlights
 	resetState();
 });

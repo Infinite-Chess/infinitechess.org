@@ -3,7 +3,7 @@ import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import type { SoundObject } from '../../audio/AudioManager.js';
@@ -85,7 +85,7 @@ const countdown: {
 
 // Events ---------------------------------------------------------------------------
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
 	resetClocks();
 });

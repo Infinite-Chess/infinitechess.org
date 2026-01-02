@@ -29,7 +29,7 @@ import coordutil, {
 } from '../../../../../../shared/chess/util/coordutil.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Type Definitions ----------------------------------------------------------------------
 
@@ -193,7 +193,7 @@ let v_at_stage2_end: number;
 
 // Events ---------------------------------------------------------------------------
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	eraseTelHist();
 });
 

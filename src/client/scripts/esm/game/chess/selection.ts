@@ -41,7 +41,7 @@ import { animateMove } from './graphicalchanges.js';
 import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input.js';
-import { UIBus } from './UIBus.js';
+import { GameBus } from './GameBus.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -79,10 +79,10 @@ let editMode = false; // editMode, allows moving pieces anywhere else on the boa
 
 // Events ----------------------------------------------------------------------------------------
 
-UIBus.addEventListener('game-concluded', () => {
+GameBus.addEventListener('game-concluded', () => {
 	unselectPiece();
 });
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	disableEditMode();
 	unselectPiece();
 });
@@ -497,7 +497,7 @@ function unselectPiece(): void {
 	hoverSquareLegal = false;
 	frametracker.onVisualChange();
 
-	UIBus.dispatch('piece-unselected');
+	GameBus.dispatch('piece-unselected');
 }
 
 /** Initializes the selected piece, and calculates its legal moves. */
@@ -524,7 +524,7 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
 
 	// console.log('Selected Legal Moves:', legalMoves);
 
-	UIBus.dispatch('piece-selected', { piece: pieceSelected, legalMoves });
+	GameBus.dispatch('piece-selected', { piece: pieceSelected, legalMoves });
 }
 
 /**
@@ -560,7 +560,7 @@ function moveGamefilePiece(
 	const animateMain = !wasBeingDragged;
 	animateMove(changes, true, animateMain, isPremove);
 
-	if (!isPremove) UIBus.dispatch('user-move-played');
+	if (!isPremove) GameBus.dispatch('user-move-played');
 
 	// Do very last, so that isPremove doesn't get reset.
 	unselectPiece();

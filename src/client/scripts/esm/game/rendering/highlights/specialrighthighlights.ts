@@ -20,7 +20,7 @@ import piecemodels from '../piecemodels.js';
 import squarerendering from './squarerendering.js';
 import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Variables -------------------------------------------------------------------------------------
 
@@ -35,14 +35,14 @@ let model: RenderableInstanced | undefined;
 
 // Events ----------------------------------------------------------------------------------------
 
-UIBus.addEventListener('game-loaded', () => {
+GameBus.addEventListener('game-loaded', () => {
 	regenModel();
 });
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Erase the model so it doesn't carry over to next loaded game
 	model = undefined;
 });
-UIBus.addEventListener('physical-move', () => {
+GameBus.addEventListener('physical-move', () => {
 	regenModel();
 });
 

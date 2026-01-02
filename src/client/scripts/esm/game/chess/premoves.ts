@@ -29,7 +29,7 @@ import movepiece, {
 } from '../../../../../shared/chess/logic/movepiece.js';
 import { animateMove } from './graphicalchanges.js';
 import { Mouse } from '../input.js';
-import { UIBus } from './UIBus.js';
+import { GameBus } from './GameBus.js';
 
 // Type Definitions ---------------------------------------------
 
@@ -61,7 +61,7 @@ let applied: boolean = true;
 
 // Events ----------------------------------------------------------------------------------
 
-UIBus.addEventListener('game-concluded', () => {
+GameBus.addEventListener('game-concluded', () => {
 	// console.error("Game ended, clearing premoves");
 
 	// Erase pending premoves, leaving the `applied` state at what it was before
@@ -78,7 +78,7 @@ UIBus.addEventListener('game-concluded', () => {
 	// Restore the original applied state, as the rest of the code will have expected it not to change.
 	applied = originalApplied;
 });
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	clearPremoves();
 });
 
@@ -119,7 +119,7 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveD
 	premoves.push(premove);
 	// console.log(premoves);
 
-	UIBus.dispatch('physical-move');
+	GameBus.dispatch('physical-move');
 
 	return premove;
 }
@@ -266,7 +266,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 	// console.error("Setting applied to true.");
 	applied = true;
 
-	UIBus.dispatch('physical-move');
+	GameBus.dispatch('physical-move');
 }
 
 /**
@@ -304,7 +304,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 		const move = movesequence.makeMove(gamefile, mesh, moveDraft); // Make move
 
-		UIBus.dispatch('user-move-played');
+		GameBus.dispatch('user-move-played');
 
 		premoves.shift(); // Remove premove
 

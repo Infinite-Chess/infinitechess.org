@@ -40,7 +40,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 
 // Variables --------------------------------------------------------------
 
@@ -69,7 +69,7 @@ let disabled: boolean = false; // Disabled when there's too many pieces
 
 // Events ---------------------------------------------------------------------
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Re-enable them if the previous game turned them off due to too many pieces.
 	enable();
 });

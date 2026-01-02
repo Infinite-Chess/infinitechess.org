@@ -26,11 +26,11 @@ import movevalidation from '../../../../../../shared/chess/logic/movevalidation.
 import guipause from '../../gui/guipause.js';
 // @ts-ignore
 import websocket from '../../websocket.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Events ---------------------------------------------------------------------
 
-UIBus.addEventListener('user-move-played', () => {
+GameBus.addEventListener('user-move-played', () => {
 	sendMove();
 });
 
@@ -137,7 +137,7 @@ function handleOpponentsMove(
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 
-	UIBus.dispatch('physical-move');
+	GameBus.dispatch('physical-move');
 
 	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
 

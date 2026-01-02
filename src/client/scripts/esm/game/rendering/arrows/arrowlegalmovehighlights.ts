@@ -24,7 +24,7 @@ import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
 import meshes from '../meshes.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
 // Events ----------------------------------------------------------------------------------------------
 
-UIBus.addEventListener('physical-move', () => {
+GameBus.addEventListener('physical-move', () => {
 	// Whenever a move is made in the game, the color of the legal move highlights
 	// of the hovered arrows often changes.
 	// Erase the list so they can be regenerated next frame with the correct color.

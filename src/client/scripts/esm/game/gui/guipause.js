@@ -19,7 +19,7 @@ import boarddrag from '../rendering/boarddrag.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { listener_document } from '../chess/game.js';
 import { Mouse } from '../input.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 // Import End
 
 ('use strict');
@@ -47,7 +47,7 @@ const element_perspective = document.getElementById('toggleperspective');
 
 // Events -----------------------------------------------------------------------------------
 
-UIBus.addEventListener('game-concluded', () => {
+GameBus.addEventListener('game-concluded', () => {
 	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
 });
 

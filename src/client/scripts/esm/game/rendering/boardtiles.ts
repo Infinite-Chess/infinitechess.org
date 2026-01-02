@@ -31,7 +31,7 @@ import perspective from './perspective.js';
 import math from '../../../../../shared/util/math/math.js';
 import webgl, { gl } from './webgl.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -114,10 +114,10 @@ document.addEventListener('theme-change', (_event) => {
 	guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
 });
 
-UIBus.addEventListener('game-concluded', () => {
+GameBus.addEventListener('game-concluded', () => {
 	darkenColor();
 });
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Resets the board color (the color changes when checkmate happens)
 	updateTheme();
 });

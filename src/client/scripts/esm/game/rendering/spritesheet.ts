@@ -12,7 +12,7 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 
 // Type Definitions ---------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ let spritesheetData:
 
 // Events ---------------------------------------------------------------------------
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	deleteSpritesheet();
 });
 

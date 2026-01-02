@@ -20,7 +20,7 @@ import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
-import { UIBus } from '../../chess/UIBus.js';
+import { GameBus } from '../../chess/GameBus.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ let inSync: boolean | undefined;
 
 // Events ------------------------------------------------------------------------------------------------------
 
-UIBus.addEventListener('game-concluded', () => {
+GameBus.addEventListener('game-concluded', () => {
 	if (!inOnlineGame) return; // The game concluded wasn't an online game.
 
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!

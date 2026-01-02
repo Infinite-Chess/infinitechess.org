@@ -23,7 +23,7 @@ import guiclock from '../gui/guiclock.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import frametracker from '../rendering/frametracker.js';
 import enginegame from '../misc/enginegame.js';
-import { UIBus } from './UIBus.js';
+import { GameBus } from './GameBus.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
 
@@ -64,7 +64,7 @@ function makeMove(
 			gameslot.concludeGame();
 	}
 
-	UIBus.dispatch('physical-move');
+	GameBus.dispatch('physical-move');
 
 	return move;
 }

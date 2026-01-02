@@ -25,7 +25,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 
 /** A sigle star particle. */
 type Star = {
@@ -130,7 +130,7 @@ document.addEventListener('starfield-toggle', (e) => {
 	else terminate();
 });
 
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)
 	terminate();
 });

@@ -11,7 +11,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -30,10 +30,10 @@ let selectionOpen = false; // True when promotion GUI visible. Do not listen to 
 
 // Events -----------------------------------------------------------------------
 
-UIBus.addEventListener('piece-unselected', () => {
+GameBus.addEventListener('piece-unselected', () => {
 	close();
 });
-UIBus.addEventListener('game-unloaded', () => {
+GameBus.addEventListener('game-unloaded', () => {
 	resetUI();
 });
 

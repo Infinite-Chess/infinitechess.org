@@ -19,7 +19,7 @@ import snapping from '../rendering/highlights/snapping.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import frametracker from '../rendering/frametracker.js';
-import { UIBus } from '../chess/UIBus.js';
+import { GameBus } from '../chess/GameBus.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -79,10 +79,10 @@ const pendingDebugRequests: number[] = [];
 
 // Events -----------------------------------------------------------------------
 
-UIBus.addEventListener('user-move-played', () => {
+GameBus.addEventListener('user-move-played', () => {
 	onMovePlayed();
 });
-UIBus.addEventListener('game-concluded', () => {
+GameBus.addEventListener('game-concluded', () => {
 	if (!inEngineGame) return;
 	checkmatepractice.onEngineGameConclude();
 });
@@ -314,7 +314,7 @@ function makeEngineMove(compactMove: unknown): void {
 
 	const move = movesequence.makeMove(gamefile, mesh, moveValidationResults.draft);
 
-	UIBus.dispatch('physical-move');
+	GameBus.dispatch('physical-move');
 
 	if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
