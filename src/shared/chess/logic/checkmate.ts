@@ -76,21 +76,24 @@ function isHuygenOnAttackerKingRay(gamefile: FullGame, color: Player): boolean {
 	const attackers = boardsim.state.local.attackers;
 	if (!attackers || attackers.length === 0) return false;
 
-	const royalCoords = boardutil.getRoyalCoordsOfColor(boardsim.pieces, color);
-	if (royalCoords.length === 0) return false;
-	const kingCoords = royalCoords[0]!;
+	// Get the actual royals that are in check (not all royals)
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
+	if (royalsInCheck.length === 0) return false;
 
 	const huygenType = typeutil.buildType(rawTypes.HUYGEN, color);
 	const huygenRange = boardsim.pieces.typeRanges.get(huygenType);
 	if (!huygenRange) return false;
 
+	// Check each Huygen against each royal in check
 	for (let idx = huygenRange.start; idx < huygenRange.end; idx++) {
 		const huygen = boardutil.getPieceFromIdx(boardsim.pieces, idx);
 		if (!huygen) continue;
 
-		for (const attacker of attackers) {
-			if (isPointOnLine(huygen.coords, kingCoords, attacker.coords)) {
-				return true; // Huygen is on the attacker-king ray
+		for (const kingCoords of royalsInCheck) {
+			for (const attacker of attackers) {
+				if (isPointOnLine(huygen.coords, kingCoords, attacker.coords)) {
+					return true; // Huygen is on the attacker-king ray
+				}
 			}
 		}
 	}
