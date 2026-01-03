@@ -18,6 +18,7 @@ import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
+import type { MoveDraft } from './movepiece.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords, BDCoords } from '../util/coordutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
@@ -666,26 +667,26 @@ function doesSlidingMovesetContainSquare(
 }
 
 /**
- * Accepts the calculated legal moves, tests to see if there are any
- * @param moves
+ * Accepts the calculated legal moves, tests to see if there are any.
+ * @param moves - The legal moves object
+ * @returns true if at least 1 legal move exists, false if no legal moves exist
  */
 function hasAtleast1Move(moves: LegalMoves): boolean {
 	if (moves.individual.length > 0) return true;
+
 	for (const limits of Object.values(moves.sliding)) {
 		if (doesSlideHaveWidth(limits)) return true;
 	}
 
-	function doesSlideHaveWidth(slide: SlideLimits): boolean {
-		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in at least one direction
-		return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
-
-		// In the future: If the `brute` flag is present, and there isn't
-		// too large of a slide range (maybe 50 max),
-		// then we could test if each of them would result in check.
-		// ...
-	}
-
 	return false;
+}
+
+/**
+ * Checks if a slide has any width (can move at least 1 square).
+ */
+function doesSlideHaveWidth(slide: SlideLimits): boolean {
+	if (slide[0] === null || slide[1] === null) return true; // Infinite slide in at least one direction
+	return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
 }
 
 // Exports ----------------------------------------------------------------

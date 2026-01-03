@@ -352,8 +352,6 @@ function removeSlidingMovesThatOpenDiscovered(
 
 		if (Object.keys(moves.sliding).length === 0)
 			moves.sliding = {}; // No sliding moves left
-		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
-		else if (gamefile.boardsim.colinearsPresent) moves.brute = true;
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
@@ -401,31 +399,6 @@ function appendBlockingMoves(
 			...line1GeneralForm,
 			...line2GeneralForm,
 		); // The intersection point of the 2 lines.
-
-		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
-		if (
-			blockPoint === undefined &&
-			gamefile.boardsim.colinearsPresent &&
-			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)
-		) {
-			// The piece lies on the same line from the attacker to the royal!
-			// Flag this slide direction to brute force check each move for legality.
-			moves.brute = true;
-			// Delete all other sliding moves that aren't also colinear with this one.
-			for (const slideDir in moves.sliding) {
-				// 'dx,dy'
-				if (slideDir === lineKey) continue; // Same line, don't delete this one.
-				// Different line... but is it colinear? If so we also want to keep it.
-				const thisSlideDir = coordutil.getCoordsFromKey(slideDir as Vec2Key); // [dx,dy]
-				const thisLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(
-					coords,
-					thisSlideDir,
-				);
-				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm))
-					delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
-			}
-			break; // All other slides were deleted, no point in continuing to iterate.
-		}
 
 		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
 		if (!bdcoords.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
