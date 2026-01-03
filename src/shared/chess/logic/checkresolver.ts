@@ -350,8 +350,7 @@ function removeSlidingMovesThatOpenDiscovered(
 			}
 		}
 
-		if (Object.keys(moves.sliding).length === 0)
-			moves.sliding = {}; // No sliding moves left
+		if (Object.keys(moves.sliding).length === 0) moves.sliding = {}; // No sliding moves left
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back

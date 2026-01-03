@@ -141,7 +141,12 @@ function canHuygensSaveKing(gamefile: FullGame, color: Player): boolean | undefi
 				}
 
 				// Check if Huygen can block by moving to a square between king and attacker
-				const blockResult = canHuygenBlockCheck(pieces, huygen.coords, kingCoords, attackerCoords);
+				const blockResult = canHuygenBlockCheck(
+					pieces,
+					huygen.coords,
+					kingCoords,
+					attackerCoords,
+				);
 				if (blockResult === true) return true;
 				if (blockResult === undefined) return undefined;
 			}
@@ -158,7 +163,11 @@ function canHuygensSaveKing(gamefile: FullGame, color: Player): boolean | undefi
  * @param targetCoords - The target square
  * @returns true if Huygen can reach the target
  */
-function canHuygenReachSquare(pieces: OrganizedPieces, huygenCoords: Coords, targetCoords: Coords): boolean {
+function canHuygenReachSquare(
+	pieces: OrganizedPieces,
+	huygenCoords: Coords,
+	targetCoords: Coords,
+): boolean {
 	// Huygen moves like a rook but only to prime distances
 	// Check if target is on same rank or file
 	if (huygenCoords[0] !== targetCoords[0] && huygenCoords[1] !== targetCoords[1]) {
@@ -188,7 +197,12 @@ function isOnSameRay(point: Coords, lineStart: Coords, lineEnd: Coords): boolean
  * @param pieces - The organized pieces to check for blockers
  * @returns true if can block, false if cannot, undefined if can't determine
  */
-function canHuygenBlockCheck(pieces: OrganizedPieces, huygenCoords: Coords, kingCoords: Coords, attackerCoords: Coords): boolean | undefined {
+function canHuygenBlockCheck(
+	pieces: OrganizedPieces,
+	huygenCoords: Coords,
+	kingCoords: Coords,
+	attackerCoords: Coords,
+): boolean | undefined {
 	// The Huygen moves orthogonally (like a rook)
 	// We need to find if any of the Huygen's rays intersect with the king-attacker ray
 	// at a point that is:
@@ -203,7 +217,12 @@ function canHuygenBlockCheck(pieces: OrganizedPieces, huygenCoords: Coords, king
 	];
 
 	// Huygen's possible move directions (orthogonal)
-	const huygenDirections: Coords[] = [[1n, 0n], [-1n, 0n], [0n, 1n], [0n, -1n]];
+	const huygenDirections: Coords[] = [
+		[1n, 0n],
+		[-1n, 0n],
+		[0n, 1n],
+		[0n, -1n],
+	];
 
 	for (const dir of huygenDirections) {
 		// Find intersection of Huygen's ray with king-attacker line
@@ -217,11 +236,11 @@ function canHuygenBlockCheck(pieces: OrganizedPieces, huygenCoords: Coords, king
 		const dx = kingCoords[0] - huygenCoords[0];
 		const dy = kingCoords[1] - huygenCoords[1];
 
-		const det = dir[0] * (-kingToAttacker[1]) - dir[1] * (-kingToAttacker[0]);
+		const det = dir[0] * -kingToAttacker[1] - dir[1] * -kingToAttacker[0];
 		if (det === 0n) continue; // Parallel lines, no intersection (or same line - but we already checked that)
 
 		// t = (dx * (-kingToAttacker[1]) - dy * (-kingToAttacker[0])) / det
-		const tNumerator = dx * (-kingToAttacker[1]) - dy * (-kingToAttacker[0]);
+		const tNumerator = dx * -kingToAttacker[1] - dy * -kingToAttacker[0];
 		if (tNumerator % det !== 0n) continue; // Not an integer intersection
 		const t = tNumerator / det;
 
@@ -262,7 +281,11 @@ function canHuygenBlockCheck(pieces: OrganizedPieces, huygenCoords: Coords, king
  * Checks if a Huygen's path to a target is blocked by any piece at a prime distance.
  * Uses organized lines to efficiently check only pieces on the same line.
  */
-function isHuygenPathBlocked(pieces: OrganizedPieces, huygenCoords: Coords, targetCoords: Coords): boolean {
+function isHuygenPathBlocked(
+	pieces: OrganizedPieces,
+	huygenCoords: Coords,
+	targetCoords: Coords,
+): boolean {
 	// Huygen moves orthogonally, so step is [1,0] or [0,1]
 	const step: Coords = huygenCoords[0] === targetCoords[0] ? [0n, 1n] : [1n, 0n];
 	const lineKey: Vec2Key = `${step[0]},${step[1]}`;
@@ -293,9 +316,8 @@ function isHuygenPathBlocked(pieces: OrganizedPieces, huygenCoords: Coords, targ
 		if (piecePos <= minPos || piecePos >= maxPos) continue;
 
 		// Calculate distance from Huygen to this piece
-		const distanceFromHuygen = huygenPos < targetPos
-			? piecePos - huygenPos
-			: huygenPos - piecePos;
+		const distanceFromHuygen =
+			huygenPos < targetPos ? piecePos - huygenPos : huygenPos - piecePos;
 
 		// For Huygens, a piece only blocks if it's at a prime distance
 		if (primalityTest(distanceFromHuygen)) {
