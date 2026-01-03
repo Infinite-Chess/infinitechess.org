@@ -399,7 +399,6 @@ function appendBlockingMoves(
 			...line2GeneralForm,
 		); // The intersection point of the 2 lines.
 
-		
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
 		if (
 			blockPoint === undefined &&
