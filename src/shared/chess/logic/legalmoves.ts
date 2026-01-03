@@ -18,7 +18,6 @@ import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
-import type { MoveDraft } from './movepiece.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords, BDCoords } from '../util/coordutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
