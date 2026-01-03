@@ -674,6 +674,11 @@ function doesSlidingMovesetContainSquare(
 function hasAtleast1Move(moves: LegalMoves): boolean {
 	if (moves.individual.length > 0) return true;
 
+	// If brute flag is set, sliding moves need simulation to verify legality.
+	// Since we can't simulate here, we conservatively return false.
+	// The checkmate detection will handle this case separately.
+	if (moves.brute) return false;
+
 	for (const limits of Object.values(moves.sliding)) {
 		if (doesSlideHaveWidth(limits)) return true;
 	}
