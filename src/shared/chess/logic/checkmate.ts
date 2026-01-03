@@ -29,10 +29,14 @@ function detectCheckmateOrStalemate(gamefile: FullGame): string | undefined {
 	const { basegame, boardsim } = gamefile;
 	const color = basegame.whosTurn;
 
-	// If Huygens are present and in check, check if any Huygen is on the same ray as attacker-king.
-	// If so, we can't determine checkmate without complex simulation, so return undefined.
+	// If colinears are present and in check, we may not be able to determine checkmate reliably.
+	// Return undefined if:
+	// 1. The attacker is a Huygen (complex prime-distance blocking rules)
+	// 2. A friendly Huygen is on the same ray as attacker-king (could potentially block)
 	if (boardsim.colinearsPresent && gamefileutility.isCurrentViewedPositionInCheck(boardsim)) {
-		if (isHuygenOnAttackerKingRay(gamefile, color)) return undefined;
+		if (isAttackerHuygen(boardsim) || isHuygenOnAttackerKingRay(gamefile, color)) {
+			return undefined;
+		}
 	}
 
 	// Iterate through every piece, calculating its legal moves.
@@ -64,6 +68,23 @@ function detectCheckmateOrStalemate(gamefile: FullGame): string | undefined {
 		return `${colorThatWon} checkmate`;
 	}
 	return `${players.NEUTRAL} stalemate`;
+}
+
+/**
+ * Checks if any of the attackers giving check is a Huygen.
+ * If so, we can't reliably determine checkmate due to complex prime-distance blocking rules.
+ */
+function isAttackerHuygen(boardsim: FullGame['boardsim']): boolean {
+	const attackers = boardsim.state.local.attackers;
+	if (!attackers || attackers.length === 0) return false;
+
+	for (const attacker of attackers) {
+		const pieceOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, attacker.coords);
+		if (pieceOnSquare !== undefined && typeutil.getRawType(pieceOnSquare) === rawTypes.HUYGEN) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
