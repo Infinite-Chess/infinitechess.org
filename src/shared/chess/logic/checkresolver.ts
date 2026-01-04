@@ -165,10 +165,13 @@ function addressExistingChecks(
 		throw new Error('We are in check, but there is no specified attacker!');
 
 	// To know how to address the check, we have to know where the check is coming from.
-	// For now, add legal blocks for the first attacker, not the others. Since legal blocks
-	// are added as extra individual moves, they will be simulated afterward. And if
-	// the inCheck property comes back as false, then it will block ALL attackers!
-	const attacker = boardsim.state.local.attackers[0]!; // { coords, slidingCheck }
+	// Optimization: We only have to address checks for one attacker, not all.
+	// Because legal blocks are added as extra individual moves, they will be simulated afterward,
+	// and if the `check` property is false, then we know the move also blocks ALL attackers!
+	// PREFER addressing a non-colinear attacker, to avoid the `brute` flag being added as much as possible. This makes the checkmate algorithm cover more scenarios.
+	const attacker =
+		boardsim.state.local.attackers.find((a) => !a.slidingCheck || !a.colinear) ??
+		boardsim.state.local.attackers[0]!;
 
 	// Does this piece have a sliding moveset that will either...
 
@@ -408,7 +411,7 @@ function appendBlockingMoves(
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
 		if (
 			blockPoint === undefined &&
-			gamefile.boardsim.colinearsPresent &&
+			(attackerColinear || moves.colinear) &&
 			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)
 		) {
 			// The piece lies on the same line from the attacker to the royal!
@@ -424,8 +427,9 @@ function appendBlockingMoves(
 					coords,
 					thisSlideDir,
 				);
-				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm))
+				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) {
 					delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
+				}
 			}
 			break; // All other slides were deleted, no point in continuing to iterate.
 		}
