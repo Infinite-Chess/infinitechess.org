@@ -196,6 +196,24 @@ async function validateGames(): Promise<void> {
 		const worker = new Worker('scripts/esm/workers/icnvalidator.worker.js', { type: 'module' });
 		activeWorkers.push(worker);
 
+		// Handle Worker Loading Errors (e.g., 404, script syntax error)
+		worker.onerror = (error) => {
+			if (runId !== currentValidationId) return;
+
+			const msg = error.message || 'Failed to load worker script';
+			addLog(`✗ System Error: Worker failed to start - ${msg}`, 'error');
+
+			// Update UI to show critical failure
+			fileName.textContent = `❌ SYSTEM ERROR: Worker Script Failed`;
+			fileName.style.color = 'var(--danger-color)';
+
+			// Abort the entire run
+			terminateWorkers();
+			currentValidationId++; // Invalidate runId to stop loop/other callbacks
+
+			progressSection.style.display = 'none';
+		};
+
 		// Track progress specific to this worker to avoid double-counting at the end
 		let itemsProcessedInChunk = 0;
 
