@@ -3,9 +3,10 @@
  */
 
 import vectors from '../../util/math/vectors.js';
-import { rawTypes } from '../util/typeutil.js';
 import specialdetect from './specialdetect.js';
+import bimath from '../../util/math/bimath.js';
 import legalmoves from './legalmoves.js';
+import { rawTypes } from '../util/typeutil.js';
 import { primalityTest } from '../../util/isprime.js';
 
 // Type definitions...
@@ -17,15 +18,14 @@ import type { Piece } from '../util/boardutil.js';
 import type { FullGame } from './gamefile.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
-/**
- * A Movesets object containing the movesets for every piece type in a game
- */
+/** A Movesets object containing the movesets for every piece type in a game */
 type Movesets = RawTypeGroup<PieceMoveset>;
 
-/**
- * A moveset for an single piece type in a game
- */
-interface PieceMoveset {
+/** {@link Movesets} but without the auto-generated colinear properties. */
+type RawMovesets = RawTypeGroup<RawPieceMoveset>;
+
+/** {@link PieceMoveset} but without the auto-generated colinear property. */
+interface RawPieceMoveset {
 	/**
 	 * Jumping moves immediately surrounding the piece where it can move to.
 	 *
@@ -60,6 +60,12 @@ interface PieceMoveset {
 	 * If present, the function to call for calculating legal special moves.
 	 */
 	special?: SpecialFunction;
+}
+
+/** A moveset for an single piece type in a game */
+interface PieceMoveset extends RawPieceMoveset {
+	/** Whether this moveset involves colinear sliding moves. Auto-generated property. */
+	colinear: boolean;
 }
 
 /**
@@ -190,7 +196,7 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 		'1,-1': slideLimits,
 	};
 
-	return {
+	const rawMovesets: RawMovesets = {
 		// Finitely moving
 		[rawTypes.PAWN]: {
 			special: specialdetect.pawns,
@@ -289,6 +295,8 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 			special: specialdetect.roses,
 		},
 	};
+
+	return convertRawMovesetsToPieceMovesets(rawMovesets);
 }
 
 /**
@@ -306,11 +314,76 @@ function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec
 	return Array.from(slides, vectors.getVec2FromKey);
 }
 
+/** Converts raw movesets into final piece movesets by auto adding the colinear property. */
+function convertRawMovesetsToPieceMovesets(pieceMovesets: RawTypeGroup<RawPieceMoveset>): Movesets {
+	// Now, auto add in the colinear property to each piece moveset
+	const finalMovesets: Movesets = {};
+	for (const [rawtype, moveset] of Object.entries(pieceMovesets)) {
+		finalMovesets[Number(rawtype) as RawType] = {
+			...moveset,
+			colinear: isMovesetColinear(moveset),
+		};
+	}
+	return finalMovesets;
+}
+
+/** Tests whether the provided moveset involves colinear sliding moves. */
+function isMovesetColinear(moveset: RawPieceMoveset): boolean {
+	/**
+	 * Colinears are present if an ignore/blocking function override is present (which can simulate non-primitive vectors).
+	 * We cannot predict if the piece will not cause colinears.
+	 * A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
+	 */
+	if (moveset.blocking || moveset.ignore) return true; // This type has a custom ignore/blocking function being used (colinears may be present).
+
+	/**
+	 * Colinears are present if any vector is NOT a primitive vector.
+	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
+	 * For example, [2,0] can be made by combining [1,0] and [1,0].
+	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
+	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
+	 */
+	if (moveset.sliding) {
+		const slides: Vec2[] = (Object.keys(moveset.sliding) as Vec2Key[]).map((s) =>
+			vectors.getVec2FromKey(s),
+		);
+		if (slides.some((s) => isVectorColinear(s))) return true; // Colinear
+	}
+
+	return false;
+}
+
+/** Tests whether the provided slide vector is colinear (not a primitive vector). */
+function isVectorColinear(vector: Vec2): boolean {
+	return bimath.GCD(vector[0], vector[1]) !== 1n;
+}
+
+/**
+ * Tests if the provided movesets has colinear slide directions present.
+ * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
+ */
+function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): boolean {
+	return Object.values(pieceMovesets).some((movesetFunc) => {
+		const moveset: PieceMoveset = movesetFunc();
+		return moveset.colinear;
+	});
+}
+
 export default {
 	defaultBlockingFunction,
 	defaultIgnoreFunction,
 	getPieceDefaultMovesets,
 	getPossibleSlides,
+	convertRawMovesetsToPieceMovesets,
+	isVectorColinear,
+	areColinearsPresent,
 };
 
-export type { Movesets, PieceMoveset, BlockingFunction, IgnoreFunction, SpecialFunction };
+export type {
+	Movesets,
+	RawMovesets,
+	PieceMoveset,
+	BlockingFunction,
+	IgnoreFunction,
+	SpecialFunction,
+};

@@ -165,10 +165,13 @@ function addressExistingChecks(
 		throw new Error('We are in check, but there is no specified attacker!');
 
 	// To know how to address the check, we have to know where the check is coming from.
-	// For now, add legal blocks for the first attacker, not the others. Since legal blocks
-	// are added as extra individual moves, they will be simulated afterward. And if
-	// the inCheck property comes back as false, then it will block ALL attackers!
-	const attacker = boardsim.state.local.attackers[0]!; // { coords, slidingCheck }
+	// Optimization: We only have to address checks for one attacker, not all.
+	// Because legal blocks are added as extra individual moves, they will be simulated afterward,
+	// and if the `check` property is false, then we know the move also blocks ALL attackers!
+	// PREFER addressing a non-colinear attacker, to avoid the `brute` flag being added as much as possible. This makes the checkmate algorithm cover more scenarios.
+	const attacker =
+		boardsim.state.local.attackers.find((a) => !a.slidingCheck || !a.colinear) ??
+		boardsim.state.local.attackers[0]!;
 
 	// Does this piece have a sliding moveset that will either...
 
@@ -227,6 +230,7 @@ function addressExistingChecks(
 			legalMoves,
 			selectedPieceCoords,
 			color,
+			attacker.colinear,
 		);
 	// Has a chance to delete all sliding moves except one, adding the `brute` flag.
 	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
@@ -374,6 +378,7 @@ function removeSlidingMovesThatOpenDiscovered(
  * @param moves - The legal moves object of the piece selected, to see if it is able to block between squares 1 & 2
  * @param coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  * @param color - The color of friendlies
+ * @param attackerColinear - Whether the attacker piece giving check is a more complicated colinear mover (huygen).
  */
 function appendBlockingMoves(
 	gamefile: FullGame,
@@ -382,6 +387,7 @@ function appendBlockingMoves(
 	moves: LegalMoves,
 	coords: Coords,
 	color: Player,
+	attackerColinear: boolean,
 ): void {
 	// coords is of the selected piece
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. */
@@ -404,9 +410,11 @@ function appendBlockingMoves(
 
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
 		if (
-			blockPoint === undefined &&
-			gamefile.boardsim.colinearsPresent &&
-			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)
+			blockPoint === undefined && // Parallel
+			(attackerColinear || moves.colinear) && // Atleast one piece is colinear
+			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm) && // Coincident
+			// If this piece isn't colinear, then the only way it can have a chance to block check is if its between both pieces.
+			(moves.colinear || bounds.boxContainsSquare(box, coords))
 		) {
 			// The piece lies on the same line from the attacker to the royal!
 			// Flag this slide direction to brute force check each move for legality.
@@ -421,8 +429,9 @@ function appendBlockingMoves(
 					coords,
 					thisSlideDir,
 				);
-				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm))
+				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) {
 					delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
+				}
 			}
 			break; // All other slides were deleted, no point in continuing to iterate.
 		}

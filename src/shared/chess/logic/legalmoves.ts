@@ -49,6 +49,8 @@ interface LegalMoves {
 	brute?: boolean;
 	/** The ignore function of the piece, to skip over moves. */
 	ignoreFunc: IgnoreFunction;
+	/** Whether the generated moves are for a colinear mover (huygen). */
+	colinear: boolean;
 }
 
 /**
@@ -118,9 +120,9 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
  */
 function getPieceMoveset(boardsim: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
-	if (player === players.NEUTRAL) return {}; // Neutral pieces CANNOT MOVE!
+	if (player === players.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
 	const movesetFunc = boardsim.pieceMovesets[rawType];
-	if (!movesetFunc) return {}; // Safety net. Piece doesn't have a specified moveset. Return empty.
+	if (!movesetFunc) return { colinear: false }; // Safety net.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
 }
 
@@ -149,6 +151,7 @@ function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
 		individual: [],
 		sliding: {},
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(moveset),
+		colinear: moveset.colinear,
 	};
 }
 

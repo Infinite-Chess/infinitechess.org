@@ -26,6 +26,7 @@ import gamerules from '../variants/gamerules.js';
 import wincondition from './wincondition.js';
 import bounds from '../../util/math/bounds.js';
 import variant from '../variants/variant.js';
+import movesets from './movesets.js';
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -227,10 +228,7 @@ function initBoard(
 
 	const moves: Move[] = [];
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
-	const colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(
-		pieceMovesets,
-		pieces.slides,
-	);
+	const colinearsPresent = movesets.areColinearsPresent(pieceMovesets);
 
 	return {
 		pieces,
