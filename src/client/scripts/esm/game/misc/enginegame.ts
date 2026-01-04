@@ -286,6 +286,7 @@ function makeEngineMove(compactMove: unknown): void {
 		// Null can mean the engine didn't return a best move (perhaps it didn't
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
+		console.log(`Engine returned a null move. Resigning the game...`);
 		gamefile.basegame.gameConclusion = `${ourColor} resignation`;
 		gameslot.concludeGame();
 		return;
