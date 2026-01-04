@@ -331,9 +331,6 @@ function convertRawMovesetsToPieceMovesets(pieceMovesets: RawTypeGroup<RawPieceM
 function isMovesetColinear(moveset: RawPieceMoveset): boolean {
 	/**
 	 * Colinears are present if an ignore/blocking function override is present (which can simulate non-primitive vectors).
-	 *
-	 * This is because a custom ignore function can be used to simulate a non-primitive vector.
-	 * Or another vector for that matter.
 	 * We cannot predict if the piece will not cause colinears.
 	 * A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
 	 */
@@ -341,11 +338,9 @@ function isMovesetColinear(moveset: RawPieceMoveset): boolean {
 
 	/**
 	 * Colinears are present if any vector is NOT a primitive vector.
-	 *
 	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
 	 * For example, [2,0] can be made by combining [1,0] and [1,0].
 	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
-	 *
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 	if (moveset.sliding) {
@@ -360,7 +355,6 @@ function isMovesetColinear(moveset: RawPieceMoveset): boolean {
 
 /** Tests whether the provided slide vector is colinear (not a primitive vector). */
 function isVectorColinear(vector: Vec2): boolean {
-	// A vector is colinear if it is NOT a primitive vector.
 	return bimath.GCD(vector[0], vector[1]) !== 1n;
 }
 
