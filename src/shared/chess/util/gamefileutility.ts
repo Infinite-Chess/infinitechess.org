@@ -3,15 +3,12 @@
  */
 
 import type { Coords } from './coordutil.js';
-import type { Player, RawTypeGroup } from './typeutil.js';
-import type { PieceMoveset } from '../logic/movesets.js';
+import type { Player } from './typeutil.js';
 import type { Game, Board, FullGame } from '../logic/gamefile.js';
-import type { Vec2 } from '../../util/math/vectors.js';
 
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import bimath from '../../util/math/bimath.js';
 import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
@@ -103,53 +100,6 @@ function doGameOverChecks(gamefile: FullGame): void {
 		moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
 
-/**
- * Tests if the provided gamefile has colinear organized lines present in the game.
- * This can occur if there are sliders that can move in the same exact direction as others.
- * For example, [2,0] and [3,0]. We typically like to know this information because
- * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
- * by using royalcapture instead of checkmate.
- * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
- * @param slides - All possible slide directions in the gamefile.
- */
-function areColinearSlidesPresentInGame(
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
-	slides: Vec2[],
-): boolean {
-	// [[1,1], [1,0], ...]
-
-	/**
-	 * 1. Colinears are present if any vector is NOT a primitive vector.
-	 *
-	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
-	 * For example, [2,0] can be made by combining [1,0] and [1,0].
-	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
-	 *
-	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
-	 */
-
-	if (slides!.some((vector: Vec2) => bimath.GCD(vector[0], vector[1]) !== 1n)) return true; // Colinears are present
-
-	/**
-	 * 2. Colinears are present if there's at least one custom ignore function.
-	 *
-	 * This is because a custom ignore function can be used to simulate a non-primitive vector.
-	 * Or another vector for that matter.
-	 * We cannot predict if the piece will not cause colinears.
-	 */
-
-	if (
-		Object.values(pieceMovesets).some((movesetFunc) => {
-			const moveset: PieceMoveset = movesetFunc();
-			// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
-			return 'ignore' in moveset || 'blocking' in moveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
-		})
-	)
-		return true; // Colinears are present
-
-	return false; // Colinears are not present
-}
-
 /** Returns the number of players in the game (unique players in the turnOrder). */
 function getPlayerCount(basegame: Game): number {
 	return new Set(basegame.gameRules.turnOrder).size;
@@ -173,5 +123,4 @@ export default {
 	doGameOverChecks,
 	getPlayerCount,
 	getUniquePlayersInTurnOrder,
-	areColinearSlidesPresentInGame,
 };

@@ -115,6 +115,7 @@ type Attacker = {
 } & (
 	| {
 			slidingCheck: true;
+			colinear: boolean;
 	  }
 	| {
 			slidingCheck: false;

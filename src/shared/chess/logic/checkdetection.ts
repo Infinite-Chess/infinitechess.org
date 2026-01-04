@@ -315,7 +315,12 @@ function doesLineAttackSquare(
 
 		if (!attackers)
 			return true; // Attackers array isn't being tracked, just insta-return to save compute not finding other attackers!
-		else appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true });
+		else
+			appendAttackerToList(attackers, {
+				coords: thisPiece.coords,
+				slidingCheck: true,
+				colinear: thisPieceMoveset.colinear,
+			});
 		atleast1Attacker = true;
 	}
 

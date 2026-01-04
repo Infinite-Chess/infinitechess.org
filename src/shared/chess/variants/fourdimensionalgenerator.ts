@@ -5,7 +5,7 @@
  * Also generates their moveset, and specialVicinity, overrides.
  */
 
-import type { Movesets } from '../logic/movesets.js';
+import type { Movesets, RawMovesets } from '../logic/movesets.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 
 import coordutil from '../util/coordutil.js';
@@ -13,6 +13,7 @@ import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import { rawTypes as r, ext as e } from '../util/typeutil.js';
 import icnconverter from '../logic/icn/icnconverter.js';
 import bimath from '../../util/math/bimath.js';
+import movesets from '../logic/movesets.js';
 
 /** An object that contains all relevant quantities for the size of a single 4D chess board. */
 type Dimensions = {
@@ -197,7 +198,7 @@ function gen4DMoveset(
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	setMovementType(strong_kings_and_queens, strong_pawns);
 
-	const movesets: Movesets = {
+	const rawMovesets: RawMovesets = {
 		[r.QUEEN]: {
 			individual: [],
 			sliding: {},
@@ -249,7 +250,7 @@ function gen4DMoveset(
 
 					// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
 					if (mov.STRONG_KINGS_AND_QUEENS)
-						movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
+						rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 							null,
 							null,
 						];
@@ -259,12 +260,12 @@ function gen4DMoveset(
 						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV ===
 						2n
 					) {
-						movesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
+						rawMovesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 							null,
 							null,
 						];
 						if (!mov.STRONG_KINGS_AND_QUEENS)
-							movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
+							rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 								null,
 								null,
 							];
@@ -274,12 +275,12 @@ function gen4DMoveset(
 						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV ===
 						1n
 					) {
-						movesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
+						rawMovesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 							null,
 							null,
 						];
 						if (!mov.STRONG_KINGS_AND_QUEENS)
-							movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
+							rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 								null,
 								null,
 							];
@@ -289,7 +290,7 @@ function gen4DMoveset(
 		}
 	}
 
-	return movesets;
+	return movesets.convertRawMovesetsToPieceMovesets(rawMovesets);
 }
 
 // Special Vicinity Overrides -----------------------------------------------------------------------------------------

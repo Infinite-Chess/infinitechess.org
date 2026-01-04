@@ -227,6 +227,7 @@ function addressExistingChecks(
 			legalMoves,
 			selectedPieceCoords,
 			color,
+			attacker.colinear,
 		);
 	// Has a chance to delete all sliding moves except one, adding the `brute` flag.
 	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
@@ -374,6 +375,7 @@ function removeSlidingMovesThatOpenDiscovered(
  * @param moves - The legal moves object of the piece selected, to see if it is able to block between squares 1 & 2
  * @param coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  * @param color - The color of friendlies
+ * @param attackerColinear - Whether the attacker piece giving check is a more complicated colinear mover (huygen).
  */
 function appendBlockingMoves(
 	gamefile: FullGame,
@@ -382,6 +384,7 @@ function appendBlockingMoves(
 	moves: LegalMoves,
 	coords: Coords,
 	color: Player,
+	attackerColinear: boolean,
 ): void {
 	// coords is of the selected piece
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. */
