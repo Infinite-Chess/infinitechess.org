@@ -410,9 +410,11 @@ function appendBlockingMoves(
 
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
 		if (
-			blockPoint === undefined &&
-			(attackerColinear || moves.colinear) &&
-			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)
+			blockPoint === undefined && // Parallel
+			(attackerColinear || moves.colinear) && // Atleast one piece is colinear
+			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm) && // Coincident
+			// If this piece isn't colinear, then the only way it can have a chance to block check is if its between both pieces.
+			(moves.colinear || bounds.boxContainsSquare(box, coords))
 		) {
 			// The piece lies on the same line from the attacker to the royal!
 			// Flag this slide direction to brute force check each move for legality.
