@@ -282,6 +282,15 @@ function makeEngineMove(compactMove: unknown): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
+	if (compactMove === null) {
+		// Null can mean the engine didn't return a best move (perhaps it didn't
+		// find any legal moves, or thought it was checkmate), or an error occurred.
+		// In this case, resign for the engine.
+		gamefile.basegame.gameConclusion = `${ourColor} resignation`;
+		gameslot.concludeGame();
+		return;
+	}
+
 	// Rewind all premoves to get the real game state before making any other board changes
 	premoves.rewindPremoves(gamefile, mesh);
 

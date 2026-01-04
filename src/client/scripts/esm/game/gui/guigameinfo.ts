@@ -325,8 +325,10 @@ function gameEnd(conclusion?: string): void {
 	const { basegame } = gameslot.getGamefile()!;
 
 	// prettier-ignore
-	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole()) {
-		if (victor !== undefined && onlinegame.areInOnlineGame() && onlinegame.getOurColor() === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
+	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole() || enginegame.areInEngineGame()) {
+		const ourRole = gameloader.getOurColor()!;
+
+		if (ourRole === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time
                                                                             : condition === 'resignation' ? resultTranslations.you_resignation
                                                                             : condition === 'disconnect' ? resultTranslations.you_disconnect

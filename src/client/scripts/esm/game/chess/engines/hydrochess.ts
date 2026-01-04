@@ -235,7 +235,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 
 		if (!bestMoveResult) {
 			console.error('[Engine] No best move result returned from WASM');
-			postMessage(null);
+			postMessage({ type: 'move', data: null });
 			return;
 		}
 

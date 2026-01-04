@@ -24,7 +24,6 @@ import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import guigameinfo from '../gui/guigameinfo.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import boardpos from '../rendering/boardpos.js';
@@ -43,6 +42,7 @@ import area from '../rendering/area.js';
 import gamesound from '../misc/gamesound.js';
 import meshes from '../rendering/meshes.js';
 import starfield from '../rendering/starfield.js';
+import gameloader from './gameloader.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { animateMove } from './graphicalchanges.js';
 import { gl } from '../rendering/webgl.js';
@@ -283,13 +283,13 @@ function concludeGame(): void {
 		basegame.gameConclusion,
 	).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
-	if (!onlinegame.areInOnlineGame()) {
+	if (gameloader.areInLocalGame()) {
 		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);
 		else gamesound.playDraw(delayToPlayConcludeSoundSecs);
 	} else {
-		// In online game
-		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor())
-			gamesound.playWin(delayToPlayConcludeSoundSecs);
+		// In online game or engine game
+		const ourRole = gameloader.getOurColor()!;
+		if (victor === ourRole) gamesound.playWin(delayToPlayConcludeSoundSecs);
 		else if (victor === players.NEUTRAL || !victor)
 			gamesound.playDraw(delayToPlayConcludeSoundSecs);
 		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
