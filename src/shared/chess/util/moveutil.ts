@@ -248,15 +248,6 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
 
-/**
- * Tests if the move is a null move.
- * Only engines should be able to create and make null moves, for null move pruning.
- * Players should not be able to submit self moves in any possible way.
- */
-function isMoveNullMove(move: _Move_Compact): boolean {
-	return coordutil.areCoordsEqual(move.startCoords, move.endCoords);
-}
-
 // ------------------------------------------------------------------------------
 
 export default {
@@ -282,5 +273,4 @@ export default {
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
 	stripSpecialMoveTagsFromCoords,
-	isMoveNullMove,
 };

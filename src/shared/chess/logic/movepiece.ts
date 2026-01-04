@@ -181,23 +181,21 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 	 */
 	state.createEnPassantState(move, boardsim.state.global.enpassant, undefined);
 
-	const isNullMove = moveutil.isMoveNullMove(moveDraft);
-	if (!isNullMove) {
-		const rawType = typeutil.getRawType(move.type);
-		let specialMoveMade: boolean = false;
-		// If a special move function exists for this piece type, run it.
-		// The actual function will return whether a special move was actually made or not.
-		// If a special move IS made, we skip the normal move piece method.
-		if (rawType in boardsim.specialMoves)
-			specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
-		if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveDraft, move); // Move piece regularly (no special tag)
+	const rawType = typeutil.getRawType(move.type);
+	let specialMoveMade: boolean = false;
+	// If a special move function exists for this piece type, run it.
+	// The actual function will return whether a special move was actually made or not.
+	// If a special move IS made, we skip the normal move piece method.
+	if (rawType in boardsim.specialMoves)
+		specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
+	if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveDraft, move); // Move piece regularly (no special tag)
 
-		// Must be set before calling queueIncrementMoveRuleStateChange()
-		move.flags.capture = boardchanges.wasACapture(move);
+	// Must be set before calling queueIncrementMoveRuleStateChange()
+	move.flags.capture = boardchanges.wasACapture(move);
 
-		// Delete all special rights that should be revoked from the move.
-		queueSpecialRightDeletionStateChanges(boardsim, move);
-	}
+	// Delete all special rights that should be revoked from the move.
+	queueSpecialRightDeletionStateChanges(boardsim, move);
+
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
