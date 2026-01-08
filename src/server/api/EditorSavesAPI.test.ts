@@ -17,6 +17,7 @@ import editorSavesManager from '../database/editorSavesManager.js';
 // Mock the database manager
 vi.mock('../database/editorSavesManager.js');
 vi.mock('../middleware/logEvents.js', () => ({
+	logEvents: vi.fn(),
 	logEventsAndPrint: vi.fn(),
 }));
 
