@@ -3,8 +3,6 @@
 import statustext from './gui/statustext.js';
 // @ts-ignore
 import invites from './misc/invites.js';
-// @ts-ignore
-import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
 import localstorage from '../util/localstorage.js';
 import timeutil from '../../../../shared/util/timeutil.js';
