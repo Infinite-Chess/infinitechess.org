@@ -62,7 +62,7 @@ what_is_it_pargaraphs = [
 "Kuten voit kuvitella, on olemassa loputtomasti mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, mikä tarvitsee uusia taktiikoita, koska ei ole olemassa reunoja, joihin vastustajan kuninkaan voisi vangita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakkipelit. Sotilaat edelleen korontuvat riveillä 1 ja 8!",
 ]
 how_to_title = "Miten voin pelata?"
-how_to_paragraph = ["Tämän hetkinen versio on 1.8 ","Pelaa"," sivulla!"]
+how_to_paragraph = ["Tämän hetkinen versio on 1.9 ","Pelaa"," sivulla!"]
 about_title = "Tietoa Projektista"
 about_paragraphs = [
 "Minä olen Naviary. Siitä lähtien, kun löysin loputtoman shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut todella vaikeaa, vaatien chess.com jäsenien luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Sen takia harva tietää tästä tai on pelannut tätä.",
