@@ -171,7 +171,7 @@ js-pwd_not_pwd = "Passwort darf nicht 'password' sein"
 
 [leaderboard]
 title = "Bestenliste"
-inactive_players = ["Inaktive Spieler mit ein Rating-Unsicherheit größer als ", " sind von der Bestenliste ausgeschlossen."] # A number is inserted between these two quotes
+inactive_players = ["Inaktive Spieler mit Rating-Unsicherheit größer als ", " sind von der Bestenliste ausgeschlossen."] # A number is inserted between these two quotes
 your_global_ranking = "Ihr globaler Rang:"
 show_more = "Mehr anzeigen..."
 
@@ -664,4 +664,5 @@ ws-game_aborted = "Spiel abgebrochen." # Invite was cancelled as you clicked on 
 ws-rated_invite_verification_needed = "Um gewertet zu spielen, müssen Sie mit einem verifizierten Konto angemeldet sein."
 
 [rate-limiting]
+
 generic = "Sie haben zu viele Anfragen gestellt, bitte versuchen Sie es später erneut."
