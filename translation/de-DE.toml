@@ -62,7 +62,7 @@ what_is_it_pargaraphs = [
 "Wie Sie sich vorstellen können, gibt es eine unendliche Anzahl an möglichen Startkonfigurationen, von denen Sie viele auf dieser Webseite kompetitiv spielen können! Ihr Endziel ist immer noch Schachmatt, was neue Taktiken erfordert, da es keine Ränder gibt, an die der feindliche König gedrängt werden kann. Ein Spiel dauert normalerweise nicht viel länger als normale Schachpartien. Bauern wandeln weiterhin auf der ersten bzw. achten Reihe um!",
 ]
 how_to_title = "Wie kann ich spielen?"
-how_to_paragraph = ["Die aktuelle Version 1.8 ist auf der Seite ","Spielen"," verfügbar!"]
+how_to_paragraph = ["Die aktuelle Version 1.9 ist auf der Seite ","Spielen"," verfügbar!"]
 about_title = "Über das Projekt"
 about_paragraphs = [
 "Ich bin Naviary. Seit ich das Unendliche Schach (das Konzept existierte lange vor dieser Website) zum ersten Mal entdeckte, hat es mich sehr fasziniert und mit seinen Möglichkeiten begeistert! Bis vor kurzem war das Spielen ziemlich schwierig, da die Spieler Bilder des aktuellen Brettes erstellen und für jeden gespielten Zug hin und her senden mussten. Deswegen wissen wenige davon oder haben es spielen können.",
