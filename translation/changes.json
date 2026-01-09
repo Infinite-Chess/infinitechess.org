@@ -1,4 +1,8 @@
 {
+  "84": {
+    "note": "Added menu_computer on line 368.",
+    "changes": []
+  },
   "83": {
     "note": "Replaced ws-game_aborted_cheating on line 659 with ws-you_cheated and ws-opponent_cheated.",
     "changes": []

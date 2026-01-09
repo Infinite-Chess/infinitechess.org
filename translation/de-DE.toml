@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "83"
+version = "84"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -365,6 +365,7 @@ arrows_all_hippogonals = "Pfeile: Alle (mit Hippogonalen)"
 toggled = "Eingeschaltet"
 menu_online = "Spielen - Online"
 menu_local = "Spielen - Lokal"
+menu_computer = "Spielen - Computer"
 invite_error_digits = "Einladungscode muss 5 Ziffern lang sein."
 invite_copied = "Einladungscode in Zwischenablage kopiert."
 move_counter = "Zug:"

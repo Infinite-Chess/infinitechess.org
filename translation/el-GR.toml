@@ -1,6 +1,6 @@
 name = "Ελληνικά" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "83"
+version = "84"
 maintainer = "tsevasa"
 
 [header]
@@ -365,6 +365,7 @@ arrows_all_hippogonals = "Βέλη: Όλα (με ιππογώνιες)"
 toggled = "Εναλλάχθηκε"
 menu_online = "Παίξτε - Διαδικτυακά"
 menu_local = "Παίξτε - Τοπικά"
+menu_computer = "Παίξτε - Υπολογιστής"
 invite_error_digits = "Ο κωδικός πρόσκλησης πρέπει να αποτελείται από 5 σύμβολα."
 invite_copied = "Ο κωδικός πρόσκλησης αντιγράφηκε στο πρόχειρο."
 move_counter = "Κίνηση:"
