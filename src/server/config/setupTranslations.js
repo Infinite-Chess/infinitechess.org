@@ -49,6 +49,7 @@ const languageNames = {
 	'zh-CN': 'Simplified Chinese',
 	'zh-TW': 'Traditional Chinese',
 	'de-DE': 'German',
+	'el-GR': 'Greek',
 	'ja-JP': 'Japanese',
 	'ru-RU': 'Russian',
 	'it-IT': 'Italian',
