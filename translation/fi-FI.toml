@@ -9,8 +9,8 @@ play = "Pelaa"
 news = "Uutiset"
 login = "Kirjaudu"
 profile = "Profiili"
-createaccount = "Luo Tili"
-logout = "Kirjaudu Ulos"
+createaccount = "Luo tili"
+logout = "Kirjaudu ulos"
 leaderboard = "Tulostaulukko"
 
 [header.settings]
@@ -26,9 +26,9 @@ selection = "Valitseminen"
 selection-drag = "Vetäminen"
 selection-premove = "Aikaissiirrot"
 selection-animations = "Animaatiot"
-selection-lingering_annotations = "Pysyvät Merkinnät"
+selection-lingering_annotations = "Pysyvät merkinnät"
 perspective = "Perspektiivi" # Perspective-mode
-perspective-mouse-sensitivity = "Hiiren Herkkyys"
+perspective-mouse-sensitivity = "Hiiren herkkyys"
 perspective-fov = "Näkökenttä"
 sound = "Ääni"
 sound-master-volume = "Äänenvoimakkuus"
@@ -59,17 +59,17 @@ what_is_it_title = "Mitä se on?"
 what_is_it_pargaraphs = [
 "Infinite Chess on shakkivariantti, jossa ei ole reunoja, mikä tekee siitä paljon suuremman kuin tuttu 8x8 shakkilauta. Kuningattarilla, torneilla, ja lähettiläillä <em>ei ole rajoja</em> niiden liikkumiseen yhden vuoron aikana. Valitse mikä tahansa kokonaisluku äärettömään asti!",
 "Ilman rajoituksia sille, kuinka pitkälle voit liikkua, on olemassa asetelmia, joissa tuomiopäivän kello, tai shakkimatti-<em>jossain</em>-siirrossa, numero on edustettuna ensimmäisellä äärettömällä järjestysluvulla, <strong>omegalla ω</strong>. Tutkijat ovat todistaneet, että <strong>mikä tahansa</strong> laskettava järjestysluku on saavutettavissa shakkimattikellossa!",
-"Kuten voit kuvitella, on olemassa loputtomasti mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, mikä tarvitsee uusia taktiikoita, koska ei ole olemassa reunoja, joihin vastustajan kuninkaan voisi vangita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakkipelit. Sotilaat edelleen korontuvat riveillä 1 ja 8!",
+"Kuten voit kuvitella, on olemassa äärettömästi mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, mikä tarvitsee uusia taktiikoita, koska ei ole olemassa reunoja, joihin vastustajan kuninkaan voisi vangita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakkipelit. Sotilaat edelleen korontuvat riveillä 1 ja 8!",
 ]
 how_to_title = "Miten voin pelata?"
 how_to_paragraph = ["Tämän hetkinen versio on 1.9 ","Pelaa"," sivulla!"]
-about_title = "Tietoa Projektista"
+about_title = "Tietoa projektista"
 about_paragraphs = [
-"Minä olen Naviary. Siitä lähtien, kun löysin loputtoman shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut todella vaikeaa, vaatien chess.com jäsenien luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Sen takia harva tietää tästä tai on pelannut tätä.",
+"Minä olen Naviary. Siitä lähtien, kun löysin äärettömän shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut todella vaikeaa, vaatien chess.com jäsenien luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Sen takia harva tietää tästä tai on pelannut tätä.",
 ["Minun tavoitteeni on luoda tapa, joka tekee tästä helposti saavutettavan kaikille, ja kasvattaa yleisöä sen ympärille. Olen käyttänyt lukemattomia tunteja omasta ajastani tämän nettisivun ylläpitämiseen ja sen kehittämiseen. Minulla on monen monta ideaa, jotka ovat pitäneet minut kiireellisinä. Vaikka haluankin pitää tämän ilmaisena, elämällä on vaatimuksensa. Tukeaksesi minua taloudellisesti harkitse liityväsi minun ", "Patreoniin"] # Patreon receives a hyperlink, here
 ]
-patreon_title = "Patreon Tukijat"
-github_title = "Github Avustajat"
+patreon_title = "Patreon tukijat"
+github_title = "Github avustajat"
 
 [index.javascript]
 contribution_count_singular = ["", " avustus"] # A number is inserted between these 2 strings.
@@ -82,20 +82,20 @@ variants_heading = "Variantit"
 variants_credits = [
 "Ytimen suunnitteli Andreas Tsevas.",
 "Avaruuden suunnitteli Andreas Tsevas.",
-"Avaruus Klassisen suunnitteli Andreas Tsevas.",
-"Coaip (Shakkia Loputtomalla Alustalla) suunnitteli Vickalan.",
+"Avaruus klassisen suunnitteli Andreas Tsevas.",
+"Coaip (Shakkia äärettömällä alustalla) suunnitteli Vickalan.",
 "Sotilaslauman suunnitteli Inaccessible Cardinal.",
 "Runsauden suunnitteli Clicktuck Suskriberz.",
 "Panttimiehen suunnitteli SexyLexi.",
 "Klassinen+ suunnitteli SexyLexi.",
 "Heppalinjan suunnitteli Inaccessible Cardinal.",
-"Hepoitetun Shakin suunnitteli cycy98.",
+"Hepoitetun shakin suunnitteli cycy98.",
 "suunnitteli Cory Evans ja Joel Hamkins.",
 "suunnitteli Andreas Tsevas.",
 "suunnitteli Cory Evans ja Joel Hamkins.",
 "suunnitteli Cory Evans, Joel Hamkins, ja Norman Lewis Perlmutter.",
-"Shakkia Loputtomalla Alustalla - Huygens Variantit suunnitteli V. Reinhart.",
-"Rajoitettu Klassinen suunnitteli Andreas Tsevas.",
+"Shakkia äärettömällä alustalla - Huygen variantit suunnitteli V. Reinhart.",
+"Rajoitettu klassinen suunnitteli Andreas Tsevas.",
 "4x4x4x4 Shakki suunnitteli Andreas Tsevas.",
 "5D Shakki suunnitteli Jace.",
 ]
@@ -129,7 +129,7 @@ resend_message = ["Etkö saanut sähköpostia? Tarkista roskapostisi. Jos et lö
 verify_confirm = "Kiitos! Tilisi on vahvistettu."
 joined = "Liityi:"
 seen = ["Nähty:", " sitten"]
-practice_progress = "Harjoitustilan Edistys:"
+practice_progress = "Harjoitustilan edistys:"
 ranked_elo = "Luokitus:"
 infinity_leaderboard_position = "Sijoitus:"
 infinity_leaderboard_rating_deviation = "Epävarmuus:"
@@ -139,16 +139,16 @@ email = "Sähköpostiosoite:"
 delete_account = "Poista tili"
 
 [member.badge-tooltips]
-checkmate_bronze = "Shakkimatti Veteraani: Läpäise 50% kaikista harjoitusshakkimateista."
-checkmate_silver = "Shakkimatti Ammattilainen: Läpäise 75% kaikista harjoitusshakkimateista."
-checkmate_gold = "Shakkimatti Mestari: Läpäise 100% kaikista harjoitusshakkimateista."
+checkmate_bronze = "Shakkimatti veteraani: Läpäise 50% kaikista harjoitusshakkimateista."
+checkmate_silver = "Shakkimatti ammattilainen: Läpäise 75% kaikista harjoitusshakkimateista."
+checkmate_gold = "Shakkimatti mestari: Läpäise 100% kaikista harjoitusshakkimateista."
 
 [create-account]
-title = "Luo Tili" # The tab name
+title = "Luo tili" # The tab name
 username = "Käyttäjänimi:"
 email = "Sähköposti:"
 password = "Salasana:"
-create_button = "Luo Tili"
+create_button = "Luo tili"
 agreement = ["Minä suostun ", "Käyttöehtoihin", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
@@ -160,7 +160,7 @@ js-email_inuse = "Sähköpostiosoite on jo käytössä"
 
 [reset-password.javascript]
 js-pwd_no_match = "Salasanat eivät vastaa toisiaan."
-reset-password = "Palauta Salasana"
+reset-password = "Palauta salasana"
 processing = "Käsitellään..."
 network-error = "Verkkovirhe tapahtui. Yritä uudelleen."
 
@@ -185,21 +185,21 @@ credits = "Krediitit"
 play = "Pelaa"
 practice = "Harjoittele"
 guide = "Opas"
-editor = "Laudan Muokkaaja"
+editor = "Laudan muokkaaja"
 
 [play.guide]
 title = "Opas"
 rules = "Säännöt"
 rules_paragraphs = [
-"Loputtoman Shakin säännöt ovat melkein identtiset tavallisen shakin kanssa, paitsi että shakkilauta on loputon kaikissa suunnissa! Nämä ovat ainoat huomiot ja muutokset, joista sinun pitää tietää:",
+"Äärettömän shakin säännöt ovat melkein identtiset tavallisen shakin kanssa, paitsi että shakkilauta on ääretön kaikissa suunnissa! Nämä ovat ainoat huomiot ja muutokset, joista sinun pitää tietää:",
 "Nappuloilta, jotka liikkuvat suorassa linjassa, kuten tornit, lähetit, ja kuningatar, on poistettu niiden tavalliset etäisyysrajoitukset! Niin kauan, jun niiden reitty on esteetön, sinä voit liikkua miljoonia ruutuja!",
 ["\"Klassisessa\" variantissa, valkoiset sotilaat ylentyvät rivillä 8, ja mustat sotilaat rivillä 1. Tässä kuvassa, tämä hainnollistetaan ohuilla mustilla viivoilla. Ne ovat todella ohuesti piirretty, näetkö ne? Sotilaiden täytyy päästä vastakkaiselle viivalle ylentyäkseen, ", "ei", " sen yli."],
 "Ruutujen merkintätapa ei enää perustu kirjaimeen ja rivinumeroon (esim. a1), vaan jokainen ruutu määritellään x- ja y-koordinaattiparilla. a1-ruutu on nyt (1,1) ja h8-ruutu on nyt (8,8). Tietokoneella koordinaatti, jonka päällä hiiri on, näytetään näytön yläreunassa.",
 "Kaikki muut säännöt ovat samat kuin tavallisessa shakissa, kuten shakkimatti, tasapeli, kolminkertainen toisto, 50-siirron sääntö, linnoittuminen, en passant, jne.!"
 ]
-careful_heading = "Ole Varovainen!"
+careful_heading = "Ole varovainen!"
 careful_paragraphs = [
-"Loputtoman laudan avoinnaisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita, koska sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
+"Äärettömän laudan avoinnaisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita, koska sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
 "Monet muut variantit on luotu sinun taaimmaisen puolen vahvistamiseen."
 ]
 controls_heading = "Ohjaimet"
@@ -222,7 +222,7 @@ keybinds_extra = [
 ]
 fairy_heading = "Erikoisnappulat"
 fairy_paragraph = "Osaat jo pelata oletusvarianttia \"Klassinen\". Erikoisnappuloita ei käytetä tavallisessa shakissa, mutta ne ovat mukana muissa varianteissa! Jos kohtaat variantin, jossa on uusia nappuloita, opi miten ne toimivat täällä!"
-editing_heading = "Laudan Muokkaus"
+editing_heading = "Laudan muokkaus"
 editing_paragraphs = [
 ["On olemassa ulkoinen ", "laudan muokkaaja", " julkisella google sheetillä! Siellä on käyttöohjeet. Tämä vaatii perustason google sheets -osaamista. Kun muutokset on tehty, voit luoda ja tuoda omia asemia peliin \"Liitä peli\" -painikkeella valikossa!"],
 "Pelataksesi oman aseman kaverin kanssa, pyydä häntä liittymään yksityiseen kutsuun, ja molemmat liittävät pelin koodin ennen pelin aloittamista!",
@@ -257,41 +257,41 @@ local = "Paikallinen"
 computer = "Tietokone"
 variant = "Variantti"
 Classical = "Klassinen"
-Confined_Classical = "Rajoitettu Klassinen"
+Confined_Classical = "Rajoitettu klassinen"
 Classical_Plus = "Klassinen+"
-CoaIP = "Shakkia Loputtomalla Alustalla"
-Pawndard = "Panttimies"
-Knighted_Chess = "Hepoittetu Shakki"
+CoaIP = "Shakkia äärettömällä alustalla"
+Pawndard = "Pawndard"
+Knighted_Chess = "Hepoittetu shakki"
 Palace = "Palace"
 Knightline = "Heppalinja"
 Core = "Ydin"
 Standarch = "Standarch"
 Pawn_Horde = "Sotilaslauma"
-Space_Classic = "Klassinen Avaruus"
+Space_Classic = "Klassinen avaruus"
 Space = "Avaruus"
 Obstocean = "Estemeri"
 Abundance = "Runsaus"
-Amazon_Chandelier = "Amazon Chandelier"
+Amazon_Chandelier = "Amazon chandelier"
 Containment = "Hillitseminen"
 Classical_Limit_7 = "Klassinen - 7 rajoitus"
 CoaIP_Limit_7 = "Coaip - 7 rajoitus"
 Chess = "Shakki"
 Classical_KOTH = "Kokeellinen: Klassinen - KOTH"
 CoaIP_KOTH = "Kokeellinen: Coaip - KOTH"
-CoaIP_HO = "Shakkia Loputtomalla Alustalla - Huygens Variantti"
-CoaIP_RO = "Shakkia Loputtomalla Alustalla - Roses Variantti"
-CoaIP_NO = "Shakkia Loputtomalla Alustalla - Knightriders Variantti"
+CoaIP_HO = "Shakkia äärettömällä alustalla - Huygens variantti"
+CoaIP_RO = "Shakkia äärettömällä alustalla - Roses variantti"
+CoaIP_NO = "Shakkia äärettömällä alustalla - Knightriders variantti"
 Omega = "Näyte: Omega"
 Omega_Squared = "Näyte: Omega^2"
 Omega_Cubed = "Näyte: Omega^3"
 Omega_Fourth = "Näyte: Omega^4"
 4x4x4x4_Chess = "4×4×4×4 Shakki"
 5D_Chess = "5D Shakki"
-no_clock = "Ei Kelloa"
+no_clock = "Ei kelloa"
 clock = "Kello"
 minutes = "m"
 seconds = "s"
-infinite_time = "Loputon Aika"
+infinite_time = "Ääretön aika"
 color = "Väri"
 piece_colors = ["Satunnainen", "Valkoinen", "Musta"]
 private = "Yksityinen"
@@ -302,10 +302,10 @@ casual = "Rento"
 easy = "Helppo"
 medium = "Keskivaikea"
 hard = "Vaikea"
-join_games = "Liity Valmiiseen - Aktiiviset Pelit:"
-private_invite = "Yksityinen Kutsu:"
-your_invite = "Sinun Kutsukoodisi:"
-create_invite = "Luo Kutsu"
+join_games = "Liity valmiiseen - Aktiiviset pelit:"
+private_invite = "Yksityinen kutsu:"
+your_invite = "Sinun kutsukoodisi:"
+create_invite = "Luo kutsu"
 join = "Liity"
 copy = "Kopioi"
 back = "Takaisin"
@@ -331,9 +331,9 @@ title = "Pysäytetty"
 resume = "Palaa"
 arrows = "Nuolet: Puolustus"
 perspective = "Perspektiivi: Pois"
-copy = "Kopioi Peli"
-paste = "Liitä Peli"
-offer_draw = "Ehdota Tasapeliä"
+copy = "Kopioi peli"
+paste = "Liitä peli"
+offer_draw = "Ehdota tasapeliä"
 practice_menu = "Harjoitteluvalikko"
 main_menu = "Päävalikkoon"
 
@@ -355,9 +355,9 @@ failed_to_load = "Yksi tai enemmän resurssia ei latautunut. Lataa sivu uudellee
 planned_feature = "Tämä on tulossa!"
 main_menu = "Päävalikko"
 resign_game = "Luovuta"
-abort_game = "Keskeytä Peli"
-offer_draw = "Ehdota Tasapeliä" # Offer draw button text in the pause menu
-accept_draw = "Hyväksy Tasapeli" # Offer draw button text in the pause menu
+abort_game = "Keskeytä peli"
+offer_draw = "Ehdota tasapeliä" # Offer draw button text in the pause menu
+accept_draw = "Hyväksy tasapeli" # Offer draw button text in the pause menu
 arrows_off = "Nuolet: Pois"
 arrows_defense = "Nuolet: Puolustus"
 arrows_all = "Nuolet: Kaikki"
@@ -374,7 +374,7 @@ rotating_mesh = "Käännetään meshiä"
 lost_connection = "Yhteys menetetty."
 please_wait = "Odota hetki suorittaaksesi tämän."
 webgl_unsupported = "Sinun nettiselain ei tue WebGL2:ta. Päivitä nettiselaimesi!"
-bigints_unsupported = "BigInts ei ole tuettu. Päivitä nettiselaimesi.\nBigIntsiä tarvitaan, jotta lauta olisi loputon."
+bigints_unsupported = "BigInts ei ole tuettu. Päivitä nettiselaimesi.\nBigIntsiä tarvitaan, jotta lauta olisi ääretön."
 # Checkmate Practice
 versus = "vs"
 easy = "Helppo"
@@ -382,9 +382,9 @@ medium = "Keskitaso"
 hard = "Vaikea"
 insane = "Hullu"
 checkmate_logged_out = "Sinun tulee olla kirjautunut ansaitaksesi merkkejä."
-checkmate_bronze = "Shakkimatti Veteraani: Läpäise 50% kaikista harjoitusshakkimateista."
-checkmate_silver = "Shakkimatti Ammattilainen: Läpäise 75% kaikista harjoitusshakkimateista."
-checkmate_gold = "Shakkimatti Mestari: Läpäise 100% kaikista harjoitusshakkimateista."
+checkmate_bronze = "Shakkimatti veteraani: Läpäise 50% kaikista harjoitusshakkimateista."
+checkmate_silver = "Shakkimatti ammattilainen: Läpäise 75% kaikista harjoitusshakkimateista."
+checkmate_gold = "Shakkimatti mestari: Läpäise 100% kaikista harjoitusshakkimateista."
 checkmate_bronze_unearned = "Läpäise 50% kaikista harjoitusshakkimateista ansaitaksesi tämän."
 checkmate_silver_unearned = "Läpäise 75% kaikista harjoitusshakkimateista ansaitaksesi tämän."
 checkmate_gold_unearned = "Läpäise 100% kaikista harjoitusshakkimateista ansaitaksesi tämän."
@@ -454,10 +454,10 @@ you_are_black = "Olet: Musta"
 random = "Satunnainen"
 accept = "Hyväksy"
 cancel = "Peruuta"
-create_invite = "Luo Kutsu"
-cancel_invite = "Peruuta Kutsu"
-start_game = "Aloita Peli"
-join_existing_active_games = "Liity Valmiiseen Peliin - Aktiiviset Pelit:"
+create_invite = "Luo kutsu"
+cancel_invite = "Peruuta kutsu"
+start_game = "Aloita peli"
+join_existing_active_games = "Liity valmiiseen peliin - Aktiiviset pelit:"
 
 [play.javascript.onlinegame]
 afk_warning = "Olet AFK."
@@ -556,7 +556,7 @@ parents_paragraphs = [
 "Sivustolla on algoritmi, joka estää käyttäjiä asettamasta nimekseen yleisiä kirosanoja. Tällä hetkellä sivustolla ei ole jäsenten välistä viestintämahdollisuutta.",
 "Tällä hetkellä jäsenet eivät voi asettaa omaa profiilikuvaa. Tämän ominaisuuden lisäämistä suunnitellaan. Silloin pyrimme estämään sopimattomat profiilikuvat parhaamme mukaan.",
 ]
-fair_play_header = "Reilu Peli"
+fair_play_header = "Reilu peli"
 fair_play_paragraph1 = ["Et voi luoda useampaa kuin yhtä tiliä."]
 fair_play_paragraph2 = "Jotta pelaaminen olisi hauskaa ja reilua kaikille, ET SAA:"
 fair_play_rules = [
@@ -597,12 +597,12 @@ conclusion_paragraphs = [
 thanks = "Kiitos!"
 
 [login]
-title = "Kirjaudu Sisään" # The tab name
+title = "Kirjaudu sisään" # The tab name
 username = "Käyttäjänimi:"
 password = "Salasana:"
-login_button = "Kirjaudu Sisään"
+login_button = "Kirjaudu sisään"
 send_reset_link = "Lähetä palautuslinkki"
-forgot_question = "Unohditko Salasanasi?"
+forgot_question = "Unohditko salasanasi?"
 back_to_login = "Takaisin kirjautumaan"
 forgot_instruction = "Unohditko salasanasi? Syötä käyttäjätunnuksesi ja lähetämme sinulle palautuslinkin."
 
@@ -610,11 +610,11 @@ forgot_instruction = "Unohditko salasanasi? Syötä käyttäjätunnuksesi ja lä
 network-error = "Verkkovirhe tapahtui. Kokeile uudestaan."
 
 [reset_password]
-title = "Palauta Salasanasi"
+title = "Palauta salasanasi"
 instruction = "Syötä ja vahvista uusi salasanasi."
-new_password = "Uusi Salasana"
-confirm_password = "Vahvista Salasana"
-submit_button = "Palauta Salasana"
+new_password = "Uusi salasana"
+confirm_password = "Vahvista salasana"
+submit_button = "Palauta salasana"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Väärä pyyntö oli vastaanotettu."
