@@ -14,6 +14,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
 import metadata from '../../shared/chess/util/metadata.js';
 import { IdentifiedRequest } from '../types.js';
+import { localeMap } from '../config/dateLocales.js';
 
 // Define the structure of the JSON response body
 interface MemberResponse {
@@ -83,13 +84,13 @@ const getMemberData = async (req: IdentifiedRequest, res: Response): Promise<Res
 	// Load their data
 	const joinedPhrase = format(new Date(record.joined), 'PP');
 	let localeStr = req.i18n.resolvedLanguage.replace('-', '');
-	if (!(localeStr in locales)) {
+	if (localeMap[localeStr] === undefined) {
 		localeStr = req.i18n.resolvedLanguage.split('-')[0]!;
 	}
 	const lastSeenDate = new Date(timeutil.sqliteToISO(record.last_seen));
 	// Use type assertion here since we check for localeStr's existence in locales
 	const seenPhrase = formatDistance(new Date(), lastSeenDate, {
-		locale: (locales as Record<string, Locale>)[localeStr],
+		locale: localeMap[localeStr]?.locale,
 		addSuffix: true,
 	});
 

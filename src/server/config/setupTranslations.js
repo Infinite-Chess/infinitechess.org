@@ -8,57 +8,11 @@ import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
-import deDE from 'date-fns/locale/de/index.js';
-import enUS from 'date-fns/locale/en-US/index.js';
-import frFR from 'date-fns/locale/fr/index.js';
-import ptBR from 'date-fns/locale/pt-BR/index.js';
-import zhTW from 'date-fns/locale/zh-TW/index.js';
-import zhCN from 'date-fns/locale/zh-CN/index.js';
-import pl from 'date-fns/locale/pl/index.js';
 
 import { fileURLToPath } from 'node:url';
 import { UNCERTAIN_LEADERBOARD_RD } from '../game/gamemanager/ratingcalculation.js';
+import { localeMap } from './dateLocales.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
- * This dictionary tells use what code the date-fns package uses
- * to provide language-correct dates.
- *
- * Update when we support a new language.
- */
-const localeMap = {
-	'de-DE': deDE,
-	'en-US': enUS,
-	'fr-FR': frFR,
-	'pt-BR': ptBR,
-	'zh-TW': zhTW,
-	'zh-CN': zhCN,
-	'pl-PL': pl,
-};
-
-/**
- * A dictionary containing the English names of many language codes.
- * ADD TO THIS when we add a new language that's not listed below!
- */
-const languageNames = {
-	'en-US': 'English',
-	'es-ES': 'Spanish',
-	'fr-FR': 'French',
-	'pl-PL': 'Polish',
-	'pt-BR': 'Portuguese',
-	'zh-CN': 'Simplified Chinese',
-	'zh-TW': 'Traditional Chinese',
-	'de-DE': 'German',
-	'el-GR': 'Greek',
-	'ja-JP': 'Japanese',
-	'ru-RU': 'Russian',
-	'it-IT': 'Italian',
-	'ar-SA': 'Arabic',
-	'hi-IN': 'Hindi',
-	'ko-KR': 'Korean',
-	'tr-TR': 'Turkish',
-	'fi-FI': 'Finnish',
-};
 
 const translationsFolder = './translation';
 
@@ -286,7 +240,7 @@ function loadTranslationsFolder(folder) {
 						const date = format(parseISO(dateISO), 'PP', {
 							// Change the number of P's to change how the date is phrased
 							timeZone: 'UTC-6',
-							locale: localeMap[languageCode],
+							locale: localeMap[languageCode].locale,
 						});
 
 						return `<div class='news-post' data-date='${dateISO}'>
@@ -330,7 +284,7 @@ function translateStaticTemplates(translations) {
 
 	const languages_list = languages.map((language) => {
 		const name = translations[language].default.name;
-		const englishName = languageNames[language];
+		const englishName = localeMap[language].name;
 		if (!englishName)
 			throw new Error(
 				`English name not found for language code: ${language} Name: ${translations[language].default.name}`,
