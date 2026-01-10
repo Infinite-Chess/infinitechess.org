@@ -25,6 +25,7 @@ import meshes from '../meshes.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import { GameBus } from '../../GameBus.js';
 import gameloader from '../../chess/gameloader.js';
+import boardeditor from '../../boardeditor/boardeditor.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -139,9 +140,10 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const ourColor = gameloader.areInLocalGame()
-		? gamefile.basegame.whosTurn
-		: gameloader.getOurColor();
+	const ourColor =
+		gameloader.areInLocalGame() || boardeditor.areInBoardEditor()
+			? gamefile.basegame.whosTurn
+			: gameloader.getOurColor();
 	const isOpponentPiece = pieceColor !== ourColor;
 	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({
