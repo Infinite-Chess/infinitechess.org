@@ -117,10 +117,13 @@ export function manuallyVerifyUser(
 ): { success: true; username: string } | { success: false; reason: string } {
 	const record = getMemberDataByCriteria(['user_id', 'username', 'is_verified'], 'email', email);
 
-	if (record === undefined)
+	if (record === undefined) {
 		return { success: false, reason: `User with email "${email}" doesn't exist.` };
-	if (record.is_verified === 1)
+	}
+
+	if (record.is_verified === 1) {
 		return { success: false, reason: `User with email "${email}" is already verified.` };
+	}
 
 	// VERIFY THEM..
 	const result = _executeVerificationUpdate(record.user_id, record.username);

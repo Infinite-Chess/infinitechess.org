@@ -267,8 +267,10 @@ function logoutUser(
 	logCommand(command, req);
 	const usernameArgument = commandAndArgs[1]!;
 	const record = getMemberDataByCriteria(['user_id', 'username'], 'username', usernameArgument);
-	if (record === undefined)
-		return sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
+	if (record === undefined) {
+		sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
+		return;
+	}
 
 	try {
 		// Effectively terminates all login sessions of the user
