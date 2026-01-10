@@ -66,7 +66,7 @@ how_to_paragraph = ["Tämän hetkinen versio on 1.9 ","Pelaa"," sivulla!"]
 about_title = "Tietoa projektista"
 about_paragraphs = [
 "Minä olen Naviary. Siitä lähtien, kun löysin äärettömän shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut todella vaikeaa, vaatien chess.com jäsenien luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Sen takia harva tietää tästä tai on pelannut tätä.",
-["Minun tavoitteeni on luoda tapa, joka tekee tästä helposti saavutettavan kaikille, ja kasvattaa yleisöä sen ympärille. Olen käyttänyt lukemattomia tunteja omasta ajastani tämän nettisivun ylläpitämiseen ja sen kehittämiseen. Minulla on monen monta ideaa, jotka ovat pitäneet minut kiireellisinä. Vaikka haluankin pitää tämän ilmaisena, elämällä on vaatimuksensa. Tukeaksesi minua taloudellisesti harkitse liityväsi minun ", "Patreoniin"] # Patreon receives a hyperlink, here
+["Minun tavoitteeni on luoda tapa, joka tekee tästä helposti saavutettavan kaikille ja kasvattaa yleisöä sen ympärille. Olen käyttänyt lukemattomia tunteja omasta ajastani tämän nettisivun ylläpitämiseen ja sen kehittämiseen. Minulla on monen monta ideaa, jotka ovat pitäneet minut kiireellisinä. Vaikka haluankin pitää tämän ilmaisena, elämällä on vaatimuksensa. Tukeaksesi minua taloudellisesti harkitse liityväsi minun ", "Patreoniin"] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Patreon tukijat"
 github_title = "Github avustajat"
@@ -262,7 +262,7 @@ Classical_Plus = "Klassinen+"
 CoaIP = "Shakkia äärettömällä alustalla"
 Pawndard = "Pawndard"
 Knighted_Chess = "Hepoittetu shakki"
-Palace = "Palace"
+Palace = "Palatsi"
 Knightline = "Heppalinja"
 Core = "Ydin"
 Standarch = "Standarch"
@@ -278,9 +278,9 @@ CoaIP_Limit_7 = "Coaip - 7 rajoitus"
 Chess = "Shakki"
 Classical_KOTH = "Kokeellinen: Klassinen - KOTH"
 CoaIP_KOTH = "Kokeellinen: Coaip - KOTH"
-CoaIP_HO = "Shakkia äärettömällä alustalla - Huygens variantti"
-CoaIP_RO = "Shakkia äärettömällä alustalla - Roses variantti"
-CoaIP_NO = "Shakkia äärettömällä alustalla - Knightriders variantti"
+CoaIP_HO = "Shakkia äärettömällä alustalla - Huygen variantti"
+CoaIP_RO = "Shakkia äärettömällä alustalla - Ruusu variantti"
+CoaIP_NO = "Shakkia äärettömällä alustalla - Ratsuratsastaja variantti"
 Omega = "Näyte: Omega"
 Omega_Squared = "Näyte: Omega^2"
 Omega_Cubed = "Näyte: Omega^3"
