@@ -7,7 +7,7 @@ import { fromEnv } from '@aws-sdk/credential-providers';
 // Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
 import * as aws from '@aws-sdk/client-ses';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getMemberDataByCriteria, MemberRecord } from '../database/memberManager.js';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
@@ -90,14 +90,13 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
  * @param user_id - The ID of the user to send the verification email to.
  */
 async function sendEmailConfirmation(user_id: number): Promise<void> {
-	const memberData = getMemberDataByCriteria(
+	const record = getMemberDataByCriteria(
 		['username', 'email', 'is_verified', 'verification_code'],
 		'user_id',
 		user_id,
-		false,
-	) as MemberRecord;
+	);
 
-	if (!memberData.username || !memberData.email) {
+	if (record === undefined) {
 		logEventsAndPrint(
 			`Unable to send email confirmation for non-existent member of id (${user_id})!`,
 			'errLog.txt',
@@ -105,26 +104,26 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		return;
 	}
 
-	if (isBlacklisted(memberData.email)) {
+	if (isBlacklisted(record.email)) {
 		logEventsAndPrint(
-			`[BLOCKED] Skipping email confirmation to ${memberData.email} (Blacklisted)`,
+			`[BLOCKED] Skipping email confirmation to ${record.email} (Blacklisted)`,
 			'blacklistLog.txt',
 		);
 		return;
 	}
 
 	// Check the new 'is_verified' column directly.
-	if (memberData.is_verified === 1) {
+	if (record.is_verified === 1) {
 		console.log(
-			`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`,
+			`User ${record.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`,
 		);
 		return;
 	}
 
 	// An unverified user MUST have a verification code.
-	if (!memberData.verification_code) {
+	if (!record.verification_code) {
 		logEventsAndPrint(
-			`User ${memberData.username} (ID: ${user_id}) is unverified but has no verification code. Cannot send email.`,
+			`User ${record.username} (ID: ${user_id}) is unverified but has no verification code. Cannot send email.`,
 			'errLog.txt',
 		);
 		return;
@@ -134,7 +133,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		// Construct verification URL using the new 'verification_code' column
 		const baseUrl = getAppBaseUrl();
 		const verificationUrl = new URL(
-			`${baseUrl}/verify/${memberData.username.toLowerCase()}/${memberData.verification_code}`,
+			`${baseUrl}/verify/${record.username.toLowerCase()}/${record.verification_code}`,
 		).toString();
 
 		if (!transporter) {
@@ -146,7 +145,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		}
 
 		const content = `
-			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
+			<p style="font-size: 16px; color: #555;">Thank you, <strong>${record.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
 			<p style="font-size: 16px; color: #555;">If this takes you to the login page, then as soon as you log in, your account will be verified.</p>
 			<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
@@ -154,13 +153,13 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 
 		const mailOptions = {
 			from: `"Infinite Chess" <${FROM}>`,
-			to: memberData.email,
+			to: record.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
 		};
 
 		await transporter.sendMail(mailOptions);
-		console.log(`Verification email sent to member ${memberData.username} of ID ${user_id}!`);
+		console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		logEventsAndPrint(
