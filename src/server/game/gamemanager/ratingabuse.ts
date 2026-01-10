@@ -314,11 +314,20 @@ async function measurePlayerRatingAbuse(
 	}
 
 	// Get relevant MemberRecords of the opponents from the members table
-	const opponentInfoList = getMultipleMemberDataByCriteria(
-		['username', 'user_id', 'joined'],
-		'user_id',
-		unique_user_id_list,
-	) as RatingAbuseRelevantMemberRecord[];
+	let opponentInfoList: RatingAbuseRelevantMemberRecord[] = [];
+	try {
+		opponentInfoList = getMultipleMemberDataByCriteria(
+			['username', 'user_id', 'joined'],
+			'user_id',
+			unique_user_id_list,
+		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		await logEventsAndPrint(
+			`Error fetching records for opponents during rating abuse calculation for user ${username} with user_id ${user_id}: ${message}`,
+			'errLog.txt',
+		);
+	}
 
 	// Handcrafted game suspicion checking ------------------------------------------
 

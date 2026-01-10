@@ -7,11 +7,7 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import {
-	getMemberDataByCriteria,
-	MemberRecord,
-	updateMemberColumns,
-} from '../database/memberManager.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
 /**
@@ -29,23 +25,16 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(
-		['last_read_news_date'],
-		'user_id',
-		userId,
-		false,
-	);
+	const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-	const lastReadDate = memberData.last_read_news_date;
-
-	if (!lastReadDate) {
-		// For some reason the cell was null or undefined
+	if (!record?.last_read_news_date) {
+		// For some reason the cell was null or record not found
 		res.json({ count: 0 });
 		return;
 	}
 
 	// Count unread news posts
-	const unreadCount = countUnreadNews(lastReadDate);
+	const unreadCount = countUnreadNews(record.last_read_news_date);
 
 	res.json({ count: unreadCount });
 }
@@ -64,23 +53,16 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(
-		['last_read_news_date'],
-		'user_id',
-		userId,
-		false,
-	);
+	const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-	const lastReadDate = memberData.last_read_news_date;
-
-	if (!lastReadDate) {
+	if (!record?.last_read_news_date) {
 		// For some reason the cell was null or undefined
 		res.json({ dates: [] });
 		return;
 	}
 
 	// Get unread news dates
-	const unreadDates = getUnreadNewsDates(lastReadDate);
+	const unreadDates = getUnreadNewsDates(record.last_read_news_date);
 
 	res.json({ dates: unreadDates });
 }

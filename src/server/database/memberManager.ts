@@ -12,24 +12,26 @@ import { SqliteError } from 'better-sqlite3';
 
 // Type Definitions ----------------------------------------------------------
 
-/** Structure of a member record. */
+/** Structure of a complete member record. */
 export interface MemberRecord {
-	user_id?: number;
-	username?: string;
-	email?: string;
-	hashed_password?: string;
-	roles?: string | null;
-	joined?: string;
-	last_seen?: string;
-	login_count?: number;
-	is_verified?: 0 | 1;
-	verification_code?: string | null;
-	is_verification_notified?: 0 | 1;
-	preferences?: string | null;
-	username_history?: string | null;
-	checkmates_beaten?: string;
-	last_read_news_date?: string | null;
+	user_id: number;
+	username: string;
+	email: string;
+	hashed_password: string;
+	roles: string | null;
+	joined: string;
+	last_seen: string;
+	login_count: number;
+	is_verified: 0 | 1;
+	verification_code: string | null;
+	is_verification_notified: 0 | 1;
+	preferences: string | null;
+	username_history: string | null;
+	checkmates_beaten: string;
+	last_read_news_date: string | null;
 }
+
+type MembersColumn = keyof MemberRecord;
 
 // Constants ----------------------------------------------------------
 
@@ -180,25 +182,26 @@ function deleteUser(user_id: number, reason_deleted: string): void {
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
  * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
- * @param searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
+ * @param searchKey - The search key to use. Must be a valid column name.
  * @param searchValue - The value to search for, can be a user ID, username, or email.
  * @param skipErrorLogging - If true, errors will not be logged when no match is found.
- * @returns An object containing the requested columns, or an empty object if no match is found.
+ * @returns An object containing the requested columns, or undefined if no match is found.
+ * @throws If invalid parameters are provided, or if a database error occurs during the query.
  */
-function getMemberDataByCriteria(
-	columns: string[],
-	searchKey: string,
+function getMemberDataByCriteria<K extends MembersColumn>(
+	columns: K[],
+	searchKey: MembersColumn,
 	searchValue: string | number,
-	skipErrorLogging: boolean,
-): MemberRecord {
+): Pick<MemberRecord, K> | undefined {
 	// Guard clauses... Validating the arguments...
+	// These are safety backups in case type safety doesn't prevent invalid arguments.
 
 	if (!Array.isArray(columns)) {
 		logEventsAndPrint(
 			`When getting member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
 			'errLog.txt',
 		);
-		return {};
+		throw new Error('Invalid columns parameter.');
 	}
 	if (
 		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
@@ -207,7 +210,7 @@ function getMemberDataByCriteria(
 			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
 			'errLog.txt',
 		);
-		return {};
+		throw new Error('Invalid columns parameter.');
 	}
 
 	// Check if the searchKey and searchValue are valid
@@ -219,14 +222,14 @@ function getMemberDataByCriteria(
 			`When getting member data by criteria, searchKey must be a string and searchValue must be a number or string! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValue)}`,
 			'errLog.txt',
 		);
-		return {};
+		throw new Error('Invalid search key.');
 	}
 	if (!uniqueMemberKeys.includes(searchKey)) {
 		logEventsAndPrint(
 			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
 			'errLog.txt',
 		);
-		return {};
+		throw new Error('Invalid search key.');
 	}
 
 	// Arguments are valid, move onto the SQL query...
@@ -236,41 +239,28 @@ function getMemberDataByCriteria(
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get<MemberRecord>(query, [searchValue]);
-
-		// If no row is found, return an empty object
-		if (!row) {
-			if (!skipErrorLogging)
-				logEventsAndPrint(
-					`No matches found for ${searchKey} = ${searchValue}`,
-					'errLog.txt',
-				);
-			return {};
-		}
-
-		// Return the fetched row (single object)
-		return row;
+		return db.get<Pick<MemberRecord, K>>(query, [searchValue]);
 	} catch (error: unknown) {
-		// Log the error and return an empty object
+		// Log the error and rethrow a generic error
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error executing query: ${message}`, 'errLog.txt');
-		return {};
+		logEventsAndPrint(`Error getting member data by criteria: ${message}`, 'errLog.txt');
+		throw new Error('A database error occured.'); // Rethrow generic error
 	}
 }
 
 /**
  * Fetches specified columns of multiple members from the database based on a list of user_ids, usernames, or emails.
  * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'roles']).
- * @param searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
+ * @param searchKey - The search key to use. Must be a valid column name.
  * @param searchValueList - The value to search for, can be a list of user IDs, usernames, or emails.
- * @param skipErrorLogging - If true, errors will not be logged when no match is found.
- * @returns An object containing a list of MemberRecords, or an empty list if no matches are found.
+ * @returns An array of member records.
+ * @throws If invalid parameters are provided, or if a database error occurs during the query.
  */
-function getMultipleMemberDataByCriteria(
-	columns: string[],
-	searchKey: string,
+function getMultipleMemberDataByCriteria<K extends MembersColumn>(
+	columns: K[],
+	searchKey: MembersColumn,
 	searchValueList: string[] | number[],
-): MemberRecord[] {
+): Pick<MemberRecord, K>[] {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
@@ -278,7 +268,7 @@ function getMultipleMemberDataByCriteria(
 			`When getting multiple member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
 			'errLog.txt',
 		);
-		return [];
+		throw new Error('Invalid columns parameter.');
 	}
 	if (
 		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
@@ -287,23 +277,27 @@ function getMultipleMemberDataByCriteria(
 			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
 			'errLog.txt',
 		);
-		return [];
+		throw new Error('Invalid columns parameter.');
 	}
 
 	// Check if the searchKey and searchValueList are valid
-	if (typeof searchKey !== 'string' || !Array.isArray(searchValueList)) {
+	if (
+		typeof searchKey !== 'string' ||
+		!Array.isArray(searchValueList) ||
+		searchValueList.length === 0
+	) {
 		logEventsAndPrint(
-			`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`,
+			`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a non-empty list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`,
 			'errLog.txt',
 		);
-		return [];
+		throw new Error('Invalid search key.');
 	}
 	if (!uniqueMemberKeys.includes(searchKey)) {
 		logEventsAndPrint(
 			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
 			'errLog.txt',
 		);
-		return [];
+		throw new Error('Invalid search key.');
 	}
 
 	// Arguments are valid, move onto the SQL query...
@@ -318,24 +312,15 @@ function getMultipleMemberDataByCriteria(
 
 	try {
 		// Execute the query and fetch result
-		const rows = db.all<MemberRecord>(query, searchValueList);
-
-		// If no row is found, return an empty object
-		if (!rows || rows.length === 0) {
-			logEventsAndPrint(
-				`No matches found for ${searchKey} in ${jsutil.ensureJSONString(searchValueList)}`,
-				'errLog.txt',
-			);
-			return [];
-		}
-
-		// Return the fetched rows
-		return rows;
+		return db.all<Pick<MemberRecord, K>>(query, searchValueList);
 	} catch (error: unknown) {
-		// Log the error and return an empty list
+		// Log the error and rethrow a generic error
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error executing query: ${message}`, 'errLog.txt');
-		return [];
+		logEventsAndPrint(
+			`Error getting MULTIPLE member data by criteria: ${message}`,
+			'errLog.txt',
+		);
+		throw new Error('A database error occured.'); // Rethrow generic error
 	}
 }
 
