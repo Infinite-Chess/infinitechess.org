@@ -5,7 +5,7 @@
     "src/client/views",
     "src/client/scripts/cjs/game/htmlscript.js"
   ],
-  "ext": "js,ejs",
+  "ext": "js,ejs,html",
   "exec": "node --enable-source-maps dist/server/server.js",
   "delay": "200"
 }
