@@ -1,6 +1,6 @@
 name = "Suomi" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "76"
+version = "84"
 maintainer = "ThisIsNotAvailable"
 
 [header]
@@ -152,10 +152,10 @@ create_button = "Luo Tili"
 agreement = ["Minä suostun ", "Käyttöehtoihin", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
-js-username_specs = "Käyttäjänimen täytyy olla vähintään 3 kirjainta pitkä, ja sen täytyy sisältää vain kirjaimia A-Z ja numeroita 0-9"
 js-username_tooshort = "Käyttäjänimen täytyy olla vähintään 3 kirjainta pitkä"
 js-username_wrongenc = "Käyttäjänimen pitää sisältää vain kirjaimia A-Z ja numeroita 0-9"
 js-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
+js-email_too_long = "Tämä sähköpostiosoite on liian pitkä"
 js-email_inuse = "Sähköpostiosoite on jo käytössä"
 
 [reset-password.javascript]
@@ -165,14 +165,13 @@ processing = "Käsitellään..."
 network-error = "Verkkovirhe tapahtui. Yritä uudelleen."
 
 [password-validation]
-js-pwd_incorrect_format = "Salasana on väärässä muodossa"
 js-pwd_too_short = "Salasana ei saa olla alle 6 kirjainta pitkä"
 js-pwd_too_long = "Salasana ei saa olla yli 72 kirjainta pitkä"
 js-pwd_not_pwd = "Salasana ei saa olla 'password'"
 
 [leaderboard]
 title = "Tulostaulukko"
-inactive_players = "Passiiviset pelaajat, joilla on korkea epävarmuus, suljetaan pois tulostaulukosta."
+inactive_players = ["Passiiviset pelaajat, joilla on epävarmuus korkeampi kuin ", ", suljetaan pois tulostaulukosta."] # A number is inserted between these two quotes
 your_global_ranking = "Sinun sijoituksesi:"
 show_more = "Näytä lisää..."
 
@@ -184,7 +183,7 @@ error = "VIRHE"
 [play.main-menu]
 credits = "Krediitit"
 play = "Pelaa"
-practice = "Harjoittelu"
+practice = "Harjoittele"
 guide = "Opas"
 editor = "Laudan Muokkaaja"
 
@@ -245,7 +244,7 @@ obstacle = {name="Este", description="Neutraali nappula (ei kummankaan pelaajan 
 void = {name="Tyhjyys", description="Neutraali nappula (ei kummankaan pelaajan ohjaama), joka edustaa laudan puuttuvaa osaa. Nappulat eivät voi liikkua sen läpi tai sen päälle."}
 
 [play.practice-menu]
-title = "Harjoittelu - Shakkimatti"
+title = "Harjoittele - Shakkimatti"
 play = "Pelaa"
 back = "Takaisin"
 difficulty = "Vaikeus"
@@ -300,6 +299,9 @@ no = "Ei"
 yes = "Kyllä"
 rated = "Arvioitu"
 casual = "Rento"
+easy = "Helppo"
+medium = "Keskivaikea"
+hard = "Vaikea"
 join_games = "Liity Valmiiseen - Aktiiviset Pelit:"
 private_invite = "Yksityinen Kutsu:"
 your_invite = "Sinun Kutsukoodisi:"
@@ -318,11 +320,11 @@ erase = "Poista merkintöjä"
 collapse = "Supista merkinnät"
 rewind_move = "Kelaa taaksepäin siirto"
 forward_move = "Eteenpäin siirto"
-undo_edit = "Kumoa muokkaus (Ctrl+Z)"
-redo_edit = "Tee muokkaus uudelleen (Ctrl+Y)"
+undo_edit = "Kumoa muokkaus (Ctrl+Z)" # Board editor
+redo_edit = "Tee muokkaus uudelleen (Ctrl+Y)" # Board editor
 pause = "Pysäytä"
-undo = "Kumoa siirto"
-restart = "Käynnistä peli uudelleen"
+undo = "Kumoa siirto" # Checkmate practice game
+restart = "Käynnistä peli uudelleen" # Checkmate practice game
 
 [play.pause]
 title = "Pysäytetty"
@@ -363,6 +365,7 @@ arrows_all_hippogonals = "Nuolet: Kaikki (hippogonaalit)"
 toggled = "Vaihdettu"
 menu_online = "Pelaa - Verkossa"
 menu_local = "Pelaa - Paikallinen"
+menu_computer = "Pelaa - Tietokone"
 invite_error_digits = "Kutsukoodin täytyy olla 5 pitkä."
 invite_copied = "Kutsukoodi kopioitui."
 move_counter = "Siirto:"
@@ -558,7 +561,7 @@ fair_play_paragraph1 = ["Et voi luoda useampaa kuin yhtä tiliä."]
 fair_play_paragraph2 = "Jotta pelaaminen olisi hauskaa ja reilua kaikille, ET SAA:"
 fair_play_rules = [
 "Muokata tai manipuloida koodia millään tavalla, mukaan lukien mutta ei rajoittuen: Konsolikomennot, paikalliset ohitukset, omat skriptit, http-pyyntöjen muokkaaminen jne. Tätä voidaan tehdä tarkoituksella pelin rikkomiseksi tai saadakseen etua.",
-"Hyödyntää bugeja tai virheitä pelin keskeyttämiseksi, edun saamiseksi tai pelin tekemiseksi muuten pelikelvottomaksi. Tämä voi sisältää nappulan siirtämisen äärimmäisiin etäisyyksiin, kuten 10^15 keskipisteestä.",
+"Hyödyntää bugeja tai virheitä pelin keskeyttämiseksi, edun saamiseksi tai pelin tekemiseksi muuten pelikelvottomaksi.",
 "Arvostelluissa peleissä saada apua/toisen henkilön tai ohjelman neuvoja siitä, mitä sinun tulisi pelata. (Algoritmin luominen on ok ja kannustettua, mutta sen käyttö tulee rajoittaa arvostelemattomiin, rentoihin peleihin)",
 "Vaihtaa elo-pisteitä muiden kanssa häviämällä tarkoituksellisesti, jotta vastustajan elo nousee, tai saamalla elo-pisteitä vastustajalta, joka aikoo hävitä nostaakseen sinun arvoasi. Tämä vääristää järjestelmää ja luo epätarkkoja luokituksia taitotasoon nähden."
 ]
@@ -637,9 +640,8 @@ ws-email_too_long = "Sinun sähköpostiosoitteesi on liian piiitkä."
 ws-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
 ws-email_in_use = "Sähköposti on jo käytössä"
 ws-email_domain_invalid = "Vääränlainen nettiosoite."
-ws-you_are_banned = "Sinut on estetty."
+ws-email_blacklisted = "Sinun sähköpostiosoitteesi on estolistalla."
 ws-password_length = "Salasanan tulee olla 6-72 kirjainta pitkä"
-ws-password_format = "Salasana on väärässä muodossa"
 ws-password_password = "Salasana ei saa olla 'password'"
 ws-password-reset-link-sent = "Jos kyseisellä sähköpostiosoitteella on jo tili, salasanan palautuslinkki on lähetetty."
 ws-password-change-success = "Salasanan palauttaminen onnistui. Sinut ohjataan pian kirjautumissivulle."
@@ -655,8 +657,12 @@ ws-server_restarting = "Palvelin uudelleenkäynnistyy" # The server inserts a nu
 ws-server_under_maintenance = "Palvelin on huollossa. Tule pian takaisin!" # Can be changed at will to change the display message.
 ws-minutes = "minuutissa" # unit of time
 ws-minute = "minuutissa" # unit of time
-ws-game_aborted_cheating = "Peli keskeytettiin todennäköisestä huijaamisesta."
+ws-you_cheated = "Hups! Sinä pelasit jotain sääntöjen vastaista. Tämä peli on keskeytetty. Jos tämä on vahinko, ilmoita meille!"
+ws-opponent_cheated = "Vastustajasi pelasi jotain sääntöjen vastaista. Tämä peli on keskeytetty."
 ws-cannot_resign_finished_game = "Pelistä ei voi erota, se on jo ohi."
 ws-invalid_code = "Vääränlainen koodi!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Peli keskeytettiin." # Invite was cancelled as you clicked on it
 ws-rated_invite_verification_needed = "Pelataksesi arvosteltuja pelejä sinun on kirjauduttava sisään vahvistetulla tilillä."
+
+[rate-limiting]
+generic = "Teit liian monta pyyntöä, kokeile myöhemmin uudelleen."
