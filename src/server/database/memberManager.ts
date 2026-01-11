@@ -180,30 +180,21 @@ function deleteUser(user_id: number, reason_deleted: string): void {
 // General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
 
 /**
- * Fetches specified columns of a single member from the database based on user_id, username, or email.
- * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
- * @param searchKey - The search key to use. Must be a valid column name.
- * @param searchValue - The value to search for, can be a user ID, username, or email.
- * @param skipErrorLogging - If true, errors will not be logged when no match is found.
- * @returns An object containing the requested columns, or undefined if no match is found.
- * @throws If invalid parameters are provided, or if a database error occurs during the query.
+ * Helper for validating the common arguments used for querying member data.
+ * @param columns - The list of columns to retrieve (e.g., ['checkmates_beaten']).
+ * @param searchKey - The database column to search by (e.g., 'username').
+ * @param searchValues - An array of values to search for (e.g., ['user1', 'user2']).
+ * @throws Error if any validation fails.
  */
-function getMemberDataByCriteria<K extends MembersColumn>(
-	columns: K[],
-	searchKey: MembersColumn,
-	searchValue: string | number,
-): Pick<MemberRecord, K> | undefined {
-	// Guard clauses... Validating the arguments...
-	// These are safety backups in case type safety doesn't prevent invalid arguments.
-
-	if (!Array.isArray(columns)) {
-		logEventsAndPrint(
-			`When getting member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid columns parameter.');
-	}
+function validateMemberQueryArgs(
+	columns: string[],
+	searchKey: string,
+	searchValues: (string | number)[],
+): void {
+	// 1. Validate Columns
 	if (
+		!Array.isArray(columns) ||
+		columns.length === 0 ||
 		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
 	) {
 		logEventsAndPrint(
@@ -213,18 +204,8 @@ function getMemberDataByCriteria<K extends MembersColumn>(
 		throw new Error('Invalid columns parameter.');
 	}
 
-	// Check if the searchKey and searchValue are valid
-	if (
-		typeof searchKey !== 'string' ||
-		(typeof searchValue !== 'string' && typeof searchValue !== 'number')
-	) {
-		logEventsAndPrint(
-			`When getting member data by criteria, searchKey must be a string and searchValue must be a number or string! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValue)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid search key.');
-	}
-	if (!uniqueMemberKeys.includes(searchKey)) {
+	// 2. Validate Search Key
+	if (typeof searchKey !== 'string' || !uniqueMemberKeys.includes(searchKey)) {
 		logEventsAndPrint(
 			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
 			'errLog.txt',
@@ -232,9 +213,36 @@ function getMemberDataByCriteria<K extends MembersColumn>(
 		throw new Error('Invalid search key.');
 	}
 
-	// Arguments are valid, move onto the SQL query...
+	// 3. Validate Search Values
+	if (
+		!Array.isArray(searchValues) ||
+		searchValues.length === 0 ||
+		!searchValues.every((value) => typeof value === 'string' || typeof value === 'number')
+	) {
+		logEventsAndPrint(
+			`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`,
+			'errLog.txt',
+		);
+		throw new Error('Invalid search values.');
+	}
+}
 
-	// Construct SQL query
+/**
+ * Fetches specified columns of a single member from the database based on user_id, username, or email.
+ * @param columns - The columns to retrieve (e.g., ['checkmates_beaten']).
+ * @param searchKey - The search key to use. (e.g. 'username')
+ * @param searchValue - The value to search for (e.g. 'user123').
+ * @returns An object containing the requested columns, or undefined if no match is found.
+ * @throws If invalid parameters are provided, or if a database error occurs during the query.
+ */
+function getMemberDataByCriteria<K extends MembersColumn>(
+	columns: K[],
+	searchKey: MembersColumn,
+	searchValue: string | number,
+): Pick<MemberRecord, K> | undefined {
+	// Runtime validation
+	validateMemberQueryArgs(columns, searchKey, [searchValue]);
+
 	const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
 
 	try {
@@ -244,14 +252,14 @@ function getMemberDataByCriteria<K extends MembersColumn>(
 		// Log the error and rethrow a generic error
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error getting member data by criteria: ${message}`, 'errLog.txt');
-		throw new Error('A database error occured.'); // Rethrow generic error
+		throw new Error('A database error occured.');
 	}
 }
 
 /**
  * Fetches specified columns of multiple members from the database based on a list of user_ids, usernames, or emails.
  * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'roles']).
- * @param searchKey - The search key to use. Must be a valid column name.
+ * @param searchKey - The search key to use (e.g., 'checkmates_beaten').
  * @param searchValueList - The value to search for, can be a list of user IDs, usernames, or emails.
  * @returns An array of member records.
  * @throws If invalid parameters are provided, or if a database error occurs during the query.
@@ -261,46 +269,8 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 	searchKey: MembersColumn,
 	searchValueList: string[] | number[],
 ): Pick<MemberRecord, K>[] {
-	// Guard clauses... Validating the arguments...
-
-	if (!Array.isArray(columns)) {
-		logEventsAndPrint(
-			`When getting multiple member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid columns parameter.');
-	}
-	if (
-		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
-	) {
-		logEventsAndPrint(
-			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid columns parameter.');
-	}
-
-	// Check if the searchKey and searchValueList are valid
-	if (
-		typeof searchKey !== 'string' ||
-		!Array.isArray(searchValueList) ||
-		searchValueList.length === 0
-	) {
-		logEventsAndPrint(
-			`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a non-empty list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid search key.');
-	}
-	if (!uniqueMemberKeys.includes(searchKey)) {
-		logEventsAndPrint(
-			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid search key.');
-	}
-
-	// Arguments are valid, move onto the SQL query...
+	// Runtime validation
+	validateMemberQueryArgs(columns, searchKey, searchValueList);
 
 	// Construct SQL query
 	const placeholders = searchValueList.map(() => '?').join(', ');
@@ -320,7 +290,7 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 			`Error getting MULTIPLE member data by criteria: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occured.'); // Rethrow generic error
+		throw new Error('A database error occured.');
 	}
 }
 
