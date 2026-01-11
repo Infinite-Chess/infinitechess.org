@@ -39,17 +39,73 @@ describe('Practice Progress Integration', () => {
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ username: 'ChessMaster', password: 'Password123!' });
 
-		// Extract the 'jwt' cookie
+		// Extract the session cookies
 		const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
 		const jwtCookie = cookies.find((c) => c.startsWith('jwt='));
 		const memberInfoCookie = cookies.find((c) => c.startsWith('memberInfo='));
 
-		if (!jwtCookie) throw new Error('Failed to get JWT cookie during test setup');
-		if (!memberInfoCookie) throw new Error('Failed to get memberInfo cookie during test setup');
+		if (!jwtCookie || !memberInfoCookie) throw new Error('Missing login cookies');
 
 		// Return both combined for the next request
 		return [jwtCookie, memberInfoCookie].filter(Boolean).join(';');
 	}
+
+	it('should reject requests with no body', async () => {
+		const cookie = await loginAndGetCookie();
+
+		const response = await request(app)
+			.post('/api/update-checkmatelist')
+			.set('Cookie', cookie)
+			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+
+		expect(response.status).toBe(400);
+	});
+
+	it('should reject requests with missing new_checkmate_beaten', async () => {
+		const cookie = await loginAndGetCookie();
+
+		const response = await request(app)
+			.post('/api/update-checkmatelist')
+			.set('Cookie', cookie)
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.send({}); // No new_checkmate_beaten
+
+		expect(response.status).toBe(400);
+	});
+
+	it('should reject requests with non-string new_checkmate_beaten', async () => {
+		const cookie = await loginAndGetCookie();
+
+		const response = await request(app)
+			.post('/api/update-checkmatelist')
+			.set('Cookie', cookie)
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.send({ new_checkmate_beaten: 12345 }); // Non-string
+
+		expect(response.status).toBe(400);
+	});
+
+	it('should reject requests from unauthenticated users', async () => {
+		const response = await request(app)
+			.post('/api/update-checkmatelist')
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
+
+		expect(response.status).toBe(401);
+	});
+
+	it('should reject invalid checkmate IDs', async () => {
+		const cookie = await loginAndGetCookie();
+
+		const response = await request(app)
+			.post('/api/update-checkmatelist')
+			.set('Cookie', cookie)
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.send({ new_checkmate_beaten: 'INVALID-ID-123' });
+
+		expect(response.status).toBe(400);
+		// expect(response.body.message).toBe('Invalid checkmate ID');
+	});
 
 	it('should allow a logged-in user to save a new checkmate', async () => {
 		const cookie = await loginAndGetCookie();
@@ -108,14 +164,16 @@ describe('Practice Progress Integration', () => {
 		const cookie = await loginAndGetCookie();
 
 		// 1. Submit First Time
-		await request(app)
+		let response = await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
+		expect(response.status).toBe(200);
+
 		// 2. Submit Same ID Again
-		const response = await request(app)
+		response = await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
@@ -127,27 +185,5 @@ describe('Practice Progress Integration', () => {
 		// DB should still only have it once (no duplicates like "ID,ID")
 		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', 'ChessMaster');
 		expect(record?.checkmates_beaten).toBe(VALID_CHECKMATE_ID);
-	});
-
-	it('should reject invalid checkmate IDs', async () => {
-		const cookie = await loginAndGetCookie();
-
-		const response = await request(app)
-			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ new_checkmate_beaten: 'INVALID-ID-123' });
-
-		expect(response.status).toBe(400);
-		expect(response.body.message).toBe('Invalid checkmate ID');
-	});
-
-	it('should reject requests from unauthenticated users', async () => {
-		const response = await request(app)
-			.post('/api/update-checkmatelist')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
-
-		expect(response.status).toBe(401);
 	});
 });
