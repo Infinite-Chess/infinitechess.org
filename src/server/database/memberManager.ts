@@ -295,71 +295,57 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 }
 
 /**
- * Updates multiple column values in the members table for a given user.
- * @param userId - The user ID of the member.
- * @param columnsAndValues - An object containing column-value pairs to update.
- * @returns Returns true if the update was successful, false if no changes were made or validation failed.
+ * Updates specified columns for a member based on their user ID.
+ * @param user_id - The user ID of the member to update.
+ * @param columnsAndValues - An object mapping column names to their new values.
+ * @returns A result object indicating if a change was made, which if not, may indicate the user_id does not exist.
+ * @throws If invalid parameters are provided, or if a database error occurs.
  */
-function updateMemberColumns(userId: number, columnsAndValues: Record<string, any>): boolean {
-	// Ensure columnsAndValues is an object and not empty
-	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
+function updateMemberColumns(
+	user_id: number,
+	columnsAndValues: Partial<MemberRecord>,
+): { changeMade: boolean } {
+	// Validate that we have columns to update
+	if (typeof columnsAndValues !== 'object' || columnsAndValues === null) {
 		logEventsAndPrint(
-			`Invalid or empty columns and values provided for user ID "${userId}" when updating member columns!`,
+			`Invalid columnsAndValues provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
 			'errLog.txt',
 		);
-		return false;
+		throw new Error('Invalid update parameters.');
 	}
 
-	for (const column in columnsAndValues) {
-		// Validate all provided columns
-		if (!allMemberColumns.includes(column)) {
-			logEventsAndPrint(
-				`Invalid column "${column}" provided for user ID "${userId}" when updating member columns!`,
-				'errLog.txt',
-			);
-			return false;
-		}
-		// Convert objects (e.g., JSON) to strings for storage
-		if (typeof columnsAndValues[column] === 'object' && columnsAndValues[column] !== null) {
-			columnsAndValues[column] = JSON.stringify(columnsAndValues[column]);
-		}
+	const columns = Object.keys(columnsAndValues);
+	const values = Object.values(columnsAndValues);
+
+	// Validate they are all valid database columns
+	if (
+		columns.length === 0 ||
+		!columns.every((col) => allMemberColumns.includes(col)) ||
+		!values.every((val) => typeof val === 'string' || typeof val === 'number' || val === null)
+	) {
+		logEventsAndPrint(
+			`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
+			'errLog.txt',
+		);
+		throw new Error('Invalid update parameters.');
 	}
 
 	// Dynamically build the SET part of the query
-	const setStatements = Object.keys(columnsAndValues)
-		.map((column) => `${column} = ?`)
-		.join(', ');
-	const values = Object.values(columnsAndValues);
-
-	// Add the userId as the last parameter for the WHERE clause
-	values.push(userId);
-
-	// Update query to modify multiple columns
-	const updateQuery = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
+	const setStatements = columns.map((column) => `${column} = ?`).join(', ');
+	const query = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
 
 	try {
-		// Execute the update query
-		const result = db.run(updateQuery, values);
-
-		// Check if the update was successful
-		if (result.changes > 0) return true;
-		else {
-			logEventsAndPrint(
-				`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`,
-				'errLog.txt',
-			);
-			return false;
-		}
+		// Execute the update query, appending user_id as the last parameter
+		const result = db.run(query, [...values, user_id]);
+		return { changeMade: result.changes > 0 };
 	} catch (error: unknown) {
-		// Log the error for debugging purposes
+		// Log the error and rethrow a generic error
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${userId}": ${message}`,
+			`Error updating columns ${jsutil.ensureJSONString(columnsAndValues)} for user ID "${user_id}": ${message}`,
 			'errLog.txt',
 		);
-
-		// Return false indicating failure
-		return false;
+		throw new Error('A database error occurred.');
 	}
 }
 

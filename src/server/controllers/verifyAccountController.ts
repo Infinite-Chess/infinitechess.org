@@ -8,7 +8,11 @@
 import { getTranslationForReq } from '../utility/translate.js';
 import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
+import {
+	getMemberDataByCriteria,
+	MemberRecord,
+	updateMemberColumns,
+} from '../database/memberManager.js';
 
 import type { Response } from 'express';
 import type { IdentifiedRequest } from '../types.js';
@@ -151,22 +155,31 @@ function _executeVerificationUpdate(
 ): { success: true } | { success: false; reason: string } {
 	AddVerificationToAllSocketsOfMember(user_id);
 
-	const changes = {
+	const changes: Partial<MemberRecord> = {
 		is_verified: 1,
 		verification_code: null,
 		// Set to 0 so they will see the "Thank you" message next time they visit their profile
 		is_verification_notified: 0,
 	};
-	const changesMade = updateMemberColumns(user_id, changes);
 
-	if (!changesMade) {
-		const reason = `Database update failed for user "${username}".`;
+	try {
+		const result = updateMemberColumns(user_id, changes);
+
+		if (!result.changeMade) {
+			logEventsAndPrint(
+				`Failed to verify member "${username}" of ID "${user_id}": No change made. Do they exist?`,
+				'errLog.txt',
+			);
+			return { success: false, reason: 'Failed to update user verification.' };
+		}
+
+		return { success: true };
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`No changes made when verifying member "${username}" (ID: ${user_id})!`,
+			`Error verifying member "${username}" of ID "${user_id}": ${message}`,
 			'errLog.txt',
 		);
-		return { success: false, reason };
+		return { success: false, reason: 'Server error during user verification.' };
 	}
-
-	return { success: true };
 }

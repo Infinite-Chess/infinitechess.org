@@ -45,19 +45,28 @@ function giveRole(userId, role) {
 	// Add the new role to the roles array
 	roles.push(role);
 
-	// Save the updated roles back to the database
-	const success = updateMemberColumns(userId, { roles });
+	try {
+		// Save the updated roles back to the database
+		const result = updateMemberColumns(userId, { roles: JSON.stringify(roles) });
 
-	if (success)
+		if (result.changeMade) {
+			logEventsAndPrint(
+				`Added role "${role}" to member with ID "${userId}".`,
+				'loginAttempts.txt',
+			);
+		} else {
+			logEventsAndPrint(
+				`Failed to add role "${role}" to member with ID "${userId}".`,
+				'errLog.txt',
+			);
+		}
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Added role "${role}" to member with user ID "${userId}".`,
-			'loginAttempts.txt',
-		);
-	else
-		logEventsAndPrint(
-			`Failed to add role "${role}" to member with user ID "${userId}".`,
+			`Error adding role "${role}" to member of ID "${userId}": ${message}`,
 			'errLog.txt',
 		);
+	}
 }
 
 // /**

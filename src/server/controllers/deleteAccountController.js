@@ -45,13 +45,13 @@ async function removeAccount(req, res) {
 	}
 
 	// Get user_id and case-sensitive username from database
-	const { user_id, username } = getMemberDataByCriteria(
+	const record = getMemberDataByCriteria(
 		['user_id', 'username'],
 		'username',
 		claimedUsername,
 		false,
 	);
-	if (user_id === undefined || username === undefined) {
+	if (record === undefined) {
 		return logEventsAndPrint(
 			`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`,
 			'errLog.txt',
@@ -63,9 +63,9 @@ async function removeAccount(req, res) {
 	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
 	// If that is done while they are in the middle of a rated game,
 	// errors will happen when the game is deleted.
-	if (isMemberInSomeActiveGame(username)) {
+	if (isMemberInSomeActiveGame(record.username)) {
 		logEventsAndPrint(
-			`User ${username} requested account deletion while being listed in some active game.`,
+			`User ${record.username} requested account deletion while being listed in some active game.`,
 			'deletedAccounts.txt',
 		);
 		return res.status(403).json({
@@ -81,16 +81,16 @@ async function removeAccount(req, res) {
 	const reason_deleted = 'user request';
 
 	try {
-		deleteAccount(user_id, reason_deleted);
+		deleteAccount(record.user_id, reason_deleted);
 		logEventsAndPrint(
-			`Deleted account of user_id (${user_id}) for reason (${reason_deleted}).`,
+			`Deleted account of user_id (${record.user_id}) for reason (${reason_deleted}).`,
 			'deletedAccounts.txt',
 		);
 		return res.send('OK'); // 200 is default code
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Can't delete account of user_id (${user_id}) after a correct password entered: ${errorMessage}`,
+			`Can't delete account of user_id (${record.user_id}) after a correct password entered: ${errorMessage}`,
 			'errLog.txt',
 		);
 		return res.status(404).json({

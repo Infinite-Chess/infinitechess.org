@@ -127,8 +127,16 @@ const getMemberData = async (req: IdentifiedRequest, res: Response): Promise<Res
 		// If they are verified but haven't been notified yet, this is the moment to do so.
 		if (record.is_verified === 1 && record.is_verification_notified === 0) {
 			console.log(`Thanking member ${record.username} for verifying their account!`);
-			// Mark them as notified in the database.
-			updateMemberColumns(record.user_id, { is_verification_notified: 1 });
+			try {
+				// Mark them as notified in the database.
+				updateMemberColumns(record.user_id, { is_verification_notified: 1 });
+			} catch (error: unknown) {
+				const message = error instanceof Error ? error.message : String(error);
+				logEventsAndPrint(
+					`Failed to update member of ID "${record.user_id}" verification notified status: ${message}`,
+					'errLog.txt',
+				);
+			}
 		} else if (record.is_verified === 0) {
 			console.log(`Requesting member ${record.username} to verify their account!`);
 		}

@@ -29,14 +29,14 @@ async function handleLogin(req, res) {
 	try {
 		const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
-		const { user_id, username, roles } = getMemberDataByCriteria(
+		const record = getMemberDataByCriteria(
 			['user_id', 'username', 'roles'],
 			'username',
 			usernameCaseInsensitive,
 			false,
 		);
 
-		if (user_id === undefined) {
+		if (record === undefined) {
 			// This is a critical internal inconsistency.
 			logEventsAndPrint(
 				`User "${usernameCaseInsensitive}" not found by username after a successful password check! This indicates a data integrity issue.`,
@@ -49,15 +49,15 @@ async function handleLogin(req, res) {
 		}
 
 		// The roles fetched from the database is a stringified json string array, parse it here!
-		const parsedRoles = roles !== null ? JSON.parse(roles) : null;
+		const parsedRoles = record.roles !== null ? JSON.parse(record.roles) : null;
 
-		createNewSession(req, res, user_id, username, parsedRoles);
+		createNewSession(req, res, record.user_id, record.username, parsedRoles);
 
 		res.status(200).json({ message: 'Logged in successfully.' });
 
 		// These operations are "fire and forget" in terms of the client response
-		updateLoginCountAndLastSeen(user_id);
-		logEventsAndPrint(`Logged in member "${username}".`, 'loginAttempts.txt');
+		updateLoginCountAndLastSeen(record.user_id);
+		logEventsAndPrint(`Logged in member "${record.username}".`, 'loginAttempts.txt');
 	} catch (error) {
 		// Log the detailed error for server-side debugging.
 		logEventsAndPrint(

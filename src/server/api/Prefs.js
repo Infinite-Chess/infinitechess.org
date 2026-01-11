@@ -118,9 +118,9 @@ function deletePreferencesCookie(res) {
  * @returns {Object|undefined} - Returns the preferences object if found, otherwise undefined.
  */
 function getPrefs(userId) {
-	const { preferences } = getMemberDataByCriteria(['preferences'], 'user_id', userId, true);
-	if (preferences === undefined) return;
-	const prefs = JSON.parse(preferences);
+	const record = getMemberDataByCriteria(['preferences'], 'user_id', userId, true);
+	if (record === undefined) return;
+	const prefs = JSON.parse(record.preferences);
 	if (prefs === null) return;
 	return prefs;
 }
@@ -153,21 +153,30 @@ function postPrefs(req, res) {
 			.json({ message: 'Preferences not valid, cannot save on the server.' });
 	}
 
-	// Update the preferences column in the database
-	const updateSuccess = updateMemberColumns(user_id, { preferences });
+	try {
+		// Update the preferences column in the database
+		const result = updateMemberColumns(user_id, { preferences: JSON.stringify(preferences) });
 
-	// Send appropriate response
-	if (updateSuccess) {
-		console.log(
-			`Successfully saved member "${username}" of id "${user_id}"s user preferences.`,
-		);
-		res.status(200).json({ message: 'Preferences updated successfully' });
-	} else {
+		// Send appropriate response
+		if (result.changeMade) {
+			console.log(
+				`Successfully saved member "${username}" of id "${user_id}"s user preferences.`,
+			);
+			res.status(200).json({ message: 'Preferences updated successfully' });
+		} else {
+			logEventsAndPrint(
+				`Failed to save preferences for member "${username}" id "${user_id}". No change made. Do they exist?`,
+				'errLog.txt',
+			);
+			res.status(500).json({ message: 'Failed to update preferences' });
+		}
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`,
+			`Error occurred while saving preferences for member "${username}" of ID "${user_id}": ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'Failed to update preferences: user_id not found' });
+		res.status(500).json({ message: 'Server error while updating preferences' });
 	}
 }
 

@@ -34,31 +34,31 @@ async function testPasswordForRequest(req, res) {
 	let { username: claimedUsername, password: claimedPassword } = req.body;
 	claimedUsername = claimedUsername || req.params.member;
 
-	const { user_id, username, hashed_password } = getMemberDataByCriteria(
+	const record = getMemberDataByCriteria(
 		['user_id', 'username', 'hashed_password'],
 		'username',
 		claimedUsername,
 		true,
 	);
-	if (user_id === undefined) {
-		// Username doesn't exist
+	if (record === undefined) {
+		// User not found
 		res.status(401).json({
 			message: getTranslationForReq('server.javascript.ws-invalid_username', req),
 		}); // Unauthorized, username not found
 		return false;
 	}
 
-	const browserAgent = getBrowserAgent(req, username);
+	const browserAgent = getBrowserAgent(req, record.username);
 	if (!rateLimitLogin(req, res, browserAgent)) return false; // They are being rate limited from enterring incorrectly too many times
 
 	// Test the password
-	const match = await bcrypt.compare(claimedPassword, hashed_password);
+	const match = await bcrypt.compare(claimedPassword, record.hashed_password);
 	if (!match) {
-		logEventsAndPrint(`Incorrect password for user ${username}!`, 'loginAttempts.txt');
+		logEventsAndPrint(`Incorrect password for user ${record.username}!`, 'loginAttempts.txt');
 		res.status(401).json({
 			message: getTranslationForReq('server.javascript.ws-incorrect_password', req),
 		}); // Unauthorized, password not found
-		onIncorrectPassword(browserAgent, username);
+		onIncorrectPassword(browserAgent, record.username);
 		return false;
 	}
 
