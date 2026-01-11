@@ -38,7 +38,6 @@ async function testPasswordForRequest(req, res) {
 		['user_id', 'username', 'hashed_password'],
 		'username',
 		claimedUsername,
-		true,
 	);
 	if (record === undefined) {
 		// User not found

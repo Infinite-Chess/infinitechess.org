@@ -27,7 +27,7 @@ function giveRole(userId, role) {
 		);
 
 	// Fetch the member's current roles from the database
-	let { roles } = getMemberDataByCriteria(['roles'], 'user_id', userId, false);
+	let { roles } = getMemberDataByCriteria(['roles'], 'user_id', userId);
 	if (roles === undefined)
 		return logEventsAndPrint(
 			`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`,

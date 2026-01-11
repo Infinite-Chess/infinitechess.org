@@ -45,12 +45,7 @@ async function removeAccount(req, res) {
 	}
 
 	// Get user_id and case-sensitive username from database
-	const record = getMemberDataByCriteria(
-		['user_id', 'username'],
-		'username',
-		claimedUsername,
-		false,
-	);
+	const record = getMemberDataByCriteria(['user_id', 'username'], 'username', claimedUsername);
 	if (record === undefined) {
 		return logEventsAndPrint(
 			`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`,
