@@ -85,7 +85,7 @@ describe('Preferences Integration', () => {
 		const prefCookie = cookies.find((c) => c.startsWith('preferences='));
 		expect(prefCookie).toBeDefined();
 
-		const prefValue = JSON.parse(decodeURIComponent(prefCookie!.split(';')[0].split('=')[1]));
+		const prefValue = JSON.parse(decodeURIComponent(prefCookie!.split(';')[0]!.split('=')[1]!));
 		expect(prefValue).toMatchObject(VALID_PREFS);
 	});
 
