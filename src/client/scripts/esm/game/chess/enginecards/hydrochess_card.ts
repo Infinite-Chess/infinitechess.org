@@ -17,8 +17,13 @@ type SupportedResult = { supported: true } | { supported: false; reason: string 
  * If it's not, and we play a game with it anyway, the engine may crash.
  */
 function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
-	// 1. Any win condition that is not checkmate or royalcapture or allpiecescaptured is unsupported.
-	const supportedWinConditions = ['checkmate', 'royalcapture', 'allpiecescaptured'];
+	// 1. Any win condition that is not checkmate, royalcapture, allroyalscaptured, or allpiecescaptured is unsupported.
+	const supportedWinConditions = [
+		'checkmate',
+		'royalcapture',
+		'allroyalscaptured',
+		'allpiecescaptured',
+	];
 	const usedWinConditions: string[] = Object.values(
 		variantOptions.gameRules.winConditions,
 	).flat();
@@ -27,13 +32,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 			return { supported: false, reason: `Unsupported win condition: ${winCondition}.` };
 	}
 
-	// 2. Any side with more than one win condition is unsupported.
-	for (const playerWinConditions of Object.values(variantOptions.gameRules.winConditions)) {
-		if (playerWinConditions.length > 1)
-			return { supported: false, reason: 'Multiple win conditions per player.' };
-	}
-
-	// 3. World border larger than i64 is unsupported.
+	// 2. World border larger than i64 is unsupported.
 	const cap = 1_000_000_000_000_000_000n; // About 10% the max, for cushion
 	if (
 		!variantOptions.gameRules.worldBorder ||
@@ -45,7 +44,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		};
 	}
 
-	// 4. Maximum of one promotion line per player.
+	// 3. Maximum of one promotion line per player.
 	if (variantOptions.gameRules.promotionRanks) {
 		for (const playerRanks of Object.values(variantOptions.gameRules.promotionRanks)) {
 			if (playerRanks.length > 1) {
@@ -57,7 +56,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 5. Not too many pieces in total.
+	// 4. Not too many pieces in total.
 	const maxPieces = 200;
 	if (variantOptions.position.size > maxPieces) {
 		return {
@@ -66,7 +65,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		};
 	}
 
-	// 6. Only suppported pieces may be present.
+	// 5. Only suppported pieces may be present.
 	const supportedPieces: RawType[] = [
 		rawTypes.VOID,
 		rawTypes.OBSTACLE,
@@ -101,7 +100,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 7. Maximum of 1 royal per side.
+	// 6. Maximum of 1 royal per side.
 	const royalsCountByPlayer: PlayerGroup<number> = {};
 	for (const type of variantOptions.position.values()) {
 		const rawType = typeutil.getRawType(type);
