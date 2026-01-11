@@ -75,8 +75,8 @@ describe('Preferences Integration', () => {
 		const response = await request(app)
 			.get('/') // Hitting the homepage (or any HTML route)
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
-		// .set('Accept', 'text/html');
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('Accept', 'text/html');
 
 		expect(response.status).toBe(200);
 
