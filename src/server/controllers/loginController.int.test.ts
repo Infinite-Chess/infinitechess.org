@@ -1,3 +1,5 @@
+// src/server/controllers/loginController.int.test.ts
+
 import app from '../app.js';
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import request from 'supertest';
