@@ -14,10 +14,9 @@ import { Request, Response } from 'express';
 
 import bcrypt from 'bcrypt';
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
+import { handleLogin } from './loginController.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
-// @ts-ignore
-import { handleLogin } from './loginController.js';
 // @ts-ignore
 import emailValidator from 'node-email-verifier';
 import {

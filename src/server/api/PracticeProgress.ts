@@ -153,7 +153,7 @@ function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
 
 	if (checkmates_beaten_array.includes(new_checkmate_beaten)) {
 		// Already beaten
-		res.status(200).json({ message: 'Checkmate already beaten' });
+		res.status(204).json({ message: 'Checkmate already beaten' });
 		return;
 	}
 

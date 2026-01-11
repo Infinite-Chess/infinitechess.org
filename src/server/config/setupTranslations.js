@@ -1,3 +1,5 @@
+// src/server/config/setupTranslations.js
+
 import i18next from 'i18next';
 import { parse } from 'smol-toml';
 import fs from 'fs';
@@ -39,40 +41,6 @@ const staticTranslatedTemplates = [
 	'errors/500',
 ];
 
-// Removed because <a> tags are no longer in whitelist
-/*
-const link_white_list = [
-  "/",
-  "/login",
-  "/news",
-  "/leaderboard",
-  "/play",
-  "/credits",
-  "/termsofservice",
-  "/createaccount",
-  "https://github.com/pychess/pychess/blob/master/LICENSE",
-  "mailto:support@infinitechess.org",
-  "https://www.patreon.com/Naviary",
-  "https://math.colgate.edu/~integers/og2/og2.pdf",
-  "https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces",
-  "https://math.colgate.edu/~integers/og2/og2.pdf",
-  "https://math.colgate.edu/~integers/rg4/rg4.pdf",
-  "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
-  "https://creativecommons.org/licenses/by-sa/3.0/deed.en",
-  "https://www.gnu.org/licenses/gpl-3.0.en.html",
-  "https://greenchess.net/info.php?item=downloads",
-  "https://github.com/lichess-org/lila/blob/master/COPYING.md",
-  "https://www.gnu.org/licenses/agpl-3.0.en.html",
-  "https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html",
-  "https://github.com/tsevasa/infinite-chess-notation",
-  "https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md",
-  "https://discord.gg/NFWFGZeNh5",
-  "https://www.chess.com/forum/view/chess-variants/infinite-chess-app-devlogs-and-more",
-  "https://github.com/Infinite-Chess/infinitechess.org",
-  "https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997"
-];
-*/
-
 const xss_options = {
 	whiteList: {
 		// a: ["href", "target"],
@@ -109,6 +77,13 @@ const xss_options = {
 	},
 };
 const custom_xss = new FilterXSS(xss_options);
+
+// Variables ----------------------------------------------------------------------
+
+/** Translations object containing all loaded translations. */
+let translations;
+
+// Functions ----------------------------------------------------------------------
 
 function html_escape_array(array) {
 	const escaped = [];
@@ -277,9 +252,30 @@ function createFileOrDir(filePath) {
 }
 
 /**
+ * Initializes i18next, loads languages from .toml files, saves translated versions of templates.
+ * **Should be ran only once**.
+ *
+ * DOES NOT translate static templates automatically, since that should not be done during integration tests.
+ */
+function initTranslations() {
+	translations = loadTranslationsFolder(translationsFolder);
+
+	i18next.use(middleware.LanguageDetector).init({
+		// debug: true,
+		preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
+		resources: translations,
+		defaultNS: 'default',
+		fallbackLng: getDefaultLanguage(),
+		// debug: true // Enable debug mode to see logs for missing keys and other details
+	});
+}
+
+/**
  * Generates translated versions of templates in staticTranslatedTemplates
  */
-function translateStaticTemplates(translations) {
+function translateStaticTemplates() {
+	if (!translations) throw new Error('Translations have not been initialized yet.');
+
 	const languages = Object.keys(translations);
 
 	const languages_list = languages.map((language) => {
@@ -322,23 +318,4 @@ function translateStaticTemplates(translations) {
 	}
 }
 
-/**
- * Initializes i18next, loads languages from .toml files, saves translated versions of templates.
- * **Should be ran only once**.
- */
-function initTranslations() {
-	const translations = loadTranslationsFolder(translationsFolder);
-
-	i18next.use(middleware.LanguageDetector).init({
-		// debug: true,
-		preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
-		resources: translations,
-		defaultNS: 'default',
-		fallbackLng: getDefaultLanguage(),
-		// debug: true // Enable debug mode to see logs for missing keys and other details
-	});
-
-	translateStaticTemplates(translations); // Compiles static files
-}
-
-export { initTranslations };
+export { initTranslations, translateStaticTemplates };
