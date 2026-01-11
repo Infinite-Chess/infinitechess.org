@@ -43,9 +43,9 @@ let stats: {
 };
 try {
 	stats = await readFile('database/stats.json');
-} catch (e) {
+} catch (error: unknown) {
 	if (process.env['VITEST']) {
-		console.warn('Mocking stats for test environment');
+		console.warn('Mocking stats.json for test environment');
 		stats = {
 			moveCount: {},
 			gamesPlayed: {
@@ -55,9 +55,8 @@ try {
 			},
 		};
 	} else {
-		const errMsg =
-			'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
-		throw new Error(errMsg);
+		const message = error instanceof Error ? error.message : String(error);
+		throw new Error('Unable to read stats.json on startup: ' + message);
 	}
 }
 
