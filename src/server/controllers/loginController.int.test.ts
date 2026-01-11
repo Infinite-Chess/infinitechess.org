@@ -104,5 +104,12 @@ describe('Login Controller Integration', () => {
 			.send({ username: 'RealUser', password: 'CorrectPassword!' });
 
 		expect(response.status).toBe(200);
+
+		// Ensure that the session cookies are set
+		const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
+
+		expect(cookies).toBeDefined();
+		expect(cookies.some((c) => c.startsWith('jwt='))).toBe(true);
+		expect(cookies.some((c) => c.startsWith('memberInfo='))).toBe(true);
 	});
 });
