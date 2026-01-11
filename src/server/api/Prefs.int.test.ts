@@ -76,7 +76,7 @@ describe('Preferences Integration', () => {
 			.get('/') // Hitting the homepage (or any HTML route)
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('Accept', 'text/html');
+			.set('Accept', 'text/html'); // Required for 'test' GitHub workflow to work here
 
 		expect(response.status).toBe(200);
 
