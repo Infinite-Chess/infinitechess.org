@@ -325,6 +325,32 @@ function initDatabase(): void {
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }
 
+/** Wipes all data from all tables. ONLY call in a test environment! */
+function clearAllTables(): void {
+	if (process.env['NODE_ENV'] !== 'test') {
+		return console.error('CANNOT CLEAR DATABASE TABLES OUTSIDE OF TEST ENVIRONMENT!');
+	}
+
+	// Get all table names dynamically
+	const tables = db.all<{ name: string }>(
+		"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+	);
+
+	// Disable foreign keys temporarily to avoid constraint errors (e.g. deleting Parent before Child)
+	db.run('PRAGMA foreign_keys = OFF');
+
+	// Wrap deletions in a transaction for speed
+	const wipeTransaction = db.transaction(() => {
+		for (const table of tables) {
+			db.run(`DELETE FROM ${table.name}`);
+		}
+	});
+	wipeTransaction();
+
+	// Re-enable foreign keys
+	db.run('PRAGMA foreign_keys = ON');
+}
+
 export {
 	user_id_upper_cap,
 	game_id_upper_cap,
@@ -335,4 +361,6 @@ export {
 	allGamesColumns,
 	allRatingAbuseColumns,
 	initDatabase,
+	generateTables,
+	clearAllTables,
 };
