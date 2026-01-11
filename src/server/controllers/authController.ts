@@ -1,13 +1,4 @@
-import bcrypt from 'bcrypt';
-import { getTranslationForReq } from '../utility/translate.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import {
-	getBrowserAgent,
-	onCorrectPassword,
-	onIncorrectPassword,
-	rateLimitLogin,
-} from './authRatelimiter.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+// src/server/controllers/authController.ts
 
 /**
  * This controller is used to process login form data,
@@ -16,6 +7,20 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
  * This also rate limits a members login attempts.
  */
 
+import type { Request, Response } from 'express';
+
+import bcrypt from 'bcrypt';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
+import {
+	getBrowserAgent,
+	onCorrectPassword,
+	onIncorrectPassword,
+	rateLimitLogin,
+} from './authRatelimiter.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+// @ts-ignore
+import { getTranslationForReq } from '../utility/translate.js';
+
 /**
  * Called when any fetch request submits login form data.
  * The req body needs to have the `username` and `password` properties.
@@ -23,16 +28,14 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
  * If the password is correct, this returns true.
  * Otherwise this sends a response to the client saying it was incorrect.
  * This is also rate limited.
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {Promise<boolean>} true if the password was correct
+ * @returns true if the password was correct
  */
-async function testPasswordForRequest(req, res) {
+async function testPasswordForRequest(req: Request, res: Response): Promise<boolean> {
 	if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
 
 	// eslint-disable-next-line prefer-const
 	let { username: claimedUsername, password: claimedPassword } = req.body;
-	claimedUsername = claimedUsername || req.params.member;
+	claimedUsername = claimedUsername || req.params['member'];
 
 	const record = getMemberDataByCriteria(
 		['user_id', 'username', 'hashed_password'],
@@ -69,11 +72,9 @@ async function testPasswordForRequest(req, res) {
 /**
  * Tests if the request body has valid `username` and `password` properties.
  * If not, this auto-sends a response to the client with an error.
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {boolean} true if the body is valid
+ * @returns true if the body is valid
  */
-function verifyBodyHasLoginFormData(req, res) {
+function verifyBodyHasLoginFormData(req: Request, res: Response): boolean {
 	if (!req.body) {
 		// Missing body
 		console.log(`User sent a bad login request missing the body!`);

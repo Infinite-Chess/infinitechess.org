@@ -13,7 +13,6 @@ import type { Request, Response } from 'express';
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
-// @ts-ignore
 import { testPasswordForRequest } from './authController.js';
 
 /**
