@@ -78,12 +78,6 @@ describe('Preferences Integration', () => {
 			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
 		// .set('Accept', 'text/html');
 
-		// Print debugging information about the response
-		console.log('Response Status:', response.status);
-		console.log('Response Headers:', response.headers);
-		console.log('Response Body:', response.text);
-		console.log('Response Body:', response.body);
-
 		expect(response.status).toBe(200);
 
 		const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
