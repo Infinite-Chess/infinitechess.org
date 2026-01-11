@@ -67,11 +67,6 @@ const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
 const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
 // refreshGitHubContributorsList(); // Initial refreshal for dev testing
 
-if (process.env['GITHUB_API_KEY'] === undefined || process.env['GITHUB_REPO'] === undefined)
-	throw new Error(
-		'.env file is missing GITHUB_API_KEY or GITHUB_REPO, please regenerate the file or add the lines manually.',
-	);
-
 // Functions ---------------------------------------------------------------------------
 
 /**
