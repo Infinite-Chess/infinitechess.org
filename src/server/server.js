@@ -14,8 +14,11 @@ import https from 'https';
 import app from './app.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
-import { logAllGames } from './game/gamemanager/gamemanager.js';
 import socketServer from './socket/socketServer.js';
+import { logAllGames } from './game/gamemanager/gamemanager.js';
+import { translateStaticTemplates } from './config/setupTranslations.js';
+
+translateStaticTemplates(); // Compiles static files. This part is NOT done for integration tests.
 
 const httpsServer = https.createServer(getCertOptions(), app);
 

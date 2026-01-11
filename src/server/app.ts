@@ -22,6 +22,7 @@ app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all 
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 
+// This is in here so integration tests work
 initTranslations();
 
 configureMiddleware(app); // Setup the middleware waterfall

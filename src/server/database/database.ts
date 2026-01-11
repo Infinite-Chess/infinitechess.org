@@ -17,9 +17,12 @@ const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
-const dbPath: string = path.join(__dirname, '../../../database.db');
-const db = new Database(dbPath); // Optional for logging queries
-// const db = new Database(dbPath, { verbose: console.log }); // Optional for logging queries
+const dbLocation: string =
+	process.env['NODE_ENV'] === 'test'
+		? ':memory:' // For integration tests, use in-memory database
+		: path.join(__dirname, '../../../', 'database.db'); // Normal database file
+const db = new Database(dbLocation);
+// const db = new Database(dbLocation, { verbose: console.log }); // Optional for logging queries
 
 // Variables ----------------------------------------------------------------------------------------------
 
