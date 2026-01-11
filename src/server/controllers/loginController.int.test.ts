@@ -43,6 +43,24 @@ describe('Login Controller Integration', () => {
 		expect(response.status).toBe(400);
 	});
 
+	it('should reject login with non-string username', async () => {
+		const response = await request(app)
+			.post('/auth')
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.send({ username: 12345, password: 'SomePassword' }); // Non-string username
+
+		expect(response.status).toBe(400);
+	});
+
+	it('should reject login with non-string password', async () => {
+		const response = await request(app)
+			.post('/auth')
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.send({ username: 'SomeUser', password: 67890 }); // Non-string password
+
+		expect(response.status).toBe(400);
+	});
+
 	it('should reject login for non-existent user', async () => {
 		const response = await request(app)
 			.post('/auth')
