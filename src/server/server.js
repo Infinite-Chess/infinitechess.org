@@ -9,32 +9,15 @@ import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
 
 // Dependancy/built-in imports
-import express from 'express';
 import https from 'https';
-import ejs from 'ejs';
 // Other imports
-import configureMiddleware from './middleware/middleware.js';
+import app from './app.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
-import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
 import socketServer from './socket/socketServer.js';
 
-const app = express();
-
-// This ensures that req.ip will give us the real user's IP instead of the Cloudflare proxy's IP.
-app.set('trust proxy', 1); // '1' means trust the first proxy hop (Cloudflare)
-
-// Initiate translations
-initTranslations();
-
-// Set EJS as the view engine
-app.engine('html', ejs.renderFile);
-app.set('view engine', 'html');
-
 const httpsServer = https.createServer(getCertOptions(), app);
-app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
-configureMiddleware(app); // Setup the middleware waterfall
 
 // Start the server
 const DEV_BUILD = process.env.NODE_ENV === 'development';
