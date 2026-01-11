@@ -75,8 +75,14 @@ describe('Preferences Integration', () => {
 		const response = await request(app)
 			.get('/') // Hitting the homepage (or any HTML route)
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('Accept', 'text/html'); // Required for 'test' GitHub workflow to work here
+			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+		// .set('Accept', 'text/html');
+
+		// Print debugging information about the response
+		console.log('Response Status:', response.status);
+		console.log('Response Headers:', response.headers);
+		console.log('Response Body:', response.text);
+		console.log('Response Body:', response.body);
 
 		expect(response.status).toBe(200);
 
