@@ -60,37 +60,36 @@ describe('Preferences Integration', () => {
 		premove_enabled: false,
 	} as const;
 
-	// CAN'T TEST THIS ONE unless html files are rendered during tests.
-	// Which creates an issue, because tests shouldn't depend on the build process.
-	// TODO: How to test the cookie being set, otherwise?
-	// it('should verify middleware sets preferences cookie on GET request', async () => {
-	// 	const cookie = await loginAndGetCookie();
+	it('should verify middleware sets preferences cookie on GET request', async () => {
+		const cookie = await loginAndGetCookie();
 
-	// 	// 1. Manually set prefs in DB first (so we have something to fetch)
-	// 	// Since we can't easily inject into DB without the API, we'll use the API first
-	// 	await request(app)
-	// 		.post('/api/set-preferences')
-	// 		.set('Cookie', cookie)
-	// 		.set('X-Forwarded-Proto', 'https')
-	// 		.send({ preferences: VALID_PREFS });
+		// 1. Manually set prefs in DB first (so we have something to fetch)
+		// Since we can't easily inject into DB without the API, we'll use the API first
+		await request(app)
+			.post('/api/set-preferences')
+			.set('Cookie', cookie)
+			.set('X-Forwarded-Proto', 'https')
+			.send({ preferences: VALID_PREFS });
 
-	// 	// 2. Now test the GET request (HTML request)
-	// 	const response = await request(app)
-	// 		.get('/') // Hitting the homepage (or any HTML route)
-	// 		.set('Cookie', cookie)
-	// 		.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
-	// 	// .set('Accept', 'text/html');
+		// 2. Now test the GET request (HTML request)
+		const response = await request(app)
+			.get('/') // Hitting the homepage (or any HTML route)
+			.set('Cookie', cookie)
+			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+		// .set('Accept', 'text/html');
 
-	// 	expect(response.status).toBe(200);
+		// CAN'T KEEP THIS, because if `dist/` is not built, it will 404.
+		// Luckily, the cookie is still set before then.
+		// expect(response.status).toBe(200);
 
-	// 	const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
-	// 	// Verify 'preferences' cookie is set and matches what we saved
-	// 	const prefCookie = cookies.find((c) => c.startsWith('preferences='));
-	// 	expect(prefCookie).toBeDefined();
+		const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
+		// Verify 'preferences' cookie is set and matches what we saved
+		const prefCookie = cookies.find((c) => c.startsWith('preferences='));
+		expect(prefCookie).toBeDefined();
 
-	// 	const prefValue = JSON.parse(decodeURIComponent(prefCookie!.split(';')[0]!.split('=')[1]!));
-	// 	expect(prefValue).toMatchObject(VALID_PREFS);
-	// });
+		const prefValue = JSON.parse(decodeURIComponent(prefCookie!.split(';')[0]!.split('=')[1]!));
+		expect(prefValue).toMatchObject(VALID_PREFS);
+	});
 
 	it('should reject request with no body', async () => {
 		const cookie = await loginAndGetCookie();
