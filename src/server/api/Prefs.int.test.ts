@@ -8,6 +8,22 @@ import integrationUtils from '../../tests/integrationUtils.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
+/** An example of valid preferences. */
+const VALID_PREFS_1 = {
+	theme: 'wood_light',
+	legal_moves: 'dots',
+	animations: false,
+	lingering_annotations: true,
+} as const;
+
+/** Another example of valid preferences. */
+const VALID_PREFS_2 = {
+	theme: 'sandstone',
+	legal_moves: 'squares',
+	animations: true,
+	lingering_annotations: false,
+} as const;
+
 describe('Preferences Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
@@ -18,22 +34,6 @@ describe('Preferences Integration', () => {
 	beforeEach(() => {
 		clearAllTables();
 	});
-
-	/** An example of valid preferences. */
-	const VALID_PREFS_1 = {
-		theme: 'wood_light',
-		legal_moves: 'dots',
-		animations: false,
-		lingering_annotations: true,
-	} as const;
-
-	/** Another example of valid preferences. */
-	const VALID_PREFS_2 = {
-		theme: 'sandstone',
-		legal_moves: 'squares',
-		animations: true,
-		lingering_annotations: false,
-	} as const;
 
 	it('should verify middleware sets preferences cookie on GET request', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
