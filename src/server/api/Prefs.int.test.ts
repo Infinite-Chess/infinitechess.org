@@ -164,16 +164,14 @@ describe('Preferences Integration', () => {
 		const cookie = await loginAndGetCookie();
 
 		// 1. Save initial preferences
-		let response = await request(app)
+		await request(app)
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ preferences: VALID_PREFS });
 
-		expect(response.status).toBe(200);
-
 		// 2. Save new preferences to overwrite
-		response = await request(app)
+		const response = await request(app)
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect

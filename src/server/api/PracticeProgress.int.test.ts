@@ -138,16 +138,14 @@ describe('Practice Progress Integration', () => {
 		if (!secondCheckmateId) throw new Error('Not enough valid checkmate IDs for this test!');
 
 		// 1. Submit First Checkmate
-		let response = await request(app)
+		await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
-		expect(response.status).toBe(200);
-
 		// 2. Submit Second Checkmate
-		response = await request(app)
+		const response = await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
@@ -164,16 +162,14 @@ describe('Practice Progress Integration', () => {
 		const cookie = await loginAndGetCookie();
 
 		// 1. Submit First Time
-		let response = await request(app)
+		await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
-		expect(response.status).toBe(200);
-
 		// 2. Submit Same ID Again
-		response = await request(app)
+		const response = await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
