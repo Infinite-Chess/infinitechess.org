@@ -4,9 +4,9 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import request from 'supertest';
 
 import app from '../app.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import integrationUtils from '../../tests/integrationUtils.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
-import { generateAccount } from '../controllers/createAccountController.js';
+import { generateTables, clearAllTables } from '../database/databaseTables.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 // We'll use the first easy checkmate as our valid test case
@@ -25,33 +25,8 @@ describe('Practice Progress Integration', () => {
 		clearAllTables();
 	});
 
-	/** Helper to create a user and get their login cookies. */
-	async function loginAndGetCookie(): Promise<string> {
-		await generateAccount({
-			username: 'ChessMaster',
-			email: 'master@example.com',
-			password: 'Password123!',
-			autoVerify: true,
-		});
-
-		const response = await request(app)
-			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ username: 'ChessMaster', password: 'Password123!' });
-
-		// Extract the session cookies
-		const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
-		const jwtCookie = cookies.find((c) => c.startsWith('jwt='));
-		const memberInfoCookie = cookies.find((c) => c.startsWith('memberInfo='));
-
-		if (!jwtCookie || !memberInfoCookie) throw new Error('Missing login cookies');
-
-		// Return both combined for the next request
-		return [jwtCookie, memberInfoCookie].filter(Boolean).join(';');
-	}
-
 	it('should reject requests with no body', async () => {
-		const cookie = await loginAndGetCookie();
+		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
@@ -62,7 +37,7 @@ describe('Practice Progress Integration', () => {
 	});
 
 	it('should reject requests with missing new_checkmate_beaten', async () => {
-		const cookie = await loginAndGetCookie();
+		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
@@ -74,11 +49,11 @@ describe('Practice Progress Integration', () => {
 	});
 
 	it('should reject requests with non-string new_checkmate_beaten', async () => {
-		const cookie = await loginAndGetCookie();
+		const cookie = await integrationUtils.createAndLoginUser();
 
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
+			.set('Cookie', cookie.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: 12345 }); // Non-string
 
@@ -95,7 +70,7 @@ describe('Practice Progress Integration', () => {
 	});
 
 	it('should reject invalid checkmate IDs', async () => {
-		const cookie = await loginAndGetCookie();
+		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
@@ -108,18 +83,18 @@ describe('Practice Progress Integration', () => {
 	});
 
 	it('should allow a logged-in user to save a new checkmate', async () => {
-		const cookie = await loginAndGetCookie();
+		const user = await integrationUtils.createAndLoginUser();
 
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
+			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		expect(response.status).toBe(200);
 
 		// Check DB Side Effect
-		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', 'ChessMaster');
+		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', user.username);
 		expect(record?.checkmates_beaten).toBe(VALID_CHECKMATE_ID);
 
 		// Verify the response set the updated cookie
@@ -132,7 +107,7 @@ describe('Practice Progress Integration', () => {
 	});
 
 	it('should correctly store multiple checkmates', async () => {
-		const cookie = await loginAndGetCookie();
+		const user = await integrationUtils.createAndLoginUser();
 
 		const secondCheckmateId = validcheckmates.validCheckmates.easy[1];
 		if (!secondCheckmateId) throw new Error('Not enough valid checkmate IDs for this test!');
@@ -140,38 +115,38 @@ describe('Practice Progress Integration', () => {
 		// 1. Submit First Checkmate
 		await request(app)
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
+			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Second Checkmate
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
+			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: secondCheckmateId });
 
 		expect(response.status).toBe(200);
 
 		// DB should have both IDs stored correctly
-		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', 'ChessMaster');
+		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', user.username);
 		expect(record?.checkmates_beaten).toBe([VALID_CHECKMATE_ID, secondCheckmateId].join(','));
 	});
 
 	it('should handle duplicate checkmate submissions gracefully', async () => {
-		const cookie = await loginAndGetCookie();
+		const user = await integrationUtils.createAndLoginUser();
 
 		// 1. Submit First Time
 		await request(app)
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
+			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Same ID Again
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
+			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
@@ -179,7 +154,7 @@ describe('Practice Progress Integration', () => {
 		expect(response.status).toBe(204);
 
 		// DB should still only have it once (no duplicates like "ID,ID")
-		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', 'ChessMaster');
+		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', user.username);
 		expect(record?.checkmates_beaten).toBe(VALID_CHECKMATE_ID);
 	});
 });
