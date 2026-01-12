@@ -43,12 +43,11 @@ describe('Preferences Integration', () => {
 	}
 
 	/** An example of valid preferences. */
-	const VALID_PREFS = {
+	const VALID_PREFS_1 = {
 		theme: 'wood_light',
 		legal_moves: 'dots',
 		animations: false,
 		lingering_annotations: true,
-		premove_enabled: true,
 	} as const;
 
 	/** Another example of valid preferences. */
@@ -57,7 +56,6 @@ describe('Preferences Integration', () => {
 		legal_moves: 'squares',
 		animations: true,
 		lingering_annotations: false,
-		premove_enabled: false,
 	} as const;
 
 	it('should verify middleware sets preferences cookie on GET request', async () => {
@@ -69,7 +67,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https')
-			.send({ preferences: VALID_PREFS });
+			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Now test the GET request (HTML request)
 		const response = await request(app)
@@ -78,7 +76,7 @@ describe('Preferences Integration', () => {
 			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
 		// .set('Accept', 'text/html');
 
-		// CAN'T KEEP THIS, because if `dist/` is not built, it will 404.
+		// CAN'T KEEP THIS, because if `dist/` is not built, it will 404. Tests should NOT depend on the build process.
 		// Luckily, the cookie is still set before then.
 		// expect(response.status).toBe(200);
 
@@ -88,7 +86,7 @@ describe('Preferences Integration', () => {
 		expect(prefCookie).toBeDefined();
 
 		const prefValue = JSON.parse(decodeURIComponent(prefCookie!.split(';')[0]!.split('=')[1]!));
-		expect(prefValue).toMatchObject(VALID_PREFS);
+		expect(prefValue).toMatchObject(VALID_PREFS_1);
 	});
 
 	it('should reject request with no body', async () => {
@@ -118,7 +116,7 @@ describe('Preferences Integration', () => {
 		const response = await request(app)
 			.post('/api/set-preferences')
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ preferences: VALID_PREFS });
+			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(401);
 	});
@@ -149,7 +147,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ preferences: VALID_PREFS });
+			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(200);
 
@@ -157,7 +155,7 @@ describe('Preferences Integration', () => {
 		const record = getMemberDataByCriteria(['preferences'], 'username', 'PrefUser');
 		expect(record).toBeDefined();
 		const savedPrefs = record!.preferences === null ? null : JSON.parse(record!.preferences);
-		expect(savedPrefs).toMatchObject(VALID_PREFS);
+		expect(savedPrefs).toMatchObject(VALID_PREFS_1);
 	});
 
 	it('should overwrite existing preferences', async () => {
@@ -168,7 +166,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ preferences: VALID_PREFS });
+			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Save new preferences to overwrite
 		const response = await request(app)

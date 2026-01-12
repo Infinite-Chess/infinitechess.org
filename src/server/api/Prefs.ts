@@ -3,25 +3,37 @@
  * And it has an API for setting your preferences in the database.
  */
 
+import type { NextFunction, Request, Response } from 'express';
+import type { IdentifiedRequest } from '../types.js';
+
+import z from 'zod';
+
 import themes from '../../shared/components/header/themes.js';
 import jsutil from '../../shared/util/jsutil.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logZodError } from '../utility/zodlogger.js';
 
-// Variables -------------------------------------------------------------
+// Types -------------------------------------------------------------------------------
 
+export type Preferences = z.infer<typeof prefsSchema>;
+
+// Variables -----------------------------------------------------------------------------
+
+/** Zod schema to validate preferences object structure. */
+const prefsSchema = z
+	.strictObject({
+		theme: z.string().refine((val) => themes.isThemeValid(val)),
+		legal_moves: z.enum(['squares', 'dots']),
+		animations: z.boolean(),
+		lingering_annotations: z.boolean(),
+	})
+	.partial();
+
+/** The client has this long to read the cookie and update preferences in memory. */
 const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
-const validPrefs = [
-	'theme',
-	'legal_moves',
-	'animations',
-	'lingering_annotations',
-	'premove_enabled',
-];
-const legal_move_shapes = ['squares', 'dots'];
-
-// Functions -------------------------------------------------------------
+// Functions -----------------------------------------------------------------------------
 
 /**
  * Middleware to set the preferences cookie for logged-in users based on their memberInfo cookie.
@@ -30,11 +42,8 @@ const legal_move_shapes = ['squares', 'dots'];
  * It is possible for the memberInfo cookie to be tampered with, but preferences can be public information anyway.
  * We are reading the memberInfo cookie instead of verifying their session token
  * because that could take a little bit longer as it requires a database look up.
- * @param {Object} req - The Express request object.
- * @param {Object} res - The Express response object.
- * @param {Function} next - The Express next middleware function.
  */
-function setPrefsCookie(req, res, next) {
+function setPrefsCookie(req: Request, res: Response, next: NextFunction): void {
 	// We don't have to worry about the request being for a resource because those have already been served.
 	// The only scenario this request could be for now is an HTML or fetch API request
 	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
@@ -50,9 +59,10 @@ function setPrefsCookie(req, res, next) {
 	let memberInfoCookie; // { user_id, username }
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
-	} catch (error) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`,
+			`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${message}`,
 			'errLog.txt',
 		);
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
@@ -85,12 +95,8 @@ function setPrefsCookie(req, res, next) {
 	next();
 }
 
-/**
- * Sets the preferences cookie for the user.
- * @param {Object} res - The Express response object.
- * @param {Object} preferences - The preferences object to be saved in the cookie.
- */
-function createPrefsCookie(res, preferences) {
+/**  Sets the preferences cookie for the user. */
+function createPrefsCookie(res: Response, preferences: Preferences): void {
 	// Set or update the preferences cookie
 	res.cookie('preferences', JSON.stringify(preferences), {
 		httpOnly: false,
@@ -103,9 +109,8 @@ function createPrefsCookie(res, preferences) {
  * Deletes the preferences cookie for the user.
  * Typically called when they log out.
  * Even though the cookie only lasts 10 seconds, this is still helpful
- * @param {Object} res - The Express response object.
  */
-function deletePreferencesCookie(res) {
+function deletePreferencesCookie(res: Response): void {
 	res.clearCookie('preferences', {
 		httpOnly: false,
 		secure: true,
@@ -114,48 +119,48 @@ function deletePreferencesCookie(res) {
 
 /**
  * Fetches the preferences for a given user from the database.
- * @param {number} userId - The ID of the user whose preferences are to be fetched.
- * @returns {Object|undefined} - Returns the preferences object if found, otherwise undefined.
+ * @param userId - The ID of the user whose preferences are to be fetched.
+ * @returns The preferences object if found, otherwise undefined.
  */
-function getPrefs(userId) {
+function getPrefs(userId: number): Preferences | undefined {
 	const record = getMemberDataByCriteria(['preferences'], 'user_id', userId);
 	if (record === undefined) return;
-	const prefs = JSON.parse(record.preferences);
-	if (prefs === null) return;
-	return prefs;
+	if (record.preferences === null) return;
+	return JSON.parse(record.preferences);
 }
 
-/**
- * Route that Handles a POST request to update user preferences in the database.
- * @param {import("../types.js").IdentifiedRequest} req - Express request object
- * @param {Object} res - Express response object
- */
-function postPrefs(req, res) {
+/** Route that Handles a POST request to update user preferences in the database. */
+function postPrefs(req: IdentifiedRequest, res: Response): void {
 	if (!req.memberInfo.signedIn) {
 		logEventsAndPrint(
 			"User tried to save preferences when they weren't signed in!",
 			'errLog.txt',
 		);
-		return res.status(401).json({ message: "Can't save preferences, not signed in." });
+		res.status(401).json({ message: "Can't save preferences, not signed in." });
+		return;
 	}
 
 	const { user_id, username } = req.memberInfo;
 
 	const preferences = req.body.preferences;
 
-	if (!arePrefsValid(preferences)) {
-		logEventsAndPrint(
-			`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`,
-			'errLog.txt',
+	// Validate preferences using Zod schema
+	const parseResult = prefsSchema.safeParse(preferences);
+	if (!parseResult.success) {
+		logZodError(
+			preferences,
+			parseResult.error,
+			`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database.`,
 		);
-		return res
-			.status(400)
-			.json({ message: 'Preferences not valid, cannot save on the server.' });
+		res.status(400).json({ message: 'Preferences not valid, cannot save on the server.' });
+		return;
 	}
 
 	try {
 		// Update the preferences column in the database
-		const result = updateMemberColumns(user_id, { preferences: JSON.stringify(preferences) });
+		const result = updateMemberColumns(user_id, {
+			preferences: JSON.stringify(parseResult.data),
+		});
 
 		// Send appropriate response
 		if (result.changeMade) {
@@ -178,41 +183,6 @@ function postPrefs(req, res) {
 		);
 		res.status(500).json({ message: 'Server error while updating preferences' });
 	}
-}
-
-/**
- * Tests if the user provided preferences are valid and OK to be saved in the database
- * @param {*} preferences - The preferences object to validate
- * @returns {boolean} - Returns true if preferences are valid, otherwise false
- */
-function arePrefsValid(preferences) {
-	// 1. Ensure preferences is defined, of type object, and not an array
-	if (preferences === undefined || typeof preferences !== 'object' || Array.isArray(preferences))
-		return false;
-	if (preferences === null) return true; // We can save null values.
-
-	for (const [key, value] of Object.entries(preferences)) {
-		// 2. Validate that all keys are valid preferences
-		if (!validPrefs.includes(key)) return false;
-
-		// 3. Check if the theme property is valid
-		if (key === 'theme' && !themes.isThemeValid(value)) return false;
-
-		// 4. Validate legal_moves property
-		if (key === 'legal_moves' && !legal_move_shapes.includes(value)) return false;
-
-		// 5. Check the animations property is a boolean
-		if (key === 'animations' && typeof value !== 'boolean') return false;
-
-		// 6. Check the lingering_annotations property is a boolean
-		if (key === 'lingering_annotations' && typeof value !== 'boolean') return false;
-
-		// 7. Check the premove_enabled property is a boolean
-		if (key === 'premove_enabled' && typeof value !== 'boolean') return false;
-	}
-
-	// If all checks pass, preferences are valid
-	return true;
 }
 
 export { setPrefsCookie, postPrefs, deletePreferencesCookie };
