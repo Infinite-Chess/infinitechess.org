@@ -1,4 +1,4 @@
-// src/tests-setup.ts
+// src/tests/tests-setup.ts
 
 // Set up environment variables for testing.
 // Prevents `test` workflow job failing due to missing secrets.
