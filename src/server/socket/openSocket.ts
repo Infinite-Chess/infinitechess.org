@@ -4,7 +4,9 @@
  * This script handles socket upgrade connection requests, and creating new sockets.
  */
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import type WebSocket from 'ws';
+import type { CustomWebSocket } from './socketUtility.js';
+import type { IncomingMessage } from 'http';
 
 import socketUtility from './socketUtility.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
@@ -19,20 +21,13 @@ import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-// @ts-ignore
-import { GAME_VERSION } from '../config/config.js';
+import { GAME_VERSION } from '../../shared/game_version.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
-
-// Type Definitions ---------------------------------------------------------------------------
-
-import type WebSocket from 'ws';
-import type { CustomWebSocket } from './socketUtility.js';
-import type { IncomingMessage } from 'http';
 
 // Variables ---------------------------------------------------------------------------
 

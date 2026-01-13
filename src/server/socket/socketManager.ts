@@ -6,10 +6,7 @@
  * And unsubbing a socket from subscriptions.
  */
 
-// @ts-ignore
-import { printIncomingAndClosingSockets } from '../config/config.js';
 import { handleUnsubbing } from './generalrouter.js';
-import socketUtility from './socketUtility.js';
 import uuid from '../../shared/util/uuid.js';
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -59,10 +56,9 @@ function addConnectionToConnectionLists(ws: CustomWebSocket): void {
 		addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
 
 	startTimerToExpireSocket(ws);
-	if (printIncomingAndClosingSockets)
-		console.log(
-			`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
+	// console.log(
+	// 	`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
+	// );
 }
 
 /**
@@ -90,13 +86,13 @@ function startTimerToExpireSocket(ws: CustomWebSocket): void {
 /**
  * Removes the given WebSocket connection from all tracking lists.
  * @param ws - The WebSocket connection to remove.
- * @param code - The WebSocket closure code.
- * @param reason - The reason for the WebSocket closure.
+ * @param _code - The WebSocket closure code.
+ * @param _reason - The reason for the WebSocket closure.
  */
 function removeConnectionFromConnectionLists(
 	ws: CustomWebSocket,
-	code: number,
-	reason: string,
+	_code: number,
+	_reason: string,
 ): void {
 	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Remove IP connection
@@ -106,10 +102,9 @@ function removeConnectionFromConnectionLists(
 		removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
 
 	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
-	if (printIncomingAndClosingSockets)
-		console.log(
-			`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`,
-		);
+	// console.log(
+	// 	`WebSocket connection has been closed. Code: ${_code}. Reason: ${_reason}. Socket count: ${Object.keys(websocketConnections).length}`,
+	// );
 }
 
 /**

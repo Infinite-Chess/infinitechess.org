@@ -6,13 +6,15 @@
  */
 
 // @ts-ignore
-import { maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';
-// @ts-ignore
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import db from './database.js'; // Adjust path
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
 import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
+
+/** The maximum time an account is allowed to remain unverified before the server will delete it from Database. */
+const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
+// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 // const CLEANUP_INTERVAL_MS = 1000 * 20; // 20 seconds for dev testing
