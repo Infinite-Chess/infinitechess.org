@@ -61,7 +61,7 @@ function getChildByIndexInParent(parent, index) {
 
 /**
  * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
- * @param {number[]} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
+ * @param {import("../../../../../shared/util/math/math").Color} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
  * @returns {string} A CSS rgba color string.
  */
 function arrayToCssColor(colorArray) {

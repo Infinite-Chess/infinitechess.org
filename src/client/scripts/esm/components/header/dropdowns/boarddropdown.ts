@@ -5,12 +5,16 @@ import themes from '../../../../../../shared/components/header/themes.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-title');
-const boardDropdown = document.querySelector('.board-dropdown');
-const themeList = document.querySelector('.theme-list'); // Get the theme list div
+const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-title')!;
+const boardDropdown = document.querySelector('.board-dropdown')!;
+const themeList = document.querySelector('.theme-list')!; // Get the theme list div
 
-const starfieldCheckbox = document.querySelector('.boolean-option.starfield input');
-const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced-effects input');
+const starfieldCheckbox = document.querySelector<HTMLInputElement>(
+	'.boolean-option.starfield input',
+)!;
+const advancedEffectsCheckbox = document.querySelector<HTMLInputElement>(
+	'.boolean-option.advanced-effects input',
+)!;
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -19,17 +23,17 @@ const advancedEffectsCheckbox = document.querySelector('.boolean-option.advanced
 	addThemesToThemesDropdown();
 })();
 
-function showCheckmarkOnSelectedOptions() {
+function showCheckmarkOnSelectedOptions(): void {
 	starfieldCheckbox.checked = preferences.getStarfieldMode();
 	advancedEffectsCheckbox.checked = preferences.getAdvancedEffectsMode();
 }
 
-async function addThemesToThemesDropdown() {
+async function addThemesToThemesDropdown(): Promise<void> {
 	const themeDictionary = themes.themes;
 
 	// Loop through each theme in the dictionary
 	for (const themeName in themeDictionary) {
-		const theme = themeDictionary[themeName];
+		const theme = themeDictionary[themeName]!;
 		const lightTiles = theme.lightTiles;
 		const darkTiles = theme.darkTiles;
 
@@ -49,16 +53,16 @@ async function addThemesToThemesDropdown() {
 	updateThemeSelectedStyling();
 }
 
-function open() {
+function open(): void {
 	boardDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
 }
-function close() {
+function close(): void {
 	boardDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
 }
 
-function initListeners() {
+function initListeners(): void {
 	boardDropdownTitle.addEventListener('click', close);
 	initThemeChangeListeners();
 	// Starfield toggle
@@ -66,7 +70,7 @@ function initListeners() {
 	// Advanced Effects toggle
 	advancedEffectsCheckbox.addEventListener('click', toggleAdvancedEffects);
 }
-function closeListeners() {
+function closeListeners(): void {
 	boardDropdownTitle.removeEventListener('click', close);
 	closeThemeChangeListeners();
 	// Starfield toggle
@@ -74,21 +78,21 @@ function closeListeners() {
 	// Advanced Effects toggle
 	advancedEffectsCheckbox.removeEventListener('click', toggleAdvancedEffects);
 }
-function initThemeChangeListeners() {
+function initThemeChangeListeners(): void {
 	for (let i = 0; i < themeList.children.length; i++) {
-		const theme = themeList.children[i];
+		const theme = themeList.children[i]!;
 		theme.addEventListener('click', selectTheme);
 	}
 }
-function closeThemeChangeListeners() {
+function closeThemeChangeListeners(): void {
 	for (let i = 0; i < themeList.children.length; i++) {
-		const theme = themeList.children[i];
+		const theme = themeList.children[i]!;
 		theme.removeEventListener('click', selectTheme);
 	}
 }
 
-function selectTheme(event) {
-	const selectedTheme = event.target.getAttribute('theme');
+function selectTheme(event: Event): void {
+	const selectedTheme = (event.currentTarget as HTMLElement).getAttribute('theme')!;
 
 	// Saves it to browser storage
 	preferences.setTheme(selectedTheme);
@@ -99,21 +103,20 @@ function selectTheme(event) {
 	document.dispatchEvent(new Event('theme-change'));
 }
 /** Outlines in black the current theme selection */
-function updateThemeSelectedStyling() {
+function updateThemeSelectedStyling(): void {
 	const selectedTheme = preferences.getTheme();
 	for (let i = 0; i < themeList.children.length; i++) {
-		const theme = themeList.children[i];
-		if (selectTheme && theme.getAttribute('theme') === selectedTheme)
-			theme.classList.add('selected');
+		const theme = themeList.children[i]!;
+		if (theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');
 		else theme.classList.remove('selected');
 	}
 }
 
-function toggleStarfield() {
+function toggleStarfield(): void {
 	preferences.setStarfieldMode(starfieldCheckbox.checked);
 }
 
-function toggleAdvancedEffects() {
+function toggleAdvancedEffects(): void {
 	preferences.setAdvancedEffectsMode(advancedEffectsCheckbox.checked);
 }
 
