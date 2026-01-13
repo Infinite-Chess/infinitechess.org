@@ -7,7 +7,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 // @ts-ignore
 import guipause from '../gui/guipause.js';
-// @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera.js';
 import perspective from './perspective.js';

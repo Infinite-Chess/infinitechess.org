@@ -15,7 +15,6 @@ import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
-// @ts-ignore
 import loadbalancer from './misc/loadbalancer.js';
 
 // Starts the game. Runs automatically once the page is loaded.
