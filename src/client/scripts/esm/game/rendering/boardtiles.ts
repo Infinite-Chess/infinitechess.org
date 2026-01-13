@@ -10,7 +10,6 @@ import type { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
 import style from '../gui/style.js';
 import camera from './camera.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
