@@ -5,31 +5,31 @@ import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown');
+const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
 // The option in the main settings menu
 const perspectiveSettingsDropdownItem = document.getElementById(
 	'perspective-settings-dropdown-item',
-);
+)!;
 
-const perspectiveDropdown = document.querySelector('.perspective-dropdown');
-const perspectiveDropdownTitle = document.querySelector('.perspective-dropdown .dropdown-title');
+const perspectiveDropdown = document.querySelector('.perspective-dropdown')!;
+const perspectiveDropdownTitle = document.querySelector('.perspective-dropdown .dropdown-title')!;
 
-const mouseSensitivitySlider = document.querySelector(
+const mouseSensitivitySlider = document.querySelector<HTMLInputElement>(
 	'.perspective-options .mouse-sensitivity .slider',
-);
+)!;
 /** The text that displays the value */
 const mouseSensitivityOutput = document.querySelector(
 	'.perspective-options .mouse-sensitivity .value',
-);
+)!;
 
-const fovSlider = document.querySelector('.perspective-dropdown .fov .slider');
+const fovSlider = document.querySelector<HTMLInputElement>('.perspective-options .fov .slider')!;
 /** The text that displays the value */
-const fovOutput = document.querySelector('.perspective-dropdown .fov .value');
+const fovOutput = document.querySelector('.perspective-dropdown .fov .value')!;
 const fovResetDefaultContainer = document.querySelector(
 	'.perspective-dropdown .fov .reset-default-container',
-);
-const fovResetDefault = document.querySelector('.perspective-dropdown .fov .reset-default');
+)!;
+const fovResetDefault = document.querySelector('.perspective-dropdown .fov .reset-default')!;
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -42,75 +42,75 @@ const fovResetDefault = document.querySelector('.perspective-dropdown .fov .rese
 })();
 
 /** Update the sliders according to the already existing preferences */
-function setInitialValues() {
-	mouseSensitivitySlider.value = preferences.getPerspectiveSensitivity();
+function setInitialValues(): void {
+	mouseSensitivitySlider.value = String(preferences.getPerspectiveSensitivity());
 	updateMouseSensitivityOutput();
 
-	fovSlider.value = preferences.getPerspectiveFOV();
+	fovSlider.value = String(preferences.getPerspectiveFOV());
 	updateFOVOutput();
 }
 
-function open() {
+function open(): void {
 	perspectiveDropdown.classList.remove('visibility-hidden');
 	initListeners();
 	settingsDropdown.classList.add('transparent');
 }
-function close() {
+function close(): void {
 	perspectiveDropdown.classList.add('visibility-hidden');
 	closeListeners();
 	settingsDropdown.classList.remove('transparent');
 }
 
-function initListeners() {
+function initListeners(): void {
 	perspectiveDropdownTitle.addEventListener('click', close);
 	mouseSensitivitySlider.addEventListener('input', onMouseSensitivityChange);
 	fovSlider.addEventListener('input', onFOVChange);
 	fovResetDefault.addEventListener('click', resetFOVDefault);
 }
-function closeListeners() {
+function closeListeners(): void {
 	perspectiveDropdownTitle.removeEventListener('click', close);
 	mouseSensitivitySlider.removeEventListener('input', onMouseSensitivityChange);
 	fovSlider.removeEventListener('input', onFOVChange);
 	fovResetDefault.removeEventListener('click', resetFOVDefault);
 }
 
-function onMouseSensitivityChange(event) {
-	const value = Number(event.currentTarget.value);
+function onMouseSensitivityChange(event: Event): void {
+	const value = Number((event.currentTarget as HTMLInputElement).value);
 	// console.log(`Mouse sensitivity changed: ${value}`);
 	setMouseSensitivity(value);
 }
-function onFOVChange(event) {
-	const value = Number(event.currentTarget.value);
+function onFOVChange(event: Event): void {
+	const value = Number((event.currentTarget as HTMLInputElement).value);
 	// console.log(`FOV changed: ${value}`);
 	setFOV(value);
 }
 
-function setMouseSensitivity(value) {
+function setMouseSensitivity(value: number): void {
 	preferences.setPerspectiveSensitivity(value);
 	updateMouseSensitivityOutput();
 }
-function setFOV(value) {
+function setFOV(value: number): void {
 	preferences.setPerspectiveFOV(value);
 	updateFOVOutput();
 }
 
-function updateMouseSensitivityOutput() {
+function updateMouseSensitivityOutput(): void {
 	const value = Number(mouseSensitivitySlider.value);
 	mouseSensitivityOutput.textContent = value + '%';
 }
-function updateFOVOutput() {
+function updateFOVOutput(): void {
 	const value = Number(fovSlider.value);
-	fovOutput.textContent = value;
+	fovOutput.textContent = String(value);
 	updateFOVResetDefaultButton(value);
 }
-function updateFOVResetDefaultButton(value) {
+function updateFOVResetDefaultButton(value: number): void {
 	if (value === preferences.getDefaultPerspectiveFOV())
 		fovResetDefaultContainer.classList.add('hidden');
 	else fovResetDefaultContainer.classList.remove('hidden');
 }
-function resetFOVDefault() {
+function resetFOVDefault(): void {
 	const defaultFOV = preferences.getDefaultPerspectiveFOV();
-	fovSlider.value = defaultFOV;
+	fovSlider.value = String(defaultFOV);
 	setFOV(defaultFOV);
 }
 

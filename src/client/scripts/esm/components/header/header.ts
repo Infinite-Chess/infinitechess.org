@@ -4,34 +4,32 @@
 import languagedropdown from './dropdowns/languagedropdown.js';
 import validatorama from '../../util/validatorama.js';
 
-// Only imported so their code will run! ...
+// Only imported so their code will run! ------------------------------------------------
+import './faviconselector.js';
+import './spacing.js';
+import './currpage-greyer.js';
+import './settings.js';
+import '../../util/tooltips.js'; // This should be imported on EVERY page!
+import './news-notification.js'; // Handles unread news badge
+// --------------------------------------------------------------------------------------
 
-/* eslint-disable no-unused-vars */
-import faviconselector from './faviconselector.js';
-import spacing from './spacing.js';
-import currpage_greyer from './currpage-greyer.js';
-import settings from './settings.js';
-import tooltips from '../../util/tooltips.js'; // This should be imported on EVERY page!
-import newsNotification from './news-notification.js'; // Handles unread news badge
-/* eslint-enable no-unused-vars */
-
-const loginLink = document.getElementById('login-link');
-const loginText = document.getElementById('login');
-const loginSVG = document.getElementById('svg-login');
-const profileText = document.getElementById('profile');
-const profileSVG = document.getElementById('svg-profile');
-const createaccountLink = document.getElementById('createaccount-link');
-const createaccountText = document.getElementById('createaccount');
-const createaccountSVG = document.getElementById('svg-createaccount');
-const logoutText = document.getElementById('logout');
-const logoutSVG = document.getElementById('svg-logout');
+const loginLink = document.getElementById('login-link') as HTMLAnchorElement;
+const loginText = document.getElementById('login')!;
+const loginSVG = document.getElementById('svg-login')!;
+const profileText = document.getElementById('profile')!;
+const profileSVG = document.getElementById('svg-profile')!;
+const createaccountLink = document.getElementById('createaccount-link') as HTMLAnchorElement;
+const createaccountText = document.getElementById('createaccount')!;
+const createaccountSVG = document.getElementById('svg-createaccount')!;
+const logoutText = document.getElementById('logout')!;
+const logoutSVG = document.getElementById('svg-logout')!;
 
 (function init() {
 	initListeners();
 	updateNavigationLinks(); // Do this once initially
 })();
 
-function initListeners() {
+function initListeners(): void {
 	window.addEventListener('pageshow', updateNavigationLinks); // Fired on initial page load AND when hitting the back button to return.
 	document.addEventListener('login', updateNavigationLinks); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
 	document.addEventListener('logout', updateNavigationLinks); // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
@@ -41,7 +39,7 @@ function initListeners() {
  * Changes the navigation links, depending on if we're logged in, to
  * go to our Profile or the Log Out route, or the Log In / Create Account pages.
  */
-function updateNavigationLinks() {
+function updateNavigationLinks(): void {
 	const username = validatorama.getOurUsername();
 	if (username) {
 		// Logged in
@@ -79,12 +77,15 @@ function updateNavigationLinks() {
 }
 
 // For every '.badge img' in the document, prevent long-press context menu
-document.querySelectorAll('.badge img').forEach((img) => {
-	img.addEventListener('contextmenu', (e) => {
+// Specify <HTMLImageElement> so TS knows these are HTMLElements (which have 'contextmenu')
+document.querySelectorAll<HTMLImageElement>('.badge img').forEach((img) => {
+	// The native definition of contextmenu is MouseEvent.
+	img.addEventListener('contextmenu', (event: MouseEvent) => {
+		if (!(event instanceof PointerEvent)) return;
 		// Only prevent default if the context menu is triggered by touch or pen
-		if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+		if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
 		console.log('Preventing context menu for badge image.');
-		e.preventDefault();
+		event.preventDefault();
 	});
 });
 
@@ -93,6 +94,6 @@ document.querySelectorAll('.badge img').forEach((img) => {
 // Just using 100vh is incorrect as the home button bar doesn't affect that.
 updateViewportHeight();
 window.addEventListener('resize', () => updateViewportHeight());
-function updateViewportHeight() {
+function updateViewportHeight(): void {
 	document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`);
 }

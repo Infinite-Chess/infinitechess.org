@@ -3,7 +3,7 @@
 import docutil from '../../util/docutil.js';
 import validatorama from '../../util/validatorama.js';
 
-const loginLink = document.getElementById('login-link');
+const loginLink = document.getElementById('login-link')!;
 
 (function init() {
 	greyBackgroundOfCurrPage();
@@ -11,9 +11,9 @@ const loginLink = document.getElementById('login-link');
 })();
 
 /** Greys the background color of the header navigation link of the page we are currently on */
-function greyBackgroundOfCurrPage() {
+function greyBackgroundOfCurrPage(): void {
 	document.querySelectorAll('nav a').forEach((link) => {
-		const hrefPathname = docutil.getPathnameFromHref(link.getAttribute('href'));
+		const hrefPathname = docutil.getPathnameFromHref(link.getAttribute('href')!);
 		if (hrefPathname === window.location.pathname) {
 			// e.g. "/news"
 			link.classList.add('currPage');
@@ -25,7 +25,7 @@ function greyBackgroundOfCurrPage() {
 }
 
 // Greys the background color of the profile button if it is ours
-function updateColorOfProfileButton() {
+function updateColorOfProfileButton(): void {
 	if (!window.location.pathname.startsWith('/member')) return; // Not on a members profile
 
 	loginLink.classList.remove('currPage'); // Reset
@@ -37,7 +37,7 @@ function updateColorOfProfileButton() {
 		loginLink.classList.add('currPage');
 }
 
-function initListeners() {
+function initListeners(): void {
 	document.addEventListener('login', updateColorOfProfileButton); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
 	window.addEventListener('pageshow', greyBackgroundOfCurrPage); // Fired on initial page load AND when hitting the back button to return.
 }
