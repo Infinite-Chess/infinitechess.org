@@ -178,7 +178,7 @@ function isScaleSmallForInvisibleTiles(): boolean {
 function update(): void {
 	if (guipause.areWePaused()) return; // Exit if paused
 	if (Transition.areTransitioning()) return; // Exit if we are teleporting
-	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.areWeAFK()) return; // Exit if we're AFK. Save our CPU!
 
 	panBoard();
 	recalcScale();
