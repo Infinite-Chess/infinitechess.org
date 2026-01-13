@@ -9,7 +9,7 @@ import sounddropdown from './dropdowns/sounddropdown.js';
 import preferences from './preferences.js';
 import themes from '../../../../../shared/components/header/themes.js';
 // Only imported so its code runs
-import _pingmeter from './pingmeter.js';
+import './pingmeter.js';
 
 // Document Elements -------------------------------------------------------------------------
 

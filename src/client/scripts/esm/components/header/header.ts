@@ -5,12 +5,12 @@ import languagedropdown from './dropdowns/languagedropdown.js';
 import validatorama from '../../util/validatorama.js';
 
 // Only imported so their code will run! ------------------------------------------------
-import _faviconselector from './faviconselector.js';
-import _spacing from './spacing.js';
-import _currpage_greyer from './currpage-greyer.js';
-import _settings from './settings.js';
-import _tooltips from '../../util/tooltips.js'; // This should be imported on EVERY page!
-import _newsNotification from './news-notification.js'; // Handles unread news badge
+import './faviconselector.js';
+import './spacing.js';
+import './currpage-greyer.js';
+import './settings.js';
+import '../../util/tooltips.js'; // This should be imported on EVERY page!
+import './news-notification.js'; // Handles unread news badge
 // --------------------------------------------------------------------------------------
 
 const loginLink = document.getElementById('login-link') as HTMLAnchorElement;
