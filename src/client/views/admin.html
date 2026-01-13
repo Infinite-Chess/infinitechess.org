@@ -4,6 +4,8 @@
 	<link rel="stylesheet" href="/css/admin.css" />
 </head>
 <body>
+	<%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language})
+	%>
 	<textarea id="commandHistory" readonly></textarea>
 	<div class="inputContainer">
 		<input id="commandInput" type="text" />
