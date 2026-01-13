@@ -48,7 +48,6 @@ import type { CustomWebSocket } from './socketUtility.js';
 const simulatedWebsocketLatencyMillis = 0;
 // const simulatedWebsocketLatencyMillis = 1000; // 1 Second
 // const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
-
 if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis !== 0) {
 	throw new Error('simulatedWebsocketLatencyMillis must be 0 in production!!');
 }

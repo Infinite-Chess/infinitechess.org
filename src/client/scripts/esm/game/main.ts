@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/main.ts
+
 /*
  * This is the main script. This is where the game begins running.
 
@@ -5,9 +7,7 @@
  * and input listeners, and begins the game loop.
  */
 
-// Import Start
 import webgl from './rendering/webgl.js';
-import loadbalancer from './misc/loadbalancer.js';
 import localstorage from '../util/localstorage.js';
 import game from './chess/game.js';
 import camera from './rendering/camera.js';
@@ -15,12 +15,11 @@ import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
-// Import End
-
-('use strict');
+// @ts-ignore
+import loadbalancer from './misc/loadbalancer.js';
 
 // Starts the game. Runs automatically once the page is loaded.
-function start() {
+function start(): void {
 	guiloading.closeAnimation(); // Stops the loading screen animation
 	webgl.init(); // Initiate the WebGL context. This is our web-based render engine.
 	camera.init(); // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
@@ -36,7 +35,7 @@ function start() {
 	gameLoop(); // Update & draw the scene repeatedly
 }
 
-function initListeners() {
+function initListeners(): void {
 	window.addEventListener('beforeunload', (_event) => {
 		// console.log('Detecting unload');
 
@@ -48,8 +47,8 @@ function initListeners() {
 	});
 }
 
-function gameLoop() {
-	const loop = function (runtime) {
+function gameLoop(): void {
+	const loop = function (runtime: number): void {
 		loadbalancer.update(runtime); // Updates fps, delta time, etc..
 
 		game.update(); // Always update the game, even if we're afk. By FAR this is less resource intensive than rendering!
@@ -68,7 +67,7 @@ function gameLoop() {
 	frameratelimiter.requestFrame(loop); // Calls the very first frame. Subsequent loops are called in the loop() function
 }
 
-function render() {
+function render(): void {
 	if (!frametracker.doWeRenderNextFrame()) return; // Only render the world though if any visual on the screen changed! This is to save cpu when there's no page interaction or we're afk.
 
 	// console.log("Rendering this frame");
