@@ -119,27 +119,27 @@ function deleteCommand(
 	logCommand(command, req);
 	const reason = commandAndArgs[2];
 	const usernameArgument = commandAndArgs[1]!;
-	const { user_id, username, roles } = getMemberDataByCriteria(
+	const record = getMemberDataByCriteria(
 		['user_id', 'username', 'roles'],
 		'username',
 		usernameArgument,
-		true,
 	);
-	if (user_id === undefined)
+	if (record === undefined)
 		return sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
+
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
-	const rolesOfAffectedUser = JSON.parse(roles!);
+	const rolesOfAffectedUser = record.roles === null ? null : JSON.parse(record.roles);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser))
-		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + username + '.');
+		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
 
 	try {
-		deleteAccount(user_id, reason);
-		sendAndLogResponse(res, 200, 'Successfully deleted user ' + username + '.');
+		deleteAccount(record.user_id, reason);
+		sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		sendAndLogResponse(res, 500, `Failed to delete user (${username}): ${errorMessage}`);
+		sendAndLogResponse(res, 500, `Failed to delete user (${record.username}): ${errorMessage}`);
 	}
 }
 
@@ -229,10 +229,10 @@ function usernameCommand(
 		}
 		// Valid Syntax
 		logCommand(command, req);
-		const { username } = getMemberDataByCriteria(['username'], 'user_id', parsedId, true);
-		if (username === undefined)
+		const record = getMemberDataByCriteria(['username'], 'user_id', parsedId);
+		if (record === undefined)
 			sendAndLogResponse(res, 404, 'User with id ' + parsedId + ' does not exist.');
-		else sendAndLogResponse(res, 200, username);
+		else sendAndLogResponse(res, 200, record.username);
 	} else if (commandAndArgs[1] === 'set') {
 		if (commandAndArgs.length < 4) {
 			res.status(422).send(
@@ -266,33 +266,29 @@ function logoutUser(
 	// Valid Syntax
 	logCommand(command, req);
 	const usernameArgument = commandAndArgs[1]!;
-	const { user_id, username } = getMemberDataByCriteria(
-		['user_id', 'username'],
-		'username',
-		usernameArgument,
-		true,
-	);
-	if (user_id !== undefined) {
-		try {
-			// Effectively terminates all login sessions of the user
-			deleteAllRefreshTokensForUser(user_id);
-		} catch (e) {
-			const errorMessage = e instanceof Error ? e.stack : String(e);
-			logEventsAndPrint(
-				`Error during admin-manual-logout of user "${username}": ${errorMessage}`,
-				'errLog.txt',
-			);
-			sendAndLogResponse(
-				res,
-				500,
-				`Failed to log out user "${username}" due to internal error.`,
-			);
-			return;
-		}
-		sendAndLogResponse(res, 200, 'User ' + username + ' successfully logged out.'); // Use their case-sensitive username
-	} else {
+	const record = getMemberDataByCriteria(['user_id', 'username'], 'username', usernameArgument);
+	if (record === undefined) {
 		sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
+		return;
 	}
+
+	try {
+		// Effectively terminates all login sessions of the user
+		deleteAllRefreshTokensForUser(record.user_id);
+	} catch (e) {
+		const errorMessage = e instanceof Error ? e.stack : String(e);
+		logEventsAndPrint(
+			`Error during admin-manual-logout of user "${record.username}": ${errorMessage}`,
+			'errLog.txt',
+		);
+		sendAndLogResponse(
+			res,
+			500,
+			`Failed to log out user "${record.username}" due to internal error.`,
+		);
+		return;
+	}
+	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
 }
 
 function verify(
@@ -341,7 +337,7 @@ function getUserInfo(
 	// Valid Syntax
 	logCommand(command, req);
 	const username = commandAndArgs[1]!;
-	const memberData = getMemberDataByCriteria(
+	const record = getMemberDataByCriteria(
 		[
 			'user_id',
 			'username',
@@ -356,14 +352,9 @@ function getUserInfo(
 		],
 		'username',
 		username,
-		true,
 	);
-	if (Object.keys(memberData).length === 0) {
-		// Empty (member not found)
-		sendAndLogResponse(res, 404, 'User ' + username + ' does not exist.');
-	} else {
-		sendAndLogResponse(res, 200, JSON.stringify(memberData));
-	}
+	if (record === undefined) sendAndLogResponse(res, 404, 'User ' + username + ' does not exist.');
+	else sendAndLogResponse(res, 200, JSON.stringify(record));
 }
 
 function updateContributorsCommand(command: string, req: IdentifiedRequest, res: Response): void {

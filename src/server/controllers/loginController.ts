@@ -8,6 +8,8 @@
  * and updates last_seen and login_count in their profile.
  */
 
+import type { Request, Response } from 'express';
+
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
@@ -18,10 +20,8 @@ import { testPasswordForRequest } from './authController.js';
  * Tests their username and password. If correct, it logs
  * them in, generates tokens for them, and updates their member variables.
  * THIS SHOULD ALWAYS send a json response, because the errors we send are displayed on the page.
- * @param {Object} req - The request object
- * @param {Object} res - The response object
  */
-async function handleLogin(req, res) {
+async function handleLogin(req: Request, res: Response): Promise<void> {
 	// Initial check - if this fails, it sends a response and returns.
 	if (!(await testPasswordForRequest(req, res))) return;
 	// Correct password...
@@ -29,39 +29,40 @@ async function handleLogin(req, res) {
 	try {
 		const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
-		const { user_id, username, roles } = getMemberDataByCriteria(
+		const record = getMemberDataByCriteria(
 			['user_id', 'username', 'roles'],
 			'username',
 			usernameCaseInsensitive,
-			false,
 		);
 
-		if (user_id === undefined) {
+		if (record === undefined) {
 			// This is a critical internal inconsistency.
 			logEventsAndPrint(
 				`User "${usernameCaseInsensitive}" not found by username after a successful password check! This indicates a data integrity issue.`,
 				'errLog.txt',
 			);
 			// Send a generic error to the client, as this is a server-side problem.
-			return res.status(500).json({
+			res.status(500).json({
 				message: 'Login failed due to an internal server error. Please try again later.',
 			});
+			return;
 		}
 
 		// The roles fetched from the database is a stringified json string array, parse it here!
-		const parsedRoles = roles !== null ? JSON.parse(roles) : null;
+		const parsedRoles = record.roles !== null ? JSON.parse(record.roles) : null;
 
-		createNewSession(req, res, user_id, username, parsedRoles);
+		createNewSession(req, res, record.user_id, record.username, parsedRoles);
 
 		res.status(200).json({ message: 'Logged in successfully.' });
 
 		// These operations are "fire and forget" in terms of the client response
-		updateLoginCountAndLastSeen(user_id);
-		logEventsAndPrint(`Logged in member "${username}".`, 'loginAttempts.txt');
-	} catch (error) {
+		updateLoginCountAndLastSeen(record.user_id);
+		logEventsAndPrint(`Logged in member "${record.username}".`, 'loginAttempts.txt');
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		// Log the detailed error for server-side debugging.
 		logEventsAndPrint(
-			`Error during handleLogin for user "${req.body.username}": ${error.message}\n${error.stack}`,
+			`Error during handleLogin for user "${req.body.username}": ${message}`,
 			'errLog.txt',
 		);
 

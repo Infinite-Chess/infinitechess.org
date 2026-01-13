@@ -1,3 +1,5 @@
+// src/shared/chess/util/validcheckmates.ts
+
 /**
  * This script stores the list of valid checkmates for the practice mode, and is used for verification clientside and serverside
  * It should have no dependencies at all.

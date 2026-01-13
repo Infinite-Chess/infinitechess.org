@@ -5,10 +5,23 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 import { logEvents, logEventsAndPrint } from './logEvents.js';
 import { getClientIP } from '../utility/IP.js';
 import { isIPBanned } from './banned.js';
-import { ARE_RATE_LIMITING } from '../config/config.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 /** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
+
+/**
+ * Whether the server is running in development mode.
+ * It will be hosted on a different port for local host,
+ * and a few other minor adjustments.
+ */
+const DEV_BUILD = process.env.NODE_ENV === 'development';
+
+/** Whether we are currently rate limiting connections.
+ * Only disable temporarily for development purposes. */
+const ARE_RATE_LIMITING = !DEV_BUILD; // Set to false to temporarily get around it, during development.
+if (!DEV_BUILD && !ARE_RATE_LIMITING) {
+	throw new Error('ARE_RATE_LIMITING must be true in production!!');
+}
 
 // For rate limiting a client...
 

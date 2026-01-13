@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "77"
+version = "84"
 maintainer = "estetique_bs,tsevasa"
 
 [header]
@@ -62,7 +62,7 @@ what_is_it_pargaraphs = [
 "Wie Sie sich vorstellen können, gibt es eine unendliche Anzahl an möglichen Startkonfigurationen, von denen Sie viele auf dieser Webseite kompetitiv spielen können! Ihr Endziel ist immer noch Schachmatt, was neue Taktiken erfordert, da es keine Ränder gibt, an die der feindliche König gedrängt werden kann. Ein Spiel dauert normalerweise nicht viel länger als normale Schachpartien. Bauern wandeln weiterhin auf der ersten bzw. achten Reihe um!",
 ]
 how_to_title = "Wie kann ich spielen?"
-how_to_paragraph = ["Die aktuelle Version 1.8 ist auf der Seite ","Spielen"," verfügbar!"]
+how_to_paragraph = ["Die aktuelle Version 1.9 ist auf der Seite ","Spielen"," verfügbar!"]
 about_title = "Über das Projekt"
 about_paragraphs = [
 "Ich bin Naviary. Seit ich das Unendliche Schach (das Konzept existierte lange vor dieser Website) zum ersten Mal entdeckte, hat es mich sehr fasziniert und mit seinen Möglichkeiten begeistert! Bis vor kurzem war das Spielen ziemlich schwierig, da die Spieler Bilder des aktuellen Brettes erstellen und für jeden gespielten Zug hin und her senden mussten. Deswegen wissen wenige davon oder haben es spielen können.",
@@ -171,7 +171,7 @@ js-pwd_not_pwd = "Passwort darf nicht 'password' sein"
 
 [leaderboard]
 title = "Bestenliste"
-inactive_players = "Inaktive Spieler mit hoher Rating-Unsicherheit werden von der Bestenliste ausgeschlossen."
+inactive_players = ["Inaktive Spieler mit Rating-Unsicherheit größer als ", " sind von der Bestenliste ausgeschlossen."] # A number is inserted between these two quotes
 your_global_ranking = "Ihr globaler Rang:"
 show_more = "Mehr anzeigen..."
 
@@ -299,6 +299,9 @@ no = "Nein"
 yes = "Ja"
 rated = "Gewertet"
 casual = "Ungewertet"
+easy = "Einfach"
+medium = "Mittel"
+hard = "Schwer"
 join_games = "Beitreten - Aktive Spiele:"
 private_invite = "Private Einladung:"
 your_invite = "Ihr Einladungscode:"
@@ -362,6 +365,7 @@ arrows_all_hippogonals = "Pfeile: Alle (mit Hippogonalen)"
 toggled = "Eingeschaltet"
 menu_online = "Spielen - Online"
 menu_local = "Spielen - Lokal"
+menu_computer = "Spielen - Computer"
 invite_error_digits = "Einladungscode muss 5 Ziffern lang sein."
 invite_copied = "Einladungscode in Zwischenablage kopiert."
 move_counter = "Zug:"
@@ -557,7 +561,7 @@ fair_play_paragraph1 = ["Sie dürfen nicht mehr als ein Konto besitzen."]
 fair_play_paragraph2 = "Um das Spielen für alle unterhaltsam und fair zu halten, dürfen Sie NICHT:"
 fair_play_rules = [
 "Den Code in irgendeiner Weise modifizieren oder manipulieren, einschließlich, aber nicht beschränkt auf: Verwendung von Konsolenbefehlen, lokalen Überschreibungen, benutzerdefinierten Skripten, Modifikation von HTTP-Anfragen, WebSocket-Nachrichten usw. Dies kann geschehen, um das Spiel absichtlich zu stören, illegale Züge zu spielen oder sich einen Vorteil zu verschaffen.",
-"Bugs oder Glitches ausnutzen, um das Spiel abzubrechen, sich einen Vorteil zu verschaffen oder das Spiel anderweitig unspielbar zu machen. Dies kann das Bewegen einer Figur über extreme Distanzen, wie 10^15 vom Ursprung entfernt, beinhalten.",
+"Bugs oder Glitches ausnutzen, um das Spiel abzubrechen, sich einen Vorteil zu verschaffen oder das Spiel anderweitig unspielbar zu machen.",
 "In gewerteten Spielen Hilfe/Ratschläge von einer anderen Person oder einem Programm bezüglich Ihrer Züge erhalten. (Das Erstellen einer Engine ist in Ordnung und erwünscht, aber Sie müssen deren Verwendung auf ungewertete Gelegenheitsspiele beschränken)",
 "Rating-Punkte mit anderen Personen tauschen, indem Sie absichtlich verlieren, um das Rating Ihres Gegners zu erhöhen, oder indem Sie Rating-Punkte von einem Gegner erhalten, der beabsichtigt zu verlieren, um Ihre eigene Wertung zu erhöhen. Dies missbraucht das System und führt zu ungenauen Wertungen gemäß Ihrem Fähigkeitsniveau."
 ]
@@ -636,7 +640,7 @@ ws-email_too_long = "Ihre E-Mail ist zu laaaaaaaang."
 ws-email_invalid = "Dies ist keine gültige E-Mail"
 ws-email_in_use = "Diese E-Mail ist bereits in Verwendung"
 ws-email_domain_invalid = "Ungültige Domain."
-ws-you_are_banned = "Sie sind gesperrt."
+ws-email_blacklisted = "Ihre E-Mail-Adresse ist gesperrt."
 ws-password_length = "Passwort muss 6 bis 72 Zeichen lang sein"
 ws-password_password = "Passwort darf nicht 'password' sein"
 ws-password-reset-link-sent = "Falls ein Konto mit dieser E-Mail Adresse existiert, wurde ein Link zur Zurücksetzung des Passworts gesendet."
@@ -653,8 +657,13 @@ ws-server_restarting = "Der Server startet in" # The server inserts a number imm
 ws-server_under_maintenance = "Server ist wegen Wartungsarbeiten offline. Schauen Sie bald wieder vorbei!" # Can be changed at will to change the display message.
 ws-minutes = "Minuten" # unit of time
 ws-minute = "Minute" # unit of time
-ws-game_aborted_cheating = "Spiel wegen wahrscheinlichem Betrug abgebrochen."
+ws-you_cheated = "Hoppla! Sie haben einen illegalen Zug gemacht. Das Spiel wurde abgebrochen. Wenn dies ein Fehler war, bitte melden Sie diesen Bug!"
+ws-opponent_cheated = "Ihr Gegner hat versucht, einen illegalen Zug zu machen. Das Spiel wurde abgebrochen."
 ws-cannot_resign_finished_game = "Spiel kann nicht aufgegeben werden, es ist bereits beendet."
 ws-invalid_code = "Ungültiger Code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Spiel abgebrochen." # Invite was cancelled as you clicked on it
 ws-rated_invite_verification_needed = "Um gewertet zu spielen, müssen Sie mit einem verifizierten Konto angemeldet sein."
+
+[rate-limiting]
+
+generic = "Sie haben zu viele Anfragen gestellt, bitte versuchen Sie es später erneut."

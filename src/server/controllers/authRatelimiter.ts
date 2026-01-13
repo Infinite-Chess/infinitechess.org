@@ -1,10 +1,24 @@
-import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getTranslationForReq } from '../utility/translate.js';
+// src/server/controllers/authRatelimiter.ts
 
 /**
  * The script rate limits login/authentication attempts by a combination of username and IP address
  */
+
+import type { Request, Response } from 'express';
+
+import { getClientIP } from '../utility/IP.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+// @ts-ignore
+import { getTranslationForReq } from '../utility/translate.js';
+
+// Types ----------------------------------------------------------------------------
+
+type LoginAttemptData = {
+	attempts: number;
+	cooldownTimeSecs: number;
+	lastAttemptTime: Date;
+	deleteTimeoutID?: NodeJS.Timeout;
+};
 
 // Variables ----------------------------------------------------------------------------
 
@@ -24,18 +38,20 @@ const loginCooldownIncrementorSecs = 5;
  *  }
  * }`
  */
-const loginAttemptData = {};
-/** The time, in milliseconds, to delete a browser agent from the
- * login attempt data, if they have stopped trying to login. */
+const loginAttemptData: Record<string, LoginAttemptData> = {};
+/**
+ * The time, in milliseconds, to delete a browser agent from the
+ * login attempt data, if they have stopped trying to login.
+ */
 const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minutes
 
 // Functions ----------------------------------------------------------------------------
 
 /**
  * Prevents a user-IP combination from entering login attempts too fast.
- * @returns {boolean} true if the attempt is allowed
+ * @returns true if the attempt is allowed
  */
-function rateLimitLogin(req, res, browserAgent) {
+function rateLimitLogin(req: Request, res: Response, browserAgent: string): boolean {
 	const now = new Date();
 	loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
 		attempts: 0,
@@ -43,7 +59,8 @@ function rateLimitLogin(req, res, browserAgent) {
 		lastAttemptTime: now,
 	};
 
-	const timeSinceLastAttemptsSecs = (now - loginAttemptData[browserAgent].lastAttemptTime) / 1000;
+	const timeSinceLastAttemptsSecs =
+		(now.getTime() - loginAttemptData[browserAgent].lastAttemptTime.getTime()) / 1000;
 
 	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) {
 		incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
@@ -83,23 +100,23 @@ function rateLimitLogin(req, res, browserAgent) {
 
 /**
  * Generates a unique browser agent string using the request object and username.
- * @param {Object} req - The request object.
- * @param {string} username - The username.
- * @returns {string} - The browser agent string, `${usernameLowercase}${clientIP}`
+ * @param req - The request object.
+ * @param username - The username.
+ * @returns The browser agent string, `${usernameLowercase}${clientIP}`
  */
-function getBrowserAgent(req, username) {
+function getBrowserAgent(req: Request, username: string): string {
 	const clientIP = getClientIP(req);
 	return `${username}${clientIP}`;
 }
 
 /**
  * Increments the login attempt counter in the login attempt data for a browser agent.
- * @param {string} browserAgent - The browser agent string.
- * @param {Date} now - The current date and time.
+ * @param browserAgent - The browser agent string.
+ * @param now - The current date and time.
  */
-function incrementBrowserAgentLoginAttemptCounter(browserAgent, now) {
-	loginAttemptData[browserAgent].attempts += 1;
-	loginAttemptData[browserAgent].lastAttemptTime = now;
+function incrementBrowserAgentLoginAttemptCounter(browserAgent: string, now: Date): void {
+	loginAttemptData[browserAgent]!.attempts += 1;
+	loginAttemptData[browserAgent]!.lastAttemptTime = now;
 	// Reset the timer to auto-delete them from the login attempt data
 	// if they haven't tried in a while.
 	// This is so it doesn't get cluttered over time
@@ -109,26 +126,26 @@ function incrementBrowserAgentLoginAttemptCounter(browserAgent, now) {
 
 /**
  * Resets the login attempt counter in the login attempt data for a browser agent.
- * @param {string} browserAgent - The browser agent string.
+ * @param browserAgent - The browser agent string.
  */
-function resetBrowserAgentLoginAttemptCounter(browserAgent) {
-	loginAttemptData[browserAgent].attempts = 0;
+function resetBrowserAgentLoginAttemptCounter(browserAgent: string): void {
+	loginAttemptData[browserAgent]!.attempts = 0;
 }
 
 /**
  * Resets the timer to delete a browser agent from the login attempt data.
- * @param {string} browserAgent - The browser agent string.
+ * @param browserAgent - The browser agent string.
  */
-function resetTimerToDeleteBrowserAgent(browserAgent) {
+function resetTimerToDeleteBrowserAgent(browserAgent: string): void {
 	cancelTimerToDeleteBrowserAgent(browserAgent);
 	startTimerToDeleteBrowserAgent(browserAgent);
 }
 
 /**
  * Cancels the timer to delete a browser agent from the login attempt data.
- * @param {string} browserAgent - The browser agent string.
+ * @param browserAgent - The browser agent string.
  */
-function cancelTimerToDeleteBrowserAgent(browserAgent) {
+function cancelTimerToDeleteBrowserAgent(browserAgent: string): void {
 	clearTimeout(loginAttemptData[browserAgent]?.deleteTimeoutID);
 	delete loginAttemptData[browserAgent]?.deleteTimeoutID;
 }
@@ -136,10 +153,10 @@ function cancelTimerToDeleteBrowserAgent(browserAgent) {
 /**
  * Starts the timer that will delete a browser agent from the login attempt data
  * after they have given up on trying passwords.
- * @param {string} browserAgent - The browser agent string.
+ * @param browserAgent - The browser agent string.
  */
-function startTimerToDeleteBrowserAgent(browserAgent) {
-	loginAttemptData[browserAgent].deleteTimeoutID = setTimeout(() => {
+function startTimerToDeleteBrowserAgent(browserAgent: string): void {
+	loginAttemptData[browserAgent]!.deleteTimeoutID = setTimeout(() => {
 		delete loginAttemptData[browserAgent];
 		console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`);
 	}, timeToDeleteBrowserAgentAfterNoAttemptsMillis);
@@ -148,15 +165,15 @@ function startTimerToDeleteBrowserAgent(browserAgent) {
 /**
  * Handles the rate limiting scenario when an incorrect password is entered.
  * Temporarily locks them out if they've entered too many incorrect passwords.
- * @param {string} browserAgent - The browser agent string.
- * @param {string} username - The username.
+ * @param browserAgent - The browser agent string.
+ * @param username - The username.
  */
-function onIncorrectPassword(browserAgent, username) {
-	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
+function onIncorrectPassword(browserAgent: string, username: string): void {
+	if (loginAttemptData[browserAgent]!.attempts < maxLoginAttempts) return; // Don't lock them yet
 	// Lock them!
-	loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
+	loginAttemptData[browserAgent]!.cooldownTimeSecs += loginCooldownIncrementorSecs;
 	logEventsAndPrint(
-		`${username} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`,
+		`${username} got login locked for ${loginAttemptData[browserAgent]!.cooldownTimeSecs} seconds`,
 		'loginAttempts.txt',
 	);
 }
@@ -164,9 +181,9 @@ function onIncorrectPassword(browserAgent, username) {
 /**
  * Handles the rate limiting scenario when a correct password is entered.
  * Deletes their browser agent from the login attempt data.
- * @param {string} browserAgent - The browser agent string.
+ * @param browserAgent - The browser agent string.
  */
-function onCorrectPassword(browserAgent) {
+function onCorrectPassword(browserAgent: string): void {
 	cancelTimerToDeleteBrowserAgent(browserAgent);
 	// Delete now
 	delete loginAttemptData[browserAgent];

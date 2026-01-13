@@ -1,10 +1,7 @@
-// Import Start
 // @ts-ignore
 import statustext from './gui/statustext.js';
 // @ts-ignore
 import invites from './misc/invites.js';
-// @ts-ignore
-import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
 import localstorage from '../util/localstorage.js';
 import timeutil from '../../../../shared/util/timeutil.js';
@@ -15,7 +12,7 @@ import validatorama from '../util/validatorama.js';
 import wsutil from '../../../../shared/util/wsutil.js';
 import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 import docutil from '../util/docutil.js';
-// Import End
+import { GAME_VERSION } from '../../../../shared/game_version.js';
 
 // Custom type definitions...
 
@@ -360,7 +357,7 @@ function ongeneralmessage(action: string, value: WebsocketMessageValue): void {
 			break;
 		case 'gameversion':
 			// If the current version doesn't match, hard refresh.
-			if (value !== config.GAME_VERSION) handleHardRefresh(value);
+			if (value !== GAME_VERSION) handleHardRefresh(value);
 			break;
 		default:
 			console.log(
@@ -394,22 +391,21 @@ function ongeneralmessage(action: string, value: WebsocketMessageValue): void {
  * This prevents a cycle of endless refreshing if a browser doesn't support hard refreshing.
  * I don't have a way of getting them to hard refresh if this doesn't work, it will
  * try hard refreshing again 1 day from now.
- * @param GAME_VERSION - The game version the server is currently running.
+ * @param LATEST_GAME_VERSION - The game version the server is currently running.
  */
-function handleHardRefresh(GAME_VERSION: string): void {
+function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 	// New update!
-	if (!GAME_VERSION) throw new Error("Can't hard refresh with no expected version.");
 
 	const reloadInfo = {
 		timeLastHardRefreshed: Date.now(),
-		expectedVersion: GAME_VERSION,
+		expectedVersion: LATEST_GAME_VERSION,
 	};
 	const preexistingHardRefreshInfo: HardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
-	if (preexistingHardRefreshInfo?.expectedVersion === GAME_VERSION) {
+	if (preexistingHardRefreshInfo?.expectedVersion === LATEST_GAME_VERSION) {
 		// Don't hard-refresh, we've already tried for this version.
 		if (!preexistingHardRefreshInfo.sentNotSupported)
 			sendFeatureNotSupported(
-				`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${config.GAME_VERSION}`,
+				`location.reload(true) failed to hard refresh. Server version: ${LATEST_GAME_VERSION}. Still running: ${GAME_VERSION}`,
 			);
 		preexistingHardRefreshInfo.sentNotSupported = true;
 		saveInfo(preexistingHardRefreshInfo);

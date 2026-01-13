@@ -13,11 +13,6 @@ import {
 import socketUtility from './socketUtility.js';
 import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
-import {
-	printIncomingAndOutgoingMessages,
-	simulatedWebsocketLatencyMillis,
-	// @ts-ignore
-} from '../config/config.js';
 // @ts-ignore
 import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
 // @ts-ignore
@@ -46,8 +41,22 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 // Variables ---------------------------------------------------------------------------
 
-/** After this much time of no messages sent we send a message,
- * expecting an echo, just to check if they are still connected. */
+/**
+ * The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV!!
+ * I recommend 2 seconds of latency for testing slow networks.
+ */
+const simulatedWebsocketLatencyMillis = 0;
+// const simulatedWebsocketLatencyMillis = 1000; // 1 Second
+// const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
+
+if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis !== 0) {
+	throw new Error('simulatedWebsocketLatencyMillis must be 0 in production!!');
+}
+
+/**
+ * After this much time of no messages sent we send a message,
+ * expecting an echo, just to check if they are still connected.
+ */
 const timeOfInactivityToRenewConnection = 10000;
 
 // Sending Messages ---------------------------------------------------------------------------
@@ -95,7 +104,7 @@ function sendSocketMessage(
 	};
 	const stringifiedPayload = JSON.stringify(payload);
 
-	if (printIncomingAndOutgoingMessages && !isEcho) console.log(`Sending: ${stringifiedPayload}`);
+	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
 
 	ws.send(stringifiedPayload); // Send the message
 	if (!isEcho) {

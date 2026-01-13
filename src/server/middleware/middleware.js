@@ -11,7 +11,6 @@ import helmet from 'helmet';
 
 // Middleware
 import cookieParser from 'cookie-parser';
-import credentials from './credentials.js';
 import secureRedirect from './secureRedirect.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
@@ -23,10 +22,8 @@ import i18next from 'i18next';
 import middleware from 'i18next-http-middleware';
 
 // Other imports
-import { useOriginWhitelist } from '../config/config.js';
 import { router as rootRouter } from '../routes/root.js';
 import send404 from './send404.js';
-import corsOptions from '../config/corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
@@ -75,7 +72,8 @@ function configureMiddleware(app) {
 	app.use(rateLimit);
 
 	// This allows us to retrieve json-received-data as a parameter/data!
-	// The logger can't log the request body without this
+	// The logger can't log the request body without this.
+	// This also ensures all requests with content-type "application/json" have a body as an object, even if empty.
 	app.use(express.json({ limit: '50kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
 	app.use(reqLogger); // Log the request
@@ -126,24 +124,10 @@ function configureMiddleware(app) {
 		}
 	});
 
-	app.use(credentials); // Handle credentials check. Must be before CORS.
-
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
 
-	/**
-	 * Cross Origin Resource Sharing
-	 *
-	 * This allows 3rd party middleware. Without this, other sites will get an
-	 * error when retreiving data on your site to serve to their customers.
-	 * Be careful, incorrectly setting will block our own customers.
-	 * For many applications though, you don't want it open to the public,
-	 * but perhaps you do want search engines to have access?
-	 *
-	 * Does this create a 'Access-Control-Allow-Origin' header?
-	 */
-	const options = useOriginWhitelist ? corsOptions : undefined;
-	app.use(cors(options));
+	app.use(cors());
 
 	// CUSTOM express.json() NEEDED because AWS SNS sends text/plain instead of application/json! But it is still parsable as JSON.
 	const awsParser = express.json({

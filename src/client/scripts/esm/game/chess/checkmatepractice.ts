@@ -315,7 +315,6 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		);
 
 		if (response.ok) {
-			// 200 OK from your server
 			console.log('Server recorded checkmate completion successfully.');
 			// Do this now, since the server will have updated the cookie containing the completed checkmates
 			guipractice.updateCheckmatesBeaten(completedCheckmates);

@@ -7,12 +7,9 @@
 import type { IdentifiedRequest } from '../types.js';
 import type { Response } from 'express';
 
-import {
-	getMemberDataByCriteria,
-	MemberRecord,
-	updateMemberColumns,
-} from '../database/memberManager.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
  * API endpoint to get the count of unread news posts for the current user.
@@ -29,23 +26,16 @@ function getUnreadNewsCount(req: IdentifiedRequest, res: Response): void {
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(
-		['last_read_news_date'],
-		'user_id',
-		userId,
-		false,
-	);
+	const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-	const lastReadDate = memberData.last_read_news_date;
-
-	if (!lastReadDate) {
-		// For some reason the cell was null or undefined
+	if (!record?.last_read_news_date) {
+		// For some reason the cell was null or record not found
 		res.json({ count: 0 });
 		return;
 	}
 
 	// Count unread news posts
-	const unreadCount = countUnreadNews(lastReadDate);
+	const unreadCount = countUnreadNews(record.last_read_news_date);
 
 	res.json({ count: unreadCount });
 }
@@ -64,23 +54,16 @@ function getUnreadNewsDatesEndpoint(req: IdentifiedRequest, res: Response): void
 	const userId = req.memberInfo.user_id;
 
 	// Get user's last read news date
-	const memberData: MemberRecord = getMemberDataByCriteria(
-		['last_read_news_date'],
-		'user_id',
-		userId,
-		false,
-	);
+	const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-	const lastReadDate = memberData.last_read_news_date;
-
-	if (!lastReadDate) {
+	if (!record?.last_read_news_date) {
 		// For some reason the cell was null or undefined
 		res.json({ dates: [] });
 		return;
 	}
 
 	// Get unread news dates
-	const unreadDates = getUnreadNewsDates(lastReadDate);
+	const unreadDates = getUnreadNewsDates(record.last_read_news_date);
 
 	res.json({ dates: unreadDates });
 }
@@ -100,10 +83,32 @@ function markNewsAsRead(req: IdentifiedRequest, res: Response): void {
 
 	const latestNewsDate = getLatestNewsDate();
 
-	const success = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
+	try {
+		const result = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
 
-	if (success) res.status(200).json({ success: true });
-	else res.status(500).json({ success: false, message: 'Failed to update last read news date.' });
+		if (result.changeMade) {
+			res.status(200).json({ success: true });
+		} else {
+			logEventsAndPrint(
+				`Failed to update last read news date for member of ID "${userId}". No changes made. Do they exist?`,
+				'errLog.txt',
+			);
+			res.status(500).json({
+				success: false,
+				message: 'Failed to update last read news date.',
+			});
+		}
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Error updating last read news date for member of ID "${userId}": ${message}`,
+			'errLog.txt',
+		);
+		res.status(500).json({
+			success: false,
+			message: `Server error updating last read news date`,
+		});
+	}
 }
 
 export { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead };

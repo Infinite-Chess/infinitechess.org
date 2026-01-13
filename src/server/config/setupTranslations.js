@@ -1,3 +1,5 @@
+// src/server/config/setupTranslations.js
+
 import i18next from 'i18next';
 import { parse } from 'smol-toml';
 import fs from 'fs';
@@ -8,56 +10,11 @@ import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
-import deDE from 'date-fns/locale/de/index.js';
-import enUS from 'date-fns/locale/en-US/index.js';
-import frFR from 'date-fns/locale/fr/index.js';
-import ptBR from 'date-fns/locale/pt-BR/index.js';
-import zhTW from 'date-fns/locale/zh-TW/index.js';
-import zhCN from 'date-fns/locale/zh-CN/index.js';
-import pl from 'date-fns/locale/pl/index.js';
 
 import { fileURLToPath } from 'node:url';
 import { UNCERTAIN_LEADERBOARD_RD } from '../game/gamemanager/ratingcalculation.js';
+import { localeMap } from './dateLocales.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
- * This dictionary tells use what code the date-fns package uses
- * to provide language-correct dates.
- *
- * Update when we support a new language.
- */
-const localeMap = {
-	'de-DE': deDE,
-	'en-US': enUS,
-	'fr-FR': frFR,
-	'pt-BR': ptBR,
-	'zh-TW': zhTW,
-	'zh-CN': zhCN,
-	'pl-PL': pl,
-};
-
-/**
- * A dictionary containing the English names of many language codes.
- * ADD TO THIS when we add a new language that's not listed below!
- */
-const languageNames = {
-	'en-US': 'English',
-	'es-ES': 'Spanish',
-	'fr-FR': 'French',
-	'pl-PL': 'Polish',
-	'pt-BR': 'Portuguese',
-	'zh-CN': 'Simplified Chinese',
-	'zh-TW': 'Traditional Chinese',
-	'de-DE': 'German',
-	'ja-JP': 'Japanese',
-	'ru-RU': 'Russian',
-	'it-IT': 'Italian',
-	'ar-SA': 'Arabic',
-	'hi-IN': 'Hindi',
-	'ko-KR': 'Korean',
-	'tr-TR': 'Turkish',
-	'fi-FI': 'Finnish',
-};
 
 const translationsFolder = './translation';
 
@@ -83,40 +40,6 @@ const staticTranslatedTemplates = [
 	'errors/409',
 	'errors/500',
 ];
-
-// Removed because <a> tags are no longer in whitelist
-/*
-const link_white_list = [
-  "/",
-  "/login",
-  "/news",
-  "/leaderboard",
-  "/play",
-  "/credits",
-  "/termsofservice",
-  "/createaccount",
-  "https://github.com/pychess/pychess/blob/master/LICENSE",
-  "mailto:support@infinitechess.org",
-  "https://www.patreon.com/Naviary",
-  "https://math.colgate.edu/~integers/og2/og2.pdf",
-  "https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces",
-  "https://math.colgate.edu/~integers/og2/og2.pdf",
-  "https://math.colgate.edu/~integers/rg4/rg4.pdf",
-  "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
-  "https://creativecommons.org/licenses/by-sa/3.0/deed.en",
-  "https://www.gnu.org/licenses/gpl-3.0.en.html",
-  "https://greenchess.net/info.php?item=downloads",
-  "https://github.com/lichess-org/lila/blob/master/COPYING.md",
-  "https://www.gnu.org/licenses/agpl-3.0.en.html",
-  "https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html",
-  "https://github.com/tsevasa/infinite-chess-notation",
-  "https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md",
-  "https://discord.gg/NFWFGZeNh5",
-  "https://www.chess.com/forum/view/chess-variants/infinite-chess-app-devlogs-and-more",
-  "https://github.com/Infinite-Chess/infinitechess.org",
-  "https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997"
-];
-*/
 
 const xss_options = {
 	whiteList: {
@@ -154,6 +77,13 @@ const xss_options = {
 	},
 };
 const custom_xss = new FilterXSS(xss_options);
+
+// Variables ----------------------------------------------------------------------
+
+/** Translations object containing all loaded translations. */
+let translations;
+
+// Functions ----------------------------------------------------------------------
 
 function html_escape_array(array) {
 	const escaped = [];
@@ -285,7 +215,7 @@ function loadTranslationsFolder(folder) {
 						const date = format(parseISO(dateISO), 'PP', {
 							// Change the number of P's to change how the date is phrased
 							timeZone: 'UTC-6',
-							locale: localeMap[languageCode],
+							locale: localeMap[languageCode].locale,
 						});
 
 						return `<div class='news-post' data-date='${dateISO}'>
@@ -322,14 +252,35 @@ function createFileOrDir(filePath) {
 }
 
 /**
+ * Initializes i18next, loads languages from .toml files, saves translated versions of templates.
+ * **Should be ran only once**.
+ *
+ * DOES NOT translate static templates automatically, since that should not be done during integration tests.
+ */
+function initTranslations() {
+	translations = loadTranslationsFolder(translationsFolder);
+
+	i18next.use(middleware.LanguageDetector).init({
+		// debug: true,
+		preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
+		resources: translations,
+		defaultNS: 'default',
+		fallbackLng: getDefaultLanguage(),
+		// debug: true // Enable debug mode to see logs for missing keys and other details
+	});
+}
+
+/**
  * Generates translated versions of templates in staticTranslatedTemplates
  */
-function translateStaticTemplates(translations) {
+function translateStaticTemplates() {
+	if (!translations) throw new Error('Translations have not been initialized yet.');
+
 	const languages = Object.keys(translations);
 
 	const languages_list = languages.map((language) => {
 		const name = translations[language].default.name;
-		const englishName = languageNames[language];
+		const englishName = localeMap[language].name;
 		if (!englishName)
 			throw new Error(
 				`English name not found for language code: ${language} Name: ${translations[language].default.name}`,
@@ -367,23 +318,4 @@ function translateStaticTemplates(translations) {
 	}
 }
 
-/**
- * Initializes i18next, loads languages from .toml files, saves translated versions of templates.
- * **Should be ran only once**.
- */
-function initTranslations() {
-	const translations = loadTranslationsFolder(translationsFolder);
-
-	i18next.use(middleware.LanguageDetector).init({
-		// debug: true,
-		preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
-		resources: translations,
-		defaultNS: 'default',
-		fallbackLng: getDefaultLanguage(),
-		// debug: true // Enable debug mode to see logs for missing keys and other details
-	});
-
-	translateStaticTemplates(translations); // Compiles static files
-}
-
-export { initTranslations };
+export { initTranslations, translateStaticTemplates };

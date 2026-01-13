@@ -35,10 +35,18 @@ let bannedJSON: {
 };
 try {
 	bannedJSON = await readFile(bannedPath);
-} catch (e) {
-	const errMsg =
-		'Unable to read banned.json on startup. ' + (e instanceof Error ? e.stack : String(e));
-	throw new Error(errMsg);
+} catch (error: unknown) {
+	if (process.env['VITEST']) {
+		console.warn('Mocking banned.json for test environment');
+		bannedJSON = {
+			IPs: {},
+			emails: {},
+			'browser-ids': {},
+		};
+	} else {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new Error('Unable to read banned.json on startup: ' + message);
+	}
 }
 // EMAIL BANS are now handled in the email_blacklist database table!
 // function isEmailBanned(email: string): boolean {

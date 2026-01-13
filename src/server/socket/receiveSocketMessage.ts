@@ -11,8 +11,6 @@ import * as z from 'zod';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
-// @ts-ignore
-import { printIncomingAndOutgoingMessages } from '../config/config.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
@@ -117,7 +115,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 	// Send our echo here! We always send an echo to every message except echos themselves.
 	sendSocketMessage(ws, 'general', 'echo', message.id);
 
-	if (printIncomingAndOutgoingMessages) console.log('Received message: ' + rawMessage);
+	// console.log('Received message: ' + rawMessage);
 
 	rescheduleRenewConnection(ws); // We know they are connected, so reset this
 
