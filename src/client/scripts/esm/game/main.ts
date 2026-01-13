@@ -32,7 +32,8 @@ function start(): void {
 	// If so, it will send the info to join it.
 	websocket.sendmessage('game', 'joingame', undefined, true);
 
-	gameLoop(); // Update & draw the scene repeatedly
+	// Update & draw the scene repeatedly
+	frameratelimiter.requestFrame(gameLoop);
 }
 
 function initListeners(): void {
@@ -47,24 +48,21 @@ function initListeners(): void {
 	});
 }
 
-function gameLoop(): void {
-	const loop = function (runtime: number): void {
-		loadbalancer.update(runtime); // Updates fps, delta time, etc..
+/** The main game loop. Called every frame. */
+function gameLoop(runtime: number): void {
+	loadbalancer.update(runtime); // Updates fps, delta time, etc..
 
-		game.update(); // Always update the game, even if we're afk. By FAR this is less resource intensive than rendering!
+	game.update(); // Always update the game, even if we're afk. By FAR this is less resource intensive than rendering!
 
-		render(); // Render everything
+	render(); // Render everything
 
-		// Reset all event listeners states so we can catch any new events that happen for the next frame.
-		document.dispatchEvent(new Event('reset-listener-events'));
+	// Reset all event listeners states so we can catch any new events that happen for the next frame.
+	document.dispatchEvent(new Event('reset-listener-events'));
 
-		loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
+	loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 
-		// Loop again while app is running.
-		frameratelimiter.requestFrame(loop);
-	};
-
-	frameratelimiter.requestFrame(loop); // Calls the very first frame. Subsequent loops are called in the loop() function
+	// Loop again while app is running.
+	frameratelimiter.requestFrame(gameLoop);
 }
 
 function render(): void {
