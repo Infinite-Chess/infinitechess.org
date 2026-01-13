@@ -22,7 +22,7 @@ type WebsocketMessageValue = MessageEvent['data'];
 type HardRefreshInfo = {
 	timeLastHardRefreshed: number;
 	expectedVersion: string;
-	sentNotSupported?: boolean;
+	refreshFailed?: boolean;
 };
 
 /**
@@ -403,11 +403,11 @@ function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 	const preexistingHardRefreshInfo: HardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
 	if (preexistingHardRefreshInfo?.expectedVersion === LATEST_GAME_VERSION) {
 		// Don't hard-refresh, we've already tried for this version.
-		if (!preexistingHardRefreshInfo.sentNotSupported)
-			sendFeatureNotSupported(
+		if (!preexistingHardRefreshInfo.refreshFailed)
+			console.warn(
 				`location.reload(true) failed to hard refresh. Server version: ${LATEST_GAME_VERSION}. Still running: ${GAME_VERSION}`,
 			);
-		preexistingHardRefreshInfo.sentNotSupported = true;
+		preexistingHardRefreshInfo.refreshFailed = true;
 		saveInfo(preexistingHardRefreshInfo);
 		return;
 	}
@@ -416,16 +416,8 @@ function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 	location.reload(true);
 
 	function saveInfo(info: HardRefreshInfo): void {
-		localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 }));
+		localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 })); // I think cloudflare caches scripts for 4 hours
 	}
-}
-
-/**
- *
- * @param description
- */
-function sendFeatureNotSupported(description: string): void {
-	sendmessage('general', 'feature-not-supported', description);
 }
 
 /**

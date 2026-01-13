@@ -6,8 +6,6 @@
 
 import * as z from 'zod';
 
-import socketUtility from './socketUtility.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { subToInvitesList, unsubFromInvitesList } from '../game/invitesmanager/invitesmanager.js';
 import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
 
@@ -18,7 +16,6 @@ const validUnsubs = ['invites', 'game'] as const;
 type ValidUnsub = (typeof validUnsubs)[number];
 
 const GeneralSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('feature-not-supported'), value: z.string() }),
 	z.strictObject({ action: z.literal('sub'), value: z.literal(['invites']) }),
 	z.strictObject({ action: z.literal('unsub'), value: z.literal(validUnsubs) }),
 ]);
@@ -37,9 +34,6 @@ function routeGeneralMessage(ws: CustomWebSocket, message: GeneralMessage): void
 			break;
 		case 'unsub':
 			handleUnsubbing(ws, message.value);
-			break;
-		case 'feature-not-supported':
-			handleFeatureNotSupported(ws, message.value);
 			break;
 		default:
 			console.error(
@@ -79,11 +73,6 @@ function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, closureNotByChoic
 		default:
 			console.error(`UNKNOWN subscription list to unsubscribe client from! "${key}"`);
 	}
-}
-
-function handleFeatureNotSupported(ws: CustomWebSocket, description: string): void {
-	const errText = `Client unsupported feature: ${description}   Socket: ${socketUtility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
-	logEventsAndPrint(errText, 'featuresUnsupported.txt');
 }
 
 // Exports ------------------------------------------------------------
