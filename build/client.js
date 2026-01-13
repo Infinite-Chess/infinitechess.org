@@ -25,10 +25,10 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * into their own bundle!
  */
 const ESMEntryPoints = [
-	'src/client/scripts/esm/game/main.js',
+	'src/client/scripts/esm/game/main.ts',
 	'src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.ts',
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
-	'src/client/scripts/esm/components/header/header.js',
+	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index.ts',
 	'src/client/scripts/esm/views/member.ts',
 	'src/client/scripts/esm/views/leaderboard.ts',
