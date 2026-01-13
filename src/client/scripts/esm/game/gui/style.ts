@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * This script holds common operations on document elements,
  *  as show, hide, fade-after-1s...
@@ -7,36 +5,29 @@
  * for things like the color of the navigation bar when theme changes.
  */
 
-const element_style = document.getElementById('style'); // The in-html-doc style element containing css stylings
+import type { Color } from '../../../../../shared/util/math/math';
+
+const element_style = document.getElementById('style')!; // The in-html-doc style element containing css stylings
 
 // What things require styling that our javascript changes?
 // * The navigation bar, when the theme changes.
-let navigationStyle;
+let navigationStyle: string;
 
 // Other operations
 
-function setNavStyle(cssStyle) {
+function setNavStyle(cssStyle: string): void {
 	navigationStyle = cssStyle;
-	onStyleChange();
-}
-
-function onStyleChange() {
-	updateJavascriptStyling();
-}
-
-function updateJavascriptStyling() {
+	// Update the style element
 	element_style.innerHTML = navigationStyle; // Other styles can be appended here later
 }
 
 /**
  * Finds the index of an element within its parent.
- * @param {Element} element - The element to find the index of.
- * @returns {number} - The index of the element within its parent, or -1 if not found.
+ * @param element - The element to find the index of.
+ * @returns - The index of the element within its parent, or -1 if not found.
  */
-function getElementIndexWithinItsParent(element) {
-	if (!element || !element.parentNode) {
-		return -1;
-	}
+function getElementIndexWithinItsParent(element: Element): number {
+	if (!element || !element.parentNode) return -1;
 
 	// Get the parent node
 	const parent = element.parentNode;
@@ -48,11 +39,11 @@ function getElementIndexWithinItsParent(element) {
 
 /**
  * Gets the child element at the specified index of a parent element.
- * @param {Element} parent - The parent element.
- * @param {number} index - The index of the child element.
- * @returns {Element|null} - The child element at the specified index, or null if not found.
+ * @param parent - The parent element.
+ * @param index - The index of the child element.
+ * @returns The child element at the specified index, or null if not found.
  */
-function getChildByIndexInParent(parent, index) {
+function getChildByIndexInParent(parent: Element, index: number): Element | null {
 	if (parent && parent.children && index >= 0 && index < parent.children.length) {
 		return parent.children[index];
 	}
@@ -61,10 +52,10 @@ function getChildByIndexInParent(parent, index) {
 
 /**
  * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
- * @param {import("../../../../../shared/util/math/math").Color} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
- * @returns {string} A CSS rgba color string.
+ * @param colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
+ * @returns A CSS rgba color string.
  */
-function arrayToCssColor(colorArray) {
+function arrayToCssColor(colorArray: Color): string {
 	if (colorArray.length !== 4)
 		throw new Error('Array must have exactly 4 elements: [r, g, b, a].');
 
