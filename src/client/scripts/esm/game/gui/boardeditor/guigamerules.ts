@@ -2,6 +2,7 @@
 
 /**
  * Manages the GUI popup window for the Game Rules of the Board Editor
+ * (game-rule-specific logic only; floating window behavior is in guifloatingwindow.ts)
  */
 
 import type { Coords } from '../../../../../../shared/chess/util/coordutil';
@@ -11,14 +12,12 @@ import type { BoundingBox } from '../../../../../../shared/util/math/bounds';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 import { RawType } from '../../../../../../shared/chess/util/typeutil';
 import jsutil from '../../../../../../shared/util/jsutil';
-import math from '../../../../../../shared/util/math/math';
 import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import gameslot from '../../chess/gameslot';
+import guifloatingwindow from './guifloatingwindow';
 
 // Elements ----------------------------------------------------------
-
-const element_boardUI = document.getElementById('boardUI')!;
 
 /** The button the toggles visibility of the Game Rules popup window. */
 const element_gamerules = document.getElementById('gamerules')!;
@@ -90,51 +89,20 @@ const integerRegex = new RegExp(String.raw`^${icnconverter.integerSource}$`);
 const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
 const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsAllowedSource}$`);
 
-// State ------------------------------------------------------------------
+// Create floating window (generic behavior) -------------------------------------
 
-// Window Position & Dragging State
+const floatingWindow = guifloatingwindow.createFloatingWindow({
+	windowEl: element_window,
+	headerEl: element_header,
+	toggleButtonEl: element_gamerules,
+	closeButtonEl: element_closeButton,
+	onOpen: initGameRulesListeners,
+	onClose: closeGameRulesListeners,
+});
 
-let gameRulesOffsetX = 0;
-let gameRulesOffsetY = 0;
-let gameRulesIsDragging = false;
-let gameRulesSavedPos: { left: number; top: number } | undefined;
-
-// Initialization ----------------------------------------------------------------
-
-function openGameRules(): void {
-	if (gameRulesSavedPos !== undefined) {
-		element_window.style.left = `${gameRulesSavedPos.left}px`;
-		element_window.style.top = `${gameRulesSavedPos.top}px`;
-	}
-	element_window.classList.remove('hidden');
-	element_gamerules.classList.add('active');
-	clampGameRulesToBoardUIBounds();
-	initGameRulesListeners();
-}
-
-function closeGameRules(): void {
-	element_window.classList.add('hidden');
-	element_gamerules.classList.remove('active');
-	closeGameRulesListeners();
-}
-
-/** Opens and closes the Game Rules window. */
-function toggleGameRules(): void {
-	if (element_window.classList.contains('hidden')) openGameRules();
-	else closeGameRules();
-}
+// Gamerules-specific listeners -------------------------------------------
 
 function initGameRulesListeners(): void {
-	element_header.addEventListener('mousedown', startGameRulesMouseDrag);
-	document.addEventListener('mousemove', duringGameRulesMouseDrag);
-	document.addEventListener('mouseup', stopGameRulesDrag);
-	element_header.addEventListener('touchstart', startGameRulesTouchDrag, { passive: false });
-	document.addEventListener('touchmove', duringGameRulesTouchDrag, { passive: false });
-	document.addEventListener('touchend', stopGameRulesDrag, { passive: false });
-
-	window.addEventListener('resize', clampGameRulesToBoardUIBounds);
-	element_closeButton.addEventListener('click', closeGameRules);
-
 	elements_selectionList.forEach((el) => {
 		if (el.type === 'text') {
 			el.addEventListener('keydown', blurOnEnter);
@@ -148,16 +116,6 @@ function initGameRulesListeners(): void {
 }
 
 function closeGameRulesListeners(): void {
-	element_header.removeEventListener('mousedown', startGameRulesMouseDrag);
-	document.removeEventListener('mousemove', duringGameRulesMouseDrag);
-	document.removeEventListener('mouseup', stopGameRulesDrag);
-	element_header.removeEventListener('touchstart', startGameRulesTouchDrag);
-	document.removeEventListener('touchmove', duringGameRulesTouchDrag);
-	document.removeEventListener('touchend', stopGameRulesDrag);
-
-	window.removeEventListener('resize', clampGameRulesToBoardUIBounds);
-	element_closeButton.removeEventListener('click', closeGameRules);
-
 	elements_selectionList.forEach((el) => {
 		if (el.type === 'text') {
 			el.removeEventListener('keydown', blurOnEnter);
@@ -168,12 +126,6 @@ function closeGameRulesListeners(): void {
 	});
 	document.removeEventListener('click', blurOnClickorTouchOutside);
 	document.removeEventListener('touchstart', blurOnClickorTouchOutside);
-}
-
-function resetPositioning(): void {
-	element_window.style.left = '';
-	element_window.style.top = '';
-	gameRulesSavedPos = undefined;
 }
 
 // Reading/Writing Game Rules -----------------------------------------------
@@ -505,98 +457,17 @@ function blurOnEnter(e: KeyboardEvent): void {
 function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent): void {
 	if (!element_window.contains(e.target as Node)) {
 		const activeEl = document.activeElement as HTMLInputElement;
-		if (activeEl && elements_selectionList.includes(activeEl) && activeEl.tagName === 'INPUT')
+		if (activeEl && elements_selectionList.includes(activeEl) && activeEl.tagName === 'INPUT') {
 			activeEl.blur();
-	}
-}
-
-/** Helper: keep the UI box within boardUI bounds */
-function clampGameRulesToBoardUIBounds(): void {
-	const parentRect = element_boardUI.getBoundingClientRect();
-	const elWidth = element_window.offsetWidth;
-	const elHeight = element_window.offsetHeight;
-
-	// Compute clamped position
-	const newLeft = math.clamp(element_window.offsetLeft, 0, parentRect.width - elWidth);
-	const newTop = math.clamp(element_window.offsetTop, 0, parentRect.height - elHeight);
-
-	element_window.style.left = `${newLeft}px`;
-	element_window.style.top = `${newTop}px`;
-
-	// Save new position
-	gameRulesSavedPos = { left: newLeft, top: newTop };
-}
-
-// Dragging ---------------------------------------------------------------
-
-/** Start dragging */
-function startGameRulesDrag(coordx: number, coordy: number): void {
-	gameRulesIsDragging = true;
-	gameRulesOffsetX = coordx - element_window.offsetLeft;
-	gameRulesOffsetY = coordy - element_window.offsetTop;
-	document.body.style.userSelect = 'none';
-}
-
-function startGameRulesMouseDrag(e: MouseEvent): void {
-	startGameRulesDrag(e.clientX, e.clientY);
-}
-
-function startGameRulesTouchDrag(e: TouchEvent): void {
-	if (e.touches.length === 1) {
-		const touch = e.touches[0]!;
-		startGameRulesDrag(touch.clientX, touch.clientY);
-	}
-}
-
-/** Stop dragging */
-function stopGameRulesDrag(): void {
-	if (gameRulesIsDragging) {
-		clampGameRulesToBoardUIBounds();
-	}
-	gameRulesIsDragging = false;
-	document.body.style.userSelect = 'auto';
-}
-
-/** During drag */
-function duringGameRulesDrag(coordx: number, coordy: number): void {
-	if (!gameRulesIsDragging) return;
-
-	const parentRect = element_boardUI.getBoundingClientRect();
-	const elWidth = element_window.offsetWidth;
-	const elHeight = element_window.offsetHeight;
-
-	// Compute desired new position
-	const newLeft = coordx - gameRulesOffsetX;
-	const newTop = coordy - gameRulesOffsetY;
-
-	// Clamp within parent container
-	const clampedLeft = math.clamp(newLeft, 0, parentRect.width - elWidth);
-	const clampedTop = math.clamp(newTop, 0, parentRect.height - elHeight);
-
-	element_window.style.left = `${clampedLeft}px`;
-	element_window.style.top = `${clampedTop}px`;
-
-	// Save new position
-	gameRulesSavedPos = { left: clampedLeft, top: clampedTop };
-}
-
-function duringGameRulesMouseDrag(e: MouseEvent): void {
-	duringGameRulesDrag(e.clientX, e.clientY);
-}
-
-function duringGameRulesTouchDrag(e: TouchEvent): void {
-	if (e.touches.length === 1) {
-		e.preventDefault(); // prevent scrolling
-		const touch = e.touches[0]!;
-		duringGameRulesDrag(touch.clientX, touch.clientY);
+		}
 	}
 }
 
 // Exports -----------------------------------------------------------------
 
 export default {
-	closeGameRules,
-	toggleGameRules,
-	resetPositioning,
+	closeGameRules: floatingWindow.close,
+	toggleGameRules: floatingWindow.toggle,
+	resetPositioning: floatingWindow.resetPositioning,
 	setGameRules,
 };
