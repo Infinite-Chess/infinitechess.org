@@ -521,10 +521,10 @@
                     </div>
 
                     <!-- Game Rules UI for Board Editor -->
-                    <div id="game-rules" class="center hidden">
-                        <div id="game-rules-header">
+                    <div id="game-rules" class="center floating-window hidden">
+                        <div id="game-rules-header" class="floating-window-header">
                             <span class="unselectable">Game Rules</span>
-                            <button id="close-rules">&times;</button>
+                            <button id="close-rules" class="close-floating-window">&times;</button>
                         </div>
 
                         <hr class="divider">
@@ -623,6 +623,19 @@
                         </div>
                     </div>
 
+                    <!-- Start local game UI for Board Editor -->
+                    <div id="local-game-UI" class="center floating-window hidden">
+                        <div id="local-game-UI-header" class="floating-window-header">
+                            <span class="unselectable">Start local game</span>
+                            <button id="close-local-game-UI" class="close-floating-window">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div>
+                            Do you want to leave the board editor and start a local game from this position? Changes will be saved.
+                        </div>
+                    </div>
 
                     <!-- Pause UI -->
                     <div id="pauseUI" class="pauseUI hidden">

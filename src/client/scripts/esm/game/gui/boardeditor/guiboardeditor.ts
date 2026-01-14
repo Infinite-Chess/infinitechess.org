@@ -21,6 +21,7 @@ import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
+import guistartlocalgame from './guistartlocalgame.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -129,8 +130,12 @@ function isOpen(): boolean {
 
 function close(): void {
 	if (!boardEditorOpen) return;
+
 	guigamerules.closeGameRules();
 	guigamerules.resetPositioning();
+	guistartlocalgame.closeLocalGameUI();
+	guistartlocalgame.resetPositioning();
+
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
@@ -349,7 +354,7 @@ function callback_Action(e: Event): void {
 			guigamerules.toggleGameRules();
 			return;
 		case 'start-local-game':
-			handleStartLocalGame();
+			guistartlocalgame.toggleLocalGameUI();
 			return;
 		case 'start-engine-game':
 			handleStartEngineGame();
@@ -408,16 +413,6 @@ function callback_ChangePieceType(e: Event): void {
 	drawingtool.setPiece(currentPieceType);
 	boardeditor.setTool('placer');
 	markPiece(currentPieceType);
-}
-
-/** Called when users click the "Start local game from position" button. */
-function handleStartLocalGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm(
-		'Do you want to leave the board editor and start a local game from this position? Changes will be saved.',
-	); // PLANNED to save changes
-	// Start the local game as requested
-	if (result) eactions.startLocalGame();
 }
 
 /** Called when users click the "Start engine game from position" button. */

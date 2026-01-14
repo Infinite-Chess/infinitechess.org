@@ -40,6 +40,9 @@ interface FloatingWindowOptions {
 	/** Optional close button inside the floating window */
 	closeButtonEl?: HTMLElement;
 
+	/** Optional list of input elements in floating window. They will get deselected on any click outside the floating window */
+	inputElList?: HTMLInputElement[];
+
 	/** Called after the floating window opens (use for window-specific listeners) */
 	onOpen?: () => void;
 
@@ -49,7 +52,8 @@ interface FloatingWindowOptions {
 
 /** Crate the functions needed for the handling of a floating window in the board editor */
 function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle {
-	const { windowEl, headerEl, toggleButtonEl, closeButtonEl, onOpen, onClose } = opts;
+	const { windowEl, headerEl, toggleButtonEl, closeButtonEl, inputElList, onOpen, onClose } =
+		opts;
 
 	// Window Position & Dragging State
 	let offsetX = 0;
@@ -142,6 +146,14 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		window.addEventListener('resize', clampToParentBounds);
 
 		if (closeButtonEl) closeButtonEl.addEventListener('click', close);
+
+		if (inputElList) {
+			inputElList.forEach((el) => {
+				if (el.type === 'text') el.addEventListener('keydown', blurOnEnter);
+			});
+			document.addEventListener('click', blurOnClickorTouchOutside);
+			document.addEventListener('touchstart', blurOnClickorTouchOutside);
+		}
 	}
 
 	/** Close general floating window listeners */
@@ -157,6 +169,14 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		window.removeEventListener('resize', clampToParentBounds);
 
 		if (closeButtonEl) closeButtonEl.removeEventListener('click', close);
+
+		if (inputElList) {
+			inputElList.forEach((el) => {
+				if (el.type === 'text') el.removeEventListener('keydown', blurOnEnter);
+			});
+			document.removeEventListener('click', blurOnClickorTouchOutside);
+			document.removeEventListener('touchstart', blurOnClickorTouchOutside);
+		}
 	}
 
 	/** Open floating window */
@@ -195,6 +215,24 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		windowEl.style.left = '';
 		windowEl.style.top = '';
 		savedPos = undefined;
+	}
+
+	/** Deselects input boxes when pressing Enter */
+	function blurOnEnter(e: KeyboardEvent): void {
+		if (e.key === 'Enter') {
+			(e.target as HTMLInputElement).blur();
+		}
+	}
+
+	/** Deselects input boxes when clicking somewhere outside the game rules UI */
+	function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent): void {
+		if (inputElList === undefined) return;
+		if (!windowEl.contains(e.target as Node)) {
+			const activeEl = document.activeElement as HTMLInputElement;
+			if (activeEl && inputElList.includes(activeEl) && activeEl.tagName === 'INPUT') {
+				activeEl.blur();
+			}
+		}
 	}
 
 	return {

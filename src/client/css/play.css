@@ -1418,8 +1418,8 @@ svg.collapse {
 	background-color: rgba(0, 0, 0, 0.158);
 }
 
-/* Game Rules UI */
-#game-rules {
+/* Shared floating Window UI */
+.floating-window {
 	max-width: min(220px, 50vw);
 	max-height: 80vh;
 	overflow: auto; /* enable vertical scrolling */
@@ -1436,7 +1436,7 @@ svg.collapse {
 }
 
 /* Header (draggable area + close button) */
-#game-rules-header {
+.floating-window-header {
 	cursor: move;
 	user-select: none;
 	display: flex;
@@ -1447,7 +1447,7 @@ svg.collapse {
 	font-weight: 600;
 }
 
-#close-rules {
+.close-floating-window {
 	background: none;
 	border: none;
 	color: #616161;
@@ -1456,7 +1456,7 @@ svg.collapse {
 	font-weight: bold;
 }
 
-#close-rules:hover {
+.close-floating-window:hover {
 	color: #000000;
 	transform: scale(1.1);
 }
@@ -1467,6 +1467,7 @@ svg.collapse {
 	margin: 0 0 12px 0;
 }
 
+/* Game rules UI */
 .rules-section {
 	margin-bottom: 10px;
 	display: flex;

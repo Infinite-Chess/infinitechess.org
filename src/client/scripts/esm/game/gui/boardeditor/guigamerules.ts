@@ -96,6 +96,7 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 	headerEl: element_header,
 	toggleButtonEl: element_gamerules,
 	closeButtonEl: element_closeButton,
+	inputElList: elements_selectionList,
 	onOpen: initGameRulesListeners,
 	onClose: closeGameRulesListeners,
 });
@@ -104,28 +105,14 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 
 function initGameRulesListeners(): void {
 	elements_selectionList.forEach((el) => {
-		if (el.type === 'text') {
-			el.addEventListener('keydown', blurOnEnter);
-			el.addEventListener('blur', readGameRules);
-		} else if (el.type === 'radio' || el.type === 'checkbox') {
-			el.addEventListener('change', readGameRules);
-		}
+		el.addEventListener('blur', readGameRules);
 	});
-	document.addEventListener('click', blurOnClickorTouchOutside);
-	document.addEventListener('touchstart', blurOnClickorTouchOutside);
 }
 
 function closeGameRulesListeners(): void {
 	elements_selectionList.forEach((el) => {
-		if (el.type === 'text') {
-			el.removeEventListener('keydown', blurOnEnter);
-			el.removeEventListener('blur', readGameRules);
-		} else if (el.type === 'radio' || el.type === 'checkbox') {
-			el.removeEventListener('change', readGameRules);
-		}
+		el.removeEventListener('blur', readGameRules);
 	});
-	document.removeEventListener('click', blurOnClickorTouchOutside);
-	document.removeEventListener('touchstart', blurOnClickorTouchOutside);
 }
 
 // Reading/Writing Game Rules -----------------------------------------------
@@ -442,25 +429,6 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	element_borderRight.classList.remove('invalid-input');
 	element_borderBottom.classList.remove('invalid-input');
 	element_borderTop.classList.remove('invalid-input');
-}
-
-// Utilities ------------------------------------------------------------
-
-/** Deselects the input boxes when pressing Enter */
-function blurOnEnter(e: KeyboardEvent): void {
-	if (e.key === 'Enter') {
-		(e.target as HTMLInputElement).blur();
-	}
-}
-
-/** Deselects the input boxes when clicking somewhere outside the game rules UI */
-function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent): void {
-	if (!element_window.contains(e.target as Node)) {
-		const activeEl = document.activeElement as HTMLInputElement;
-		if (activeEl && elements_selectionList.includes(activeEl) && activeEl.tagName === 'INPUT') {
-			activeEl.blur();
-		}
-	}
 }
 
 // Exports -----------------------------------------------------------------
