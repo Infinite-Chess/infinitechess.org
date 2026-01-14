@@ -83,6 +83,11 @@ let currentTool: Tool = 'normal';
 let edits: Array<EditWithRules> | undefined;
 let indexOfThisEdit: number | undefined;
 
+/** The value of the pawnDoublePush game rule in the initial zeroth edit */
+let initial_pawnDoublePush: boolean | undefined = true;
+/** The value of the castling game rule in the initial zeroth edit */
+let initial_castling: boolean | undefined = true;
+
 // Initialization ------------------------------------------------------------------------
 
 /**
@@ -113,6 +118,9 @@ async function initBoardEditor(
 		gamefile.basegame.gameRules.winConditions[players.BLACK] = [
 			icnconverter.default_win_condition,
 		];
+
+		initial_pawnDoublePush = true;
+		initial_castling = true;
 		egamerules.setGamerulesGUIinfo(
 			gamefile.basegame.gameRules,
 			gamefile.boardsim.state.global,
@@ -121,6 +129,9 @@ async function initBoardEditor(
 		);
 	} else {
 		// Set game rules according to provided variantOptions object
+
+		initial_pawnDoublePush = pawnDoublePush;
+		initial_castling = castling;
 		egamerules.setGamerulesGUIinfo(
 			variantOptions.gameRules,
 			variantOptions.state_global,
@@ -297,7 +308,11 @@ function undo(): void {
 			pawnDoublePush: previousEdit.pawnDoublePush,
 			castling: previousEdit.castling,
 		});
-	} else egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Reset to Classical state
+	} else
+		egamerules.setPositionDependentGameRules({
+			pawnDoublePush: initial_pawnDoublePush,
+			castling: initial_castling,
+		}); // Reset to initial state
 
 	guinavigation.update_EditButtons();
 
