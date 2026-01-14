@@ -1467,6 +1467,42 @@ svg.collapse {
 	margin: 0 0 12px 0;
 }
 
+/* Confirmation button styling */
+.confirmation-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+	margin-top: 18px;
+}
+
+.btn {
+	min-width: 80px;
+	padding: 10px 18px;
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	border: 1px solid transparent;
+}
+
+.btn-primary {
+	background-color: #4fa3e3;
+	color: #ffffff;
+}
+
+.btn-primary:hover {
+	background-color: #3e93d3;
+}
+
+.btn-secondary {
+	background-color: #e0e0e0;
+	color: #222;
+}
+
+.btn-secondary:hover {
+	background-color: #d5d5d5;
+}
+
 /* Game rules UI */
 .rules-section {
 	margin-bottom: 10px;
