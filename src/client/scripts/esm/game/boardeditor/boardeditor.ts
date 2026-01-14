@@ -38,6 +38,7 @@ import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
 import gameloader from '../chess/gameloader.js';
+import eautosave from './eautosave.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -87,7 +88,7 @@ let indexOfThisEdit: number | undefined;
  * Initializes the board editor.
  * Should be called AFTER loading the game logically.
  */
-function initBoardEditor(): void {
+async function initBoardEditor(): Promise<void> {
 	inBoardEditor = true;
 	edits = [];
 	indexOfThisEdit = 0;
@@ -109,9 +110,15 @@ function initBoardEditor(): void {
 	);
 
 	addEventListeners();
+
+	eautosave.startPositionAutosave();
 }
 
 function closeBoardEditor(): void {
+	eautosave.markPositionDirty();
+	void eautosave.saveCurrentPositionOnce();
+	eautosave.stopPositionAutosave();
+
 	// Reset state
 	inBoardEditor = false;
 	currentTool = 'normal';
@@ -249,6 +256,8 @@ function addEditToHistory(edit: Edit): void {
 	edits!.push(editWithRules);
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
+
+	eautosave.markPositionDirty();
 }
 
 function undo(): void {
@@ -271,6 +280,8 @@ function undo(): void {
 	} else egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Reset to Classical state
 
 	guinavigation.update_EditButtons();
+
+	eautosave.markPositionDirty();
 }
 
 function redo(): void {
@@ -290,6 +301,8 @@ function redo(): void {
 
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
+
+	eautosave.markPositionDirty();
 }
 
 // Queuing Edits ---------------------------------------------------------------

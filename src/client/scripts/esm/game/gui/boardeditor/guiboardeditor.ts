@@ -6,6 +6,7 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
+import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 
 // @ts-ignore
 import statustext from '../statustext.js';
@@ -21,6 +22,9 @@ import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
+import indexeddb from '../../../util/indexeddb.js';
+import timeutil from '../../../../../../shared/util/timeutil.js';
+import { VariantOptions } from '../../../../../../shared/chess/logic/initvariant.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -118,7 +122,37 @@ async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
-	await gameloader.startBoardEditor();
+
+	const editorAutosaveVariantOptions = (await indexeddb.loadItem('editor-autosave')) as
+		| undefined
+		| VariantOptions;
+	if (editorAutosaveVariantOptions === undefined) await gameloader.startBoardEditor();
+	else {
+		const metadata: MetaData = {
+			Variant: 'Classical',
+			TimeControl: '-',
+			Event: `Position created using ingame board editor`,
+			Site: 'https://www.infinitechess.org/',
+			Round: '-',
+			UTCDate: timeutil.getCurrentUTCDate(),
+			UTCTime: timeutil.getCurrentUTCTime(),
+		};
+
+		try {
+			await gameloader.startBoardEditorFromCustomPosition({
+				metadata,
+				additional: {
+					variantOptions: editorAutosaveVariantOptions,
+				},
+			});
+		} catch (err) {
+			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
+			// then do not lock user out of board editor
+			console.error('Failed to load autosaved board editor position when opening it:', err);
+
+			await gameloader.startBoardEditor();
+		}
+	}
 	initListeners();
 }
 

@@ -441,4 +441,5 @@ export default {
 	load,
 	startLocalGame,
 	startEngineGame,
+	getCurrentPositionInformation,
 };

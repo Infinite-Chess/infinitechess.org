@@ -410,6 +410,42 @@ async function startCustomEngineGame(options: {
 	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
 }
 
+/** Initializes the board editor from a custom position. */
+async function startBoardEditorFromCustomPosition(options: {
+	metadata: MetaData;
+	additional: {
+		moves?: ServerGameMoveMessage[];
+		variantOptions: VariantOptions;
+	};
+	presetAnnotes?: PresetAnnotes;
+}): Promise<void> {
+	typeOfGameWeAreIn = 'editor';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	gameslot
+		.loadGamefile({
+			metadata: options.metadata,
+			viewWhitePerspective: true,
+			allowEditCoords: true,
+			// See comment in startBoardEditor for why "editor: true" is needed
+			additional: { ...options.additional, editor: true },
+			presetAnnotes: options.presetAnnotes,
+		})
+		.then((_result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	await guiboardeditor.initUI();
+	boardeditor.initBoardEditor();
+
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+}
+
 /**
  * Reloads the current local or online game from the provided metadata, existing moves, and variant options.
  */
@@ -525,6 +561,7 @@ export default {
 	startBoardEditor,
 	startCustomLocalGame,
 	startCustomEngineGame,
+	startBoardEditorFromCustomPosition,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
