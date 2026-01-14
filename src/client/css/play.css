@@ -1467,7 +1467,7 @@ svg.collapse {
 	margin: 0 0 12px 0;
 }
 
-/* Confirmation button styling */
+/* Floating window UI confirmation button styling */
 .confirmation-buttons {
 	display: flex;
 	justify-content: center;
@@ -1503,19 +1503,19 @@ svg.collapse {
 	background-color: #d5d5d5;
 }
 
-/* Game rules UI */
-.rules-section {
+/* Floating window UI input styling */
+.flwindow-section {
 	margin-bottom: 10px;
 	display: flex;
 	flex-direction: column;
 }
 
-.rules-section label {
+.flwindow-section label {
 	font-weight: 500;
 	margin-bottom: 4px;
 }
 
-#game-rules .invalid-input {
+.floating-window .invalid-input {
 	/* Higher specificity to override default border-color */
 	background-color: #f8d7da; /* light red */
 	border-color: #f5c2c7; /* optional border */
@@ -1538,14 +1538,14 @@ svg.collapse {
 	transition: border 0.2s;
 }
 
-.rules-section input[type='text'] {
+.flwindow-section input[type='text'] {
 	border: 1px solid #ccc;
 	border-radius: 6px;
 	padding: 5px 8px;
 	transition: border 0.2s;
 }
 
-.rules-section input:focus {
+.flwindow-section input:focus {
 	border-color: #4285f4;
 	outline: none;
 }
@@ -1560,7 +1560,7 @@ svg.collapse {
 	cursor: pointer;
 }
 
-.rules-list {
+.flwindow-list {
 	display: flex;
 	flex-direction: column;
 	gap: 6px; /* space between items */

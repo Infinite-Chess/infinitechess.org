@@ -529,7 +529,7 @@
 
                         <hr class="divider">
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Player to move:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="rules-white" name="player" value="white" checked>
@@ -539,7 +539,7 @@
                             </div>
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">En passant square:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-enpassant-x" placeholder="x">
@@ -548,7 +548,7 @@
                             </div>
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Move rule state:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-moverule-current" placeholder="e.g. 0">
@@ -557,22 +557,22 @@
                             </div>
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Promotion ranks (White):</label>
                             <input type="text" id="rules-promotionranks-white" placeholder="e.g. 8,12">
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Promotion ranks (Black):</label>
                             <input type="text" id="rules-promotionranks-black" placeholder="e.g. 1,-10">
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Promotion pieces:</label>
                             <input type="text" id="rules-promotionpieces" placeholder="e.g. Q,R,B,N">
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Global special rights:</label>
                             <div class="rules-list">
                                 <div class="checkbox-item">
@@ -586,7 +586,7 @@
                             </div>
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">Win conditions:</label>
                             <div class="rules-list">
                                 <div class="checkbox-item">
@@ -608,7 +608,7 @@
                             </div>
                         </div>
 
-                        <div class="rules-section">
+                        <div class="flwindow-section">
                             <label class="unselectable">World Border:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-border-left" placeholder="Left">
@@ -632,9 +632,11 @@
 
                         <hr class="divider">
 
-                        <label class="unselectable">
-                            Do you want to leave the board editor and start a local game from this position? Changes will be saved.
-                        </label>
+                        <div class="flwindow-section">
+                            <label class="unselectable">
+                                Do you want to leave the board editor and start a local game from this position? Changes will be saved.
+                            </label>
+                        </div>
 
                         <div class="unselectable confirmation-buttons">
                             <button id="start-local-game-no" class="btn btn-secondary">No</button>
@@ -651,9 +653,11 @@
 
                         <hr class="divider">
 
-                        <label class="unselectable">
-                            Do you want to leave the board editor and start an engine game from this position? Changes will be saved.
-                        </label>
+                        <div class="flwindow-section">
+                            <label class="unselectable">
+                                Do you want to leave the board editor and start an engine game from this position? Changes will be saved.
+                            </label>
+                        </div>
 
                         <div class="unselectable confirmation-buttons">
                             <button id="start-engine-game-no" class="btn btn-secondary">No</button>
