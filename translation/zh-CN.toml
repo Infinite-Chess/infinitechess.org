@@ -1,4 +1,5 @@
-name = "简体中文" # Simplified Chinese - Name of language
+name = "简体中文" # Name of language
+english_name = "Simplified Chinese"
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "22"
 maintainer = "Heinrich Xiao"
