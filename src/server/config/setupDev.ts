@@ -1,25 +1,26 @@
-// src/server/config/setupDev.js
+// src/server/config/setupDev.ts
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
-import { giveRole } from '../controllers/roles.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
+// @ts-ignore
+import { giveRole } from '../controllers/roles.js';
 
-function initDevEnvironment() {
-	if (process.env.NODE_ENV === 'production') return;
+export function initDevEnvironment(): void {
+	if (process.env['NODE_ENV'] === 'production') return;
 
 	ensureSelfSignedCertificate();
 
-	createDevelopmentAccounts();
+	ensureDevelopmentAccounts();
 
 	// Display the url to the page
-	console.log(`Local website is hosted at https://localhost:${process.env.HTTPSPORT_LOCAL}/`);
+	console.log(`Local website is hosted at https://localhost:${process.env['HTTPSPORT_LOCAL']}/`);
 }
 
-async function createDevelopmentAccounts() {
+async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!isUsernameTaken('owner')) {
 		const user_id = await generateAccount({
 			username: 'Owner',
@@ -69,6 +70,7 @@ async function createDevelopmentAccounts() {
 		});
 	}
 
+	// Populate leaderboard with dummy accounts for testing
 	// for (let i = 0; i < 230; i++) {
 	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
 	// 		const user_id = (await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true })).user_id;
@@ -77,5 +79,3 @@ async function createDevelopmentAccounts() {
 	// 	}
 	// }
 }
-
-export { initDevEnvironment };

@@ -3,9 +3,10 @@
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 import { initDatabase } from './database/databaseTables.js';
+import { initDevEnvironment } from './config/setupDev.js';
+
 initDatabase();
 // Ensure our workspace is ready for the dev environment
-import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
 
 // Dependancy/built-in imports
