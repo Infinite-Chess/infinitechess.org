@@ -16,7 +16,7 @@ const element_boardUI = document.getElementById('boardUI')!;
 
 // Types -------------------------------------------------------------
 
-/** Functions that handle floating window behavior */
+/** Functions that handle all floating window behavior */
 interface FloatingWindowHandle {
 	open: () => void;
 	close: () => void;
@@ -24,6 +24,13 @@ interface FloatingWindowHandle {
 	resetPositioning: () => void;
 	clampToParentBounds: () => void;
 	isOpen: () => boolean;
+}
+
+/** Functions that handle floating window closing */
+interface FloatingWindowClosingHandle {
+	close: () => void;
+	isOpen: () => boolean;
+	resetPositioning: () => void;
 }
 
 /** Options for initializing a floating window in the board editor */
@@ -50,7 +57,37 @@ interface FloatingWindowOptions {
 	onClose?: () => void;
 }
 
-/** Crate the functions needed for the handling of a floating window in the board editor */
+// Utilities -------------------------------------------------------------
+
+/** Manager function that handles the closing and resetting of floating windows */
+const windowClosingManager = (() => {
+	const managedWindows = new Set<FloatingWindowClosingHandle>();
+
+	function register(w: FloatingWindowClosingHandle): void {
+		managedWindows.add(w);
+	}
+
+	function unregister(w: FloatingWindowClosingHandle): void {
+		managedWindows.delete(w);
+	}
+
+	function closeOthers(except: FloatingWindowClosingHandle): void {
+		for (const w of managedWindows) {
+			if (w !== except && w.isOpen()) w.close();
+		}
+	}
+
+	function closeAndResetAll(): void {
+		for (const w of managedWindows) {
+			if (w.isOpen()) w.close();
+			w.resetPositioning();
+		}
+	}
+
+	return { register, unregister, closeOthers, closeAndResetAll };
+})();
+
+/** Create the functions needed for the handling of a floating window in the board editor */
 function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle {
 	const { windowEl, headerEl, toggleButtonEl, closeButtonEl, inputElList, onOpen, onClose } =
 		opts;
@@ -60,10 +97,6 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 	let offsetY = 0;
 	let isDragging = false;
 	let savedPos: { left: number; top: number } | undefined;
-
-	function isOpen(): boolean {
-		return !windowEl.classList.contains('hidden');
-	}
 
 	function clampToParentBounds(): void {
 		const parentRect = element_boardUI.getBoundingClientRect();
@@ -133,6 +166,24 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		}
 	}
 
+	/** Deselects input boxes when pressing Enter */
+	function blurOnEnter(e: KeyboardEvent): void {
+		if (e.key === 'Enter') {
+			(e.target as HTMLInputElement).blur();
+		}
+	}
+
+	/** Deselects input boxes when clicking somewhere outside the game rules UI */
+	function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent): void {
+		if (inputElList === undefined) return;
+		if (!windowEl.contains(e.target as Node)) {
+			const activeEl = document.activeElement as HTMLInputElement;
+			if (activeEl && inputElList.includes(activeEl) && activeEl.tagName === 'INPUT') {
+				activeEl.blur();
+			}
+		}
+	}
+
 	/** Initialize general floating window listeners */
 	function initBaseListeners(): void {
 		headerEl.addEventListener('mousedown', startMouseDrag);
@@ -179,8 +230,37 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		}
 	}
 
+	function isOpen(): boolean {
+		return !windowEl.classList.contains('hidden');
+	}
+
+	function close(): void {
+		windowEl.classList.add('hidden');
+		if (toggleButtonEl) toggleButtonEl.classList.remove('active');
+
+		onClose?.();
+		removeBaseListeners();
+	}
+
+	function resetPositioning(): void {
+		windowEl.style.left = '';
+		windowEl.style.top = '';
+		savedPos = undefined;
+	}
+
+	// Register floating window closing functions in the windowClosingManager
+	const FloatingWindowClosingHandle: FloatingWindowClosingHandle = {
+		close,
+		isOpen,
+		resetPositioning,
+	};
+	windowClosingManager.register({ close, isOpen, resetPositioning });
+
 	/** Open floating window */
 	function open(): void {
+		// Close all other floating windows in the board editor
+		windowClosingManager.closeOthers(FloatingWindowClosingHandle);
+
 		if (savedPos !== undefined) {
 			windowEl.style.left = `${savedPos.left}px`;
 			windowEl.style.top = `${savedPos.top}px`;
@@ -196,43 +276,10 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		onOpen?.();
 	}
 
-	/** Close floating window */
-	function close(): void {
-		windowEl.classList.add('hidden');
-		if (toggleButtonEl) toggleButtonEl.classList.remove('active');
-
-		onClose?.();
-		removeBaseListeners();
-	}
-
 	/** Toggle floating window */
 	function toggle(): void {
 		if (isOpen()) close();
 		else open();
-	}
-
-	function resetPositioning(): void {
-		windowEl.style.left = '';
-		windowEl.style.top = '';
-		savedPos = undefined;
-	}
-
-	/** Deselects input boxes when pressing Enter */
-	function blurOnEnter(e: KeyboardEvent): void {
-		if (e.key === 'Enter') {
-			(e.target as HTMLInputElement).blur();
-		}
-	}
-
-	/** Deselects input boxes when clicking somewhere outside the game rules UI */
-	function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent): void {
-		if (inputElList === undefined) return;
-		if (!windowEl.contains(e.target as Node)) {
-			const activeEl = document.activeElement as HTMLInputElement;
-			if (activeEl && inputElList.includes(activeEl) && activeEl.tagName === 'INPUT') {
-				activeEl.blur();
-			}
-		}
 	}
 
 	return {
@@ -246,6 +293,7 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 }
 
 export default {
+	windowClosingManager,
 	createFloatingWindow,
 };
 

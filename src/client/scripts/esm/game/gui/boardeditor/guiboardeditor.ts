@@ -23,6 +23,7 @@ import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
+import guifloatingwindow from './guifloatingwindow.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -132,13 +133,7 @@ function isOpen(): boolean {
 function close(): void {
 	if (!boardEditorOpen) return;
 
-	guigamerules.closeGameRules();
-	guigamerules.resetPositioning();
-	guistartlocalgame.closeLocalGameUI();
-	guistartlocalgame.resetPositioning();
-	guistartenginegame.closeEngineGameUI();
-	guistartenginegame.resetPositioning();
-
+	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning of all floating windows
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
