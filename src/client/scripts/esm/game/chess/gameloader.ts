@@ -411,14 +411,20 @@ async function startCustomEngineGame(options: {
 }
 
 /** Initializes the board editor from a custom position. */
-async function startBoardEditorFromCustomPosition(options: {
-	metadata: MetaData;
-	additional: {
-		moves?: ServerGameMoveMessage[];
-		variantOptions: VariantOptions;
-	};
-	presetAnnotes?: PresetAnnotes;
-}): Promise<void> {
+async function startBoardEditorFromCustomPosition(
+	options: {
+		metadata: MetaData;
+		additional: {
+			moves?: ServerGameMoveMessage[];
+			variantOptions: VariantOptions;
+		};
+		presetAnnotes?: PresetAnnotes;
+	},
+	/** Whether the pawnDoublePush flag should be set for the position in the editor game rules */
+	pawnDoublePush?: boolean,
+	/** Whether the castling flag should be set for the position in the editor game rules */
+	castling?: boolean,
+): Promise<void> {
 	typeOfGameWeAreIn = 'editor';
 	gameLoading = true;
 
@@ -441,7 +447,7 @@ async function startBoardEditorFromCustomPosition(options: {
 	// because the gui DEPENDS on the other stuff.
 
 	await guiboardeditor.initUI();
-	boardeditor.initBoardEditor();
+	boardeditor.initBoardEditor(options.additional.variantOptions, pawnDoublePush, castling);
 
 	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }

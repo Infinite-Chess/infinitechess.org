@@ -7,6 +7,7 @@
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
+import type { EditorAutosave } from '../../boardeditor/eautosave.js';
 
 // @ts-ignore
 import statustext from '../statustext.js';
@@ -24,7 +25,6 @@ import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
 import indexeddb from '../../../util/indexeddb.js';
 import timeutil from '../../../../../../shared/util/timeutil.js';
-import { VariantOptions } from '../../../../../../shared/chess/logic/initvariant.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -123,10 +123,11 @@ async function open(): Promise<void> {
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	const editorAutosaveVariantOptions = (await indexeddb.loadItem('editor-autosave')) as
+	const editorAutosave = (await indexeddb.loadItem('editor-autosave')) as
 		| undefined
-		| VariantOptions;
-	if (editorAutosaveVariantOptions === undefined) await gameloader.startBoardEditor();
+		| EditorAutosave;
+	if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+		await gameloader.startBoardEditor();
 	else {
 		const metadata: MetaData = {
 			Variant: 'Classical',
@@ -139,12 +140,16 @@ async function open(): Promise<void> {
 		};
 
 		try {
-			await gameloader.startBoardEditorFromCustomPosition({
-				metadata,
-				additional: {
-					variantOptions: editorAutosaveVariantOptions,
+			await gameloader.startBoardEditorFromCustomPosition(
+				{
+					metadata,
+					additional: {
+						variantOptions: editorAutosave.variantOptions,
+					},
 				},
-			});
+				editorAutosave.pawnDoublePush,
+				editorAutosave.castling,
+			);
 		} catch (err) {
 			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
 			// then do not lock user out of board editor

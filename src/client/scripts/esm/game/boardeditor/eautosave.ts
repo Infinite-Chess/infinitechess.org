@@ -6,9 +6,20 @@
  * It also autosaves when leaving the editor
  */
 
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
+
 import indexeddb from '../../util/indexeddb';
 import boardeditor from './boardeditor';
 import eactions from './eactions';
+import egamerules from './egamerules';
+
+// Types ------------------------------------------------------------------
+
+interface EditorAutosave {
+	variantOptions: VariantOptions;
+	pawnDoublePush?: boolean;
+	castling?: boolean;
+}
 
 // Variables --------------------------------------------------------------
 
@@ -58,9 +69,14 @@ async function saveCurrentPositionOnce(): Promise<void> {
 
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation();
+		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 		if (variantOptions.position.size === 0) return; // Don't save empty position, as loading it is currently not supported
 
-		await indexeddb.saveItem('editor-autosave', variantOptions);
+		await indexeddb.saveItem('editor-autosave', {
+			variantOptions,
+			pawnDoublePush,
+			castling,
+		} as EditorAutosave);
 
 		positionDirty = false;
 	} catch (err) {
@@ -111,3 +127,5 @@ export default {
 	saveCurrentPositionOnce,
 	stopPositionAutosave,
 };
+
+export type { EditorAutosave };

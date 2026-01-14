@@ -11,6 +11,7 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 // @ts-ignore
 import statustext from '../gui/statustext.js';
@@ -87,8 +88,13 @@ let indexOfThisEdit: number | undefined;
 /**
  * Initializes the board editor.
  * Should be called AFTER loading the game logically.
+ * May optionally be supplied with custom game rules.
  */
-async function initBoardEditor(): Promise<void> {
+async function initBoardEditor(
+	variantOptions?: VariantOptions,
+	pawnDoublePush?: boolean,
+	castling?: boolean,
+): Promise<void> {
 	inBoardEditor = true;
 	edits = [];
 	indexOfThisEdit = 0;
@@ -98,16 +104,30 @@ async function initBoardEditor(): Promise<void> {
 	guiboardeditor.markTool(currentTool);
 	drawingtool.init();
 
-	// Set gamerulesGUIinfo object according to pasted game
-	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
-	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
-	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(
-		gamefile.basegame.gameRules,
-		gamefile.boardsim.state.global,
-		true,
-		true,
-	);
+	if (variantOptions === undefined) {
+		// Set gamerulesGUIinfo object according to loaded Classical variant
+		const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
+		gamefile.basegame.gameRules.winConditions[players.WHITE] = [
+			icnconverter.default_win_condition,
+		];
+		gamefile.basegame.gameRules.winConditions[players.BLACK] = [
+			icnconverter.default_win_condition,
+		];
+		egamerules.setGamerulesGUIinfo(
+			gamefile.basegame.gameRules,
+			gamefile.boardsim.state.global,
+			true,
+			true,
+		);
+	} else {
+		// Set game rules according to provided variantOptions object
+		egamerules.setGamerulesGUIinfo(
+			variantOptions.gameRules,
+			variantOptions.state_global,
+			pawnDoublePush,
+			castling,
+		);
+	}
 
 	addEventListeners();
 
