@@ -133,7 +133,8 @@ function isOpen(): boolean {
 function close(): void {
 	if (!boardEditorOpen) return;
 
-	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning of all floating windows
+	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning and contents of all floating windows
+
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();

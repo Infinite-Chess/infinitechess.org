@@ -15,7 +15,7 @@
  */
 
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility';
-import type { MetaData } from '../../../../../shared/chess/util/metadata';
+import type { MetaData, TimeControl } from '../../../../../shared/chess/util/metadata';
 import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
 import type { Player } from '../../../../../shared/chess/util/typeutil';
@@ -189,14 +189,9 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(): void {
+function startEngineGame(youAreColor: Player, TimeControl: TimeControl): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	// Ask which color the user wants to play as
-	const playAsWhite = confirm('Play as White? (OK = White, Cancel = Black)');
-
-	const TimeControl = '-';
-	const youAreColor: Player = playAsWhite ? players.WHITE : players.BLACK;
 	const currentEngine = 'hydrochess';
 
 	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
@@ -215,6 +210,7 @@ function startEngineGame(): void {
 		return;
 	}
 
+	/*
 	// Ask the user if they want worldBorder set automatically
 	// TODO: Have a custom UI for starting an engine game from the board editor instead of using a prompt
 	if (!variantOptions.gameRules.worldBorder) {
@@ -247,6 +243,7 @@ function startEngineGame(): void {
 		);
 		return;
 	}
+	*/
 
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {

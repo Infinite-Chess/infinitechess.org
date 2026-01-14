@@ -659,6 +659,21 @@
                             </label>
                         </div>
 
+                        <div class="flwindow-section">
+                            <label class="unselectable">Play as:</label>
+                            <div class="toggle-group">
+                                <input type="radio" id="engine-game-white" name="human-player" value="white" checked>
+                                <label for="engine-game-white">White</label>
+                                <input type="radio" id="engine-game-black" name="human-player" value="black">
+                                <label for="engine-game-black">Black</label>
+                            </div>
+                        </div>
+
+                        <div class="flwindow-section">
+                            <label class="unselectable">Time Control (leave blank for unlimited time):</label>
+                            <input type="text" id="engine-game-timecontrol" placeholder="e.g. 600+6">
+                        </div>
+
                         <div class="unselectable confirmation-buttons">
                             <button id="start-engine-game-no" class="btn btn-secondary">No</button>
                             <button id="start-engine-game-yes" class="btn btn-primary">Yes</button>
