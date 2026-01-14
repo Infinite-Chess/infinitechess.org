@@ -57,5 +57,4 @@ export function ensureSelfSignedCertificate(): void {
 	if (fs.existsSync(keyPath) && fs.existsSync(certPath)) return; // Self-signed certificate already exists
 
 	generateSelfSignedCertificate();
-	return;
 }
