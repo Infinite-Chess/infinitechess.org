@@ -39,6 +39,7 @@ import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -431,6 +432,9 @@ async function startBoardEditorFromCustomPosition(
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
+	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
+
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
@@ -447,7 +451,7 @@ async function startBoardEditorFromCustomPosition(
 	// because the gui DEPENDS on the other stuff.
 
 	await guiboardeditor.initUI();
-	boardeditor.initBoardEditor(options.additional.variantOptions, pawnDoublePush, castling);
+	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
 
 	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }
