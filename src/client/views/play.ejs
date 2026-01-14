@@ -642,6 +642,25 @@
                         </div>
                     </div>
 
+                    <!-- Start engine game UI for Board Editor -->
+                    <div id="engine-game-UI" class="center floating-window hidden">
+                        <div id="engine-game-UI-header" class="floating-window-header">
+                            <span class="unselectable">Start engine game</span>
+                            <button id="close-engine-game-UI" class="close-floating-window">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <label class="unselectable">
+                            Do you want to leave the board editor and start an engine game from this position? Changes will be saved.
+                        </label>
+
+                        <div class="unselectable confirmation-buttons">
+                            <button id="start-engine-game-no" class="btn btn-secondary">No</button>
+                            <button id="start-engine-game-yes" class="btn btn-primary">Yes</button>
+                        </div>
+                    </div>
+
                     <!-- Pause UI -->
                     <div id="pauseUI" class="pauseUI hidden">
                         <p class="paused"><%=t('play.pause.title')%></p>

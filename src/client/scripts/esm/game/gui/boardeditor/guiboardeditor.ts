@@ -22,6 +22,7 @@ import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
 import guistartlocalgame from './guistartlocalgame.js';
+import guistartenginegame from './guistartenginegame.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -135,6 +136,8 @@ function close(): void {
 	guigamerules.resetPositioning();
 	guistartlocalgame.closeLocalGameUI();
 	guistartlocalgame.resetPositioning();
+	guistartenginegame.closeEngineGameUI();
+	guistartenginegame.resetPositioning();
 
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
@@ -357,7 +360,7 @@ function callback_Action(e: Event): void {
 			guistartlocalgame.toggleLocalGameUI();
 			return;
 		case 'start-engine-game':
-			handleStartEngineGame();
+			guistartenginegame.toggleEngineGameUI();
 			return;
 		// Selection (buttons that are always active)
 		case 'select-all':
@@ -413,21 +416,6 @@ function callback_ChangePieceType(e: Event): void {
 	drawingtool.setPiece(currentPieceType);
 	boardeditor.setTool('placer');
 	markPiece(currentPieceType);
-}
-
-/** Called when users click the "Start engine game from position" button. */
-function handleStartEngineGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm(
-		'Do you want to leave the board editor and start an engine game from this position? Changes will be saved.',
-	);
-
-	if (result) {
-		// Start the engine game as requested
-		// PLANNED to save changes...
-
-		eactions.startEngineGame();
-	}
 }
 
 /** Swaps the color of pieces being drawn. */
