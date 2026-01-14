@@ -2,20 +2,21 @@
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-import { ensureSelfSignedCertificate } from './generateCert.js';
+import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { giveRole } from '../controllers/roles.js';
-import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+import { ensureSelfSignedCertificate } from './generateCert.js';
 
 function initDevEnvironment() {
 	if (process.env.NODE_ENV === 'production') return;
 
-	if (ensureSelfSignedCertificate()) {
-		// Let's also display the url to the page!
-		// console.log(`Website is hosted at https://localhost:${process.env.HTTPSPORT_LOCAL}/`);
-	}
+	ensureSelfSignedCertificate();
+
 	createDevelopmentAccounts();
+
+	// Display the url to the page
+	console.log(`Local website is hosted at https://localhost:${process.env.HTTPSPORT_LOCAL}/`);
 }
 
 async function createDevelopmentAccounts() {
