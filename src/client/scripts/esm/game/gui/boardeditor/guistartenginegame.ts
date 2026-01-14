@@ -18,6 +18,8 @@ import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
 interface EngineUIConfig {
 	youAreColor: Player;
 	TimeControl: TimeControl;
+	strengthLevel: number;
+	setDefaultWorldBorder: boolean;
 }
 
 // Constants ----------------------------------------------------------
@@ -36,17 +38,30 @@ const element_window = document.getElementById('engine-game-UI')!;
 const element_header = document.getElementById('engine-game-UI-header')!;
 const element_closeButton = document.getElementById('close-engine-game-UI')!;
 
-const yesButton = document.getElementById('start-engine-game-yes')!;
 const noButton = document.getElementById('start-engine-game-no')!;
+const yesButton = document.getElementById('start-engine-game-yes')!;
 
 const element_white = document.getElementById('engine-game-white')! as HTMLInputElement;
 const element_black = document.getElementById('engine-game-black')! as HTMLInputElement;
+
 const element_timecontrol = document.getElementById('engine-game-timecontrol')! as HTMLInputElement;
+
+const element_easy = document.getElementById('engine-game-easy')! as HTMLInputElement;
+const element_medium = document.getElementById('engine-game-medium')! as HTMLInputElement;
+const element_hard = document.getElementById('engine-game-hard')! as HTMLInputElement;
+
+const element_noborder = document.getElementById('engine-game-border-no')! as HTMLInputElement;
+const element_yesborder = document.getElementById('engine-game-border-yes')! as HTMLInputElement;
 
 const elements_selectionList: HTMLInputElement[] = [
 	element_white,
 	element_black,
 	element_timecontrol,
+	element_easy,
+	element_medium,
+	element_hard,
+	element_noborder,
+	element_yesborder,
 ];
 
 // Running variables ------------------------------------------------------------
@@ -55,6 +70,8 @@ const elements_selectionList: HTMLInputElement[] = [
 let engineUIConfig: EngineUIConfig = {
 	youAreColor: players.WHITE,
 	TimeControl: '-',
+	strengthLevel: 3,
+	setDefaultWorldBorder: true,
 };
 
 // Create floating window (generic behavior) -------------------------------------
@@ -90,7 +107,7 @@ function closeEngineGameUIListeners(): void {
 // Utilities---- -----------------------------------------------------------------
 
 function onYesButtonPress(): void {
-	eactions.startEngineGame(engineUIConfig.youAreColor, engineUIConfig.TimeControl);
+	eactions.startEngineGame(engineUIConfig);
 }
 
 function onNoButtonPress(): void {
@@ -103,17 +120,26 @@ function initEngineUIcontents(): void {
 	element_black.checked = false;
 	element_timecontrol.value = '';
 	element_timecontrol.classList.remove('invalid-input');
+	element_easy.checked = false;
+	element_medium.checked = false;
+	element_hard.checked = true;
+	element_noborder.checked = false;
+	element_yesborder.checked = true;
 
-	engineUIConfig = { youAreColor: players.WHITE, TimeControl: '-' };
+	engineUIConfig = {
+		youAreColor: players.WHITE,
+		TimeControl: '-',
+		strengthLevel: 3,
+		setDefaultWorldBorder: true,
+	};
 }
 
 /** Reads the engineconfig inserted into the input boxes and updates engineUIConfig */
 function readEngineUIConfig(): void {
-	console.log('hi');
-	// color
+	// Player color
 	const youAreColor = element_white.checked ? players.WHITE : players.BLACK;
 
-	// time control
+	// Time control
 	let TimeControl: TimeControl = '-';
 	const timeControlRaw = element_timecontrol.value;
 	if (timeControlRaw === '-' || timeControlRaw === '') {
@@ -130,7 +156,13 @@ function readEngineUIConfig(): void {
 		element_timecontrol.classList.add('invalid-input');
 	}
 
-	engineUIConfig = { youAreColor, TimeControl };
+	// Strength level
+	const strengthLevel = element_hard.checked ? 3 : element_medium.checked ? 2 : 1;
+
+	// Set default world border
+	const setDefaultWorldBorder = element_yesborder.checked ? true : false;
+
+	engineUIConfig = { youAreColor, TimeControl, strengthLevel, setDefaultWorldBorder };
 }
 
 // Exports -----------------------------------------------------------------
@@ -141,3 +173,5 @@ export default {
 	resetPositioning: floatingWindow.resetPositioning,
 	initEngineUIcontents,
 };
+
+export type { EngineUIConfig };

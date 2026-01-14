@@ -15,10 +15,10 @@
  */
 
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility';
-import type { MetaData, TimeControl } from '../../../../../shared/chess/util/metadata';
+import type { MetaData } from '../../../../../shared/chess/util/metadata';
 import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
-import type { Player } from '../../../../../shared/chess/util/typeutil';
+import type { EngineUIConfig } from '../gui/boardeditor/guistartenginegame';
 
 // @ts-ignore
 import statustext from '../gui/statustext';
@@ -189,16 +189,10 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(youAreColor: Player, TimeControl: TimeControl): void {
+function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const currentEngine = 'hydrochess';
-
-	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
-	// since it is far stronger and faster for single king endgames.
-	// Rememember to also set checkmateSelectedID if applicable
-
-	// TODO: If the world border isn't set, query the user as to whether they want it automatically set.
 
 	// Get current position
 	const variantOptions = getCurrentPositionInformation();
@@ -210,13 +204,8 @@ function startEngineGame(youAreColor: Player, TimeControl: TimeControl): void {
 		return;
 	}
 
-	/*
-	// Ask the user if they want worldBorder set automatically
-	// TODO: Have a custom UI for starting an engine game from the board editor instead of using a prompt
-	if (!variantOptions.gameRules.worldBorder) {
-		const setWorldBorder = confirm('No world border specified. Set it automatically?');
-		if (!setWorldBorder) return;
-
+	// Set world border automatically, if wished
+	if (engineUIConfig.setDefaultWorldBorder) {
 		// Calculate minimum bounding box of all pieces
 		const allCoordsKeys = variantOptions.position.keys();
 		const coordsOfAllPieces = Array.from(allCoordsKeys, (key) =>
@@ -234,7 +223,7 @@ function startEngineGame(youAreColor: Player, TimeControl: TimeControl): void {
 		};
 	}
 
-	// Does the engine support it?
+	// Does the engine support the given world border?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		statustext.showStatus(
@@ -243,20 +232,19 @@ function startEngineGame(youAreColor: Player, TimeControl: TimeControl): void {
 		);
 		return;
 	}
-	*/
 
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
 		Event: 'Position created using ingame board editor',
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		TimeControl,
+		TimeControl: engineUIConfig.TimeControl,
 		White:
-			youAreColor === players.WHITE
+			engineUIConfig.youAreColor === players.WHITE
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		Black:
-			youAreColor === players.BLACK
+			engineUIConfig.youAreColor === players.BLACK
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		UTCDate,
@@ -269,10 +257,11 @@ function startEngineGame(youAreColor: Player, TimeControl: TimeControl): void {
 		additional: {
 			variantOptions,
 		},
-		youAreColor,
+		youAreColor: engineUIConfig.youAreColor,
 		currentEngine,
 		engineConfig: {
 			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			strengthLevel: engineUIConfig.strengthLevel,
 		},
 	});
 }
