@@ -25,6 +25,9 @@ import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
 import indexeddb from '../../../util/indexeddb.js';
 import timeutil from '../../../../../../shared/util/timeutil.js';
+import guistartlocalgame from './guistartlocalgame.js';
+import guistartenginegame from './guistartenginegame.js';
+import guifloatingwindow from './guifloatingwindow.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -166,8 +169,9 @@ function isOpen(): boolean {
 
 function close(): void {
 	if (!boardEditorOpen) return;
-	guigamerules.closeGameRules();
-	guigamerules.resetPositioning();
+
+	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning and contents of all floating windows
+
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
@@ -383,13 +387,13 @@ function callback_Action(e: Event): void {
 			eactions.load();
 			return;
 		case 'gamerules':
-			guigamerules.toggleGameRules();
+			guigamerules.toggle();
 			return;
 		case 'start-local-game':
-			handleStartLocalGame();
+			guistartlocalgame.toggle();
 			return;
 		case 'start-engine-game':
-			handleStartEngineGame();
+			guistartenginegame.toggle();
 			return;
 		// Selection (buttons that are always active)
 		case 'select-all':
@@ -445,31 +449,6 @@ function callback_ChangePieceType(e: Event): void {
 	drawingtool.setPiece(currentPieceType);
 	boardeditor.setTool('placer');
 	markPiece(currentPieceType);
-}
-
-/** Called when users click the "Start local game from position" button. */
-function handleStartLocalGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm(
-		'Do you want to leave the board editor and start a local game from this position? Changes will be saved.',
-	); // PLANNED to save changes
-	// Start the local game as requested
-	if (result) eactions.startLocalGame();
-}
-
-/** Called when users click the "Start engine game from position" button. */
-function handleStartEngineGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm(
-		'Do you want to leave the board editor and start an engine game from this position? Changes will be saved.',
-	);
-
-	if (result) {
-		// Start the engine game as requested
-		// PLANNED to save changes...
-
-		eactions.startEngineGame();
-	}
 }
 
 /** Swaps the color of pieces being drawn. */
