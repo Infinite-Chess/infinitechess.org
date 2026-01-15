@@ -586,7 +586,7 @@ function duringGameRulesMouseDrag(e: MouseEvent): void {
 
 function duringGameRulesTouchDrag(e: TouchEvent): void {
 	if (e.touches.length === 1) {
-		e.preventDefault(); // prevent scrolling
+		if (gameRulesIsDragging) e.preventDefault(); // prevent scrolling
 		const touch = e.touches[0]!;
 		duringGameRulesDrag(touch.clientX, touch.clientY);
 	}
