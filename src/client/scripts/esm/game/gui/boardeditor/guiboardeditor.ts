@@ -356,7 +356,7 @@ function callback_Action(e: Event): void {
 			guistartlocalgame.toggleLocalGameUI();
 			return;
 		case 'start-engine-game':
-			guistartenginegame.toggleEngineGameUI();
+			guistartenginegame.toggle();
 			return;
 		// Selection (buttons that are always active)
 		case 'select-all':

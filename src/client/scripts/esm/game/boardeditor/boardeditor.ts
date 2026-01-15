@@ -109,9 +109,6 @@ function initBoardEditor(): void {
 		true,
 	);
 
-	// Initialize EngineUIConfig with default values
-	guistartenginegame.initEngineUIcontents();
-
 	addEventListeners();
 }
 

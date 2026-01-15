@@ -5,10 +5,10 @@
  */
 
 import { players } from '../../../../../../shared/chess/util/typeutil';
-
 import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/eactions';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import gameslot from '../../chess/gameslot';
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil';
 import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
@@ -18,7 +18,7 @@ import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
 interface EngineUIConfig {
 	youAreColor: Player;
 	TimeControl: TimeControl;
-	strengthLevel: number;
+	strengthLevel: 1 | 2 | 3;
 	setDefaultWorldBorder: boolean;
 }
 
@@ -64,16 +64,6 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_yesborder,
 ];
 
-// Running variables ------------------------------------------------------------
-
-/** Virtual game rules object for the position */
-let engineUIConfig: EngineUIConfig = {
-	youAreColor: players.WHITE,
-	TimeControl: '-',
-	strengthLevel: 3,
-	setDefaultWorldBorder: true,
-};
-
 // Create floating window (generic behavior) -------------------------------------
 
 const floatingWindow = guifloatingwindow.createFloatingWindow({
@@ -89,24 +79,25 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 // Enginegame-UI-specific listeners -------------------------------------------
 
 function initEngineGameUIListeners(): void {
-	elements_selectionList.forEach((el) => {
-		el.addEventListener('blur', readEngineUIConfig);
-	});
 	yesButton.addEventListener('pointerup', onYesButtonPress);
 	noButton.addEventListener('pointerup', onNoButtonPress);
 }
 
 function closeEngineGameUIListeners(): void {
-	elements_selectionList.forEach((el) => {
-		el.removeEventListener('blur', readEngineUIConfig);
-	});
 	yesButton.removeEventListener('pointerup', onYesButtonPress);
 	noButton.removeEventListener('pointerup', onNoButtonPress);
 }
 
-// Utilities---- -----------------------------------------------------------------
+// Utilities ----------------------------------------------------------------------
+
+function toggle(): void {
+	// Initialize EngineUIConfig with default values on toggle open
+	if (!floatingWindow.isOpen()) updateEngineUIcontents();
+	floatingWindow.toggle();
+}
 
 function onYesButtonPress(): void {
+	const engineUIConfig = getEngineUIConfig();
 	eactions.startEngineGame(engineUIConfig);
 }
 
@@ -114,28 +105,15 @@ function onNoButtonPress(): void {
 	floatingWindow.close();
 }
 
-/** Initializes the engineconfig UI values to default values */
-function initEngineUIcontents(): void {
-	element_white.checked = true;
-	element_black.checked = false;
-	element_timecontrol.value = '';
-	element_timecontrol.classList.remove('invalid-input');
-	element_easy.checked = false;
-	element_medium.checked = false;
-	element_hard.checked = true;
-	element_noborder.checked = false;
-	element_yesborder.checked = true;
-
-	engineUIConfig = {
-		youAreColor: players.WHITE,
-		TimeControl: '-',
-		strengthLevel: 3,
-		setDefaultWorldBorder: true,
-	};
+/** Updates the engineconfig UI values when opened */
+function updateEngineUIcontents(): void {
+	const existingBorder = gameslot.getGamefile()?.basegame.gameRules.worldBorder !== undefined;
+	element_noborder.checked = existingBorder;
+	element_yesborder.checked = !existingBorder;
 }
 
-/** Reads the engineconfig inserted into the input boxes and updates engineUIConfig */
-function readEngineUIConfig(): void {
+/** Constructs the engineconfig by reading the input boxes */
+function getEngineUIConfig(): EngineUIConfig {
 	// Player color
 	const youAreColor = element_white.checked ? players.WHITE : players.BLACK;
 
@@ -162,16 +140,15 @@ function readEngineUIConfig(): void {
 	// Set default world border
 	const setDefaultWorldBorder = element_yesborder.checked ? true : false;
 
-	engineUIConfig = { youAreColor, TimeControl, strengthLevel, setDefaultWorldBorder };
+	return { youAreColor, TimeControl, strengthLevel, setDefaultWorldBorder };
 }
 
 // Exports -----------------------------------------------------------------
 
 export default {
+	toggle,
 	closeEngineGameUI: floatingWindow.close,
-	toggleEngineGameUI: floatingWindow.toggle,
 	resetPositioning: floatingWindow.resetPositioning,
-	initEngineUIcontents,
 };
 
 export type { EngineUIConfig };
