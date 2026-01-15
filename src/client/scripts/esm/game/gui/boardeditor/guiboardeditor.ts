@@ -123,9 +123,7 @@ async function open(): Promise<void> {
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	const editorAutosave = (await indexeddb.loadItem('editor-autosave')) as
-		| undefined
-		| EditorAutosave;
+	const editorAutosave = await indexeddb.loadItem<EditorAutosave>('editor-autosave');
 	if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
 		await gameloader.startBoardEditor();
 	else {

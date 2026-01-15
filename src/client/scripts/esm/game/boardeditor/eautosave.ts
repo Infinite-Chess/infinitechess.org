@@ -27,7 +27,7 @@ interface EditorAutosave {
 const positionAutosaveIntervalMillis = 10000;
 
 /** Interval object for position autosave */
-let positionAutosaveTimer: ReturnType<typeof setInterval> | undefined;
+let positionAutosaveTimer: number | undefined;
 
 /** Prevent overlapping IndexedDB writes (single-flight): is autosave ongoing */
 let positionSaveInFlight = false;
@@ -45,10 +45,6 @@ let positionDirty = true;
  */
 function markPositionDirty(): void {
 	positionDirty = true;
-}
-
-function isPositionDirty(): boolean {
-	return positionDirty;
 }
 
 /**
@@ -79,7 +75,7 @@ async function saveCurrentPositionOnce(): Promise<void> {
 				variantOptions,
 				pawnDoublePush,
 				castling,
-			} as EditorAutosave);
+			});
 
 		positionDirty = false;
 	} catch (err) {
@@ -107,7 +103,7 @@ function startPositionAutosave(): void {
 	positionDirty = true;
 	void saveCurrentPositionOnce();
 
-	positionAutosaveTimer = setInterval(() => {
+	positionAutosaveTimer = window.setInterval(() => {
 		// Don't save if editor is closed mid-tick
 		if (!boardeditor.areInBoardEditor()) return;
 
@@ -125,7 +121,6 @@ function stopPositionAutosave(): void {
 
 export default {
 	markPositionDirty,
-	isPositionDirty,
 	startPositionAutosave,
 	saveCurrentPositionOnce,
 	stopPositionAutosave,

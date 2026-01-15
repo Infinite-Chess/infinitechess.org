@@ -124,12 +124,11 @@ async function initBoardEditor(
 		egamerules.setGamerulesGUIinfo(
 			gamefile.basegame.gameRules,
 			gamefile.boardsim.state.global,
-			true,
-			true,
+			initial_pawnDoublePush,
+			initial_castling,
 		);
 	} else {
 		// Set game rules according to provided variantOptions object
-
 		initial_pawnDoublePush = pawnDoublePush;
 		initial_castling = castling;
 		egamerules.setGamerulesGUIinfo(
@@ -308,11 +307,13 @@ function undo(): void {
 			pawnDoublePush: previousEdit.pawnDoublePush,
 			castling: previousEdit.castling,
 		});
-	} else
+	} else {
+		// Reset to initial state
 		egamerules.setPositionDependentGameRules({
 			pawnDoublePush: initial_pawnDoublePush,
 			castling: initial_castling,
-		}); // Reset to initial state
+		});
+	}
 
 	guinavigation.update_EditButtons();
 
