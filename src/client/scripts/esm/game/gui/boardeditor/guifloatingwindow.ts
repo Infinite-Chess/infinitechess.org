@@ -173,7 +173,7 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		}
 	}
 
-	/** Deselects input boxes when clicking somewhere outside the game rules UI */
+	/** Deselects input boxes when clicking somewhere outside the floating window */
 	function blurOnClickorTouchOutside(e: MouseEvent | TouchEvent): void {
 		if (inputElList === undefined) return;
 		if (!windowEl.contains(e.target as Node)) {

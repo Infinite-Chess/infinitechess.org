@@ -1608,7 +1608,7 @@ svg.collapse {
 	border-radius: 1px;
 }
 
-#game-rules input::placeholder {
+.floating-window input::placeholder {
 	color: #999;
 }
 
