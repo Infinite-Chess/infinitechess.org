@@ -11,6 +11,7 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 // @ts-ignore
 import statustext from '../gui/statustext.js';
@@ -38,6 +39,7 @@ import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
 import gameloader from '../chess/gameloader.js';
+import eautosave from './eautosave.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -81,13 +83,23 @@ let currentTool: Tool = 'normal';
 let edits: Array<EditWithRules> | undefined;
 let indexOfThisEdit: number | undefined;
 
+/** The value of the pawnDoublePush game rule in the initial zeroth edit */
+let initial_pawnDoublePush: boolean | undefined = true;
+/** The value of the castling game rule in the initial zeroth edit */
+let initial_castling: boolean | undefined = true;
+
 // Initialization ------------------------------------------------------------------------
 
 /**
  * Initializes the board editor.
  * Should be called AFTER loading the game logically.
+ * May optionally be supplied with custom game rules.
  */
-function initBoardEditor(): void {
+async function initBoardEditor(
+	variantOptions?: VariantOptions,
+	pawnDoublePush?: boolean,
+	castling?: boolean,
+): Promise<void> {
 	inBoardEditor = true;
 	edits = [];
 	indexOfThisEdit = 0;
@@ -97,21 +109,46 @@ function initBoardEditor(): void {
 	guiboardeditor.markTool(currentTool);
 	drawingtool.init();
 
-	// Set gamerulesGUIinfo object according to pasted game
-	const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
-	gamefile.basegame.gameRules.winConditions[players.WHITE] = [icnconverter.default_win_condition];
-	gamefile.basegame.gameRules.winConditions[players.BLACK] = [icnconverter.default_win_condition];
-	egamerules.setGamerulesGUIinfo(
-		gamefile.basegame.gameRules,
-		gamefile.boardsim.state.global,
-		true,
-		true,
-	);
+	if (variantOptions === undefined) {
+		// Set gamerulesGUIinfo object according to loaded Classical variant
+		const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
+		gamefile.basegame.gameRules.winConditions[players.WHITE] = [
+			icnconverter.default_win_condition,
+		];
+		gamefile.basegame.gameRules.winConditions[players.BLACK] = [
+			icnconverter.default_win_condition,
+		];
+
+		initial_pawnDoublePush = true;
+		initial_castling = true;
+		egamerules.setGamerulesGUIinfo(
+			gamefile.basegame.gameRules,
+			gamefile.boardsim.state.global,
+			initial_pawnDoublePush,
+			initial_castling,
+		);
+	} else {
+		// Set game rules according to provided variantOptions object
+		initial_pawnDoublePush = pawnDoublePush;
+		initial_castling = castling;
+		egamerules.setGamerulesGUIinfo(
+			variantOptions.gameRules,
+			variantOptions.state_global,
+			pawnDoublePush,
+			castling,
+		);
+	}
 
 	addEventListeners();
+
+	eautosave.startPositionAutosave();
 }
 
 function closeBoardEditor(): void {
+	eautosave.markPositionDirty();
+	void eautosave.saveCurrentPositionOnce();
+	eautosave.stopPositionAutosave();
+
 	// Reset state
 	inBoardEditor = false;
 	currentTool = 'normal';
@@ -249,6 +286,8 @@ function addEditToHistory(edit: Edit): void {
 	edits!.push(editWithRules);
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
+
+	eautosave.markPositionDirty();
 }
 
 function undo(): void {
@@ -268,9 +307,17 @@ function undo(): void {
 			pawnDoublePush: previousEdit.pawnDoublePush,
 			castling: previousEdit.castling,
 		});
-	} else egamerules.setPositionDependentGameRules({ pawnDoublePush: true, castling: true }); // Reset to Classical state
+	} else {
+		// Reset to initial state
+		egamerules.setPositionDependentGameRules({
+			pawnDoublePush: initial_pawnDoublePush,
+			castling: initial_castling,
+		});
+	}
 
 	guinavigation.update_EditButtons();
+
+	eautosave.markPositionDirty();
 }
 
 function redo(): void {
@@ -290,6 +337,8 @@ function redo(): void {
 
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
+
+	eautosave.markPositionDirty();
 }
 
 // Queuing Edits ---------------------------------------------------------------
