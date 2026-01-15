@@ -1651,6 +1651,7 @@ export default {
 	parsePresetRays,
 
 	// Regex sources & objects
+	wholeNumberSource,
 	integerSource,
 	promotionRanksSource,
 	promotionsAllowedSource,
