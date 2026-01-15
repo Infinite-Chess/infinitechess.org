@@ -1422,7 +1422,7 @@ svg.collapse {
 
 /* Shared floating Window UI */
 .floating-window {
-	max-width: min(220px, 50vw);
+	max-width: min(220px, 60vw);
 	max-height: min(80vh, var(--dvh-sub-nav));
 	box-sizing: border-box;
 	overflow: auto; /* enable vertical scrolling */
