@@ -18,6 +18,8 @@ html {
 	--nav-bar-height: 41px; /* 40 + 1 for border */
 	/* The viewport height, subtract the navigation bar height. */
 	--vh-sub-nav: calc(100vh - var(--nav-bar-height));
+	/* The viewport height on phones can change. */
+	--dvh-sub-nav: calc(100dvh - var(--nav-bar-height));
 	/* The minimum between the viewport width and height */
 	--vwh: min(var(--vh-sub-nav), var(--vw-capped));
 }
@@ -1421,7 +1423,8 @@ svg.collapse {
 /* Shared floating Window UI */
 .floating-window {
 	max-width: min(220px, 50vw);
-	max-height: 80vh;
+	max-height: min(80vh, var(--dvh-sub-nav));
+	box-sizing: border-box;
 	overflow: auto; /* enable vertical scrolling */
 	padding: 0 18px 16px 18px;
 	border-radius: 12px;
@@ -1620,8 +1623,8 @@ svg.collapse {
 	background-color: rgba(0, 0, 0, 0.849);
 	padding-bottom: 15vh;
 	display: grid;
-	grid-template: repeat(6, min(8vw, 86px)) / repeat(2, min(30vw, 320px));
-	gap: min(3vw, 32px);
+	grid-template: repeat(6, min(8vw, 86px, 15dvh)) / repeat(2, min(30vw, 320px));
+	gap: min(3vw, 32px, calc(4.2dvh - var(--nav-bar-height) / 6));
 	justify-content: center;
 	align-content: center;
 }
