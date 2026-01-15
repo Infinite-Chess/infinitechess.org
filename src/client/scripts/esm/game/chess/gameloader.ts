@@ -452,8 +452,6 @@ async function startBoardEditorFromCustomPosition(
 
 	await guiboardeditor.initUI();
 	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
-
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }
 
 /**

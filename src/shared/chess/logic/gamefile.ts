@@ -196,7 +196,7 @@ function initBoard(
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
 	const coordsOfAllPieces = boardutil.getCoordsOfAllPieces(pieces);
-	const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
+	const startingPositionBox = bounds.getStartingPositionBoxFromCoordsList(coordsOfAllPieces);
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
 	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);

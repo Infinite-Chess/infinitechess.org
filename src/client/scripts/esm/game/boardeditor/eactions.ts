@@ -49,6 +49,8 @@ import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
 import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
 import bounds from '../../../../../shared/util/math/bounds';
+import guiboardeditor from '../gui/boardeditor/guiboardeditor';
+import eautosave from './eautosave';
 
 // Constants ----------------------------------------------------------------------
 
@@ -62,43 +64,21 @@ const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 // Actions ----------------------------------------------------------------------
 
 /** Resets the board editor position to the Classical position. */
-function reset(): void {
+async function reset(): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata: MetaData = {
-		Variant: 'Classical',
-		Event: 'Position created using ingame board editor',
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
-	const classicalGamefile = gamefile.initFullGame(metadata);
-	const longformat = gamecompressor.compressGamefile(classicalGamefile);
-	loadFromLongformat(longformat);
-	selectiontool.resetState(); // Clear current selection
-
-	statustext.showStatus(translations['copypaste'].reset_position);
+	gameloader.unloadGame();
+	await eautosave.clearAutosave();
+	await guiboardeditor.open('reset');
 }
 
 /** Clears the entire board editor position. */
-function clearAll(): void {
+async function clearAll(): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
-	const pieces = gamefile.boardsim.pieces;
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	queueRemovalOfAllPieces(gamefile, edit, pieces);
-	egamerules.setGamerulesGUIinfoUponPositionClearing();
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
-	annotations.resetState(); // Clear all annotations
-	selectiontool.resetState(); // Clear current selection
-
-	statustext.showStatus(translations['copypaste'].clear_position);
+	gameloader.unloadGame();
+	await eautosave.clearAutosave();
+	await guiboardeditor.open('clear');
 }
 
 /**
@@ -211,7 +191,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		const coordsOfAllPieces = Array.from(allCoordsKeys, (key) =>
 			coordutil.getCoordsFromKey(key),
 		);
-		const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
+		const startingPositionBox = bounds.getStartingPositionBoxFromCoordsList(coordsOfAllPieces);
 
 		// Calculate it using the default distance
 		const worldBorderProperty = engineWorldBorderDict[currentEngine];

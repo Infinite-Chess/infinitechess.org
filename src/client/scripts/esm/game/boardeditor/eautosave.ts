@@ -130,11 +130,21 @@ function onPageUnload(): void {
 	void saveCurrentPositionOnce();
 }
 
+async function clearAutosave(): Promise<void> {
+	try {
+		await indexeddb.saveItem('editor-autosave', undefined);
+	} catch (err) {
+		// Don't crash the editor over failed autosave clear
+		console.error('Failed to clear autosave board editor position:', err);
+	}
+}
+
 export default {
 	markPositionDirty,
 	startPositionAutosave,
 	saveCurrentPositionOnce,
 	stopPositionAutosave,
+	clearAutosave,
 };
 
 export type { EditorAutosave };

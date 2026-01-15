@@ -76,6 +76,23 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 	return box;
 }
 
+/**
+ * Calculates the minimum bounding box that contains all the provided coordinates.
+ * To be used for computing the startingPositionBox of the startSnapshot of a game,
+ * since it fallbacks to the bounding box of Classical if the piece list is empty
+ */
+function getStartingPositionBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
+	if (coordsList.length === 0) {
+		// If coordsList is empty, always just default to returning the bounding box of Classical
+		return {
+			left: 1n,
+			right: 8n,
+			bottom: 1n,
+			top: 8n,
+		};
+	} else return getBoxFromCoordsList(coordsList);
+}
+
 function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
 	return {
 		left: bd.fromNumber(box.left),
@@ -258,6 +275,7 @@ function printBDBox(box: BoundingBoxBD): void {
 export default {
 	// Construction
 	getBoxFromCoordsList,
+	getStartingPositionBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
 	// castBDBoundingBoxToBigint,
