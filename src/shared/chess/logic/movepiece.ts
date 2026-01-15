@@ -307,14 +307,7 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 		});
 
 		// If no partners were found, this piece is now impotent. Revoke its rights.
-		if (!hasValidPartner) {
-			state.createSpecialRightsState(
-				edit,
-				candCoordsKey,
-				boardsim.state.global.specialRights.has(candCoordsKey),
-				false,
-			);
-		}
+		if (!hasValidPartner) state.createSpecialRightsState(edit, candCoordsKey, true, false);
 	}
 }
 
