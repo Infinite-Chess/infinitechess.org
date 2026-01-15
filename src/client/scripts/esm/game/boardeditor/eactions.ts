@@ -223,7 +223,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		};
 	}
 
-	// Does the engine support the given world border?
+	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		statustext.showStatus(

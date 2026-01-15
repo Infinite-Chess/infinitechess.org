@@ -64,7 +64,7 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_yesborder,
 ];
 
-// Create floating window (generic behavior) -------------------------------------
+// Create floating window ----------------------------------------------------
 
 const floatingWindow = guifloatingwindow.createFloatingWindow({
 	windowEl: element_window,
@@ -91,7 +91,6 @@ function closeEngineGameUIListeners(): void {
 // Utilities ----------------------------------------------------------------------
 
 function toggle(): void {
-	// Initialize EngineUIConfig with default values on toggle open
 	if (!floatingWindow.isOpen()) updateEngineUIcontents();
 	floatingWindow.toggle();
 }
@@ -147,7 +146,7 @@ function getEngineUIConfig(): EngineUIConfig {
 
 export default {
 	toggle,
-	closeEngineGameUI: floatingWindow.close,
+	close: floatingWindow.close,
 	resetPositioning: floatingWindow.resetPositioning,
 };
 

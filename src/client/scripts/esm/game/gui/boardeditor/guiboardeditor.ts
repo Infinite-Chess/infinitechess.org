@@ -350,10 +350,10 @@ function callback_Action(e: Event): void {
 			eactions.load();
 			return;
 		case 'gamerules':
-			guigamerules.toggleGameRules();
+			guigamerules.toggle();
 			return;
 		case 'start-local-game':
-			guistartlocalgame.toggleLocalGameUI();
+			guistartlocalgame.toggle();
 			return;
 		case 'start-engine-game':
 			guistartenginegame.toggle();

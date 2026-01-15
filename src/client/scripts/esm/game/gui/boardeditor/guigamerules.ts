@@ -2,7 +2,6 @@
 
 /**
  * Manages the GUI popup window for the Game Rules of the Board Editor
- * (game-rule-specific logic only; floating window behavior is in guifloatingwindow.ts)
  */
 
 import type { Coords } from '../../../../../../shared/chess/util/coordutil';
@@ -89,7 +88,7 @@ const integerRegex = new RegExp(String.raw`^${icnconverter.integerSource}$`);
 const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
 const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsAllowedSource}$`);
 
-// Create floating window (generic behavior) -------------------------------------
+// Create floating window -------------------------------------
 
 const floatingWindow = guifloatingwindow.createFloatingWindow({
 	windowEl: element_window,
@@ -434,8 +433,7 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 // Exports -----------------------------------------------------------------
 
 export default {
-	closeGameRules: floatingWindow.close,
-	toggleGameRules: floatingWindow.toggle,
-	resetPositioning: floatingWindow.resetPositioning,
+	close: floatingWindow.close,
+	toggle: floatingWindow.toggle,
 	setGameRules,
 };

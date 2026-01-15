@@ -56,7 +56,7 @@ function onNoButtonPress(): void {
 // Exports -----------------------------------------------------------------
 
 export default {
-	closeLocalGameUI: floatingWindow.close,
-	toggleLocalGameUI: floatingWindow.toggle,
+	close: floatingWindow.close,
+	toggle: floatingWindow.toggle,
 	resetPositioning: floatingWindow.resetPositioning,
 };

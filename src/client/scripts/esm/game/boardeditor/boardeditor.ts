@@ -38,7 +38,6 @@ import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
 import gameloader from '../chess/gameloader.js';
-import guistartenginegame from '../gui/boardeditor/guistartenginegame.js';
 
 // Type Definitions -------------------------------------------------------------
 
