@@ -34,13 +34,13 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 // Gamerules-specific listeners -------------------------------------------
 
 function initLocalGameUIListeners(): void {
-	yesButton.addEventListener('pointerup', onYesButtonPress);
-	noButton.addEventListener('pointerup', onNoButtonPress);
+	yesButton.addEventListener('click', onYesButtonPress);
+	noButton.addEventListener('click', onNoButtonPress);
 }
 
 function closeLocalGameUIListeners(): void {
-	yesButton.removeEventListener('pointerup', onYesButtonPress);
-	noButton.removeEventListener('pointerup', onNoButtonPress);
+	yesButton.removeEventListener('click', onYesButtonPress);
+	noButton.removeEventListener('click', onNoButtonPress);
 }
 
 // Utilities---- -----------------------------------------------------------------
