@@ -89,8 +89,16 @@ button {
 	transform: scale(0.8);
 }
 
-.svg-saved-positions {
+.svg-load-position {
 	transform: scale(0.75);
+}
+
+.svg-save-position-as {
+	transform: scale(0.82);
+}
+
+.svg-save-position {
+	transform: scale(0.82);
 }
 
 .svg-copy-notation {

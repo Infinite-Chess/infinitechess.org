@@ -53,7 +53,9 @@ const elements_actions = [
 	// Position
 	document.getElementById('reset')!,
 	document.getElementById('clearall')!,
-	document.getElementById('saved-positions')!,
+	document.getElementById('load-position')!,
+	document.getElementById('save-position-as')!,
+	document.getElementById('save-position')!,
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
@@ -429,7 +431,13 @@ function callback_Action(e: Event): void {
 		case 'clearall':
 			guiclearposition.toggle();
 			return;
-		case 'saved-positions':
+		case 'load-position':
+			statustext.showStatus('Not implemented yet.');
+			return;
+		case 'save-position-as':
+			statustext.showStatus('Not implemented yet.');
+			return;
+		case 'save-position':
 			statustext.showStatus('Not implemented yet.');
 			return;
 		case 'copy-notation':
