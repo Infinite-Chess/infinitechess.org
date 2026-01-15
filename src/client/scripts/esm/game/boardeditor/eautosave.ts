@@ -109,6 +109,9 @@ function startPositionAutosave(): void {
 
 		void saveCurrentPositionOnce();
 	}, positionAutosaveIntervalMillis);
+
+	// Save when leaving the page
+	window.addEventListener('beforeunload', onPageUnload);
 }
 
 /** Kill running autosave interval */
@@ -117,6 +120,14 @@ function stopPositionAutosave(): void {
 		clearInterval(positionAutosaveTimer);
 		positionAutosaveTimer = undefined;
 	}
+
+	window.removeEventListener('beforeunload', onPageUnload);
+}
+
+function onPageUnload(): void {
+	// Do a final save when leaving the page
+	positionDirty = true;
+	void saveCurrentPositionOnce();
 }
 
 export default {
