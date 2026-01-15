@@ -6,13 +6,12 @@
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
-import loadbalancer from './loadbalancer.js';
-// @ts-ignore
 import websocket from '../websocket.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
+import loadbalancer from './loadbalancer.js';
 import camera from '../rendering/camera.js';
 import perspective from '../rendering/perspective.js';
 import copygame from '../chess/copygame.js';

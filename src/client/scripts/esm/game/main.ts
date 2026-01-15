@@ -15,7 +15,6 @@ import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
-// @ts-ignore
 import loadbalancer from './misc/loadbalancer.js';
 
 // Starts the game. Runs automatically once the page is loaded.
@@ -58,8 +57,6 @@ function gameLoop(runtime: number): void {
 
 	// Reset all event listeners states so we can catch any new events that happen for the next frame.
 	document.dispatchEvent(new Event('reset-listener-events'));
-
-	loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 
 	// Loop again while app is running.
 	frameratelimiter.requestFrame(gameLoop);

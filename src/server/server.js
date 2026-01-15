@@ -3,9 +3,10 @@
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 import { initDatabase } from './database/databaseTables.js';
+import { initDevEnvironment } from './config/setupDev.js';
+
 initDatabase();
 // Ensure our workspace is ready for the dev environment
-import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
 
 // Dependancy/built-in imports
@@ -13,10 +14,10 @@ import https from 'https';
 // Other imports
 import app from './app.js';
 import db from './database/database.js';
-import getCertOptions from './config/certOptions.js';
 import socketServer from './socket/socketServer.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
 import { translateStaticTemplates } from './config/setupTranslations.js';
+import { getCertOptions } from './config/certOptions.js';
 
 translateStaticTemplates(); // Compiles static files. This part is NOT done for integration tests.
 

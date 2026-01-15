@@ -7,7 +7,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 // @ts-ignore
 import guipause from '../gui/guipause.js';
-// @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera.js';
 import perspective from './perspective.js';
@@ -178,7 +177,7 @@ function isScaleSmallForInvisibleTiles(): boolean {
 function update(): void {
 	if (guipause.areWePaused()) return; // Exit if paused
 	if (Transition.areTransitioning()) return; // Exit if we are teleporting
-	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.areWeAFK()) return; // Exit if we're AFK. Save our CPU!
 
 	panBoard();
 	recalcScale();

@@ -8,7 +8,6 @@ import type { Mat4 } from './camera';
 
 // @ts-ignore
 import mat4 from './gl-matrix.js';
-// @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera';
 import frametracker from './frametracker.js';
