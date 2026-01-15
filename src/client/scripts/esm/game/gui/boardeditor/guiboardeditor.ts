@@ -28,6 +28,8 @@ import timeutil from '../../../../../../shared/util/timeutil.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
 import guifloatingwindow from './guifloatingwindow.js';
+import guiresetposition from './guiresetposition.js';
+import guiclearposition from './guiclearposition.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -372,10 +374,10 @@ function callback_Action(e: Event): void {
 	switch (action) {
 		// Position ---------------------
 		case 'reset':
-			eactions.reset();
+			guiresetposition.toggle();
 			return;
 		case 'clearall':
-			eactions.clearAll();
+			guiclearposition.toggle();
 			return;
 		case 'saved-positions':
 			statustext.showStatus('Not implemented yet.');
