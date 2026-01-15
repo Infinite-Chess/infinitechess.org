@@ -1,0 +1,17 @@
+<!doctype html>
+<head>
+	<script defer src="scripts/esm/views/admin.js"></script>
+	<link rel='stylesheet' href='/css/header.css'>
+	<link rel="stylesheet" href="/css/admin.css" />
+	<link rel="icon" href="/img/favicon/favicon-light.png" media="(prefers-color-scheme: light)" />
+	<link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+</head>
+<body>
+	<%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language})
+	%>
+	<textarea id="commandHistory" readonly></textarea>
+	<div class="inputContainer">
+		<input id="commandInput" type="text" />
+		<button type="button" id="sendButton">Send Command</button>
+	</div>
+</body>
