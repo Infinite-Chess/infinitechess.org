@@ -79,11 +79,17 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 // Enginegame-UI-specific listeners -------------------------------------------
 
 function initEngineGameUIListeners(): void {
+	elements_selectionList.forEach((el) => {
+		el.addEventListener('blur', readEngineUIConfig);
+	});
 	yesButton.addEventListener('click', onYesButtonPress);
 	noButton.addEventListener('click', onNoButtonPress);
 }
 
 function closeEngineGameUIListeners(): void {
+	elements_selectionList.forEach((el) => {
+		el.removeEventListener('blur', readEngineUIConfig);
+	});
 	yesButton.removeEventListener('click', onYesButtonPress);
 	noButton.removeEventListener('click', onNoButtonPress);
 }
@@ -96,7 +102,7 @@ function toggle(): void {
 }
 
 function onYesButtonPress(): void {
-	const engineUIConfig = getEngineUIConfig();
+	const engineUIConfig = readEngineUIConfig();
 	eactions.startEngineGame(engineUIConfig);
 }
 
@@ -111,8 +117,8 @@ function updateEngineUIcontents(): void {
 	element_yesborder.checked = !existingBorder;
 }
 
-/** Constructs the engineconfig by reading the input boxes */
-function getEngineUIConfig(): EngineUIConfig {
+/** Constructs the engineconfig by reading the input boxes, and validating them */
+function readEngineUIConfig(): EngineUIConfig {
 	// Player color
 	const youAreColor = element_white.checked ? players.WHITE : players.BLACK;
 
