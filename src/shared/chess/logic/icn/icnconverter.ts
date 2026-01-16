@@ -263,6 +263,7 @@ const possessive = (() => {
 const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
 const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
 const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
+const integerOrNullSource = String.raw`(?:null|${integerSource})`; // Allows null
 
 const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
 
@@ -399,7 +400,7 @@ const promotionsRegex = new RegExp(
  * Example: '-7,16,-7,16'
  */
 const worldBorderRegex = new RegExp(
-	String.raw`(?<worldBorder>${integerSource},${integerSource},${integerSource},${integerSource})${whiteSpaceOrEnd}`,
+	String.raw`(?<worldBorder>${integerOrNullSource},${integerOrNullSource},${integerOrNullSource},${integerOrNullSource})${whiteSpaceOrEnd}`,
 	'y',
 );
 
@@ -984,7 +985,12 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	if (borderResult) {
 		const [left, right, bottom, top] = borderResult
 			.groups!['worldBorder']!.split(',')
-			.map(BigInt) as [bigint, bigint, bigint, bigint];
+			.map((value) => (value === 'null' ? null : BigInt(value))) as [
+			bigint | null,
+			bigint | null,
+			bigint | null,
+			bigint | null,
+		];
 		worldBorder = { left, right, bottom, top };
 
 		lastIndex = worldBorderRegex.lastIndex; // Update the ICN index being observed

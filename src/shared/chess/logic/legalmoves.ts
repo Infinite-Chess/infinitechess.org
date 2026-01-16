@@ -487,7 +487,7 @@ function enforceWorldBorderOnSlideLimit(
 ): void {
 	if (worldBorder === undefined) return; // No world border, skip
 
-	if (bounds.boxContainsSquare(worldBorder, coords)) {
+	if (!bounds.boxContainsSquare(worldBorder, coords)) {
 		throw Error('Piece outside world border!');
 	}
 
