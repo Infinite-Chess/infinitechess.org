@@ -13,7 +13,7 @@ import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
-import bounds, { HalfBoundingBox } from '../../util/math/bounds.js';
+import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 
@@ -213,7 +213,7 @@ function appendSpecialMoves(
  */
 function removeObstructedMoves(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	legalmoves: LegalMoves,
@@ -243,7 +243,7 @@ function removeObstructedMoves(
  */
 function removeInvalidIndividualMoves(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	individualMoves: Coords[],
 	color: Player,
 	premove: boolean,
@@ -269,7 +269,7 @@ function removeInvalidIndividualMoves(
  */
 function removeObstructedSlidingMoves(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	slidingMoves: Record<Vec2Key, SlideLimits>,
@@ -310,7 +310,7 @@ function removeObstructedSlidingMoves(
  */
 function testSquareValidity(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	coords: Coords,
 	friendlyColor: Player,
 	premove: boolean,
@@ -415,7 +415,7 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  */
 function slide_CalcLegalLimit(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	blockingFunc: BlockingFunction,
 	o: OrganizedPieces,
 	line: number[],
@@ -434,7 +434,7 @@ function slide_CalcLegalLimit(
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
-	enforceWorldBorderOnSlideLimit(boardsim, worldBorder, limit, coords, step, axis); // Mutating
+	enforceWorldBorderOnSlideLimit(boardsim, worldBorder, limit, coords, step); // Mutating
 	// else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
@@ -480,15 +480,19 @@ function slide_CalcLegalLimit(
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	limit: SlideLimits,
 	coords: Coords,
 	step: Vec2,
 ): void {
 	if (worldBorder === undefined) return; // No world border, skip
 
+	if (bounds.boxContainsSquare(worldBorder, coords)) {
+		throw Error('Piece outside world border!');
+	}
+
 	if (worldBorder.left !== null && step[0]) {
-		const stepsToIntersect = (worldBorder.left - coords[1]) / step[0];
+		const stepsToIntersect = (worldBorder.left - coords[0]) / step[0];
 		if (step[0] < 0) {
 			// Moving toward left border
 			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
@@ -499,7 +503,7 @@ function enforceWorldBorderOnSlideLimit(
 	}
 
 	if (worldBorder.right !== null && step[0]) {
-		const stepsToIntersect = (worldBorder.right - coords[1]) / step[0];
+		const stepsToIntersect = (worldBorder.right - coords[0]) / step[0];
 		if (step[0] > 0) {
 			// Moving toward right border
 			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
@@ -545,7 +549,7 @@ function enforceWorldBorderOnSlideLimit(
  */
 function calcPiecesLegalSlideLimitOnSpecificLine(
 	boardsim: Board,
-	worldBorder: HalfBoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 	piece: Piece,
 	slide: Vec2,
 	slideKey: Vec2Key,

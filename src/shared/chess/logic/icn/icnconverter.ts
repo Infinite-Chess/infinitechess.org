@@ -26,7 +26,7 @@ import type { GameRules } from '../../variants/gamerules.js';
 import type { MetaData } from '../../util/metadata.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
 import type { BaseRay } from '../../../util/math/geometry.js';
-import { HalfBoundingBox } from '../../../util/math/bounds.js';
+import { UnboundedRectangle } from '../../../util/math/bounds.js';
 
 // Type Definitions -------------------------------------------------------------------
 
@@ -814,7 +814,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let promotionRanks: PlayerGroup<bigint[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
-	let worldBorder: HalfBoundingBox | undefined;
+	let worldBorder: UnboundedRectangle | undefined;
 	let presetSquares: Coords[] | undefined;
 	let presetRays: BaseRay[] | undefined;
 	let position: Map<CoordsKey, number> | undefined;

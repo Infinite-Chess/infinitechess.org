@@ -6,7 +6,7 @@
 
 import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { Edit } from '../../boardeditor/boardeditor';
-import type { HalfBoundingBox } from '../../../../../../shared/util/math/bounds';
+import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 import { RawType } from '../../../../../../shared/chess/util/typeutil';
@@ -241,7 +241,7 @@ function readGameRules(): void {
 	if (!element_castling.indeterminate) castling = element_castling.checked;
 
 	// World Border
-	let worldBorder: HalfBoundingBox | undefined = undefined;
+	let worldBorder: UnboundedRectangle | undefined = undefined;
 	const borderInputs = [
 		{ el: element_borderLeft, val: element_borderLeft.value },
 		{ el: element_borderRight, val: element_borderRight.value },
@@ -255,10 +255,14 @@ function readGameRules(): void {
 		borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
 		worldBorder = undefined;
 	} else {
-		const leftInfinite = element_borderLeft.value === '-Infinity';
-		const rightInfinite = element_borderRight.value === 'Infinity';
-		const bottomInfinite = element_borderBottom.value === '-Infinity';
-		const topInfinite = element_borderTop.value === 'Infinity';
+		const leftInfinite =
+			element_borderLeft.value === '-Infinity' || element_borderLeft.value == 'null';
+		const rightInfinite =
+			element_borderRight.value === 'Infinity' || element_borderRight.value == 'null';
+		const bottomInfinite =
+			element_borderBottom.value === '-Infinity' || element_borderBottom.value == 'null';
+		const topInfinite =
+			element_borderTop.value === 'Infinity' || element_borderTop.value == 'null';
 		// At least one is set, so ALL must be valid integers, and must be ascending
 		const leftValid = leftInfinite || integerRegex.test(element_borderLeft.value);
 		const rightValid =

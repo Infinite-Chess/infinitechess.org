@@ -3,7 +3,7 @@
  * and contains utility methods for working with them.
  */
 
-import type { HalfBoundingBox } from '../../util/math/bounds.js';
+import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { Player, RawType, PlayerGroup } from '../util/typeutil.js';
 
 interface GameRules {
@@ -37,7 +37,7 @@ interface GameRules {
 	 * All pieces must be within this box.
 	 * The inclusive playable region of the board.
 	 */
-	worldBorder?: HalfBoundingBox;
+	worldBorder?: UnboundedRectangle;
 }
 
 /** Checks if a specified color has a given win condition. */

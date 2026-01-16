@@ -13,7 +13,7 @@ import boardtiles from './boardtiles.js';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,
-	HalfBoundingBox,
+	UnboundedRectangle,
 } from '../../../../../shared/util/math/bounds.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 
@@ -21,7 +21,7 @@ import { createRenderable } from '../../webgl/Renderable.js';
  * Draws a square on screen containing the entire
  * playable area, just inside the world border.
  */
-function drawPlayableRegionMask(worldBorder: HalfBoundingBox | undefined): void {
+function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): void {
 	// No border, and in perspective mode => This is the best mask we can get!
 	// This is crucial for making as if the board goes infinitely into the horizon.
 	// Otherwise without this the solid cover isn't visible.

@@ -24,7 +24,7 @@ interface BoundingBox {
 	top: bigint;
 }
 
-interface HalfBoundingBox {
+interface UnboundedRectangle {
 	/** The x-coordinate of the left side of the box. */
 	left: bigint | null;
 	/** The x-coordinate of the right side of the box. */
@@ -175,7 +175,10 @@ function translateBoundingBox(box: BoundingBox, translation: Coords): BoundingBo
  * Determines if one bounding box (`innerBox`) is entirely contained within another bounding box (`outerBox`).
  * No overlaps allowed, but edges can touch.
  */
-function boxContainsBox(outerBox: BoundingBox | HalfBoundingBox, innerBox: BoundingBox): boolean {
+function boxContainsBox(
+	outerBox: BoundingBox | UnboundedRectangle,
+	innerBox: BoundingBox,
+): boolean {
 	if (outerBox.left !== null && innerBox.left < outerBox.left) return false;
 	if (outerBox.right !== null && innerBox.right > outerBox.right) return false;
 	if (outerBox.bottom !== null && innerBox.bottom < outerBox.bottom) return false;
@@ -212,7 +215,7 @@ function areBoxesDisjoint(box1: DoubleBoundingBox, box3: DoubleBoundingBox): boo
 /**
  * Returns true if the provided box contains the square coordinate.
  */
-function boxContainsSquare(box: BoundingBox | HalfBoundingBox, square: Coords): boolean {
+function boxContainsSquare(box: BoundingBox | UnboundedRectangle, square: Coords): boolean {
 	if (box.left !== null && square[0] < box.left) return false;
 	if (box.right !== null && square[0] > box.right) return false;
 	if (box.bottom !== null && square[1] < box.bottom) return false;
@@ -291,4 +294,4 @@ export default {
 	printBDBox,
 };
 
-export type { BoundingBox, HalfBoundingBox, BoundingBoxBD, DoubleBoundingBox };
+export type { BoundingBox, UnboundedRectangle, BoundingBoxBD, DoubleBoundingBox };
