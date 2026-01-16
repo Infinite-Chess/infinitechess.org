@@ -13,7 +13,7 @@ import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
 import vectors from '../../util/math/vectors.js';
-import bounds, { BoundingBox } from '../../util/math/bounds.js';
+import bounds, { HalfBoundingBox } from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 
@@ -213,7 +213,7 @@ function appendSpecialMoves(
  */
 function removeObstructedMoves(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	legalmoves: LegalMoves,
@@ -243,7 +243,7 @@ function removeObstructedMoves(
  */
 function removeInvalidIndividualMoves(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	individualMoves: Coords[],
 	color: Player,
 	premove: boolean,
@@ -269,7 +269,7 @@ function removeInvalidIndividualMoves(
  */
 function removeObstructedSlidingMoves(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	slidingMoves: Record<Vec2Key, SlideLimits>,
@@ -310,7 +310,7 @@ function removeObstructedSlidingMoves(
  */
 function testSquareValidity(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	coords: Coords,
 	friendlyColor: Player,
 	premove: boolean,
@@ -415,7 +415,7 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  */
 function slide_CalcLegalLimit(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	blockingFunc: BlockingFunction,
 	o: OrganizedPieces,
 	line: number[],
@@ -480,56 +480,56 @@ function slide_CalcLegalLimit(
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	limit: SlideLimits,
 	coords: Coords,
 	step: Vec2,
-	axis: 0 | 1,
 ): void {
 	if (worldBorder === undefined) return; // No world border, skip
 
-	// What are the intersections this step makes with the playable region box?
-	const coordsBD = bdcoords.FromCoords(coords);
-	const stepBD = bdcoords.FromCoords(step);
-	const negatedStepBD = vectors.negateBDVector(stepBD);
-
-	// These are in order of ascending dot product.
-	const intersections = geometry
-		.findLineBoxIntersections(coords, step, worldBorder)
-		.map((i) => i.coords);
-	if (intersections.length < 1)
-		throw Error('Slide direction made zero intersections with border!'); // Would happen if the piece somehow gets outside the border
-	// eslint-disable-next-line prefer-const
-	let [intsect1, intsect2] = intersections;
-	if (!intsect2) intsect2 = intsect1; // If there's only one intersection (corner), use it for both
-
-	const stepsToIntsect1 = getStepsToReachPoint(coordsBD, intsect1!, negatedStepBD, axis); // Always positive
-	const stepsToIntsect2 = getStepsToReachPoint(coordsBD, intsect2!, stepBD, axis); // Always positive
-
-	/**
-	 * Calculates the minimum number of steps to reach the destination
-	 * coords (inclusive), or immediately before, but not after.
-	 * @param origin
-	 * @param destination
-	 * @param step - Can be negated. MUST BE IN THE direction towards the destination!
-	 * @param axis - Whether to use the x or y axis in arithmetic (can't use x if x step is 0)
-	 * @returns A number of steps (always positive) it would take to reach the destination from the origin using the step provided.
-	 */
-	function getStepsToReachPoint(
-		origin: BDCoords,
-		destination: BDCoords,
-		step: BDCoords,
-		axis: 0 | 1,
-	): bigint {
-		// How many steps would it take to reach this point?
-		const distanceToPoint: BigDecimal = bd.subtract(destination[axis], origin[axis]);
-		// The maximum number of steps we can take before exceeding the point (inclusive to the point)
-		return bd.toBigInt(bd.floor(bd.divide(distanceToPoint, step[axis]))); // Always positive
+	if (worldBorder.left !== null && step[0]) {
+		const stepsToIntersect = (worldBorder.left - coords[1]) / step[0];
+		if (step[0] < 0) {
+			// Moving toward left border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from left border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
 	}
 
-	// Shorten our slide limit to not exceed the world border
-	if (limit[0] === null || -stepsToIntsect1 > limit[0]) limit[0] = -stepsToIntsect1;
-	if (limit[1] === null || stepsToIntsect2 < limit[1]) limit[1] = stepsToIntsect2;
+	if (worldBorder.right !== null && step[0]) {
+		const stepsToIntersect = (worldBorder.right - coords[1]) / step[0];
+		if (step[0] > 0) {
+			// Moving toward right border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from right border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
+
+	if (worldBorder.bottom !== null && step[1]) {
+		const stepsToIntersect = (worldBorder.bottom - coords[1]) / step[1];
+		if (step[1] < 0) {
+			// Moving toward bottom border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from bottom border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
+
+	if (worldBorder.top !== null && step[1]) {
+		const stepsToIntersect = (worldBorder.top - coords[1]) / step[1];
+		if (step[1] > 0) {
+			// Moving toward top border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from top border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
 
 	// console.log("New limit after blocked by world border:", limit);
 }
@@ -545,7 +545,7 @@ function enforceWorldBorderOnSlideLimit(
  */
 function calcPiecesLegalSlideLimitOnSpecificLine(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	piece: Piece,
 	slide: Vec2,
 	slideKey: Vec2Key,

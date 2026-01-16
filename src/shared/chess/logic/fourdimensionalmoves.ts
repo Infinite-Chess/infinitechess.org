@@ -12,7 +12,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { Game, Board, FullGame } from './gamefile.js';
 import type { MoveDraftEdit } from './specialmove.js';
-import type { BoundingBox } from '../../util/math/bounds.js';
+import type { HalfBoundingBox } from '../../util/math/bounds.js';
 
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
@@ -363,7 +363,7 @@ function fourDimensionalKingMove(
  */
 function kingLegalMoves(
 	boardsim: Board,
-	worldBorder: BoundingBox | undefined,
+	worldBorder: HalfBoundingBox | undefined,
 	coords: Coords,
 	color: Player,
 	premove: boolean,

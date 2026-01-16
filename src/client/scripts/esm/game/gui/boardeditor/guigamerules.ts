@@ -6,7 +6,7 @@
 
 import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { Edit } from '../../boardeditor/boardeditor';
-import type { BoundingBox } from '../../../../../../shared/util/math/bounds';
+import type { HalfBoundingBox } from '../../../../../../shared/util/math/bounds';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 import { RawType } from '../../../../../../shared/chess/util/typeutil';
@@ -241,7 +241,7 @@ function readGameRules(): void {
 	if (!element_castling.indeterminate) castling = element_castling.checked;
 
 	// World Border
-	let worldBorder: BoundingBox | undefined = undefined;
+	let worldBorder: HalfBoundingBox | undefined = undefined;
 	const borderInputs = [
 		{ el: element_borderLeft, val: element_borderLeft.value },
 		{ el: element_borderRight, val: element_borderRight.value },
@@ -255,23 +255,33 @@ function readGameRules(): void {
 		borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
 		worldBorder = undefined;
 	} else {
+		const leftInfinite = element_borderLeft.value === '-Infinity';
+		const rightInfinite = element_borderRight.value === 'Infinity';
+		const bottomInfinite = element_borderBottom.value === '-Infinity';
+		const topInfinite = element_borderTop.value === 'Infinity';
 		// At least one is set, so ALL must be valid integers, and must be ascending
-		const leftValid = integerRegex.test(element_borderLeft.value);
+		const leftValid = leftInfinite || integerRegex.test(element_borderLeft.value);
 		const rightValid =
-			integerRegex.test(element_borderRight.value) &&
-			(!leftValid || BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value));
-		const bottomValid = integerRegex.test(element_borderBottom.value);
+			rightInfinite ||
+			(integerRegex.test(element_borderRight.value) &&
+				(!leftValid ||
+					leftInfinite ||
+					BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value)));
+		const bottomValid = bottomInfinite || integerRegex.test(element_borderBottom.value);
 		const topValid =
-			integerRegex.test(element_borderTop.value) &&
-			(!bottomValid || BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value));
+			topInfinite ||
+			(integerRegex.test(element_borderTop.value) &&
+				(!bottomValid ||
+					bottomInfinite ||
+					BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value)));
 
 		if (leftValid && rightValid && bottomValid && topValid) {
 			borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
 			worldBorder = {
-				left: BigInt(element_borderLeft.value),
-				right: BigInt(element_borderRight.value),
-				bottom: BigInt(element_borderBottom.value),
-				top: BigInt(element_borderTop.value),
+				left: leftInfinite ? null : BigInt(element_borderLeft.value),
+				right: rightInfinite ? null : BigInt(element_borderRight.value),
+				bottom: bottomInfinite ? null : BigInt(element_borderBottom.value),
+				top: topInfinite ? null : BigInt(element_borderTop.value),
 			};
 		} else {
 			// Invalid: Either partial data or non-integer data or invalid ranges
