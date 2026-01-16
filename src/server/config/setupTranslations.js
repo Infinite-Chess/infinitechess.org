@@ -211,11 +211,11 @@ function loadTranslationsFolder(folder) {
 									)
 							).toString(),
 						); // parsedHTML should be safe to be rendered
-						const dateISO = filePath.replace('.md', ''); // Store the ISO date (YYYY-MM-DD)
+						const dateISO = filePath.replace('.md', ''); // YYYY-MM-DD
+						// Localize it. Change the number of P's to change how the date is phrased
 						const date = format(parseISO(dateISO), 'PP', {
-							// Change the number of P's to change how the date is phrased
 							timeZone: 'UTC-6',
-							locale: localeMap[languageCode].locale,
+							locale: localeMap[languageCode],
 						});
 
 						return `<div class='news-post' data-date='${dateISO}'>
@@ -276,36 +276,32 @@ function initTranslations() {
 function translateStaticTemplates() {
 	if (!translations) throw new Error('Translations have not been initialized yet.');
 
-	const languages = Object.keys(translations);
+	const language_codes = Object.keys(translations);
 
-	const languages_list = languages.map((language) => {
-		const name = translations[language].default.name;
-		const englishName = localeMap[language].name;
-		if (!englishName)
-			throw new Error(
-				`English name not found for language code: ${language} Name: ${translations[language].default.name}`,
-			);
-		return { code: language, name, englishName };
+	const languages_list = language_codes.map((language_code) => {
+		const name = translations[language_code].default.name;
+		const englishName = translations[language_code].default.english_name;
+		return { code: language_code, name, englishName };
 	});
 
 	const templatesPath = path.join(__dirname, '../../client/views');
-	for (const language of languages) {
+	for (const language_code of language_codes) {
 		for (const template of staticTranslatedTemplates) {
-			createFileOrDir(path.join(templatesPath, language, template + '.html')); // Make sure it exists
+			createFileOrDir(path.join(templatesPath, language_code, template + '.html')); // Make sure it exists
 			fs.writeFileSync(
-				path.join(templatesPath, language, template + '.html'),
+				path.join(templatesPath, language_code, template + '.html'),
 				ejs.render(
 					// Read EJS template
 					fs.readFileSync(path.join(templatesPath, template + '.ejs')).toString(),
 					{
 						// Function for translations
 						t: function (key, options = {}) {
-							options.lng = language; // Make sure language is correct
+							options.lng = language_code; // Make sure language is correct
 							return i18next.t(key, options);
 						},
 						languages: languages_list,
-						language: language,
-						newsHTML: translations[language].news,
+						language: language_code,
+						newsHTML: translations[language_code].news,
 						distfolder: path.join(__dirname, '../..'), // '/workspaces/infinitechess.org/dist'
 						viewsfolder: path.join(__dirname, '../../client/views'), // '/workspaces/infinitechess.org/dist/client/views'
 
