@@ -42,8 +42,6 @@ function copyToClipboard(text: string): void {
  * Returns true if the current device has a mouse pointer.
  */
 function isMouseSupported(): boolean {
-	return true; // The latest windows version says it doesn't support mouse. :P
-
 	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
 	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
 	// USING "any-pointer" CAUSES false positives on mobile devices!
