@@ -67,15 +67,11 @@ async function saveCurrentPositionOnce(): Promise<void> {
 		const variantOptions = eactions.getCurrentPositionInformation();
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 
-		if (variantOptions.position.size === 0) {
-			// Don't save empty position, as loading it is currently not supported
-			await indexeddb.saveItem('editor-autosave', undefined);
-		} else
-			await indexeddb.saveItem('editor-autosave', {
-				variantOptions,
-				pawnDoublePush,
-				castling,
-			});
+		await indexeddb.saveItem('editor-autosave', {
+			variantOptions,
+			pawnDoublePush,
+			castling,
+		});
 
 		positionDirty = false;
 	} catch (err) {
@@ -130,11 +126,21 @@ function onPageUnload(): void {
 	void saveCurrentPositionOnce();
 }
 
+async function clearAutosave(): Promise<void> {
+	try {
+		await indexeddb.saveItem('editor-autosave', undefined);
+	} catch (err) {
+		// Don't crash the editor over failed autosave clear
+		console.error('Failed to clear autosave board editor position:', err);
+	}
+}
+
 export default {
 	markPositionDirty,
 	startPositionAutosave,
 	saveCurrentPositionOnce,
 	stopPositionAutosave,
+	clearAutosave,
 };
 
 export type { EditorAutosave };

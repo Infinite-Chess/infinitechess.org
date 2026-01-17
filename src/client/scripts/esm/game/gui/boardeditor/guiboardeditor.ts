@@ -8,6 +8,8 @@ import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { EditorAutosave } from '../../boardeditor/eautosave.js';
+import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant.js';
+import type { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
 // @ts-ignore
 import statustext from '../statustext.js';
@@ -28,6 +30,9 @@ import timeutil from '../../../../../../shared/util/timeutil.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
 import guifloatingwindow from './guifloatingwindow.js';
+import guiresetposition from './guiresetposition.js';
+import guiclearposition from './guiclearposition.js';
+import variant from '../../../../../../shared/chess/variants/variant.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -48,7 +53,9 @@ const elements_actions = [
 	// Position
 	document.getElementById('reset')!,
 	document.getElementById('clearall')!,
-	document.getElementById('saved-positions')!,
+	document.getElementById('load-position')!,
+	document.getElementById('save-position-as')!,
+	document.getElementById('save-position')!,
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
@@ -121,17 +128,60 @@ let boardEditorOpen = false;
 
 // Initialization ---------------------------------------------------------
 
-async function open(): Promise<void> {
+/**
+ * Open the board editor GUI
+ * @param mode - optional argument specifying in which mode the GUI should be initialized
+ */
+async function open(mode: 'default' | 'clear' | 'reset' = 'default'): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	const editorAutosave = await indexeddb.loadItem<EditorAutosave>('editor-autosave');
-	if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+	if (mode === 'default') {
+		// Try to read in autosave and initialize board editor
+		// If there is no autosave, initialize board editor with Classical position
+		const editorAutosave = await indexeddb.loadItem<EditorAutosave>('editor-autosave');
+		if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+			await gameloader.startBoardEditor();
+		else {
+			const metadata: MetaData = {
+				Variant: 'Classical',
+				TimeControl: '-',
+				Event: `Position created using ingame board editor`,
+				Site: 'https://www.infinitechess.org/',
+				Round: '-',
+				UTCDate: timeutil.getCurrentUTCDate(),
+				UTCTime: timeutil.getCurrentUTCTime(),
+			};
+
+			try {
+				await gameloader.startBoardEditorFromCustomPosition(
+					{
+						metadata,
+						additional: {
+							variantOptions: editorAutosave.variantOptions,
+						},
+					},
+					editorAutosave.pawnDoublePush,
+					editorAutosave.castling,
+				);
+			} catch (err) {
+				// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
+				// then do not lock user out of board editor
+				console.error(
+					'Failed to load autosaved board editor position when opening it:',
+					err,
+				);
+
+				await gameloader.startBoardEditor();
+			}
+		}
+	} else if (mode === 'reset') {
+		// Initialize board editor with Classical position
 		await gameloader.startBoardEditor();
-	else {
+	} else if (mode === 'clear') {
+		// Initialize board editor with empty position and bare minimum game rules
 		const metadata: MetaData = {
-			Variant: 'Classical',
 			TimeControl: '-',
 			Event: `Position created using ingame board editor`,
 			Site: 'https://www.infinitechess.org/',
@@ -139,26 +189,30 @@ async function open(): Promise<void> {
 			UTCDate: timeutil.getCurrentUTCDate(),
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
-
-		try {
-			await gameloader.startBoardEditorFromCustomPosition(
-				{
-					metadata,
-					additional: {
-						variantOptions: editorAutosave.variantOptions,
-					},
+		const gameRules = variant.getBareMinimumGameRules();
+		const position: Map<CoordsKey, number> = new Map();
+		const specialRights: Set<CoordsKey> = new Set();
+		const state_global = { specialRights };
+		const variantOptions: VariantOptions = {
+			fullMove: 1,
+			gameRules,
+			position,
+			state_global,
+		};
+		await gameloader.startBoardEditorFromCustomPosition(
+			{
+				metadata,
+				additional: {
+					variantOptions,
 				},
-				editorAutosave.pawnDoublePush,
-				editorAutosave.castling,
-			);
-		} catch (err) {
-			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
-			// then do not lock user out of board editor
-			console.error('Failed to load autosaved board editor position when opening it:', err);
-
-			await gameloader.startBoardEditor();
-		}
+			},
+			false,
+			false,
+		);
+	} else {
+		console.error('guiboardeditor.open called with unsupported mode ', mode);
 	}
+
 	initListeners();
 }
 
@@ -372,12 +426,18 @@ function callback_Action(e: Event): void {
 	switch (action) {
 		// Position ---------------------
 		case 'reset':
-			eactions.reset();
+			guiresetposition.toggle();
 			return;
 		case 'clearall':
-			eactions.clearAll();
+			guiclearposition.toggle();
 			return;
-		case 'saved-positions':
+		case 'load-position':
+			statustext.showStatus('Not implemented yet.');
+			return;
+		case 'save-position-as':
+			statustext.showStatus('Not implemented yet.');
+			return;
+		case 'save-position':
 			statustext.showStatus('Not implemented yet.');
 			return;
 		case 'copy-notation':
