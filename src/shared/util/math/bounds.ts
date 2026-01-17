@@ -263,7 +263,7 @@ function reduceIntervalToExclude(
 	value: bigint | null,
 	decreaseUpperBound: 0 | 1 | boolean,
 ): void {
-	if (value === null) return; // intervals never inclue infinity
+	if (value === null) return; // intervals never include infinity
 	if (decreaseUpperBound) {
 		// Decrease upper bound
 		if (interval[1] === null || interval[1] > value) interval[1] = value;
