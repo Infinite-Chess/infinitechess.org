@@ -263,7 +263,7 @@ const possessive = (() => {
 const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
 const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
 const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
-const integerOrNullSource = String.raw`(?:null|${integerSource})`; // Allows null
+const unboundedIntegerSource = String.raw`(?:_|${integerSource})`; // Allows null
 
 const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
 
@@ -400,7 +400,7 @@ const promotionsRegex = new RegExp(
  * Example: '-7,16,-7,16'
  */
 const worldBorderRegex = new RegExp(
-	String.raw`(?<worldBorder>${integerOrNullSource},${integerOrNullSource},${integerOrNullSource},${integerOrNullSource})${whiteSpaceOrEnd}`,
+	String.raw`(?<worldBorder>${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource})${whiteSpaceOrEnd}`,
 	'y',
 );
 
@@ -707,7 +707,7 @@ function LongToShort_Format(
 	// World Border
 	if (longformat.gameRules.worldBorder) {
 		const { left, right, bottom, top } = longformat.gameRules.worldBorder;
-		positionSegments.push(`${left},${right},${bottom},${top}`);
+		positionSegments.push(`${left ?? '_'},${right ?? '_'},${bottom ?? '_'},${top ?? '_'}`);
 	}
 
 	// Win conditions
@@ -985,7 +985,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	if (borderResult) {
 		const [left, right, bottom, top] = borderResult
 			.groups!['worldBorder']!.split(',')
-			.map((value) => (value === 'null' ? null : BigInt(value))) as [
+			.map((value) => (value === '_' ? null : BigInt(value))) as [
 			bigint | null,
 			bigint | null,
 			bigint | null,
