@@ -104,7 +104,7 @@ function calcIntersectionPointOfLinesBD(
 function rayStepsUntilLine(startOffSet: Vec2, lineNormal: Vec2, step: Vec2): bigint | null {
 	// normal is in both the numerator and denominator so it does not need to be normalsed.
 	const movementTowardLine = vectors.dotProduct(step, lineNormal);
-	if (movementTowardLine == 0n) return null; // Ray is parallel
+	if (movementTowardLine === 0n) return null; // Ray is parallel
 	return -vectors.dotProduct(startOffSet, lineNormal) / movementTowardLine;
 }
 
@@ -131,7 +131,7 @@ function rayStepsUntilRectangle(
 	step: Vec2,
 	box: UnboundedRectangle,
 ): [bigint | null, bigint | null] {
-	let interval: [bigint | null, bigint | null] = [null, null];
+	const interval: [bigint | null, bigint | null] = [null, null];
 
 	const stepsToLeft = rayStepsUntilOrthogonalLine(startCoords, step, box.left, 0);
 	const stepsToRight = rayStepsUntilOrthogonalLine(startCoords, step, box.right, 0);

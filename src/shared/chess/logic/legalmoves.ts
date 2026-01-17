@@ -2,8 +2,6 @@
  * This script calculates legal moves
  */
 
-import bd, { BigDecimal } from '@naviary/bigdecimal';
-
 import specialdetect from './specialdetect.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
@@ -12,14 +10,12 @@ import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import geometry from '../../util/math/geometry.js';
-import vectors from '../../util/math/vectors.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
-import bdcoords from '../util/bdcoords.js';
 
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { CoordsKey, Coords, BDCoords } from '../util/coordutil.js';
+import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
