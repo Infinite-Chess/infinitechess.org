@@ -5,7 +5,7 @@
  * such as calculating intersections, and distances.
  */
 
-import type { BoundingBox, BoundingBoxBD } from './bounds.js';
+import type { BoundingBox, BoundingBoxBD, UnboundedRectangle } from './bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -94,6 +94,56 @@ function calcIntersectionPointOfLinesBD(
 	const y = determineAxis(bd.subtract(bd.multiply(A2, C1), bd.multiply(A1, C2)));
 
 	return [x, y];
+}
+
+/**
+ * startOffSet = statCoords - any point on the line
+ * Polygonal chains can be optimised by calculating startOffset
+ * for every second point. (each point is on two lines)
+ */
+function rayStepsUntilLine(startOffSet: Vec2, lineNormal: Vec2, step: Vec2): bigint | null {
+	// normal is in both the numerator and denominator so it does not need to be normalsed.
+	const movementTowardLine = vectors.dotProduct(step, lineNormal);
+	if (movementTowardLine == 0n) return null; // Ray is parallel
+	return -vectors.dotProduct(startOffSet, lineNormal) / movementTowardLine;
+}
+
+/**
+ * Calculates the number of steps we can take before crossing an orthogonal line.
+ * Standing on the line is allowed.
+ */
+function rayStepsUntilOrthogonalLine(
+	startCoords: Coords,
+	step: Vec2,
+	axisValue: bigint | null,
+	axis: 0 | 1,
+): bigint | null {
+	if (axisValue === null || !step[axis]) return null;
+	return (axisValue - startCoords[axis]) / step[axis];
+}
+
+/**
+ * A simplified version of @link {findLineBoxIntersections}.
+ * Uses integers. Assumes startCoords is inside the rectangle.
+ */
+function rayStepsUntilRectangle(
+	startCoords: Coords,
+	step: Vec2,
+	box: UnboundedRectangle,
+): [bigint | null, bigint | null] {
+	let interval: [bigint | null, bigint | null] = [null, null];
+
+	const stepsToLeft = rayStepsUntilOrthogonalLine(startCoords, step, box.left, 0);
+	const stepsToRight = rayStepsUntilOrthogonalLine(startCoords, step, box.right, 0);
+	const stepsToBottom = rayStepsUntilOrthogonalLine(startCoords, step, box.bottom, 1);
+	const stepsToTop = rayStepsUntilOrthogonalLine(startCoords, step, box.top, 1);
+	// if (step[0] < 0) we are moving down toward the lower border
+	bounds.reduceIntervalToExclude(interval, stepsToLeft, step[0] < 0);
+	bounds.reduceIntervalToExclude(interval, stepsToRight, step[0] > 0);
+	bounds.reduceIntervalToExclude(interval, stepsToBottom, step[1] < 0);
+	bounds.reduceIntervalToExclude(interval, stepsToTop, step[1] > 0);
+
+	return interval;
 }
 
 /**
@@ -737,6 +787,11 @@ export default {
 	// Fundamental Intersection Functions
 	calcIntersectionPointOfLines,
 	calcIntersectionPointOfLinesBD,
+
+	// Discrete Intersection Functions
+	rayStepsUntilLine,
+	rayStepsUntilOrthogonalLine,
+	rayStepsUntilRectangle,
 
 	// Composite Intersection Functions
 	intersectLineSegments,
