@@ -100,14 +100,11 @@ function init(): void {
 
 	guititle.open();
 
-	window.addEventListener('resize', onScreenResize);
-}
-
-function onScreenResize(): void {
-	pipeline.resize(gl.canvas.width, gl.canvas.height);
-
-	const detail = { width: gl.canvas.width, height: gl.canvas.height };
-	document.dispatchEvent(new CustomEvent('canvas_resize', { detail }));
+	// Update the pipeline on canvas resize
+	document.addEventListener('canvas_resize', (event) => {
+		const { width, height } = event.detail;
+		pipeline.resize(width, height);
+	});
 }
 
 // Update the game every single frame
