@@ -255,37 +255,31 @@ function readGameRules(): void {
 		borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
 		worldBorder = undefined;
 	} else {
-		const leftInfinite =
-			element_borderLeft.value === '-Infinity' || element_borderLeft.value == 'null';
-		const rightInfinite =
-			element_borderRight.value === 'Infinity' || element_borderRight.value == 'null';
-		const bottomInfinite =
-			element_borderBottom.value === '-Infinity' || element_borderBottom.value == 'null';
-		const topInfinite =
-			element_borderTop.value === 'Infinity' || element_borderTop.value == 'null';
-		// At least one is set, so ALL must be valid integers, and must be ascending
-		const leftValid = leftInfinite || integerRegex.test(element_borderLeft.value);
+		// Must be valid integers or empty, and must be ascending
+		// Empty represents Infinity or -Infinity
+		const leftValid = !element_borderLeft.value || integerRegex.test(element_borderLeft.value);
 		const rightValid =
-			rightInfinite ||
+			!element_borderRight.value ||
 			(integerRegex.test(element_borderRight.value) &&
 				(!leftValid ||
-					leftInfinite ||
+					!element_borderLeft.value ||
 					BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value)));
-		const bottomValid = bottomInfinite || integerRegex.test(element_borderBottom.value);
+		const bottomValid =
+			!element_borderBottom.value || integerRegex.test(element_borderBottom.value);
 		const topValid =
-			topInfinite ||
+			!element_borderTop.value ||
 			(integerRegex.test(element_borderTop.value) &&
 				(!bottomValid ||
-					bottomInfinite ||
+					!element_borderBottom.value ||
 					BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value)));
 
 		if (leftValid && rightValid && bottomValid && topValid) {
 			borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
 			worldBorder = {
-				left: leftInfinite ? null : BigInt(element_borderLeft.value),
-				right: rightInfinite ? null : BigInt(element_borderRight.value),
-				bottom: bottomInfinite ? null : BigInt(element_borderBottom.value),
-				top: topInfinite ? null : BigInt(element_borderTop.value),
+				left: element_borderLeft.value ? BigInt(element_borderLeft.value) : null,
+				right: element_borderRight.value ? BigInt(element_borderRight.value) : null,
+				bottom: element_borderBottom.value ? BigInt(element_borderBottom.value) : null,
+				top: element_borderTop.value ? BigInt(element_borderTop.value) : null,
 			};
 		} else {
 			// Invalid: Either partial data or non-integer data or invalid ranges
@@ -418,10 +412,10 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 
 	// World Border
 	if (gamerulesGUIinfo.worldBorder !== undefined) {
-		element_borderLeft.value = String(gamerulesGUIinfo.worldBorder.left);
-		element_borderRight.value = String(gamerulesGUIinfo.worldBorder.right);
-		element_borderBottom.value = String(gamerulesGUIinfo.worldBorder.bottom);
-		element_borderTop.value = String(gamerulesGUIinfo.worldBorder.top);
+		element_borderLeft.value = String(gamerulesGUIinfo.worldBorder.left ?? '');
+		element_borderRight.value = String(gamerulesGUIinfo.worldBorder.right ?? '');
+		element_borderBottom.value = String(gamerulesGUIinfo.worldBorder.bottom ?? '');
+		element_borderTop.value = String(gamerulesGUIinfo.worldBorder.top ?? '');
 	} else {
 		element_borderLeft.value = '';
 		element_borderRight.value = '';
