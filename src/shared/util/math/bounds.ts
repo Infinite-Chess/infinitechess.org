@@ -24,8 +24,10 @@ interface BoundingBox {
 	top: bigint;
 }
 
-/** A variant of {@link BoundingBox} that can be unbounded in one or more directions.
- * `null` is used as a placeholder for -infinity or infinity. */
+/**
+ * A {@link BoundingBox} that may be unbounded in one or more directions.
+ * `null` is used as a placeholder for -infinity or infinity.
+ */
 interface UnboundedRectangle {
 	/** The x-coordinate of the left side of the box. */
 	left: bigint | null;

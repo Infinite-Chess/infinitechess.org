@@ -398,6 +398,7 @@ const promotionsRegex = new RegExp(
 /**
  * Matches the world border segment in ICN: 'left,right,bottom,top'
  * Example: '-7,16,-7,16'
+ * `_` can be used to represent infinity.
  */
 const worldBorderRegex = new RegExp(
 	String.raw`(?<worldBorder>${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource})${whiteSpaceOrEnd}`,
