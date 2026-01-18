@@ -26,7 +26,7 @@ import type { GameRules } from '../../variants/gamerules.js';
 import type { MetaData } from '../../util/metadata.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
 import type { BaseRay } from '../../../util/math/geometry.js';
-import { BoundingBox } from '../../../util/math/bounds.js';
+import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 
 // Type Definitions -------------------------------------------------------------------
 
@@ -263,6 +263,7 @@ const possessive = (() => {
 const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
 const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
 const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
+const unboundedIntegerSource = String.raw`(?:_|${integerSource})`; // Allows _ as a placeholder for infinity
 
 const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
 
@@ -397,9 +398,10 @@ const promotionsRegex = new RegExp(
 /**
  * Matches the world border segment in ICN: 'left,right,bottom,top'
  * Example: '-7,16,-7,16'
+ * `_` can be used to represent infinity.
  */
 const worldBorderRegex = new RegExp(
-	String.raw`(?<worldBorder>${integerSource},${integerSource},${integerSource},${integerSource})${whiteSpaceOrEnd}`,
+	String.raw`(?<worldBorder>${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource})${whiteSpaceOrEnd}`,
 	'y',
 );
 
@@ -706,7 +708,7 @@ function LongToShort_Format(
 	// World Border
 	if (longformat.gameRules.worldBorder) {
 		const { left, right, bottom, top } = longformat.gameRules.worldBorder;
-		positionSegments.push(`${left},${right},${bottom},${top}`);
+		positionSegments.push(`${left ?? '_'},${right ?? '_'},${bottom ?? '_'},${top ?? '_'}`);
 	}
 
 	// Win conditions
@@ -814,7 +816,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let promotionRanks: PlayerGroup<bigint[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
-	let worldBorder: BoundingBox | undefined;
+	let worldBorder: UnboundedRectangle | undefined;
 	let presetSquares: Coords[] | undefined;
 	let presetRays: BaseRay[] | undefined;
 	let position: Map<CoordsKey, number> | undefined;
@@ -984,7 +986,12 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	if (borderResult) {
 		const [left, right, bottom, top] = borderResult
 			.groups!['worldBorder']!.split(',')
-			.map(BigInt) as [bigint, bigint, bigint, bigint];
+			.map((value) => (value === '_' ? null : BigInt(value))) as [
+			bigint | null,
+			bigint | null,
+			bigint | null,
+			bigint | null,
+		];
 		worldBorder = { left, right, bottom, top };
 
 		lastIndex = worldBorderRegex.lastIndex; // Update the ICN index being observed

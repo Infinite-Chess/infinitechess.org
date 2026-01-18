@@ -257,7 +257,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	// Make sure the start and end world points don't overflow to Infinity.
 	// To resolve this, we are going to cap the start and end world points to the view distance.
 
-	const viewBox: DoubleBoundingBox = camera.getPerspecticeScreenBox(); // World space view box
+	const viewBox: DoubleBoundingBox = camera.getPerspectiveScreenBox(); // World space view box
 	// Convert to squares
 	const boardPos: BDCoords = boardpos.getBoardPos();
 	const boardScale: BigDecimal = boardpos.getBoardScale();

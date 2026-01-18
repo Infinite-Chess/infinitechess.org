@@ -11,7 +11,7 @@ import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
 import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 import type { Edit } from './boardeditor';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
-import type { BoundingBox } from '../../../../../shared/util/math/bounds';
+import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 
 import typeutil, { players, rawTypes } from '../../../../../shared/chess/util/typeutil';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
@@ -43,7 +43,7 @@ interface GameRulesGUIinfo {
 	pawnDoublePush?: boolean;
 	castling?: boolean;
 	winConditions: string[];
-	worldBorder?: BoundingBox;
+	worldBorder?: UnboundedRectangle;
 }
 
 // Constants -------------------------------------------------------------
@@ -322,7 +322,7 @@ function updateGamefileProperties(
 	enpassantCoords: Coords | undefined,
 	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
 	playerToMove: 'white' | 'black',
-	worldBorder: BoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 ): void {
 	const gamefile = gameslot.getGamefile()!;
 
