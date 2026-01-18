@@ -36,7 +36,9 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	const cap = 1_000_000_000_000_000_000n; // About 10% the max, for cushion
 	if (
 		!variantOptions.gameRules.worldBorder ||
-		Object.values(variantOptions.gameRules.worldBorder).some((dist) => bimath.abs(dist) > cap)
+		Object.values(variantOptions.gameRules.worldBorder).some(
+			(dist) => dist === null || bimath.abs(dist) > cap,
+		)
 	) {
 		return {
 			supported: false,
