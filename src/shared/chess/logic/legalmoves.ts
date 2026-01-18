@@ -429,7 +429,7 @@ function slide_CalcLegalLimit(
 	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
-	enforceWorldBorderOnSlideLimit(boardsim, worldBorder, limit, coords, step); // Mutating
+	enforceWorldBorderOnSlideLimit(worldBorder, limit, coords, step); // Mutating
 	// else console.error("No world border set, skipping world border slide limit check.");
 
 	// Iterate through all pieces on same line
@@ -474,63 +474,43 @@ function slide_CalcLegalLimit(
 
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(
-	boardsim: Board,
 	worldBorder: UnboundedRectangle | undefined,
 	limit: SlideLimits,
 	coords: Coords,
 	step: Vec2,
 ): void {
-	if (worldBorder === undefined) return; // No world border, skip
+	if (!worldBorder) return; // No world border, skip
 
 	if (!bounds.boxContainsSquare(worldBorder, coords)) {
-		throw Error('Piece outside world border!');
+		console.warn('Piece outside world border.'); // Doesn't crash game, but does yield strange legal move results.
 	}
 
-	if (worldBorder.left !== null && step[0]) {
-		const stepsToIntersect = (worldBorder.left - coords[0]) / step[0];
-		if (step[0] < 0) {
-			// Moving toward left border
+	// Helper to apply logic for a single border
+	const checkBound = (border: bigint | null, axis: 0 | 1, isMaxBound: boolean): void => {
+		const axisStep = step[axis];
+		if (border === null || axisStep === 0n) return;
+
+		// Takes advantage that bigints truncate towards zero when dividing.
+		// The result is how many steps it would take to reach the border, but not exceed it.
+		const stepsToIntersect = (border - coords[axis]) / axisStep;
+		const movingTowards = isMaxBound ? axisStep > 0 : axisStep < 0;
+
+		if (movingTowards) {
 			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
 		} else {
-			// Moving away from left border
 			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
 		}
-	}
+	};
 
-	if (worldBorder.right !== null && step[0]) {
-		const stepsToIntersect = (worldBorder.right - coords[0]) / step[0];
-		if (step[0] > 0) {
-			// Moving toward right border
-			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
-		} else {
-			// Moving away from right border
-			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
-		}
-	}
+	// X Axis
+	checkBound(worldBorder.left, 0, false); // Min bound
+	checkBound(worldBorder.right, 0, true); // Max bound
 
-	if (worldBorder.bottom !== null && step[1]) {
-		const stepsToIntersect = (worldBorder.bottom - coords[1]) / step[1];
-		if (step[1] < 0) {
-			// Moving toward bottom border
-			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
-		} else {
-			// Moving away from bottom border
-			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
-		}
-	}
+	// Y Axis
+	checkBound(worldBorder.bottom, 1, false); // Min bound
+	checkBound(worldBorder.top, 1, true); // Max bound
 
-	if (worldBorder.top !== null && step[1]) {
-		const stepsToIntersect = (worldBorder.top - coords[1]) / step[1];
-		if (step[1] > 0) {
-			// Moving toward top border
-			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
-		} else {
-			// Moving away from top border
-			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
-		}
-	}
-
-	// console.log("New limit after blocked by world border:", limit);
+	// console.log('New limit for step ', step, 'after blocked by world border:', limit);
 }
 
 /**
