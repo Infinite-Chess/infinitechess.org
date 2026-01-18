@@ -6,12 +6,30 @@
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
  */
 
+import jsutil from '../../../../shared/util/jsutil.js';
+
+/** An entry in IndexedDB storage */
+interface Entry {
+	/** The actual value of the entry */
+	value: any;
+	/** The timestamp the entry will become stale, at which point it should be deleted. */
+	expires: number;
+}
+
 const DB_NAME = 'infinitechess';
 const DB_VERSION = 1;
 const STORE_NAME = 'entries';
 
+/** For debugging. This prints to the console all save and delete operations. */
+const printSavesAndDeletes = false;
+
+const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24; // 24 hours
+
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
+
+// Do this on load every time
+eraseExpiredItems();
 
 /**
  * Initializes the IndexedDB database.
@@ -102,10 +120,18 @@ async function withWrite<R>(op: (_store: IDBObjectStore) => IDBRequest<R>): Prom
  * Saves an item in browser IndexedDB storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
+ * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
  * @returns A promise that resolves when the item is saved
  */
-async function saveItem<T>(key: string, value: T): Promise<void> {
-	return withWrite((store) => store.put(value, key));
+async function saveItem<T>(
+	key: string,
+	value: T,
+	expiryMillis: number = defaultExpiryTimeMillis,
+): Promise<void> {
+	if (printSavesAndDeletes) console.log(`Saving key to IndexedDB: ${key}`);
+	const timeExpires = Date.now() + expiryMillis;
+	const save: Entry = { value, expires: timeExpires };
+	return withWrite((store) => store.put(save, key));
 }
 
 /**
@@ -114,7 +140,26 @@ async function saveItem<T>(key: string, value: T): Promise<void> {
  * @returns A promise that resolves to the entry value, or undefined if not found
  */
 async function loadItem<T>(key: string): Promise<T | undefined> {
-	return withRead<T | undefined>((store) => store.get(key));
+	const save = await withRead<Entry | undefined>((store) => store.get(key));
+	if (save === undefined) return undefined;
+
+	// Check if the item is in the expected format
+	if (save.expires === undefined) {
+		console.log(
+			`IndexedDB item was in an old format. Deleting it! Key: ${key}, Value: ${JSON.stringify(save, jsutil.stringifyReplacer)}`,
+		);
+		await deleteItem(key);
+		return undefined;
+	}
+
+	// Check if the item has expired
+	if (hasItemExpired(save)) {
+		await deleteItem(key);
+		return undefined;
+	}
+
+	// Not expired...
+	return save.value as T;
 }
 
 /**
@@ -123,7 +168,33 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
  * @returns A promise that resolves when the item is deleted
  */
 async function deleteItem(key: string): Promise<void> {
+	if (printSavesAndDeletes) console.log(`Deleting IndexedDB item with key '${key}!'`);
 	return withWrite((store) => store.delete(key));
+}
+
+/**
+ * Checks if an entry has expired
+ * @param save - The entry to check
+ * @returns True if the entry has expired
+ */
+function hasItemExpired(save: Entry): boolean {
+	return Date.now() >= save.expires;
+}
+
+/**
+ * Erases all expired items from IndexedDB storage
+ * @returns A promise that resolves when all expired items are deleted
+ */
+async function eraseExpiredItems(): Promise<void> {
+	try {
+		const keys = await getAllKeys();
+
+		// Load each item, which will auto-delete expired items
+		await Promise.all(keys.map((key) => loadItem(key)));
+	} catch (error) {
+		// Silently fail if IndexedDB is not available during initialization
+		// This can happen during the initial page load before IndexedDB is ready
+	}
 }
 
 /**
@@ -161,6 +232,7 @@ export default {
 	loadItem,
 	deleteItem,
 	getAllKeys,
+	eraseExpiredItems,
 	eraseAll,
 	resetDBInstance,
 };

@@ -11,7 +11,7 @@ import websocket from '../websocket.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import localstorage from '../../util/localstorage.js';
+import indexeddb from '../../util/indexeddb.js';
 import enginegame from '../misc/enginegame.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
@@ -111,7 +111,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 
 	// console.log(jsutil.deepCopyObject(longformOut));
 
-	pasteGame(longformOut);
+	await pasteGame(longformOut);
 
 	// Let the server know if we pasted a custom position in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
@@ -146,7 +146,7 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
  * @param longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  * @returns Whether the paste was successful
  */
-function pasteGame(longformOut: LongFormatOut): void {
+async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 	console.log(translations['copypaste'].pasting_game);
 
 	// Create a new gamefile from the longformat...
@@ -195,8 +195,8 @@ function pasteGame(longformOut: LongFormatOut): void {
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();
 		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
-		const expiryMillis = timeutil.getTotalMilliseconds({ days: 1 });
-		localstorage.saveItem(storageKey, variantOptions, expiryMillis);
+		const expiryMillis = timeutil.getTotalMilliseconds({ days: 3 });
+		await indexeddb.saveItem(storageKey, variantOptions, expiryMillis);
 	}
 
 	// What is the warning message if pasting in a private match?
