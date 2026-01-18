@@ -32,15 +32,13 @@ const CLEANUP_INTERVAL = 1000 * 60 * 60; // Clean up at most once per hour
 
 // Clean up expired items on load, but only if it hasn't been done recently
 // This runs in the background and doesn't block initialization
-if (Date.now() - lastCleanupTime > CLEANUP_INTERVAL) {
-	eraseExpiredItems()
-		.then(() => {
-			lastCleanupTime = Date.now();
-		})
-		.catch(() => {
-			// Silently ignore errors during initialization cleanup
-			// This can fail if IndexedDB is not available yet
-		});
+const timeSinceLastCleanup = Date.now() - lastCleanupTime;
+if (timeSinceLastCleanup > CLEANUP_INTERVAL) {
+	lastCleanupTime = Date.now(); // Update timestamp before starting cleanup
+	eraseExpiredItems().catch(() => {
+		// Silently ignore errors during initialization cleanup
+		// This can fail if IndexedDB is not available yet
+	});
 }
 
 /**
@@ -157,7 +155,7 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
 
 	// Check if the item is in the expected format
 	if (save.expires === undefined) {
-		console.log(`IndexedDB item '${key}' was in an old format. Deleting it.`);
+		console.log('IndexedDB item found in old format. Deleting it.');
 		await deleteItem(key);
 		return undefined;
 	}
