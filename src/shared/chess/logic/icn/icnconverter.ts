@@ -26,7 +26,7 @@ import type { GameRules } from '../../variants/gamerules.js';
 import type { MetaData } from '../../util/metadata.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
 import type { BaseRay } from '../../../util/math/geometry.js';
-import { UnboundedRectangle } from '../../../util/math/bounds.js';
+import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 
 // Type Definitions -------------------------------------------------------------------
 
@@ -263,7 +263,7 @@ const possessive = (() => {
 const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
 const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
 const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
-const unboundedIntegerSource = String.raw`(?:_|${integerSource})`; // Allows null
+const unboundedIntegerSource = String.raw`(?:_|${integerSource})`; // Allows _ as a placeholder for infinity
 
 const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
 
