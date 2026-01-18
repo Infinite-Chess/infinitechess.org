@@ -191,7 +191,7 @@ async function eraseExpiredItems(): Promise<void> {
 
 		// Load each item, which will auto-delete expired items
 		await Promise.all(keys.map((key) => loadItem(key)));
-	} catch (error) {
+	} catch (_error) {
 		// Silently fail if IndexedDB is not available during initialization
 		// This can happen during the initial page load before IndexedDB is ready
 	}
