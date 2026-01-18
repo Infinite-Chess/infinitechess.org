@@ -6,8 +6,6 @@
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
  */
 
-import jsutil from '../../../../shared/util/jsutil.js';
-
 /** An entry in IndexedDB storage */
 interface Entry {
 	/** The actual value of the entry */
@@ -28,11 +26,22 @@ const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24; // 24 hours
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
 
-// Clean up expired items on load, but don't block initialization
-eraseExpiredItems().catch(() => {
-	// Silently ignore errors during initialization cleanup
-	// This can fail if IndexedDB is not available yet
-});
+/** Track when we last cleaned up expired items to avoid doing it too frequently */
+let lastCleanupTime = 0;
+const CLEANUP_INTERVAL = 1000 * 60 * 60; // Clean up at most once per hour
+
+// Clean up expired items on load, but only if it hasn't been done recently
+// This runs in the background and doesn't block initialization
+if (Date.now() - lastCleanupTime > CLEANUP_INTERVAL) {
+	eraseExpiredItems()
+		.then(() => {
+			lastCleanupTime = Date.now();
+		})
+		.catch(() => {
+			// Silently ignore errors during initialization cleanup
+			// This can fail if IndexedDB is not available yet
+		});
+}
 
 /**
  * Initializes the IndexedDB database.
@@ -148,9 +157,7 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
 
 	// Check if the item is in the expected format
 	if (save.expires === undefined) {
-		console.log(
-			`IndexedDB item was in an old format. Deleting it! Key: ${key}, Value: ${JSON.stringify(save, jsutil.stringifyReplacer)}`,
-		);
+		console.log(`IndexedDB item '${key}' was in an old format. Deleting it.`);
 		await deleteItem(key);
 		return undefined;
 	}
@@ -186,14 +193,52 @@ function hasItemExpired(save: Entry): boolean {
 
 /**
  * Erases all expired items from IndexedDB storage
+ * More efficient implementation that checks expiry without loading full values
  * @returns A promise that resolves when all expired items are deleted
  */
 async function eraseExpiredItems(): Promise<void> {
 	try {
-		const keys = await getAllKeys();
+		const db = await initDB();
+		const now = Date.now();
+		const keysToDelete: string[] = [];
 
-		// Load each item, which will auto-delete expired items
-		await Promise.all(keys.map((key) => loadItem(key)));
+		// Use a cursor to iterate through entries and check expiry without deserializing values
+		await new Promise<void>((resolve, reject) => {
+			const tx = db.transaction([STORE_NAME], 'readonly');
+			const store = tx.objectStore(STORE_NAME);
+			const request = store.openCursor();
+
+			request.onsuccess = () => {
+				const cursor = request.result;
+				if (cursor) {
+					const entry = cursor.value as Entry;
+					// Check if entry has expired or is in old format
+					if (entry.expires === undefined || now >= entry.expires) {
+						keysToDelete.push(cursor.key as string);
+					}
+					cursor.continue();
+				}
+			};
+
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+			request.onerror = () => reject(request.error || new Error('Request error'));
+		});
+
+		// Delete all expired items in a single transaction
+		if (keysToDelete.length > 0) {
+			await new Promise<void>((resolve, reject) => {
+				const tx = db.transaction([STORE_NAME], 'readwrite');
+				const store = tx.objectStore(STORE_NAME);
+
+				for (const key of keysToDelete) {
+					store.delete(key);
+				}
+
+				tx.oncomplete = () => resolve();
+				tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+			});
+		}
 	} catch (_error) {
 		// This can fail during initialization if IndexedDB is not yet ready.
 		// We silently ignore these errors as they're not critical - expired items
