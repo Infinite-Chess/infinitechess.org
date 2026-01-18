@@ -484,16 +484,52 @@ function enforceWorldBorderOnSlideLimit(
 	if (worldBorder === undefined) return; // No world border, skip
 
 	if (!bounds.boxContainsSquare(worldBorder, coords)) {
-		limit[0] = 0n;
-		limit[1] = 0n;
-		return;
-		// To do: Panic unless we are using the board editor
-		//throw Error('Piece outside world border!');
+		throw Error('Piece outside world border!');
 	}
 
-	const worldBorderCollisions = geometry.rayStepsUntilRectangle(coords, step, worldBorder);
-	bounds.reduceIntervalToExclude(limit, worldBorderCollisions[0], 0);
-	bounds.reduceIntervalToExclude(limit, worldBorderCollisions[1], 1);
+	if (worldBorder.left !== null && step[0]) {
+		const stepsToIntersect = (worldBorder.left - coords[0]) / step[0];
+		if (step[0] < 0) {
+			// Moving toward left border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from left border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
+
+	if (worldBorder.right !== null && step[0]) {
+		const stepsToIntersect = (worldBorder.right - coords[0]) / step[0];
+		if (step[0] > 0) {
+			// Moving toward right border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from right border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
+
+	if (worldBorder.bottom !== null && step[1]) {
+		const stepsToIntersect = (worldBorder.bottom - coords[1]) / step[1];
+		if (step[1] < 0) {
+			// Moving toward bottom border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from bottom border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
+
+	if (worldBorder.top !== null && step[1]) {
+		const stepsToIntersect = (worldBorder.top - coords[1]) / step[1];
+		if (step[1] > 0) {
+			// Moving toward top border
+			if (limit[1] === null || stepsToIntersect < limit[1]) limit[1] = stepsToIntersect;
+		} else {
+			// Moving away from top border
+			if (limit[0] === null || stepsToIntersect > limit[0]) limit[0] = stepsToIntersect;
+		}
+	}
 
 	// console.log("New limit after blocked by world border:", limit);
 }

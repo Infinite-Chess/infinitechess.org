@@ -257,22 +257,6 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 	return [bd.divide(xSum, TWO), bd.divide(ySum, TWO)];
 }
 
-/** Mutates an open interval to exclue value */
-function reduceIntervalToExclude(
-	interval: [bigint | null, bigint | null],
-	value: bigint | null,
-	decreaseUpperBound: 0 | 1 | boolean,
-): void {
-	if (value === null) return; // intervals never include infinity
-	if (decreaseUpperBound) {
-		// Decrease upper bound
-		if (interval[1] === null || interval[1] > value) interval[1] = value;
-	} else {
-		// Increase lower bound
-		if (interval[0] === null || interval[0] < value) interval[0] = value;
-	}
-}
-
 // Debugging --------------------------------------------------------
 
 /** [DEBUG] Prints a box of BigDecimal floating point edges, with their exact representations. SLOW. */
@@ -305,9 +289,6 @@ export default {
 	boxContainsSquareBD,
 	boxContainsSquareDouble,
 	calcCenterOfBoundingBox,
-
-	// 2D operations
-	reduceIntervalToExclude,
 
 	// Debugging
 	printBDBox,
