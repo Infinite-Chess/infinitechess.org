@@ -9,7 +9,6 @@ import coordutil from '../util/coordutil.js';
 import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
-import geometry from '../../util/math/geometry.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 
