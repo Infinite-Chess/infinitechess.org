@@ -28,8 +28,11 @@ const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24; // 24 hours
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
 
-// Do this on load every time
-eraseExpiredItems();
+// Clean up expired items on load, but don't block initialization
+eraseExpiredItems().catch(() => {
+	// Silently ignore errors during initialization cleanup
+	// This can fail if IndexedDB is not available yet
+});
 
 /**
  * Initializes the IndexedDB database.
@@ -192,8 +195,9 @@ async function eraseExpiredItems(): Promise<void> {
 		// Load each item, which will auto-delete expired items
 		await Promise.all(keys.map((key) => loadItem(key)));
 	} catch (_error) {
-		// Silently fail if IndexedDB is not available during initialization
-		// This can happen during the initial page load before IndexedDB is ready
+		// This can fail during initialization if IndexedDB is not yet ready.
+		// We silently ignore these errors as they're not critical - expired items
+		// will be cleaned up on next successful load or when items are accessed.
 	}
 }
 
