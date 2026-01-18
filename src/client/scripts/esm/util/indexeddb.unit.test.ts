@@ -111,4 +111,80 @@ describe('IndexedDB storage functional behavior', () => {
 		// New open should yield empty store
 		expect(await indexeddb.getAllKeys()).toEqual([]);
 	});
+
+	it('saves an item with custom expiry time', async () => {
+		const expiryMillis = 10000; // 10 seconds
+		await indexeddb.saveItem('k', 'value', expiryMillis);
+		const value = await indexeddb.loadItem<string>('k');
+		expect(value).toBe('value');
+	});
+
+	it('auto-deletes expired items on load', async () => {
+		const shortExpiry = 1; // 1 millisecond
+		await indexeddb.saveItem('expiring', 'test', shortExpiry);
+
+		// Wait for expiry
+		await new Promise((resolve) => setTimeout(resolve, 10));
+
+		const value = await indexeddb.loadItem('expiring');
+		expect(value).toBeUndefined();
+
+		// Verify the key was actually deleted
+		const keys = await indexeddb.getAllKeys();
+		expect(keys).not.toContain('expiring');
+	});
+
+	it('eraseExpiredItems removes only expired items', async () => {
+		const shortExpiry = 1; // 1 millisecond
+		const longExpiry = 60000; // 60 seconds
+
+		await indexeddb.saveItem('expired1', 'test1', shortExpiry);
+		await indexeddb.saveItem('expired2', 'test2', shortExpiry);
+		await indexeddb.saveItem('valid', 'test3', longExpiry);
+
+		// Wait for short-lived items to expire
+		await new Promise((resolve) => setTimeout(resolve, 10));
+
+		await indexeddb.eraseExpiredItems();
+
+		const keys = await indexeddb.getAllKeys();
+		expect(keys).toEqual(['valid']);
+
+		const validValue = await indexeddb.loadItem('valid');
+		expect(validValue).toBe('test3');
+	});
+
+	it('handles items saved without expiry (old format)', async () => {
+		// First save an item normally to ensure DB is initialized
+		await indexeddb.saveItem('temp', 'temp');
+
+		// Manually save an item in the old format (without expiry) by directly accessing IDB
+		await new Promise<void>((resolve, reject) => {
+			const request = (globalThis as any).indexedDB.open('infinitechess', 1);
+			request.onsuccess = () => {
+				const db = request.result;
+				const tx = db.transaction(['entries'], 'readwrite');
+				const store = tx.objectStore('entries');
+				// Save old format: just the value, no wrapper object
+				store.put('old-value', 'old-key');
+				tx.oncomplete = () => {
+					db.close();
+					resolve();
+				};
+				tx.onerror = () => reject(tx.error);
+			};
+			request.onerror = () => reject(request.error);
+		});
+
+		// Reset to get fresh connection
+		indexeddb.resetDBInstance();
+
+		// Try to load it - should return undefined and delete the item
+		const value = await indexeddb.loadItem('old-key');
+		expect(value).toBeUndefined();
+
+		// Verify it was deleted
+		const keys = await indexeddb.getAllKeys();
+		expect(keys).not.toContain('old-key');
+	});
 });
