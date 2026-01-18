@@ -43,47 +43,47 @@
                 </div>
                 <h2><%=t('index.what_is_it_title')%></h2>
                 <p><%-t('index.what_is_it_pargaraphs', { joinArrays: '</p><p>' })%></p>
-                    <h3><%=t('index.how_to_title')%></h3>
-                    <p><%=t('index.how_to_paragraph.0')%><a href='/play?lng=<%= language %>'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
-                    
-                    <br>
-                    <h3 class="center"><%=t('index.about_title')%></h3>
-                    <!-- <h3>About the Project</h3> -->
-                    <p><%=t('index.about_paragraphs.0')%></p>
-                    <p><%=t('index.about_paragraphs.1.0')%><a target='_blank' href='https://www.patreon.com/Naviary'><%=t('index.about_paragraphs.1.1')%></a><%=t('index.about_paragraphs.1.2')%></p>
+                <h3><%=t('index.how_to_title')%></h3>
+                <p><%=t('index.how_to_paragraph.0')%><a href='/play?lng=<%= language %>'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
+                
+                <br>
+                <h3 class="center"><%=t('index.about_title')%></h3>
+                <!-- <h3>About the Project</h3> -->
+                <p><%=t('index.about_paragraphs.0')%></p>
+                <p><%=t('index.about_paragraphs.1.0')%><a target='_blank' href='https://www.patreon.com/Naviary'><%=t('index.about_paragraphs.1.1')%></a><%=t('index.about_paragraphs.1.2')%></p>
 
-                    <br>
-                    <h3 class="center"><%=t('index.patreon_title')%></h3>
-                    <div class="patreon-container">
-                        <p>Andreas</p>
-                        <p>Mauer01</p>
-                        <p>Meni Rosenfeld</p>
-                        <p>Uncle Dave</p>
-                        <p><spam class="IM">IM</spam> Luke Harmon-Vellotti</p>
-                        <p>KnightBeforeLast</p> <!-- Poryhedron -->
-                        <p>Marillia</p>
-                        <p>Elliot Glazer</p>
-                        <p>AbyssalCryptid</p>
-                        <p>Marsgreekgod</p>
-                        <p>Or Ben Naim</p>
-                    </div>
-                    <div class="patreon-container">
-                        <p>EmmaBellHelium</p>
-                        <p>Mark Wiemer</p>
-                        <p>Tommy Nordman</p>
-                        <p>Joe & Rafi Moed</p> <!-- Joe Moed-->
-                    </div>
-                    <h3 class="center"><%=t('index.github_title')%></h3>
-                    <div class="github-container">
-                        <!-- Example contributor, appended by javascript -->
-                        <!-- <a href="https://github.com/Naviary2">
-                            <img src="https://avatars.githubusercontent.com/u/163621561?v=4">
-                            <div class="github-stats">
-                                <p class="name">Naviary2</p>
-                                <p class="contribution-count">1568 contributions</p>
-                            </div>
-                        </a> -->
-                    </div>
+                <br>
+                <h3 class="center"><%=t('index.patreon_title')%></h3>
+                <div class="patreon-container">
+                    <p>Andreas</p>
+                    <p>Mauer01</p>
+                    <p>Meni Rosenfeld</p>
+                    <p>Uncle Dave</p>
+                    <p><spam class="IM">IM</spam> Luke Harmon-Vellotti</p>
+                    <p>KnightBeforeLast</p> <!-- Poryhedron -->
+                    <p>Marillia</p>
+                    <p>Elliot Glazer</p>
+                    <p>AbyssalCryptid</p>
+                    <p>Marsgreekgod</p>
+                    <p>Or Ben Naim</p>
+                </div>
+                <div class="patreon-container">
+                    <p>EmmaBellHelium</p>
+                    <p>Mark Wiemer</p>
+                    <p>Tommy Nordman</p>
+                    <p>Joe & Rafi Moed</p> <!-- Joe Moed-->
+                </div>
+                <h3 class="center"><%=t('index.github_title')%></h3>
+                <div class="github-container">
+                    <!-- Example contributor, appended by javascript -->
+                    <!-- <a href="https://github.com/Naviary2">
+                        <img src="https://avatars.githubusercontent.com/u/163621561?v=4">
+                        <div class="github-stats">
+                            <p class="name">Naviary2</p>
+                            <p class="contribution-count">1568 contributions</p>
+                        </div>
+                    </a> -->
+                </div>
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
