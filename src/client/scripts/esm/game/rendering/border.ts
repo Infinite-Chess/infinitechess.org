@@ -31,6 +31,7 @@ function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): vo
 
 	let worldBox: DoubleBoundingBox;
 	if (worldBorder) {
+		// 0n works because, below, if the sides are at infinity anyway, they get capped to the screen box. The intermediate worldBox makes no difference to the final result for those sides.
 		const worldBorderNotNull: BoundingBox = {
 			left: worldBorder.left ?? 0n,
 			right: worldBorder.right ?? 0n,
