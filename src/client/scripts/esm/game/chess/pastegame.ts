@@ -27,6 +27,7 @@ import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
@@ -194,7 +195,8 @@ function pasteGame(longformOut: LongFormatOut): void {
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();
 		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
-		localstorage.saveItem(storageKey, variantOptions);
+		const expiryMillis = timeutil.getTotalMilliseconds({ days: 1 });
+		localstorage.saveItem(storageKey, variantOptions, expiryMillis);
 	}
 
 	// What is the warning message if pasting in a private match?
