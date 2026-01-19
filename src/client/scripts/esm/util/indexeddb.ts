@@ -163,9 +163,7 @@ async function deleteItem(key: string): Promise<void> {
  */
 function hasItemExpired(save: Entry | any): boolean {
 	if (typeof save !== 'object' || save === null || save.expires === undefined) {
-		console.log(
-			`IndexedDB item was in an old format. Deleting it! Value: ${JSON.stringify(save)}}`,
-		);
+		console.log(`IndexedDB item was in an old format. Deleting it...`);
 		return true;
 	}
 	return Date.now() >= save.expires;
