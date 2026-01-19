@@ -23,6 +23,9 @@ const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24 * 365; // 1 year, since Inde
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
 
+// Do this on load every time
+eraseExpiredItems();
+
 /**
  * Initializes the IndexedDB database.
  * Returns a promise that resolves to the database instance.
