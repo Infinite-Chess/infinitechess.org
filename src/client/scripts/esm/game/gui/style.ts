@@ -45,7 +45,7 @@ function getElementIndexWithinItsParent(element: Element): number {
  */
 function getChildByIndexInParent(parent: Element, index: number): Element | null {
 	if (parent && parent.children && index >= 0 && index < parent.children.length) {
-		return parent.children[index];
+		return parent.children[index]!;
 	}
 	return null;
 }
