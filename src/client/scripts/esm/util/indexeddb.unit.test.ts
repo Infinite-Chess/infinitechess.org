@@ -161,11 +161,14 @@ describe('IndexedDB storage functional behavior', () => {
 
 		// Manually save an item in the old format (without expiry) by directly accessing IDB
 		await new Promise<void>((resolve, reject) => {
-			const request = (globalThis as any).indexedDB.open('infinitechess', 1);
+			const request = (globalThis as any).indexedDB.open(
+				indexeddb.DB_NAME,
+				indexeddb.DB_VERSION,
+			);
 			request.onsuccess = () => {
 				const db = request.result;
-				const tx = db.transaction(['entries'], 'readwrite');
-				const store = tx.objectStore('entries');
+				const tx = db.transaction([indexeddb.STORE_NAME], 'readwrite');
+				const store = tx.objectStore(indexeddb.STORE_NAME);
 				// Save old format: just the value, no wrapper object
 				store.put('old-value', 'old-key');
 				tx.oncomplete = () => {

@@ -170,7 +170,6 @@ function hasItemExpired(save: Entry | any): boolean {
 
 /**
  * Erases all expired items from IndexedDB storage
- * More efficient implementation that checks expiry without loading full values
  * @returns A promise that resolves when all expired items are deleted
  */
 async function eraseExpiredItems(): Promise<void> {
@@ -254,4 +253,8 @@ export default {
 	eraseExpiredItems,
 	eraseAll,
 	resetDBInstance,
+	// Testing constants
+	DB_NAME,
+	DB_VERSION,
+	STORE_NAME,
 };
