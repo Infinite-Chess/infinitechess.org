@@ -185,7 +185,7 @@ async function startOnlineGame(options: {
 	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: (await indexeddb.loadItem(storageKey)) as VariantOptions,
+		variantOptions: await indexeddb.loadItem<VariantOptions>(storageKey),
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
