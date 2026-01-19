@@ -6,6 +6,8 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
+import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
+import type { EditorAutosave } from '../../boardeditor/eautosave.js';
 
 // @ts-ignore
 import statustext from '../statustext.js';
@@ -21,6 +23,11 @@ import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
+import indexeddb from '../../../util/indexeddb.js';
+import timeutil from '../../../../../../shared/util/timeutil.js';
+import guistartlocalgame from './guistartlocalgame.js';
+import guistartenginegame from './guistartenginegame.js';
+import guifloatingwindow from './guifloatingwindow.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -118,7 +125,40 @@ async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
-	await gameloader.startBoardEditor();
+
+	const editorAutosave = await indexeddb.loadItem<EditorAutosave>('editor-autosave');
+	if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+		await gameloader.startBoardEditor();
+	else {
+		const metadata: MetaData = {
+			Variant: 'Classical',
+			TimeControl: '-',
+			Event: `Position created using ingame board editor`,
+			Site: 'https://www.infinitechess.org/',
+			Round: '-',
+			UTCDate: timeutil.getCurrentUTCDate(),
+			UTCTime: timeutil.getCurrentUTCTime(),
+		};
+
+		try {
+			await gameloader.startBoardEditorFromCustomPosition(
+				{
+					metadata,
+					additional: {
+						variantOptions: editorAutosave.variantOptions,
+					},
+				},
+				editorAutosave.pawnDoublePush,
+				editorAutosave.castling,
+			);
+		} catch (err) {
+			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
+			// then do not lock user out of board editor
+			console.error('Failed to load autosaved board editor position when opening it:', err);
+
+			await gameloader.startBoardEditor();
+		}
+	}
 	initListeners();
 }
 
@@ -129,8 +169,9 @@ function isOpen(): boolean {
 
 function close(): void {
 	if (!boardEditorOpen) return;
-	guigamerules.closeGameRules();
-	guigamerules.resetPositioning();
+
+	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning and contents of all floating windows
+
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
@@ -346,13 +387,13 @@ function callback_Action(e: Event): void {
 			eactions.load();
 			return;
 		case 'gamerules':
-			guigamerules.toggleGameRules();
+			guigamerules.toggle();
 			return;
 		case 'start-local-game':
-			handleStartLocalGame();
+			guistartlocalgame.toggle();
 			return;
 		case 'start-engine-game':
-			handleStartEngineGame();
+			guistartenginegame.toggle();
 			return;
 		// Selection (buttons that are always active)
 		case 'select-all':
@@ -408,31 +449,6 @@ function callback_ChangePieceType(e: Event): void {
 	drawingtool.setPiece(currentPieceType);
 	boardeditor.setTool('placer');
 	markPiece(currentPieceType);
-}
-
-/** Called when users click the "Start local game from position" button. */
-function handleStartLocalGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm(
-		'Do you want to leave the board editor and start a local game from this position? Changes will be saved.',
-	); // PLANNED to save changes
-	// Start the local game as requested
-	if (result) eactions.startLocalGame();
-}
-
-/** Called when users click the "Start engine game from position" button. */
-function handleStartEngineGame(): void {
-	// Show a dialog box to confirm they want to leave the editor
-	const result = confirm(
-		'Do you want to leave the board editor and start an engine game from this position? Changes will be saved.',
-	);
-
-	if (result) {
-		// Start the engine game as requested
-		// PLANNED to save changes...
-
-		eactions.startEngineGame();
-	}
 }
 
 /** Swaps the color of pieces being drawn. */

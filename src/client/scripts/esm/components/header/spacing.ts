@@ -1,8 +1,8 @@
 // Spacing: This script handles the spacing of our header elements at various screen widths
 
-const header = document.querySelector('header');
-const home = document.querySelector('.home'); // "Infinite Chess" text
-const nav = document.querySelector('nav');
+const header = document.querySelector('header')!;
+const home = document.querySelector('.home')!; // "Infinite Chess" text
+const nav = document.querySelector('nav')!;
 const links = document.querySelectorAll('nav a');
 // Paddings allowed between each of our header links (right of logo & left of gear)
 const maxPadding = parseInt(
@@ -22,7 +22,7 @@ let compactnessLevel = 0;
 updateSpacing(); // Initial spacing on page load
 window.addEventListener('resize', updateSpacing); // Continuous spacing on page-resizing
 
-function updateSpacing() {
+function updateSpacing(): void {
 	// Reset to least compact, so that we can measure if each stage fits.
 	// If it doesn't, we go down to the next compact stage
 	compactnessLevel = 0;
@@ -43,26 +43,28 @@ function updateSpacing() {
  * Updates the left-right padding of the navigation links (right of logo and left of gear)
  * according to how much space is available.
  */
-function updatePadding() {
+function updatePadding(): void {
 	const spaceBetween = getSpaceBetweenHeaderFlexElements();
 
 	// If the space is less than 100px, reduce padding gradually
 	if (spaceBetween >= 100) {
 		// Reset to max padding when space is larger than 100px
 		links.forEach((link) => {
+			if (!(link instanceof HTMLElement)) return;
 			link.style.paddingLeft = `${maxPadding}px`;
 			link.style.paddingRight = `${maxPadding}px`;
 		});
 	} else {
 		const newPadding = Math.max(minPadding, maxPadding * (spaceBetween / 100));
 		links.forEach((link) => {
+			if (!(link instanceof HTMLElement)) return;
 			link.style.paddingLeft = `${newPadding}px`;
 			link.style.paddingRight = `${newPadding}px`;
 		});
 	}
 }
 
-function updateMode() {
+function updateMode(): void {
 	if (compactnessLevel === 0) {
 		home.classList.remove('compact-1'); // Show the "Infinite Chess" text
 		nav.classList.remove('compact-2'); // Show the navigation SVGs
@@ -82,7 +84,7 @@ function updateMode() {
 	}
 }
 
-function getSpaceBetweenHeaderFlexElements() {
+function getSpaceBetweenHeaderFlexElements(): number {
 	const homeRight = home.getBoundingClientRect().right;
 	const navLeft = nav.getBoundingClientRect().left;
 	return navLeft - homeRight;

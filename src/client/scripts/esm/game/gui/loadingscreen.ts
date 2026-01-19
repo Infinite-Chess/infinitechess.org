@@ -7,7 +7,6 @@
 import preferences from '../../components/header/preferences.js';
 import thread from '../../util/thread.js';
 import themes from '../../../../../shared/components/header/themes.js';
-// @ts-ignore
 import style from './style.js';
 
 const loadingScreen: HTMLElement = document.querySelector('.game-loading-screen') as HTMLElement;

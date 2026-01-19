@@ -1,17 +1,17 @@
-// src/client/scripts/esm/views/createaccount.js
+// src/client/scripts/esm/views/createaccount.ts
 
 // The script on the createaccount page
 
 import validators from '../../../../shared/util/validators.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
-const element_usernameInput = document.getElementById('username');
-const element_emailInput = document.getElementById('email');
-const element_passwordInput = document.getElementById('password');
-const element_submitButton = document.getElementById('submit');
+const element_usernameInput = document.getElementById('username') as HTMLInputElement;
+const element_emailInput = document.getElementById('email') as HTMLInputElement;
+const element_passwordInput = document.getElementById('password') as HTMLInputElement;
+const element_submitButton = document.getElementById('submit') as HTMLButtonElement;
 
 /** Default fetch options */
-const fetchOptions = {
+const fetchOptions: RequestInit = {
 	headers: {
 		'is-fetch-request': 'true', // Custom header
 	},
@@ -28,7 +28,7 @@ element_usernameInput.addEventListener('input', () => {
 	// Doesn't contain existing/reserved usernames.
 	// Doesn't contain profain words.
 
-	let usernameError = document.getElementById('usernameerror'); // Does an error already exist?
+	let usernameError = document.getElementById('usernameerror')!; // Does an error already exist?
 
 	const result = validators.validateUsername(element_usernameInput.value);
 
@@ -41,9 +41,9 @@ element_usernameInput.addEventListener('input', () => {
 			// Change input box to red outline
 			element_usernameInput.style.outline = 'solid 1px red';
 			// Reset variable because it now exists.
-			usernameError = document.getElementById('usernameerror');
+			usernameError = document.getElementById('usernameerror')!;
 		}
-		usernameError.textContent = translations[validators.getUsernameErrorTranslation(result)];
+		usernameError.textContent = translations[validators.getUsernameErrorTranslation(result)!];
 	} else if (usernameError) {
 		// No errors, delete that error element if it exists
 		usernameHasError = false;
@@ -71,7 +71,7 @@ element_usernameInput.addEventListener('focusout', () => {
 			// Change input box to red outline
 			element_usernameInput.style.outline = 'solid 1px red';
 			// Reset variable because it now exists.
-			const usernameError = document.getElementById('usernameerror');
+			const usernameError = document.getElementById('usernameerror')!;
 
 			// translate the message from the server if a translation is available
 			let result_message = result.reason;
@@ -100,9 +100,9 @@ element_emailInput.addEventListener('input', () => {
 			// Change input box to red outline
 			element_emailInput.style.outline = 'solid 1px red';
 			// Reset variable because it now exists.
-			emailError = document.getElementById('emailerror');
+			emailError = document.getElementById('emailerror')!;
 		}
-		emailError.textContent = translations[validators.getEmailErrorTranslation(result)];
+		emailError.textContent = translations[validators.getEmailErrorTranslation(result)!];
 	} else if (emailError) {
 		// No errors, delete that error element if it exists
 		emailHasError = false;
@@ -132,7 +132,7 @@ element_emailInput.addEventListener('focusout', () => {
 					element_emailInput.style.outline = 'solid 1px red';
 
 					// Reset variable because it now exists.
-					const emailError = document.getElementById('emailerror');
+					const emailError = document.getElementById('emailerror')!;
 
 					// The error message from the server is already language-localized
 					emailError.textContent = result.reason;
@@ -159,7 +159,7 @@ element_passwordInput.addEventListener('input', () => {
 			passwordError = createErrorElement('passworderror', 'password-input-line');
 			element_passwordInput.style.outline = 'solid 1px red';
 		}
-		passwordError.textContent = translations[validators.getPasswordErrorTranslation(result)];
+		passwordError.textContent = translations[validators.getPasswordErrorTranslation(result)!];
 	} else {
 		passwordHasError = false;
 		if (passwordError) {
@@ -189,19 +189,14 @@ element_submitButton.addEventListener('click', (event) => {
 		);
 });
 
-/**
- * Sends our form data to the createaccount route.
- * @param {string} username
- * @param {string} email
- * @param {string} password
- */
-function sendForm(username, email, password) {
+/** Sends our form data to the createaccount route. */
+function sendForm(username: string, email: string, password: string): void {
 	// Disable the button and set its class to unavailable immediately.
 	element_submitButton.disabled = true;
 	element_submitButton.className = 'unavailable';
 
 	let OK = false;
-	const config = {
+	const config: RequestInit = {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -238,19 +233,19 @@ function sendForm(username, email, password) {
 		});
 }
 
-function createErrorElement(id, insertAfter) {
+function createErrorElement(id: string, insertAfter: string): HTMLElement {
 	const errElement = document.createElement('div');
 	errElement.className = 'error';
 	errElement.id = id;
 	// The element now looks like this:
 	// <div class="error" id="usernameerror"></div>
-	document.getElementById(insertAfter).insertAdjacentElement('afterend', errElement);
+	document.getElementById(insertAfter)!.insertAdjacentElement('afterend', errElement);
 	return errElement; // Return the created element
 }
 
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
-function updateSubmitButton() {
+function updateSubmitButton(): void {
 	if (
 		usernameHasError ||
 		emailHasError ||

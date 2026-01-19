@@ -48,7 +48,7 @@ function gelement_iCodeCode() {
 
 function update() {
 	if (!guiplay.isOpen()) return; // Not on the play screen
-	if (loadbalancer.gisHibernating())
+	if (loadbalancer.areWeHibernating())
 		statustext.showStatus(translations.invites.move_mouse, false, 0.1);
 }
 
@@ -425,7 +425,7 @@ function doWeHave() {
 
 /** Subscribes to the invites list. We will receive updates
  * for incoming and deleted invites from other players.
- * @param {ignoreAlreadySubbed} *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
+ * @param {boolean} [ignoreAlreadySubbed] *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
  * */
 async function subscribeToInvites(ignoreAlreadySubbed) {
 	// Set to true when we are restarting the connection and need to resub to everything we were to before.

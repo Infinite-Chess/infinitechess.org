@@ -24,11 +24,11 @@ const annoteArrowColor = 'annoteArrowColor';
 const pieceTheme = 'pieceTheme';
 
 interface ThemeProperties {
-	[lightTiles]?: Color;
-	[darkTiles]?: Color;
-	[legalMovesHighlightColor_Friendly]?: Color;
-	[legalMovesHighlightColor_Opponent]?: Color;
-	[legalMovesHighlightColor_Premove]?: Color;
+	[lightTiles]: Color;
+	[darkTiles]: Color;
+	[legalMovesHighlightColor_Friendly]: Color;
+	[legalMovesHighlightColor_Opponent]: Color;
+	[legalMovesHighlightColor_Premove]: Color;
 	[lastMoveHighlightColor]?: Color;
 	[checkHighlightColor]?: Color;
 	[boxOutlineColor]?: Color;
@@ -41,7 +41,7 @@ interface ThemeProperties {
  * Fallback properties for a themes properties
  * to use if it doesn't have them present
  */
-const defaults: ThemeProperties = {
+const defaults: Partial<ThemeProperties> = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],

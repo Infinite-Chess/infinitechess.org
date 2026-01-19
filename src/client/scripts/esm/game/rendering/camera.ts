@@ -143,12 +143,12 @@ function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false):
  * Ignorant of debug mode.
  */
 function getRespectiveScreenBox(): DoubleBoundingBox {
-	if (perspective.getEnabled()) return getPerspecticeScreenBox();
+	if (perspective.getEnabled()) return getPerspectiveScreenBox();
 	else return getScreenBoundingBox(false, true);
 }
 
 /** Returns the world bounding box of the visible range when in perspective mode. */
-function getPerspecticeScreenBox(): DoubleBoundingBox {
+function getPerspectiveScreenBox(): DoubleBoundingBox {
 	const dist = perspective.distToRenderBoard;
 	return { left: -dist, right: dist, bottom: -dist, top: dist };
 }
@@ -187,7 +187,7 @@ function init(): void {
 	initFOV();
 	initMatrixes();
 	document.addEventListener('fov-change', () => onFOVChange());
-	document.addEventListener('canvas_resize', () => onScreenResize());
+	window.addEventListener('resize', () => onScreenResize());
 }
 
 // Inits the matrix uniforms: viewMatrix (camera) & projMatrix
@@ -221,6 +221,10 @@ function updateCanvasDimensions(): void {
 	gl.viewport(0, 0, canvas.width, canvas.height);
 
 	recalcCanvasVariables(); // Recalculate canvas-dependant variables
+
+	// Dispatch event to notify other application code of the new canvas dimensions
+	const detail = { width: canvas.width, height: canvas.height };
+	document.dispatchEvent(new CustomEvent('canvas_resize', { detail }));
 }
 
 function recalcCanvasVariables(): void {
@@ -358,7 +362,7 @@ export default {
 	getDebug,
 	getScreenBoundingBox,
 	getRespectiveScreenBox,
-	getPerspecticeScreenBox,
+	getPerspectiveScreenBox,
 	getScreenHeightWorld,
 	getViewMatrix,
 	setViewMatrix,
