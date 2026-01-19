@@ -21,7 +21,7 @@ const STORE_NAME = 'entries';
 /** For debugging. This prints to the console all save and delete operations. */
 const printSavesAndDeletes = false;
 
-const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24; // 24 hours
+const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24 * 365; // 1 year, since IndexedDB is for longer-term storage
 
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
