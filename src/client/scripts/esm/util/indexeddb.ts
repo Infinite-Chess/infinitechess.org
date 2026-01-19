@@ -134,14 +134,14 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
 	const save = await withRead<any>((store) => store.get(key));
 	if (save === undefined) return undefined;
 
-	// If it's in the new format with { value, expires }, return the value
-	// If it's in old format (just the raw value), return it directly
-	// Expiry checking is done by eraseExpiredItems()
-	if (save.expires !== undefined && save.value !== undefined) {
-		return save.value as T;
+	// Check if the item has expired or is in old format
+	if (hasItemExpired(save)) {
+		await deleteItem(key);
+		return undefined;
 	}
-	// Old format or raw value
-	return save as T;
+
+	// Not expired, return the value
+	return save.value as T;
 }
 
 /**

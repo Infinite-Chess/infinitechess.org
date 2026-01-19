@@ -119,25 +119,20 @@ describe('IndexedDB storage functional behavior', () => {
 		expect(value).toBe('value');
 	});
 
-	it('does not auto-delete expired items on load (that is done by eraseExpiredItems)', async () => {
+	it('auto-deletes expired items on load', async () => {
 		const shortExpiry = 1; // 1 millisecond
 		await indexeddb.saveItem('expiring', 'test', shortExpiry);
 
 		// Wait for expiry
 		await new Promise((resolve) => setTimeout(resolve, 10));
 
-		// loadItem should still return the value even if expired
+		// loadItem should delete the expired item and return undefined
 		const value = await indexeddb.loadItem('expiring');
-		expect(value).toBe('test');
+		expect(value).toBeUndefined();
 
-		// Key should still exist
+		// Key should be deleted
 		const keys = await indexeddb.getAllKeys();
-		expect(keys).toContain('expiring');
-
-		// But eraseExpiredItems should delete it
-		await indexeddb.eraseExpiredItems();
-		const keysAfterCleanup = await indexeddb.getAllKeys();
-		expect(keysAfterCleanup).not.toContain('expiring');
+		expect(keys).not.toContain('expiring');
 	});
 
 	it('eraseExpiredItems removes only expired items', async () => {
@@ -185,13 +180,11 @@ describe('IndexedDB storage functional behavior', () => {
 		// Reset to get fresh connection
 		indexeddb.resetDBInstance();
 
-		// loadItem should still return the value (doesn't check expiry)
+		// loadItem should delete the old format item and return undefined
 		const value = await indexeddb.loadItem('old-key');
-		expect(value).toBe('old-value');
+		expect(value).toBeUndefined();
 
-		// But eraseExpiredItems should detect and delete the old format item
-		await indexeddb.eraseExpiredItems();
-
+		// Verify it was deleted
 		const keys = await indexeddb.getAllKeys();
 		expect(keys).not.toContain('old-key');
 	});
