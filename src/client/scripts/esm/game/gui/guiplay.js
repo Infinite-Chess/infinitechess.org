@@ -140,7 +140,7 @@ function isOpen() {
 
 /**
  * Returns whether we've selected "online", "local", or a "computer" game.
- * @returns {boolean}
+ * @returns {string}
  */
 function getModeSelected() {
 	return modeSelected;

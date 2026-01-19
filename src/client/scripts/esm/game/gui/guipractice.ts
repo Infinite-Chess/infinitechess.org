@@ -11,7 +11,6 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-// @ts-ignore
 import style from './style.js';
 
 // Variables ----------------------------------------------------------------------------
