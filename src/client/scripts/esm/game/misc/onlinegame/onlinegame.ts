@@ -10,7 +10,7 @@ import type { Rating } from '../../../../../../server/database/leaderboardsManag
 
 // @ts-ignore
 import websocket from '../../websocket.js';
-import localstorage from '../../../util/localstorage.js';
+import indexeddb from '../../../util/indexeddb.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
@@ -373,7 +373,10 @@ function onMainMenuButtonPress(): void {
 
 function deleteCustomVariantOptions(): void {
 	// Delete any custom pasted position in a private game.
-	if (isPrivate) localstorage.deleteItem(String(id!));
+	if (isPrivate) {
+		const storageKey = getKeyForOnlineGameVariantOptions(id!);
+		indexeddb.deleteItem(storageKey);
+	}
 }
 
 /**
