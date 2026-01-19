@@ -1,7 +1,7 @@
 /**
- * This script holds common operations on document elements,
- *  as show, hide, fade-after-1s...
- * And it keeps track of our javascript-inserted css in the style element of the html document
+ * Utility function for html elements and styles.
+ *
+ * It also keeps track of our javascript-inserted css in the style element of the html document
  * for things like the color of the navigation bar when theme changes.
  */
 
