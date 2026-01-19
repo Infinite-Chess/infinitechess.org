@@ -7,9 +7,8 @@
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import websocket from '../websocket.js';
-// @ts-ignore
 import guipause from '../gui/guipause.js';
+import websocket from '../websocket.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import indexeddb from '../../util/indexeddb.js';
 import enginegame from '../misc/enginegame.js';

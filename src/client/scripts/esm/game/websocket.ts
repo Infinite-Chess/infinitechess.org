@@ -28,7 +28,7 @@ type HardRefreshInfo = {
 /**
  * An incoming websocket server message.
  */
-interface WebsocketMessage {
+export interface WebsocketMessage {
 	/** What subscription the message should be forwarded to (e.g. "general", "invites", "game"). */
 	sub: string;
 	/** What action to perform with this message's data. */

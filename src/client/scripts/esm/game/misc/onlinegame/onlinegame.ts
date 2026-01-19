@@ -8,7 +8,6 @@ import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/ty
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
-// @ts-ignore
 import websocket from '../../websocket.js';
 import indexeddb from '../../../util/indexeddb.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
