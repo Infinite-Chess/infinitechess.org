@@ -111,7 +111,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 
 	// console.log(jsutil.deepCopyObject(longformOut));
 
-	await pasteGame(longformOut);
+	pasteGame(longformOut);
 
 	// Let the server know if we pasted a custom position in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
@@ -146,7 +146,7 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
  * @param longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  * @returns Whether the paste was successful
  */
-async function pasteGame(longformOut: LongFormatOut): Promise<void> {
+function pasteGame(longformOut: LongFormatOut): void {
 	console.log(translations['copypaste'].pasting_game);
 
 	// Create a new gamefile from the longformat...
@@ -196,7 +196,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 		const gameID = onlinegame.getGameID();
 		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
 		const expiryMillis = timeutil.getTotalMilliseconds({ days: 3 });
-		await indexeddb.saveItem(storageKey, variantOptions, expiryMillis);
+		indexeddb.saveItem(storageKey, variantOptions, expiryMillis);
 	}
 
 	// What is the warning message if pasting in a private match?
