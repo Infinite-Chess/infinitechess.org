@@ -9,7 +9,7 @@ import type { Edit } from '../../boardeditor/boardeditor';
 import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import { RawType } from '../../../../../../shared/chess/util/typeutil';
+import typeutil, { players as p, RawType } from '../../../../../../shared/chess/util/typeutil';
 import jsutil from '../../../../../../shared/util/jsutil';
 import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
@@ -205,12 +205,20 @@ function readGameRules(): void {
 	};
 
 	// promotionsAllowed
-	let promotionsAllowed: Number[] | undefined = undefined;
+	let promotionsAllowed: number[] | undefined = undefined;
 	const promotionsAllowedRaw = element_promotionpieces.value;
 	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
 		// prettier-ignore
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as Number))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		if (promotionsAllowed.includes(NaN)) {
+		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()])))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+		// if (typeutil.royals.includes(type)) return NaN;
+		// if (typeutil.getRawType(icnconverter.getTypeFromAbbr(raw)) === p.NEUTRAL) return NaN;
+		if (
+			promotionsAllowed.includes(NaN) ||
+			promotionsAllowed.some((type) => {
+				const [rawType, color] = typeutil.splitType(type);
+				return typeutil.royals.includes(rawType) || color === p.NEUTRAL;
+			})
+		) {
 			// One or more piece abbreviations were invalid
 			element_promotionpieces.classList.add('invalid-input');
 			promotionsAllowed = undefined;
