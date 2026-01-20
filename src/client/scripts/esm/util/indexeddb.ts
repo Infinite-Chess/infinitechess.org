@@ -24,7 +24,11 @@ let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
 
 // Do this on load every time
-eraseExpiredItems();
+eraseExpiredItems().catch((error: unknown) => {
+	// Can happen in testing environment where IndexedDB is not available
+	const msg = error instanceof Error ? error.message : String(error);
+	console.error('Error erasing expired IndexedDB items on init:', msg);
+});
 
 /**
  * Initializes the IndexedDB database.
