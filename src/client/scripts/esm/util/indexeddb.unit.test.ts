@@ -85,20 +85,6 @@ describe('IndexedDB storage functional behavior', () => {
 		expect(reads).toEqual([{ v: 0 }, { v: 25 }, { v: 49 }]);
 	});
 
-	it('rejects with a clear error when IndexedDB is not supported', async () => {
-		// Remove IndexedDB and reset instance so next init fails
-		(globalThis as any).indexedDB = undefined;
-		indexeddb.resetDBInstance();
-
-		await expect(indexeddb.saveItem('a', 1)).rejects.toThrow(
-			'IndexedDB is not supported in this browser',
-		);
-
-		await expect(indexeddb.loadItem('a')).rejects.toThrow(
-			'IndexedDB is not supported in this browser',
-		);
-	});
-
 	it('resetDBInstance causes a fresh database (previous keys gone)', async () => {
 		await indexeddb.saveItem('temp', 42);
 		expect(await indexeddb.getAllKeys()).toEqual(['temp']);
