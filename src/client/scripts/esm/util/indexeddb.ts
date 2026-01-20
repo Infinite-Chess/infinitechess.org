@@ -158,11 +158,18 @@ async function deleteItem(key: string): Promise<void> {
 
 /**
  * Checks if an entry has expired
- * @param save - The entry to check
+ * @param save - The entry to check. The latest format is { value: any, expires: number }
  * @returns True if the entry has expired
  */
-function hasItemExpired(save: Entry | any): boolean {
-	if (typeof save !== 'object' || save === null || save.expires === undefined) {
+function hasItemExpired(save: unknown): boolean {
+	// Verify it's an object, and the `expires` property is present.
+	// Checking in this way will allow typescript afterward to know it has that property.
+	if (
+		typeof save !== 'object' ||
+		save === null ||
+		!('expires' in save) ||
+		typeof save.expires !== 'number'
+	) {
 		console.log(`IndexedDB item was in an old format. Deleting it...`);
 		return true;
 	}
