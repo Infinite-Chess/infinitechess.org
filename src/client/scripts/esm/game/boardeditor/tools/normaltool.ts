@@ -17,6 +17,7 @@ import boardutil from '../../../../../../shared/chess/util/boardutil';
 import coordutil from '../../../../../../shared/chess/util/coordutil';
 import movesequence from '../../chess/movesequence';
 import boardeditor from '../boardeditor';
+import { GameBus } from '../../GameBus';
 
 // Making Move Edits in the Game ---------------------------------------------
 
@@ -28,6 +29,8 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
 	const edit = generateMoveEdit(gamefile.boardsim, moveDraft);
 
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
+	GameBus.dispatch('physical-move');
+
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
 
 	boardeditor.addEditToHistory(edit);

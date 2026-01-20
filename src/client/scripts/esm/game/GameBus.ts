@@ -25,7 +25,7 @@ interface GameBusEvents {
 	// 'post-move-gen': { gamefile: FullGame; piece: Piece; legalMoves: LegalMoves };
 	/** Dispatched when a physical (not premove or simulated) move is made by us, NOT our opponent. */
 	'user-move-played': void;
-	/** Dispatched when a physical move is made on the board by any player, even our own premoves. */
+	/** Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit. */
 	'physical-move': void;
 	// =========== Graphical Events ===========
 	'render-below-pieces': void;
