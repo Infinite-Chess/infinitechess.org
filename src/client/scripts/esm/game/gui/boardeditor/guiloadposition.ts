@@ -81,12 +81,10 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 		if (!key.startsWith('editor-saveinfo-')) continue;
 
 		const editorSaveinfo = await indexeddb.loadItem<EditorAbridgedSaveState>(key);
-		console.log(editorSaveinfo);
 
 		// Name
 		const name_cell = document.createElement('div');
 		const positionname = editorSaveinfo?.positionname;
-		console.log(positionname);
 		if (positionname !== undefined) name_cell.textContent = positionname;
 		else {
 			void indexeddb.deleteItem(key);
@@ -113,15 +111,14 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 		// Buttons
 		const buttons_cell = document.createElement('div');
 
-		// Play button
-		const playBtn = document.createElement('button');
-		playBtn.textContent = 'P';
-		playBtn.className = 'btn';
-		registerButtonClick(playBtn, () => {
-			console.log('Play', key);
-			// TODO: actually load + start game from this saved position
+		// Load button
+		const loadBtn = document.createElement('button');
+		loadBtn.textContent = 'L';
+		loadBtn.className = 'btn';
+		registerButtonClick(loadBtn, () => {
+			// TODO: actually load position
 		});
-		buttons_cell.appendChild(playBtn);
+		buttons_cell.appendChild(loadBtn);
 
 		// Delete button
 		const deleteBtn = document.createElement('button');
