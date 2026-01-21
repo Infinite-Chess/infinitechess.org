@@ -1430,10 +1430,10 @@ svg.collapse {
 
 /* Shared floating Window UI */
 .floating-window {
-	max-width: min(220px, 60vw);
+	display: flex;
+	flex-direction: column;
 	max-height: min(80vh, var(--dvh-sub-nav));
 	box-sizing: border-box;
-	overflow: auto; /* enable vertical scrolling */
 	padding: 0 18px 16px 18px;
 	border-radius: 12px;
 	position: absolute;
@@ -1444,6 +1444,22 @@ svg.collapse {
 	font-family: 'Segoe UI', Roboto, sans-serif;
 	font-size: 14px;
 	color: #222;
+}
+
+.scrolling.floating-window {
+	overflow: auto;
+}
+
+.nonscrolling.floating-window {
+	overflow: hidden;
+}
+
+.narrow.floating-window {
+	max-width: min(220px, 60vw);
+}
+
+.wide.floating-window {
+	max-width: calc(2 * min(220px, 60vw));
 }
 
 /* Header (draggable area + close button) */
@@ -1618,6 +1634,54 @@ svg.collapse {
 
 .floating-window input::placeholder {
 	color: #999;
+}
+
+/* Board editor saved positions UI */
+
+.saved-position-list {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+	padding: 0.15em 0;
+}
+
+.saved-position {
+	flex: 0 0 auto; /* do not shrink */
+	height: 3em;
+	border-radius: 0.45em;
+	background-color: rgba(199, 199, 199, 1);
+	display: grid;
+	align-items: center;
+	grid-template-columns: 1.4fr 0.9fr 1fr auto;
+	padding: 0 0.6em;
+	overflow: hidden;
+}
+
+.saved-position > div {
+	margin: 0;
+	padding: 0 0.35em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.saved-position:hover {
+	background-color: rgba(168, 168, 168, 0.8);
+	cursor: pointer;
+}
+
+.saved-position:active {
+	background-color: rgba(157, 156, 156, 0.8);
+}
+
+.saved-position.selected {
+	outline-style: solid;
+	outline-width: 0.25em;
+	outline-offset: -0.15em;
 }
 
 /* Pause UI */
