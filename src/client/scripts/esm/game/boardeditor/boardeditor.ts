@@ -139,6 +139,12 @@ async function initBoardEditor(
 		);
 	}
 
+	// Erase the `inCheck` and `attackers` state of the gamefile, which were auto-calculated in the constructor.
+	// Prevents check highlights from rendering when opening the board editor.
+	const gamefile = gameslot.getGamefile()!;
+	gamefile.boardsim.state.local.inCheck = false;
+	gamefile.boardsim.state.local.attackers = [];
+
 	addEventListeners();
 
 	eautosave.startPositionAutosave();
