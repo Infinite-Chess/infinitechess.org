@@ -6,20 +6,10 @@
  * It also autosaves when leaving the editor
  */
 
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
-
 import indexeddb from '../../util/indexeddb';
 import boardeditor from './boardeditor';
 import eactions from './eactions';
 import egamerules from './egamerules';
-
-// Types ------------------------------------------------------------------
-
-interface EditorAutosave {
-	variantOptions: VariantOptions;
-	pawnDoublePush?: boolean;
-	castling?: boolean;
-}
 
 // Variables --------------------------------------------------------------
 
@@ -30,9 +20,9 @@ const positionAutosaveIntervalMillis = 10000;
 let positionAutosaveTimer: number | undefined;
 
 /** Prevent overlapping IndexedDB writes (single-flight): is autosave ongoing */
-let positionSaveInFlight = false;
+let positionAutosaveInFlight = false;
 /** Prevent overlapping IndexedDB writes (single-flight): is autosave pending */
-let positionSavePending = false;
+let positionAutosavePending = false;
 
 /** Track whether anything changed since last save */
 let positionDirty = true;
@@ -48,26 +38,33 @@ function markPositionDirty(): void {
 }
 
 /**
- * Save board editor position to IndexedDB via indexeddb.ts wrapper
+ * Autosave board editor position to IndexedDB via indexeddb.ts wrapper
+ * But only if no other autosave is currently ongoing
  */
-async function saveCurrentPositionOnce(): Promise<void> {
+async function autosaveCurrentPositionOnce(): Promise<void> {
 	// Track dirtiness: skip unnecessary writes that don't change anything
 	if (!positionDirty) return;
 
 	// Coalesce: if a save is already running, request another and return.
-	if (positionSaveInFlight) {
-		positionSavePending = true;
+	if (positionAutosaveInFlight) {
+		positionAutosavePending = true;
 		return;
 	}
 
-	positionSaveInFlight = true;
-	positionSavePending = false;
+	positionAutosaveInFlight = true;
+	positionAutosavePending = false;
 
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation();
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+		const name = 'editor-autosave';
+		const date = new Date();
+		const pieceCount = variantOptions.position.size;
 
-		await indexeddb.saveItem('editor-autosave', {
+		await indexeddb.saveItem(name, {
+			name,
+			date,
+			pieceCount,
 			variantOptions,
 			pawnDoublePush,
 			castling,
@@ -78,15 +75,15 @@ async function saveCurrentPositionOnce(): Promise<void> {
 		// Don't crash the editor over failed autosave
 		console.error('Failed to autosave board editor position:', err);
 	} finally {
-		positionSaveInFlight = false;
+		positionAutosaveInFlight = false;
 
 		// If something changed while saving, immediately save again (latest wins).
-		if (positionSavePending) {
-			positionSavePending = false;
+		if (positionAutosavePending) {
+			positionAutosavePending = false;
 			// Mark dirty because we want to flush latest state.
 			positionDirty = true;
 			// Fire and forget; caller doesn't need to await.
-			void saveCurrentPositionOnce();
+			void autosaveCurrentPositionOnce();
 		}
 	}
 }
@@ -97,13 +94,13 @@ function startPositionAutosave(): void {
 
 	// Do an initial save after init (for safety)
 	positionDirty = true;
-	void saveCurrentPositionOnce();
+	void autosaveCurrentPositionOnce();
 
 	positionAutosaveTimer = window.setInterval(() => {
 		// Don't save if editor is closed mid-tick
 		if (!boardeditor.areInBoardEditor()) return;
 
-		void saveCurrentPositionOnce();
+		void autosaveCurrentPositionOnce();
 	}, positionAutosaveIntervalMillis);
 
 	// Save when leaving the page
@@ -123,7 +120,7 @@ function stopPositionAutosave(): void {
 function onPageUnload(): void {
 	// Do a final save when leaving the page
 	positionDirty = true;
-	void saveCurrentPositionOnce();
+	void autosaveCurrentPositionOnce();
 }
 
 async function clearAutosave(): Promise<void> {
@@ -138,9 +135,7 @@ async function clearAutosave(): Promise<void> {
 export default {
 	markPositionDirty,
 	startPositionAutosave,
-	saveCurrentPositionOnce,
+	autosaveCurrentPositionOnce,
 	stopPositionAutosave,
 	clearAutosave,
 };
-
-export type { EditorAutosave };

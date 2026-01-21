@@ -51,6 +51,18 @@ import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '
 import bounds from '../../../../../shared/util/math/bounds';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor';
 import eautosave from './eautosave';
+import indexeddb from '../../util/indexeddb';
+
+// Types ------------------------------------------------------------------
+
+interface EditorSaveState {
+	name: string;
+	date: Date;
+	pieceCount: number;
+	variantOptions: VariantOptions;
+	pawnDoublePush?: boolean;
+	castling?: boolean;
+}
 
 // Constants ----------------------------------------------------------------------
 
@@ -60,6 +72,13 @@ import eautosave from './eautosave';
  * else they are set to undetermined.
  */
 const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
+
+// Variables --------------------------------------------------------------------
+
+/** Prevent overlapping IndexedDB saves (single-flight): is save ongoing */
+let positionSaveInFlight = false;
+/** Prevent overlapping IndexedDB writes (single-flight): is save pending */
+let positionSavePending = false;
 
 // Actions ----------------------------------------------------------------------
 
@@ -81,12 +100,54 @@ async function clearAll(): Promise<void> {
 	await guiboardeditor.open('clear');
 }
 
+async function save(positionname: string): Promise<void> {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	// Coalesce: if a save is already running, request another and return.
+	if (positionSaveInFlight) {
+		positionSavePending = true;
+		return;
+	}
+
+	positionSaveInFlight = true;
+	positionSavePending = false;
+
+	try {
+		const variantOptions = getCurrentPositionInformation();
+		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+		const name = `editor-save-${positionname}`;
+		const date = new Date();
+		const pieceCount = variantOptions.position.size;
+
+		await indexeddb.saveItem(name, {
+			name,
+			date,
+			pieceCount,
+			variantOptions,
+			pawnDoublePush,
+			castling,
+		});
+	} catch (err) {
+		// Don't crash the editor over failed save
+		console.error('Failed to save board editor position:', err);
+	} finally {
+		positionSaveInFlight = false;
+
+		// If something changed while saving, immediately save again (latest wins).
+		if (positionSavePending) {
+			positionSavePending = false;
+			// Fire and forget; caller doesn't need to await.
+			void save(positionname);
+		} else statustext.showStatus('Position successfully saved to local storage');
+	}
+}
+
 /**
  * copygame uses the move list instead of the position
  * which doesn't work for the board editor.
  * This function uses the position of pieces on the board.
  */
-function save(): void {
+function copy(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const gamefile = gameslot.getGamefile()!;
@@ -111,7 +172,7 @@ function save(): void {
 }
 
 /** Loads the position from the clipboard. */
-async function load(): Promise<undefined> {
+async function paste(): Promise<undefined> {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	let longformOut: LongFormatOut;
@@ -404,8 +465,11 @@ export default {
 	reset,
 	clearAll,
 	save,
-	load,
+	copy,
+	paste,
 	startLocalGame,
 	startEngineGame,
 	getCurrentPositionInformation,
 };
+
+export type { EditorSaveState };

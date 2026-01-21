@@ -146,7 +146,7 @@ async function initBoardEditor(
 
 function closeBoardEditor(): void {
 	eautosave.markPositionDirty();
-	void eautosave.saveCurrentPositionOnce();
+	void eautosave.autosaveCurrentPositionOnce();
 	eautosave.stopPositionAutosave();
 
 	// Reset state
@@ -379,7 +379,7 @@ function Copy(): void {
 
 	if (currentTool !== 'selection-tool') {
 		// Copy game notation
-		eactions.save();
+		eactions.copy();
 	} else if (selectiontool.isExistingSelection()) {
 		// Copy current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -409,7 +409,7 @@ function Paste(): void {
 
 	if (currentTool !== 'selection-tool') {
 		// Paste game notation
-		eactions.load();
+		eactions.paste();
 	} else if (selectiontool.isExistingSelection()) {
 		// Paste clipboard at current selection
 		const gamefile = gameslot.getGamefile()!;

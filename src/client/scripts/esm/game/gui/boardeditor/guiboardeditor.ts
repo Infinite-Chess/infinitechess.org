@@ -7,7 +7,7 @@
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { EditorAutosave } from '../../boardeditor/eautosave.js';
+import type { EditorSaveState } from '../../boardeditor/eactions.js';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant.js';
 import type { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
@@ -142,8 +142,8 @@ async function open(mode: 'default' | 'clear' | 'reset' = 'default'): Promise<vo
 	if (mode === 'default') {
 		// Try to read in autosave and initialize board editor
 		// If there is no autosave, initialize board editor with Classical position
-		const editorAutosave = await indexeddb.loadItem<EditorAutosave>('editor-autosave');
-		if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+		const EditorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
+		if (EditorSaveState === undefined || EditorSaveState.variantOptions === undefined)
 			await gameloader.startBoardEditor();
 		else {
 			const metadata: MetaData = {
@@ -161,11 +161,11 @@ async function open(mode: 'default' | 'clear' | 'reset' = 'default'): Promise<vo
 					{
 						metadata,
 						additional: {
-							variantOptions: editorAutosave.variantOptions,
+							variantOptions: EditorSaveState.variantOptions,
 						},
 					},
-					editorAutosave.pawnDoublePush,
-					editorAutosave.castling,
+					EditorSaveState.pawnDoublePush,
+					EditorSaveState.castling,
 				);
 			} catch (err) {
 				// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
@@ -443,10 +443,10 @@ function callback_Action(e: Event): void {
 			statustext.showStatus('Not implemented yet.');
 			return;
 		case 'copy-notation':
-			eactions.save();
+			eactions.copy();
 			return;
 		case 'paste-notation':
-			eactions.load();
+			eactions.paste();
 			return;
 		case 'gamerules':
 			guigamerules.toggle();
