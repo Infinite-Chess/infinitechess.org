@@ -1644,7 +1644,7 @@ svg.collapse {
 
 .saved-position-columns {
 	display: grid;
-	grid-template-columns: 30% 25% 25% 20%;
+	grid-template-columns: 30% 15% 25% 40%;
 	align-items: center;
 	padding: 0 0.6em;
 	height: 1em;
@@ -1676,7 +1676,7 @@ svg.collapse {
 	background-color: rgba(199, 199, 199, 1);
 	display: grid;
 	align-items: center;
-	grid-template-columns: 30% 25% 25% 20%;
+	grid-template-columns: 30% 15% 25% 40%;
 	padding: 0 0.6em;
 	overflow: hidden;
 }
@@ -1687,6 +1687,13 @@ svg.collapse {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+/* Buttons column */
+.saved-position > div:last-child {
+	display: flex;
+	gap: 0.4rem;
+	flex-shrink: 0;
 }
 
 .saved-position:hover {
@@ -1702,6 +1709,18 @@ svg.collapse {
 	outline-style: solid;
 	outline-width: 0.25em;
 	outline-offset: -0.15em;
+}
+
+.saved-position .btn {
+	flex-shrink: 0;
+	padding: 0.25rem 0.5rem;
+	width: 35px;
+	height: 35px;
+	border-radius: 8px;
+	font-size: 10px;
+	font-weight: 600;
+	cursor: pointer;
+	border: 1px solid transparent;
 }
 
 .position-name {

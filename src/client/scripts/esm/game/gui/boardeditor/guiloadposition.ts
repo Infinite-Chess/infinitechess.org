@@ -10,7 +10,18 @@ import indexeddb from '../../../util/indexeddb';
 import guifloatingwindow from './guifloatingwindow';
 import timeutil from '../../../../../../shared/util/timeutil';
 
+// Types -------------------------------------------------------------------------
+
+/** Object to keep track of listener for position button */
+type ButtonHandlerPair = {
+	type: 'click';
+	handler: (e: MouseEvent) => void;
+};
+
 // Elements ----------------------------------------------------------
+
+/** Object to keep track of all position button listeners */
+const registeredButtonListeners = new Map<HTMLButtonElement, ButtonHandlerPair>();
 
 /** The button the toggles visibility of the Start local game popup window. */
 const element_loadbutton = document.getElementById('load-position')!;
@@ -34,25 +45,35 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 	onClose,
 });
 
-// Gamerules-specific listeners -------------------------------------------
-
-function initLoadPositionUIListeners(): void {}
-
-function closeLoadPositionUIListeners(): void {}
-
 // Utilities----------------------------------------------------------------
 
 function onOpen(): void {
 	updateSavedPositionListUI(element_savedPositionsToLoad);
-	initLoadPositionUIListeners();
 }
 
 function onClose(): void {
-	closeLoadPositionUIListeners();
+	unregisterAllPositionButtonListeners();
+	element_savedPositionsToLoad.replaceChildren();
 }
 
+function registerButtonClick(button: HTMLButtonElement, handler: (e: MouseEvent) => void): void {
+	button.addEventListener('click', handler);
+	registeredButtonListeners.set(button, { type: 'click', handler });
+}
+
+function unregisterAllPositionButtonListeners(): void {
+	for (const [button, { type, handler }] of registeredButtonListeners) {
+		button.removeEventListener(type, handler);
+	}
+	registeredButtonListeners.clear();
+}
+
+/**
+ * Update the saved positions list
+ */
 async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
-	element.replaceChildren(); // empty existing content
+	unregisterAllPositionButtonListeners(); // unregister position button listeners
+	element.replaceChildren(); // empty existing position list
 
 	const keys = await indexeddb.getAllKeys();
 
@@ -91,6 +112,27 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 
 		// Buttons
 		const buttons_cell = document.createElement('div');
+
+		// Play button
+		const playBtn = document.createElement('button');
+		playBtn.textContent = 'P';
+		playBtn.className = 'btn';
+		registerButtonClick(playBtn, () => {
+			console.log('Play', key);
+			// TODO: actually load + start game from this saved position
+		});
+		buttons_cell.appendChild(playBtn);
+
+		// Delete button
+		const deleteBtn = document.createElement('button');
+		deleteBtn.textContent = 'D';
+		deleteBtn.className = 'btn';
+		registerButtonClick(deleteBtn, async () => {
+			await indexeddb.deleteItem(key);
+			await updateSavedPositionListUI(element);
+		});
+		buttons_cell.appendChild(deleteBtn);
+
 		row.appendChild(buttons_cell);
 
 		element.appendChild(row);
@@ -104,4 +146,5 @@ export default {
 	toggle: floatingWindow.toggle,
 	resetPositioning: floatingWindow.resetPositioning,
 	updateSavedPositionListUI,
+	unregisterAllPositionButtonListeners,
 };

@@ -60,6 +60,8 @@ function onOpen(): void {
 
 function onClose(): void {
 	closeSavePositionUIListeners();
+	guiloadposition.unregisterAllPositionButtonListeners();
+	element_savedPositionsToSave.replaceChildren();
 }
 
 async function onSaveButtonPress(): Promise<void> {
