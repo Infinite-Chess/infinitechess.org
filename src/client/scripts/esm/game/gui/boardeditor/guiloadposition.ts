@@ -4,7 +4,11 @@
  * Manages the GUI popup window for the Load Positions UI of the board editor
  */
 
+import type { EditorAbridgedSaveState } from '../../boardeditor/eactions';
+
+import indexeddb from '../../../util/indexeddb';
 import guifloatingwindow from './guifloatingwindow';
+import timeutil from '../../../../../../shared/util/timeutil';
 
 // Elements ----------------------------------------------------------
 
@@ -39,7 +43,7 @@ function closeLoadPositionUIListeners(): void {}
 // Utilities----------------------------------------------------------------
 
 function onOpen(): void {
-	setSavedPositionListUI(element_savedPositionsToLoad);
+	updateSavedPositionListUI(element_savedPositionsToLoad);
 	initLoadPositionUIListeners();
 }
 
@@ -47,21 +51,47 @@ function onClose(): void {
 	closeLoadPositionUIListeners();
 }
 
-function setSavedPositionListUI(element: HTMLElement): void {
+async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 	element.replaceChildren(); // empty existing content
 
-	const ROWS = 30;
+	const keys = await indexeddb.getAllKeys();
 
-	for (let i = 0; i < ROWS; i++) {
+	for (const key of keys) {
+		if (!key.startsWith('editor-saveinfo-')) continue;
+
+		const editorSaveinfo = await indexeddb.loadItem<EditorAbridgedSaveState>(key);
+		console.log(editorSaveinfo);
+
+		// Name
+		const name_cell = document.createElement('div');
+		const positionname = editorSaveinfo?.positionname;
+		console.log(positionname);
+		if (positionname !== undefined) name_cell.textContent = positionname;
+		else {
+			void indexeddb.deleteItem(key);
+			continue;
+		}
 		const row = document.createElement('div');
 		row.className = 'saved-position unselectable';
+		row.appendChild(name_cell);
 
-		const cols = ['Name', 'Piece count', 'Date', 'Buttons'];
-		for (const text of cols) {
-			const cell = document.createElement('div');
-			cell.textContent = text;
-			row.appendChild(cell);
-		}
+		// Piececount
+		const piececount_cell = document.createElement('div');
+		piececount_cell.textContent = String(editorSaveinfo?.pieceCount ?? '');
+		row.appendChild(piececount_cell);
+
+		// Date
+		const date_cell = document.createElement('div');
+		const timestamp = editorSaveinfo?.timestamp;
+		if (timestamp !== undefined) {
+			const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
+			date_cell.textContent = UTCDate;
+		} else date_cell.textContent = '';
+		row.appendChild(date_cell);
+
+		// Buttons
+		const buttons_cell = document.createElement('div');
+		row.appendChild(buttons_cell);
 
 		element.appendChild(row);
 	}
@@ -73,5 +103,5 @@ export default {
 	close: floatingWindow.close,
 	toggle: floatingWindow.toggle,
 	resetPositioning: floatingWindow.resetPositioning,
-	setSavedPositionListUI,
+	updateSavedPositionListUI,
 };

@@ -54,7 +54,7 @@ function closeSavePositionUIListeners(): void {
 // Utilities----------------------------------------------------------------
 
 function onOpen(): void {
-	guiloadposition.setSavedPositionListUI(element_savedPositionsToSave);
+	guiloadposition.updateSavedPositionListUI(element_savedPositionsToSave);
 	initSavePositionUIListeners();
 }
 
@@ -62,8 +62,9 @@ function onClose(): void {
 	closeSavePositionUIListeners();
 }
 
-function onSaveButtonPress(): void {
-	void eactions.save(element_saveAsPositionName.value);
+async function onSaveButtonPress(): Promise<void> {
+	await eactions.save(element_saveAsPositionName.value);
+	guiloadposition.updateSavedPositionListUI(element_savedPositionsToSave);
 }
 
 // Exports -----------------------------------------------------------------

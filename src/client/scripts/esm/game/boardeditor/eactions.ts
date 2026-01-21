@@ -55,10 +55,15 @@ import indexeddb from '../../util/indexeddb';
 
 // Types ------------------------------------------------------------------
 
-interface EditorSaveState {
-	name: string;
-	date: Date;
+/** Minimal information about a saved position */
+interface EditorAbridgedSaveState {
+	positionname: string;
+	timestamp: number;
 	pieceCount: number;
+}
+
+/** Complete information about a saved position */
+interface EditorSaveState extends EditorAbridgedSaveState {
 	variantOptions: VariantOptions;
 	pawnDoublePush?: boolean;
 	castling?: boolean;
@@ -115,17 +120,24 @@ async function save(positionname: string): Promise<void> {
 	try {
 		const variantOptions = getCurrentPositionInformation();
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-		const name = `editor-save-${positionname}`;
-		const date = new Date();
+		const timestamp = Date.now();
 		const pieceCount = variantOptions.position.size;
 
-		await indexeddb.saveItem(name, {
-			name,
-			date,
+		// Save full info for loading purposes
+		await indexeddb.saveItem(`editor-save-${positionname}`, {
+			positionname,
+			timestamp,
 			pieceCount,
 			variantOptions,
 			pawnDoublePush,
 			castling,
+		});
+
+		// Save abridged info for display purposes
+		await indexeddb.saveItem(`editor-saveinfo-${positionname}`, {
+			positionname,
+			timestamp,
+			pieceCount,
 		});
 	} catch (err) {
 		// Don't crash the editor over failed save
@@ -136,8 +148,7 @@ async function save(positionname: string): Promise<void> {
 		// If something changed while saving, immediately save again (latest wins).
 		if (positionSavePending) {
 			positionSavePending = false;
-			// Fire and forget; caller doesn't need to await.
-			void save(positionname);
+			await save(positionname);
 		} else statustext.showStatus('Position successfully saved to local storage');
 	}
 }
@@ -472,4 +483,4 @@ export default {
 	getCurrentPositionInformation,
 };
 
-export type { EditorSaveState };
+export type { EditorAbridgedSaveState, EditorSaveState };
