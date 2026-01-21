@@ -24,6 +24,21 @@ interface BoundingBox {
 	top: bigint;
 }
 
+/**
+ * A {@link BoundingBox} that may be unbounded in one or more directions.
+ * `null` is used as a placeholder for -infinity or infinity.
+ */
+interface UnboundedRectangle {
+	/** The x-coordinate of the left side of the box. */
+	left: bigint | null;
+	/** The x-coordinate of the right side of the box. */
+	right: bigint | null;
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: bigint | null;
+	/** The y-coordinate of the top side of the box. */
+	top: bigint | null;
+}
+
 /** A rectangle object with properties for the coordinates of its sides, but using BigDecimal
  * instead of bigints for arbitrary deciaml precision. */
 interface BoundingBoxBD {
@@ -181,11 +196,14 @@ function translateBoundingBox(box: BoundingBox, translation: Coords): BoundingBo
  * Determines if one bounding box (`innerBox`) is entirely contained within another bounding box (`outerBox`).
  * No overlaps allowed, but edges can touch.
  */
-function boxContainsBox(outerBox: BoundingBox, innerBox: BoundingBox): boolean {
-	if (innerBox.left < outerBox.left) return false;
-	if (innerBox.right > outerBox.right) return false;
-	if (innerBox.bottom < outerBox.bottom) return false;
-	if (innerBox.top > outerBox.top) return false;
+function boxContainsBox(
+	outerBox: BoundingBox | UnboundedRectangle,
+	innerBox: BoundingBox,
+): boolean {
+	if (outerBox.left !== null && innerBox.left < outerBox.left) return false;
+	if (outerBox.right !== null && innerBox.right > outerBox.right) return false;
+	if (outerBox.bottom !== null && innerBox.bottom < outerBox.bottom) return false;
+	if (outerBox.top !== null && innerBox.top > outerBox.top) return false;
 
 	return true;
 }
@@ -218,11 +236,11 @@ function areBoxesDisjoint(box1: DoubleBoundingBox, box3: DoubleBoundingBox): boo
 /**
  * Returns true if the provided box contains the square coordinate.
  */
-function boxContainsSquare(box: BoundingBox, square: Coords): boolean {
-	if (square[0] < box.left) return false;
-	if (square[0] > box.right) return false;
-	if (square[1] < box.bottom) return false;
-	if (square[1] > box.top) return false;
+function boxContainsSquare(box: BoundingBox | UnboundedRectangle, square: Coords): boolean {
+	if (box.left !== null && square[0] < box.left) return false;
+	if (box.right !== null && square[0] > box.right) return false;
+	if (box.bottom !== null && square[1] < box.bottom) return false;
+	if (box.top !== null && square[1] > box.top) return false;
 
 	return true;
 }
@@ -298,4 +316,4 @@ export default {
 	printBDBox,
 };
 
-export type { BoundingBox, BoundingBoxBD, DoubleBoundingBox };
+export type { BoundingBox, UnboundedRectangle, BoundingBoxBD, DoubleBoundingBox };

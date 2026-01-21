@@ -17,13 +17,13 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/initvaria
 import statustext from '../gui/statustext.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document } from '../chess/game.js';
+import { GameBus } from '../GameBus.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import selection from '../chess/selection.js';
 import state from '../../../../../shared/chess/logic/state.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import movesequence from '../chess/movesequence.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
@@ -239,11 +239,10 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 
 	// Run logical changes
 	movepiece.applyEdit(gamefile, edit, forward, true); // Apply the logical changes to the board state
+	GameBus.dispatch('physical-move');
 
 	// Run graphical changes
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
-
-	specialrighthighlights.onMove();
 
 	// If the piece count is now high enough, disable icons and arrows.
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);

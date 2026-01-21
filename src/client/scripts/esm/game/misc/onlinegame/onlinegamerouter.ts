@@ -8,15 +8,12 @@ import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
-// @ts-ignore
-import type { WebsocketMessage } from '../websocket.js';
 
 // @ts-ignore
 import guiplay from '../../gui/guiplay.js';
 // @ts-ignore
-import websocket from '../../websocket.js';
-// @ts-ignore
 import statustext from '../../gui/statustext.js';
+import websocket, { WebsocketMessage } from '../../websocket.js';
 import board from '../../rendering/boardtiles.js';
 import disconnect from './disconnect.js';
 import afk from './afk.js';
@@ -72,7 +69,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 /**
  * Routes a server websocket message with subscription marked `game`.
  * This handles all messages related to the active game we're in.
- * @param {WebsocketMessage} data - The incoming server websocket message
+ * @param data - The incoming server websocket message
  */
 function routeMessage(data: WebsocketMessage): void {
 	// { sub, action, value, id }

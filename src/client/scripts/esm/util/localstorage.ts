@@ -77,9 +77,7 @@ function deleteItem(key: string): void {
 
 function hasItemExpired(save: Entry | any): boolean {
 	if (save.expires === undefined) {
-		console.log(
-			`Local storage item was in an old format. Deleting it! Value: ${JSON.stringify(save)}}`,
-		);
+		console.log(`Local storage item was in an old format. Deleting it...`);
 		return true;
 	}
 	return Date.now() >= save.expires;

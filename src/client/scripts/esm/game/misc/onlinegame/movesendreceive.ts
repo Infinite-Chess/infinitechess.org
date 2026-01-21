@@ -22,11 +22,10 @@ import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-// @ts-ignore
-import guipause from '../../gui/guipause.js';
-// @ts-ignore
 import websocket from '../../websocket.js';
 import { GameBus } from '../../GameBus.js';
+// @ts-ignore
+import guipause from '../../gui/guipause.js';
 
 // Events ---------------------------------------------------------------------
 

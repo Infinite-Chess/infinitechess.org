@@ -34,7 +34,7 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import guinavigation from '../gui/guinavigation.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import localstorage from '../../util/localstorage.js';
+import indexeddb from '../../util/indexeddb.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
 import boardeditor from '../boardeditor/boardeditor.js';
@@ -185,7 +185,7 @@ async function startOnlineGame(options: {
 	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: localstorage.loadItem(storageKey) as VariantOptions,
+		variantOptions: await indexeddb.loadItem<VariantOptions>(storageKey),
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
