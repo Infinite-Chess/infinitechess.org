@@ -37,6 +37,7 @@ import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';
 import keybinds from '../misc/keybinds.js';
 import normaltool from '../boardeditor/tools/normaltool.js';
+import bounds from '../../../../../shared/util/math/bounds.js';
 import { animateMove } from './graphicalchanges.js';
 import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
@@ -245,7 +246,12 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 				false,
 			) <= 1) ||
 		(boardeditor.areInBoardEditor() &&
-			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords)); // Allow ALL moves in board editor.
+			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
+			(gamefile.basegame.gameRules.worldBorder === undefined ||
+				bounds.boxContainsSquare(
+					gamefile.basegame.gameRules.worldBorder,
+					pieceSelected.coords,
+				))); // Allow ALL moves in board editor.
 }
 
 // Piece Select / Drop / Move -----------------------------------------------------------------------------
