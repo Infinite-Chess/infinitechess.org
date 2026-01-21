@@ -33,6 +33,7 @@ import guifloatingwindow from './guifloatingwindow.js';
 import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guiloadposition from './guiloadposition.js';
+import guisaveposition from './guisaveposition.js';
 import variant from '../../../../../../shared/chess/variants/variant.js';
 
 // Elements ---------------------------------------------------------------
@@ -436,7 +437,7 @@ function callback_Action(e: Event): void {
 			guiloadposition.toggle();
 			return;
 		case 'save-position-as':
-			statustext.showStatus('Not implemented yet.');
+			guisaveposition.toggle();
 			return;
 		case 'save-position':
 			statustext.showStatus('Not implemented yet.');

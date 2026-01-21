@@ -39,7 +39,7 @@ function closeLoadPositionUIListeners(): void {}
 // Utilities----------------------------------------------------------------
 
 function onOpen(): void {
-	setSavedPositionListUI();
+	setSavedPositionListUI(element_savedPositionsToLoad);
 	initLoadPositionUIListeners();
 }
 
@@ -47,9 +47,8 @@ function onClose(): void {
 	closeLoadPositionUIListeners();
 }
 
-function setSavedPositionListUI(): void {
-	// empty existing content
-	element_savedPositionsToLoad.replaceChildren();
+function setSavedPositionListUI(element: HTMLElement): void {
+	element.replaceChildren(); // empty existing content
 
 	const ROWS = 30;
 
@@ -64,7 +63,7 @@ function setSavedPositionListUI(): void {
 			row.appendChild(cell);
 		}
 
-		element_savedPositionsToLoad.appendChild(row);
+		element.appendChild(row);
 	}
 }
 
@@ -74,4 +73,5 @@ export default {
 	close: floatingWindow.close,
 	toggle: floatingWindow.toggle,
 	resetPositioning: floatingWindow.resetPositioning,
+	setSavedPositionListUI,
 };

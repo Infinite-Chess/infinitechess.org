@@ -1506,7 +1506,7 @@ svg.collapse {
 	margin-top: 18px;
 }
 
-.btn {
+.confirmation-buttons .btn {
 	min-width: 80px;
 	padding: 10px 18px;
 	border-radius: 8px;
@@ -1640,7 +1640,7 @@ svg.collapse {
 	color: #999;
 }
 
-/* Board editor saved positions UI */
+/* Board editor load & save positions UI */
 
 .saved-position-columns {
 	display: grid;
@@ -1702,6 +1702,49 @@ svg.collapse {
 	outline-style: solid;
 	outline-width: 0.25em;
 	outline-offset: -0.15em;
+}
+
+.position-name {
+	display: flex;
+	flex-direction: column;
+	align-self: stretch;
+	width: 100%;
+}
+
+.position-name label {
+	text-align: left;
+}
+
+.position-name-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.position-name-row input {
+	flex: 1;
+	min-width: 0;
+}
+
+.btn-save {
+	width: 90px;
+	height: 28px;
+	padding: 0 18px; /* <-- no vertical padding */
+	display: inline-flex; /* <-- enables centering */
+	align-items: center; /* <-- vertical center */
+	justify-content: center; /* <-- horizontal center */
+	line-height: 1; /* helps avoid baseline weirdness */
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	border: 1px solid transparent;
+	background-color: #1d8ee4;
+	color: #ffffff;
+}
+
+.btn-save:hover {
+	background-color: #0d7ed4;
 }
 
 /* Pause UI */
