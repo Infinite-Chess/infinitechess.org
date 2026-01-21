@@ -1455,10 +1455,14 @@ svg.collapse {
 }
 
 .narrow.floating-window {
+	width: 100%;
+	box-sizing: border-box;
 	max-width: min(220px, 60vw);
 }
 
 .wide.floating-window {
+	width: 100%;
+	box-sizing: border-box;
 	max-width: calc(2 * min(220px, 60vw));
 }
 
@@ -1638,6 +1642,22 @@ svg.collapse {
 
 /* Board editor saved positions UI */
 
+.saved-position-columns {
+	display: grid;
+	grid-template-columns: 30% 25% 25% 20%;
+	align-items: center;
+	padding: 0 0.6em;
+	height: 1em;
+	overflow: hidden;
+}
+
+.saved-position-columns > div {
+	padding: 0 0.35em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .saved-position-list {
 	flex: 1 1 auto;
 	min-height: 0;
@@ -1656,7 +1676,7 @@ svg.collapse {
 	background-color: rgba(199, 199, 199, 1);
 	display: grid;
 	align-items: center;
-	grid-template-columns: 1.4fr 0.9fr 1fr auto;
+	grid-template-columns: 30% 25% 25% 20%;
 	padding: 0 0.6em;
 	overflow: hidden;
 }

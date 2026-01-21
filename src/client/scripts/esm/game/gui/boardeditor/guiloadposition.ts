@@ -12,9 +12,12 @@ import guifloatingwindow from './guifloatingwindow';
 const element_loadbutton = document.getElementById('load-position')!;
 
 /** The actual window of the Game Rules popup. */
-const element_window = document.getElementById('saved-positions-UI')!;
-const element_header = document.getElementById('saved-positions-UI-header')!;
-const element_closeButton = document.getElementById('close-saved-positions-UI')!;
+const element_window = document.getElementById('load-position-UI')!;
+const element_header = document.getElementById('load-position-UI-header')!;
+const element_closeButton = document.getElementById('close-load-position-UI')!;
+
+/** List of saved positions */
+const element_savedPositionsToLoad = document.getElementById('load-position-UI-saved-positions')!;
 
 // Create floating window (generic behavior) -------------------------------------
 
@@ -23,8 +26,8 @@ const floatingWindow = guifloatingwindow.createFloatingWindow({
 	headerEl: element_header,
 	toggleButtonEl: element_loadbutton,
 	closeButtonEl: element_closeButton,
-	onOpen: initLoadPositionUIListeners,
-	onClose: closeLoadPositionUIListeners,
+	onOpen,
+	onClose,
 });
 
 // Gamerules-specific listeners -------------------------------------------
@@ -34,6 +37,36 @@ function initLoadPositionUIListeners(): void {}
 function closeLoadPositionUIListeners(): void {}
 
 // Utilities----------------------------------------------------------------
+
+function onOpen(): void {
+	setSavedPositionListUI();
+	initLoadPositionUIListeners();
+}
+
+function onClose(): void {
+	closeLoadPositionUIListeners();
+}
+
+function setSavedPositionListUI(): void {
+	// empty existing content
+	element_savedPositionsToLoad.replaceChildren();
+
+	const ROWS = 30;
+
+	for (let i = 0; i < ROWS; i++) {
+		const row = document.createElement('div');
+		row.className = 'saved-position unselectable';
+
+		const cols = ['Name', 'Piece count', 'Date', 'Buttons'];
+		for (const text of cols) {
+			const cell = document.createElement('div');
+			cell.textContent = text;
+			row.appendChild(cell);
+		}
+
+		element_savedPositionsToLoad.appendChild(row);
+	}
+}
 
 // Exports -----------------------------------------------------------------
 
