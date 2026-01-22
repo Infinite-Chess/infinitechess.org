@@ -148,7 +148,7 @@ async function save(positionname: string): Promise<void> {
 		if (positionSavePending) {
 			positionSavePending = false;
 			await save(positionname);
-		} else statustext.showStatus('Position successfully saved to local storage');
+		} else statustext.showStatus('Position successfully saved on browser.');
 	}
 }
 
