@@ -211,9 +211,7 @@ function readGameRules(): void {
 	const promotionsAllowedRaw = element_promotionpieces.value;
 	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
 		// prettier-ignore
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()])))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		// if (typeutil.royals.includes(type)) return NaN;
-		// if (typeutil.getRawType(icnconverter.getTypeFromAbbr(raw)) === p.NEUTRAL) return NaN;
+		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_inverted[raw])))] : jsutil.deepCopyObject(icnconverter.default_promotions);
 		if (
 			promotionsAllowed.includes(NaN) ||
 			promotionsAllowed.some((type) => {
