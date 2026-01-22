@@ -1664,8 +1664,8 @@ export default {
 	promotionsAllowedSource,
 	default_promotions,
 	default_win_condition,
+	piece_codes_inverted,
 	piece_codes_raw,
-	piece_codes_raw_inverted,
 };
 
 export type { LongFormatIn, LongFormatOut, _Move_In, _Move_Out, _Move_Compact, PresetAnnotes };
