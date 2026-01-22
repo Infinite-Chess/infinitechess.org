@@ -22,7 +22,7 @@ const noButton = document.getElementById('reset-position-no')!;
 
 // Create floating window -------------------------------------
 
-const floatingWindow = guifloatingwindow.createFloatingWindow({
+const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
 	headerEl: element_header,
 	closeButtonEl: element_closeButton,

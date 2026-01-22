@@ -66,7 +66,7 @@ const elements_selectionList: HTMLInputElement[] = [
 
 // Create floating window ----------------------------------------------------
 
-const floatingWindow = guifloatingwindow.createFloatingWindow({
+const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
 	headerEl: element_header,
 	closeButtonEl: element_closeButton,

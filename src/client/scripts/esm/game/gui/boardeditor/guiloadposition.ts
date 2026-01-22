@@ -52,7 +52,7 @@ let mode: 'load' | 'save-as' | undefined = undefined;
 
 // Create floating window -------------------------------------
 
-const floatingWindow = guifloatingwindow.createFloatingWindow({
+const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
 	headerEl: element_header,
 	closeButtonEl: element_closeButton,
