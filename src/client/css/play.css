@@ -1444,6 +1444,10 @@ svg.collapse {
 	font-family: 'Segoe UI', Roboto, sans-serif;
 	font-size: 14px;
 	color: #222;
+	--editor-floating-window-btn-primary: #1d8ee4;
+	--editor-floating-window-btn-primary-hover: #0d7ed4;
+	--editor-floating-window-btn-secondary: #e0e0e0;
+	--editor-floating-window-btn-secondary-hover: #d5d5d5;
 }
 
 .scrolling.floating-window {
@@ -1517,21 +1521,21 @@ svg.collapse {
 }
 
 .btn-primary {
-	background-color: #1d8ee4;
+	background-color: var(--editor-floating-window-btn-primary);
 	color: #ffffff;
 }
 
 .btn-primary:hover {
-	background-color: #0d7ed4;
+	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
 .btn-secondary {
-	background-color: #e0e0e0;
+	background-color: var(--editor-floating-window-btn-secondary);
 	color: #222;
 }
 
 .btn-secondary:hover {
-	background-color: #d5d5d5;
+	background-color: var(--editor-floating-window-btn-secondary-hover);
 }
 
 /* Floating window UI input styling */
@@ -1753,12 +1757,12 @@ svg.collapse {
 	border-radius: 8px;
 	font-size: 15px;
 	font-weight: 600;
-	background-color: #1d8ee4;
+	background-color: var(--editor-floating-window-btn-primary);
 	color: #ffffff;
 }
 
 .btn-save:hover {
-	background-color: #0d7ed4;
+	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
 /* Pause UI */
