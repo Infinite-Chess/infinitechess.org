@@ -1747,18 +1747,12 @@ svg.collapse {
 }
 
 .btn-save {
-	width: 90px;
+	width: 75px;
 	height: 28px;
-	padding: 0 18px; /* <-- no vertical padding */
-	display: inline-flex; /* <-- enables centering */
-	align-items: center; /* <-- vertical center */
-	justify-content: center; /* <-- horizontal center */
-	line-height: 1; /* helps avoid baseline weirdness */
+	justify-content: center;
 	border-radius: 8px;
 	font-size: 15px;
 	font-weight: 600;
-	cursor: pointer;
-	border: 1px solid transparent;
 	background-color: #1d8ee4;
 	color: #ffffff;
 }
