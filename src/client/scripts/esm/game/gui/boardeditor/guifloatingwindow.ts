@@ -49,7 +49,7 @@ interface FloatingWindowOptions {
 // Utilities -------------------------------------------------------------
 
 /** Create the functions needed for the handling of a floating window in the board editor */
-function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle {
+function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 	const { windowEl, headerEl, closeButtonEl, inputElList, onOpen, onClose } = opts;
 
 	// Window Position & Dragging State
@@ -237,5 +237,5 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 }
 
 export default {
-	createFloatingWindow,
+	create,
 };
