@@ -248,10 +248,7 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 		(boardeditor.areInBoardEditor() &&
 			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
 			(gamefile.basegame.gameRules.worldBorder === undefined ||
-				bounds.boxContainsSquare(
-					gamefile.basegame.gameRules.worldBorder,
-					pieceSelected.coords,
-				))); // Allow ALL moves in board editor.
+				bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder, hoverSquare))); // Allow ALL moves in board editor.
 }
 
 // Piece Select / Drop / Move -----------------------------------------------------------------------------
