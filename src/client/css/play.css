@@ -1495,7 +1495,7 @@ svg.collapse {
 .divider {
 	border: none;
 	border-bottom: 1px solid #ccc;
-	margin: 0 0 12px 0;
+	margin-bottom: 12px;
 }
 
 /* Floating window UI confirmation button styling */
@@ -1728,6 +1728,7 @@ svg.collapse {
 	flex-direction: column;
 	align-self: stretch;
 	width: 100%;
+	margin-bottom: 12px;
 }
 
 .position-name label {

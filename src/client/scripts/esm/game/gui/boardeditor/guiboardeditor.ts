@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/gui/boardeditor/guiboardeditor.ts
 
-/*
+/**
  * Handles the Board Editor GUI
  */
 
@@ -29,11 +29,9 @@ import indexeddb from '../../../util/indexeddb.js';
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
-import guifloatingwindow from './guifloatingwindow.js';
 import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guiloadposition from './guiloadposition.js';
-import guisaveposition from './guisaveposition.js';
 import variant from '../../../../../../shared/chess/variants/variant.js';
 
 // Elements ---------------------------------------------------------------
@@ -226,7 +224,7 @@ function isOpen(): boolean {
 function close(): void {
 	if (!boardEditorOpen) return;
 
-	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning and contents of all floating windows
+	closeAllFloatingWindows(true);
 
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
@@ -256,6 +254,16 @@ function closeListeners(): void {
 	_getActivePieceElements().forEach((element) => {
 		element.removeEventListener('click', callback_ChangePieceType);
 	});
+}
+
+/** Close and reset the positioning and contents of all floating windows */
+function closeAllFloatingWindows(resetPositioning: boolean): void {
+	guiresetposition.close(resetPositioning);
+	guiclearposition.close(resetPositioning);
+	guiloadposition.close(resetPositioning);
+	guigamerules.close(resetPositioning);
+	guistartlocalgame.close(resetPositioning);
+	guistartenginegame.close(resetPositioning);
 }
 
 async function initUI(): Promise<void> {
@@ -427,18 +435,30 @@ function callback_Action(e: Event): void {
 
 	switch (action) {
 		// Position ---------------------
-		case 'reset':
-			guiresetposition.toggle();
+		case 'reset': {
+			const wasOpen = guiresetposition.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guiresetposition.open();
 			return;
-		case 'clearall':
-			guiclearposition.toggle();
+		}
+		case 'clearall': {
+			const wasOpen = guiclearposition.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guiclearposition.open();
 			return;
-		case 'load-position':
-			guiloadposition.toggle();
+		}
+		case 'load-position': {
+			const wasOpen = guiloadposition.getMode() !== 'load';
+			closeAllFloatingWindows(false);
+			if (wasOpen) guiloadposition.openLoadPosition();
 			return;
-		case 'save-position-as':
-			guisaveposition.toggle();
+		}
+		case 'save-position-as': {
+			const wasOpen = guiloadposition.getMode() !== 'save-as';
+			closeAllFloatingWindows(false);
+			if (wasOpen) guiloadposition.openSavePositionAs();
 			return;
+		}
 		case 'save-position':
 			statustext.showStatus('Not implemented yet.');
 			return;
@@ -448,15 +468,24 @@ function callback_Action(e: Event): void {
 		case 'paste-notation':
 			eactions.paste();
 			return;
-		case 'gamerules':
-			guigamerules.toggle();
+		case 'gamerules': {
+			const wasOpen = guigamerules.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guigamerules.open();
 			return;
-		case 'start-local-game':
-			guistartlocalgame.toggle();
+		}
+		case 'start-local-game': {
+			const wasOpen = guistartlocalgame.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guistartlocalgame.open();
 			return;
-		case 'start-engine-game':
-			guistartenginegame.toggle();
+		}
+		case 'start-engine-game': {
+			const wasOpen = guistartenginegame.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guistartenginegame.open();
 			return;
+		}
 		// Selection (buttons that are always active)
 		case 'select-all':
 			selectiontool.selectAll();

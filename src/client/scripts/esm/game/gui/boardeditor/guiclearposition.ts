@@ -20,16 +20,28 @@ const element_closeButton = document.getElementById('close-clear-position-UI')!;
 const yesButton = document.getElementById('clear-position-yes')!;
 const noButton = document.getElementById('clear-position-no')!;
 
-// Create floating window (generic behavior) -------------------------------------
+// Create floating window -------------------------------------
 
 const floatingWindow = guifloatingwindow.createFloatingWindow({
 	windowEl: element_window,
 	headerEl: element_header,
-	toggleButtonEl: element_clearbutton,
 	closeButtonEl: element_closeButton,
-	onOpen: initClearPositionUIListeners,
-	onClose: closeClearPositionUIListeners,
+	onOpen,
+	onClose,
 });
+
+// Toggling ---------------------------------------------
+
+function onOpen(): void {
+	element_clearbutton.classList.add('active');
+	initClearPositionUIListeners();
+}
+
+function onClose(resetPositioning: boolean): void {
+	if (resetPositioning) floatingWindow.resetPositioning();
+	element_clearbutton.classList.remove('active');
+	closeClearPositionUIListeners();
+}
 
 // Gamerules-specific listeners -------------------------------------------
 
@@ -47,17 +59,17 @@ function closeClearPositionUIListeners(): void {
 
 function onYesButtonPress(): void {
 	eactions.clearAll();
-	floatingWindow.close();
+	floatingWindow.close(false);
 }
 
 function onNoButtonPress(): void {
-	floatingWindow.close();
+	floatingWindow.close(false);
 }
 
 // Exports -----------------------------------------------------------------
 
 export default {
+	open: floatingWindow.open,
 	close: floatingWindow.close,
-	toggle: floatingWindow.toggle,
-	resetPositioning: floatingWindow.resetPositioning,
+	isOpen: floatingWindow.isOpen,
 };

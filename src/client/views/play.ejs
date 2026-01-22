@@ -535,36 +535,8 @@
 
                         <hr class="divider">
 
-                        <div class="flwindow-section">
-                            <div class="saved-position-columns unselectable">
-                                <div> Name </div>
-                                <div> Piece count </div>
-                                <div> Date </div>
-                            </div>
-                        </div>
-
-                        <div id="load-position-UI-saved-positions" class="saved-position-list">
-                            <!--
-                            <div class="saved-position unselectable">
-                                <div> Name </div>
-                                <div> Piece count </div>
-                                <div> Date </div>
-                                <div> Buttons </div>
-                            </div>
-                            -->
-                        </div>
-                    </div>
-
-                    <!-- Save position UI for Board Editor -->
-                    <div id="save-position-UI" class="center wide nonscrolling floating-window hidden">
-                        <div id="save-position-UI-header" class="floating-window-header">
-                            <span class="unselectable" id="save-position-UI-header-text">Save Position as</span>
-                            <button id="close-save-position-UI" class="close-floating-window">&times;</button>
-                        </div>
-
-                        <hr class="divider">
-
-                        <div class="flwindow-section">
+                        <!-- Container for Save Position As -->
+                        <div class="flwindow-section hidden" id="enter-position-name">
                             <div class="position-name">
                                 <label class="unselectable" for="save-as-position-name">Enter position name:</label>
 
@@ -573,19 +545,18 @@
                                     <button id="save-position-button" class="btn-save">Save</button>
                                 </div>
                             </div>
+                            <hr class="divider">
                         </div>
-
-                        <hr class="divider">
 
                         <div class="flwindow-section">
                             <div class="saved-position-columns unselectable">
-                                <div> Name </div>
-                                <div> Piece count </div>
-                                <div> Date </div>
+                                <div>Name</div>
+                                <div>Piece count</div>
+                                <div>Date</div>
                             </div>
                         </div>
 
-                        <div id="save-position-UI-saved-positions" class="saved-position-list">
+                        <div id="load-position-UI-saved-positions" class="saved-position-list">
                             <!--
                             <div class="saved-position unselectable">
                                 <div> Name </div>

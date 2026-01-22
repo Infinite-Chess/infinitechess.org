@@ -69,12 +69,25 @@ const elements_selectionList: HTMLInputElement[] = [
 const floatingWindow = guifloatingwindow.createFloatingWindow({
 	windowEl: element_window,
 	headerEl: element_header,
-	toggleButtonEl: element_enginegamebutton,
 	closeButtonEl: element_closeButton,
 	inputElList: elements_selectionList,
-	onOpen: initEngineGameUIListeners,
-	onClose: closeEngineGameUIListeners,
+	onOpen,
+	onClose,
 });
+
+// Toggling ------------------------------------------------------------
+
+function onOpen(): void {
+	updateEngineUIcontents();
+	element_enginegamebutton.classList.add('active');
+	initEngineGameUIListeners();
+}
+
+function onClose(resetPositioning = false): void {
+	if (resetPositioning) floatingWindow.resetPositioning();
+	element_enginegamebutton.classList.remove('active');
+	closeEngineGameUIListeners();
+}
 
 // Enginegame-UI-specific listeners -------------------------------------------
 
@@ -96,18 +109,13 @@ function closeEngineGameUIListeners(): void {
 
 // Utilities ----------------------------------------------------------------------
 
-function toggle(): void {
-	if (!floatingWindow.isOpen()) updateEngineUIcontents();
-	floatingWindow.toggle();
-}
-
 function onYesButtonPress(): void {
 	const engineUIConfig = readEngineUIConfig();
 	eactions.startEngineGame(engineUIConfig);
 }
 
 function onNoButtonPress(): void {
-	floatingWindow.close();
+	floatingWindow.close(false);
 }
 
 /** Updates the engineconfig UI values when opened */
@@ -151,9 +159,9 @@ function readEngineUIConfig(): EngineUIConfig {
 // Exports -----------------------------------------------------------------
 
 export default {
-	toggle,
+	open: floatingWindow.open,
 	close: floatingWindow.close,
-	resetPositioning: floatingWindow.resetPositioning,
+	isOpen: floatingWindow.isOpen,
 };
 
 export type { EngineUIConfig };

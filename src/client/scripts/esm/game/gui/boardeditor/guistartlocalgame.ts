@@ -20,16 +20,28 @@ const element_closeButton = document.getElementById('close-local-game-UI')!;
 const yesButton = document.getElementById('start-local-game-yes')!;
 const noButton = document.getElementById('start-local-game-no')!;
 
-// Create floating window (generic behavior) -------------------------------------
+// Create floating window -------------------------------------
 
 const floatingWindow = guifloatingwindow.createFloatingWindow({
 	windowEl: element_window,
 	headerEl: element_header,
-	toggleButtonEl: element_localgamebutton,
 	closeButtonEl: element_closeButton,
-	onOpen: initLocalGameUIListeners,
-	onClose: closeLocalGameUIListeners,
+	onOpen,
+	onClose,
 });
+
+// Toggling ---------------------------------------------
+
+function onOpen(): void {
+	element_localgamebutton.classList.add('active');
+	initLocalGameUIListeners();
+}
+
+function onClose(resetPositioning: boolean): void {
+	if (resetPositioning) floatingWindow.resetPositioning();
+	element_localgamebutton.classList.remove('active');
+	closeLocalGameUIListeners();
+}
 
 // Gamerules-specific listeners -------------------------------------------
 
@@ -43,20 +55,20 @@ function closeLocalGameUIListeners(): void {
 	noButton.removeEventListener('click', onNoButtonPress);
 }
 
-// Utilities---- -----------------------------------------------------------------
+// Utilities---------------------------------------------------------------------
 
 function onYesButtonPress(): void {
 	eactions.startLocalGame();
 }
 
 function onNoButtonPress(): void {
-	floatingWindow.close();
+	floatingWindow.close(false);
 }
 
 // Exports -----------------------------------------------------------------
 
 export default {
+	open: floatingWindow.open,
 	close: floatingWindow.close,
-	toggle: floatingWindow.toggle,
-	resetPositioning: floatingWindow.resetPositioning,
+	isOpen: floatingWindow.isOpen,
 };
