@@ -177,34 +177,6 @@ function readGameRules(): void {
 	// prettier-ignore
 	const moveRule = (validMoveRuleInputs === 2 ? { current: Number(moveRuleCurrent), max: Number(moveRuleMax) } : undefined);
 
-	// promotionsAllowed
-	let promotionsAllowed: number[] | undefined = undefined;
-	const promotionsAllowedRaw = element_promotionpieces.value;
-	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
-		// prettier-ignore
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()])))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		// if (typeutil.royals.includes(type)) return NaN;
-		// if (typeutil.getRawType(icnconverter.getTypeFromAbbr(raw)) === p.NEUTRAL) return NaN;
-		if (
-			promotionsAllowed.includes(NaN) ||
-			promotionsAllowed.some((type) => {
-				const [rawType, color] = typeutil.splitType(type);
-				return typeutil.royals.includes(rawType) || color === p.NEUTRAL;
-			})
-		) {
-			// One or more piece abbreviations were invalid
-			element_promotionpieces.classList.add('invalid-input');
-			promotionsAllowed = undefined;
-		} else {
-			element_promotionpieces.classList.remove('invalid-input');
-			if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
-		}
-	} else if (promotionsAllowedRaw === '') {
-		element_promotionpieces.classList.remove('invalid-input');
-	} else {
-		element_promotionpieces.classList.add('invalid-input');
-	}
-
 	// promotionRanks
 	let promotionRanksWhite: bigint[] = [];
 	const promotionRanksWhiteInput = element_promotionranksWhite.value;
@@ -233,6 +205,34 @@ function readGameRules(): void {
 		white: promotionRanksWhite.length === 0 ? undefined : promotionRanksWhite,
 		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
 	};
+
+	// promotionsAllowed
+	let promotionsAllowed: number[] | undefined = undefined;
+	const promotionsAllowedRaw = element_promotionpieces.value;
+	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
+		// prettier-ignore
+		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()])))] : jsutil.deepCopyObject(icnconverter.default_promotions);
+		// if (typeutil.royals.includes(type)) return NaN;
+		// if (typeutil.getRawType(icnconverter.getTypeFromAbbr(raw)) === p.NEUTRAL) return NaN;
+		if (
+			promotionsAllowed.includes(NaN) ||
+			promotionsAllowed.some((type) => {
+				const [rawType, color] = typeutil.splitType(type);
+				return typeutil.royals.includes(rawType) || color === p.NEUTRAL;
+			})
+		) {
+			// One or more piece abbreviations were invalid
+			element_promotionpieces.classList.add('invalid-input');
+			promotionsAllowed = undefined;
+		} else {
+			element_promotionpieces.classList.remove('invalid-input');
+			if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
+		}
+	} else if (promotionsAllowedRaw === '') {
+		element_promotionpieces.classList.remove('invalid-input');
+	} else {
+		element_promotionpieces.classList.add('invalid-input');
+	}
 
 	// win conditions
 	const winConditions: string[] = [];
