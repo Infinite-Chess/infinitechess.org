@@ -25,13 +25,6 @@ interface FloatingWindowHandle {
 	isOpen: () => boolean;
 }
 
-/** Functions that handle floating window closing */
-interface FloatingWindowClosingHandle {
-	close: (resetPositioning: boolean) => void;
-	isOpen: () => boolean;
-	resetPositioning: () => void;
-}
-
 /** Options for initializing a floating window in the board editor */
 interface FloatingWindowOptions {
 	/** Floating window element */
@@ -54,21 +47,6 @@ interface FloatingWindowOptions {
 }
 
 // Utilities -------------------------------------------------------------
-
-/** Manager function that handles the closing and resetting of floating windows */
-const windowClosingManager = (() => {
-	const managedWindows = new Set<FloatingWindowClosingHandle>();
-
-	function register(w: FloatingWindowClosingHandle): void {
-		managedWindows.add(w);
-	}
-
-	function unregister(w: FloatingWindowClosingHandle): void {
-		managedWindows.delete(w);
-	}
-
-	return { register, unregister };
-})();
 
 /** Create the functions needed for the handling of a floating window in the board editor */
 function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle {
@@ -233,8 +211,6 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		savedPos = undefined;
 	}
 
-	windowClosingManager.register({ close, isOpen, resetPositioning });
-
 	/** Open floating window */
 	function open(): void {
 		if (savedPos !== undefined) {
@@ -263,5 +239,3 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 export default {
 	createFloatingWindow,
 };
-
-export type { FloatingWindowHandle, FloatingWindowOptions };
