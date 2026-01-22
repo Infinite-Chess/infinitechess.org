@@ -15,7 +15,6 @@ import movesets from './movesets.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import bimath from '../../util/math/bimath.js';
 
-import type { LineKey } from '../util/boardutil.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
@@ -81,6 +80,9 @@ interface TypeRange {
 	/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
 	undefineds: Array<number>;
 }
+
+/** A unique identifier for a single line of pieces. `C|X` */
+type LineKey = `${bigint}|${bigint}`;
 
 // Constants ---------------------------------------------------------------------------
 
@@ -658,4 +660,4 @@ export default {
 	getXFromLine,
 };
 
-export type { OrganizedPieces, TypeRange };
+export type { OrganizedPieces, TypeRange, LineKey };

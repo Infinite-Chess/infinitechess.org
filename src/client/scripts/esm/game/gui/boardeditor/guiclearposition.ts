@@ -43,7 +43,7 @@ function closeClearPositionUIListeners(): void {
 	noButton.removeEventListener('click', onNoButtonPress);
 }
 
-// Utilities---- -----------------------------------------------------------------
+// Utilities---------------------------------------------------------------------
 
 function onYesButtonPress(): void {
 	eactions.clearAll();

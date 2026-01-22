@@ -25,9 +25,6 @@ interface Piece {
 	index: number;
 }
 
-/** A unique identifier for a single line of pieces. `C|X` */
-type LineKey = `${bigint}|${bigint}`;
-
 // Counting Pieces ----------------------------------------------------------------------------------------------
 
 /**
@@ -323,7 +320,7 @@ function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
 	return o.coords.has(coordutil.getKeyFromCoords(coords));
 }
 
-export type { Piece, LineKey };
+export type { Piece };
 
 export default {
 	getPieceCountOfGame,
