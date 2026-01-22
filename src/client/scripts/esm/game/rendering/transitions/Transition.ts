@@ -13,6 +13,8 @@
  * within a constant duration, while still feeling smooth and natural.
  */
 
+import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import perspective from '../perspective.js';
@@ -27,7 +29,6 @@ import coordutil, {
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import meshes from '../meshes.js';
 import { GameBus } from '../../GameBus.js';
 
@@ -388,15 +389,6 @@ function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 }
 
 /**
- * Starts a Zooming Transition to a list of coordinates.
- * If an intermediate zoom-out is needed first, it will be done.
- */
-function zoomToCoordsList(coordsList: Coords[]): void {
-	const box = bounds.getBoxFromCoordsList(coordsList);
-	zoomToCoordsBox(box);
-}
-
-/**
  * Starts a Zooming Transition to an integer bounding box.
  * If an intermediate zoom-out is needed first, it will be done.
  */
@@ -705,7 +697,6 @@ export default {
 	areTransitioning,
 	startZoomTransition,
 	startPanTransition,
-	zoomToCoordsList,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
 	singleZoomToBDCoords,

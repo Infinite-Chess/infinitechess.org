@@ -48,7 +48,6 @@ import selectiontool from './tools/selection/selectiontool';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
 import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
-import bounds from '../../../../../shared/util/math/bounds';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor';
 import eautosave from './eautosave';
 import indexeddb from '../../util/indexeddb';
@@ -259,11 +258,9 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Set world border automatically, if wished
 	if (engineUIConfig.setDefaultWorldBorder) {
 		// Calculate minimum bounding box of all pieces
-		const allCoordsKeys = variantOptions.position.keys();
-		const coordsOfAllPieces = Array.from(allCoordsKeys, (key) =>
-			coordutil.getCoordsFromKey(key),
-		);
-		const startingPositionBox = bounds.getStartingPositionBoxFromCoordsList(coordsOfAllPieces);
+		const startingPositionBox = boardutil.getBoundingBoxOfAllPieces(
+			gameslot.getGamefile()!.boardsim.pieces,
+		)!; // Guaranteed defined since above we check if there's > 0 pieces
 
 		// Calculate it using the default distance
 		const worldBorderProperty = engineWorldBorderDict[currentEngine];

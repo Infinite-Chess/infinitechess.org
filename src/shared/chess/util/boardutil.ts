@@ -2,15 +2,18 @@
  * This script contains utility methods for working with the organized pieces of a game.
  */
 
-import typeutil from './typeutil.js';
-import coordutil from './coordutil.js';
-import jsutil from '../../util/jsutil.js';
-
-// Type Definitions -----------------------------------------------------------------------------------------
-
 import type { OrganizedPieces, TypeRange } from '../logic/organizedpieces.js';
 import type { Coords } from './coordutil.js';
 import type { RawType, Player } from './typeutil.js';
+
+import typeutil from './typeutil.js';
+import coordutil from './coordutil.js';
+import jsutil from '../../util/jsutil.js';
+import vectors from '../../util/math/vectors.js';
+import organizedpieces from '../logic/organizedpieces.js';
+import bounds, { BoundingBox } from '../../util/math/bounds.js';
+
+// Type Definitions -----------------------------------------------------------------------------------------
 
 interface Piece {
 	type: number;
@@ -160,6 +163,69 @@ function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 }
 
 /**
+ * O(sqrt(n)) algorithm to get the bounding box of all pieces.
+ * Falls back to O(n) if no vertical or horizontal slides are in the game.
+ */
+function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined {
+	if (o.coords.size === 0) return undefined; // No pieces
+
+	const allSlides = Array.from(o.lines.keys());
+
+	// Find a single vertical slide direction
+	const vertSlideKey = allSlides.find((slideKey) => {
+		const vec = vectors.getVec2FromKey(slideKey);
+		return vec[0] === 0n;
+	});
+
+	// Find a single horizontal slide direction
+	const horzSlideKey = allSlides.find((slideKey) => {
+		const vec = vectors.getVec2FromKey(slideKey);
+		return vec[1] === 0n;
+	});
+
+	if (vertSlideKey === undefined || horzSlideKey === undefined) {
+		// This can happen in practice checkmate 1K3NR-1k.
+		// Only console warn if there is a large number of pieces
+		if (o.coords.size > 1_000_000)
+			console.warn(
+				'Falling back to slower O(n) bounding box calculation for all pieces. Either no vertical or horizontal slide found.',
+			);
+		// Fallback to O(n) algorithm, we don't have the advantage of organized lines to optimize this.
+		const allCoords = getCoordsOfAllPieces(o);
+		return bounds.getBoxFromCoordsList(allCoords);
+	}
+
+	// Find the left-most and right-most vertical lines
+	let left: bigint | undefined = undefined;
+	let right: bigint | undefined = undefined;
+	const vertSlide = vectors.getVec2FromKey(vertSlideKey);
+	for (const lineKey of o.lines.get(vertSlideKey)!.keys()) {
+		const C = organizedpieces.getCFromKey(lineKey);
+		const x = C / -vertSlide[1]; // Reverse engineered vectors.getLineCFromCoordsAndVec() to obtain x
+		if (left === undefined || x < left) left = x;
+		if (right === undefined || x > right) right = x;
+	}
+
+	// Find the bottom-most and top-most horizontal lines
+	let bottom: bigint | undefined = undefined;
+	let top: bigint | undefined = undefined;
+	const horzSlide = vectors.getVec2FromKey(horzSlideKey);
+	for (const lineKey of o.lines.get(horzSlideKey)!.keys()) {
+		const C = organizedpieces.getCFromKey(lineKey);
+		const y = C / horzSlide[0]; // Reverse engineered vectors.getLineCFromCoordsAndVec() to obtain y
+		if (bottom === undefined || y < bottom) bottom = y;
+		if (top === undefined || y > top) top = y;
+	}
+
+	if (left === undefined || right === undefined || bottom === undefined || top === undefined)
+		throw new Error(
+			'Failed to calculate bounding box of all pieces. Lines of slide direction was empty (failure of organizedpieces)',
+		);
+
+	return { left, right, bottom, top };
+}
+
+/**
  * Returns a list of all the jumping royal pieces of a specific color.
  * @param o the piece lists
  * @param color - The color of the jumping royals to look for.
@@ -216,11 +282,9 @@ function iteratePiecesInTypeRange_IncludeUndefineds(
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (idx === range.undefineds[undefinedidx]) {
-			// Is our next undefined piece entry, skip.
-			undefinedidx++;
-			callback(idx, true);
-		} else callback(idx, false);
+		const isUndefined = idx === range.undefineds[undefinedidx];
+		if (isUndefined) undefinedidx++;
+		callback(idx, isUndefined);
 	}
 }
 
@@ -313,9 +377,7 @@ function getTypeRangeFromIdx(o: OrganizedPieces, idx: number): TypeRange {
 	return o.typeRanges.get(type)!;
 }
 
-/**
- * Whether a piece is on the provided coords
- */
+/** Whether a piece is on the provided coords */
 function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
 	return o.coords.has(coordutil.getKeyFromCoords(coords));
 }
@@ -334,6 +396,7 @@ export default {
 	getCoordsOfAllPieces,
 	getJumpingRoyalCoordsOfColor,
 	getRoyalCoordsOfColor,
+	getBoundingBoxOfAllPieces,
 	iteratePiecesInTypeRange,
 	iteratePiecesInTypeRange_IncludeUndefineds,
 

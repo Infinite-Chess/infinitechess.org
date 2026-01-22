@@ -24,7 +24,6 @@ import movepiece from './movepiece.js';
 import checkdetection from './checkdetection.js';
 import gamerules from '../variants/gamerules.js';
 import wincondition from './wincondition.js';
-import bounds from '../../util/math/bounds.js';
 import variant from '../variants/variant.js';
 import movesets from './movesets.js';
 
@@ -195,8 +194,10 @@ function initBoard(
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
-	const coordsOfAllPieces = boardutil.getCoordsOfAllPieces(pieces);
-	const startingPositionBox = bounds.getStartingPositionBoxFromCoordsList(coordsOfAllPieces);
+	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
+	// Fallback if no pieces present
+	if (startingPositionBox === undefined)
+		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
 	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);

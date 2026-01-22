@@ -7,17 +7,17 @@
  */
 
 import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import type {
+	BoundingBox,
+	BoundingBoxBD,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../util/mouse';
 import arrows from '../../../rendering/arrows/arrows';
 import stoolgraphics from './stoolgraphics';
 import { Mouse } from '../../../input';
 import { listener_document, listener_overlay } from '../../../chess/game';
-import bounds, {
-	BoundingBox,
-	BoundingBoxBD,
-	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
 import meshes from '../../../rendering/meshes';
 import bimath from '../../../../../../../shared/util/math/bimath';
 import sfill from './sfill';
@@ -224,19 +224,15 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 function selectAll(): void {
 	boardeditor.setTool('selection-tool'); // Switch if we're not already using
 
-	const allCoords: Coords[] = boardutil.getCoordsOfAllPieces(
-		gameslot.getGamefile()!.boardsim.pieces!,
-	);
+	const box = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces);
 
-	if (allCoords.length === 0) {
+	if (box === undefined) {
 		// No pieces, cancel selection
 		resetState();
 		// Disabled for now as I'm not sure I like Selecting all immediately transitioning
 		// guinavigation.recenter();
 		return;
 	}
-
-	const box: BoundingBox = bounds.getBoxFromCoordsList(allCoords);
 
 	startPoint = [box.left, box.top];
 	endPoint = [box.right, box.bottom];
