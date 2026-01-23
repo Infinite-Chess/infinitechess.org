@@ -79,6 +79,18 @@ button {
 	margin: 0.2em 0.2em;
 }
 
+.editor-positionname {
+	text-align: center;
+	margin: 0.2em 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.italic {
+	font-style: italic;
+}
+
 /* SVG resizings */
 
 .svg-reset {

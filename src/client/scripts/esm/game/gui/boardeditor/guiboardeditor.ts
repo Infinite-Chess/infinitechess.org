@@ -34,6 +34,7 @@ import guiloadposition from './guiloadposition.js';
 // Elements ---------------------------------------------------------------
 
 const element_menu = document.getElementById('editor-menu')!;
+const element_activePositionNameDisplay = document.getElementById('active-position-name-display')!;
 
 const elements_tools = [
 	document.getElementById('normal')!,
@@ -136,9 +137,10 @@ async function open(): Promise<void> {
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
 	const EditorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
-	if (EditorSaveState === undefined || EditorSaveState.variantOptions === undefined)
+	if (EditorSaveState === undefined || EditorSaveState.variantOptions === undefined) {
+		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
-	else {
+	} else {
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
@@ -150,6 +152,7 @@ async function open(): Promise<void> {
 		};
 
 		try {
+			boardeditor.setActivePositionName(EditorSaveState.positionname);
 			await gameloader.startBoardEditorFromCustomPosition(
 				{
 					metadata,
@@ -165,6 +168,7 @@ async function open(): Promise<void> {
 			// then do not lock user out of board editor
 			console.error('Failed to load autosaved board editor position when opening it:', err);
 
+			boardeditor.setActivePositionName(undefined);
 			await gameloader.startBoardEditor();
 		}
 	}
@@ -357,6 +361,18 @@ function onClearSelection(): void {
 			(child as HTMLElement).classList.add('disabled');
 		}
 	});
+}
+
+// Active position name display control -------------------------------------
+
+function updateActivePositionElement(positionname: string | undefined): void {
+	if (positionname === undefined) {
+		element_activePositionNameDisplay.textContent = 'New position';
+		element_activePositionNameDisplay.classList.add('italic');
+	} else {
+		element_activePositionNameDisplay.textContent = positionname;
+		element_activePositionNameDisplay.classList.remove('italic');
+	}
 }
 
 // Helper Functions ---------------------------------------------------------
@@ -554,4 +570,5 @@ export default {
 	onNewSelection,
 	onClearSelection,
 	updatePieceColors,
+	updateActivePositionElement,
 };

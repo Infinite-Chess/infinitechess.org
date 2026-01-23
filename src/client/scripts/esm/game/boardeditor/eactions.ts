@@ -98,6 +98,7 @@ async function reset(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Load default board editor position
+	boardeditor.setActivePositionName(undefined);
 	await gameloader.startBoardEditor();
 }
 
@@ -127,6 +128,8 @@ async function clearAll(): Promise<void> {
 		position,
 		state_global,
 	};
+
+	boardeditor.setActivePositionName(undefined);
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
@@ -158,6 +161,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 	};
 
 	try {
+		boardeditor.setActivePositionName(editorSaveState.positionname);
 		await gameloader.startBoardEditorFromCustomPosition(
 			{
 				metadata,
@@ -170,7 +174,12 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 		);
 		statustext.showStatus('Position successfully loaded.');
 	} catch (err) {
-		console.error(`Loading position ${editorSaveState.positionname} failed: ${err}`);
+		console.error(
+			`Loading position ${editorSaveState.positionname} failed: ${err}. Loading Classical instead.`,
+		);
+
+		boardeditor.setActivePositionName(undefined);
+		await gameloader.startBoardEditor();
 	}
 }
 
@@ -218,7 +227,10 @@ async function save(positionname: string): Promise<void> {
 		if (positionSavePending) {
 			positionSavePending = false;
 			await save(positionname);
-		} else statustext.showStatus('Position successfully saved in local browser storage.');
+		} else {
+			boardeditor.setActivePositionName(positionname);
+			statustext.showStatus('Position successfully saved in local browser storage.');
+		}
 	}
 }
 

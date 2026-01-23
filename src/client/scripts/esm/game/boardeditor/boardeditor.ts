@@ -88,6 +88,9 @@ let initial_pawnDoublePush: boolean | undefined = true;
 /** The value of the castling game rule in the initial zeroth edit */
 let initial_castling: boolean | undefined = true;
 
+/** Name of active position, as displayed on editor bar and used for "Save" button by default */
+let active_positionname: string | undefined = undefined;
+
 // Initialization ------------------------------------------------------------------------
 
 /**
@@ -456,6 +459,15 @@ function stealPointer(pointerIdToSteal: string): void {
 		drawingtool.stealPointer(pointerIdToSteal);
 }
 
+function getActivePositionName(): string | undefined {
+	return active_positionname;
+}
+
+function setActivePositionName(positionname: string | undefined): void {
+	active_positionname = positionname;
+	guiboardeditor.updateActivePositionElement(positionname);
+}
+
 // Rendering ------------------------------------------------------------------
 
 /** Renders any graphics of the active tool, if we are in the board editor. */
@@ -494,6 +506,8 @@ export default {
 	canRedo,
 	isLeftMouseReserved,
 	stealPointer,
+	getActivePositionName,
+	setActivePositionName,
 	// Rendering
 	render,
 };
