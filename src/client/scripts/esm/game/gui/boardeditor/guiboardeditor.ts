@@ -10,7 +10,6 @@ import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { EditorSaveState } from '../../boardeditor/eactions.js';
 
 // @ts-ignore
-import statustext from '../statustext.js';
 import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
