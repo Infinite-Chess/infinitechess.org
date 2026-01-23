@@ -1688,9 +1688,10 @@ svg.collapse {
 .saved-position > div {
 	margin: 0;
 	padding: 0 0.35em;
-	white-space: nowrap;
+	white-space: normal;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	word-break: break-word;
 }
 
 /* Buttons column */
@@ -1798,6 +1799,7 @@ svg.collapse {
 	background: rgba(240, 240, 240, 1);
 	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
 	overflow: hidden;
+	padding: 0em 1em 0.5em 1em;
 }
 
 /* Pause UI */
