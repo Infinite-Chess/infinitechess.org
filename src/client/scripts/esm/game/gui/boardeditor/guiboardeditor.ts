@@ -431,9 +431,21 @@ function callback_Action(e: Event): void {
 			if (wasOpen) guiloadposition.openSavePositionAs();
 			return;
 		}
-		case 'save-position':
-			statustext.showStatus('Not implemented yet.');
+		case 'save-position': {
+			const active_positionname = boardeditor.getActivePositionName();
+			if (active_positionname === undefined) {
+				// If there is no active position name, treat this the same way as "Save as" if that window is not open
+				const wasOpen = guiloadposition.getMode() !== 'save-as';
+				if (wasOpen) {
+					closeAllFloatingWindows(false);
+					guiloadposition.openSavePositionAs();
+				}
+			} else {
+				// If there is an active position name, simply overwrite save
+				eactions.save(active_positionname);
+			}
 			return;
+		}
 		case 'copy-notation':
 			eactions.copy();
 			return;

@@ -183,6 +183,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 	}
 }
 
+/** Saves current position under "positionname". */
 async function save(positionname: string): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
