@@ -1765,6 +1765,41 @@ svg.collapse {
 	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
+/* Ensure the load-position window can anchor absolute children */
+#load-position-UI {
+	position: relative; /* does not move it; only creates a positioning context */
+}
+
+/* The overlay covers ONLY the load-position-UI */
+.local-modal-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.25);
+	pointer-events: auto;
+}
+
+.local-modal-window-header {
+	user-select: none;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 0 4px 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.local-modal {
+	width: 90%;
+	border-radius: 0.75em;
+	background: rgba(240, 240, 240, 1);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+	overflow: hidden;
+}
+
 /* Pause UI */
 
 .pauseUI {

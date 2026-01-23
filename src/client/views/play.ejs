@@ -566,6 +566,27 @@
                             </div>
                             -->
                         </div>
+
+                        <!-- Local modal overlay to block the load-position-UI -->
+                        <div id="load-position-modal-overlay" class="local-modal-overlay hidden">
+                            <div class="local-modal">
+                                <div class="local-modal-window-header">
+                                    <span class="unselectable" id="load-position-modal-title"></span>
+                                    <button id="close-load-position-modal" class="close-floating-window">&times;</button>
+                                </div>
+
+                                <hr class="divider">
+
+                                <div class="flwindow-section">
+                                    <label id="load-position-modal-message" class="unselectable"></label>
+                                </div>
+
+                                <div class="unselectable confirmation-buttons">
+                                    <button id="load-position-modal-no" class="btn btn-secondary">No</button>
+                                    <button id="load-position-modal-yes" class="btn btn-primary">Yes</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Reset position UI for Board Editor -->

@@ -47,8 +47,21 @@ const element_saveCurrentPositionButton = document.getElementById('save-position
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('load-position-UI-saved-positions')!;
 
+/** Confirmation dialog modal elements */
+const element_modal = document.getElementById('load-position-modal-overlay')!;
+const element_modalCloseButton = document.getElementById('close-load-position-modal')!;
+const element_modalTitle = document.getElementById('load-position-modal-title')!;
+const element_modalMessage = document.getElementById('load-position-modal-message')!;
+const element_modalNoButton = document.getElementById('load-position-modal-no')!;
+const element_modalYesButton = document.getElementById('load-position-modal-yes')!;
+
 /** The current open/close mode of the Load Position UI */
 let mode: 'load' | 'save-as' | undefined = undefined;
+
+/** The current mode of the Confirmation dialog modal */
+let modal_mode: 'load' | 'delete' | undefined = undefined;
+let current_modal_key: string | undefined = undefined;
+let current_modal_unabridged_key: string | undefined = undefined;
 
 // Create floating window -------------------------------------
 
@@ -63,7 +76,8 @@ const floatingWindow = guifloatingwindow.create({
 // Utilities----------------------------------------------------------------
 
 function onOpen(): void {
-	updateSavedPositionListUI(element_savedPositionsToLoad);
+	closeModal();
+	updateSavedPositionListUI();
 }
 
 function registerButtonClick(button: HTMLButtonElement, handler: (e: MouseEvent) => void): void {
@@ -94,6 +108,7 @@ function openSavePositionAs(): void {
 
 function onClose(resetPositioning = false): void {
 	if (resetPositioning) floatingWindow.resetPositioning();
+	closeModal();
 	element_loadbutton.classList.remove('active');
 	element_saveasbutton.classList.remove('active');
 	mode = undefined;
@@ -107,7 +122,28 @@ function getMode(): typeof mode {
 	return mode;
 }
 
-// Gamerules-specific listeners -------------------------------------------
+function openModal(mode: typeof modal_mode, positionname: string): void {
+	modal_mode = mode;
+	if (modal_mode === 'delete') {
+		element_modalTitle.textContent = 'Delete position?';
+		element_modalMessage.textContent = `Are you sure that you want to delete position ${positionname}? This cannot be undone.`;
+	} else if (modal_mode === 'load') {
+		element_modalTitle.textContent = 'Load position?';
+		element_modalMessage.textContent = `Are you sure that you want to load position ${positionname}? Unsaved changes to the current position will be lost.`;
+	}
+	element_modal.classList.remove('hidden');
+	initModalListeners();
+}
+
+function closeModal(): void {
+	modal_mode = undefined;
+	current_modal_key = undefined;
+	current_modal_unabridged_key = undefined;
+	element_modal.classList.add('hidden');
+	closeModalListeners();
+}
+
+// Load position UI specific listeners -------------------------------------------
 
 function initSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.addEventListener('click', onSaveButtonPress);
@@ -117,16 +153,68 @@ function closeSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.removeEventListener('click', onSaveButtonPress);
 }
 
-async function onSaveButtonPress(): Promise<void> {
-	await eactions.save(element_saveAsPositionName.value);
-	updateSavedPositionListUI(element_savedPositionsToLoad);
-}
-
 function unregisterAllPositionButtonListeners(): void {
 	for (const [button, { type, handler }] of registeredButtonListeners) {
 		button.removeEventListener(type, handler);
 	}
 	registeredButtonListeners.clear();
+}
+
+function initModalListeners(): void {
+	element_modalCloseButton.addEventListener('click', closeModal);
+	element_modalNoButton.addEventListener('click', closeModal);
+	element_modalYesButton.addEventListener('click', onModalYesButtonPress);
+}
+
+function closeModalListeners(): void {
+	element_modalCloseButton.removeEventListener('click', closeModal);
+	element_modalNoButton.removeEventListener('click', closeModal);
+	element_modalYesButton.removeEventListener('click', onModalYesButtonPress);
+}
+
+// Functions -----------------------------------------------------------------
+
+async function onModalYesButtonPress(): Promise<void> {
+	if (modal_mode === undefined) return;
+	else if (
+		modal_mode === 'delete' &&
+		current_modal_key !== undefined &&
+		current_modal_unabridged_key !== undefined
+	) {
+		// Delete position
+		await indexeddb.deleteItem(current_modal_key);
+		await indexeddb.deleteItem(current_modal_unabridged_key);
+		await updateSavedPositionListUI();
+	} else if (
+		modal_mode === 'load' &&
+		current_modal_key !== undefined &&
+		current_modal_unabridged_key !== undefined
+	) {
+		// Load position
+		const editorSaveState = await indexeddb.loadItem<EditorSaveState>(
+			current_modal_unabridged_key,
+		);
+		if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
+			console.error(
+				`Saved position ${current_modal_unabridged_key} appears to be corrupted, deleting...`,
+			);
+			await indexeddb.deleteItem(current_modal_key);
+			await indexeddb.deleteItem(current_modal_unabridged_key);
+			await updateSavedPositionListUI();
+		} else {
+			eactions.load(editorSaveState);
+		}
+	}
+
+	closeModal();
+}
+
+/**
+ * Gets executed when the "save" button is pressed
+ */
+async function onSaveButtonPress(): Promise<void> {
+	await eactions.save(element_saveAsPositionName.value);
+	updateSavedPositionListUI();
 }
 
 /**
@@ -135,17 +223,11 @@ function unregisterAllPositionButtonListeners(): void {
 async function onLoadButtonClick(
 	key: string,
 	unabridged_key: string,
-	element: HTMLElement,
+	positionname: string,
 ): Promise<void> {
-	const editorSaveState = await indexeddb.loadItem<EditorSaveState>(unabridged_key);
-	if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
-		console.error(`Saved position ${unabridged_key} appears to be corrupted, deleting...`);
-		await indexeddb.deleteItem(key);
-		await indexeddb.deleteItem(unabridged_key);
-		await updateSavedPositionListUI(element);
-	} else {
-		eactions.load(editorSaveState);
-	}
+	current_modal_key = key;
+	current_modal_unabridged_key = unabridged_key;
+	openModal('load', positionname);
 }
 
 /**
@@ -154,19 +236,19 @@ async function onLoadButtonClick(
 async function onDeleteButtonClick(
 	key: string,
 	unabridged_key: string,
-	element: HTMLElement,
+	positionname: string,
 ): Promise<void> {
-	await indexeddb.deleteItem(key);
-	await indexeddb.deleteItem(unabridged_key);
-	await updateSavedPositionListUI(element);
+	current_modal_key = key;
+	current_modal_unabridged_key = unabridged_key;
+	openModal('delete', positionname);
 }
 
 /**
  * Update the saved positions list
  */
-async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
+async function updateSavedPositionListUI(): Promise<void> {
 	unregisterAllPositionButtonListeners(); // unregister position button listeners
-	element.replaceChildren(); // empty existing position list
+	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
 	const keys = await indexeddb.getAllKeys();
 
@@ -213,18 +295,20 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 		const loadBtn = document.createElement('button');
 		loadBtn.textContent = 'L';
 		loadBtn.className = 'btn';
-		registerButtonClick(loadBtn, () => onLoadButtonClick(key, unabridged_key, element));
+		registerButtonClick(loadBtn, () => onLoadButtonClick(key, unabridged_key, positionname));
 		buttons_cell.appendChild(loadBtn);
 
 		// "Delete" button
 		const deleteBtn = document.createElement('button');
 		deleteBtn.textContent = 'D';
 		deleteBtn.className = 'btn';
-		registerButtonClick(deleteBtn, () => onDeleteButtonClick(key, unabridged_key, element));
+		registerButtonClick(deleteBtn, () =>
+			onDeleteButtonClick(key, unabridged_key, positionname),
+		);
 		buttons_cell.appendChild(deleteBtn);
 
 		row.appendChild(buttons_cell);
-		element.appendChild(row);
+		element_savedPositionsToLoad.appendChild(row);
 	}
 }
 
