@@ -168,6 +168,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 			editorSaveState.pawnDoublePush,
 			editorSaveState.castling,
 		);
+		statustext.showStatus('Position successfully loaded.');
 	} catch (err) {
 		console.error(`Loading position ${editorSaveState.positionname} failed: ${err}`);
 	}
@@ -217,7 +218,7 @@ async function save(positionname: string): Promise<void> {
 		if (positionSavePending) {
 			positionSavePending = false;
 			await save(positionname);
-		} else statustext.showStatus('Position successfully saved in browser.');
+		} else statustext.showStatus('Position successfully saved in local browser storage.');
 	}
 }
 

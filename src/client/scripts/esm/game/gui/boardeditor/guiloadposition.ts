@@ -215,6 +215,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			await indexeddb.deleteItem(current_modal_unabridged_key);
 			await updateSavedPositionListUI();
 		} else {
+			floatingWindow.close(false);
 			eactions.load(editorSaveState);
 		}
 	} else if (modal_mode === 'overwrite_save') {
