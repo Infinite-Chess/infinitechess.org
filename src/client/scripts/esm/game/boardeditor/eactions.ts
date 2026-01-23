@@ -33,7 +33,7 @@ import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../shared/chess/logic/organizedpieces';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
+import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil';
 import timeutil from '../../../../../shared/util/timeutil';
 import docutil from '../../util/docutil';
 import gamecompressor, { SimplifiedGameState } from '../chess/gamecompressor';
@@ -48,9 +48,8 @@ import selectiontool from './tools/selection/selectiontool';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
 import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
-import guiboardeditor from '../gui/boardeditor/guiboardeditor';
-import eautosave from './eautosave';
 import indexeddb from '../../util/indexeddb';
+import variant from '../../../../../shared/chess/variants/variant';
 
 // Types ------------------------------------------------------------------
 
@@ -90,18 +89,49 @@ let positionSavePending = false;
 async function reset(): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	gameloader.unloadGame();
-	await eautosave.clearAutosave();
-	await guiboardeditor.open('reset');
+	// Unload logical and rendering parts of current position
+	gameloader.unloadLogicalAndRendering();
+
+	// Load default board editor position
+	await gameloader.startBoardEditor();
 }
 
 /** Clears the entire board editor position. */
 async function clearAll(): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	gameloader.unloadGame();
-	await eautosave.clearAutosave();
-	await guiboardeditor.open('clear');
+	// Unload logical and rendering parts of current position
+	gameloader.unloadLogicalAndRendering();
+
+	// Initialize board editor with empty position and bare minimum game rules
+	const metadata: MetaData = {
+		TimeControl: '-',
+		Event: `Position created using ingame board editor`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime(),
+	};
+	const gameRules = variant.getBareMinimumGameRules();
+	const position: Map<CoordsKey, number> = new Map();
+	const specialRights: Set<CoordsKey> = new Set();
+	const state_global = { specialRights };
+	const variantOptions: VariantOptions = {
+		fullMove: 1,
+		gameRules,
+		position,
+		state_global,
+	};
+	await gameloader.startBoardEditorFromCustomPosition(
+		{
+			metadata,
+			additional: {
+				variantOptions,
+			},
+		},
+		false,
+		false,
+	);
 }
 
 async function save(positionname: string): Promise<void> {

@@ -8,8 +8,6 @@ import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { EditorSaveState } from '../../boardeditor/eactions.js';
-import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant.js';
-import type { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
 // @ts-ignore
 import statustext from '../statustext.js';
@@ -32,7 +30,6 @@ import guistartenginegame from './guistartenginegame.js';
 import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guiloadposition from './guiloadposition.js';
-import variant from '../../../../../../shared/chess/variants/variant.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -130,58 +127,20 @@ let boardEditorOpen = false;
 
 /**
  * Open the board editor GUI
- * @param mode - optional argument specifying in which mode the GUI should be initialized
  */
-async function open(mode: 'default' | 'clear' | 'reset' = 'default'): Promise<void> {
+async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	if (mode === 'default') {
-		// Try to read in autosave and initialize board editor
-		// If there is no autosave, initialize board editor with Classical position
-		const EditorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
-		if (EditorSaveState === undefined || EditorSaveState.variantOptions === undefined)
-			await gameloader.startBoardEditor();
-		else {
-			const metadata: MetaData = {
-				Variant: 'Classical',
-				TimeControl: '-',
-				Event: `Position created using ingame board editor`,
-				Site: 'https://www.infinitechess.org/',
-				Round: '-',
-				UTCDate: timeutil.getCurrentUTCDate(),
-				UTCTime: timeutil.getCurrentUTCTime(),
-			};
-
-			try {
-				await gameloader.startBoardEditorFromCustomPosition(
-					{
-						metadata,
-						additional: {
-							variantOptions: EditorSaveState.variantOptions,
-						},
-					},
-					EditorSaveState.pawnDoublePush,
-					EditorSaveState.castling,
-				);
-			} catch (err) {
-				// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
-				// then do not lock user out of board editor
-				console.error(
-					'Failed to load autosaved board editor position when opening it:',
-					err,
-				);
-
-				await gameloader.startBoardEditor();
-			}
-		}
-	} else if (mode === 'reset') {
-		// Initialize board editor with Classical position
+	// Try to read in autosave and initialize board editor
+	// If there is no autosave, initialize board editor with Classical position
+	const EditorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
+	if (EditorSaveState === undefined || EditorSaveState.variantOptions === undefined)
 		await gameloader.startBoardEditor();
-	} else if (mode === 'clear') {
-		// Initialize board editor with empty position and bare minimum game rules
+	else {
 		const metadata: MetaData = {
+			Variant: 'Classical',
 			TimeControl: '-',
 			Event: `Position created using ingame board editor`,
 			Site: 'https://www.infinitechess.org/',
@@ -189,28 +148,25 @@ async function open(mode: 'default' | 'clear' | 'reset' = 'default'): Promise<vo
 			UTCDate: timeutil.getCurrentUTCDate(),
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
-		const gameRules = variant.getBareMinimumGameRules();
-		const position: Map<CoordsKey, number> = new Map();
-		const specialRights: Set<CoordsKey> = new Set();
-		const state_global = { specialRights };
-		const variantOptions: VariantOptions = {
-			fullMove: 1,
-			gameRules,
-			position,
-			state_global,
-		};
-		await gameloader.startBoardEditorFromCustomPosition(
-			{
-				metadata,
-				additional: {
-					variantOptions,
+
+		try {
+			await gameloader.startBoardEditorFromCustomPosition(
+				{
+					metadata,
+					additional: {
+						variantOptions: EditorSaveState.variantOptions,
+					},
 				},
-			},
-			false,
-			false,
-		);
-	} else {
-		console.error('guiboardeditor.open called with unsupported mode ', mode);
+				EditorSaveState.pawnDoublePush,
+				EditorSaveState.castling,
+			);
+		} catch (err) {
+			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
+			// then do not lock user out of board editor
+			console.error('Failed to load autosaved board editor position when opening it:', err);
+
+			await gameloader.startBoardEditor();
+		}
 	}
 
 	initListeners();
