@@ -230,6 +230,7 @@ async function onModalYesButtonPress(): Promise<void> {
  */
 async function onSaveButtonPress(): Promise<void> {
 	const positionname = element_saveAsPositionName.value;
+	if (positionname === '') return;
 	if (positionname.length > eactions.POSITION_NAME_MAX_LENGTH) {
 		console.error(
 			`This should not happen, position name input box is restricted to ${eactions.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
