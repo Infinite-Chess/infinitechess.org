@@ -1766,6 +1766,16 @@ svg.collapse {
 	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
+.saved-position-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.saved-position-btn svg {
+	flex-shrink: 0;
+}
+
 /* Ensure the load-position window can anchor absolute children */
 #load-position-UI {
 	position: relative; /* does not move it; only creates a positioning context */
