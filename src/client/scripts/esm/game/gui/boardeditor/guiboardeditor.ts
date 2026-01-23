@@ -442,6 +442,10 @@ function callback_Action(e: Event): void {
 			} else {
 				// If there is an active position name, simply overwrite save
 				eactions.save(active_positionname);
+
+				// Update UI if necessary
+				if (guiloadposition.getMode() !== undefined)
+					guiloadposition.updateSavedPositionListUI();
 			}
 			return;
 		}
