@@ -458,6 +458,11 @@ function Transform(
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);
 
+	// Determine whether the destination box is entirely contained within the border
+	const withinBorder = gamefile.basegame.gameRules.worldBorder
+		? bounds.boxContainsBox(gamefile.basegame.gameRules.worldBorder, destinationBox)
+		: true;
+
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	// Clear the destination area of any pieces not part of the original selection
@@ -477,6 +482,12 @@ function Transform(
 	for (const piece of piecesInSource) {
 		// Determine the new state for this piece
 		const transformed = transformer(piece);
+		// Skip if the destination is out of bounds
+		if (
+			!withinBorder &&
+			!bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder!, transformed.coords)
+		)
+			continue;
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
 		boardeditor.queueAddPiece(
