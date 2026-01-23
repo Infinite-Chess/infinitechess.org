@@ -70,6 +70,11 @@ interface EditorSaveState extends EditorAbridgedSaveState {
 // Constants ----------------------------------------------------------------------
 
 /**
+ * Max allowed length of the name of a position
+ */
+const POSITION_NAME_MAX_LENGTH = 24;
+
+/**
  * If a position with less pieces than this is pasted, the position dependent
  * game rules (pawnDoublePush, castling) are accurately updated,
  * else they are set to undetermined.
@@ -534,6 +539,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 // Exports --------------------------------------------------------------------
 
 export default {
+	POSITION_NAME_MAX_LENGTH,
+
 	reset,
 	clearAll,
 	load,

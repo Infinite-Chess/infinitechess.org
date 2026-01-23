@@ -59,7 +59,8 @@ const element_modalYesButton = document.getElementById('load-position-modal-yes'
 let mode: 'load' | 'save-as' | undefined = undefined;
 
 /** The current mode of the Confirmation dialog modal */
-let modal_mode: 'load' | 'delete' | undefined = undefined;
+let modal_mode: 'load' | 'delete' | 'overwrite_save' | undefined = undefined;
+let current_modal_positionname: string | undefined = undefined;
 let current_modal_key: string | undefined = undefined;
 let current_modal_unabridged_key: string | undefined = undefined;
 
@@ -122,14 +123,26 @@ function getMode(): typeof mode {
 	return mode;
 }
 
-function openModal(mode: typeof modal_mode, positionname: string): void {
+function openModal(
+	mode: typeof modal_mode,
+	positionname: string,
+	key: string,
+	unabridged_key: string,
+): void {
 	modal_mode = mode;
+	current_modal_positionname = positionname;
+	current_modal_key = key;
+	current_modal_unabridged_key = unabridged_key;
+
 	if (modal_mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
 		element_modalMessage.textContent = `Are you sure that you want to delete position ${positionname}? This cannot be undone.`;
 	} else if (modal_mode === 'load') {
 		element_modalTitle.textContent = 'Load position?';
 		element_modalMessage.textContent = `Are you sure that you want to load position ${positionname}? Unsaved changes to the current position will be lost.`;
+	} else if (modal_mode === 'overwrite_save') {
+		element_modalTitle.textContent = 'Overwrite position?';
+		element_modalMessage.textContent = `Are you sure that you want to overwrite position ${positionname}? This cannot be undone.`;
 	}
 	element_modal.classList.remove('hidden');
 	initModalListeners();
@@ -137,6 +150,7 @@ function openModal(mode: typeof modal_mode, positionname: string): void {
 
 function closeModal(): void {
 	modal_mode = undefined;
+	current_modal_positionname = undefined;
 	current_modal_key = undefined;
 	current_modal_unabridged_key = undefined;
 	element_modal.classList.add('hidden');
@@ -175,21 +189,20 @@ function closeModalListeners(): void {
 // Functions -----------------------------------------------------------------
 
 async function onModalYesButtonPress(): Promise<void> {
-	if (modal_mode === undefined) return;
-	else if (
-		modal_mode === 'delete' &&
-		current_modal_key !== undefined &&
-		current_modal_unabridged_key !== undefined
+	if (
+		modal_mode === undefined ||
+		current_modal_positionname === undefined ||
+		current_modal_key === undefined ||
+		current_modal_unabridged_key === undefined
 	) {
+		closeModal();
+		return;
+	} else if (modal_mode === 'delete') {
 		// Delete position
 		await indexeddb.deleteItem(current_modal_key);
 		await indexeddb.deleteItem(current_modal_unabridged_key);
 		await updateSavedPositionListUI();
-	} else if (
-		modal_mode === 'load' &&
-		current_modal_key !== undefined &&
-		current_modal_unabridged_key !== undefined
-	) {
+	} else if (modal_mode === 'load') {
 		// Load position
 		const editorSaveState = await indexeddb.loadItem<EditorSaveState>(
 			current_modal_unabridged_key,
@@ -204,6 +217,9 @@ async function onModalYesButtonPress(): Promise<void> {
 		} else {
 			eactions.load(editorSaveState);
 		}
+	} else if (modal_mode === 'overwrite_save') {
+		await eactions.save(current_modal_positionname);
+		updateSavedPositionListUI();
 	}
 
 	closeModal();
@@ -213,8 +229,21 @@ async function onModalYesButtonPress(): Promise<void> {
  * Gets executed when the "save" button is pressed
  */
 async function onSaveButtonPress(): Promise<void> {
-	await eactions.save(element_saveAsPositionName.value);
-	updateSavedPositionListUI();
+	const positionname = element_saveAsPositionName.value;
+	if (positionname.length > eactions.POSITION_NAME_MAX_LENGTH) {
+		console.error(
+			`This should not happen, position name input box is restricted to ${eactions.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
+		);
+		return;
+	}
+	const key = `editor-save-${positionname}`;
+	const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
+	const previous_save = await indexeddb.loadItem<EditorSaveState>(key);
+
+	if (previous_save === undefined) {
+		await eactions.save(positionname);
+		updateSavedPositionListUI();
+	} else openModal('overwrite_save', positionname, key, unabridged_key);
 }
 
 /**
@@ -225,9 +254,7 @@ async function onLoadButtonClick(
 	unabridged_key: string,
 	positionname: string,
 ): Promise<void> {
-	current_modal_key = key;
-	current_modal_unabridged_key = unabridged_key;
-	openModal('load', positionname);
+	openModal('load', positionname, key, unabridged_key);
 }
 
 /**
@@ -238,9 +265,7 @@ async function onDeleteButtonClick(
 	unabridged_key: string,
 	positionname: string,
 ): Promise<void> {
-	current_modal_key = key;
-	current_modal_unabridged_key = unabridged_key;
-	openModal('delete', positionname);
+	openModal('delete', positionname, key, unabridged_key);
 }
 
 /**
