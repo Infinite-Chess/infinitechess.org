@@ -12,6 +12,7 @@ import state from '../../../../../../shared/chess/logic/state';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil';
 import typeutil, { Player, players, rawTypes } from '../../../../../../shared/chess/util/typeutil';
+import bounds from '../../../../../../shared/util/math/bounds';
 import mouse from '../../../util/mouse';
 import gameslot from '../../chess/gameslot';
 import selection from '../../chess/selection';
@@ -112,8 +113,15 @@ function update(currentTool: Tool): void {
 	const mouseCoords = mouse.getTileMouseOver_Integer();
 	if (mouseCoords === undefined) return;
 	if (previousSquare !== undefined && coordutil.areCoordsEqual(mouseCoords, previousSquare))
-		return;
+		return; // We've already drawn on this square
 	previousSquare = mouseCoords;
+
+	// Make sure we don't paint outside the world border
+	if (
+		gamefile.basegame.gameRules.worldBorder &&
+		!bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder, mouseCoords)
+	)
+		return;
 
 	const pieceHovered = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, mouseCoords);
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
