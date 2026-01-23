@@ -4,7 +4,7 @@
  * Manages the GUI popup window for the Load Positions UI of the board editor
  */
 
-import type { EditorAbridgedSaveState } from '../../boardeditor/eactions';
+import type { EditorAbridgedSaveState, EditorSaveState } from '../../boardeditor/eactions';
 
 import indexeddb from '../../../util/indexeddb';
 import guifloatingwindow from './guifloatingwindow';
@@ -130,6 +130,38 @@ function unregisterAllPositionButtonListeners(): void {
 }
 
 /**
+ * Gets executed when a "load position" button is clicked
+ */
+async function onLoadButtonClick(
+	key: string,
+	unabridged_key: string,
+	element: HTMLElement,
+): Promise<void> {
+	const editorSaveState = await indexeddb.loadItem<EditorSaveState>(unabridged_key);
+	if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
+		console.error(`Saved position ${unabridged_key} appears to be corrupted, deleting...`);
+		await indexeddb.deleteItem(key);
+		await indexeddb.deleteItem(unabridged_key);
+		await updateSavedPositionListUI(element);
+	} else {
+		eactions.load(editorSaveState);
+	}
+}
+
+/**
+ * Gets executed when a "delete position" button is clicked
+ */
+async function onDeleteButtonClick(
+	key: string,
+	unabridged_key: string,
+	element: HTMLElement,
+): Promise<void> {
+	await indexeddb.deleteItem(key);
+	await indexeddb.deleteItem(unabridged_key);
+	await updateSavedPositionListUI(element);
+}
+
+/**
  * Update the saved positions list
  */
 async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
@@ -141,14 +173,19 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 	for (const key of keys) {
 		if (!key.startsWith('editor-saveinfo-')) continue;
 
-		const editorSaveinfo = await indexeddb.loadItem<EditorAbridgedSaveState>(key);
+		const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
+		const editorAbridgedSaveState = await indexeddb.loadItem<EditorAbridgedSaveState>(key);
 
 		// Name
 		const name_cell = document.createElement('div');
-		const positionname = editorSaveinfo?.positionname;
+		const positionname = editorAbridgedSaveState?.positionname;
 		if (positionname !== undefined) name_cell.textContent = positionname;
 		else {
-			void indexeddb.deleteItem(key);
+			console.error(
+				`Saved position entry ${unabridged_key} does not have a valid positionname entry, deleting...`,
+			);
+			await indexeddb.deleteItem(key);
+			await indexeddb.deleteItem(unabridged_key);
 			continue;
 		}
 		const row = document.createElement('div');
@@ -157,12 +194,12 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 
 		// Piececount
 		const piececount_cell = document.createElement('div');
-		piececount_cell.textContent = String(editorSaveinfo?.pieceCount ?? '');
+		piececount_cell.textContent = String(editorAbridgedSaveState?.pieceCount ?? '');
 		row.appendChild(piececount_cell);
 
 		// Date
 		const date_cell = document.createElement('div');
-		const timestamp = editorSaveinfo?.timestamp;
+		const timestamp = editorAbridgedSaveState?.timestamp;
 		if (timestamp !== undefined) {
 			const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
 			date_cell.textContent = UTCDate;
@@ -172,27 +209,21 @@ async function updateSavedPositionListUI(element: HTMLElement): Promise<void> {
 		// Buttons
 		const buttons_cell = document.createElement('div');
 
-		// Load button
+		// "Load" button
 		const loadBtn = document.createElement('button');
 		loadBtn.textContent = 'L';
 		loadBtn.className = 'btn';
-		registerButtonClick(loadBtn, () => {
-			// TODO: actually load position
-		});
+		registerButtonClick(loadBtn, () => onLoadButtonClick(key, unabridged_key, element));
 		buttons_cell.appendChild(loadBtn);
 
-		// Delete button
+		// "Delete" button
 		const deleteBtn = document.createElement('button');
 		deleteBtn.textContent = 'D';
 		deleteBtn.className = 'btn';
-		registerButtonClick(deleteBtn, async () => {
-			await indexeddb.deleteItem(key);
-			await updateSavedPositionListUI(element);
-		});
+		registerButtonClick(deleteBtn, () => onDeleteButtonClick(key, unabridged_key, element));
 		buttons_cell.appendChild(deleteBtn);
 
 		row.appendChild(buttons_cell);
-
 		element.appendChild(row);
 	}
 }

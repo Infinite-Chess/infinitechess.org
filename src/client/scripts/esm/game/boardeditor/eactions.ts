@@ -134,6 +134,40 @@ async function clearAll(): Promise<void> {
 	);
 }
 
+/** Loads a position from a savestate. */
+async function load(editorSaveState: EditorSaveState): Promise<void> {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	// Unload logical and rendering parts of current position
+	gameloader.unloadLogicalAndRendering();
+
+	// Load given savestate
+	const metadata: MetaData = {
+		Variant: 'Classical',
+		TimeControl: '-',
+		Event: `Position created using ingame board editor`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime(),
+	};
+
+	try {
+		await gameloader.startBoardEditorFromCustomPosition(
+			{
+				metadata,
+				additional: {
+					variantOptions: editorSaveState.variantOptions,
+				},
+			},
+			editorSaveState.pawnDoublePush,
+			editorSaveState.castling,
+		);
+	} catch (err) {
+		console.error(`Loading position ${editorSaveState.positionname} failed: ${err}`);
+	}
+}
+
 async function save(positionname: string): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
@@ -502,6 +536,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 export default {
 	reset,
 	clearAll,
+	load,
 	save,
 	copy,
 	paste,
