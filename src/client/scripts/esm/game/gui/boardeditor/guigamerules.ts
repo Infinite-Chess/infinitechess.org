@@ -9,8 +9,11 @@ import type { Edit } from '../../boardeditor/boardeditor';
 import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import typeutil, { players as p, RawType } from '../../../../../../shared/chess/util/typeutil';
-import jsutil from '../../../../../../shared/util/jsutil';
+import typeutil, {
+	players as p,
+	rawTypes as r,
+	RawType,
+} from '../../../../../../shared/chess/util/typeutil';
 import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import gameslot from '../../chess/gameslot';
@@ -206,26 +209,37 @@ function readGameRules(): void {
 		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
 	};
 
-	// promotionsAllowed
-	let promotionsAllowed: number[] | undefined = undefined;
+	// promotions allowed
+	let promotionsAllowed: RawType[] | undefined = undefined;
 	const promotionsAllowedRaw = element_promotionpieces.value;
-	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
-		// prettier-ignore
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_inverted[raw])))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		if (
-			promotionsAllowed.includes(NaN) ||
-			promotionsAllowed.some((type) => {
-				const [rawType, color] = typeutil.splitType(type);
-				return typeutil.royals.includes(rawType) || color === p.NEUTRAL;
-			})
-		) {
-			// One or more piece abbreviations were invalid
-			element_promotionpieces.classList.add('invalid-input');
-			promotionsAllowed = undefined;
-		} else {
-			element_promotionpieces.classList.remove('invalid-input');
-			if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
+	pa: if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
+		const runningPromotionsAllowed: RawType[] = [];
+
+		for (const code of promotionsAllowedRaw.split(',')) {
+			const typeStr: string | undefined = icnconverter.piece_codes_inverted[code];
+			if (typeStr === undefined) {
+				element_promotionpieces.classList.add('invalid-input');
+				break pa;
+			}
+			const type = Number(typeStr);
+			const [rawType, color] = typeutil.splitType(type);
+
+			if (
+				typeutil.royals.includes(rawType) || // Can't promote to royals
+				rawType === r.PAWN || // Can't promote to pawns
+				color === p.NEUTRAL || // Can't promote to neutrals
+				runningPromotionsAllowed.includes(rawType) // No duplicates
+			) {
+				element_promotionpieces.classList.add('invalid-input');
+				break pa;
+			}
+
+			runningPromotionsAllowed.push(rawType);
 		}
+
+		// All promotion pieces are valid
+		element_promotionpieces.classList.remove('invalid-input');
+		promotionsAllowed = runningPromotionsAllowed;
 	} else if (promotionsAllowedRaw === '') {
 		element_promotionpieces.classList.remove('invalid-input');
 	} else {
@@ -330,7 +344,7 @@ function readGameRules(): void {
 		enPassant,
 		moveRule,
 		promotionRanks,
-		promotionsAllowed: promotionsAllowed as RawType[],
+		promotionsAllowed,
 		winConditions,
 		pawnDoublePush,
 		castling,
