@@ -1660,7 +1660,7 @@ svg.collapse {
 
 .saved-position-columns {
 	display: grid;
-	grid-template-columns: 40% 15% 25% 30%;
+	grid-template-columns: 40% 13% 25% 32%;
 	align-items: center;
 	padding: 0 0.6em;
 	height: 1em;
@@ -1681,20 +1681,28 @@ svg.collapse {
 	overflow-x: hidden;
 	display: flex;
 	flex-direction: column;
-	gap: 0.35em;
-	padding: 0.15em 0;
+	gap: 0;
+	padding: 0;
 }
 
 .saved-position {
 	flex: 0 0 auto; /* do not shrink */
 	height: 3em;
-	border-radius: 0.45em;
-	background-color: rgba(199, 199, 199, 1);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: 40% 15% 25% 30%;
-	padding: 0 0.6em;
+	grid-template-columns: 40% 13% 25% 32%;
+	border-radius: 0;
+	padding: 0 0.2em;
 	overflow: hidden;
+}
+
+.saved-position:nth-child(odd) {
+	background-color: rgba(199, 199, 199, 1);
+}
+
+.saved-position:nth-child(even) {
+	background-color: rgba(185, 185, 185, 1);
 }
 
 .saved-position > div {
@@ -1711,21 +1719,7 @@ svg.collapse {
 	display: flex;
 	gap: 0.4rem;
 	flex-shrink: 0;
-}
-
-.saved-position:hover {
-	background-color: rgba(168, 168, 168, 0.8);
-	cursor: pointer;
-}
-
-.saved-position:active {
-	background-color: rgba(157, 156, 156, 0.8);
-}
-
-.saved-position.selected {
-	outline-style: solid;
-	outline-width: 0.25em;
-	outline-offset: -0.15em;
+	padding-right: 0.5em;
 }
 
 .saved-position .btn {
