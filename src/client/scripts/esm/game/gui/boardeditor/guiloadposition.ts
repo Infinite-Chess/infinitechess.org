@@ -301,7 +301,7 @@ async function updateSavedPositionListUI(): Promise<void> {
 			continue;
 		}
 		const row = document.createElement('div');
-		row.className = 'saved-position unselectable';
+		row.className = 'saved-position';
 		row.appendChild(name_cell);
 
 		// Piececount
