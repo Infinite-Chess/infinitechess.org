@@ -339,7 +339,7 @@ function hasCastlingPartner(
 		if (dist < 3n) return false;
 
 		// Additional optional constraint checks
-		if (!partnerConstraint(partner)) return false;
+		if (partnerConstraint && !partnerConstraint(partner)) return false;
 
 		return true; // Found a valid partner!
 	});
