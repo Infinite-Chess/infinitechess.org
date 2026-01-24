@@ -1660,7 +1660,7 @@ svg.collapse {
 
 .saved-position-columns {
 	display: grid;
-	grid-template-columns: 40% 13% 25% 32%;
+	grid-template-columns: 35% 18% 20% auto;
 	align-items: center;
 	padding: 0 0.6em;
 	height: 1em;
