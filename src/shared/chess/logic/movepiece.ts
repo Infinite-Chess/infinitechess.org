@@ -273,42 +273,78 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 		const candCoordsKey = coordutil.getKeyFromCoords(candidate.coords);
 		if (!boardsim.state.global.specialRights.has(candCoordsKey)) continue; // Already has no rights
 
-		const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
-
 		// Optimization: If the piece being checked is the same "Role" as the piece that triggered this event,
 		// it is unaffected. (e.g. Left Rook moving doesn't stop Right Rook from *potential* castling).
+		const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
 		if (candidateIsTrigger === isTrigger) continue;
 
 		// 3. Search: Does this candidate have ANY valid partner remaining?
-		const hasValidPartner = row.some((partnerIdx) => {
-			const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
-			const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
-
-			// Partner Validation
-			if (partnerPlayer !== player) return false; // Affects friends only
-			if (partnerRawType === rawTypes.PAWN) return false; // Pawns don't have castling rights
-
-			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
-			if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
-
-			const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
-
-			// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
-			if (partnerIsTrigger === candidateIsTrigger) return false;
-
-			// The partner cannot be the piece that just moved/died
-			if (coordutil.areCoordsEqual(partner.coords, coords)) return false;
-
-			// Distance Check: Must be at least 3 spaces away
-			const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
-			if (dist < 3n) return false;
-
-			return true; // Found a valid partner!
-		});
+		const hasValidPartner = hasCastlingPartner(
+			boardsim,
+			candidate,
+			true, // Require rights
+			// Additional constraint: The partner cannot be the piece that just moved/died
+			(partner: Piece) => !coordutil.areCoordsEqual(partner.coords, coords),
+		);
 
 		// If no partners were found, this piece is now impotent. Revoke its rights.
 		if (!hasValidPartner) state.createSpecialRightsState(edit, candCoordsKey, true, false);
 	}
+}
+
+/**
+ * Determines whether a piece has any valid castling partner on the board.
+ * @param boardsim
+ * @param candidate - A candidate piece for castling. MUST NOT be a pawn.
+ * @param requireRights - If true, the partners must currently have special rights to be considered valid.
+ * @param partnerConstraint - An optional function, run for each partner, that must return true for them to be considered valid.
+ */
+function hasCastlingPartner(
+	boardsim: Board,
+	candidate: Piece,
+	requireRights: boolean,
+	partnerConstraint?: (partner: Piece) => boolean,
+): boolean {
+	const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
+
+	// Basic Validity Checks
+	if (candRawType === rawTypes.PAWN)
+		throw new Error('Cannot test if pawn has valid castling partner.'); // Safety, this could be easy to accidentally pass in.
+
+	const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
+
+	const key = organizedpieces.getKeyFromLine([1n, 0n], candidate.coords);
+	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
+
+	// Search: Does this candidate have ANY valid castling partner?
+	const hasValidPartner = row.some((partnerIdx) => {
+		const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
+		const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
+
+		// Partner Validation
+		if (partnerPlayer !== candPlayer) return false; // Affects friends only
+		if (partnerRawType === rawTypes.PAWN) return false; // Pawns don't have castling rights
+
+		if (requireRights) {
+			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
+			if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
+		}
+
+		// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
+		const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
+		if (partnerIsTrigger === candidateIsTrigger) return false;
+
+		// Distance Check: Must be at least 3 spaces away
+		const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
+		if (dist < 3n) return false;
+
+		// Additional optional constraint checks
+		if (!partnerConstraint(partner)) return false;
+
+		return true; // Found a valid partner!
+	});
+
+	return hasValidPartner;
 }
 
 /**
@@ -632,6 +668,7 @@ export default {
 	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,
+	hasCastlingPartner,
 	makeMove,
 	updateTurn,
 	goToMove,
