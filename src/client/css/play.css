@@ -1732,6 +1732,7 @@ svg.collapse {
 	font-weight: 600;
 	cursor: pointer;
 	border: 1px solid transparent;
+	background-color: rgba(185, 185, 185, 1);
 }
 
 .position-name {
