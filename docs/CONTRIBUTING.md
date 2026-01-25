@@ -29,6 +29,8 @@ The use of AI to help you write and modify code is permitted, but you must caref
 
 Keep all coding languages to their respective files. For example, shader code goes inside `.glsl` files, and html goes inside `.html` or `.ejs` files, not scripts.
 
+`// prettier-ignore`s are permitted to bypass the prettifier, for any one code block, if you're style is easier to read.
+
 ### No code duplication
 
 There may not be any code redundancy. Always refactor to the simplest way things can be expressed.
@@ -37,6 +39,16 @@ Use as many prexisting helper methods in the codebase as possible. At times, you
 
 No dead code or functions that are never called.
 
+## Type Safety
+
+All new scripts are required to be written in TypeScript, vs JavaScript.
+
+To retain maximum type safety, no casting via `as` is permitted, only in rare circumstances when it is not simple to get typescript to infer the type, and we are 100% confident of the type. Try to use generics where you can.
+
+For arguments defined by user input, or needing to be sanitized from the client, use the `zod` package to achieve full type safety.
+
+No `// ts-ignore`s are permitted, except for imports of existing `.js` files into `.ts` files.
+
 ### No magic strings
 
 There must be no magic strings. All precise strings that are used in multiple locations must be stored in a constant variable. A string is considered magic if changing it in one place, but not everywhere else, would create a bug.
@@ -44,6 +56,10 @@ There must be no magic strings. All precise strings that are used in multiple lo
 ### Single Responsibility Principle (SRP)
 
 Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
+
+### Target the Root Cause
+
+Do not opt for "band-aid" patches for bugs that only patch symptoms. Bugs are a sign of something not working how it's designed to. Find the root cause, patch that.
 
 ### Functions
 
