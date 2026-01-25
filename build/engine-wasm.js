@@ -10,17 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // Absolute path to the HydroChess WASM engine submodule (if present)
-const HYDROCHESS_WASM_DIR = path.join(
-	process.cwd(),
-	'src',
-	'client',
-	'scripts',
-	'esm',
-	'game',
-	'chess',
-	'engines',
-	'hydrochess-wasm',
-);
+const HYDROCHESS_WASM_DIR = path.join(process.cwd(), 'src', 'client', 'pkg', 'hydrochess');
 
 // API URL to check the latest released version
 const LATEST_RELEASE_API_URL =
@@ -31,7 +21,7 @@ const LATEST_RELEASE_API_URL =
  * Automatically downloads the pre-built WASM if there is a new release.
  */
 export async function setupEngineWasm() {
-	const label = '[hydrochess-wasm]';
+	const label = '[hydrochess]';
 	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
 	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
 	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
