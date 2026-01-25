@@ -39,7 +39,7 @@ Use as many prexisting helper methods in the codebase as possible. At times, you
 
 No dead code or functions that are never called.
 
-## Avoid Complexity
+### Avoid Complexity
 
 Don't add unnecessary complexity. Use the minimum amount of code & features needed to get the job done.
 
