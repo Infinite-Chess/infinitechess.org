@@ -47,6 +47,8 @@ Don't add unnecessary complexity. Use the minimum amount of code & features need
 2. Identify where the website currently lacks in those requirements.
 3. Make the **minimum** changes necessary to fulfill those requirements.
 
+Start minimal. Sometimes requirements may not be fully known until halfway through implementation. Start small and only increase requirements when needed.
+
 ### Type Safety
 
 All new scripts are required to be written in TypeScript, vs JavaScript.
