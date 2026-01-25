@@ -73,6 +73,8 @@ Require atleast one sentence of JSDoc. Do not make the documentation too verbose
 
 Arguments only need documentation if it is not common sense what they would be for, or what we should pass in for them (for example, `boardsim` is common sense and doesn't require documentation).
 
+Function bodies should also have comments for documentation, to help understand what it's doing and how it works. Don't be too verbose.
+
 ### Exports
 
 In general, use default exports (e.g. `export default { ... }`) over normal exports `export { ... }`. This reduces global scope pollution. The only exception is when a script has only one exported function, then it may export that function normally.
