@@ -72,7 +72,7 @@ interface EditorSaveState extends EditorAbridgedSaveState {
 /**
  * Max allowed length of the name of a position
  */
-const POSITION_NAME_MAX_LENGTH = 24;
+const POSITION_NAME_MAX_LENGTH = 32;
 
 /**
  * If a position with less pieces than this is pasted, the position dependent
