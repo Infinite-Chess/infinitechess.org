@@ -23,7 +23,7 @@ Massive refactors covering dozens of files in the codebase.
 ## Code Standards
 
 > [!NOTE]
-> Any guidelines automatically enforced via our linter, prettier, type checker, and builder, are not listed here. Fix them as you encounter them.
+> Any guidelines automatically enforced via our linter, prettifier, type checker, and builder, are not listed here. Fix them as you encounter them.
 
 The use of AI to help you write and modify code is permitted, but you must carefully review and polish its output to ensure the quality of the code meets all standards of the project!
 
