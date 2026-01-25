@@ -16,7 +16,7 @@ import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
 import loadbalancer from './misc/loadbalancer.js';
-import indexeddb from '../util/indexeddb.js';
+import IndexedDB from '../util/IndexedDB.js';
 
 // Starts the game. Runs automatically once the page is loaded.
 function start(): void {
@@ -45,7 +45,7 @@ function initListeners(): void {
 		websocket.closeSocket();
 
 		LocalStorage.eraseExpiredItems();
-		indexeddb.eraseExpiredItems();
+		IndexedDB.eraseExpiredItems();
 	});
 }
 

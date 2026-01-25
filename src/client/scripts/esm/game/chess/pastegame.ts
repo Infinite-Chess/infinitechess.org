@@ -10,7 +10,7 @@ import statustext from '../gui/statustext.js';
 import guipause from '../gui/guipause.js';
 import websocket from '../websocket.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import indexeddb from '../../util/indexeddb.js';
+import IndexedDB from '../../util/IndexedDB.js';
 import enginegame from '../misc/enginegame.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
@@ -195,7 +195,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 		const gameID = onlinegame.getGameID();
 		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
 		const expiryMillis = timeutil.getTotalMilliseconds({ days: 3 });
-		indexeddb.saveItem(storageKey, variantOptions, expiryMillis);
+		IndexedDB.saveItem(storageKey, variantOptions, expiryMillis);
 	}
 
 	// What is the warning message if pasting in a private match?

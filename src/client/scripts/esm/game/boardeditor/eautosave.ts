@@ -8,7 +8,7 @@
 
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
 
-import indexeddb from '../../util/indexeddb';
+import IndexedDB from '../../util/IndexedDB';
 import boardeditor from './boardeditor';
 import eactions from './eactions';
 import egamerules from './egamerules';
@@ -69,9 +69,9 @@ async function saveCurrentPositionOnce(): Promise<void> {
 
 		if (variantOptions.position.size === 0) {
 			// Don't save empty position, as loading it is currently not supported
-			await indexeddb.saveItem('editor-autosave', undefined);
+			await IndexedDB.saveItem('editor-autosave', undefined);
 		} else
-			await indexeddb.saveItem('editor-autosave', {
+			await IndexedDB.saveItem('editor-autosave', {
 				variantOptions,
 				pawnDoublePush,
 				castling,
