@@ -37,10 +37,7 @@ function markPositionDirty(): void {
 	positionDirty = true;
 }
 
-/**
- * Autosave board editor position to IndexedDB via indexeddb.ts wrapper
- * But only if no other autosave is currently ongoing
- */
+/** Auto saves the board editor position once. */
 async function autosaveCurrentPositionOnce(): Promise<void> {
 	// Track dirtiness: skip unnecessary writes that don't change anything
 	if (!positionDirty) return;

@@ -135,8 +135,8 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const EditorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
-	if (EditorSaveState === undefined || EditorSaveState.variantOptions === undefined) {
+	const editorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
+	if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
 		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
 	} else {
@@ -151,16 +151,16 @@ async function open(): Promise<void> {
 		};
 
 		try {
-			boardeditor.setActivePositionName(EditorSaveState.positionname);
+			boardeditor.setActivePositionName(editorSaveState.positionname);
 			await gameloader.startBoardEditorFromCustomPosition(
 				{
 					metadata,
 					additional: {
-						variantOptions: EditorSaveState.variantOptions,
+						variantOptions: editorSaveState.variantOptions,
 					},
 				},
-				EditorSaveState.pawnDoublePush,
-				EditorSaveState.castling,
+				editorSaveState.pawnDoublePush,
+				editorSaveState.castling,
 			);
 		} catch (err) {
 			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,

@@ -69,9 +69,7 @@ interface EditorSaveState extends EditorAbridgedSaveState {
 
 // Constants ----------------------------------------------------------------------
 
-/**
- * Max allowed length of the name of a position
- */
+/** Max allowed length of the name of a position */
 const POSITION_NAME_MAX_LENGTH = 32;
 
 /**
@@ -230,7 +228,7 @@ async function save(positionname: string): Promise<void> {
 			await save(positionname);
 		} else {
 			boardeditor.setActivePositionName(positionname);
-			statustext.showStatus('Position successfully saved in local browser storage.');
+			statustext.showStatus('Position successfully saved on browser.');
 		}
 	}
 }
