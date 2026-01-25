@@ -39,7 +39,11 @@ Use as many prexisting helper methods in the codebase as possible. At times, you
 
 No dead code or functions that are never called.
 
+## Avoid Complexity
+
 Don't add unnecessary complexity. Use the minimum amount of code & features needed to get the job done.
+
+1. Identify the requirements for adding a new feature. 2. Identify where the website currently lacks in those requirements. 3. Make the **minimum** changes necessary to fulfill those requirements.
 
 ### Type Safety
 
