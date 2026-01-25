@@ -41,6 +41,10 @@ No dead code or functions that are never called.
 
 Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
 
+### No magic strings
+
+There must be no magic strings. All precise strings that are used in multiple locations must be stored in a constant variable. A string is considered magic if changing it in one place, but not everywhere else, would create a bug.
+
 ### Functions
 
 Should have one single purpose. If it does multiple things, refactor it out into multiple functions. Aim for under 40 lines.
