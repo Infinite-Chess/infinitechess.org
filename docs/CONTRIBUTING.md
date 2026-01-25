@@ -1,7 +1,5 @@
 # Pull Request Requirements and Guidelines
 
-## General
-
 ### All pull requests should only add **one** feature, fix **one** bug, or refactor **one** item.
 
 If your changes affect more than one feature, it **must** be refactored into multiple pull requests. If those additional PRs would depend on the code of the first PR, you must wait until the first one is merged before opening the additional ones. To avoid this, while you wait, try to work on features that have no overlap in the codebase, thus allowing multiple PRs at once.
@@ -57,7 +55,7 @@ In general, use default exports (e.g. `export default { ... }`) over normal expo
 
 All files, types, and variable names should have clear and easy to understand names.
 
-When writing names, keep context in mind. For example, a script whos responsibility is to save board editor positions should not be named `save.ts`, as `save` doesn't infer any context about the board editor. A better name is `editorsave`, or `esave` for short. Another example: If a script named `guinavigation.ts` is using default exports, and we're writing a function that opens the navigation UI, then choose `open()` for the function name instead of say, `openNavigationUI()`, as for the latter, external application code calling the function would look like `guinavigation.openNavigationUI()`, which duplicates the needed context, vs the simpler `guinavigation.open()`.
+When writing names, keep context in mind. For example, a script whos responsibility is to save board editor positions should not be named `save.ts`, as `save` doesn't infer any context about the board editor. A better name is `editorsave.ts`, or `esave.ts` for short. Another example: If a script named `guinavigation.ts` is using default exports, and we're writing a function that opens the navigation UI, then choose `open()` for the function name instead of say, `openNavigationUI()`, as for the latter, external application code calling the function would look like `guinavigation.openNavigationUI()`, which duplicates the needed context, vs the simpler `guinavigation.open()`.
 
 ### Casing
 
