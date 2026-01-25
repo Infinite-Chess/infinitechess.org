@@ -35,6 +35,8 @@ There may not be any code redundancy. Always refactor to the simplest way things
 
 Use as many prexisting helper methods in the codebase as possible. At times, you may have to refactor out helpers out of existing codebase functions in order to satisfy this.
 
+No dead code or functions that are never called.
+
 ### Single Responsibility Principle (SRP)
 
 Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
