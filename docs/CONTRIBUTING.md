@@ -39,7 +39,7 @@ Use as many prexisting helper methods in the codebase as possible. At times, you
 
 No dead code or functions that are never called.
 
-## Type Safety
+### Type Safety
 
 All new scripts are required to be written in TypeScript, vs JavaScript.
 
