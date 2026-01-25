@@ -57,6 +57,8 @@ There must be no magic strings. All precise strings that are used in multiple lo
 
 Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
 
+Be aware of context. A script in charge reading and managing the pieces inside the gamefile should not be in charge of knowing the fallback bounding box of the pieces, if there are none. Remember, one responsibility per script.
+
 ### Target the Root Cause
 
 Do not opt for "band-aid" patches for bugs that only patch symptoms. Bugs are a sign of something not working how it's designed to. Find the root cause, patch that.
