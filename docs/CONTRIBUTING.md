@@ -93,7 +93,7 @@ When writing names, keep context in mind. For example, a script whos responsibil
 
 ### Casing
 
-**Scripts**: Use either lowercase (e.g. `localstorage.ts`) or PascalCase (e.g. `AudioManager.ts`), depending on how universally professional and reusable it is. If it's scope could only ever be used in our repository and game, use lowercase. If it could be pulled out and reused in other projects without significant refactoring, use PascalCase.
+**Scripts**: Use either lowercase (e.g. `boardutil.ts`) or PascalCase (e.g. `AudioManager.ts`), depending on how universally professional and reusable it is. If it's scope could only ever be used in our repository and game, use lowercase. If it could be pulled out and reused in other projects without significant refactoring, use PascalCase.
 
 **Types**: Use PascalCase (e.g. `OrganizedPieces`)
 

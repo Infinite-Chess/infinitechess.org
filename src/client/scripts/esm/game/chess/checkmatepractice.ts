@@ -7,7 +7,7 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/initvaria
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import localstorage from '../../util/localstorage.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
@@ -54,7 +54,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * [ "2Q-1k", "3R-1k", "2CH-1k"]
  *
  * This will be initialized when guipractice calls {@link updateCompletedCheckmates} for the first time!
- * If we initialize it right here, we crash in production, because localstorage is not defined yet in app.js
+ * If we initialize it right here, we crash in production, because LocalStorage is not defined yet.
  * @type {string[]}
  */
 let completedCheckmates: string[];
@@ -233,7 +233,7 @@ function squareNotInSight(square: CoordsKey, position: Map<CoordsKey, number>): 
  * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
  */
 function eraseCheckmatePracticeProgressFromLocalStorage(): void {
-	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+	LocalStorage.deleteItem(nameOfCompletedCheckmatesInStorage);
 	console.log('DELETED all checkmate practice progress.');
 	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
 	completedCheckmates.length = 0;
@@ -250,8 +250,8 @@ function updateCompletedCheckmates(): void {
 		// console.log("checkmates_beaten cookie was present!");
 		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
 	} else {
-		// Else, use localstorage as a fallback
-		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
+		// Else, use LocalStorage as a fallback
+		completedCheckmates = LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
 	}
 	guipractice.updateCheckmatesBeaten(completedCheckmates);
 }
@@ -271,9 +271,9 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		completedCheckmates.push(checkmatePracticeID);
 	console.log('Marked checkmate practice as completed!');
 
-	// Update localstorage and exit, if we are not logged in
+	// Update LocalStorage and exit, if we are not logged in
 	if (!validatorama.areWeLoggedIn()) {
-		localstorage.saveItem(
+		LocalStorage.saveItem(
 			nameOfCompletedCheckmatesInStorage,
 			completedCheckmates,
 			expiryOfCompletedCheckmatesMillis,

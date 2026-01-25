@@ -8,7 +8,7 @@
  */
 
 import webgl from './rendering/webgl.js';
-import localstorage from '../util/localstorage.js';
+import LocalStorage from '../util/LocalStorage.js';
 import game from './chess/game.js';
 import camera from './rendering/camera.js';
 import websocket from './websocket.js';
@@ -44,7 +44,7 @@ function initListeners(): void {
 		// "1000 Closed by client" instead of "1001 Endpoint left"
 		websocket.closeSocket();
 
-		localstorage.eraseExpiredItems();
+		LocalStorage.eraseExpiredItems();
 		indexeddb.eraseExpiredItems();
 	});
 }
