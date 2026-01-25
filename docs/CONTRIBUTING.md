@@ -1,0 +1,70 @@
+# Pull Request Requirements and Guidelines
+
+## General
+
+### All pull requests should only add **one** feature, fix **one** bug, or refactor **one** item.
+
+If your changes affect more than one feature, it **must** be refactored into multiple pull requests. If those additional PRs would depend on the code of the first PR, you must wait until the first one is merged before opening the additional ones. To avoid this, while you wait, try to work on features that have no overlap in the codebase, thus allowing multiple PRs at once.
+
+### Title & Description
+
+Titles must be clear to understand.
+
+Description guidelines are in the automatic template when opening a new pull request.
+
+### Scopes you should NOT submit pull requests for:
+
+Only Naviary should make these types of changes (but you may request me to do so):
+
+Adding/removing package dependancies, or making any changes to `package.json`.
+
+Type or variable renames spanning several files (time consuming for me to review, but taking one minute to make the changes myself).
+
+Massive refactors covering dozens of files in the codebase.
+
+## Code Standards
+
+> [!NOTE]
+> Any guidelines automatically enforced via our linter, prettier, type checker, and builder, are not listed here. Fix them as you encounter them.
+
+The use of AI to help you write and modify code is permitted, but you must carefully review and polish its output to ensure the quality of the code meets all standards of the project!
+
+Keep all coding languages to their respective files. For example, shader code goes inside `.glsl` files, and html goes inside `.html` or `.ejs` files, not scripts.
+
+### No code duplication
+
+There may not be any code redundancy. Always refactor to the simplest way things can be expressed.
+
+Use as many prexisting helper methods in the codebase as possible. At times, you may have to refactor out helpers out of existing codebase functions in order to satisfy this.
+
+### Single Responsibility Principle (SRP)
+
+Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
+
+### Functions
+
+Should have one single purpose. If it does multiple things, refactor it out into multiple functions. Aim for under 40 lines.
+
+Require atleast one sentence of JSDoc. Do not make the documentation too verbose.
+
+Arguments only need documentation if it is not common sense what they would be for, or what we should pass in for them (for example, `boardsim` is common sense and doesn't require documentation).
+
+### Exports
+
+In general, use default exports (e.g. `export default { ... }`) over normal exports `export { ... }`. This reduces global scope pollution. The only exception is when a script has only one exported function, then it may export that function normally.
+
+## Naming
+
+All files, types, and variable names should have clear and easy to understand names.
+
+When writing names, keep context in mind. For example, a script whos responsibility is to save board editor positions should not be named `save.ts`, as `save` doesn't infer any context about the board editor. A better name is `editorsave`, or `esave` for short. Another example: If a script named `guinavigation.ts` is using default exports, and we're writing a function that opens the navigation UI, then choose `open()` for the function name instead of say, `openNavigationUI()`, as for the latter, external application code calling the function would look like `guinavigation.openNavigationUI()`, which duplicates the needed context, vs the simpler `guinavigation.open()`.
+
+### Casing
+
+**Scripts**: Use either lowercase (e.g. `localstorage.ts`) or PascalCase (e.g. `AudioManager.ts`), depending on how universally professional and reusable it is. If it's scope could only ever be used in our repository and game, use lowercase. If it could be pulled out and reused in other projects without significant refactoring, use PascalCase.
+
+**Types**: Use PascalCase (e.g. `OrganizedPieces`)
+
+**Constants**: Use UpperSnakeCase (e.g. `SOUND_OFFSET`).
+
+**Variables**: Use either CamelCase (e.g. `playerColor`) or SnakeCase (e.g. `player_color`), depending on what the script you are working on is using more apparently. Remaining consistent is trump: if many other scripts create a local variable named `timeoutId`, choose that for your local variable name instead of `timeout_id`.
