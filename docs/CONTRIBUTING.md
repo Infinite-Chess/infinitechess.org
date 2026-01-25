@@ -39,6 +39,8 @@ Use as many prexisting helper methods in the codebase as possible. At times, you
 
 No dead code or functions that are never called.
 
+Don't add unnecessary complexity. Use the minimum amount of code & features needed to get the job done.
+
 ### Type Safety
 
 All new scripts are required to be written in TypeScript, vs JavaScript.
