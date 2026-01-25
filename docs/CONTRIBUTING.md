@@ -37,13 +37,13 @@ Use as many prexisting helper methods in the codebase as possible. At times, you
 
 No dead code or functions that are never called.
 
-### Single Responsibility Principle (SRP)
-
-Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
-
 ### No magic strings
 
 There must be no magic strings. All precise strings that are used in multiple locations must be stored in a constant variable. A string is considered magic if changing it in one place, but not everywhere else, would create a bug.
+
+### Single Responsibility Principle (SRP)
+
+Each script should have one responsibility only. If it has multiple, you **must** refactor it into multiple scripts.
 
 ### Functions
 
