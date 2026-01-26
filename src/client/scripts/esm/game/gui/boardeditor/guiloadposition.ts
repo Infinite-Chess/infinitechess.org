@@ -6,7 +6,7 @@
 
 import type { EditorAbridgedSaveState, EditorSaveState } from '../../boardeditor/eactions';
 
-import indexeddb from '../../../util/indexeddb';
+import IndexedDB from '../../../util/IndexedDB';
 import guifloatingwindow from './guifloatingwindow';
 import timeutil from '../../../../../../shared/util/timeutil';
 import eactions from '../../boardeditor/eactions';
@@ -202,20 +202,20 @@ async function onModalYesButtonPress(): Promise<void> {
 		return;
 	} else if (modal_mode === 'delete') {
 		// Delete position
-		await indexeddb.deleteItem(current_modal_key);
-		await indexeddb.deleteItem(current_modal_unabridged_key);
+		await IndexedDB.deleteItem(current_modal_key);
+		await IndexedDB.deleteItem(current_modal_unabridged_key);
 		await updateSavedPositionListUI();
 	} else if (modal_mode === 'load') {
 		// Load position
-		const editorSaveState = await indexeddb.loadItem<EditorSaveState>(
+		const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(
 			current_modal_unabridged_key,
 		);
 		if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
 			console.error(
 				`Saved position ${current_modal_unabridged_key} appears to be corrupted, deleting...`,
 			);
-			await indexeddb.deleteItem(current_modal_key);
-			await indexeddb.deleteItem(current_modal_unabridged_key);
+			await IndexedDB.deleteItem(current_modal_key);
+			await IndexedDB.deleteItem(current_modal_unabridged_key);
 			await updateSavedPositionListUI();
 		} else {
 			floatingWindow.close(false);
@@ -243,7 +243,7 @@ async function onSaveButtonPress(): Promise<void> {
 	}
 	const key = `editor-save-${positionname}`;
 	const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
-	const previous_save = await indexeddb.loadItem<EditorSaveState>(key);
+	const previous_save = await IndexedDB.loadItem<EditorSaveState>(key);
 
 	if (previous_save === undefined) {
 		await eactions.save(positionname);
@@ -280,13 +280,13 @@ async function updateSavedPositionListUI(): Promise<void> {
 	unregisterAllPositionButtonListeners(); // unregister position button listeners
 	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
-	const keys = await indexeddb.getAllKeys();
+	const keys = await IndexedDB.getAllKeys();
 
 	for (const key of keys) {
 		if (!key.startsWith('editor-saveinfo-')) continue;
 
 		const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
-		const editorAbridgedSaveState = await indexeddb.loadItem<EditorAbridgedSaveState>(key);
+		const editorAbridgedSaveState = await IndexedDB.loadItem<EditorAbridgedSaveState>(key);
 
 		// Name
 		const name_cell = document.createElement('div');
@@ -296,8 +296,8 @@ async function updateSavedPositionListUI(): Promise<void> {
 			console.error(
 				`Saved position entry ${unabridged_key} does not have a valid positionname entry, deleting...`,
 			);
-			await indexeddb.deleteItem(key);
-			await indexeddb.deleteItem(unabridged_key);
+			await IndexedDB.deleteItem(key);
+			await IndexedDB.deleteItem(unabridged_key);
 			continue;
 		}
 		const row = document.createElement('div');

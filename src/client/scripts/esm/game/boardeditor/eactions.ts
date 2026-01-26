@@ -48,7 +48,7 @@ import selectiontool from './tools/selection/selectiontool';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
 import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
-import indexeddb from '../../util/indexeddb';
+import IndexedDB from '../../util/IndexedDB';
 import variant from '../../../../../shared/chess/variants/variant';
 
 // Types ------------------------------------------------------------------
@@ -201,7 +201,7 @@ async function save(positionname: string): Promise<void> {
 		const pieceCount = variantOptions.position.size;
 
 		// Save full info for loading purposes
-		await indexeddb.saveItem(`editor-save-${positionname}`, {
+		await IndexedDB.saveItem(`editor-save-${positionname}`, {
 			positionname,
 			timestamp,
 			pieceCount,
@@ -211,7 +211,7 @@ async function save(positionname: string): Promise<void> {
 		});
 
 		// Save abridged info for display purposes
-		await indexeddb.saveItem(`editor-saveinfo-${positionname}`, {
+		await IndexedDB.saveItem(`editor-saveinfo-${positionname}`, {
 			positionname,
 			timestamp,
 			pieceCount,

@@ -135,7 +135,7 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveState = await indexeddb.loadItem<EditorSaveState>('editor-autosave');
+	const editorSaveState = await IndexedDB.loadItem<EditorSaveState>('editor-autosave');
 	if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
 		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
