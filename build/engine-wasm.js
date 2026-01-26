@@ -58,7 +58,12 @@ export async function setupEngineWasm() {
 
 	const remoteVersion = releaseData.tag_name;
 
-	if (localVersion && localVersion === remoteVersion && fs.existsSync(wasmFile)) {
+	if (
+		localVersion &&
+		localVersion === remoteVersion &&
+		fs.existsSync(wasmFile) &&
+		fs.existsSync(jsFile)
+	) {
 		console.log(`${label} Engine is up-to-date (${localVersion}).`);
 		return;
 	}
