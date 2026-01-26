@@ -3,7 +3,7 @@ import statustext from './gui/statustext.js';
 // @ts-ignore
 import invites from './misc/invites.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
-import localstorage from '../util/localstorage.js';
+import LocalStorage from '../util/LocalStorage.js';
 import timeutil from '../../../../shared/util/timeutil.js';
 import uuid from '../../../../shared/util/uuid.js';
 import config from './config.js';
@@ -400,7 +400,7 @@ function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 		timeLastHardRefreshed: Date.now(),
 		expectedVersion: LATEST_GAME_VERSION,
 	};
-	const preexistingHardRefreshInfo: HardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
+	const preexistingHardRefreshInfo: HardRefreshInfo = LocalStorage.loadItem('hardrefreshinfo');
 	if (preexistingHardRefreshInfo?.expectedVersion === LATEST_GAME_VERSION) {
 		// Don't hard-refresh, we've already tried for this version.
 		if (!preexistingHardRefreshInfo.refreshFailed)
@@ -416,7 +416,7 @@ function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 	location.reload(true);
 
 	function saveInfo(info: HardRefreshInfo): void {
-		localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 })); // I think cloudflare caches scripts for 4 hours
+		LocalStorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 })); // I think cloudflare caches scripts for 4 hours
 	}
 }
 

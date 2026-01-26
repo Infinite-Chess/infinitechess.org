@@ -9,7 +9,7 @@ import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js'
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
 import websocket from '../../websocket.js';
-import indexeddb from '../../../util/indexeddb.js';
+import IndexedDB from '../../../util/IndexedDB.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
@@ -374,7 +374,7 @@ function deleteCustomVariantOptions(): void {
 	// Delete any custom pasted position in a private game.
 	if (isPrivate) {
 		const storageKey = getKeyForOnlineGameVariantOptions(id!);
-		indexeddb.deleteItem(storageKey);
+		IndexedDB.deleteItem(storageKey);
 	}
 }
 

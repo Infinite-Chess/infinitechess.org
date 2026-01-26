@@ -265,7 +265,7 @@ export default {
 	eraseExpiredItems,
 	eraseAll,
 	resetDBInstance,
-	// Testing constants
+	// Unit test constants
 	DB_NAME,
 	DB_VERSION,
 	STORE_NAME,

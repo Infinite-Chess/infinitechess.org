@@ -129,6 +129,8 @@ Let's move on to learn how to suggest changes to the repository! Or, skip right 
 
 ## Creating a Pull Request
 
+All pull requests MUST meet the standards outlined in [Pull Request Requirements and Guidelines](./CONTRIBUTING.md)!
+
 After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab.
 
 <img width="887" alt="Screen Shot 2024-07-03 at 9 48 08 AM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/a2280180-dc4a-4cd4-a411-db026591b6a2">
@@ -156,3 +158,5 @@ Now click "New pull request", followed by "Create pull request"! Your changes wi
 Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss with the others how we should best go about things!
 
 Next, read the [Navigation Guide](./NAVIGATING.md) to get a rundown of the project structure, where the game code is located, etc.!
+
+Or, read the [Pull Request Requirements and Guidelines](./CONTRIBUTING.md) to adopt the coding standards of the project!

@@ -1,6 +1,6 @@
 // Import Start
 import websocket from '../websocket.js';
-import localstorage from '../../util/localstorage.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
@@ -122,7 +122,7 @@ function cancel(id = ourInviteID) {
 	if (!weHaveInvite) return;
 	if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
 
-	localstorage.deleteItem('invite-tag');
+	LocalStorage.deleteItem('invite-tag');
 
 	guiplay.lockCreateInviteButton();
 
@@ -138,7 +138,7 @@ function generateTagForInvite(inviteOptions) {
 	const tag = uuid.generateID_Base62(8);
 
 	// NEW browser storage method!
-	localstorage.saveItem('invite-tag', tag);
+	LocalStorage.saveItem('invite-tag', tag);
 
 	inviteOptions.tag = tag;
 }
@@ -311,7 +311,7 @@ function isInviteOurs(invite) {
 
 	// Compare the tag..
 
-	const localStorageTag = localstorage.loadItem('invite-tag');
+	const localStorageTag = LocalStorage.loadItem('invite-tag');
 	if (!localStorageTag) return false;
 	if (invite.tag === localStorageTag) return true;
 	return false;

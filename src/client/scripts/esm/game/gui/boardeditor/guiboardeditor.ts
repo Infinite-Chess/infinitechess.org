@@ -22,7 +22,7 @@ import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
-import indexeddb from '../../../util/indexeddb.js';
+import IndexedDB from '../../../util/IndexedDB.js';
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';

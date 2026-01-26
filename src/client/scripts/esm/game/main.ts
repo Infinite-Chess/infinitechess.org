@@ -8,7 +8,7 @@
  */
 
 import webgl from './rendering/webgl.js';
-import localstorage from '../util/localstorage.js';
+import LocalStorage from '../util/LocalStorage.js';
 import game from './chess/game.js';
 import camera from './rendering/camera.js';
 import websocket from './websocket.js';
@@ -16,7 +16,7 @@ import guiloading from './gui/guiloading.js';
 import frametracker from './rendering/frametracker.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
 import loadbalancer from './misc/loadbalancer.js';
-import indexeddb from '../util/indexeddb.js';
+import IndexedDB from '../util/IndexedDB.js';
 
 // Starts the game. Runs automatically once the page is loaded.
 function start(): void {
@@ -44,8 +44,8 @@ function initListeners(): void {
 		// "1000 Closed by client" instead of "1001 Endpoint left"
 		websocket.closeSocket();
 
-		localstorage.eraseExpiredItems();
-		indexeddb.eraseExpiredItems();
+		LocalStorage.eraseExpiredItems();
+		IndexedDB.eraseExpiredItems();
 	});
 }
 

@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 
-import indexeddb from './indexeddb.js';
+import indexeddb from './IndexedDB.js';
 
 beforeEach(() => {
 	// Fresh fake IndexedDB and key range per test

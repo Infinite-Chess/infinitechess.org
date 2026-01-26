@@ -6,7 +6,9 @@
  * It also autosaves when leaving the editor
  */
 
-import indexeddb from '../../util/indexeddb';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
+
+import IndexedDB from '../../util/IndexedDB';
 import boardeditor from './boardeditor';
 import eactions from './eactions';
 import egamerules from './egamerules';
