@@ -6,8 +6,6 @@
  * It also autosaves when leaving the editor
  */
 
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
-
 import IndexedDB from '../../util/IndexedDB';
 import boardeditor from './boardeditor';
 import eactions from './eactions';
@@ -60,7 +58,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 		const date = new Date();
 		const pieceCount = variantOptions.position.size;
 
-		await indexeddb.saveItem('editor-autosave', {
+		await IndexedDB.saveItem('editor-autosave', {
 			positionname,
 			date,
 			pieceCount,
@@ -122,19 +120,9 @@ function onPageUnload(): void {
 	void autosaveCurrentPositionOnce();
 }
 
-async function clearAutosave(): Promise<void> {
-	try {
-		await indexeddb.saveItem('editor-autosave', undefined);
-	} catch (err) {
-		// Don't crash the editor over failed autosave clear
-		console.error('Failed to clear autosave board editor position:', err);
-	}
-}
-
 export default {
 	markPositionDirty,
 	startPositionAutosave,
 	autosaveCurrentPositionOnce,
 	stopPositionAutosave,
-	clearAutosave,
 };
