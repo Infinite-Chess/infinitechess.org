@@ -154,26 +154,17 @@ async function open(): Promise<void> {
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
 
-		try {
-			boardeditor.setActivePositionName(editorSaveState.positionname);
-			await gameloader.startBoardEditorFromCustomPosition(
-				{
-					metadata,
-					additional: {
-						variantOptions: editorSaveState.variantOptions,
-					},
+		boardeditor.setActivePositionName(editorSaveState.positionname);
+		await gameloader.startBoardEditorFromCustomPosition(
+			{
+				metadata,
+				additional: {
+					variantOptions: editorSaveState.variantOptions,
 				},
-				editorSaveState.pawnDoublePush,
-				editorSaveState.castling,
-			);
-		} catch (err) {
-			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
-			// then do not lock user out of board editor
-			console.error('Failed to load autosaved board editor position when opening it:', err);
-
-			boardeditor.setActivePositionName(undefined);
-			await gameloader.startBoardEditor();
-		}
+			},
+			editorSaveState.pawnDoublePush,
+			editorSaveState.castling,
+		);
 	}
 
 	initListeners();
