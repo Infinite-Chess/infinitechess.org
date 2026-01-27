@@ -4,6 +4,8 @@
  * Handles the saving of positions in boardeditor
  */
 
+import * as z from 'zod';
+
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 
 import IndexedDB from '../../../util/IndexedDB';
@@ -17,7 +19,7 @@ import statustext from '../../gui/statustext';
 
 /** Minimal information about a saved position */
 interface EditorAbridgedSaveState {
-	positionname: string;
+	positionname?: string;
 	timestamp: number;
 	pieceCount: number;
 }
@@ -39,6 +41,35 @@ const EDITOR_SAVE_PREFIX = 'editor-save-';
 
 /** Prefix for editor saveinfo in local storage */
 const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-';
+
+// Zod Schemas --------------------------------------------------------------------
+
+/** Schema for validating an EditorAbridgedSaveState */
+const EditorAbridgedSaveStateSchema = z.strictObject({
+	positionname: z
+		.string()
+		.min(1, 'Position name is required')
+		.max(
+			POSITION_NAME_MAX_LENGTH,
+			`Name must be ${POSITION_NAME_MAX_LENGTH} characters or less`,
+		)
+		.optional(),
+	timestamp: z.number(),
+	pieceCount: z
+		.number()
+		.int('Piece count must be an integer')
+		.min(0, 'Position must have nonnegative amount of pieces'),
+});
+
+/** Schema for validating an EditorSaveStateSchema */
+const EditorSaveStateSchema = EditorAbridgedSaveStateSchema.extend({
+	variantOptions: z
+		.object({})
+		.loose()
+		.transform((v) => v as unknown as VariantOptions), // Workaround, for lack of VariantOptions schema
+	pawnDoublePush: z.boolean().optional(),
+	castling: z.boolean().optional(),
+});
 
 // Variables --------------------------------------------------------------------
 
@@ -107,6 +138,9 @@ export default {
 	POSITION_NAME_MAX_LENGTH,
 	EDITOR_SAVE_PREFIX,
 	EDITOR_SAVEINFO_PREFIX,
+
+	EditorAbridgedSaveStateSchema,
+	EditorSaveStateSchema,
 
 	save,
 };

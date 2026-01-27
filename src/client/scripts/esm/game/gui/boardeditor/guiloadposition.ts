@@ -209,18 +209,17 @@ async function onModalYesButtonPress(): Promise<void> {
 		await updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
 		// Load position
-		const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(modal_config.save_key);
-		if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
+		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
+		const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+		if (!editorSaveStateParsed.success) {
 			console.error(
-				`Saved position ${modal_config.save_key} appears to be corrupted, deleting...`,
+				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
-			await IndexedDB.deleteItem(modal_config.saveinfo_key);
-			await IndexedDB.deleteItem(modal_config.save_key);
-			await updateSavedPositionListUI();
-		} else {
-			floatingWindow.close(false);
-			eactions.load(editorSaveState);
+			return;
 		}
+		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
+		floatingWindow.close(false);
+		eactions.load(editorSaveState);
 	} else if (modal_config.mode === 'overwrite_save') {
 		await esave.save(modal_config.positionname);
 		updateSavedPositionListUI();
@@ -241,14 +240,17 @@ async function onSaveButtonPress(): Promise<void> {
 		);
 		return;
 	}
-	const key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
+	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
 	const save_key = `${esave.EDITOR_SAVE_PREFIX}${positionname}`;
-	const previous_saveinfo = await IndexedDB.loadItem<EditorAbridgedSaveState>(save_key);
 
-	if (previous_saveinfo === undefined) {
+	const previous_saveinfoRaw = await IndexedDB.loadItem(saveinfo_key);
+	const previous_saveinfoParsed =
+		esave.EditorAbridgedSaveStateSchema.safeParse(previous_saveinfoRaw);
+	if (!previous_saveinfoParsed.success) {
+		// If there is no previous valid EditorAbridgedSaveState, save under positionname
 		await esave.save(positionname);
 		updateSavedPositionListUI();
-	} else openModal('overwrite_save', positionname, key, save_key);
+	} else openModal('overwrite_save', positionname, saveinfo_key, save_key);
 }
 
 /**
@@ -319,20 +321,23 @@ function createDeleteButtonElement(): HTMLButtonElement {
  * */
 async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<void> {
 	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
-	const editorAbridgedSaveState = await IndexedDB.loadItem<EditorAbridgedSaveState>(saveinfo_key);
+
+	const editorAbridgedSaveStateRaw = await IndexedDB.loadItem(saveinfo_key);
+	const editorAbridgedSaveStateParsed = esave.EditorAbridgedSaveStateSchema.safeParse(
+		editorAbridgedSaveStateRaw,
+	);
+	if (!editorAbridgedSaveStateParsed.success) {
+		console.error(
+			`Invalid EditorAbridgedSaveState ${saveinfo_key} in IndexedDB ${editorAbridgedSaveStateParsed.error}`,
+		);
+		return;
+	}
+	const editorAbridgedSaveState: EditorAbridgedSaveState = editorAbridgedSaveStateParsed.data;
 
 	// Name
 	const name_cell = document.createElement('div');
-	const positionname = editorAbridgedSaveState?.positionname;
-	if (positionname !== undefined) name_cell.textContent = positionname;
-	else {
-		console.error(
-			`Saved position entry ${save_key} does not have a valid positionname entry, deleting...`,
-		);
-		await IndexedDB.deleteItem(saveinfo_key);
-		await IndexedDB.deleteItem(save_key);
-		return;
-	}
+	const positionname = editorAbridgedSaveState.positionname ?? '';
+	name_cell.textContent = positionname;
 	const row = document.createElement('div');
 	row.className = 'saved-position';
 	row.appendChild(name_cell);
@@ -345,10 +350,8 @@ async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<v
 	// Date
 	const date_cell = document.createElement('div');
 	const timestamp = editorAbridgedSaveState?.timestamp;
-	if (timestamp !== undefined) {
-		const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
-		date_cell.textContent = UTCDate;
-	} else date_cell.textContent = '';
+	const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
+	date_cell.textContent = UTCDate;
 	row.appendChild(date_cell);
 
 	// Buttons

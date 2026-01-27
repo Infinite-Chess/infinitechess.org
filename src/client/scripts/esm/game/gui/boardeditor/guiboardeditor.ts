@@ -30,7 +30,7 @@ import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guiloadposition from './guiloadposition.js';
 import autosave from '../../boardeditor/actions/eautosave.js';
-import save from '../../boardeditor/actions/esave.js';
+import esave from '../../boardeditor/actions/esave.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -137,13 +137,14 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(
-		autosave.EDITOR_AUTOSAVE_NAME,
-	);
-	if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
+	const editorSaveStateRaw = await IndexedDB.loadItem(autosave.EDITOR_AUTOSAVE_NAME);
+	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+
+	if (!editorSaveStateParsed.success) {
 		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
 	} else {
+		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
@@ -436,7 +437,7 @@ function callback_Action(e: Event): void {
 				}
 			} else {
 				// If there is an active position name, simply overwrite save
-				save.save(active_positionname);
+				esave.save(active_positionname);
 
 				// Update UI if necessary
 				if (guiloadposition.getMode() !== undefined)
