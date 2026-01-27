@@ -59,6 +59,12 @@ const element_modalMessage = document.getElementById('load-position-modal-messag
 const element_modalNoButton = document.getElementById('load-position-modal-no')!;
 const element_modalYesButton = document.getElementById('load-position-modal-yes')!;
 
+// Constants
+
+const SVG_NS = 'http://www.w3.org/2000/svg'; // Presumably, this belongs to another file, but to which?
+
+// Variables ----------------------------------------------------------------
+
 /** The current open/close mode of the Load Position UI */
 let mode: 'load' | 'save-as' | undefined = undefined;
 
@@ -69,9 +75,6 @@ let modal_config: {
 	saveinfo_key?: string;
 	save_key?: string;
 } = {};
-
-const delete_button_svg = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400" width="26" height="26"><g fill="#333"><path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>`;
-const load_button_svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.5 0 7 7" width="20" height="20"><path fill="#333" fill-rule="evenodd" d="M5.495 2.573 1.5.143C.832-.266 0 .25 0 1.068V5.93c0 .82.832 1.333 1.5.927l3.995-2.43c.673-.41.673-1.445 0-1.855"/></svg>`;
 
 // Create floating window -------------------------------------
 
@@ -270,6 +273,30 @@ async function onDeleteButtonClick(
 	openModal('delete', positionname, saveinfo_key, save_key);
 }
 
+/** Create an HTML button element corresponding to a load button */
+function createLoadButtonElement(): HTMLButtonElement {
+	const loadBtn = document.createElement('button');
+	const svg = document.createElementNS(SVG_NS, 'svg');
+	const use = document.createElementNS(SVG_NS, 'use');
+	use.setAttribute('href', '#svg-load');
+	svg.appendChild(use);
+	loadBtn.appendChild(svg);
+	loadBtn.className = 'btn saved-position-btn';
+	return loadBtn;
+}
+
+/** Create an HTML button element corresponding to a delete button */
+function createDeleteButtonElement(): HTMLButtonElement {
+	const deleteBtn = document.createElement('button');
+	const svg = document.createElementNS(SVG_NS, 'svg');
+	const use = document.createElementNS(SVG_NS, 'use');
+	use.setAttribute('href', '#svg-delete');
+	svg.appendChild(use);
+	deleteBtn.appendChild(svg);
+	deleteBtn.className = 'btn saved-position-btn';
+	return deleteBtn;
+}
+
 /**
  * Update the saved positions list
  */
@@ -323,16 +350,12 @@ async function updateSavedPositionListUI(): Promise<void> {
 		const buttons_cell = document.createElement('div');
 
 		// "Load" button
-		const loadBtn = document.createElement('button');
-		loadBtn.innerHTML = load_button_svg;
-		loadBtn.className = 'btn saved-position-btn';
+		const loadBtn = createLoadButtonElement();
 		registerButtonClick(loadBtn, () => onLoadButtonClick(positionname, saveinfo_key, save_key));
 		buttons_cell.appendChild(loadBtn);
 
 		// "Delete" button
-		const deleteBtn = document.createElement('button');
-		deleteBtn.className = 'btn saved-position-btn';
-		deleteBtn.innerHTML = delete_button_svg;
+		const deleteBtn = createDeleteButtonElement();
 		registerButtonClick(deleteBtn, () =>
 			onDeleteButtonClick(positionname, saveinfo_key, save_key),
 		);

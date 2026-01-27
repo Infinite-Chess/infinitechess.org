@@ -26,6 +26,21 @@
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
+
+        <!-- SVG definitions -->
+        <div class="hidden">
+            <svg>
+                <symbol id="svg-delete" viewBox="0 0 2400 2400">
+                    <path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/>
+                </symbol>
+            </svg>
+            <svg>
+                <symbol id="svg-load" viewBox="-1.5 -1 9 9">
+                    <path d="M5.495 2.573 1.5.143C.832-.266 0 .25 0 1.068V5.93c0 .82.832 1.333 1.5.927l3.995-2.43c.673-.41.673-1.445 0-1.855" fill-rule="evenodd"/>
+                </symbol>
+            </svg>
+        </div>
+
         <main>
             <!-- Left vertical bar of Board Editor -->
         	<div id="editor-menu" class="editor-menu unselectable hidden">
@@ -41,7 +56,7 @@
 							<svg class="svg-reset" fill="none" viewBox="0 0 240 240"><g stroke="#333" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" clip-path="url(#a)"><path d="M120 30a90 90 0 11-57 20"/><path d="M30 45h40v40"/></g><defs><clipPath id="a"><path d="M0 0h240v240H0" fill="#333"/></clipPath></defs></svg>
 						</div>
 						<div data-action="clearall" id="clearall" class="instant tooltip-d" data-tooltip="Clear position">
-							<svg class="svg-clearall" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><g fill="#333"><path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>
+							<svg class="svg-delete" fill="#333" viewBox="0 0 2400 2400"><use href="#svg-delete"></use></svg>
 						</div>
 						<div data-action="load-position" id="load-position" class="tooltip-d" data-tooltip="Load position">
 							<svg class="svg-load-position" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 2400 2400"><g fill="#333" stroke="none"><path d="M1475 575h250v487l-70-40h-1l-16-8a93 93 0 00-76 0l-16 8-71 40V575Z"/><path d="M2200 1155v220c0 377 0 566-117 683s-306 117-683 117h-400c-377 0-566 0-683-117S200 1752 200 1375V670c0-88 0-132 7-170a400 400 0 01 319-318c37-7 80-7 169-7 39 0 58 0 77 2a400 400 0 01 218 90c14 12 28 26 55 53l55 55a855 855 0 00 171 150 400 400 0 00 54 24v571c0 14 0 30 2 45a100 100 0 00 40 70c35 23 70 14 86 8 14-5 28-13 39-20h2l106-60 106 60h2c10 7 25 15 39 20 16 6 51 15 86-10a98 98 0 00 40-70c2-12 2-30 2-43V580c105 7 174 25 226 72l24 22c77 86 77 218 77 480Z"/></g></svg>

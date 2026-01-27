@@ -93,7 +93,7 @@ button {
 	transform: scale(0.85) translate(2%, 0%);
 }
 
-.svg-clearall {
+.svg-delete {
 	transform: scale(0.8);
 }
 
@@ -1777,6 +1777,9 @@ svg.collapse {
 
 .saved-position-btn svg {
 	flex-shrink: 0;
+	fill: #333;
+	width: 26px;
+	height: 26px;
 }
 
 /* Ensure the load-position window can anchor absolute children */
