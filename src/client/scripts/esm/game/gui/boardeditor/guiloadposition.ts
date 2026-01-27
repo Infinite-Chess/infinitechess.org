@@ -11,6 +11,7 @@ import guifloatingwindow from './guifloatingwindow';
 import timeutil from '../../../../../../shared/util/timeutil';
 import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
+import style from '../style';
 
 // Types -------------------------------------------------------------------------
 
@@ -58,10 +59,6 @@ const element_modalTitle = document.getElementById('load-position-modal-title')!
 const element_modalMessage = document.getElementById('load-position-modal-message')!;
 const element_modalNoButton = document.getElementById('load-position-modal-no')!;
 const element_modalYesButton = document.getElementById('load-position-modal-yes')!;
-
-// Constants
-
-const SVG_NS = 'http://www.w3.org/2000/svg'; // Presumably, this belongs to another file, but to which?
 
 // Variables ----------------------------------------------------------------
 
@@ -278,8 +275,8 @@ async function onDeleteButtonClick(
 /** Create an HTML button element corresponding to a load button */
 function createLoadButtonElement(): HTMLButtonElement {
 	const loadBtn = document.createElement('button');
-	const svg = document.createElementNS(SVG_NS, 'svg');
-	const use = document.createElementNS(SVG_NS, 'use');
+	const svg = document.createElementNS(style.SVG_NS, 'svg');
+	const use = document.createElementNS(style.SVG_NS, 'use');
 	use.setAttribute('href', '#svg-load');
 	svg.appendChild(use);
 	loadBtn.appendChild(svg);
@@ -290,8 +287,8 @@ function createLoadButtonElement(): HTMLButtonElement {
 /** Create an HTML button element corresponding to a delete button */
 function createDeleteButtonElement(): HTMLButtonElement {
 	const deleteBtn = document.createElement('button');
-	const svg = document.createElementNS(SVG_NS, 'svg');
-	const use = document.createElementNS(SVG_NS, 'use');
+	const svg = document.createElementNS(style.SVG_NS, 'svg');
+	const use = document.createElementNS(style.SVG_NS, 'use');
 	use.setAttribute('href', '#svg-delete');
 	svg.appendChild(use);
 	deleteBtn.appendChild(svg);
