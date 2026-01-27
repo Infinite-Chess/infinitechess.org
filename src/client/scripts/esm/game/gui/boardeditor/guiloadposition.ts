@@ -4,12 +4,13 @@
  * Manages the GUI popup window for the Load Positions UI of the board editor
  */
 
-import type { EditorAbridgedSaveState, EditorSaveState } from '../../boardeditor/eactions';
+import type { EditorSaveState, EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
 
 import IndexedDB from '../../../util/IndexedDB';
 import guifloatingwindow from './guifloatingwindow';
 import timeutil from '../../../../../../shared/util/timeutil';
-import eactions from '../../boardeditor/eactions';
+import eactions from '../../boardeditor/actions/eactions';
+import esave from '../../boardeditor/actions/esave';
 
 // Types -------------------------------------------------------------------------
 
@@ -65,8 +66,8 @@ let mode: 'load' | 'save-as' | undefined = undefined;
 let modal_config: {
 	mode?: ModalMode;
 	positionname?: string;
-	key?: string;
-	unabridged_key?: string;
+	saveinfo_key?: string;
+	save_key?: string;
 } = {};
 
 const delete_button_svg = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400" width="26" height="26"><g fill="#333"><path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>`;
@@ -133,10 +134,10 @@ function getMode(): typeof mode {
 function openModal(
 	mode: ModalMode,
 	positionname: string,
-	key: string,
-	unabridged_key: string,
+	saveinfo_key: string,
+	save_key: string,
 ): void {
-	modal_config = { mode, positionname, key, unabridged_key };
+	modal_config = { mode, positionname, saveinfo_key, save_key };
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
@@ -193,34 +194,32 @@ async function onModalYesButtonPress(): Promise<void> {
 	if (
 		modal_config.mode === undefined ||
 		modal_config.positionname === undefined ||
-		modal_config.key === undefined ||
-		modal_config.unabridged_key === undefined
+		modal_config.saveinfo_key === undefined ||
+		modal_config.save_key === undefined
 	) {
 		closeModal();
 		return;
 	} else if (modal_config.mode === 'delete') {
 		// Delete position
-		await IndexedDB.deleteItem(modal_config.key);
-		await IndexedDB.deleteItem(modal_config.unabridged_key);
+		await IndexedDB.deleteItem(modal_config.saveinfo_key);
+		await IndexedDB.deleteItem(modal_config.save_key);
 		await updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
 		// Load position
-		const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(
-			modal_config.unabridged_key,
-		);
+		const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(modal_config.save_key);
 		if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
 			console.error(
-				`Saved position ${modal_config.unabridged_key} appears to be corrupted, deleting...`,
+				`Saved position ${modal_config.save_key} appears to be corrupted, deleting...`,
 			);
-			await IndexedDB.deleteItem(modal_config.key);
-			await IndexedDB.deleteItem(modal_config.unabridged_key);
+			await IndexedDB.deleteItem(modal_config.saveinfo_key);
+			await IndexedDB.deleteItem(modal_config.save_key);
 			await updateSavedPositionListUI();
 		} else {
 			floatingWindow.close(false);
 			eactions.load(editorSaveState);
 		}
 	} else if (modal_config.mode === 'overwrite_save') {
-		await eactions.save(modal_config.positionname);
+		await esave.save(modal_config.positionname);
 		updateSavedPositionListUI();
 	}
 
@@ -233,42 +232,42 @@ async function onModalYesButtonPress(): Promise<void> {
 async function onSaveButtonPress(): Promise<void> {
 	const positionname = element_saveAsPositionName.value;
 	if (positionname === '') return;
-	if (positionname.length > eactions.POSITION_NAME_MAX_LENGTH) {
+	if (positionname.length > esave.POSITION_NAME_MAX_LENGTH) {
 		console.error(
-			`This should not happen, position name input box is restricted to ${eactions.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
+			`This should not happen, position name input box is restricted to ${esave.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
 		);
 		return;
 	}
-	const key = `editor-saveinfo-${positionname}`;
-	const unabridged_key = `editor-save-${positionname}`;
-	const previous_saveinfo = await IndexedDB.loadItem<EditorAbridgedSaveState>(unabridged_key);
+	const key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
+	const save_key = `${esave.EDITOR_SAVE_PREFIX}${positionname}`;
+	const previous_saveinfo = await IndexedDB.loadItem<EditorAbridgedSaveState>(save_key);
 
 	if (previous_saveinfo === undefined) {
-		await eactions.save(positionname);
+		await esave.save(positionname);
 		updateSavedPositionListUI();
-	} else openModal('overwrite_save', positionname, key, unabridged_key);
+	} else openModal('overwrite_save', positionname, key, save_key);
 }
 
 /**
  * Gets executed when a "load position" button is clicked
  */
 async function onLoadButtonClick(
-	key: string,
-	unabridged_key: string,
 	positionname: string,
+	saveinfo_key: string,
+	save_key: string,
 ): Promise<void> {
-	openModal('load', positionname, key, unabridged_key);
+	openModal('load', positionname, saveinfo_key, save_key);
 }
 
 /**
  * Gets executed when a "delete position" button is clicked
  */
 async function onDeleteButtonClick(
-	key: string,
-	unabridged_key: string,
 	positionname: string,
+	saveinfo_key: string,
+	save_key: string,
 ): Promise<void> {
-	openModal('delete', positionname, key, unabridged_key);
+	openModal('delete', positionname, saveinfo_key, save_key);
 }
 
 /**
@@ -280,11 +279,15 @@ async function updateSavedPositionListUI(): Promise<void> {
 
 	const keys = await IndexedDB.getAllKeys();
 
-	for (const key of keys) {
-		if (!key.startsWith('editor-saveinfo-')) continue;
+	for (const saveinfo_key of keys) {
+		if (!saveinfo_key.startsWith(esave.EDITOR_SAVEINFO_PREFIX)) continue;
 
-		const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
-		const editorAbridgedSaveState = await IndexedDB.loadItem<EditorAbridgedSaveState>(key);
+		const save_key = saveinfo_key.replace(
+			esave.EDITOR_SAVEINFO_PREFIX,
+			esave.EDITOR_SAVE_PREFIX,
+		);
+		const editorAbridgedSaveState =
+			await IndexedDB.loadItem<EditorAbridgedSaveState>(saveinfo_key);
 
 		// Name
 		const name_cell = document.createElement('div');
@@ -292,10 +295,10 @@ async function updateSavedPositionListUI(): Promise<void> {
 		if (positionname !== undefined) name_cell.textContent = positionname;
 		else {
 			console.error(
-				`Saved position entry ${unabridged_key} does not have a valid positionname entry, deleting...`,
+				`Saved position entry ${save_key} does not have a valid positionname entry, deleting...`,
 			);
-			await IndexedDB.deleteItem(key);
-			await IndexedDB.deleteItem(unabridged_key);
+			await IndexedDB.deleteItem(saveinfo_key);
+			await IndexedDB.deleteItem(save_key);
 			continue;
 		}
 		const row = document.createElement('div');
@@ -323,7 +326,7 @@ async function updateSavedPositionListUI(): Promise<void> {
 		const loadBtn = document.createElement('button');
 		loadBtn.innerHTML = load_button_svg;
 		loadBtn.className = 'btn saved-position-btn';
-		registerButtonClick(loadBtn, () => onLoadButtonClick(key, unabridged_key, positionname));
+		registerButtonClick(loadBtn, () => onLoadButtonClick(positionname, saveinfo_key, save_key));
 		buttons_cell.appendChild(loadBtn);
 
 		// "Delete" button
@@ -331,7 +334,7 @@ async function updateSavedPositionListUI(): Promise<void> {
 		deleteBtn.className = 'btn saved-position-btn';
 		deleteBtn.innerHTML = delete_button_svg;
 		registerButtonClick(deleteBtn, () =>
-			onDeleteButtonClick(key, unabridged_key, positionname),
+			onDeleteButtonClick(positionname, saveinfo_key, save_key),
 		);
 		buttons_cell.appendChild(deleteBtn);
 

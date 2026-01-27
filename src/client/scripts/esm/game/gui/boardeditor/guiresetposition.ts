@@ -5,7 +5,7 @@
  */
 
 import guifloatingwindow from './guifloatingwindow';
-import eactions from '../../boardeditor/eactions';
+import eactions from '../../boardeditor/actions/eactions';
 
 // Elements ----------------------------------------------------------
 

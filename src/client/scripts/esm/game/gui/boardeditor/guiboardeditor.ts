@@ -7,7 +7,7 @@
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { EditorSaveState } from '../../boardeditor/eactions.js';
+import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
 // @ts-ignore
 import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
@@ -17,7 +17,7 @@ import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import tooltips from '../../../util/tooltips.js';
-import eactions from '../../boardeditor/eactions.js';
+import eactions from '../../boardeditor/actions/eactions.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
@@ -29,6 +29,8 @@ import guistartenginegame from './guistartenginegame.js';
 import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guiloadposition from './guiloadposition.js';
+import autosave from '../../boardeditor/actions/eautosave.js';
+import save from '../../boardeditor/actions/esave.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -135,7 +137,9 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveState = await IndexedDB.loadItem<EditorSaveState>('editor-autosave');
+	const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(
+		autosave.EDITOR_AUTOSAVE_NAME,
+	);
 	if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
 		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
@@ -441,7 +445,7 @@ function callback_Action(e: Event): void {
 				}
 			} else {
 				// If there is an active position name, simply overwrite save
-				eactions.save(active_positionname);
+				save.save(active_positionname);
 
 				// Update UI if necessary
 				if (guiloadposition.getMode() !== undefined)

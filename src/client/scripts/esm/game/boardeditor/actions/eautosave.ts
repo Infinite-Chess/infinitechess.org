@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/eautosave.ts
+// src/client/scripts/esm/game/boardeditor/actions/autosave.ts
 
 /**
  * This script handles autosaving the board editor position
@@ -6,10 +6,15 @@
  * It also autosaves when leaving the editor
  */
 
-import IndexedDB from '../../util/IndexedDB';
-import boardeditor from './boardeditor';
+import IndexedDB from '../../../util/IndexedDB';
+import boardeditor from '../boardeditor';
 import eactions from './eactions';
-import egamerules from './egamerules';
+import egamerules from '../egamerules';
+
+// Constants -------------------------------------------------------------
+
+/** Name of editor autosave in local storage */
+const EDITOR_AUTOSAVE_NAME = 'editor-autosave';
 
 // Variables --------------------------------------------------------------
 
@@ -58,7 +63,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 		const timestamp = Date.now();
 		const pieceCount = variantOptions.position.size;
 
-		await IndexedDB.saveItem('editor-autosave', {
+		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
 			positionname,
 			timestamp,
 			pieceCount,
@@ -121,6 +126,8 @@ function onPageUnload(): void {
 }
 
 export default {
+	EDITOR_AUTOSAVE_NAME,
+
 	markPositionDirty,
 	startPositionAutosave,
 	autosaveCurrentPositionOnce,

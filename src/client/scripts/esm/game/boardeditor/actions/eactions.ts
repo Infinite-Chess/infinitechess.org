@@ -14,63 +14,47 @@
  * * Start local game from position
  */
 
-import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility';
-import type { MetaData } from '../../../../../shared/chess/util/metadata';
-import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
-import type { EngineUIConfig } from '../gui/boardeditor/guistartenginegame';
+import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
+import type { MetaData } from '../../../../../../shared/chess/util/metadata';
+import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
+import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
+import type { EngineUIConfig } from '../../gui/boardeditor/guistartenginegame';
+import type { EditorSaveState } from './esave';
 
 // @ts-ignore
-import statustext from '../gui/statustext';
-import gamefile, { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile';
+import statustext from '../../gui/statustext';
+import gamefile, { Additional, FullGame } from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	_Move_Out,
 	LongFormatIn,
 	LongFormatOut,
-} from '../../../../../shared/chess/logic/icn/icnconverter';
-import boardeditor, { Edit } from './boardeditor';
+} from '../../../../../../shared/chess/logic/icn/icnconverter';
+import boardeditor, { Edit } from '../boardeditor';
 import organizedpieces, {
 	OrganizedPieces,
-} from '../../../../../shared/chess/logic/organizedpieces';
-import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil';
-import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil';
-import timeutil from '../../../../../shared/util/timeutil';
-import docutil from '../../util/docutil';
-import gamecompressor, { SimplifiedGameState } from '../chess/gamecompressor';
-import gameformulator from '../chess/gameformulator';
-import gameloader from '../chess/gameloader';
-import gameslot from '../chess/gameslot';
-import pastegame from '../chess/pastegame';
-import guinavigation from '../gui/guinavigation';
-import annotations from '../rendering/highlights/annotations/annotations';
-import egamerules from './egamerules';
-import selectiontool from './tools/selection/selectiontool';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
-import hydrochess_card from '../chess/enginecards/hydrochess_card';
-import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
-import IndexedDB from '../../util/IndexedDB';
-import variant from '../../../../../shared/chess/variants/variant';
-
-// Types ------------------------------------------------------------------
-
-/** Minimal information about a saved position */
-interface EditorAbridgedSaveState {
-	positionname: string;
-	timestamp: number;
-	pieceCount: number;
-}
-
-/** Complete information about a saved position */
-interface EditorSaveState extends EditorAbridgedSaveState {
-	variantOptions: VariantOptions;
-	pawnDoublePush?: boolean;
-	castling?: boolean;
-}
+} from '../../../../../../shared/chess/logic/organizedpieces';
+import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
+import timeutil from '../../../../../../shared/util/timeutil';
+import docutil from '../../../util/docutil';
+import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
+import gameformulator from '../../chess/gameformulator';
+import gameloader from '../../chess/gameloader';
+import gameslot from '../../chess/gameslot';
+import pastegame from '../../chess/pastegame';
+import guinavigation from '../../gui/guinavigation';
+import annotations from '../../rendering/highlights/annotations/annotations';
+import egamerules from '../egamerules';
+import selectiontool from '../tools/selection/selectiontool';
+import typeutil, { players } from '../../../../../../shared/chess/util/typeutil';
+import hydrochess_card from '../../chess/enginecards/hydrochess_card';
+import {
+	engineDefaultTimeLimitPerMoveMillisDict,
+	engineWorldBorderDict,
+} from '../../misc/enginegame';
+import variant from '../../../../../../shared/chess/variants/variant';
 
 // Constants ----------------------------------------------------------------------
-
-/** Max allowed length of the name of a position */
-const POSITION_NAME_MAX_LENGTH = 24;
 
 /**
  * If a position with less pieces than this is pasted, the position dependent
@@ -78,13 +62,6 @@ const POSITION_NAME_MAX_LENGTH = 24;
  * else they are set to undetermined.
  */
 const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
-
-// Variables --------------------------------------------------------------------
-
-/** Prevent overlapping IndexedDB saves (single-flight): is save ongoing */
-let positionSaveInFlight = false;
-/** Prevent overlapping IndexedDB writes (single-flight): is save pending */
-let positionSavePending = false;
 
 // Actions ----------------------------------------------------------------------
 
@@ -178,58 +155,6 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 
 		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
-	}
-}
-
-/** Saves current position under "positionname". */
-async function save(positionname: string): Promise<void> {
-	if (!boardeditor.areInBoardEditor()) return;
-
-	// Coalesce: if a save is already running, request another and return.
-	if (positionSaveInFlight) {
-		positionSavePending = true;
-		return;
-	}
-
-	positionSaveInFlight = true;
-	positionSavePending = false;
-
-	try {
-		const variantOptions = getCurrentPositionInformation();
-		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-		const timestamp = Date.now();
-		const pieceCount = variantOptions.position.size;
-
-		// Save full info for loading purposes
-		await IndexedDB.saveItem(`editor-save-${positionname}`, {
-			positionname,
-			timestamp,
-			pieceCount,
-			variantOptions,
-			pawnDoublePush,
-			castling,
-		});
-
-		// Save abridged info for display purposes
-		await IndexedDB.saveItem(`editor-saveinfo-${positionname}`, {
-			positionname,
-			timestamp,
-			pieceCount,
-		});
-	} catch (err) {
-		// Don't crash the editor over failed save
-		console.error('Failed to save board editor position:', err);
-	} finally {
-		positionSaveInFlight = false;
-
-		// If something changed while saving, immediately save again (latest wins).
-		if (positionSavePending) {
-			positionSavePending = false;
-			await save(positionname);
-		} else {
-			boardeditor.setActivePositionName(positionname);
-			statustext.showStatus('Position successfully saved on browser.');
-		}
 	}
 }
 
@@ -551,17 +476,12 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 // Exports --------------------------------------------------------------------
 
 export default {
-	POSITION_NAME_MAX_LENGTH,
-
 	reset,
 	clearAll,
 	load,
-	save,
 	copy,
 	paste,
 	startLocalGame,
 	startEngineGame,
 	getCurrentPositionInformation,
 };
-
-export type { EditorAbridgedSaveState, EditorSaveState };

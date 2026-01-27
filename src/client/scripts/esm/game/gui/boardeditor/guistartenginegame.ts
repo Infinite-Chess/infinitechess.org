@@ -6,7 +6,7 @@
 
 import { players } from '../../../../../../shared/chess/util/typeutil';
 import guifloatingwindow from './guifloatingwindow';
-import eactions from '../../boardeditor/eactions';
+import eactions from '../../boardeditor/actions/eactions';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 import gameslot from '../../chess/gameslot';
 

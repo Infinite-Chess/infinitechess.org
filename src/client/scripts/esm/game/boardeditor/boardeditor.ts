@@ -33,13 +33,13 @@ import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
-import eactions from './eactions.js';
+import eactions from './actions/eactions.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
 import gameloader from '../chess/gameloader.js';
-import eautosave from './eautosave.js';
+import eautosave from './actions/eautosave.js';
 
 // Type Definitions -------------------------------------------------------------
 
