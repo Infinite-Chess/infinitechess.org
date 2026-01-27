@@ -61,7 +61,7 @@ const EditorAbridgedSaveStateSchema = z.strictObject({
 		.min(0, 'Position must have nonnegative amount of pieces'),
 });
 
-/** Schema for validating an EditorSaveStateSchema */
+/** Schema for validating an EditorSaveState */
 const EditorSaveStateSchema = EditorAbridgedSaveStateSchema.extend({
 	variantOptions: z
 		.object({})
