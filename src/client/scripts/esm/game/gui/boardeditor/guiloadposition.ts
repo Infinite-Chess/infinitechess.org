@@ -297,6 +297,58 @@ function createDeleteButtonElement(): HTMLButtonElement {
 	return deleteBtn;
 }
 
+/** Given a saveinfo_key, read the element from local storage and append a row to element_savedPositionsToLoad */
+async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<void> {
+	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
+	const editorAbridgedSaveState = await IndexedDB.loadItem<EditorAbridgedSaveState>(saveinfo_key);
+
+	// Name
+	const name_cell = document.createElement('div');
+	const positionname = editorAbridgedSaveState?.positionname;
+	if (positionname !== undefined) name_cell.textContent = positionname;
+	else {
+		console.error(
+			`Saved position entry ${save_key} does not have a valid positionname entry, deleting...`,
+		);
+		await IndexedDB.deleteItem(saveinfo_key);
+		await IndexedDB.deleteItem(save_key);
+		return;
+	}
+	const row = document.createElement('div');
+	row.className = 'saved-position';
+	row.appendChild(name_cell);
+
+	// Piececount
+	const piececount_cell = document.createElement('div');
+	piececount_cell.textContent = String(editorAbridgedSaveState?.pieceCount ?? '');
+	row.appendChild(piececount_cell);
+
+	// Date
+	const date_cell = document.createElement('div');
+	const timestamp = editorAbridgedSaveState?.timestamp;
+	if (timestamp !== undefined) {
+		const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
+		date_cell.textContent = UTCDate;
+	} else date_cell.textContent = '';
+	row.appendChild(date_cell);
+
+	// Buttons
+	const buttons_cell = document.createElement('div');
+
+	// "Load" button
+	const loadBtn = createLoadButtonElement();
+	registerButtonClick(loadBtn, () => onLoadButtonClick(positionname, saveinfo_key, save_key));
+	buttons_cell.appendChild(loadBtn);
+
+	// "Delete" button
+	const deleteBtn = createDeleteButtonElement();
+	registerButtonClick(deleteBtn, () => onDeleteButtonClick(positionname, saveinfo_key, save_key));
+	buttons_cell.appendChild(deleteBtn);
+
+	row.appendChild(buttons_cell);
+	element_savedPositionsToLoad.appendChild(row);
+}
+
 /**
  * Update the saved positions list
  */
@@ -305,64 +357,10 @@ async function updateSavedPositionListUI(): Promise<void> {
 	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
 	const keys = await IndexedDB.getAllKeys();
-
-	for (const saveinfo_key of keys) {
-		if (!saveinfo_key.startsWith(esave.EDITOR_SAVEINFO_PREFIX)) continue;
-
-		const save_key = saveinfo_key.replace(
-			esave.EDITOR_SAVEINFO_PREFIX,
-			esave.EDITOR_SAVE_PREFIX,
-		);
-		const editorAbridgedSaveState =
-			await IndexedDB.loadItem<EditorAbridgedSaveState>(saveinfo_key);
-
-		// Name
-		const name_cell = document.createElement('div');
-		const positionname = editorAbridgedSaveState?.positionname;
-		if (positionname !== undefined) name_cell.textContent = positionname;
-		else {
-			console.error(
-				`Saved position entry ${save_key} does not have a valid positionname entry, deleting...`,
-			);
-			await IndexedDB.deleteItem(saveinfo_key);
-			await IndexedDB.deleteItem(save_key);
-			continue;
-		}
-		const row = document.createElement('div');
-		row.className = 'saved-position';
-		row.appendChild(name_cell);
-
-		// Piececount
-		const piececount_cell = document.createElement('div');
-		piececount_cell.textContent = String(editorAbridgedSaveState?.pieceCount ?? '');
-		row.appendChild(piececount_cell);
-
-		// Date
-		const date_cell = document.createElement('div');
-		const timestamp = editorAbridgedSaveState?.timestamp;
-		if (timestamp !== undefined) {
-			const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
-			date_cell.textContent = UTCDate;
-		} else date_cell.textContent = '';
-		row.appendChild(date_cell);
-
-		// Buttons
-		const buttons_cell = document.createElement('div');
-
-		// "Load" button
-		const loadBtn = createLoadButtonElement();
-		registerButtonClick(loadBtn, () => onLoadButtonClick(positionname, saveinfo_key, save_key));
-		buttons_cell.appendChild(loadBtn);
-
-		// "Delete" button
-		const deleteBtn = createDeleteButtonElement();
-		registerButtonClick(deleteBtn, () =>
-			onDeleteButtonClick(positionname, saveinfo_key, save_key),
-		);
-		buttons_cell.appendChild(deleteBtn);
-
-		row.appendChild(buttons_cell);
-		element_savedPositionsToLoad.appendChild(row);
+	for (const key of keys) {
+		// make sure that key is of the type saveinfo_key
+		if (key.startsWith(esave.EDITOR_SAVEINFO_PREFIX))
+			await appendRowToSavedPositionsElement(key);
 	}
 }
 
