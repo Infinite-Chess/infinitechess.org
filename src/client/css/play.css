@@ -1782,11 +1782,6 @@ svg.collapse {
 	height: 26px;
 }
 
-/* Ensure the load-position window can anchor absolute children */
-#load-position-UI {
-	position: relative; /* does not move it; only creates a positioning context */
-}
-
 /* The overlay covers ONLY the load-position-UI */
 .load-position-modal-overlay {
 	position: absolute;
