@@ -239,8 +239,8 @@ async function onSaveButtonPress(): Promise<void> {
 		);
 		return;
 	}
-	const key = `editor-save-${positionname}`;
-	const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
+	const key = `editor-saveinfo-${positionname}`;
+	const unabridged_key = `editor-save-${positionname}`;
 	const previous_saveinfo = await IndexedDB.loadItem<EditorAbridgedSaveState>(unabridged_key);
 
 	if (previous_saveinfo === undefined) {
