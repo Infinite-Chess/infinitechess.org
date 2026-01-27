@@ -87,10 +87,6 @@ button {
 	text-overflow: ellipsis;
 }
 
-.italic {
-	font-style: italic;
-}
-
 /* SVG resizings */
 
 .svg-reset {
@@ -1758,7 +1754,7 @@ svg.collapse {
 	min-width: 0;
 }
 
-.btn-save {
+.position-name-btnsave {
 	width: 75px;
 	height: 28px;
 	justify-content: center;
@@ -1769,7 +1765,7 @@ svg.collapse {
 	color: #ffffff;
 }
 
-.btn-save:hover {
+.position-name-btnsave:hover {
 	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
@@ -1789,7 +1785,7 @@ svg.collapse {
 }
 
 /* The overlay covers ONLY the load-position-UI */
-.local-modal-overlay {
+.load-position-modal {
 	position: absolute;
 	inset: 0;
 	z-index: 1000;
@@ -1800,7 +1796,7 @@ svg.collapse {
 	pointer-events: auto;
 }
 
-.local-modal-window-header {
+.load-position-modal-header {
 	user-select: none;
 	display: flex;
 	justify-content: space-between;
