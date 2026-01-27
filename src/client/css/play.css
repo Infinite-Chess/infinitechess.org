@@ -1785,7 +1785,7 @@ svg.collapse {
 }
 
 /* The overlay covers ONLY the load-position-UI */
-.load-position-modal {
+.load-position-modal-overlay {
 	position: absolute;
 	inset: 0;
 	z-index: 1000;
@@ -1796,6 +1796,15 @@ svg.collapse {
 	pointer-events: auto;
 }
 
+.load-position-modal {
+	width: 90%;
+	border-radius: 0.75em;
+	background-color: rgba(255, 255, 255, 0.96);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+	overflow: hidden;
+	padding: 0em 1em 0.5em 1em;
+}
+
 .load-position-modal-header {
 	user-select: none;
 	display: flex;
@@ -1804,15 +1813,6 @@ svg.collapse {
 	padding: 8px 0 4px 0;
 	font-size: 18px;
 	font-weight: 600;
-}
-
-.local-modal {
-	width: 90%;
-	border-radius: 0.75em;
-	background: rgba(240, 240, 240, 1);
-	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
-	overflow: hidden;
-	padding: 0em 1em 0.5em 1em;
 }
 
 /* Pause UI */
