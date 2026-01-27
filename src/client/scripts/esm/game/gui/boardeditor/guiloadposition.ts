@@ -19,6 +19,9 @@ type ButtonHandlerPair = {
 	handler: (e: MouseEvent) => void;
 };
 
+/** Different modes for the modal confirmation dialog */
+type ModalMode = 'load' | 'delete' | 'overwrite_save';
+
 // Elements ----------------------------------------------------------
 
 /** Object to keep track of all position button listeners */
@@ -58,11 +61,13 @@ const element_modalYesButton = document.getElementById('load-position-modal-yes'
 /** The current open/close mode of the Load Position UI */
 let mode: 'load' | 'save-as' | undefined = undefined;
 
-/** The current mode of the Confirmation dialog modal */
-let modal_mode: 'load' | 'delete' | 'overwrite_save' | undefined = undefined;
-let current_modal_positionname: string | undefined = undefined;
-let current_modal_key: string | undefined = undefined;
-let current_modal_unabridged_key: string | undefined = undefined;
+/** The current config of the Confirmation dialog modal */
+let modal_config: {
+	mode?: ModalMode;
+	positionname?: string;
+	key?: string;
+	unabridged_key?: string;
+} = {};
 
 const delete_button_svg = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400" width="26" height="26"><g fill="#333"><path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>`;
 const load_button_svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.5 0 7 7" width="20" height="20"><path fill="#333" fill-rule="evenodd" d="M5.495 2.573 1.5.143C.832-.266 0 .25 0 1.068V5.93c0 .82.832 1.333 1.5.927l3.995-2.43c.673-.41.673-1.445 0-1.855"/></svg>`;
@@ -80,7 +85,6 @@ const floatingWindow = guifloatingwindow.create({
 // Utilities----------------------------------------------------------------
 
 function onOpen(): void {
-	closeModal();
 	updateSavedPositionListUI();
 }
 
@@ -127,23 +131,20 @@ function getMode(): typeof mode {
 }
 
 function openModal(
-	mode: typeof modal_mode,
+	mode: ModalMode,
 	positionname: string,
 	key: string,
 	unabridged_key: string,
 ): void {
-	modal_mode = mode;
-	current_modal_positionname = positionname;
-	current_modal_key = key;
-	current_modal_unabridged_key = unabridged_key;
+	modal_config = { mode, positionname, key, unabridged_key };
 
-	if (modal_mode === 'delete') {
+	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
 		element_modalMessage.textContent = `Are you sure that you want to delete position ${positionname}? This cannot be undone.`;
-	} else if (modal_mode === 'load') {
+	} else if (modal_config.mode === 'load') {
 		element_modalTitle.textContent = 'Load position?';
 		element_modalMessage.textContent = `Are you sure that you want to load position ${positionname}? Unsaved changes to the current position will be lost.`;
-	} else if (modal_mode === 'overwrite_save') {
+	} else if (modal_config.mode === 'overwrite_save') {
 		element_modalTitle.textContent = 'Overwrite position?';
 		element_modalMessage.textContent = `Are you sure that you want to overwrite position ${positionname}? This cannot be undone.`;
 	}
@@ -152,10 +153,7 @@ function openModal(
 }
 
 function closeModal(): void {
-	modal_mode = undefined;
-	current_modal_positionname = undefined;
-	current_modal_key = undefined;
-	current_modal_unabridged_key = undefined;
+	modal_config = {};
 	element_modal.classList.add('hidden');
 	closeModalListeners();
 }
@@ -193,36 +191,36 @@ function closeModalListeners(): void {
 
 async function onModalYesButtonPress(): Promise<void> {
 	if (
-		modal_mode === undefined ||
-		current_modal_positionname === undefined ||
-		current_modal_key === undefined ||
-		current_modal_unabridged_key === undefined
+		modal_config.mode === undefined ||
+		modal_config.positionname === undefined ||
+		modal_config.key === undefined ||
+		modal_config.unabridged_key === undefined
 	) {
 		closeModal();
 		return;
-	} else if (modal_mode === 'delete') {
+	} else if (modal_config.mode === 'delete') {
 		// Delete position
-		await IndexedDB.deleteItem(current_modal_key);
-		await IndexedDB.deleteItem(current_modal_unabridged_key);
+		await IndexedDB.deleteItem(modal_config.key);
+		await IndexedDB.deleteItem(modal_config.unabridged_key);
 		await updateSavedPositionListUI();
-	} else if (modal_mode === 'load') {
+	} else if (modal_config.mode === 'load') {
 		// Load position
 		const editorSaveState = await IndexedDB.loadItem<EditorSaveState>(
-			current_modal_unabridged_key,
+			modal_config.unabridged_key,
 		);
 		if (editorSaveState === undefined || editorSaveState.variantOptions === undefined) {
 			console.error(
-				`Saved position ${current_modal_unabridged_key} appears to be corrupted, deleting...`,
+				`Saved position ${modal_config.unabridged_key} appears to be corrupted, deleting...`,
 			);
-			await IndexedDB.deleteItem(current_modal_key);
-			await IndexedDB.deleteItem(current_modal_unabridged_key);
+			await IndexedDB.deleteItem(modal_config.key);
+			await IndexedDB.deleteItem(modal_config.unabridged_key);
 			await updateSavedPositionListUI();
 		} else {
 			floatingWindow.close(false);
 			eactions.load(editorSaveState);
 		}
-	} else if (modal_mode === 'overwrite_save') {
-		await eactions.save(current_modal_positionname);
+	} else if (modal_config.mode === 'overwrite_save') {
+		await eactions.save(modal_config.positionname);
 		updateSavedPositionListUI();
 	}
 
