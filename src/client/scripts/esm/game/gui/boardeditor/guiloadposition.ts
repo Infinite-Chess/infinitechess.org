@@ -241,9 +241,9 @@ async function onSaveButtonPress(): Promise<void> {
 	}
 	const key = `editor-save-${positionname}`;
 	const unabridged_key = key.replace('editor-saveinfo-', 'editor-save-');
-	const previous_save = await IndexedDB.loadItem<EditorSaveState>(key);
+	const previous_saveinfo = await IndexedDB.loadItem<EditorAbridgedSaveState>(unabridged_key);
 
-	if (previous_save === undefined) {
+	if (previous_saveinfo === undefined) {
 		await eactions.save(positionname);
 		updateSavedPositionListUI();
 	} else openModal('overwrite_save', positionname, key, unabridged_key);
