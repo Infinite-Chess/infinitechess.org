@@ -297,7 +297,26 @@ function createDeleteButtonElement(): HTMLButtonElement {
 	return deleteBtn;
 }
 
-/** Given a saveinfo_key, read the element from local storage and append a row to element_savedPositionsToLoad */
+/**
+ * Given a saveinfo_key, read the element from local storage and append a row to element_savedPositionsToLoad
+ *
+ * A "row" has the following DOM structure:
+ *
+ * <div class="saved-position">
+ *   <div>POSITION_NAME</div>
+ *   <div>PIECE_COUNT</div>
+ *   <div>UTC_DATE</div>
+ *   <div>
+ *     <button class="btn saved-position-btn"> <!-- Load -->
+ *       <svg><use href="#svg-load" /></svg>
+ *     </button>
+ *     <button class="btn saved-position-btn"> <!-- Delete -->
+ *       <svg><use href="#svg-delete" /></svg>
+ *     </button>
+ *   </div>
+ * </div>
+ *
+ * */
 async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<void> {
 	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
 	const editorAbridgedSaveState = await IndexedDB.loadItem<EditorAbridgedSaveState>(saveinfo_key);
