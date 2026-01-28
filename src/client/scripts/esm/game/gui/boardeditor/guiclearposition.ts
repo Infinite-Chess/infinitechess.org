@@ -1,7 +1,7 @@
-// src/client/scripts/esm/game/gui/boardeditor/guistartlocalgame.ts
+// src/client/scripts/esm/game/gui/boardeditor/guiclearposition.ts
 
 /**
- * Manages the GUI popup window for the Start local game button of the Board Editor
+ * Manages the GUI popup window for the Clear position button of the Board Editor
  */
 
 import guifloatingwindow from './guifloatingwindow';
@@ -10,15 +10,15 @@ import eactions from '../../boardeditor/actions/eactions';
 // Elements ----------------------------------------------------------
 
 /** The button the toggles visibility of the Start local game popup window. */
-const element_localgamebutton = document.getElementById('start-local-game')!;
+const element_clearbutton = document.getElementById('clearall')!;
 
 /** The actual window of the Game Rules popup. */
-const element_window = document.getElementById('local-game-UI')!;
-const element_header = document.getElementById('local-game-UI-header')!;
-const element_closeButton = document.getElementById('close-local-game-UI')!;
+const element_window = document.getElementById('clear-position-UI')!;
+const element_header = document.getElementById('clear-position-UI-header')!;
+const element_closeButton = document.getElementById('close-clear-position-UI')!;
 
-const yesButton = document.getElementById('start-local-game-yes')!;
-const noButton = document.getElementById('start-local-game-no')!;
+const yesButton = document.getElementById('clear-position-yes')!;
+const noButton = document.getElementById('clear-position-no')!;
 
 // Create floating window -------------------------------------
 
@@ -33,24 +33,24 @@ const floatingWindow = guifloatingwindow.create({
 // Toggling ---------------------------------------------
 
 function onOpen(): void {
-	element_localgamebutton.classList.add('active');
-	initLocalGameUIListeners();
+	element_clearbutton.classList.add('active');
+	initClearPositionUIListeners();
 }
 
 function onClose(resetPositioning: boolean): void {
 	if (resetPositioning) floatingWindow.resetPositioning();
-	element_localgamebutton.classList.remove('active');
-	closeLocalGameUIListeners();
+	element_clearbutton.classList.remove('active');
+	closeClearPositionUIListeners();
 }
 
 // Gamerules-specific listeners -------------------------------------------
 
-function initLocalGameUIListeners(): void {
+function initClearPositionUIListeners(): void {
 	yesButton.addEventListener('click', onYesButtonPress);
 	noButton.addEventListener('click', onNoButtonPress);
 }
 
-function closeLocalGameUIListeners(): void {
+function closeClearPositionUIListeners(): void {
 	yesButton.removeEventListener('click', onYesButtonPress);
 	noButton.removeEventListener('click', onNoButtonPress);
 }
@@ -58,7 +58,8 @@ function closeLocalGameUIListeners(): void {
 // Utilities---------------------------------------------------------------------
 
 function onYesButtonPress(): void {
-	eactions.startLocalGame();
+	eactions.clearAll();
+	floatingWindow.close(false);
 }
 
 function onNoButtonPress(): void {

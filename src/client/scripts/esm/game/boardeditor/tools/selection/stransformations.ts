@@ -13,7 +13,7 @@ import type { Mesh } from '../../../rendering/piecemodels';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import boardutil, { LineKey, Piece } from '../../../../../../../shared/chess/util/boardutil';
+import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardutil';
 import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
 import boardeditor, { Edit } from '../../boardeditor';
 import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
@@ -539,7 +539,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	const step: Vec2 = axis === 0 ? [1n, 0n] : [0n, 1n];
 
 	const slideKey = vectors.getKeyFromVec2(step);
-	const lines: Map<LineKey, number[]> = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
+	const lines = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
 
 	/** Running list of all pieces within the box. */
 	const piecesInSelection: Piece[] = [];
@@ -570,7 +570,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 		// Iterate through each line to find all pieces within the selection box
 		for (let i = linesStart; i <= linesEnd; i++) {
 			const coordsForKey: Coords = axis === 0 ? [0n, i] : [i, 0n]; // 0n makes no difference for the final key of the line, it can be anything.
-			const lineKey: LineKey = organizedpieces.getKeyFromLine(step, coordsForKey);
+			const lineKey = organizedpieces.getKeyFromLine(step, coordsForKey);
 
 			const thisLine: number[] | undefined = lines.get(lineKey);
 			if (!thisLine) continue; // Empty line

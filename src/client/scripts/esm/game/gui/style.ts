@@ -7,13 +7,22 @@
 
 import type { Color } from '../../../../../shared/util/math/math';
 
+// Constants -------------------------------------------------------------
+
+/** SVG default namespace */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Elements  -------------------------------------------------------------
+
 const element_style = document.getElementById('style')!; // The in-html-doc style element containing css stylings
+
+// Variables  -------------------------------------------------------------
 
 // What things require styling that our javascript changes?
 // * The navigation bar, when the theme changes.
 let navigationStyle: string;
 
-// Other operations
+// Functions -------------------------------------------------------------
 
 function setNavStyle(cssStyle: string): void {
 	navigationStyle = cssStyle;
@@ -73,6 +82,8 @@ function arrayToCssColor(colorArray: Color): string {
 }
 
 export default {
+	SVG_NS,
+
 	setNavStyle,
 	arrayToCssColor,
 	getElementIndexWithinItsParent,

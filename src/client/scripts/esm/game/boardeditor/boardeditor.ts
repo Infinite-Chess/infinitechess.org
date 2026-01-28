@@ -33,13 +33,13 @@ import selectiontool from './tools/selection/selectiontool.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import stransformations from './tools/selection/stransformations.js';
-import eactions from './eactions.js';
+import eactions from './actions/eactions.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import miniimage from '../rendering/miniimage.js';
 import arrows from '../rendering/arrows/arrows.js';
 import perspective from '../rendering/perspective.js';
 import gameloader from '../chess/gameloader.js';
-import eautosave from './eautosave.js';
+import eautosave from './actions/eautosave.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -87,6 +87,9 @@ let indexOfThisEdit: number | undefined;
 let initial_pawnDoublePush: boolean | undefined = true;
 /** The value of the castling game rule in the initial zeroth edit */
 let initial_castling: boolean | undefined = true;
+
+/** Name of active position, as displayed on editor bar and used for "Save" button by default */
+let active_positionname: string | undefined = undefined;
 
 // Initialization ------------------------------------------------------------------------
 
@@ -152,7 +155,7 @@ async function initBoardEditor(
 
 function closeBoardEditor(): void {
 	eautosave.markPositionDirty();
-	void eautosave.saveCurrentPositionOnce();
+	void eautosave.autosaveCurrentPositionOnce();
 	eautosave.stopPositionAutosave();
 
 	// Reset state
@@ -385,7 +388,7 @@ function Copy(): void {
 
 	if (currentTool !== 'selection-tool') {
 		// Copy game notation
-		eactions.save();
+		eactions.copy();
 	} else if (selectiontool.isExistingSelection()) {
 		// Copy current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -415,7 +418,7 @@ function Paste(): void {
 
 	if (currentTool !== 'selection-tool') {
 		// Paste game notation
-		eactions.load();
+		eactions.paste();
 	} else if (selectiontool.isExistingSelection()) {
 		// Paste clipboard at current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -456,6 +459,15 @@ function stealPointer(pointerIdToSteal: string): void {
 		drawingtool.stealPointer(pointerIdToSteal);
 }
 
+function getActivePositionName(): string | undefined {
+	return active_positionname;
+}
+
+function setActivePositionName(positionname: string | undefined): void {
+	active_positionname = positionname;
+	guiboardeditor.updateActivePositionElement(positionname);
+}
+
 // Rendering ------------------------------------------------------------------
 
 /** Renders any graphics of the active tool, if we are in the board editor. */
@@ -494,6 +506,8 @@ export default {
 	canRedo,
 	isLeftMouseReserved,
 	stealPointer,
+	getActivePositionName,
+	setActivePositionName,
 	// Rendering
 	render,
 };

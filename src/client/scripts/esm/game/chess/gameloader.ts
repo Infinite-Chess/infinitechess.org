@@ -452,8 +452,6 @@ async function startBoardEditorFromCustomPosition(
 
 	await guiboardeditor.initUI();
 	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
-
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }
 
 /**
@@ -535,6 +533,13 @@ function openGameinfoBarAndConcludeGameIfOver(
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 
+function unloadLogicalAndRendering(): void {
+	gameslot.unloadGame();
+	perspective.disable();
+	boardpos.eraseMomentum();
+	Transition.terminate();
+}
+
 function unloadGame(): void {
 	// console.log("Game loader unloading game...");
 
@@ -546,11 +551,8 @@ function unloadGame(): void {
 	guigameinfo.close();
 	guigameinfo.clearUsernameContainers();
 	guiboardeditor.close();
-	gameslot.unloadGame();
-	perspective.disable();
+	unloadLogicalAndRendering();
 	typeOfGameWeAreIn = undefined;
-	boardpos.eraseMomentum();
-	Transition.terminate();
 
 	gui.prepareForOpen();
 }
@@ -574,5 +576,6 @@ export default {
 	startBoardEditorFromCustomPosition,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
+	unloadLogicalAndRendering,
 	unloadGame,
 };

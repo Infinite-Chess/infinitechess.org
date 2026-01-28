@@ -214,19 +214,6 @@ function setGamerulesGUIinfo(
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
-/** Set empty default game rules upon position clearing */
-function setGamerulesGUIinfoUponPositionClearing(): void {
-	gamerulesGUIinfo = {
-		playerToMove: 'white',
-		winConditions: [icnconverter.default_win_condition],
-		pawnDoublePush: false,
-		castling: false,
-	};
-
-	updateGamefileProperties(undefined, undefined, 'white', undefined);
-	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
-}
-
 /**
  * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castling entries of the gamerules
  * since we do not keep track of the checkbox state between edits.
@@ -366,7 +353,6 @@ export default {
 	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
-	setGamerulesGUIinfoUponPositionClearing,
 	setPositionDependentGameRules,
 	getPositionDependentGameRules,
 	updateGamerulesGUIinfo,

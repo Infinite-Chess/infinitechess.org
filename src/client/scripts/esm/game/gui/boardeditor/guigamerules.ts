@@ -95,15 +95,27 @@ const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsA
 
 // Create floating window -------------------------------------
 
-const floatingWindow = guifloatingwindow.createFloatingWindow({
+const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
 	headerEl: element_header,
-	toggleButtonEl: element_gamerules,
 	closeButtonEl: element_closeButton,
 	inputElList: elements_selectionList,
-	onOpen: initGameRulesListeners,
-	onClose: closeGameRulesListeners,
+	onOpen,
+	onClose,
 });
+
+// Toggling ---------------------------------------------
+
+function onOpen(): void {
+	element_gamerules.classList.add('active');
+	initGameRulesListeners();
+}
+
+function onClose(resetPositioning: boolean): void {
+	if (resetPositioning) floatingWindow.resetPositioning();
+	element_gamerules.classList.remove('active');
+	closeGameRulesListeners();
+}
 
 // Gamerules-specific listeners -------------------------------------------
 
@@ -482,7 +494,8 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 // Exports -----------------------------------------------------------------
 
 export default {
+	open: floatingWindow.open,
 	close: floatingWindow.close,
-	toggle: floatingWindow.toggle,
+	isOpen: floatingWindow.isOpen,
 	setGameRules,
 };

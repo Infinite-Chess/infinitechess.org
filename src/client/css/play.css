@@ -79,18 +79,35 @@ button {
 	margin: 0.2em 0.2em;
 }
 
+.editor-positionname {
+	text-align: center;
+	margin: 0.3em 1em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 /* SVG resizings */
 
 .svg-reset {
 	transform: scale(0.85) translate(2%, 0%);
 }
 
-.svg-clearall {
+.svg-delete {
+	aspect-ratio: 1;
 	transform: scale(0.8);
 }
 
-.svg-saved-positions {
+.svg-load-position {
 	transform: scale(0.75);
+}
+
+.svg-save-position-as {
+	transform: scale(0.82);
+}
+
+.svg-save-position {
+	transform: scale(0.82);
 }
 
 .svg-copy-notation {
@@ -1422,10 +1439,10 @@ svg.collapse {
 
 /* Shared floating Window UI */
 .floating-window {
-	max-width: min(220px, 60vw);
+	display: flex;
+	flex-direction: column;
 	max-height: min(80vh, var(--dvh-sub-nav));
 	box-sizing: border-box;
-	overflow: auto; /* enable vertical scrolling */
 	padding: 0 18px 16px 18px;
 	border-radius: 12px;
 	position: absolute;
@@ -1436,10 +1453,34 @@ svg.collapse {
 	font-family: 'Segoe UI', Roboto, sans-serif;
 	font-size: 14px;
 	color: #222;
+	--editor-floating-window-btn-primary: #1d8ee4;
+	--editor-floating-window-btn-primary-hover: #0d7ed4;
+	--editor-floating-window-btn-secondary: #e0e0e0;
+	--editor-floating-window-btn-secondary-hover: #d5d5d5;
+}
+
+.floating-window.scrolling {
+	overflow: auto;
+}
+
+.floating-window.nonscrolling {
+	overflow: hidden;
+}
+
+.floating-window.narrow {
+	width: 100%;
+	box-sizing: border-box;
+	max-width: min(220px, 60vw);
+}
+
+.floating-window.wide {
+	width: 100%;
+	box-sizing: border-box;
+	max-width: calc(2 * min(220px, 60vw));
 }
 
 /* Header (draggable area + close button) */
-.floating-window-header {
+.window-header {
 	cursor: move;
 	user-select: none;
 	display: flex;
@@ -1467,7 +1508,7 @@ svg.collapse {
 .divider {
 	border: none;
 	border-bottom: 1px solid #ccc;
-	margin: 0 0 12px 0;
+	margin-bottom: 12px;
 }
 
 /* Floating window UI confirmation button styling */
@@ -1478,7 +1519,7 @@ svg.collapse {
 	margin-top: 18px;
 }
 
-.btn {
+.confirmation-buttons .btn {
 	min-width: 80px;
 	padding: 10px 18px;
 	border-radius: 8px;
@@ -1489,21 +1530,21 @@ svg.collapse {
 }
 
 .btn-primary {
-	background-color: #1d8ee4;
+	background-color: var(--editor-floating-window-btn-primary);
 	color: #ffffff;
 }
 
 .btn-primary:hover {
-	background-color: #0d7ed4;
+	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
 .btn-secondary {
-	background-color: #e0e0e0;
+	background-color: var(--editor-floating-window-btn-secondary);
 	color: #222;
 }
 
 .btn-secondary:hover {
-	background-color: #d5d5d5;
+	background-color: var(--editor-floating-window-btn-secondary-hover);
 }
 
 /* Floating window UI input styling */
@@ -1516,6 +1557,7 @@ svg.collapse {
 .flwindow-section label {
 	font-weight: 500;
 	margin-bottom: 4px;
+	word-wrap: break-word;
 }
 
 .floating-window .invalid-input {
@@ -1610,6 +1652,119 @@ svg.collapse {
 
 .floating-window input::placeholder {
 	color: #999;
+}
+
+/* Board editor load & save positions UI */
+
+.saved-position-columns {
+	display: grid;
+	grid-template-columns: 43% 22% 35%;
+	align-items: center;
+	padding: 0 0.35em;
+}
+
+.saved-position-columns > div {
+	padding-right: 0.35em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.saved-position-list {
+	min-height: 80px;
+	overflow-y: auto;
+}
+
+.saved-position {
+	flex: 0 0 auto; /* do not shrink */
+	height: 2.5em;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	display: grid;
+	align-items: center;
+	grid-template-columns: auto 13% 25% 8% 8%;
+	padding: 0 0.35em;
+}
+
+.saved-position:nth-child(even) {
+	background-color: #f7f7f7;
+}
+
+.saved-position > div {
+	padding-right: 0.35em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.saved-position .btn {
+	background-color: transparent;
+}
+
+.position-name {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 12px;
+}
+
+.position-name-row {
+	display: flex;
+	gap: 8px;
+}
+
+.position-name-row input {
+	flex: 1;
+}
+
+.position-name-btnsave {
+	width: 75px;
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: 600;
+	background-color: var(--editor-floating-window-btn-primary);
+	color: #ffffff;
+}
+
+.position-name-btnsave:hover {
+	background-color: var(--editor-floating-window-btn-primary-hover);
+}
+
+.saved-position-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.saved-position-btn:hover svg {
+	transform: scale(1.1);
+}
+
+.saved-position-btn svg {
+	width: 22px;
+	aspect-ratio: 1;
+}
+
+/* The overlay covers ONLY the load-position-UI */
+.load-position-modal-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.25);
+	pointer-events: auto;
+}
+
+.load-position-modal {
+	width: 90%;
+	border-radius: 0.75em;
+	background-color: rgba(255, 255, 255, 0.96);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+	padding: 0em 1em 0.5em 1em;
+}
+
+.load-position-modal-header {
+	cursor: unset;
 }
 
 /* Pause UI */

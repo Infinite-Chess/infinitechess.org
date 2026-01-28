@@ -1,16 +1,15 @@
 // src/client/scripts/esm/game/gui/boardeditor/guiboardeditor.ts
 
-/*
+/**
  * Handles the Board Editor GUI
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { EditorAutosave } from '../../boardeditor/eautosave.js';
+import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
 // @ts-ignore
-import statustext from '../statustext.js';
 import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
@@ -18,7 +17,7 @@ import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import tooltips from '../../../util/tooltips.js';
-import eactions from '../../boardeditor/eactions.js';
+import eactions from '../../boardeditor/actions/eactions.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
@@ -27,11 +26,16 @@ import IndexedDB from '../../../util/IndexedDB.js';
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
-import guifloatingwindow from './guifloatingwindow.js';
+import guiresetposition from './guiresetposition.js';
+import guiclearposition from './guiclearposition.js';
+import guiloadposition from './guiloadposition.js';
+import eautosave from '../../boardeditor/actions/eautosave.js';
+import esave from '../../boardeditor/actions/esave.js';
 
 // Elements ---------------------------------------------------------------
 
 const element_menu = document.getElementById('editor-menu')!;
+const element_activePositionNameDisplay = document.getElementById('active-position-name-display')!;
 
 const elements_tools = [
 	document.getElementById('normal')!,
@@ -48,7 +52,9 @@ const elements_actions = [
 	// Position
 	document.getElementById('reset')!,
 	document.getElementById('clearall')!,
-	document.getElementById('saved-positions')!,
+	document.getElementById('load-position')!,
+	document.getElementById('save-position-as')!,
+	document.getElementById('save-position')!,
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
@@ -121,15 +127,30 @@ let boardEditorOpen = false;
 
 // Initialization ---------------------------------------------------------
 
+/**
+ * Open the board editor GUI
+ */
 async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	const editorAutosave = await IndexedDB.loadItem<EditorAutosave>('editor-autosave');
-	if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+	// Try to read in autosave and initialize board editor
+	// If there is no autosave, initialize board editor with Classical position
+	const editorSaveStateRaw = await IndexedDB.loadItem(eautosave.EDITOR_AUTOSAVE_NAME);
+	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+
+	if (!editorSaveStateParsed.success) {
+		// Missing or corrupted autosave
+		if (editorSaveStateRaw !== undefined) {
+			// If corrupted, delete
+			console.error('Corrupted board editor autosave data found, clearing autosave.');
+			eautosave.clearAutosave();
+		}
+		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
-	else {
+	} else {
+		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
@@ -140,25 +161,19 @@ async function open(): Promise<void> {
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
 
-		try {
-			await gameloader.startBoardEditorFromCustomPosition(
-				{
-					metadata,
-					additional: {
-						variantOptions: editorAutosave.variantOptions,
-					},
+		boardeditor.setActivePositionName(editorSaveState.positionname);
+		await gameloader.startBoardEditorFromCustomPosition(
+			{
+				metadata,
+				additional: {
+					variantOptions: editorSaveState.variantOptions,
 				},
-				editorAutosave.pawnDoublePush,
-				editorAutosave.castling,
-			);
-		} catch (err) {
-			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
-			// then do not lock user out of board editor
-			console.error('Failed to load autosaved board editor position when opening it:', err);
-
-			await gameloader.startBoardEditor();
-		}
+			},
+			editorSaveState.pawnDoublePush,
+			editorSaveState.castling,
+		);
 	}
+
 	initListeners();
 }
 
@@ -170,7 +185,7 @@ function isOpen(): boolean {
 function close(): void {
 	if (!boardEditorOpen) return;
 
-	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning and contents of all floating windows
+	closeAllFloatingWindows(true);
 
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
@@ -200,6 +215,16 @@ function closeListeners(): void {
 	_getActivePieceElements().forEach((element) => {
 		element.removeEventListener('click', callback_ChangePieceType);
 	});
+}
+
+/** Close and reset the positioning and contents of all floating windows */
+function closeAllFloatingWindows(resetPositioning: boolean): void {
+	guiresetposition.close(resetPositioning);
+	guiclearposition.close(resetPositioning);
+	guiloadposition.close(resetPositioning);
+	guigamerules.close(resetPositioning);
+	guistartlocalgame.close(resetPositioning);
+	guistartenginegame.close(resetPositioning);
 }
 
 async function initUI(): Promise<void> {
@@ -339,6 +364,20 @@ function onClearSelection(): void {
 	});
 }
 
+// Active position name display control -------------------------------------
+
+function updateActivePositionElement(positionname: string | undefined): void {
+	if (positionname === undefined) {
+		positionname = 'New position';
+		element_activePositionNameDisplay.classList.add('italic');
+	} else {
+		element_activePositionNameDisplay.classList.remove('italic');
+	}
+
+	element_activePositionNameDisplay.textContent = positionname;
+	element_activePositionNameDisplay.title = positionname;
+}
+
 // Helper Functions ---------------------------------------------------------
 
 /** Helper Function: Returns an array of players based on the current gamefile's turn order. */
@@ -371,30 +410,73 @@ function callback_Action(e: Event): void {
 
 	switch (action) {
 		// Position ---------------------
-		case 'reset':
-			eactions.reset();
+		case 'reset': {
+			const wasOpen = guiresetposition.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guiresetposition.open();
 			return;
-		case 'clearall':
-			eactions.clearAll();
+		}
+		case 'clearall': {
+			const wasOpen = guiclearposition.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guiclearposition.open();
 			return;
-		case 'saved-positions':
-			statustext.showStatus('Not implemented yet.');
+		}
+		case 'load-position': {
+			const wasOpen = guiloadposition.getMode() !== 'load';
+			closeAllFloatingWindows(false);
+			if (wasOpen) guiloadposition.openLoadPosition();
 			return;
+		}
+		case 'save-position-as': {
+			const wasOpen = guiloadposition.getMode() !== 'save-as';
+			closeAllFloatingWindows(false);
+			if (wasOpen) guiloadposition.openSavePositionAs();
+			return;
+		}
+		case 'save-position': {
+			const active_positionname = boardeditor.getActivePositionName();
+			if (active_positionname === undefined) {
+				// If there is no active position name, treat this the same way as "Save as" if that window is not open
+				const wasOpen = guiloadposition.getMode() !== 'save-as';
+				if (wasOpen) {
+					closeAllFloatingWindows(false);
+					guiloadposition.openSavePositionAs();
+				}
+			} else {
+				// If there is an active position name, simply overwrite save
+				esave.save(active_positionname);
+
+				// Update UI if necessary
+				if (guiloadposition.getMode() !== undefined)
+					guiloadposition.updateSavedPositionListUI();
+			}
+			return;
+		}
 		case 'copy-notation':
-			eactions.save();
+			eactions.copy();
 			return;
 		case 'paste-notation':
-			eactions.load();
+			eactions.paste();
 			return;
-		case 'gamerules':
-			guigamerules.toggle();
+		case 'gamerules': {
+			const wasOpen = guigamerules.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guigamerules.open();
 			return;
-		case 'start-local-game':
-			guistartlocalgame.toggle();
+		}
+		case 'start-local-game': {
+			const wasOpen = guistartlocalgame.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guistartlocalgame.open();
 			return;
-		case 'start-engine-game':
-			guistartenginegame.toggle();
+		}
+		case 'start-engine-game': {
+			const wasOpen = guistartenginegame.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guistartenginegame.open();
 			return;
+		}
 		// Selection (buttons that are always active)
 		case 'select-all':
 			selectiontool.selectAll();
@@ -507,4 +589,5 @@ export default {
 	onNewSelection,
 	onClearSelection,
 	updatePieceColors,
+	updateActivePositionElement,
 };

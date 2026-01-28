@@ -13,7 +13,6 @@ import type {
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import type { LineKey } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
@@ -27,7 +26,7 @@ import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
+import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import frametracker from '../frametracker.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';

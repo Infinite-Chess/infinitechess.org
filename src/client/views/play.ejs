@@ -26,10 +26,35 @@
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
-        <main>
 
+        <!-- SVG definitions -->
+        <div class="hidden">
+            <!-- Trash Can -->
+            <svg>
+                <metadata>
+                    Author: Solar Icons
+                    License: CC Attribution License
+                    Source: https://www.figma.com/de-de/community/file/1166831539721848736/solar-icons-set/
+                </metadata>
+                <symbol id="svg-delete" fill="#333" viewBox="0 0 2400 2400">
+                    <path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/>
+                </symbol>
+            </svg>
+            <!-- Play Button (Sideways triangle) -->
+            <svg>
+                <symbol id="svg-load" fill="#333" viewBox="-1.5 -1 9 9">
+                    <path d="M5.495 2.573 1.5.143C.832-.266 0 .25 0 1.068V5.93c0 .82.832 1.333 1.5.927l3.995-2.43c.673-.41.673-1.445 0-1.855" fill-rule="evenodd"/>
+                </symbol>
+            </svg>
+        </div>
+
+        <main>
             <!-- Left vertical bar of Board Editor -->
         	<div id="editor-menu" class="editor-menu unselectable hidden">
+                <div>
+                    <div class="editor-positionname" id="active-position-name-display"></div>
+                </div>
+                <hr class="editor-separator">
 				<!-- Section: Position -->
 				<div>
 					<div class="editor-header">Position</div>
@@ -38,18 +63,38 @@
 							<svg class="svg-reset" fill="none" viewBox="0 0 240 240"><g stroke="#333" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" clip-path="url(#a)"><path d="M120 30a90 90 0 11-57 20"/><path d="M30 45h40v40"/></g><defs><clipPath id="a"><path d="M0 0h240v240H0" fill="#333"/></clipPath></defs></svg>
 						</div>
 						<div data-action="clearall" id="clearall" class="instant tooltip-d" data-tooltip="Clear position">
-							<svg class="svg-clearall" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><g fill="#333"><path d="M300 639c0-49 35-88 77-88h267c53-2 100-40 117-97l3-10 12-39c7-24 13-45 21-63 34-74 97-126 170-139 17-3 37-3 60-3h347c22 0 42 0 60 3 72 13 135 65 169 140 8 17 14 40 21 62l12 40 3 10c18 56 74 94 127 96h257c42 0 77 40 77 88s-35 87-77 87H377c-42 0-77-39-77-87Z"/><path d="M1160 2200h80c279 0 418 0 508-89 90-88 100-233 119-524l26-419c10-158 15-236-30-286-45-50-122-50-275-50H812c-153 0-230 0-275 50-45 50-40 128-30 286l26 419c19 290 28 436 119 524 90 90 230 90 508 90Zm-135-981a76 76 0 00-82-70 78 78 0 00-68 86l50 526c4 43 41 75 82 70a78 78 0 00 68-86l-50-526Zm432-70c42 4 72 42 68 86l-50 526a76 76 0 01-82 70 78 78 0 01-68-86l50-526a75 75 0 01 82-70Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>
+							<svg class="svg-delete"><use href="#svg-delete"></use></svg>
 						</div>
-						<div data-action="saved-positions" id="saved-positions" class="tooltip-d" data-tooltip="Saved positions">
-							<svg class="svg-saved-positions" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 2400 2400"><g fill="#333" stroke="none"><path d="M1475 575h250v487l-70-40h-1l-16-8a93 93 0 00-76 0l-16 8-71 40V575Z"/><path d="M2200 1155v220c0 377 0 566-117 683s-306 117-683 117h-400c-377 0-566 0-683-117S200 1752 200 1375V670c0-88 0-132 7-170a400 400 0 01 319-318c37-7 80-7 169-7 39 0 58 0 77 2a400 400 0 01 218 90c14 12 28 26 55 53l55 55a855 855 0 00 171 150 400 400 0 00 54 24v571c0 14 0 30 2 45a100 100 0 00 40 70c35 23 70 14 86 8 14-5 28-13 39-20h2l106-60 106 60h2c10 7 25 15 39 20 16 6 51 15 86-10a98 98 0 00 40-70c2-12 2-30 2-43V580c105 7 174 25 226 72l24 22c77 86 77 218 77 480Z"/></g></svg>
+						<div data-action="load-position" id="load-position" class="tooltip-d" data-tooltip="Load position">
+							<svg class="svg-load-position" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 2400 2400"><g fill="#333" stroke="none"><path d="M1475 575h250v487l-70-40h-1l-16-8a93 93 0 00-76 0l-16 8-71 40V575Z"/><path d="M2200 1155v220c0 377 0 566-117 683s-306 117-683 117h-400c-377 0-566 0-683-117S200 1752 200 1375V670c0-88 0-132 7-170a400 400 0 01 319-318c37-7 80-7 169-7 39 0 58 0 77 2a400 400 0 01 218 90c14 12 28 26 55 53l55 55a855 855 0 00 171 150 400 400 0 00 54 24v571c0 14 0 30 2 45a100 100 0 00 40 70c35 23 70 14 86 8 14-5 28-13 39-20h2l106-60 106 60h2c10 7 25 15 39 20 16 6 51 15 86-10a98 98 0 00 40-70c2-12 2-30 2-43V580c105 7 174 25 226 72l24 22c77 86 77 218 77 480Z"/></g></svg>
 						</div>
-						<div data-action="copy-notation" id="copy-notation" class="instant tooltip-d" data-tooltip="Copy notation">
+                        <div data-action="save-position-as" id="save-position-as" class="tooltip-d" data-tooltip="Save position as">
+							<svg class="svg-save-position-as" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <metadata>
+                                    Author: Microsoft
+                                    License: MIT License
+                                    Source: https://github.com/microsoft/fluentui-system-icons/
+                                </metadata>
+                                <path fill="#333" d="M6.75 3h-1C4.2312 3 3 4.2312 3 5.75v12.5C3 19.7688 4.2312 21 5.75 21H6v-6c0-1.2426 1.0074-2.25 2.25-2.25h7.3531l1.7876-1.7876c.641-.641 1.4835-.962 2.3223-.9624h.0021c.437.0002.8749.0874 1.2849.2615v-1.976a3.25 3.25 0 0 0-.9519-2.298l-2.0355-2.0356a3.2503 3.2503 0 0 0-2.2626-.9517V7.5c0 1.2426-1.0074 2.25-2.25 2.25H9c-1.2426 0-2.25-1.0074-2.25-2.25V3Z"/><path fill="#333" d="m14.1031 14.25-2.6148 2.6148a3.685 3.685 0 0 0-.9693 1.712l-.4577 1.8307c-.0503.2013-.07.4-.0628.5925H7.5v-6a.75.75 0 0 1 .75-.75h5.8531ZM14.25 3v4.5a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V3h6Z"/><path fill="#333" d="M19.7152 11h-.0021a2.2785 2.2785 0 0 0-1.6152.6695l-5.9024 5.9024a2.684 2.684 0 0 0-.7063 1.2475l-.4577 1.8307c-.199.7961.5221 1.5173 1.3182 1.3182l1.8307-.4577a2.684 2.684 0 0 0 1.2475-.7063l5.9024-5.9024c.8927-.8926.8927-2.3398 0-3.2324A2.2782 2.2782 0 0 0 19.7152 11Z"/>
+                            </svg>
+                        </div>
+                        <div data-action="save-position" id="save-position" class="tooltip-dl" data-tooltip="Save position">
+							<svg class="svg-save-position" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <metadata>
+                                    Author: Microsoft
+                                    License: MIT License
+                                    Source: https://github.com/microsoft/fluentui-system-icons/
+                                </metadata>
+                                <path fill="#333" d="M6.75 3h-1C4.2312 3 3 4.2312 3 5.75v12.5C3 19.7688 4.2312 21 5.75 21H6v-6c0-1.2426 1.0074-2.25 2.25-2.25h7.5c1.2426 0 2.25 1.0074 2.25 2.25v6h.25c1.5188 0 2.75-1.2312 2.75-2.75V8.2855a3.25 3.25 0 0 0-.9519-2.298l-2.0355-2.0356a3.2503 3.2503 0 0 0-2.2626-.9517V7.5c0 1.2426-1.0074 2.25-2.25 2.25H9c-1.2426 0-2.25-1.0074-2.25-2.25V3Z"/><path fill="#333" d="M14.25 3v4.5a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V3h6ZM16.5 21v-6a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0-.75.75v6h9Z"/>
+                            </svg>
+                        </div>
+						<div data-action="copy-notation" id="copy-notation" class="instant tooltip-dr" data-tooltip="Copy notation">
 							<svg class="svg-copy-notation" xmlns="http://www.w3.org/2000/svg" fill="#333" transform="rotate(1 80 0)" viewBox="-38.4 -38.4 396.8 396.8"><g fill="none" fill-rule="evenodd"><path d="M0 0h320v320H0"/><path d="M80 80v113.3c0 25 19.7 45.5 44.5 46.7H240v40a40 40 0 01-40 40H40a40 40 0 01-40-40V120a40 40 0 01 40-40zm210-80a30 30 0 01 30 30v160a30 30 0 01-30 30H130a30 30 0 01-30-30V30a30 30 0 01 30-30" fill="#333"/></g></svg>
 						</div>
-						<div data-action="paste-notation" id="paste-notation" class="instant tooltip-dl" data-tooltip="Paste notation">
+						<div data-action="paste-notation" id="paste-notation" class="instant tooltip-d" data-tooltip="Paste notation">
 							<svg class="svg-paste-notation" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 2400 2400"><g fill="#333"><path d="M1600 425c0 124-100 225-225 225h-350A224 224 0 01 800 425C800 301 900 200 1025 200h350A224 224 0 01 1600 425Z"/><path d="M1883 503a260 260 0 00-77-45c-29-11-58 12-64 42a374 374 0 01-367 300h-350a372 372 0 01-367-300c-6-30-36-53-65-41C477 506 400 612 400 825V1800c0 300 179 400 400 400h800c221 0 400-100 400-400V825c0-163-45-263-117-322ZM800 1225h400c41 0 75 34 75 75 0 40-34 75-75 75H800a76 76 0 01-75-75c0-41 34-75 75-75Zm800 550H800a76 76 0 01-75-75c0-41 34-75 75-75h800c41 0 75 34 75 75 0 40-34 75-75 75Z"/></g></svg>
 						</div>
-						<div data-action="gamerules" id="gamerules" class="tooltip-dr" data-tooltip="Game rules">
+						<div data-action="gamerules" id="gamerules" class="tooltip-d" data-tooltip="Game rules">
 							<svg class="svg-gamerules" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" version="1.1" viewBox="0 0 51200 51200"><path d="M50818 24352a1514 1514 0 00-2140-132l-4467 3955L31596 39340a4300 4300 0 01-2849 1080c-303 0-606-30-910-94l-7213-1598-8710-1922-6105-1352-874-195a2644 2644 0 01-1548-1332 2670 2670 0 01 225-2805 2575 2575 0 01 953-810 2602 2602 0 01 1216-294c70 0 142 6 214 6l6295 1360 14600 3157a5790 5790 0 00 5082-1322l8976-7907 9166-8074a2907 2907 0 00 890-2920 2903 2903 0 00-2206-2117l-1142-246-8326-1800-10550-2277a5788 5788 0 00-5080 1324L9615 21577l-4236 3722-3686 3237a3966 3966 0 00-397 534c-65 80-123 152-181 240A5778 5778 0 00 0 32706a5764 5764 0 00 1100 3384 5613 5613 0 00 1280 1286 5530 5530 0 00 1668 840l66 20 6425 1410 6086 1330 10567 2313a7354 7354 0 00 6410-1663l362-317 12547-11110 4178-3700a1522 1522 0 00 130-2146" fill="#333"/></svg>
 						</div>
 						<div data-action="start-local-game" id="start-local-game" class="instant tooltip-d" data-tooltip="Start local game from position">
@@ -57,7 +102,7 @@
 								<path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1" fill="#333"/>
 							</svg>
 						</div>
-                        <div data-action="start-engine-game" id="start-engine-game" class="instant tooltip-d" data-tooltip="Start engine game from position">
+                        <div data-action="start-engine-game" id="start-engine-game" class="instant tooltip-dl" data-tooltip="Start engine game from position">
 							<svg class="svg-start-engine-game" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
                                 <path d="M90 20v30m60-30v30M90 190v30m60-30v30m40-130h30m-30 50h30M20 90h30m-30 50h30m48 50h44c17 0 25 0 32-3a30 30 0 00 13-13c3-7 3-15 3-32V98c0-17 0-25-3-32a30 30 0 00-13-13c-7-3-15-3-32-3H98c-17 0-25 0-32 3a30 30 0 00-13 13C50 73 50 81 50 98v44c0 17 0 25 3 32 3 5 8 10 13 13 7 3 15 3 32 3Z" stroke="#333" stroke-linecap="round" stroke-linejoin="round" stroke-width="25"/>
                             </svg>
@@ -73,7 +118,14 @@
 							<svg class="svg-normal" xmlns="http://www.w3.org/2000/svg" fill="#333" stroke="#333" viewBox="-96 0 512 512"><path d="M302.19 329.13H196.1l55.84 135.99c3.88 9.43-.56 20-9.45 24l-49.16 21.42c-9.17 4-19.45-.57-23.34-9.7L116.95 371.7 30.3 460.83C18.72 472.71 0 463.55 0 447.98V18.3C0 1.9 19.92-6.1 30.28 5.44l284.4 292.54c11.48 11.18 3.02 31.15-12.5 31.15z"/></svg>
 						</div>
 						<div data-tool="eraser" id="eraser" class="tooltip-d" data-tooltip="Eraser (G)">
-							<svg class="svg-eraser" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 240 240"><g fill="#333" stroke="none"><path d="M114 55C131 38 140 30 150 30s18 8 35 25S210 80 210 90s-8 20-25 36l-42 42-70-71 41-42Z"/><path d="m62 108 70 70-6 7-10 10H210a8 8 0 01 0 15H90c-10 0-19-9-35-25C38 168 30 160 30 150s8-20 25-36l7-6Z"/></g></svg>
+							<svg class="svg-eraser" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#333" stroke-width="0" viewBox="0 0 240 240">
+                                <metadata>
+                                    Author: Solar Icons
+                                    License: CC Attribution License
+                                    Source: https://www.figma.com/de-de/community/file/1166831539721848736/solar-icons-set/
+                                </metadata>
+                                <g fill="#333" stroke="none"><path d="M114 55C131 38 140 30 150 30s18 8 35 25S210 80 210 90s-8 20-25 36l-42 42-70-71 41-42Z"/><path d="m62 108 70 70-6 7-10 10H210a8 8 0 01 0 15H90c-10 0-19-9-35-25C38 168 30 160 30 150s8-20 25-36l7-6Z"/></g>
+                            </svg>
 						</div>
 						<div data-tool="selection-tool" id="selection-tool" class="tooltip-d" data-tooltip="Selection (H)">
 							<svg class="svg-selection-tool" xmlns="http://www.w3.org/2000/svg" fill="#222" viewBox="0 0 2560 2560"><path d="M1520 480a120 120 0 01-120 120h-240a120 120 0 01 0-240h240a120 120 0 01 120 120Zm-120 1480h-240a120 120 0 00 0 240h240a120 120 0 00 0-240Zm400-1360h160v160a120 120 0 00 240 0V560a200.2 200.2 0 00-200-200h-200a120 120 0 00 0 240Zm280 440a120 120 0 00-120 120v240a120 120 0 00 240 0v-240a120 120 0 00-120-120ZM480 1520a120 120 0 00 120-120v-240a120 120 0 10-240 0v240a120 120 0 00 120 120Zm280 440H600v-160a120 120 0 00-240 0v200a200.2 200.2 0 00 200 200h200a120 120 0 00 0-240Zm0-1600H560a200.2 200.2 0 00-200 200v200a120 120 0 00 240 0V600h160a120 120 0 00 0-240Zm1600 1600h-160v-160a120 120 0 00-240 0v160h-160a120 120 0 00 0 240h160v160a120 120 0 00 240 0v-160h160a120 120 0 00 0-240Z"/></svg>
@@ -520,17 +572,129 @@
                         </div>
                     </div>
 
+                    <!-- Reset position UI for Board Editor -->
+                    <div id="reset-position-UI" class="center narrow scrolling floating-window hidden">
+                        <div id="reset-position-UI-header" class="window-header">
+                            <span>Reset position</span>
+                            <button id="close-reset-position-UI" class="close-floating-window">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="flwindow-section">
+                            <label>
+                                Do you want to reset the board and create a new position? Unsaved changes will be lost.
+                            </label>
+                        </div>
+
+                        <div class="unselectable confirmation-buttons">
+                            <button id="reset-position-no" class="btn btn-secondary">No</button>
+                            <button id="reset-position-yes" class="btn btn-primary">Yes</button>
+                        </div>
+                    </div>
+
+                    <!-- Clear position UI for Board Editor -->
+                    <div id="clear-position-UI" class="center narrow scrolling floating-window hidden">
+                        <div id="clear-position-UI-header" class="window-header">
+                            <span>Clear position</span>
+                            <button id="close-clear-position-UI" class="close-floating-window">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="flwindow-section">
+                            <label>
+                                Do you want to clear the board and create a new position? Unsaved changes will be lost.
+                            </label>
+                        </div>
+
+                        <div class="unselectable confirmation-buttons">
+                            <button id="clear-position-no" class="btn btn-secondary">No</button>
+                            <button id="clear-position-yes" class="btn btn-primary">Yes</button>
+                        </div>
+                    </div>
+
+                    <!-- Load position UI for Board Editor -->
+                    <div id="load-position-UI" class="wide nonscrolling floating-window hidden">
+                        <div id="load-position-UI-header" class="window-header">
+                            <span id="load-position-UI-header-text">Load Position</span>
+                            <button id="close-load-position-UI" class="close-floating-window">&times;</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <!-- Container for Save Position As -->
+                        <div class="flwindow-section hidden" id="enter-position-name">
+                            <div class="position-name">
+                                <label for="save-as-position-name">Enter position name:</label>
+
+                                <div class="position-name-row">
+                                    <input type="text" id="save-as-position-name" maxlength="100">
+                                    <button id="save-position-button" class="position-name-btnsave">Save</button>
+                                </div>
+                            </div>
+                            <hr class="divider">
+                        </div>
+
+                        <div class="flwindow-section">
+                            <div class="saved-position-columns">
+                                <div>Name</div>
+                                <div>Pieces</div>
+                                <div>Date</div>
+                            </div>
+                        </div>
+
+                        <div id="load-position-UI-saved-positions" class="saved-position-list">
+                            <!--
+                            <div class="saved-position">
+                                <div>POSITION_NAME</div>
+                                <div>PIECE_COUNT</div>
+                                <div>UTC_DATE</div>
+                                <div>
+                                    <button class="btn saved-position-btn">
+                                        <svg><use href="#svg-load" /></svg>
+                                    </button>
+                                    <button class="btn saved-position-btn">
+                                        <svg><use href="#svg-delete" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            -->
+                        </div>
+
+                        <!-- Local modal overlay to block the load-position-UI -->
+                        <div id="load-position-modal-overlay" class="load-position-modal-overlay center hidden">
+                            <div class="load-position-modal">
+                                <div class="window-header load-position-modal-header">
+                                    <span id="load-position-modal-title"></span>
+                                    <button id="close-load-position-modal" class="close-floating-window">&times;</button>
+                                </div>
+
+                                <hr class="divider">
+
+                                <div class="flwindow-section">
+                                    <label id="load-position-modal-message"></label>
+                                </div>
+
+                                <div class="unselectable confirmation-buttons">
+                                    <button id="load-position-modal-no" class="btn btn-secondary">No</button>
+                                    <button id="load-position-modal-yes" class="btn btn-primary">Yes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Game Rules UI for Board Editor -->
-                    <div id="game-rules" class="center floating-window hidden">
-                        <div id="game-rules-header" class="floating-window-header">
-                            <span class="unselectable">Game Rules</span>
+                    <div id="game-rules" class="center narrow scrolling floating-window hidden">
+                        <div id="game-rules-header" class="window-header">
+                            <span>Game Rules</span>
                             <button id="close-rules" class="close-floating-window">&times;</button>
                         </div>
 
                         <hr class="divider">
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Player to move:</label>
+                            <label>Player to move:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="rules-white" name="player" value="white" checked>
                                 <label for="rules-white">White</label>
@@ -540,7 +704,7 @@
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">En passant square:</label>
+                            <label>En passant square:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-enpassant-x" placeholder="x">
                                 <span>,</span>
@@ -549,7 +713,7 @@
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Move rule state:</label>
+                            <label>Move rule state:</label>
                             <div class="input-pair">
                                 <input type="text" id="rules-moverule-current" placeholder="e.g. 0">
                                 <span>/</span>
@@ -558,58 +722,58 @@
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Promotion ranks (White):</label>
+                            <label>Promotion ranks (White):</label>
                             <input type="text" id="rules-promotionranks-white" placeholder="e.g. 8,12">
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Promotion ranks (Black):</label>
+                            <label>Promotion ranks (Black):</label>
                             <input type="text" id="rules-promotionranks-black" placeholder="e.g. 1,-10">
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Promotion pieces:</label>
+                            <label>Promotion pieces:</label>
                             <input type="text" id="rules-promotionpieces" placeholder="e.g. Q,R,B,N">
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Global special rights:</label>
+                            <label>Global special rights:</label>
                             <div class="rules-list">
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="rules-doublepush">
-                                    <label for="rules-doublepush" class="unselectable">Pawn double push</label>
+                                    <label for="rules-doublepush">Pawn double push</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="rules-castling">
-                                    <label for="rules-castling" class="unselectable">Castling</label>
+                                    <label for="rules-castling">Castling</label>
                                 </div>
                             </div>
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Win conditions:</label>
+                            <label>Win conditions:</label>
                             <div class="rules-list">
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="rules-checkmate" checked>
-                                    <label for="rules-checkmate" class="unselectable">Checkmate</label>
+                                    <label for="rules-checkmate">Checkmate</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="rules-royalcapture">
-                                    <label for="rules-royalcapture" class="unselectable">Royal capture</label>
+                                    <label for="rules-royalcapture">Royal capture</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="rules-allroyalscaptured">
-                                    <label for="rules-allroyalscaptured" class="unselectable">All royals captured</label>
+                                    <label for="rules-allroyalscaptured">All royals captured</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="rules-allpiecescaptured">
-                                    <label for="rules-allpiecescaptured" class="unselectable">All pieces captured</label>
+                                    <label for="rules-allpiecescaptured">All pieces captured</label>
                                 </div>
                             </div>
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">World Border:</label>
+                            <label>World Border:</label>
                             <div class="input-pair">
                                 <span>X:</span>
                                 <input type="text" id="rules-border-left" placeholder="-&infin;">
@@ -626,16 +790,16 @@
                     </div>
 
                     <!-- Start local game UI for Board Editor -->
-                    <div id="local-game-UI" class="center floating-window hidden">
-                        <div id="local-game-UI-header" class="floating-window-header">
-                            <span class="unselectable">Start local game</span>
+                    <div id="local-game-UI" class="center narrow scrolling floating-window hidden">
+                        <div id="local-game-UI-header" class="window-header">
+                            <span>Start local game</span>
                             <button id="close-local-game-UI" class="close-floating-window">&times;</button>
                         </div>
 
                         <hr class="divider">
 
                         <div class="flwindow-section">
-                            <label class="unselectable">
+                            <label>
                                 Do you want to leave the board editor and start a local game from this position? Changes will be saved.
                             </label>
                         </div>
@@ -647,9 +811,9 @@
                     </div>
 
                     <!-- Start engine game UI for Board Editor -->
-                    <div id="engine-game-UI" class="center floating-window hidden">
-                        <div id="engine-game-UI-header" class="floating-window-header">
-                            <span class="unselectable">Start engine game</span>
+                    <div id="engine-game-UI" class="center narrow scrolling floating-window hidden">
+                        <div id="engine-game-UI-header" class="window-header">
+                            <span>Start engine game</span>
                             <button id="close-engine-game-UI" class="close-floating-window">&times;</button>
                         </div>
 
@@ -657,7 +821,7 @@
 
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Play as:</label>
+                            <label>Play as:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="engine-game-white" name="human-player" value="white" checked>
                                 <label for="engine-game-white">White</label>
@@ -667,12 +831,12 @@
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Time Control (leave blank for unlimited time):</label>
+                            <label>Time Control (leave blank for unlimited time):</label>
                             <input type="text" id="engine-game-timecontrol" placeholder="e.g. 600+6">
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Engine difficulty:</label>
+                            <label>Engine difficulty:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="engine-game-easy" name="engine-strength" value="easy" checked>
                                 <label for="engine-game-easy">Easy</label>
@@ -684,7 +848,7 @@
                         </div>
 
                         <div class="flwindow-section">
-                            <label class="unselectable">Use default engine world border:</label>
+                            <label>Use default engine world border:</label>
                             <div class="toggle-group">
                                 <input type="radio" id="engine-game-border-no" name="world-border" value="no" checked>
                                 <label for="engine-game-border-no">No</label>
@@ -696,7 +860,7 @@
                         <hr class="divider">
 
                         <div class="flwindow-section">
-                            <label class="unselectable">
+                            <label>
                                 Do you want to leave the board editor and start an engine game from this position? Changes will be saved.
                             </label>
                         </div>
