@@ -59,7 +59,7 @@ For arguments defined by user input, or needing to be sanitized from the client,
 
 No `// ts-ignore`s are permitted, except for imports of existing `.js` files into `.ts` files.
 
-For all methods that accept a function callback for an argument, like `map()`, `filter()`, `forEach()`, `setTimeout()`, etc., to obtain type safety, don't pass in the function directly, but use a wrapper. For example, don't do `array.map(functionCallback)`, but do do `array.map((item) => functionCallback(item))`.
+For all methods that accept a function callback for an argument, like `map()`, `filter()`, `forEach()`, `setTimeout()`, etc., to obtain type safety, don't pass in the function directly, but use a wrapper. For example, don't do `array.map(functionCallback)`, but do do `array.map((item) => functionCallback(item))`. The exception is when adding callbacks for event listeners, as we have to retain the reference to the original function in order to remove the listener later.
 
 ### No magic strings
 
