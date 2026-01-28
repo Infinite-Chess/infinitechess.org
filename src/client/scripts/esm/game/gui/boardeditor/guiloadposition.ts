@@ -66,12 +66,14 @@ const element_modalYesButton = document.getElementById('load-position-modal-yes'
 let mode: 'load' | 'save-as' | undefined = undefined;
 
 /** The current config of the Confirmation dialog modal */
-let modal_config: {
-	mode?: ModalMode;
-	positionname?: string;
-	saveinfo_key?: string;
-	save_key?: string;
-} = {};
+let modal_config:
+	| {
+			mode: ModalMode;
+			positionname: string;
+			saveinfo_key: string;
+			save_key: string;
+	  }
+	| undefined = undefined;
 
 // Create floating window -------------------------------------
 
@@ -154,7 +156,7 @@ function openModal(
 }
 
 function closeModal(): void {
-	modal_config = {};
+	modal_config = undefined;
 	element_modal.classList.add('hidden');
 	closeModalListeners();
 }
@@ -191,12 +193,7 @@ function closeModalListeners(): void {
 // Functions -----------------------------------------------------------------
 
 async function onModalYesButtonPress(): Promise<void> {
-	if (
-		modal_config.mode === undefined ||
-		modal_config.positionname === undefined ||
-		modal_config.saveinfo_key === undefined ||
-		modal_config.save_key === undefined
-	) {
+	if (modal_config === undefined) {
 		closeModal();
 		return;
 	} else if (modal_config.mode === 'delete') {
