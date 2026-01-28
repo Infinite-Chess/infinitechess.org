@@ -300,13 +300,7 @@ function getCurrentPositionInformation(): VariantOptions {
 		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
 
 		const hasValidCastlingPartner = movepiece.hasCastlingPartner(gamefile.boardsim, candidate);
-		if (!hasValidCastlingPartner) {
-			specialRights.delete(coordsKey);
-			// Debugging
-			console.log(
-				`Removed special rights from piece at ${coordsKey} - No valid castling partner.`,
-			);
-		}
+		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
 	}
 
 	let enpassant: EnPassant | undefined;
