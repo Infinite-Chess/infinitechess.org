@@ -1695,11 +1695,11 @@ svg.collapse {
 }
 
 .saved-position:nth-child(odd) {
-	background-color: rgba(199, 199, 199, 0.4);
+	/* Same color */
 }
 
 .saved-position:nth-child(even) {
-	background-color: rgba(185, 185, 185, 0.4);
+	background-color: rgba(0, 0, 0, 0.02);
 }
 
 .saved-position > div {
