@@ -283,8 +283,8 @@ function createDeleteButtonElement(): HTMLButtonElement {
 }
 
 /**
- * Given a saveinfo_key, read the element from local storage and generate a row for the list of saved positions
- *
+ * Given a saveinfo_key and a editorAbridgedSaveState,
+ * generate a row for the list of saved positions.
  * A "row" has the following DOM structure:
  *
  * <div class="saved-position">
@@ -300,24 +300,16 @@ function createDeleteButtonElement(): HTMLButtonElement {
  *     <svg><use href="#svg-delete" /></svg>
  *   </button>
  * </div>
+ *
+ * @param saveinfo_key
+ * @param editorAbridgedSaveState
+ * @returns - A row as an HTMLDivElement
  */
-async function generateRowForSavedPositionsElement(
+function generateRowForSavedPositionsElement(
 	saveinfo_key: string,
-): Promise<HTMLDivElement | undefined> {
+	editorAbridgedSaveState: EditorAbridgedSaveState,
+): HTMLDivElement {
 	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
-
-	const editorAbridgedSaveStateRaw = await IndexedDB.loadItem(saveinfo_key);
-	const editorAbridgedSaveStateParsed = esave.EditorAbridgedSaveStateSchema.safeParse(
-		editorAbridgedSaveStateRaw,
-	);
-	if (!editorAbridgedSaveStateParsed.success) {
-		console.error(
-			`Invalid EditorAbridgedSaveState ${saveinfo_key} in IndexedDB ${editorAbridgedSaveStateParsed.error}`,
-		);
-		return;
-	}
-	const editorAbridgedSaveState: EditorAbridgedSaveState = editorAbridgedSaveStateParsed.data;
-
 	const row = document.createElement('div');
 	row.classList.add('saved-position');
 
@@ -366,18 +358,59 @@ async function generateRowForSavedPositionsElement(
 }
 
 /**
+ * Given a saveinfo_key, read the entry from IndexedDB and return { saveinfo_key, editorAbridgedSaveState } if successful
+ */
+async function loadSinglePositionInfo(saveinfo_key: string): Promise<
+	| {
+			saveinfo_key: string;
+			editorAbridgedSaveState: EditorAbridgedSaveState;
+	  }
+	| undefined
+> {
+	const editorAbridgedSaveStateRaw = await IndexedDB.loadItem(saveinfo_key);
+	const editorAbridgedSaveStateParsed = esave.EditorAbridgedSaveStateSchema.safeParse(
+		editorAbridgedSaveStateRaw,
+	);
+	if (!editorAbridgedSaveStateParsed.success) {
+		console.error(
+			`Invalid EditorAbridgedSaveState ${saveinfo_key} in IndexedDB ${editorAbridgedSaveStateParsed.error}`,
+		);
+		return;
+	}
+	const editorAbridgedSaveState: EditorAbridgedSaveState = editorAbridgedSaveStateParsed.data;
+
+	return { saveinfo_key, editorAbridgedSaveState };
+}
+
+/**
  * Update the saved positions list
  */
 async function updateSavedPositionListUI(): Promise<void> {
 	unregisterAllPositionButtonListeners(); // unregister position button listeners
 	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
+	// Get a list of all saveinfo_keys
 	const saveinfo_keys = (await IndexedDB.getAllKeys()).filter((key) =>
 		key.startsWith(esave.EDITOR_SAVEINFO_PREFIX),
 	);
-	for (const saveinfo_key of saveinfo_keys) {
-		const row = await generateRowForSavedPositionsElement(saveinfo_key);
-		if (row !== undefined) element_savedPositionsToLoad.appendChild(row);
+
+	// Load all editorAbridgedSaveStates simultaneously into a single list
+	const editorSaveInfoList = (
+		await Promise.all(saveinfo_keys.map(loadSinglePositionInfo))
+	).filter((x) => x !== undefined);
+
+	// Sort editorSaveInfoList by timestamp (newest first)
+	editorSaveInfoList.sort(
+		(a, b) => b.editorAbridgedSaveState.timestamp - a.editorAbridgedSaveState.timestamp,
+	);
+
+	// Generate and append row by row to saved positions UI
+	for (const editorSaveInfo of editorSaveInfoList) {
+		const row = generateRowForSavedPositionsElement(
+			editorSaveInfo.saveinfo_key,
+			editorSaveInfo.editorAbridgedSaveState,
+		);
+		element_savedPositionsToLoad.appendChild(row);
 	}
 }
 
