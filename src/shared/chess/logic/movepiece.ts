@@ -18,7 +18,7 @@ import state from './state.js';
 import boardchanges from './boardchanges.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import { rawTypes } from '../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
 import checkdetection from './checkdetection.js';
@@ -253,7 +253,7 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, coords)!;
 	const [rawType, player] = typeutil.splitType(piece.type);
 
-	if (rawType === rawTypes.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others.
+	if (rawType === r.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others.
 
 	const isTrigger: boolean = typeutil.jumpingRoyals.includes(rawType); // Royals are the castling triggers
 
@@ -268,7 +268,7 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 
 		// Basic Validity Checks
 		if (candPlayer !== player) continue; // Affects friends only
-		if (candRawType === rawTypes.PAWN) continue; // Pawns don't have castling rights
+		if (candRawType === r.PAWN) continue; // Pawns don't have castling rights
 
 		const candCoordsKey = coordutil.getKeyFromCoords(candidate.coords);
 		if (!boardsim.state.global.specialRights.has(candCoordsKey)) continue; // Already has no rights
@@ -308,8 +308,7 @@ function hasCastlingPartner(
 	const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
 
 	// Basic Validity Checks
-	if (candRawType === rawTypes.PAWN)
-		throw new Error('Cannot test if pawn has valid castling partner.'); // Safety, this could be easy to accidentally pass in.
+	if (candRawType === r.PAWN) throw new Error('Cannot test if pawn has valid castling partner.'); // Safety, this could be easy to accidentally pass in.
 
 	const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
 
@@ -323,7 +322,7 @@ function hasCastlingPartner(
 
 		// Partner Validation
 		if (partnerPlayer !== candPlayer) return false; // Affects friends only
-		if (partnerRawType === rawTypes.PAWN) return false; // Pawns don't have castling rights
+		if (partnerRawType === r.PAWN) return false; // Pawns don't have castling rights
 
 		if (requireRights) {
 			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
@@ -355,7 +354,7 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 
 	// Reset if it was a capture or pawn movement
 	const newMoveRule =
-		!move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN
+		!move.flags.capture && typeutil.getRawType(move.type) !== r.PAWN
 			? boardsim.state.global.moveRuleState! + 1
 			: 0;
 	state.createMoveRuleState(move, boardsim.state.global.moveRuleState!, newMoveRule);
