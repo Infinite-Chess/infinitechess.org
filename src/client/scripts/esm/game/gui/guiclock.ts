@@ -1,7 +1,7 @@
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
+import gameloader from '../chess/gameloader.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import { GameBus } from '../GameBus.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -176,7 +176,7 @@ function rescheduleSoundEffects(clocks: ClockData): void {
 	cancelSoundEffectTimers(); // Clear the previous timeouts
 
 	if (clocks.colorTicking === undefined) return; // Don't reschedule sound effects if no clocks are ticking
-	if (onlinegame.areInOnlineGame() && clocks.colorTicking! !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
+	if (!gameloader.areInLocalGame() && clocks.colorTicking !== gameloader.getOurColor()) return; // Don't play the sound effect for our opponent.
 
 	scheduleMinuteTick(clocks); // Lowtime notif at 1 minute left
 	scheduleCountdown(clocks); // Schedule 10s drum countdown
