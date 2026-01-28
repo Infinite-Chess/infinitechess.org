@@ -45,7 +45,7 @@ import guinavigation from '../gui/guinavigation';
 import annotations from '../rendering/highlights/annotations/annotations';
 import egamerules from './egamerules';
 import selectiontool from './tools/selection/selectiontool';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil';
 import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
 import bounds from '../../../../../shared/util/math/bounds';
@@ -240,11 +240,11 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		Round: '-',
 		TimeControl: engineUIConfig.TimeControl,
 		White:
-			engineUIConfig.youAreColor === players.WHITE
+			engineUIConfig.youAreColor === p.WHITE
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		Black:
-			engineUIConfig.youAreColor === players.BLACK
+			engineUIConfig.youAreColor === p.BLACK
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		UTCDate,
