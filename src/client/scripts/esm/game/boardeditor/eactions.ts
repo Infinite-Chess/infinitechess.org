@@ -49,6 +49,7 @@ import typeutil, { players as p } from '../../../../../shared/chess/util/typeuti
 import hydrochess_card from '../chess/enginecards/hydrochess_card';
 import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
 import bounds from '../../../../../shared/util/math/bounds';
+import movepiece from '../../../../../shared/chess/logic/movepiece';
 
 // Constants ----------------------------------------------------------------------
 
@@ -288,7 +289,30 @@ function getCurrentPositionInformation(): VariantOptions {
 	const position = organizedpieces.generatePositionFromPieces(gamefile.boardsim.pieces);
 
 	// Construct state_global
-	const specialRights = gamefile.boardsim.state.global.specialRights;
+
+	const specialRights = new Set(gamefile.boardsim.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
+
+	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
+	for (const coordsKey of specialRights) {
+		const candidate = boardutil.getPieceFromCoordsKey(gamefile.boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
+
+		const rawType = typeutil.getRawType(candidate.type);
+		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
+
+		const hasValidCastlingPartner = movepiece.hasCastlingPartner(
+			gamefile.boardsim,
+			candidate,
+			true,
+		);
+		if (!hasValidCastlingPartner) {
+			specialRights.delete(coordsKey);
+			// Debugging
+			console.log(
+				`Removed special rights from piece at ${coordsKey} - No valid castling partner.`,
+			);
+		}
+	}
+
 	let enpassant: EnPassant | undefined;
 	if (enpassantcoords !== undefined) {
 		const playerToMove = egamerules.getPlayerToMove();
@@ -296,6 +320,7 @@ function getCurrentPositionInformation(): VariantOptions {
 		const pawn: Coords = playerToMove === 'white' ? [enpassantcoords[0], enpassantcoords[1] - 1n] : playerToMove === 'black' ? [enpassantcoords[0], enpassantcoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 		enpassant = { square: enpassantcoords, pawn };
 	}
+
 	const state_global: GlobalGameState = {
 		specialRights,
 		moveRuleState,
