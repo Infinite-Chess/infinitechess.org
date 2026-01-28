@@ -199,9 +199,11 @@ async function onModalYesButtonPress(): Promise<void> {
 		return;
 	} else if (modal_config.mode === 'delete') {
 		// Delete position
-		await IndexedDB.deleteItem(modal_config.saveinfo_key);
-		await IndexedDB.deleteItem(modal_config.save_key);
-		await updateSavedPositionListUI();
+		await Promise.all([
+			IndexedDB.deleteItem(modal_config.saveinfo_key),
+			IndexedDB.deleteItem(modal_config.save_key),
+		]);
+		updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
 		// Load position
 		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
