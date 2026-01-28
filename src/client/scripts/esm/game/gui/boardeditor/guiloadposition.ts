@@ -300,10 +300,6 @@ function createDeleteButtonElement(): HTMLButtonElement {
  *     <svg><use href="#svg-delete" /></svg>
  *   </button>
  * </div>
- *
- * @param saveinfo_key
- * @param editorAbridgedSaveState
- * @returns - A row as an HTMLDivElement
  */
 function generateRowForSavedPositionsElement(
 	saveinfo_key: string,
@@ -396,7 +392,7 @@ async function updateSavedPositionListUI(): Promise<void> {
 
 	// Load all editorAbridgedSaveStates simultaneously into a single list
 	const editorSaveInfoList = (
-		await Promise.all(saveinfo_keys.map(loadSinglePositionInfo))
+		await Promise.all(saveinfo_keys.map((saveinfo_key) => loadSinglePositionInfo(saveinfo_key)))
 	).filter((x) => x !== undefined);
 
 	// Sort editorSaveInfoList by timestamp (newest first)
