@@ -256,30 +256,17 @@ async function onSaveButtonPress(): Promise<void> {
 	} else openModal('overwrite_save', positionname, saveinfo_key, save_key);
 }
 
-/** Create an HTML button element corresponding to a load button */
-function createLoadButtonElement(): HTMLButtonElement {
-	const loadBtn = document.createElement('button');
+/** Create a button element for one position row, with given SVG href. */
+function createButtonElement(svgHref: string): HTMLButtonElement {
+	const button = document.createElement('button');
 	const svg = document.createElementNS(style.SVG_NS, 'svg');
 	const use = document.createElementNS(style.SVG_NS, 'use');
-	use.setAttribute('href', '#svg-load');
+	use.setAttribute('href', svgHref);
 	svg.appendChild(use);
-	loadBtn.appendChild(svg);
-	loadBtn.classList.add('btn');
-	loadBtn.classList.add('saved-position-btn');
-	return loadBtn;
-}
-
-/** Create an HTML button element corresponding to a delete button */
-function createDeleteButtonElement(): HTMLButtonElement {
-	const deleteBtn = document.createElement('button');
-	const svg = document.createElementNS(style.SVG_NS, 'svg');
-	const use = document.createElementNS(style.SVG_NS, 'use');
-	use.setAttribute('href', '#svg-delete');
-	svg.appendChild(use);
-	deleteBtn.appendChild(svg);
-	deleteBtn.classList.add('btn');
-	deleteBtn.classList.add('saved-position-btn');
-	return deleteBtn;
+	button.appendChild(svg);
+	button.classList.add('btn');
+	button.classList.add('saved-position-btn');
+	return button;
 }
 
 /**
@@ -341,12 +328,12 @@ function generateRowForSavedPositionsElement(
 	// Buttons
 
 	// "Load" button
-	const loadBtn = createLoadButtonElement();
+	const loadBtn = createButtonElement('#svg-load');
 	registerButtonClick(loadBtn, () => openModal('load', positionname, saveinfo_key, save_key));
 	row.appendChild(loadBtn);
 
 	// "Delete" button
-	const deleteBtn = createDeleteButtonElement();
+	const deleteBtn = createButtonElement('#svg-delete');
 	registerButtonClick(deleteBtn, () => openModal('delete', positionname, saveinfo_key, save_key));
 	row.appendChild(deleteBtn);
 
