@@ -11,6 +11,7 @@ import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
+// @ts-ignore
 import statustext from '../statustext';
 
 // Types -------------------------------------------------------------------------
