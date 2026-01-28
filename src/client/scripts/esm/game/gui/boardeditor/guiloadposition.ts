@@ -276,7 +276,7 @@ function createDeleteButtonElement(): HTMLButtonElement {
 }
 
 /**
- * Given a saveinfo_key, read the element from local storage and append a row to element_savedPositionsToLoad
+ * Given a saveinfo_key, read the element from local storage and generate a row for the list of saved positions
  *
  * A "row" has the following DOM structure:
  *
