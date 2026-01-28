@@ -141,6 +141,12 @@ async function open(): Promise<void> {
 	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
 
 	if (!editorSaveStateParsed.success) {
+		// Missing or corrupted autosave
+		if (editorSaveStateRaw !== undefined) {
+			// If corrupted, delete
+			console.error('Corrupted board editor autosave data found, clearing autosave.');
+			eautosave.clearAutosave();
+		}
 		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
 	} else {

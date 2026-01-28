@@ -125,6 +125,12 @@ function onPageUnload(): void {
 	void autosaveCurrentPositionOnce();
 }
 
+function clearAutosave(): void {
+	IndexedDB.deleteItem(EDITOR_AUTOSAVE_NAME).catch((err) => {
+		console.error('Failed to clear board editor autosave:', err);
+	});
+}
+
 export default {
 	EDITOR_AUTOSAVE_NAME,
 
@@ -132,4 +138,5 @@ export default {
 	startPositionAutosave,
 	autosaveCurrentPositionOnce,
 	stopPositionAutosave,
+	clearAutosave,
 };
