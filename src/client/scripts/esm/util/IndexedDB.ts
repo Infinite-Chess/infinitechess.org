@@ -11,14 +11,12 @@ interface Entry {
 	/** The actual value of the entry */
 	value: any;
 	/** The timestamp the entry will become stale, at which point it should be deleted. */
-	expires: number;
+	expires?: number;
 }
 
 const DB_NAME = 'infinitechess';
 const DB_VERSION = 1;
 const STORE_NAME = 'entries';
-
-const defaultExpiryTimeMillis = 1000 * 60 * 60 * 24 * 365; // 1 year, since IndexedDB is for longer-term storage
 
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
@@ -119,15 +117,11 @@ async function withWrite<R>(op: (_store: IDBObjectStore) => IDBRequest<R>): Prom
  * Saves an item in browser IndexedDB storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
- * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
+ * @param [expiryMillis] How long until this entry should be auto-deleted for being stale. Leave undefined to never expire.
  * @returns A promise that resolves when the item is saved
  */
-async function saveItem<T>(
-	key: string,
-	value: T,
-	expiryMillis: number = defaultExpiryTimeMillis,
-): Promise<void> {
-	const timeExpires = Date.now() + expiryMillis;
+async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promise<void> {
+	const timeExpires = expiryMillis !== undefined ? Date.now() + expiryMillis : undefined;
 	const save: Entry = { value, expires: timeExpires };
 	return withWrite((store) => store.put(save, key));
 }
@@ -171,12 +165,16 @@ function hasItemExpired(save: unknown): boolean {
 	if (
 		typeof save !== 'object' ||
 		save === null ||
+		// This is true EVEN if the property is present but set to undefined!
 		!('expires' in save) ||
-		typeof save.expires !== 'number'
+		(save.expires !== undefined && typeof save.expires !== 'number')
 	) {
 		console.log(`IndexedDB item was in an old format. Deleting it...`);
 		return true;
 	}
+
+	if (save.expires === undefined) return false; // Never expires
+
 	return Date.now() >= save.expires;
 }
 
