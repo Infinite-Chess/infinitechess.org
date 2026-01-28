@@ -99,22 +99,23 @@ async function save(positionname: string): Promise<void> {
 		const timestamp = Date.now();
 		const pieceCount = variantOptions.position.size;
 
-		// Save full info for loading purposes
-		await IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${positionname}`, {
-			positionname,
-			timestamp,
-			pieceCount,
-			variantOptions,
-			pawnDoublePush,
-			castling,
-		});
-
-		// Save abridged info for display purposes
-		await IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${positionname}`, {
-			positionname,
-			timestamp,
-			pieceCount,
-		});
+		await Promise.all([
+			// Save full info for loading purposes
+			IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${positionname}`, {
+				positionname,
+				timestamp,
+				pieceCount,
+				variantOptions,
+				pawnDoublePush,
+				castling,
+			}),
+			// Save abridged info for display purposes
+			IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${positionname}`, {
+				positionname,
+				timestamp,
+				pieceCount,
+			}),
+		]);
 	} catch (err) {
 		// Don't crash the editor over failed save
 		console.error('Failed to save board editor position:', err);
