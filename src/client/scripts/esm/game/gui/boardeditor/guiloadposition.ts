@@ -203,7 +203,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			IndexedDB.deleteItem(modal_config.saveinfo_key),
 			IndexedDB.deleteItem(modal_config.save_key),
 		]);
-		await updateSavedPositionListUI();
+		updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
 		// Load position
 		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
@@ -217,7 +217,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				IndexedDB.deleteItem(modal_config.saveinfo_key),
 				IndexedDB.deleteItem(modal_config.save_key),
 			]);
-			await updateSavedPositionListUI();
+			updateSavedPositionListUI();
 			return;
 		}
 		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
