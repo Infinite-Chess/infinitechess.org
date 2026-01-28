@@ -210,8 +210,10 @@ async function onModalYesButtonPress(): Promise<void> {
 				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
 			statustext.showStatus(`The position was corrupted.`, true);
-			IndexedDB.deleteItem(modal_config.saveinfo_key);
-			IndexedDB.deleteItem(modal_config.save_key);
+			await Promise.all([
+				IndexedDB.deleteItem(modal_config.saveinfo_key),
+				IndexedDB.deleteItem(modal_config.save_key),
+			]);
 			updateSavedPositionListUI();
 			return;
 		}
