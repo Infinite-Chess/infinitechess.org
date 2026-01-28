@@ -282,7 +282,6 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 		const hasValidPartner = hasCastlingPartner(
 			boardsim,
 			candidate,
-			true, // Require rights
 			// Additional constraint: The partner cannot be the piece that just moved/died
 			(partner: Piece) => !coordutil.areCoordsEqual(partner.coords, coords),
 		);
@@ -296,13 +295,11 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
  * Determines whether a piece has any valid castling partner on the board.
  * @param boardsim
  * @param candidate - A candidate piece for castling. MUST NOT be a pawn.
- * @param requireRights - If true, the partners must currently have special rights to be considered valid.
  * @param partnerConstraint - An optional function, run for each partner, that must return true for them to be considered valid.
  */
 function hasCastlingPartner(
 	boardsim: Board,
 	candidate: Piece,
-	requireRights: boolean,
 	partnerConstraint?: (partner: Piece) => boolean,
 ): boolean {
 	const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
@@ -324,10 +321,8 @@ function hasCastlingPartner(
 		if (partnerPlayer !== candPlayer) return false; // Affects friends only
 		if (partnerRawType === r.PAWN) return false; // Pawns don't have castling rights
 
-		if (requireRights) {
-			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
-			if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
-		}
+		const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
+		if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
 
 		// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
 		const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);

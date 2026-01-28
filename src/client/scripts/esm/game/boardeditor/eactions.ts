@@ -299,11 +299,7 @@ function getCurrentPositionInformation(): VariantOptions {
 		const rawType = typeutil.getRawType(candidate.type);
 		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
 
-		const hasValidCastlingPartner = movepiece.hasCastlingPartner(
-			gamefile.boardsim,
-			candidate,
-			true,
-		);
+		const hasValidCastlingPartner = movepiece.hasCastlingPartner(gamefile.boardsim, candidate);
 		if (!hasValidCastlingPartner) {
 			specialRights.delete(coordsKey);
 			// Debugging
