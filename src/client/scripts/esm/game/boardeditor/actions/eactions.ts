@@ -23,7 +23,11 @@ import type { EditorSaveState } from './esave';
 
 // @ts-ignore
 import statustext from '../../gui/statustext';
-import gamefile, { Additional, FullGame } from '../../../../../../shared/chess/logic/gamefile';
+import gamefile, {
+	Additional,
+	Board,
+	FullGame,
+} from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	_Move_Out,
 	LongFormatIn,
@@ -338,21 +342,7 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 	// Construct state_global
 
 	const specialRights = new Set(gamefile.boardsim.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
-	if (revokeRedundantRights) {
-		// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
-		for (const coordsKey of specialRights) {
-			const candidate = boardutil.getPieceFromCoordsKey(gamefile.boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
-
-			const rawType = typeutil.getRawType(candidate.type);
-			if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
-
-			const hasValidCastlingPartner = movepiece.hasCastlingPartner(
-				gamefile.boardsim,
-				candidate,
-			);
-			if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
-		}
-	}
+	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile.boardsim, specialRights);
 
 	let enpassant: EnPassant | undefined;
 	if (enpassantcoords !== undefined) {
@@ -376,6 +366,23 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 	};
 
 	return variantOptions;
+}
+
+/**
+ * Revokes special rights from pieces that no longer have a valid castling partner.
+ * MUTATES the input specialRights set.
+ */
+function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<CoordsKey>): void {
+	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
+	for (const coordsKey of specialRights) {
+		const candidate = boardutil.getPieceFromCoordsKey(boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
+
+		const rawType = typeutil.getRawType(candidate.type);
+		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
+
+		const hasValidCastlingPartner = movepiece.hasCastlingPartner(boardsim, candidate);
+		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
+	}
 }
 
 /**
