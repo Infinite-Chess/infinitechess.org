@@ -81,7 +81,7 @@ button {
 
 .editor-positionname {
 	text-align: center;
-	margin: 0.2em 0;
+	margin: 0.3em 1em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1657,15 +1657,15 @@ svg.collapse {
 
 .saved-position-columns {
 	display: grid;
-	grid-template-columns: 35% 18% 20% auto;
+	grid-template-columns: 43% 22% 35%;
 	align-items: center;
-	padding: 0 0.6em;
+	padding: 0.35em;
 	height: 1em;
 	overflow: hidden;
 }
 
 .saved-position-columns > div {
-	padding: 0 0.35em;
+	padding-right: 0.35em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1684,13 +1684,13 @@ svg.collapse {
 
 .saved-position {
 	flex: 0 0 auto; /* do not shrink */
-	height: 3em;
+	height: 2.5em;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: 40% 13% 25% 32%;
+	grid-template-columns: auto 13% 25% 8% 8%;
 	border-radius: 0;
-	padding: 0 0.2em;
+	padding: 0 0.35em;
 	overflow: hidden;
 }
 
@@ -1703,12 +1703,10 @@ svg.collapse {
 }
 
 .saved-position > div {
-	margin: 0;
-	padding: 0 0.35em;
-	white-space: normal;
+	padding-right: 0.35em;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	word-break: break-word;
+	white-space: nowrap;
 }
 
 /* Buttons column */
@@ -1720,16 +1718,9 @@ svg.collapse {
 }
 
 .saved-position .btn {
-	flex-shrink: 0;
-	padding: 0.25rem 0.5rem;
-	width: 35px;
-	height: 35px;
-	border-radius: 8px;
-	font-size: 10px;
-	font-weight: 600;
-	cursor: pointer;
-	border: 1px solid transparent;
-	background-color: rgba(185, 185, 185, 1);
+	/* width: 35px;
+	height: 35px; */
+	background-color: transparent;
 }
 
 .position-name {
@@ -1776,11 +1767,14 @@ svg.collapse {
 	justify-content: center;
 }
 
+.saved-position-btn:hover svg {
+	transform: scale(1.1);
+}
+
 .saved-position-btn svg {
-	flex-shrink: 0;
-	fill: #333;
-	width: 26px;
-	height: 26px;
+	/* fill: #333; */
+	width: 22px;
+	aspect-ratio: 1;
 }
 
 /* The overlay covers ONLY the load-position-UI */

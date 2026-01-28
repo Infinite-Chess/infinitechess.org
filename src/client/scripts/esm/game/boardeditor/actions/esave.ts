@@ -34,7 +34,7 @@ interface EditorSaveState extends EditorAbridgedSaveState {
 // Constants ----------------------------------------------------------------------
 
 /** Max allowed length of the name of a position */
-const POSITION_NAME_MAX_LENGTH = 24;
+const POSITION_NAME_MAX_LENGTH = 100;
 
 /** Prefix for editor saves in local storage */
 const EDITOR_SAVE_PREFIX = 'editor-save-';

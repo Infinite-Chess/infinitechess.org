@@ -143,13 +143,13 @@ function openModal(
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
-		element_modalMessage.textContent = `Are you sure that you want to delete position ${positionname}? This cannot be undone.`;
+		element_modalMessage.textContent = `Are you sure that you want to delete position "${positionname}"? This cannot be undone.`;
 	} else if (modal_config.mode === 'load') {
 		element_modalTitle.textContent = 'Load position?';
-		element_modalMessage.textContent = `Are you sure that you want to load position ${positionname}? Unsaved changes to the current position will be lost.`;
+		element_modalMessage.textContent = `Are you sure that you want to load position "${positionname}"? Unsaved changes to the current position will be lost.`;
 	} else if (modal_config.mode === 'overwrite_save') {
 		element_modalTitle.textContent = 'Overwrite position?';
-		element_modalMessage.textContent = `Are you sure that you want to overwrite position ${positionname}? This cannot be undone.`;
+		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${positionname}"? This cannot be undone.`;
 	}
 	element_modal.classList.remove('hidden');
 	initModalListeners();
@@ -277,7 +277,8 @@ function createLoadButtonElement(): HTMLButtonElement {
 	use.setAttribute('href', '#svg-load');
 	svg.appendChild(use);
 	loadBtn.appendChild(svg);
-	loadBtn.className = 'btn saved-position-btn';
+	loadBtn.classList.add('btn');
+	loadBtn.classList.add('saved-position-btn');
 	return loadBtn;
 }
 
@@ -289,7 +290,8 @@ function createDeleteButtonElement(): HTMLButtonElement {
 	use.setAttribute('href', '#svg-delete');
 	svg.appendChild(use);
 	deleteBtn.appendChild(svg);
-	deleteBtn.className = 'btn saved-position-btn';
+	deleteBtn.classList.add('btn');
+	deleteBtn.classList.add('saved-position-btn');
 	return deleteBtn;
 }
 
@@ -301,18 +303,17 @@ function createDeleteButtonElement(): HTMLButtonElement {
  * <div class="saved-position">
  *   <div>POSITION_NAME</div>
  *   <div>PIECE_COUNT</div>
- *   <div>UTC_DATE</div>
- *   <div>
- *     <button class="btn saved-position-btn"> <!-- Load -->
- *       <svg><use href="#svg-load" /></svg>
- *     </button>
- *     <button class="btn saved-position-btn"> <!-- Delete -->
- *       <svg><use href="#svg-delete" /></svg>
- *     </button>
- *   </div>
+ *   <div>DATE</div>
+ *   <!-- Load -->
+ *   <button class="btn saved-position-btn">
+ *     <svg><use href="#svg-load" /></svg>
+ *   </button>
+ *   <!-- Delete -->
+ *   <button class="btn saved-position-btn">
+ *     <svg><use href="#svg-delete" /></svg>
+ *   </button>
  * </div>
- *
- * */
+ */
 async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<void> {
 	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
 
@@ -328,40 +329,50 @@ async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<v
 	}
 	const editorAbridgedSaveState: EditorAbridgedSaveState = editorAbridgedSaveStateParsed.data;
 
+	const row = document.createElement('div');
+	row.classList.add('saved-position');
+
 	// Name
 	const name_cell = document.createElement('div');
 	const positionname = editorAbridgedSaveState.positionname ?? '';
 	name_cell.textContent = positionname;
-	const row = document.createElement('div');
-	row.className = 'saved-position';
+	name_cell.title = positionname; // Let's browser's automatic tooltips show the full title on hover, if it's truncated via ellipsis
 	row.appendChild(name_cell);
 
 	// Piececount
 	const piececount_cell = document.createElement('div');
-	piececount_cell.textContent = String(editorAbridgedSaveState?.pieceCount ?? '');
+	const piececount = String(editorAbridgedSaveState.pieceCount);
+	piececount_cell.textContent = piececount;
+	piececount_cell.title = piececount;
 	row.appendChild(piececount_cell);
 
 	// Date
 	const date_cell = document.createElement('div');
 	const timestamp = editorAbridgedSaveState?.timestamp;
-	const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
-	date_cell.textContent = UTCDate;
+	// const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
+
+	// Localize the date display to the user's locale
+	const dateObj = new Date(timestamp);
+	const localeDate = dateObj.toLocaleDateString(undefined, {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+	});
+	date_cell.textContent = localeDate;
 	row.appendChild(date_cell);
 
 	// Buttons
-	const buttons_cell = document.createElement('div');
 
 	// "Load" button
 	const loadBtn = createLoadButtonElement();
 	registerButtonClick(loadBtn, () => onLoadButtonClick(positionname, saveinfo_key, save_key));
-	buttons_cell.appendChild(loadBtn);
+	row.appendChild(loadBtn);
 
 	// "Delete" button
 	const deleteBtn = createDeleteButtonElement();
 	registerButtonClick(deleteBtn, () => onDeleteButtonClick(positionname, saveinfo_key, save_key));
-	buttons_cell.appendChild(deleteBtn);
+	row.appendChild(deleteBtn);
 
-	row.appendChild(buttons_cell);
 	element_savedPositionsToLoad.appendChild(row);
 }
 

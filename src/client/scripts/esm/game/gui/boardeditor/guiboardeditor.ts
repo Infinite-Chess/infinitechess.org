@@ -368,12 +368,14 @@ function onClearSelection(): void {
 
 function updateActivePositionElement(positionname: string | undefined): void {
 	if (positionname === undefined) {
-		element_activePositionNameDisplay.textContent = 'New position';
+		positionname = 'New position';
 		element_activePositionNameDisplay.classList.add('italic');
 	} else {
-		element_activePositionNameDisplay.textContent = positionname;
 		element_activePositionNameDisplay.classList.remove('italic');
 	}
+
+	element_activePositionNameDisplay.textContent = positionname;
+	element_activePositionNameDisplay.title = positionname;
 }
 
 // Helper Functions ---------------------------------------------------------
