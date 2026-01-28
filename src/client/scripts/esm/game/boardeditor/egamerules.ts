@@ -21,7 +21,6 @@ import gameslot from '../chess/gameslot';
 import guigamerules from '../gui/boardeditor/guigamerules';
 import boardeditor from './boardeditor';
 import boardutil from '../../../../../shared/chess/util/boardutil';
-import movepiece from '../../../../../shared/chess/logic/movepiece';
 
 // Type Definitions --------------------------------------------------------------
 
@@ -306,14 +305,10 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (
-			castlingTypes.includes(typeutil.getRawType(piece.type)) &&
-			movepiece.hasCastlingPartner(gamefile.boardsim, piece, false)
-		) {
+		if (castlingTypes.includes(typeutil.getRawType(piece.type)))
 			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
-		} else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type))) {
+		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
 			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
-		}
 	}
 }
 
