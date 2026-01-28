@@ -29,7 +29,7 @@ import guistartenginegame from './guistartenginegame.js';
 import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guiloadposition from './guiloadposition.js';
-import autosave from '../../boardeditor/actions/eautosave.js';
+import eautosave from '../../boardeditor/actions/eautosave.js';
 import esave from '../../boardeditor/actions/esave.js';
 
 // Elements ---------------------------------------------------------------
@@ -137,7 +137,7 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveStateRaw = await IndexedDB.loadItem(autosave.EDITOR_AUTOSAVE_NAME);
+	const editorSaveStateRaw = await IndexedDB.loadItem(eautosave.EDITOR_AUTOSAVE_NAME);
 	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
 
 	if (!editorSaveStateParsed.success) {
