@@ -1480,7 +1480,7 @@ svg.collapse {
 }
 
 /* Header (draggable area + close button) */
-.floating-window-header {
+.window-header {
 	cursor: move;
 	user-select: none;
 	display: flex;
@@ -1557,6 +1557,7 @@ svg.collapse {
 .flwindow-section label {
 	font-weight: 500;
 	margin-bottom: 4px;
+	word-wrap: break-word;
 }
 
 .floating-window .invalid-input {
@@ -1659,9 +1660,7 @@ svg.collapse {
 	display: grid;
 	grid-template-columns: 43% 22% 35%;
 	align-items: center;
-	padding: 0.35em;
-	height: 1em;
-	overflow: hidden;
+	padding: 0 0.35em;
 }
 
 .saved-position-columns > div {
@@ -1672,14 +1671,8 @@ svg.collapse {
 }
 
 .saved-position-list {
-	flex: 1 1 auto;
 	min-height: 80px;
 	overflow-y: auto;
-	overflow-x: hidden;
-	display: flex;
-	flex-direction: column;
-	gap: 0;
-	padding: 0;
 }
 
 .saved-position {
@@ -1689,9 +1682,7 @@ svg.collapse {
 	display: grid;
 	align-items: center;
 	grid-template-columns: auto 13% 25% 8% 8%;
-	border-radius: 0;
 	padding: 0 0.35em;
-	overflow: hidden;
 }
 
 .saved-position:nth-child(odd) {
@@ -1709,47 +1700,27 @@ svg.collapse {
 	white-space: nowrap;
 }
 
-/* Buttons column */
-.saved-position > div:last-child {
-	display: flex;
-	gap: 0.4rem;
-	flex-shrink: 0;
-	padding-right: 0.5em;
-}
-
 .saved-position .btn {
-	/* width: 35px;
-	height: 35px; */
 	background-color: transparent;
 }
 
 .position-name {
 	display: flex;
 	flex-direction: column;
-	align-self: stretch;
-	width: 100%;
 	margin-bottom: 12px;
-}
-
-.position-name label {
-	text-align: left;
 }
 
 .position-name-row {
 	display: flex;
-	align-items: center;
 	gap: 8px;
 }
 
 .position-name-row input {
 	flex: 1;
-	min-width: 0;
 }
 
 .position-name-btnsave {
 	width: 75px;
-	height: 28px;
-	justify-content: center;
 	border-radius: 8px;
 	font-size: 15px;
 	font-weight: 600;
@@ -1772,7 +1743,6 @@ svg.collapse {
 }
 
 .saved-position-btn svg {
-	/* fill: #333; */
 	width: 22px;
 	aspect-ratio: 1;
 }
@@ -1794,18 +1764,11 @@ svg.collapse {
 	border-radius: 0.75em;
 	background-color: rgba(255, 255, 255, 0.96);
 	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
-	overflow: hidden;
 	padding: 0em 1em 0.5em 1em;
 }
 
 .load-position-modal-header {
-	user-select: none;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 8px 0 4px 0;
-	font-size: 18px;
-	font-weight: 600;
+	cursor: unset;
 }
 
 /* Pause UI */
