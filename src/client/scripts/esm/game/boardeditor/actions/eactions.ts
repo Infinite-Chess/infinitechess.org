@@ -371,6 +371,8 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 /**
  * Revokes special rights from pieces that no longer have a valid castling partner.
  * MUTATES the input specialRights set.
+ * @param boardsim
+ * @param specialRights - MUST be a copy of the gamefile's specialRights set! This will be mutated, NOT the gamefile's internal one.
  */
 function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<CoordsKey>): void {
 	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
