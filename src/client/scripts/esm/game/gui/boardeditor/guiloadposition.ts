@@ -11,6 +11,7 @@ import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
+import statustext from '../statustext';
 
 // Types -------------------------------------------------------------------------
 
@@ -208,6 +209,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			console.error(
 				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
+			statustext.showStatus(`The position was corrupted.`, true);
 			IndexedDB.deleteItem(modal_config.saveinfo_key);
 			IndexedDB.deleteItem(modal_config.save_key);
 			updateSavedPositionListUI();
