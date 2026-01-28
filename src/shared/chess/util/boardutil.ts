@@ -3,7 +3,7 @@
  */
 
 import type { OrganizedPieces, TypeRange } from '../logic/organizedpieces.js';
-import type { Coords } from './coordutil.js';
+import type { Coords, CoordsKey } from './coordutil.js';
 import type { RawType, Player } from './typeutil.js';
 
 import typeutil from './typeutil.js';
@@ -336,6 +336,17 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	};
 }
 
+function getPieceFromCoordsKey(o: OrganizedPieces, coordsKey: CoordsKey): Piece | undefined {
+	if (!o.coords.has(coordsKey)) return undefined;
+	const idx = o.coords.get(coordsKey)!;
+	const type = o.types[idx]!;
+	return {
+		type,
+		coords: coordutil.getCoordsFromKey(coordsKey),
+		index: getRelativeIdx(o, idx),
+	};
+}
+
 /** Returns the relative index of a piece in its type range. */
 function getRelativeIdx(o: OrganizedPieces, idx: number): number {
 	return idx - o.typeRanges.get(o.types[idx]!)!.start;
@@ -404,6 +415,7 @@ export default {
 	isPieceOnCoords,
 	getTypeFromCoords,
 	getPieceFromCoords,
+	getPieceFromCoordsKey,
 	getRelativeIdx,
 	getAbsoluteIdx,
 	getPieceFromIdx,

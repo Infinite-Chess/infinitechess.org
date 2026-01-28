@@ -46,13 +46,14 @@ import guinavigation from '../../gui/guinavigation';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import egamerules from '../egamerules';
 import selectiontool from '../tools/selection/selectiontool';
-import typeutil, { players } from '../../../../../../shared/chess/util/typeutil';
+import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
 import hydrochess_card from '../../chess/enginecards/hydrochess_card';
 import {
 	engineDefaultTimeLimitPerMoveMillisDict,
 	engineWorldBorderDict,
 } from '../../misc/enginegame';
 import variant from '../../../../../../shared/chess/variants/variant';
+import movepiece from '../../../../../../shared/chess/logic/movepiece';
 
 // Constants ----------------------------------------------------------------------
 
@@ -286,11 +287,11 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		Round: '-',
 		TimeControl: engineUIConfig.TimeControl,
 		White:
-			engineUIConfig.youAreColor === players.WHITE
+			engineUIConfig.youAreColor === p.WHITE
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		Black:
-			engineUIConfig.youAreColor === players.BLACK
+			engineUIConfig.youAreColor === p.BLACK
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		UTCDate,
@@ -334,7 +335,20 @@ function getCurrentPositionInformation(): VariantOptions {
 	const position = organizedpieces.generatePositionFromPieces(gamefile.boardsim.pieces);
 
 	// Construct state_global
-	const specialRights = gamefile.boardsim.state.global.specialRights;
+
+	const specialRights = new Set(gamefile.boardsim.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
+
+	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
+	for (const coordsKey of specialRights) {
+		const candidate = boardutil.getPieceFromCoordsKey(gamefile.boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
+
+		const rawType = typeutil.getRawType(candidate.type);
+		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
+
+		const hasValidCastlingPartner = movepiece.hasCastlingPartner(gamefile.boardsim, candidate);
+		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
+	}
+
 	let enpassant: EnPassant | undefined;
 	if (enpassantcoords !== undefined) {
 		const playerToMove = egamerules.getPlayerToMove();
@@ -450,9 +464,9 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	if (keepTrackOfGlobalSpecialRights) {
 		// prettier-ignore
-		pawnDoublePush = all_pawns_have_double_push && at_least_one_pawn_has_double_push ? true : at_least_one_pawn_has_double_push ? undefined : false;
+		pawnDoublePush = all_pawns_have_double_push || at_least_one_pawn_has_double_push ? undefined : false;
 		// prettier-ignore
-		castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : at_least_one_piece_obeys_normal_castling ? undefined : false;
+		castling = all_pieces_obey_normal_castling || at_least_one_piece_obeys_normal_castling ? undefined : false;
 	}
 
 	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
