@@ -8,7 +8,6 @@ import type { EditorSaveState, EditorAbridgedSaveState } from '../../boardeditor
 
 import IndexedDB from '../../../util/IndexedDB';
 import guifloatingwindow from './guifloatingwindow';
-import timeutil from '../../../../../../shared/util/timeutil';
 import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
@@ -209,6 +208,9 @@ async function onModalYesButtonPress(): Promise<void> {
 			console.error(
 				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
+			IndexedDB.deleteItem(modal_config.saveinfo_key);
+			IndexedDB.deleteItem(modal_config.save_key);
+			updateSavedPositionListUI();
 			return;
 		}
 		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
@@ -245,28 +247,6 @@ async function onSaveButtonPress(): Promise<void> {
 		await esave.save(positionname);
 		updateSavedPositionListUI();
 	} else openModal('overwrite_save', positionname, saveinfo_key, save_key);
-}
-
-/**
- * Gets executed when a "load position" button is clicked
- */
-async function onLoadButtonClick(
-	positionname: string,
-	saveinfo_key: string,
-	save_key: string,
-): Promise<void> {
-	openModal('load', positionname, saveinfo_key, save_key);
-}
-
-/**
- * Gets executed when a "delete position" button is clicked
- */
-async function onDeleteButtonClick(
-	positionname: string,
-	saveinfo_key: string,
-	save_key: string,
-): Promise<void> {
-	openModal('delete', positionname, saveinfo_key, save_key);
 }
 
 /** Create an HTML button element corresponding to a load button */
@@ -314,7 +294,9 @@ function createDeleteButtonElement(): HTMLButtonElement {
  *   </button>
  * </div>
  */
-async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<void> {
+async function generateRowForSavedPositionsElement(
+	saveinfo_key: string,
+): Promise<HTMLDivElement | undefined> {
 	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
 
 	const editorAbridgedSaveStateRaw = await IndexedDB.loadItem(saveinfo_key);
@@ -365,15 +347,15 @@ async function appendRowToSavedPositionsElement(saveinfo_key: string): Promise<v
 
 	// "Load" button
 	const loadBtn = createLoadButtonElement();
-	registerButtonClick(loadBtn, () => onLoadButtonClick(positionname, saveinfo_key, save_key));
+	registerButtonClick(loadBtn, () => openModal('load', positionname, saveinfo_key, save_key));
 	row.appendChild(loadBtn);
 
 	// "Delete" button
 	const deleteBtn = createDeleteButtonElement();
-	registerButtonClick(deleteBtn, () => onDeleteButtonClick(positionname, saveinfo_key, save_key));
+	registerButtonClick(deleteBtn, () => openModal('delete', positionname, saveinfo_key, save_key));
 	row.appendChild(deleteBtn);
 
-	element_savedPositionsToLoad.appendChild(row);
+	return row;
 }
 
 /**
@@ -383,11 +365,12 @@ async function updateSavedPositionListUI(): Promise<void> {
 	unregisterAllPositionButtonListeners(); // unregister position button listeners
 	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
-	const keys = await IndexedDB.getAllKeys();
-	for (const key of keys) {
-		// make sure that key is of the type saveinfo_key
-		if (key.startsWith(esave.EDITOR_SAVEINFO_PREFIX))
-			await appendRowToSavedPositionsElement(key);
+	const saveinfo_keys = (await IndexedDB.getAllKeys()).filter((key) =>
+		key.startsWith(esave.EDITOR_SAVEINFO_PREFIX),
+	);
+	for (const saveinfo_key of saveinfo_keys) {
+		const row = await generateRowForSavedPositionsElement(saveinfo_key);
+		if (row !== undefined) element_savedPositionsToLoad.appendChild(row);
 	}
 }
 

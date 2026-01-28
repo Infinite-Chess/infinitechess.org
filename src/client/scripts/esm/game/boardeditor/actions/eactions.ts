@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/eactions.ts
+// src/client/scripts/esm/game/boardeditor/actions/eactions.ts
 
 /**
  * Editor Actions
@@ -96,7 +96,7 @@ async function clearAll(): Promise<void> {
 	const gameRules = variant.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
 	const specialRights: Set<CoordsKey> = new Set();
-	const state_global = { specialRights };
+	const state_global: GlobalGameState = { specialRights };
 	const variantOptions: VariantOptions = {
 		fullMove: 1,
 		gameRules,

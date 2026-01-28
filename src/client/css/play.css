@@ -1459,21 +1459,21 @@ svg.collapse {
 	--editor-floating-window-btn-secondary-hover: #d5d5d5;
 }
 
-.scrolling.floating-window {
+.floating-window.scrolling {
 	overflow: auto;
 }
 
-.nonscrolling.floating-window {
+.floating-window.nonscrolling {
 	overflow: hidden;
 }
 
-.narrow.floating-window {
+.floating-window.narrow {
 	width: 100%;
 	box-sizing: border-box;
 	max-width: min(220px, 60vw);
 }
 
-.wide.floating-window {
+.floating-window.wide {
 	width: 100%;
 	box-sizing: border-box;
 	max-width: calc(2 * min(220px, 60vw));
@@ -1683,10 +1683,6 @@ svg.collapse {
 	align-items: center;
 	grid-template-columns: auto 13% 25% 8% 8%;
 	padding: 0 0.35em;
-}
-
-.saved-position:nth-child(odd) {
-	/* Same color */
 }
 
 .saved-position:nth-child(even) {
