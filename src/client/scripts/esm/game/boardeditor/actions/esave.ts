@@ -94,7 +94,7 @@ async function save(positionname: string): Promise<void> {
 	positionSavePending = false;
 
 	try {
-		const variantOptions = eactions.getCurrentPositionInformation();
+		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 		const timestamp = Date.now();
 		const pieceCount = variantOptions.position.size;

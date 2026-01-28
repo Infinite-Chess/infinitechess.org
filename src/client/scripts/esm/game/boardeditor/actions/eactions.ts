@@ -161,7 +161,7 @@ function copy(): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (!boardutil.hasAtleastOnePiece(gamefile.boardsim.pieces)) return; // Don't copy empty positions
 
-	const variantOptions = getCurrentPositionInformation();
+	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
 		metadata:
 			{} as MetaData /** Empty metadata, in order to make copied codes easier to share */,
@@ -213,7 +213,7 @@ async function paste(): Promise<undefined> {
 function startLocalGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const variantOptions = getCurrentPositionInformation();
+	const variantOptions = getCurrentPositionInformation(true);
 	if (variantOptions.position.size === 0) {
 		statustext.showStatus('Cannot start local game from empty position!', true);
 		return;
@@ -244,7 +244,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	const currentEngine = 'hydrochess';
 
 	// Get current position
-	const variantOptions = getCurrentPositionInformation();
+	const variantOptions = getCurrentPositionInformation(true);
 
 	// Determine whether it's not supported...
 
@@ -325,8 +325,9 @@ function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: Organiz
 
 /**
  * Reconstructs the current VariantOptions object (including position, gameRules and state_global) from the current board editor position
+ * @param revokeRedundantRights - If true, special rights of pieces that no longer have a valid castling partner are revoked.
  */
-function getCurrentPositionInformation(): VariantOptions {
+function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantOptions {
 	// Get current game rules and state
 	const { gameRules, moveRuleState, enpassantcoords } = egamerules.getCurrentGamerulesAndState();
 
@@ -337,16 +338,20 @@ function getCurrentPositionInformation(): VariantOptions {
 	// Construct state_global
 
 	const specialRights = new Set(gamefile.boardsim.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
+	if (revokeRedundantRights) {
+		// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
+		for (const coordsKey of specialRights) {
+			const candidate = boardutil.getPieceFromCoordsKey(gamefile.boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
 
-	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
-	for (const coordsKey of specialRights) {
-		const candidate = boardutil.getPieceFromCoordsKey(gamefile.boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
+			const rawType = typeutil.getRawType(candidate.type);
+			if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
 
-		const rawType = typeutil.getRawType(candidate.type);
-		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
-
-		const hasValidCastlingPartner = movepiece.hasCastlingPartner(gamefile.boardsim, candidate);
-		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
+			const hasValidCastlingPartner = movepiece.hasCastlingPartner(
+				gamefile.boardsim,
+				candidate,
+			);
+			if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
+		}
 	}
 
 	let enpassant: EnPassant | undefined;

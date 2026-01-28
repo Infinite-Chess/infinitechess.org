@@ -57,7 +57,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 	positionAutosavePending = false;
 
 	try {
-		const variantOptions = eactions.getCurrentPositionInformation();
+		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 		const positionname = boardeditor.getActivePositionName();
 		const timestamp = Date.now();
