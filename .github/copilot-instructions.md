@@ -1,5 +1,9 @@
 # Copilot Instructions for infinitechess.org
 
+### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/CONTRIBUTING.md`!
+
+Below are several pointers for navigating the project.
+
 ## Project Architecture
 
 - **Monorepo Structure:** Contains `src/client` (frontend), `src/server` (backend), and `src/shared` (common logic/types).
@@ -50,6 +54,7 @@
 1. Follow code standards and best practices of today.
 2. Maintain existing code structure and organization.
 3. Perform testing for new complex functions to ensure their output is as expected.
+4. Remember before committing changes, that all pull requests must follow the guidelines in `docs/CONTRIBUTING.md`.
 
 ---
 
