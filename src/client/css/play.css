@@ -1658,7 +1658,7 @@ svg.collapse {
 
 .saved-position-columns {
 	display: grid;
-	grid-template-columns: 43% 22% 35%;
+	grid-template-columns: 35% 22% 35%;
 	align-items: center;
 	padding: 0 0.35em;
 }
@@ -1681,7 +1681,7 @@ svg.collapse {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: auto 13% 25% 8% 8%;
+	grid-template-columns: auto 13% 25% 8% 8% 8%;
 	padding: 0 0.35em;
 }
 

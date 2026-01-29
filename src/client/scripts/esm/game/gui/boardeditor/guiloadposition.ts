@@ -282,6 +282,9 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
  *   <button class="btn saved-position-btn">
  *     <svg><use href="#svg-load" /></svg>
  *   </button>
+ * 	 <button class="btn saved-position-btn">
+ *     <svg><use href="#svg-cloud" /></svg>
+ *   </button>
  *   <!-- Delete -->
  *   <button class="btn saved-position-btn">
  *     <svg><use href="#svg-delete" /></svg>
@@ -331,6 +334,12 @@ function generateRowForSavedPositionsElement(
 	const loadBtn = createButtonElement('#svg-load');
 	registerButtonClick(loadBtn, () => openModal('load', positionname, saveinfo_key, save_key));
 	row.appendChild(loadBtn);
+
+	// "Cloud" button
+	const cloudBtn = createButtonElement('#svg-cloud');
+	// TODO: Write listener function which moves position to and from server
+	// registerButtonClick(cloudBtn, () => {});
+	row.appendChild(cloudBtn);
 
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
