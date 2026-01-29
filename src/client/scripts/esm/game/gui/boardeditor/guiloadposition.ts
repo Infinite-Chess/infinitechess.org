@@ -11,6 +11,7 @@ import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
+import boardeditor from '../../boardeditor/boardeditor';
 // @ts-ignore
 import statustext from '../statustext';
 
@@ -24,6 +25,14 @@ type ButtonHandlerPair = {
 
 /** Different modes for the modal confirmation dialog */
 type ModalMode = 'load' | 'delete' | 'overwrite_save';
+
+/** Type for current config of the confirmation dialog modal */
+type ModalConfig = {
+	mode: ModalMode;
+	positionname: string;
+	saveinfo_key: string;
+	save_key: string;
+};
 
 // Elements ----------------------------------------------------------
 
@@ -67,14 +76,7 @@ const element_modalYesButton = document.getElementById('load-position-modal-yes'
 let mode: 'load' | 'save-as' | undefined = undefined;
 
 /** The current config of the Confirmation dialog modal */
-let modal_config:
-	| {
-			mode: ModalMode;
-			positionname: string;
-			saveinfo_key: string;
-			save_key: string;
-	  }
-	| undefined = undefined;
+let modal_config: ModalConfig | undefined = undefined;
 
 // Create floating window -------------------------------------
 
@@ -193,17 +195,29 @@ function closeModalListeners(): void {
 
 // Functions -----------------------------------------------------------------
 
+/** Delete saved position according to provided modal_config argument and update the UI */
+async function deleteSavedPosition(modal_config: ModalConfig): Promise<void> {
+	// Delete saved position
+	await Promise.all([
+		IndexedDB.deleteItem(modal_config.saveinfo_key),
+		IndexedDB.deleteItem(modal_config.save_key),
+	]);
+
+	// If deleted position was active, set active position name to undefined
+	if (boardeditor.getActivePositionName() === modal_config.positionname)
+		boardeditor.setActivePositionName(undefined);
+
+	// Update floating window UI
+	updateSavedPositionListUI();
+}
+
 async function onModalYesButtonPress(): Promise<void> {
 	if (modal_config === undefined) {
 		closeModal();
 		return;
 	} else if (modal_config.mode === 'delete') {
 		// Delete position
-		await Promise.all([
-			IndexedDB.deleteItem(modal_config.saveinfo_key),
-			IndexedDB.deleteItem(modal_config.save_key),
-		]);
-		updateSavedPositionListUI();
+		await deleteSavedPosition(modal_config);
 	} else if (modal_config.mode === 'load') {
 		// Load position
 		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
@@ -213,11 +227,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
 			statustext.showStatus(`The position was corrupted.`, true);
-			await Promise.all([
-				IndexedDB.deleteItem(modal_config.saveinfo_key),
-				IndexedDB.deleteItem(modal_config.save_key),
-			]);
-			updateSavedPositionListUI();
+			await deleteSavedPosition(modal_config);
 			return;
 		}
 		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
@@ -312,8 +322,7 @@ function generateRowForSavedPositionsElement(
 
 	// Date
 	const date_cell = document.createElement('div');
-	const timestamp = editorAbridgedSaveState?.timestamp;
-	// const { UTCDate } = timeutil.convertTimestampToUTCDateUTCTime(timestamp);
+	const timestamp = editorAbridgedSaveState.timestamp;
 
 	// Localize the date display to the user's locale
 	const dateObj = new Date(timestamp);
@@ -336,6 +345,9 @@ function generateRowForSavedPositionsElement(
 	const deleteBtn = createButtonElement('#svg-delete');
 	registerButtonClick(deleteBtn, () => openModal('delete', positionname, saveinfo_key, save_key));
 	row.appendChild(deleteBtn);
+
+	// Highlight row if position is active
+	if (boardeditor.getActivePositionName() === positionname) row.classList.add('active-position');
 
 	return row;
 }

@@ -1685,7 +1685,11 @@ svg.collapse {
 	padding: 0 0.35em;
 }
 
-.saved-position:nth-child(even) {
+.active-position {
+	background-color: #bddfbd;
+}
+
+.saved-position:nth-child(even):not(.active-position) {
 	background-color: #f7f7f7;
 }
 
