@@ -37,10 +37,10 @@ interface EditorSaveState extends EditorAbridgedSaveState {
 const POSITION_NAME_MAX_LENGTH = 100;
 
 /** Prefix for editor saves in local storage */
-const EDITOR_SAVE_PREFIX = 'editor-save-';
+const EDITOR_SAVE_PREFIX = 'editor-save-' as const;
 
 /** Prefix for editor saveinfo in local storage */
-const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-';
+const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-' as const;
 
 // Zod Schemas --------------------------------------------------------------------
 
