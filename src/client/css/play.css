@@ -1676,7 +1676,6 @@ svg.collapse {
 }
 
 .saved-position {
-	flex: 0 0 auto; /* do not shrink */
 	height: 2.5em;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
