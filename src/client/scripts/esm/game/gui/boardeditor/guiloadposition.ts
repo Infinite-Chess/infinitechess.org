@@ -206,9 +206,6 @@ async function deleteSavedPosition(modal_config: ModalConfig): Promise<void> {
 	// If deleted position was active, set active position name to undefined
 	if (boardeditor.getActivePositionName() === modal_config.positionname)
 		boardeditor.setActivePositionName(undefined);
-
-	// Update floating window UI
-	updateSavedPositionListUI();
 }
 
 async function onModalYesButtonPress(): Promise<void> {
@@ -218,6 +215,7 @@ async function onModalYesButtonPress(): Promise<void> {
 	} else if (modal_config.mode === 'delete') {
 		// Delete position
 		await deleteSavedPosition(modal_config);
+		updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
 		// Load position
 		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
@@ -228,6 +226,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			);
 			statustext.showStatus(`The position was corrupted.`, true);
 			await deleteSavedPosition(modal_config);
+			updateSavedPositionListUI();
 			return;
 		}
 		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
