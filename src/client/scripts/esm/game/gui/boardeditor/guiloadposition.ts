@@ -195,7 +195,7 @@ function closeModalListeners(): void {
 
 // Functions -----------------------------------------------------------------
 
-/** Delete saved position according to provided modal_config argument and update the UI */
+/** Delete saved position according to provided modal_config argument */
 async function deleteSavedPosition(modal_config: ModalConfig): Promise<void> {
 	// Delete saved position
 	await Promise.all([
