@@ -1676,13 +1676,18 @@ svg.collapse {
 }
 
 .saved-position {
-	flex: 0 0 auto; /* do not shrink */
 	height: 2.5em;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
 	grid-template-columns: auto 13% 25% 8% 8%;
 	padding: 0 0.35em;
+}
+
+.saved-position.active-position {
+	--mid: var(--background-theme-color);
+	--end: color-mix(in srgb, var(--mid), white 50%);
+	background: linear-gradient(var(--end), var(--mid), var(--end));
 }
 
 .saved-position:nth-child(even) {
