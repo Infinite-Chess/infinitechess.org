@@ -81,7 +81,7 @@ Should have one single purpose. If it does multiple things, refactor it out into
 
 Require atleast one sentence of JSDoc. Do not make the documentation too verbose.
 
-Arguments only need documentation if it is not common sense what they would be for, or what we should pass in for them (for example, `boardsim` is common sense and doesn't require documentation).
+Arguments only need documentation if it is not common sense what they would be for, or what we should pass in for them (for example, `boardsim` is common sense and doesn't require documentation), or if they don't provide any additional information than what's already in the function description.
 
 Function bodies should also have comments for documentation, to help understand what it's doing and how it works. Don't be too verbose.
 
