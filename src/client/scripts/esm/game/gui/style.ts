@@ -7,6 +7,18 @@
 
 import type { Color } from '../../../../../shared/util/math/math';
 
+// Types -------------------------------------------------------------
+
+/** HSL Color representation */
+interface HSLColor {
+	/** Hue (0 - 360) */
+	h: number;
+	/** Saturation (0.0 - 1.0) */
+	s: number;
+	/** Lightness (0.0 - 1.0) */
+	l: number;
+}
+
 // Constants -------------------------------------------------------------
 
 /** SVG default namespace */
@@ -81,6 +93,46 @@ function arrayToCssColor(colorArray: Color): string {
 	return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+/**
+ * Converts RGB components to an HSL Color.
+ * @param r - Red (0-255)
+ * @param g - Green (0-255)
+ * @param b - Blue (0-255)
+ * @returns HSLColor object
+ */
+function rgbToHsl(r: number, g: number, b: number): HSLColor {
+	const rN = r / 255;
+	const gN = g / 255;
+	const bN = b / 255;
+
+	const max = Math.max(rN, gN, bN);
+	const min = Math.min(rN, gN, bN);
+
+	let h = 0;
+	let s = 0;
+	const l = (max + min) / 2;
+
+	if (max !== min) {
+		const d = max - min;
+		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+		switch (max) {
+			case rN:
+				h = (gN - bN) / d + (gN < bN ? 6 : 0);
+				break;
+			case gN:
+				h = (bN - rN) / d + 2;
+				break;
+			case bN:
+				h = (rN - gN) / d + 4;
+				break;
+		}
+		h /= 6;
+	}
+
+	return { h: h * 360, s, l };
+}
+
 export default {
 	SVG_NS,
 
@@ -88,4 +140,5 @@ export default {
 	arrayToCssColor,
 	getElementIndexWithinItsParent,
 	getChildByIndexInParent,
+	rgbToHsl,
 };
