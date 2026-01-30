@@ -51,9 +51,9 @@ const supportedExtensions = ['.png', '.jpg', '.jpeg'];
  * @param {string} dirPath The directory to search.
  * @returns {string[]} An array of full paths to image files.
  */
-function getAllImagePaths(dirPath) {
+function getAllImagePaths(dirPath): string[] {
 	const allEntries = readdirSync(dirPath);
-	const files = [];
+	const files: string[] = [];
 
 	for (const entry of allEntries) {
 		const fullPath = path.join(dirPath, entry);
@@ -100,7 +100,7 @@ console.log(`Found ${imagesToProcess.length} image(s) that need optimization.`);
 let finished_images = 0;
 const total_images = imagesToProcess.length * 3;
 
-function logProgress(imageName, format) {
+function logProgress(imageName, format): void {
 	finished_images += 1;
 	const percentage = Math.round(finished_images / total_images * 100);
 	console.log(`[${percentage}%] Optimized ${path.basename(imageName)} to ${format.toUpperCase()}`);
