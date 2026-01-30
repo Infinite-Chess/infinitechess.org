@@ -1475,7 +1475,6 @@ svg.collapse {
 
 .floating-window.wide {
 	width: 100%;
-	box-sizing: border-box;
 	max-width: calc(2 * min(230px, 60vw));
 }
 
@@ -1552,6 +1551,9 @@ svg.collapse {
 	margin-bottom: 10px;
 	display: flex;
 	flex-direction: column;
+	/* Allows flex items to shrink below their content size,
+	allowing the positions list to be scrollable instead of clipping */
+	min-height: 0;
 }
 
 .flwindow-section label {
