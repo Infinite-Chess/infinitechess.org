@@ -1476,7 +1476,7 @@ svg.collapse {
 .floating-window.wide {
 	width: 100%;
 	box-sizing: border-box;
-	max-width: calc(2 * min(220px, 60vw));
+	max-width: calc(2 * min(250px, 60vw));
 }
 
 /* Header (draggable area + close button) */
@@ -1658,13 +1658,13 @@ svg.collapse {
 
 .saved-position-columns {
 	display: grid;
-	grid-template-columns: 43% 22% 35%;
+	grid-template-columns: auto 18% 25% 52px;
 	align-items: center;
-	padding: 0 0.35em;
+	padding: 0 0.5em;
 }
 
 .saved-position-columns > div {
-	padding-right: 0.35em;
+	padding-right: 0.5em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1680,8 +1680,8 @@ svg.collapse {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: auto 13% 25% 8% 8%;
-	padding: 0 0.35em;
+	grid-template-columns: auto 18% 25% max-content max-content;
+	padding: 0 0.5em;
 }
 
 .saved-position.active-position {
@@ -1695,14 +1695,10 @@ svg.collapse {
 }
 
 .saved-position > div {
-	padding-right: 0.35em;
+	padding-right: 0.5em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-}
-
-.saved-position .btn {
-	background-color: transparent;
 }
 
 .position-name {
@@ -1734,9 +1730,11 @@ svg.collapse {
 }
 
 .saved-position-btn {
+	background-color: transparent;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	width: 26px;
 }
 
 .saved-position-btn:hover svg {
