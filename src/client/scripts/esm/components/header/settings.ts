@@ -161,7 +161,7 @@ function updateBackgroundColor(): void {
 	const switchG = AvgG * 255;
 	const switchB = AvgB * 255;
 
-	const cssSwitch = `rgb(${switchR}, ${switchG}, ${switchB})`;
+	const cssSwitch = style.rgbToCssString(switchR, switchG, switchB);
 
 	// Also set the --background-theme-color property, which is just a slightly brightened version!
 	// The board editor uses this for the background of selected tools.
@@ -175,7 +175,7 @@ function updateBackgroundColor(): void {
 	backgroundHSL.l = math.clamp(backgroundHSL.l, 0.6, 1);
 
 	// Create CSS string
-	const cssBackground = `hsl(${Math.round(backgroundHSL.h)}, ${Math.round(backgroundHSL.s * 100)}%, ${Math.round(backgroundHSL.l * 100)}%)`;
+	const cssBackground = style.hslToCssString(backgroundHSL);
 
 	// Set CSS properties
 

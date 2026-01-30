@@ -133,6 +133,29 @@ function rgbToHsl(r: number, g: number, b: number): HSLColor {
 	return { h: h * 360, s, l };
 }
 
+/**
+ * Converts numeric RGB components into a CSS rgb() color string.
+ * @param r - Red channel (0-255)
+ * @param g - Green channel (0-255)
+ * @param b - Blue channel (0-255)
+ * @returns A CSS color string, e.g., "rgb(255, 100, 50)"
+ */
+function rgbToCssString(r: number, g: number, b: number): string {
+	return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+}
+
+/**
+ * Converts an HSLColor object into a CSS hsl() color string.
+ * @param hsl The HSLColor object to convert.
+ * @returns A CSS color string, e.g., "hsl(360, 100%, 50%)"
+ */
+function hslToCssString(hsl: HSLColor): string {
+	const h = Math.round(hsl.h);
+	const s = Math.round(hsl.s * 100);
+	const l = Math.round(hsl.l * 100);
+	return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
 export default {
 	SVG_NS,
 
@@ -141,4 +164,6 @@ export default {
 	getElementIndexWithinItsParent,
 	getChildByIndexInParent,
 	rgbToHsl,
+	rgbToCssString,
+	hslToCssString,
 };
