@@ -1551,9 +1551,6 @@ svg.collapse {
 	margin-bottom: 10px;
 	display: flex;
 	flex-direction: column;
-	/* Allows flex items to shrink below their content size,
-	allowing the positions list to be scrollable instead of clipping */
-	min-height: 0;
 }
 
 .flwindow-section label {
@@ -1665,6 +1662,10 @@ svg.collapse {
 	--w-header-actions: 52px;
 	/* Shared column structure (everything left of the action buttons) */
 	--grid-layout: auto var(--w-count) var(--w-date);
+
+	/* Allows flex items to shrink below their content size,
+	allowing the positions list to be scrollable instead of clipping */
+	min-height: 0;
 }
 
 .saved-position-header {
