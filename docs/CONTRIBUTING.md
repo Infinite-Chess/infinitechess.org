@@ -14,7 +14,7 @@ Description guidelines are in the automatic template when opening a new pull req
 
 Only Naviary should make these types of changes (but you may request me to do so):
 
-Adding/removing package dependancies, or making any changes to `package.json`.
+Adding/removing package dependancies.
 
 Type or variable renames spanning several files (time consuming for me to review, but taking one minute to make the changes myself).
 
