@@ -60,7 +60,7 @@ const element_saveAsPositionName = document.getElementById(
 const element_saveCurrentPositionButton = document.getElementById('save-position-button')!;
 
 /** List of saved positions */
-const element_savedPositionsToLoad = document.getElementById('load-position-UI-saved-positions')!;
+const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
 
 /** Confirmation dialog modal elements */
 const element_modal = document.getElementById('load-position-modal-overlay')!;
@@ -288,15 +288,15 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
  *
  * <div class="saved-position">
  *   <div>POSITION_NAME</div>
- *   <div>PIECE_COUNT</div>
- *   <div>DATE</div>
+ *   <div class="piece-count">PIECE_COUNT</div>
+ *   <div class="date">DATE</div>
  *   <!-- Load -->
  *   <button class="btn saved-position-btn">
- *     <svg><use href="#svg-load" /></svg>
+ *     <svg><use href="#svg-load"/></svg>
  *   </button>
  *   <!-- Delete -->
  *   <button class="btn saved-position-btn">
- *     <svg><use href="#svg-delete" /></svg>
+ *     <svg><use href="#svg-delete"/></svg>
  *   </button>
  * </div>
  */
@@ -317,6 +317,7 @@ function generateRowForSavedPositionsElement(
 
 	// Piececount
 	const piececount_cell = document.createElement('div');
+	piececount_cell.classList.add('piece-count');
 	const piececount = String(editorAbridgedSaveState.pieceCount);
 	piececount_cell.textContent = piececount;
 	piececount_cell.title = piececount;
@@ -324,8 +325,8 @@ function generateRowForSavedPositionsElement(
 
 	// Date
 	const date_cell = document.createElement('div');
+	date_cell.classList.add('date');
 	const timestamp = editorAbridgedSaveState.timestamp;
-
 	// Localize the date display to the user's locale
 	const dateObj = new Date(timestamp);
 	const localeDate = dateObj.toLocaleDateString(undefined, {

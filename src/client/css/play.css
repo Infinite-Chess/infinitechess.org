@@ -1656,9 +1656,18 @@ svg.collapse {
 
 /* Board editor load & save positions UI */
 
+.saved-positions {
+	/* Fixed column widths */
+	--w-count: 70px;
+	--w-date: 95px;
+	--w-header-actions: 52px;
+	/* Shared column structure (everything left of the action buttons) */
+	--grid-layout: auto var(--w-count) var(--w-date);
+}
+
 .saved-position-header {
 	display: grid;
-	grid-template-columns: auto 70px 95px 52px;
+	grid-template-columns: var(--grid-layout) var(--w-header-actions);
 	align-items: center;
 	padding: 0 0.5em;
 	margin-bottom: 0.3em;
@@ -1681,7 +1690,7 @@ svg.collapse {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: auto 70px 95px max-content max-content;
+	grid-template-columns: var(--grid-layout) max-content max-content;
 	padding: 0 0.5em;
 }
 
@@ -1700,6 +1709,25 @@ svg.collapse {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/* Hide piece count column on semi-small screens */
+@container (max-width: 390px) {
+	.saved-positions .piece-count {
+		display: none;
+	}
+	.saved-positions {
+		--grid-layout: auto var(--w-date);
+	}
+}
+/* Also hide date column on very small screens */
+@container (max-width: 320px) {
+	.saved-positions .date {
+		display: none;
+	}
+	.saved-positions {
+		--grid-layout: auto;
+	}
 }
 
 .position-name {
