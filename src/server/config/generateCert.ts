@@ -11,10 +11,8 @@ const certDir = path.join(__dirname, '..', '..', '..', 'cert');
 const keyPath = path.join(certDir, 'cert.key');
 const certPath = path.join(certDir, 'cert.pem');
 
-/**
- * Generate a self-signed certificate using node-forge
- */
-function generateSelfSignedCertificate() {
+/** Generates a self-signed certificate. */
+function generateSelfSignedCertificate(): void {
 	const pki = forge.pki;
 	const keys = pki.rsa.generateKeyPair(2048);
 	const cert = pki.createCertificate();
@@ -51,21 +49,12 @@ function generateSelfSignedCertificate() {
 /**
  * Ensure that a self-signed certificate exists in the cert directory.
  * If cert.key and cert.pem do not exist, generate them.
- * @returns {boolean} - Returns true if the certificate was generated, false if it already exists.
  */
-function ensureSelfSignedCertificate() {
+export function ensureSelfSignedCertificate(): void {
 	// Create the cert directory if it doesn't exist
 	fs.mkdirSync(certDir, { recursive: true });
 
-	if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
-		// Self-signed certificate already exists
-		return false;
-	}
+	if (fs.existsSync(keyPath) && fs.existsSync(certPath)) return; // Self-signed certificate already exists
 
 	generateSelfSignedCertificate();
-	// Self-signed certificate generated
-	return true;
 }
-
-// Export the function for external use
-export { ensureSelfSignedCertificate };

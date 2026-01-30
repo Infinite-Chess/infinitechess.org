@@ -6,12 +6,27 @@
  * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
  */
 
+/** An entry in IndexedDB storage */
+interface Entry {
+	/** The actual value of the entry */
+	value: any;
+	/** The timestamp the entry will become stale, at which point it should be deleted. */
+	expires?: number;
+}
+
 const DB_NAME = 'infinitechess';
 const DB_VERSION = 1;
 const STORE_NAME = 'entries';
 
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
+
+// Do this on load every time
+eraseExpiredItems().catch((error: unknown) => {
+	// Can happen in testing environment where IndexedDB is not available
+	const msg = error instanceof Error ? error.message : String(error);
+	console.error('Error erasing expired IndexedDB items on init:', msg);
+});
 
 /**
  * Initializes the IndexedDB database.
@@ -102,10 +117,13 @@ async function withWrite<R>(op: (_store: IDBObjectStore) => IDBRequest<R>): Prom
  * Saves an item in browser IndexedDB storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
+ * @param [expiryMillis] How long until this entry should be auto-deleted for being stale. Leave undefined to never expire.
  * @returns A promise that resolves when the item is saved
  */
-async function saveItem<T>(key: string, value: T): Promise<void> {
-	return withWrite((store) => store.put(value, key));
+async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promise<void> {
+	const timeExpires = expiryMillis !== undefined ? Date.now() + expiryMillis : undefined;
+	const save: Entry = { value, expires: timeExpires };
+	return withWrite((store) => store.put(save, key));
 }
 
 /**
@@ -114,7 +132,17 @@ async function saveItem<T>(key: string, value: T): Promise<void> {
  * @returns A promise that resolves to the entry value, or undefined if not found
  */
 async function loadItem<T>(key: string): Promise<T | undefined> {
-	return withRead<T | undefined>((store) => store.get(key));
+	const save = await withRead<any>((store) => store.get(key));
+	if (save === undefined) return undefined;
+
+	// Check if the item has expired or is in old format
+	if (hasItemExpired(save)) {
+		await deleteItem(key);
+		return undefined;
+	}
+
+	// Not expired, return the value
+	return save.value as T;
 }
 
 /**
@@ -124,6 +152,77 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
  */
 async function deleteItem(key: string): Promise<void> {
 	return withWrite((store) => store.delete(key));
+}
+
+/**
+ * Checks if an entry has expired
+ * @param save - The entry to check. The latest format is { value: any, expires: number }
+ * @returns True if the entry has expired
+ */
+function hasItemExpired(save: unknown): boolean {
+	// Verify it's an object, and the `expires` property is present.
+	// Checking in this way will allow typescript afterward to know it has that property.
+	if (
+		typeof save !== 'object' ||
+		save === null ||
+		// This is true EVEN if the property is present but set to undefined!
+		!('expires' in save) ||
+		(save.expires !== undefined && typeof save.expires !== 'number')
+	) {
+		console.log(`IndexedDB item was in an old format. Deleting it...`);
+		return true;
+	}
+
+	if (save.expires === undefined) return false; // Never expires
+
+	return Date.now() >= save.expires;
+}
+
+/**
+ * Erases all expired items from IndexedDB storage
+ * @returns A promise that resolves when all expired items are deleted
+ */
+async function eraseExpiredItems(): Promise<void> {
+	const db = await initDB();
+	const keysToDelete: string[] = [];
+
+	// Use a cursor to iterate through entries and check expiry without deserializing values
+	await new Promise<void>((resolve, reject) => {
+		const tx = db.transaction([STORE_NAME], 'readonly');
+		const store = tx.objectStore(STORE_NAME);
+		const request = store.openCursor();
+
+		request.onsuccess = () => {
+			const cursor = request.result;
+			if (cursor) {
+				const entry = cursor.value as Entry | any;
+				// Check if entry has expired or is in old format using hasItemExpired
+				if (hasItemExpired(entry)) {
+					keysToDelete.push(cursor.key as string);
+				}
+				cursor.continue();
+			}
+		};
+
+		tx.oncomplete = () => resolve();
+		tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		request.onerror = () => reject(request.error || new Error('Request error'));
+	});
+
+	// Delete all expired items in a single transaction
+	if (keysToDelete.length > 0) {
+		await new Promise<void>((resolve, reject) => {
+			const tx = db.transaction([STORE_NAME], 'readwrite');
+			const store = tx.objectStore(STORE_NAME);
+
+			for (const key of keysToDelete) {
+				store.delete(key);
+			}
+
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		});
+	}
 }
 
 /**
@@ -161,6 +260,11 @@ export default {
 	loadItem,
 	deleteItem,
 	getAllKeys,
+	eraseExpiredItems,
 	eraseAll,
 	resetDBInstance,
+	// Unit test constants
+	DB_NAME,
+	DB_VERSION,
+	STORE_NAME,
 };

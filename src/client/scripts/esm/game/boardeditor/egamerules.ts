@@ -11,9 +11,9 @@ import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
 import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 import type { Edit } from './boardeditor';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
-import type { BoundingBox } from '../../../../../shared/util/math/bounds';
+import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 
-import typeutil, { players, rawTypes } from '../../../../../shared/chess/util/typeutil';
+import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
 import winconutil from '../../../../../shared/chess/util/winconutil';
@@ -43,7 +43,7 @@ interface GameRulesGUIinfo {
 	pawnDoublePush?: boolean;
 	castling?: boolean;
 	winConditions: string[];
-	worldBorder?: BoundingBox;
+	worldBorder?: UnboundedRectangle;
 }
 
 // Constants -------------------------------------------------------------
@@ -51,9 +51,9 @@ interface GameRulesGUIinfo {
 // Game rule relevant piece types
 
 /** All piece types affected by the pawnDoublePush rule */
-const pawnDoublePushTypes: RawType[] = [rawTypes.PAWN];
+const pawnDoublePushTypes: RawType[] = [r.PAWN];
 /** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
-const castlingTypes: RawType[] = [rawTypes.ROOK, rawTypes.KING, rawTypes.ROYALCENTAUR];
+const castlingTypes: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
 
 // State -------------------------------------------------------------
 
@@ -76,12 +76,12 @@ function getCurrentGamerulesAndState(): {
 } {
 	// Construct gameRules
 	// prettier-ignore
-	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [players.WHITE, players.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [players.BLACK, players.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
+	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [p.WHITE, p.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [p.BLACK, p.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
 	const moveRule =
 		gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
 	const winConditions = {
-		[players.WHITE]: gamerulesGUIinfo.winConditions,
-		[players.BLACK]: gamerulesGUIinfo.winConditions,
+		[p.WHITE]: gamerulesGUIinfo.winConditions,
+		[p.BLACK]: gamerulesGUIinfo.winConditions,
 	};
 	let promotionRanks: PlayerGroup<bigint[]> | undefined = undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined = undefined;
@@ -95,15 +95,15 @@ function getCurrentGamerulesAndState(): {
 			gamerulesGUIinfo.promotionRanks.white !== undefined &&
 			gamerulesGUIinfo.promotionRanks.white.length !== 0
 		) {
-			promotionRanks[players.WHITE] = gamerulesGUIinfo.promotionRanks.white;
-			promotionsAllowed[players.WHITE] = gamerulesGUIinfo.promotionsAllowed;
+			promotionRanks[p.WHITE] = gamerulesGUIinfo.promotionRanks.white;
+			promotionsAllowed[p.WHITE] = gamerulesGUIinfo.promotionsAllowed;
 		}
 		if (
 			gamerulesGUIinfo.promotionRanks.black !== undefined &&
 			gamerulesGUIinfo.promotionRanks.black.length !== 0
 		) {
-			promotionRanks[players.BLACK] = gamerulesGUIinfo.promotionRanks.black;
-			promotionsAllowed[players.BLACK] = gamerulesGUIinfo.promotionsAllowed;
+			promotionRanks[p.BLACK] = gamerulesGUIinfo.promotionRanks.black;
+			promotionsAllowed[p.BLACK] = gamerulesGUIinfo.promotionsAllowed;
 		}
 	}
 
@@ -141,9 +141,9 @@ function setGamerulesGUIinfo(
 ): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	// prettier-ignore
-	gamerulesGUIinfo.playerToMove = firstPlayer === players.WHITE ? "white" : firstPlayer === players.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
+	gamerulesGUIinfo.playerToMove = firstPlayer === p.WHITE ? "white" : firstPlayer === p.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
 
-	if (gameRules.turnOrder[0] === players.WHITE) gamerulesGUIinfo.playerToMove = 'white';
+	if (gameRules.turnOrder[0] === p.WHITE) gamerulesGUIinfo.playerToMove = 'white';
 	else gamerulesGUIinfo.playerToMove = 'black';
 
 	if (state_global.enpassant !== undefined) {
@@ -166,8 +166,8 @@ function setGamerulesGUIinfo(
 
 	if (gameRules.promotionRanks !== undefined) {
 		gamerulesGUIinfo.promotionRanks = {
-			white: gameRules.promotionRanks[players.WHITE],
-			black: gameRules.promotionRanks[players.BLACK],
+			white: gameRules.promotionRanks[p.WHITE],
+			black: gameRules.promotionRanks[p.BLACK],
 		};
 	} else {
 		gamerulesGUIinfo.promotionRanks = undefined;
@@ -176,8 +176,8 @@ function setGamerulesGUIinfo(
 	if (gameRules.promotionsAllowed !== undefined) {
 		gamerulesGUIinfo.promotionsAllowed = [
 			...new Set([
-				...(gameRules.promotionsAllowed[players.WHITE] || []),
-				...(gameRules.promotionsAllowed[players.BLACK] || []),
+				...(gameRules.promotionsAllowed[p.WHITE] || []),
+				...(gameRules.promotionsAllowed[p.BLACK] || []),
 			]),
 		];
 		if (gamerulesGUIinfo.promotionsAllowed.length === 0)
@@ -188,8 +188,8 @@ function setGamerulesGUIinfo(
 
 	gamerulesGUIinfo.winConditions = [
 		...new Set([
-			...(gameRules.winConditions[players.WHITE] || [icnconverter.default_win_condition]),
-			...(gameRules.winConditions[players.BLACK] || [icnconverter.default_win_condition]),
+			...(gameRules.winConditions[p.WHITE] || [icnconverter.default_win_condition]),
+			...(gameRules.winConditions[p.BLACK] || [icnconverter.default_win_condition]),
 		]),
 	].filter((wincon) => winconutil.isWinConditionValid(wincon));
 
@@ -211,19 +211,6 @@ function setGamerulesGUIinfo(
 		gamerulesGUIinfo.worldBorder,
 	);
 
-	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
-}
-
-/** Set empty default game rules upon position clearing */
-function setGamerulesGUIinfoUponPositionClearing(): void {
-	gamerulesGUIinfo = {
-		playerToMove: 'white',
-		winConditions: [icnconverter.default_win_condition],
-		pawnDoublePush: false,
-		castling: false,
-	};
-
-	updateGamefileProperties(undefined, undefined, 'white', undefined);
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
@@ -322,7 +309,7 @@ function updateGamefileProperties(
 	enpassantCoords: Coords | undefined,
 	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
 	playerToMove: 'white' | 'black',
-	worldBorder: BoundingBox | undefined,
+	worldBorder: UnboundedRectangle | undefined,
 ): void {
 	const gamefile = gameslot.getGamefile()!;
 
@@ -341,13 +328,13 @@ function updateGamefileProperties(
 		gamefile.basegame.gameRules.promotionRanks = undefined;
 	} else {
 		gamefile.basegame.gameRules.promotionRanks = {};
-		gamefile.basegame.gameRules.promotionRanks[players.WHITE] = promotionRanks.white || [];
-		gamefile.basegame.gameRules.promotionRanks[players.BLACK] = promotionRanks.black || [];
+		gamefile.basegame.gameRules.promotionRanks[p.WHITE] = promotionRanks.white || [];
+		gamefile.basegame.gameRules.promotionRanks[p.BLACK] = promotionRanks.black || [];
 	}
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
 	// prettier-ignore
-	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [players.WHITE, players.BLACK] : playerToMove === 'black' ? [players.BLACK, players.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
 	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
 
@@ -366,7 +353,6 @@ export default {
 	getPlayerToMove,
 	getCurrentGamerulesAndState,
 	setGamerulesGUIinfo,
-	setGamerulesGUIinfoUponPositionClearing,
 	setPositionDependentGameRules,
 	getPositionDependentGameRules,
 	updateGamerulesGUIinfo,

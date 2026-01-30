@@ -2,7 +2,7 @@ import themes from '../../../../../shared/components/header/themes.js';
 import pieceThemes, {
 	PieceColorGroup,
 } from '../../../../../shared/components/header/pieceThemes.js';
-import localstorage from '../../util/localstorage.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import validatorama from '../../util/validatorama.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -79,7 +79,7 @@ let changeWasMade: boolean = false;
 })();
 
 function loadPreferences(): void {
-	const browserStoragePrefs: Preferences = localstorage.loadItem('preferences') || {
+	const browserStoragePrefs: Preferences = LocalStorage.loadItem('preferences') || {
 		theme: themes.defaultTheme,
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
@@ -107,7 +107,7 @@ function loadPreferences(): void {
 
 function savePreferences(): void {
 	const oneYearInMillis: number = timeutil.getTotalMilliseconds({ years: 1 });
-	localstorage.saveItem('preferences', preferences, oneYearInMillis);
+	LocalStorage.saveItem('preferences', preferences, oneYearInMillis);
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing

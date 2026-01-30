@@ -1,4 +1,5 @@
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -448,7 +449,8 @@ function callback_Back(): void {
 }
 
 function callback_Expand(): void {
-	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+	const box: Partial<BoundingBox> =
+		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces) ?? {};
 
 	// Add the square annotation highlights, too.
 
@@ -458,9 +460,24 @@ function callback_Expand(): void {
 		.getAnnoteSnapPoints(false)
 		.map((point) => bdcoords.coordsToBigInt(point));
 
-	allCoords.push(...annoteSnapPoints);
-	if (allCoords.length === 0) allCoords.push([1n, 1n], [8n, 8n]); // use the [1,1]-[8,8] area as a fallback
-	Transition.zoomToCoordsList(allCoords);
+	// Expand the box to include all annote snap points
+	for (const snapPoint of annoteSnapPoints) {
+		if (box.left === undefined || snapPoint[0] < box.left) box.left = snapPoint[0];
+		if (box.right === undefined || snapPoint[0] > box.right) box.right = snapPoint[0];
+		if (box.bottom === undefined || snapPoint[1] < box.bottom) box.bottom = snapPoint[1];
+		if (box.top === undefined || snapPoint[1] > box.top) box.top = snapPoint[1];
+	}
+
+	// If any sides are still undefined, set them to default values
+	const definedBox: BoundingBox =
+		box.left === undefined ||
+		box.right === undefined ||
+		box.bottom === undefined ||
+		box.top === undefined
+			? { left: 1n, right: 8n, bottom: 1n, top: 8n }
+			: (box as BoundingBox);
+
+	Transition.zoomToCoordsBox(definedBox);
 }
 
 function recenter(): void {

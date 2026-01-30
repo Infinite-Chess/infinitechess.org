@@ -8,9 +8,8 @@ import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/ty
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
-// @ts-ignore
 import websocket from '../../websocket.js';
-import localstorage from '../../../util/localstorage.js';
+import IndexedDB from '../../../util/IndexedDB.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
@@ -373,7 +372,10 @@ function onMainMenuButtonPress(): void {
 
 function deleteCustomVariantOptions(): void {
 	// Delete any custom pasted position in a private game.
-	if (isPrivate) localstorage.deleteItem(String(id!));
+	if (isPrivate) {
+		const storageKey = getKeyForOnlineGameVariantOptions(id!);
+		IndexedDB.deleteItem(storageKey);
+	}
 }
 
 /**

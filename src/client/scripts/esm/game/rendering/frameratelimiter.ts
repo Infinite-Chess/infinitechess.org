@@ -21,6 +21,16 @@ const TARGET_FPS_TITLE_SCREEN = 30;
 /** Timestamp of the last frame that was actually rendered */
 let lastFrameTime = 0;
 
+/**
+ * Set to true when we hear the canvas_resize event. We should bypass fps throttling and render the next frame immediately.
+ *
+ * Patches bug where resizing the window on the title screen (where fps is throttled) causes
+ * rapid black flickering when the canvas is black, but we're waiting to render the next frame.
+ */
+let canvasResized: boolean = false;
+
+document.addEventListener('canvas_resize', () => (canvasResized = true));
+
 // Functions -------------------------------------------------
 
 /**
@@ -29,14 +39,16 @@ let lastFrameTime = 0;
  * @param callback - The callback function to execute on the next frame
  */
 function requestFrame(callback: FrameRequestCallback): void {
-	// If we're in a game, run at full speed.
-	if (gameloader.areInAGame()) {
-		requestAnimationFrame(callback);
-		return;
-	}
-
 	// Not in a game (title screen), throttle.
 	const throttledCallback = (timestamp: number): void => {
+		// If we're in a game, or canvas was resized, run at full speed.
+		if (gameloader.areInAGame() || canvasResized) {
+			canvasResized = false;
+			lastFrameTime = timestamp;
+			callback(timestamp);
+			return;
+		}
+
 		// On the very first frame, or after a long pause (e.g. tab was inactive),
 		// reset the timer to the current time.
 		if (lastFrameTime === 0 || timestamp - lastFrameTime > 200) {

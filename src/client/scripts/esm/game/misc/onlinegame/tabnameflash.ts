@@ -9,7 +9,6 @@ import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../gamesound.js';
-// @ts-ignore
 import loadbalancer from '../loadbalancer.js';
 
 /** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */

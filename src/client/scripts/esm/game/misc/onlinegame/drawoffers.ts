@@ -11,9 +11,8 @@ import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/ga
 // @ts-ignore
 import statustext from '../../gui/statustext.js';
 // @ts-ignore
-import websocket from '../../websocket.js';
-// @ts-ignore
 import guipause from '../../gui/guipause.js';
+import websocket from '../../websocket.js';
 import gameslot from '../../chess/gameslot.js';
 import onlinegame from './onlinegame.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';

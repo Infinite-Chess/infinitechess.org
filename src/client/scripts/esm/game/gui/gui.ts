@@ -9,7 +9,6 @@ import bd from '@naviary/bigdecimal';
 
 // @ts-ignore
 import statustext from './statustext.js';
-// @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';

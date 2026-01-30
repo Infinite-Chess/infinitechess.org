@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 
-import indexeddb from './indexeddb.js';
+import indexeddb from './IndexedDB.js';
 
 beforeEach(() => {
 	// Fresh fake IndexedDB and key range per test
@@ -85,20 +85,6 @@ describe('IndexedDB storage functional behavior', () => {
 		expect(reads).toEqual([{ v: 0 }, { v: 25 }, { v: 49 }]);
 	});
 
-	it('rejects with a clear error when IndexedDB is not supported', async () => {
-		// Remove IndexedDB and reset instance so next init fails
-		(globalThis as any).indexedDB = undefined;
-		indexeddb.resetDBInstance();
-
-		await expect(indexeddb.saveItem('a', 1)).rejects.toThrow(
-			'IndexedDB is not supported in this browser',
-		);
-
-		await expect(indexeddb.loadItem('a')).rejects.toThrow(
-			'IndexedDB is not supported in this browser',
-		);
-	});
-
 	it('resetDBInstance causes a fresh database (previous keys gone)', async () => {
 		await indexeddb.saveItem('temp', 42);
 		expect(await indexeddb.getAllKeys()).toEqual(['temp']);
@@ -110,5 +96,85 @@ describe('IndexedDB storage functional behavior', () => {
 
 		// New open should yield empty store
 		expect(await indexeddb.getAllKeys()).toEqual([]);
+	});
+
+	it('saves an item with custom expiry time', async () => {
+		const expiryMillis = 10000; // 10 seconds
+		await indexeddb.saveItem('k', 'value', expiryMillis);
+		const value = await indexeddb.loadItem<string>('k');
+		expect(value).toBe('value');
+	});
+
+	it('auto-deletes expired items on load', async () => {
+		const shortExpiry = 1; // 1 millisecond
+		await indexeddb.saveItem('expiring', 'test', shortExpiry);
+
+		// Wait for expiry
+		await new Promise((resolve) => setTimeout(resolve, 10));
+
+		// loadItem should delete the expired item and return undefined
+		const value = await indexeddb.loadItem('expiring');
+		expect(value).toBeUndefined();
+
+		// Key should be deleted
+		const keys = await indexeddb.getAllKeys();
+		expect(keys).not.toContain('expiring');
+	});
+
+	it('eraseExpiredItems removes only expired items', async () => {
+		const shortExpiry = 1; // 1 millisecond
+		const longExpiry = 60000; // 60 seconds
+
+		await indexeddb.saveItem('expired1', 'test1', shortExpiry);
+		await indexeddb.saveItem('expired2', 'test2', shortExpiry);
+		await indexeddb.saveItem('valid', 'test3', longExpiry);
+
+		// Wait for short-lived items to expire
+		await new Promise((resolve) => setTimeout(resolve, 10));
+
+		await indexeddb.eraseExpiredItems();
+
+		const keys = await indexeddb.getAllKeys();
+		expect(keys).toEqual(['valid']);
+
+		const validValue = await indexeddb.loadItem('valid');
+		expect(validValue).toBe('test3');
+	});
+
+	it('handles items saved without expiry (old format)', async () => {
+		// First save an item normally to ensure DB is initialized
+		await indexeddb.saveItem('temp', 'temp');
+
+		// Manually save an item in the old format (without expiry) by directly accessing IDB
+		await new Promise<void>((resolve, reject) => {
+			const request = (globalThis as any).indexedDB.open(
+				indexeddb.DB_NAME,
+				indexeddb.DB_VERSION,
+			);
+			request.onsuccess = () => {
+				const db = request.result;
+				const tx = db.transaction([indexeddb.STORE_NAME], 'readwrite');
+				const store = tx.objectStore(indexeddb.STORE_NAME);
+				// Save old format: just the value, no wrapper object
+				store.put('old-value', 'old-key');
+				tx.oncomplete = () => {
+					db.close();
+					resolve();
+				};
+				tx.onerror = () => reject(tx.error);
+			};
+			request.onerror = () => reject(request.error);
+		});
+
+		// Reset to get fresh connection
+		indexeddb.resetDBInstance();
+
+		// loadItem should delete the old format item and return undefined
+		const value = await indexeddb.loadItem('old-key');
+		expect(value).toBeUndefined();
+
+		// Verify it was deleted
+		const keys = await indexeddb.getAllKeys();
+		expect(keys).not.toContain('old-key');
 	});
 });

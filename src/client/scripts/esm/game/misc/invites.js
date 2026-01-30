@@ -1,6 +1,6 @@
 // Import Start
 import websocket from '../websocket.js';
-import localstorage from '../../util/localstorage.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
@@ -48,7 +48,7 @@ function gelement_iCodeCode() {
 
 function update() {
 	if (!guiplay.isOpen()) return; // Not on the play screen
-	if (loadbalancer.gisHibernating())
+	if (loadbalancer.areWeHibernating())
 		statustext.showStatus(translations.invites.move_mouse, false, 0.1);
 }
 
@@ -122,7 +122,7 @@ function cancel(id = ourInviteID) {
 	if (!weHaveInvite) return;
 	if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
 
-	localstorage.deleteItem('invite-tag');
+	LocalStorage.deleteItem('invite-tag');
 
 	guiplay.lockCreateInviteButton();
 
@@ -138,7 +138,7 @@ function generateTagForInvite(inviteOptions) {
 	const tag = uuid.generateID_Base62(8);
 
 	// NEW browser storage method!
-	localstorage.saveItem('invite-tag', tag);
+	LocalStorage.saveItem('invite-tag', tag);
 
 	inviteOptions.tag = tag;
 }
@@ -311,7 +311,7 @@ function isInviteOurs(invite) {
 
 	// Compare the tag..
 
-	const localStorageTag = localstorage.loadItem('invite-tag');
+	const localStorageTag = LocalStorage.loadItem('invite-tag');
 	if (!localStorageTag) return false;
 	if (invite.tag === localStorageTag) return true;
 	return false;
@@ -425,7 +425,7 @@ function doWeHave() {
 
 /** Subscribes to the invites list. We will receive updates
  * for incoming and deleted invites from other players.
- * @param {ignoreAlreadySubbed} *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
+ * @param {boolean} [ignoreAlreadySubbed] *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
  * */
 async function subscribeToInvites(ignoreAlreadySubbed) {
 	// Set to true when we are restarting the connection and need to resub to everything we were to before.

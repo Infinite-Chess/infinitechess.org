@@ -52,6 +52,10 @@ header label {
 	font-size: inherit; /* Prevents createaccount.css changing the font size. */
 }
 
+.italic {
+	font-style: italic;
+}
+
 /* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
 
 .svg-pawn {

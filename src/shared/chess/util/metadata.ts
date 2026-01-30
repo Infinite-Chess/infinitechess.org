@@ -12,6 +12,14 @@ import type { Player } from './typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
+/**
+ * The clock value for the game, in the form `"s+s"`, where the left
+ * is start time in seconds, and the right is increment in seconds.
+ *
+ * If the game is untimed, this should be `"-"`
+ */
+type TimeControl = `${number}+${number}` | '-';
+
 interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */
 	Event: string;
@@ -23,7 +31,7 @@ interface MetaData {
 	 *
 	 * If the game is untimed, this should be `"-"`
 	 */
-	TimeControl: `${number}+${number}` | '-';
+	TimeControl: TimeControl;
 	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
 	Round: '-';
 	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */
@@ -133,4 +141,4 @@ export default {
 	getWhiteBlackRatingDiff,
 };
 
-export type { MetaData, MetadataKey };
+export type { TimeControl, MetaData, MetadataKey };

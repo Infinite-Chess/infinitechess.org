@@ -7,7 +7,6 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
-// @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera.js';
 import primitives from './primitives.js';

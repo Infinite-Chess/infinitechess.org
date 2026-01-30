@@ -34,6 +34,7 @@ const staticTranslatedTemplates = [
 	'play',
 	'termsofservice',
 	'resetpassword',
+	'admin',
 	'errors/400',
 	'errors/401',
 	'errors/404',

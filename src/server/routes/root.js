@@ -46,7 +46,7 @@ router.get('/reset-password/:token', serveFile('resetpassword.html'));
 
 router.get('/termsofservice(.html)?', serveFile('termsofservice.html'));
 router.get('/member(.html)?/:member', serveFile('member.html'));
-router.get('/admin(.html)?', serveFile('admin.html', false));
+router.get('/admin(.html)?', serveFile('admin.html'));
 router.get('/icnvalidator(.html)?', serveFile('icnvalidator.html', false));
 
 // Error pages

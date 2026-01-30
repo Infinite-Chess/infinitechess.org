@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/eactions.ts
+// src/client/scripts/esm/game/boardeditor/actions/eactions.ts
 
 /**
  * Editor Actions
@@ -14,41 +14,50 @@
  * * Start local game from position
  */
 
-import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility';
-import type { MetaData } from '../../../../../shared/chess/util/metadata';
-import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant';
-import type { Player } from '../../../../../shared/chess/util/typeutil';
+import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
+import type { MetaData } from '../../../../../../shared/chess/util/metadata';
+import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
+import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
+import type { EngineUIConfig } from '../../gui/boardeditor/guistartenginegame';
+import type { EditorSaveState } from './esave';
 
 // @ts-ignore
-import statustext from '../gui/statustext';
-import gamefile, { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile';
+import statustext from '../../gui/statustext';
+import gamefile, {
+	Additional,
+	Board,
+	FullGame,
+} from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	_Move_Out,
 	LongFormatIn,
 	LongFormatOut,
-} from '../../../../../shared/chess/logic/icn/icnconverter';
-import boardeditor, { Edit } from './boardeditor';
+} from '../../../../../../shared/chess/logic/icn/icnconverter';
+import boardeditor, { Edit } from '../boardeditor';
 import organizedpieces, {
 	OrganizedPieces,
-} from '../../../../../shared/chess/logic/organizedpieces';
-import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
-import timeutil from '../../../../../shared/util/timeutil';
-import docutil from '../../util/docutil';
-import gamecompressor, { SimplifiedGameState } from '../chess/gamecompressor';
-import gameformulator from '../chess/gameformulator';
-import gameloader from '../chess/gameloader';
-import gameslot from '../chess/gameslot';
-import pastegame from '../chess/pastegame';
-import guinavigation from '../gui/guinavigation';
-import annotations from '../rendering/highlights/annotations/annotations';
-import egamerules from './egamerules';
-import selectiontool from './tools/selection/selectiontool';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil';
-import hydrochess_card from '../chess/enginecards/hydrochess_card';
-import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../misc/enginegame';
-import bounds from '../../../../../shared/util/math/bounds';
+} from '../../../../../../shared/chess/logic/organizedpieces';
+import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
+import timeutil from '../../../../../../shared/util/timeutil';
+import docutil from '../../../util/docutil';
+import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
+import gameformulator from '../../chess/gameformulator';
+import gameloader from '../../chess/gameloader';
+import gameslot from '../../chess/gameslot';
+import pastegame from '../../chess/pastegame';
+import guinavigation from '../../gui/guinavigation';
+import annotations from '../../rendering/highlights/annotations/annotations';
+import egamerules from '../egamerules';
+import selectiontool from '../tools/selection/selectiontool';
+import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
+import hydrochess_card from '../../chess/enginecards/hydrochess_card';
+import {
+	engineDefaultTimeLimitPerMoveMillisDict,
+	engineWorldBorderDict,
+} from '../../misc/enginegame';
+import variant from '../../../../../../shared/chess/variants/variant';
+import movepiece from '../../../../../../shared/chess/logic/movepiece';
 
 // Constants ----------------------------------------------------------------------
 
@@ -62,43 +71,87 @@ const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 // Actions ----------------------------------------------------------------------
 
 /** Resets the board editor position to the Classical position. */
-function reset(): void {
+async function reset(): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata: MetaData = {
-		Variant: 'Classical',
-		Event: 'Position created using ingame board editor',
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
-	const classicalGamefile = gamefile.initFullGame(metadata);
-	const longformat = gamecompressor.compressGamefile(classicalGamefile);
-	loadFromLongformat(longformat);
-	selectiontool.resetState(); // Clear current selection
+	// Unload logical and rendering parts of current position
+	gameloader.unloadLogicalAndRendering();
 
-	statustext.showStatus(translations['copypaste'].reset_position);
+	// Load default board editor position
+	boardeditor.setActivePositionName(undefined);
+	await gameloader.startBoardEditor();
 }
 
 /** Clears the entire board editor position. */
-function clearAll(): void {
+async function clearAll(): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
-	const pieces = gamefile.boardsim.pieces;
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
-	queueRemovalOfAllPieces(gamefile, edit, pieces);
-	egamerules.setGamerulesGUIinfoUponPositionClearing();
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
-	annotations.resetState(); // Clear all annotations
-	selectiontool.resetState(); // Clear current selection
+	// Unload logical and rendering parts of current position
+	gameloader.unloadLogicalAndRendering();
 
-	statustext.showStatus(translations['copypaste'].clear_position);
+	// Initialize board editor with empty position and bare minimum game rules
+	const metadata: MetaData = {
+		TimeControl: '-',
+		Event: `Position created using ingame board editor`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime(),
+	};
+	const gameRules = variant.getBareMinimumGameRules();
+	const position: Map<CoordsKey, number> = new Map();
+	const specialRights: Set<CoordsKey> = new Set();
+	const state_global: GlobalGameState = { specialRights };
+	const variantOptions: VariantOptions = {
+		fullMove: 1,
+		gameRules,
+		position,
+		state_global,
+	};
+
+	boardeditor.setActivePositionName(undefined);
+	await gameloader.startBoardEditorFromCustomPosition(
+		{
+			metadata,
+			additional: {
+				variantOptions,
+			},
+		},
+		false,
+		false,
+	);
+}
+
+/** Loads a position from a savestate. */
+async function load(editorSaveState: EditorSaveState): Promise<void> {
+	if (!boardeditor.areInBoardEditor()) return;
+
+	// Unload logical and rendering parts of current position
+	gameloader.unloadLogicalAndRendering();
+
+	// Load given savestate
+	const metadata: MetaData = {
+		Variant: 'Classical',
+		TimeControl: '-',
+		Event: `Position created using ingame board editor`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime(),
+	};
+
+	boardeditor.setActivePositionName(editorSaveState.positionname);
+	await gameloader.startBoardEditorFromCustomPosition(
+		{
+			metadata,
+			additional: {
+				variantOptions: editorSaveState.variantOptions,
+			},
+		},
+		editorSaveState.pawnDoublePush,
+		editorSaveState.castling,
+	);
+	statustext.showStatus('Position successfully loaded.');
 }
 
 /**
@@ -106,13 +159,13 @@ function clearAll(): void {
  * which doesn't work for the board editor.
  * This function uses the position of pieces on the board.
  */
-function save(): void {
+function copy(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const gamefile = gameslot.getGamefile()!;
 	if (!boardutil.hasAtleastOnePiece(gamefile.boardsim.pieces)) return; // Don't copy empty positions
 
-	const variantOptions = getCurrentPositionInformation();
+	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
 		metadata:
 			{} as MetaData /** Empty metadata, in order to make copied codes easier to share */,
@@ -131,7 +184,7 @@ function save(): void {
 }
 
 /** Loads the position from the clipboard. */
-async function load(): Promise<undefined> {
+async function paste(): Promise<undefined> {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	let longformOut: LongFormatOut;
@@ -164,7 +217,7 @@ async function load(): Promise<undefined> {
 function startLocalGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const variantOptions = getCurrentPositionInformation();
+	const variantOptions = getCurrentPositionInformation(true);
 	if (variantOptions.position.size === 0) {
 		statustext.showStatus('Cannot start local game from empty position!', true);
 		return;
@@ -189,24 +242,13 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(): void {
+function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	// Ask which color the user wants to play as
-	const playAsWhite = confirm('Play as White? (OK = White, Cancel = Black)');
-
-	const TimeControl = '-';
-	const youAreColor: Player = playAsWhite ? players.WHITE : players.BLACK;
 	const currentEngine = 'hydrochess';
 
-	// TODO: Maybe(?): If the position allows for it, use the checkmate practice engine instead of hydrochess
-	// since it is far stronger and faster for single king endgames.
-	// Rememember to also set checkmateSelectedID if applicable
-
-	// TODO: If the world border isn't set, query the user as to whether they want it automatically set.
-
 	// Get current position
-	const variantOptions = getCurrentPositionInformation();
+	const variantOptions = getCurrentPositionInformation(true);
 
 	// Determine whether it's not supported...
 
@@ -215,18 +257,12 @@ function startEngineGame(): void {
 		return;
 	}
 
-	// Ask the user if they want worldBorder set automatically
-	// TODO: Have a custom UI for starting an engine game from the board editor instead of using a prompt
-	if (!variantOptions.gameRules.worldBorder) {
-		const setWorldBorder = confirm('No world border specified. Set it automatically?');
-		if (!setWorldBorder) return;
-
+	// Set world border automatically, if wished
+	if (engineUIConfig.setDefaultWorldBorder) {
 		// Calculate minimum bounding box of all pieces
-		const allCoordsKeys = variantOptions.position.keys();
-		const coordsOfAllPieces = Array.from(allCoordsKeys, (key) =>
-			coordutil.getCoordsFromKey(key),
-		);
-		const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
+		const startingPositionBox = boardutil.getBoundingBoxOfAllPieces(
+			gameslot.getGamefile()!.boardsim.pieces,
+		)!; // Guaranteed defined since above we check if there's > 0 pieces
 
 		// Calculate it using the default distance
 		const worldBorderProperty = engineWorldBorderDict[currentEngine];
@@ -238,7 +274,7 @@ function startEngineGame(): void {
 		};
 	}
 
-	// Does the engine support it?
+	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		statustext.showStatus(
@@ -253,13 +289,13 @@ function startEngineGame(): void {
 		Event: 'Position created using ingame board editor',
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		TimeControl,
+		TimeControl: engineUIConfig.TimeControl,
 		White:
-			youAreColor === players.WHITE
+			engineUIConfig.youAreColor === p.WHITE
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		Black:
-			youAreColor === players.BLACK
+			engineUIConfig.youAreColor === p.BLACK
 				? translations['you_indicator']
 				: translations['engine_indicator'],
 		UTCDate,
@@ -272,10 +308,11 @@ function startEngineGame(): void {
 		additional: {
 			variantOptions,
 		},
-		youAreColor,
+		youAreColor: engineUIConfig.youAreColor,
 		currentEngine,
 		engineConfig: {
 			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			strengthLevel: engineUIConfig.strengthLevel,
 		},
 	});
 }
@@ -292,8 +329,9 @@ function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: Organiz
 
 /**
  * Reconstructs the current VariantOptions object (including position, gameRules and state_global) from the current board editor position
+ * @param revokeRedundantRights - If true, special rights of pieces that no longer have a valid castling partner are revoked.
  */
-function getCurrentPositionInformation(): VariantOptions {
+function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantOptions {
 	// Get current game rules and state
 	const { gameRules, moveRuleState, enpassantcoords } = egamerules.getCurrentGamerulesAndState();
 
@@ -302,7 +340,10 @@ function getCurrentPositionInformation(): VariantOptions {
 	const position = organizedpieces.generatePositionFromPieces(gamefile.boardsim.pieces);
 
 	// Construct state_global
-	const specialRights = gamefile.boardsim.state.global.specialRights;
+
+	const specialRights = new Set(gamefile.boardsim.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
+	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile.boardsim, specialRights);
+
 	let enpassant: EnPassant | undefined;
 	if (enpassantcoords !== undefined) {
 		const playerToMove = egamerules.getPlayerToMove();
@@ -325,6 +366,25 @@ function getCurrentPositionInformation(): VariantOptions {
 	};
 
 	return variantOptions;
+}
+
+/**
+ * Revokes special rights from pieces that no longer have a valid castling partner.
+ * MUTATES the input specialRights set.
+ * @param boardsim
+ * @param specialRights - MUST be a copy of the gamefile's specialRights set! This will be mutated, NOT the gamefile's internal one.
+ */
+function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<CoordsKey>): void {
+	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
+	for (const coordsKey of specialRights) {
+		const candidate = boardutil.getPieceFromCoordsKey(boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
+
+		const rawType = typeutil.getRawType(candidate.type);
+		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
+
+		const hasValidCastlingPartner = movepiece.hasCastlingPartner(boardsim, candidate);
+		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
+	}
 }
 
 /**
@@ -418,9 +478,9 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	if (keepTrackOfGlobalSpecialRights) {
 		// prettier-ignore
-		pawnDoublePush = all_pawns_have_double_push && at_least_one_pawn_has_double_push ? true : at_least_one_pawn_has_double_push ? undefined : false;
+		pawnDoublePush = all_pawns_have_double_push || at_least_one_pawn_has_double_push ? undefined : false;
 		// prettier-ignore
-		castling = all_pieces_obey_normal_castling && at_least_one_piece_obeys_normal_castling ? true : at_least_one_piece_obeys_normal_castling ? undefined : false;
+		castling = all_pieces_obey_normal_castling || at_least_one_piece_obeys_normal_castling ? undefined : false;
 	}
 
 	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
@@ -437,8 +497,10 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 export default {
 	reset,
 	clearAll,
-	save,
 	load,
+	copy,
+	paste,
 	startLocalGame,
 	startEngineGame,
+	getCurrentPositionInformation,
 };

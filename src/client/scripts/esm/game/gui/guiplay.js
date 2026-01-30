@@ -1,5 +1,5 @@
 // Import Start
-import localstorage from '../../util/localstorage.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import statustext from './statustext.js';
 import invites from '../misc/invites.js';
 import guititle from './guititle.js';
@@ -140,7 +140,7 @@ function isOpen() {
 
 /**
  * Returns whether we've selected "online", "local", or a "computer" game.
- * @returns {boolean}
+ * @returns {string}
  */
 function getModeSelected() {
 	return modeSelected;
@@ -234,12 +234,12 @@ function changePlayMode(mode) {
 		element_optionCardPrivate.classList.remove('hidden');
 		// Patches bugs on some browsers where invite creations are sometimes sent with a blank "" private field.
 		if (!element_optionPrivate.value) element_optionPrivate.value = 'public';
-		const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
+		const localStorageClock = LocalStorage.loadItem('preferred_online_clock_invite_value');
 		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex =
 			localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
 		element_joinPrivate.classList.remove('hidden');
-		const localStorageRated = localstorage.loadItem('preferred_rated_invite_value');
+		const localStorageRated = LocalStorage.loadItem('preferred_rated_invite_value');
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
 		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
 		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
@@ -265,7 +265,7 @@ function changePlayMode(mode) {
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
 		element_optionCardClock.classList.remove('hidden');
-		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
+		const localStorageClock = LocalStorage.loadItem('preferred_local_clock_invite_value');
 		element_optionClock.selectedIndex =
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
@@ -290,7 +290,7 @@ function changePlayMode(mode) {
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
 		element_optionCardClock.classList.remove('hidden');
-		const localStorageClock = localstorage.loadItem('preferred_computer_clock_invite_value');
+		const localStorageClock = LocalStorage.loadItem('preferred_computer_clock_invite_value');
 		element_optionClock.selectedIndex =
 			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
@@ -422,7 +422,7 @@ function callback_updateOptions() {
 function savePreferredClockOption(clockIndex) {
 	const localOrOnline = modeSelected;
 	// For search results: preferred_local_clock_invite_value preferred_online_clock_invite_value
-	localstorage.saveItem(
+	LocalStorage.saveItem(
 		`preferred_${localOrOnline}_clock_invite_value`,
 		clockIndex,
 		timeutil.getTotalMilliseconds({ days: 7 }),
@@ -430,7 +430,7 @@ function savePreferredClockOption(clockIndex) {
 }
 
 function savePreferredRatedOption(ratedValue) {
-	localstorage.saveItem(
+	LocalStorage.saveItem(
 		`preferred_rated_invite_value`,
 		ratedValue,
 		timeutil.getTotalMilliseconds({ years: 1 }),

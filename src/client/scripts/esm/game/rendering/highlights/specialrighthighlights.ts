@@ -76,7 +76,7 @@ function render(): void {
 function regenModel(): void {
 	if (!enabled) return; // Not enabled
 
-	// console.log("Regenerating specialrights model");
+	// console.log('Regenerating specialrights model');
 	const gamefile = gameslot.getGamefile()!;
 	const model_Offset: Coords = legalmovemodel.getOffset();
 	// Instance data
@@ -120,23 +120,12 @@ function renderEnPassant(): void {
 		.render(undefined, undefined, { u_size });
 }
 
-/**
- * Called when any forward-global-move is made in the game, us or our opponent.
- *
- * This does not count rewinding/forwarding (which are local changes),
- * nor does it count simulated moves, or moves only made using movepiece.makeMove() and then reverted.
- */
-function onMove(): void {
-	// console.log("On move");
-	regenModel();
-}
-
 // Exports -----------------------------------------------------------------------
 
 export default {
 	enable,
 	disable,
 	toggle,
+	regenModel,
 	render,
-	onMove,
 };

@@ -7,11 +7,10 @@
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import websocket from '../websocket.js';
-// @ts-ignore
 import guipause from '../gui/guipause.js';
+import websocket from '../websocket.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import localstorage from '../../util/localstorage.js';
+import IndexedDB from '../../util/IndexedDB.js';
 import enginegame from '../misc/enginegame.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
@@ -27,6 +26,7 @@ import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
@@ -194,7 +194,8 @@ function pasteGame(longformOut: LongFormatOut): void {
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();
 		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
-		localstorage.saveItem(storageKey, variantOptions);
+		const expiryMillis = timeutil.getTotalMilliseconds({ days: 3 });
+		IndexedDB.saveItem(storageKey, variantOptions, expiryMillis);
 	}
 
 	// What is the warning message if pasting in a private match?

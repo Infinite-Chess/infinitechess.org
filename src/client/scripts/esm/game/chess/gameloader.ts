@@ -34,11 +34,12 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import guinavigation from '../gui/guinavigation.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import localstorage from '../../util/localstorage.js';
+import IndexedDB from '../../util/IndexedDB.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -184,7 +185,7 @@ async function startOnlineGame(options: {
 	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: localstorage.loadItem(storageKey) as VariantOptions,
+		variantOptions: await IndexedDB.loadItem<VariantOptions>(storageKey),
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
@@ -410,6 +411,49 @@ async function startCustomEngineGame(options: {
 	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
 }
 
+/** Initializes the board editor from a custom position. */
+async function startBoardEditorFromCustomPosition(
+	options: {
+		metadata: MetaData;
+		additional: {
+			moves?: ServerGameMoveMessage[];
+			variantOptions: VariantOptions;
+		};
+		presetAnnotes?: PresetAnnotes;
+	},
+	/** Whether the pawnDoublePush flag should be set for the position in the editor game rules */
+	pawnDoublePush?: boolean,
+	/** Whether the castling flag should be set for the position in the editor game rules */
+	castling?: boolean,
+): Promise<void> {
+	typeOfGameWeAreIn = 'editor';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
+	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
+
+	gameslot
+		.loadGamefile({
+			metadata: options.metadata,
+			viewWhitePerspective: true,
+			allowEditCoords: true,
+			// See comment in startBoardEditor for why "editor: true" is needed
+			additional: { ...options.additional, editor: true },
+			presetAnnotes: options.presetAnnotes,
+		})
+		.then((_result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	await guiboardeditor.initUI();
+	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
+}
+
 /**
  * Reloads the current local or online game from the provided metadata, existing moves, and variant options.
  */
@@ -489,6 +533,13 @@ function openGameinfoBarAndConcludeGameIfOver(
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 
+function unloadLogicalAndRendering(): void {
+	gameslot.unloadGame();
+	perspective.disable();
+	boardpos.eraseMomentum();
+	Transition.terminate();
+}
+
 function unloadGame(): void {
 	// console.log("Game loader unloading game...");
 
@@ -500,11 +551,8 @@ function unloadGame(): void {
 	guigameinfo.close();
 	guigameinfo.clearUsernameContainers();
 	guiboardeditor.close();
-	gameslot.unloadGame();
-	perspective.disable();
+	unloadLogicalAndRendering();
 	typeOfGameWeAreIn = undefined;
-	boardpos.eraseMomentum();
-	Transition.terminate();
 
 	gui.prepareForOpen();
 }
@@ -525,7 +573,9 @@ export default {
 	startBoardEditor,
 	startCustomLocalGame,
 	startCustomEngineGame,
+	startBoardEditorFromCustomPosition,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
+	unloadLogicalAndRendering,
 	unloadGame,
 };
