@@ -95,7 +95,7 @@
     "dev:server": "npm run copy:views && wait-on dist/server/server.js && nodemon",
     "dev:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,toml,md}\" dist --watch",
     "dev:assets-cjs": "cpx \"src/client/scripts/cjs/**/*.js\" dist/client/scripts/cjs --watch",
-    "optimize-images": "node optimize-images.js",
+    "optimize-images": "tsx optimize-images.ts",
     "generate-dependency-graph": "node src/server/utility/generateDependancyGraph.js",
     "test": "vitest run",
     "test:watch": "vitest",

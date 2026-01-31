@@ -26,11 +26,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Effort values. Higher mean better compression but longer processing time.
 const webp_options = {
 	effort: 6, // 0-6
-	quality: 100     // Controls visual quality (1-100). Default if not specified: 80. USE 100 FOR NOISE TEXTURES!
+	quality: 100 // Controls visual quality (1-100). Default if not specified: 80. USE 100 FOR NOISE TEXTURES!
 };
 const png_options = {
 	effort: 10, // 1-10. LOWER YIELDS BETTER COMPRESSION??? But lower image quality.
-	quality: 100, // Default if not specified: 100.
+	quality: 100 // Default if not specified: 100.
 };
 const avif_options = {
 	effort: 9, // 0-9
@@ -51,9 +51,9 @@ const supportedExtensions = ['.png', '.jpg', '.jpeg'];
  * @param {string} dirPath The directory to search.
  * @returns {string[]} An array of full paths to image files.
  */
-function getAllImagePaths(dirPath) {
+function getAllImagePaths(dirPath: string): string[] {
 	const allEntries = readdirSync(dirPath);
-	const files = [];
+	const files: string[] = [];
 
 	for (const entry of allEntries) {
 		const fullPath = path.join(dirPath, entry);
@@ -100,7 +100,7 @@ console.log(`Found ${imagesToProcess.length} image(s) that need optimization.`);
 let finished_images = 0;
 const total_images = imagesToProcess.length * 3;
 
-function logProgress(imageName, format) {
+function logProgress(imageName: string, format: string): void {
 	finished_images += 1;
 	const percentage = Math.round(finished_images / total_images * 100);
 	console.log(`[${percentage}%] Optimized ${path.basename(imageName)} to ${format.toUpperCase()}`);
