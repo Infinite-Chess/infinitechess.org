@@ -89,7 +89,7 @@ const getMemberData = async (req: IdentifiedRequest, res: Response): Promise<Res
 	const lastSeenDate = new Date(timeutil.sqliteToISO(record.last_seen));
 	const language = getLanguageToServe(req);
 	// Use type assertion here since we check for localeStr's existence in locales
-	const seenPhrase = formatDistance(new Date(), lastSeenDate, {
+	const seenPhrase = formatDistance(lastSeenDate, new Date(), {
 		locale: localeMap[language],
 		addSuffix: true,
 	});
