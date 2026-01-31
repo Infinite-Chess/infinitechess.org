@@ -12,11 +12,11 @@ This project is open source! If you have skills in HTML, CSS, JavaScript, TypeSc
 
 | 📚 Document                                                              | Description                               |
 | ------------------------------------------------------------------------ | ----------------------------------------- |
-| **[Setup Guide](docs/SETUP.md)**                                         | Setup your contribution workflow          |
-| **[Navigation Guide](docs/NAVIGATING.md)**                               | Get an overview of the codebase           |
-| **[Contributing Guide](docs/CONTRIBUTING.md)**                           | PR requirements and guidelines            |
+| **[Setup Guide](./docs/SETUP.md)**                                       | Setup your contribution workflow          |
+| **[Navigation Guide](./docs/NAVIGATING.md)**                             | Get an overview of the codebase           |
+| **[Contributing Guide](./docs/CONTRIBUTING.md)**                         | PR requirements and guidelines            |
 | **[Issues](https://github.com/Infinite-Chess/infinitechess.org/issues)** | Inquire available tasks                   |
-| **[Translation Guide](docs/TRANSLATIONS.md)**                            | Translate the website to another language |
+| **[Translation Guide](./docs/TRANSLATIONS.md)**                          | Translate the website to another language |
 
 ## Roadmap
 
