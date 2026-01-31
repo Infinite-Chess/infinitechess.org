@@ -15,7 +15,7 @@ import { logZodError } from '../utility/zodlogger.js';
 // Constants ---------------------------------------------------------------------------------
 
 /** Maximum length for a position name */
-export const MAX_NAME_LENGTH = 100;
+export const MAX_NAME_LENGTH = 70;
 
 /** Maximum length for ICN notation (also determines max size) */
 export const MAX_ICN_LENGTH = 1_000_000;
