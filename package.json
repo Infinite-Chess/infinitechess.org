@@ -101,7 +101,7 @@
     "test:watch": "vitest",
     "format": "prettier src build --write",
     "format:check": "prettier src build --check",
-    "lint": "eslint src build",
+    "lint": "eslint .",
     "prepare": "husky"
   },
   "lint-staged": {
