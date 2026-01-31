@@ -1,4 +1,4 @@
-### Type of Change (new feature, quality of life, bug fix, refactor, code improvement, translation, or documentation):
+### Type of Change (new feature, quality of life, bug fix, refactor, tooling, chore, tests, translation, or documentation):
 
 ### Scope (what part of the website or game does it apply to):
 
