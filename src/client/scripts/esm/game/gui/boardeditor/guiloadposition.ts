@@ -372,7 +372,7 @@ async function loadSinglePositionInfo(saveinfo_key: string): Promise<
 	);
 	if (!editorAbridgedSaveStateParsed.success) {
 		console.error(
-			`Invalid EditorAbridgedSaveState "${saveinfo_key}" in IndexedDB ${editorAbridgedSaveStateParsed.error}`,
+			`Invalid EditorAbridgedSaveState "${saveinfo_key}" in IndexedDB: ${editorAbridgedSaveStateParsed.error}`,
 		);
 		return;
 	}
