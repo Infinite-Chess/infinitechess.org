@@ -2,6 +2,8 @@
 
 This guide walks you through the initial setup phase of the infinitechess.org server on your machine. This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
 
+[← Back to README](../README.md) | [Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./CONTRIBUTING.md)
+
 **This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, many people are willing to assist you in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
 **SUMMARY of the setup process for experienced users:** Install Node.js. Fork the repo and install the project dependencies via `npm i`. Now you can run `npm run dev` to launch a live infinite chess server at `https://localhost:3443`. Using the suggested [list of VSCode Extensions](#step-6-install-vscode-extensions) is highly recommended but optional. Read the [Navigation Guide](./NAVIGATING.md) to get a brief rundown of the project structure.

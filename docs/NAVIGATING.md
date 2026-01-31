@@ -2,6 +2,8 @@
 
 This guide gives you several pointers on the project structure, to help you get started with collaborating!
 
+[← Back to Setup Guide](./SETUP.md) | [Contributing Guide](./CONTRIBUTING.md)
+
 It is assumed you have already gone through the [Setup](./SETUP.md) process.
 
 ## Terminal Output
