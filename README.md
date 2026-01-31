@@ -8,9 +8,15 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 ## Contributing
 
-This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)! For an overview of the codebase refer to the [Navigation Guide](./docs/NAVIGATING.md). You can also see the [Pull Request Requirements and Guidelines](./docs/CONTRIBUTING.md) for adopting the standards of the project.
+This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions!
 
-In case you want to help with translating the website to other languages, please read the [Translation Guide](./docs/TRANSLATIONS.md).
+| 📚 Document                                                              | Description                               |
+| ------------------------------------------------------------------------ | ----------------------------------------- |
+| **[Setup Guide](./docs/SETUP.md)**                                       | Setup your contribution workflow          |
+| **[Navigation Guide](./docs/NAVIGATING.md)**                             | Get an overview of the codebase           |
+| **[Contributing Guide](./docs/CONTRIBUTING.md)**                         | PR requirements and guidelines            |
+| **[Issues](https://github.com/Infinite-Chess/infinitechess.org/issues)** | Inquire available tasks                   |
+| **[Translation Guide](./docs/TRANSLATIONS.md)**                          | Translate the website to another language |
 
 ## Roadmap
 

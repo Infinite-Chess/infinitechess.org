@@ -1,6 +1,10 @@
 # Setting up your workspace
 
-This guide walks you through the initial setup phase of the infinitechess.org server on your machine. This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
+This guide walks you through the initial setup phase of the infinitechess.org server on your machine.
+
+[← Back to README](../README.md) | [Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./CONTRIBUTING.md) | [Translation Guide](./TRANSLATIONS.md)
+
+This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
 
 **This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, many people are willing to assist you in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
@@ -129,7 +133,7 @@ Let's move on to learn how to suggest changes to the repository! Or, skip right 
 
 ## Creating a Pull Request
 
-All pull requests MUST meet the standards outlined in [Pull Request Requirements and Guidelines](./CONTRIBUTING.md)!
+All pull requests MUST meet the standards outlined in the [Contributing Guide](./CONTRIBUTING.md)!
 
 After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab.
 
@@ -159,4 +163,6 @@ Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeN
 
 Next, read the [Navigation Guide](./NAVIGATING.md) to get a rundown of the project structure, where the game code is located, etc.!
 
-Or, read the [Pull Request Requirements and Guidelines](./CONTRIBUTING.md) to adopt the coding standards of the project!
+For a list of available tasks, please see the [Issues](https://github.com/Infinite-Chess/infinitechess.org/issues), or inquire in the [discord server](https://discord.gg/NFWFGZeNh5).
+
+Also, read the [Contributing Guide](./CONTRIBUTING.md) to adopt the coding standards of the project!
