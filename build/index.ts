@@ -1,4 +1,4 @@
-// build/index.js
+// build/index.ts
 
 /**
  * This script deploys all files and assets from /src/client to /dist in order to run the website.
@@ -21,7 +21,7 @@ setupEnv();
 /** Whether additional minifying of bundled scripts and css files should be skipped. */
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
 
-if (USE_DEVELOPMENT_BUILD && process.env.NODE_ENV === 'production') {
+if (USE_DEVELOPMENT_BUILD && process.env['NODE_ENV'] === 'production') {
 	throw new Error(
 		"Cannot run build process with --dev flag when NODE_ENV environment variable is 'production'!",
 	);

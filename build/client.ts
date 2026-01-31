@@ -1,13 +1,14 @@
-// build/client.js
+// build/client.ts
 
 import { readFile } from 'node:fs/promises';
 import { glob } from 'glob';
 import path from 'node:path';
 import fs from 'fs';
-import esbuild from 'esbuild';
+import esbuild, { BuildOptions, PluginBuild } from 'esbuild';
 import swc from '@swc/core';
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
+// @ts-ignore this package doesn't have a declaration file
 import stripComments from 'glsl-strip-comments';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
@@ -62,7 +63,7 @@ const CJSBuildPlugin = getESBuildLogStatusLogger(
 /** An esbuild plugin object that minifies GLSL shader files by stripping comments. */
 const GLSLMinifyPlugin = {
 	name: 'glsl-minify',
-	setup(build) {
+	setup(build: PluginBuild) {
 		// Intercept .glsl files and minify them
 		build.onLoad({ filter: /\.glsl$/ }, async (args) => {
 			try {
@@ -75,11 +76,11 @@ const GLSLMinifyPlugin = {
 					contents: minified,
 					loader: 'text',
 				};
-			} catch (error) {
+			} catch (error: unknown) {
 				return {
 					errors: [
 						{
-							text: `Failed to minify GLSL file: ${error.message}`,
+							text: `Failed to minify GLSL file: ${error instanceof Error ? error.message : String(error)}`,
 							location: { file: args.path },
 						},
 					],
@@ -89,7 +90,7 @@ const GLSLMinifyPlugin = {
 	},
 };
 
-const ESMBuildOptions = {
+const ESMBuildOptions: BuildOptions = {
 	bundle: true,
 	entryPoints: ESMEntryPoints,
 	outdir: './dist/client/scripts/esm',
@@ -109,7 +110,7 @@ const ESMBuildOptions = {
 	loader: { '.wasm': 'file' },
 };
 
-const CJSBuildOptions = {
+const CJSBuildOptions: BuildOptions = {
 	bundle: true,
 	entryPoints: CJSEntryPoints,
 	outdir: './dist/client/scripts/cjs',
@@ -122,14 +123,13 @@ const CJSBuildOptions = {
 // ================================= BUILDING ===================================
 
 /** Builds the client's scripts and minifies css. */
-export async function buildClient(isDev) {
+export async function buildClient(isDev: boolean): Promise<void> {
 	// console.log(`Building client in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
 
 	const ESMContext = await esbuild.context({
 		...ESMBuildOptions,
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
 	});
-
 	const CJSContext = await esbuild.context({
 		...CJSBuildOptions,
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
@@ -172,12 +172,16 @@ export async function buildClient(isDev) {
 
 /**
  * Minifies all JavaScript files in a directory and writes them to an output directory.
- * @param {string} inputDir - The directory to scan for scripts.
- * @param {string} outputDir - The directory where the minified files will be written.
- * @param {boolean} module - True if the scripts are ES Modules instead of CommonJS.
- * @returns {Promise<void>} Resolves when all files are minified.
+ * @param inputDir - The directory to scan for scripts.
+ * @param outputDir - The directory where the minified files will be written.
+ * @param module - True if the scripts are ES Modules instead of CommonJS.
+ * @returns Resolves when all files are minified.
  */
-async function minifyScriptDirectory(inputDir, outputDir, module) {
+async function minifyScriptDirectory(
+	inputDir: string,
+	outputDir: string,
+	module: boolean,
+): Promise<void> {
 	const files = await glob('**/*.js', { cwd: inputDir, nodir: true });
 
 	for (const file of files) {
@@ -202,9 +206,9 @@ async function minifyScriptDirectory(inputDir, outputDir, module) {
 /**
  * Minifies all CSS files from src/client/css/ directory
  * to the distribution directory, preserving the original structure.
- * @returns {Promise<void>} Resolves when all CSS files are processed.
+ * @returns Resolves when all CSS files are processed.
  */
-async function minifyCSSFiles() {
+async function minifyCSSFiles(): Promise<void> {
 	// Bundle and compress all css files
 	const cssFiles = await glob('**/*.css', { cwd: './dist/client/css', nodir: true });
 	for (const file of cssFiles) {
@@ -214,6 +218,7 @@ async function minifyCSSFiles() {
 			targets: cssTargets,
 			code: Buffer.from(await readFile(outputFilePath, 'utf8')),
 			minify: true,
+			filename: path.basename(outputFilePath),
 		});
 		// Write into /dist
 		fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });

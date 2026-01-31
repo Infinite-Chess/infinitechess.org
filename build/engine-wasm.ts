@@ -1,4 +1,4 @@
-// build/engine-wasm.js
+// build/engine-wasm.ts
 
 /**
  * HydroChess WASM Engine Setup Script
@@ -8,19 +8,37 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import * as z from 'zod';
 
-// Absolute path to the HydroChess WASM engine submodule (if present)
+import { logZodError } from '../src/server/utility/zodlogger';
+
+// Constants -------------------------------------------------------------------
+
+/** Absolute path to the HydroChess WASM engine pkg directory */
 const HYDROCHESS_WASM_DIR = path.join(process.cwd(), 'src', 'client', 'pkg', 'hydrochess');
 
-// API URL to check the latest released version
+/** API URL to check the latest released version */
 const LATEST_RELEASE_API_URL =
 	'https://api.github.com/repos/Infinite-Chess/hydrochess/releases/latest';
+
+/** Zod schema for validating GitHub release API response */
+const releaseDataSchema = z.object({
+	tag_name: z.string(),
+	assets: z.array(
+		z.object({
+			name: z.string(),
+			browser_download_url: z.string(),
+		}),
+	),
+});
+
+// Functions -------------------------------------------------------------------
 
 /**
  * Ensures the HydroChess WASM engine is available and up-to-date.
  * Automatically downloads the pre-built WASM if there is a new release.
  */
-export async function setupEngineWasm() {
+export async function setupEngineWasm(): Promise<void> {
 	const label = '[hydrochess]';
 	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
 	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
@@ -37,16 +55,31 @@ export async function setupEngineWasm() {
 		localVersion = fs.readFileSync(versionFile, 'utf-8').trim();
 	}
 
-	let releaseData = null;
+	let releaseData: z.infer<typeof releaseDataSchema>;
 
 	try {
 		const response = await fetch(LATEST_RELEASE_API_URL, {
 			headers: { 'User-Agent': 'Infinite-Chess-Build-Script' },
 		});
 		if (!response.ok) throw new Error(`GitHub API failed: ${response.statusText}`);
-		releaseData = await response.json();
-	} catch (error) {
-		console.warn(`${label} Could not check for new version:`, error.message);
+
+		const rawReleaseData = await response.json();
+		const parseResult = releaseDataSchema.safeParse(rawReleaseData);
+		if (!parseResult.success) {
+			logZodError(
+				rawReleaseData,
+				parseResult.error,
+				`${label} GitHub API returned invalid data.`,
+			);
+			throw new Error(`GitHub API returned invalid data: ${parseResult.error.message}`);
+		}
+
+		releaseData = parseResult.data;
+	} catch (error: unknown) {
+		console.warn(
+			`${label} Could not check for new version:`,
+			error instanceof Error ? error.message : String(error),
+		);
 		if (fs.existsSync(wasmFile)) {
 			console.log(`${label} Using existing local version.`);
 			return;
@@ -82,7 +115,7 @@ export async function setupEngineWasm() {
 	try {
 		await fs.promises.mkdir(pkgDir, { recursive: true });
 
-		const downloadFile = async (url, dest) => {
+		const downloadFile = async (url: string, dest: string): Promise<void> => {
 			const response = await fetch(url);
 			if (!response.ok) throw new Error(`Failed to download ${url}: ${response.statusText}`);
 			const buffer = Buffer.from(await response.arrayBuffer());
@@ -100,6 +133,9 @@ export async function setupEngineWasm() {
 
 		console.log(`${label} Hydrochess engine is ready (${remoteVersion}).`);
 	} catch (error) {
-		console.error(`${label} Automatic download failed:`, error.message);
+		console.error(
+			`${label} Automatic download failed:`,
+			error instanceof Error ? error.message : String(error),
+		);
 	}
 }

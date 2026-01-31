@@ -1,6 +1,6 @@
-// build/server.js
+// build/server.ts
 
-import esbuild from 'esbuild';
+import esbuild, { BuildOptions } from 'esbuild';
 import { glob } from 'glob';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
@@ -18,7 +18,7 @@ const esbuildServerRebuildPlugin = getESBuildLogStatusLogger(
 	'❌ Server Build failed.',
 );
 
-const esbuildOptions = {
+const esbuildOptions: BuildOptions = {
 	// Transpile all TS files from BOTH directories
 	entryPoints: entryPoints,
 	platform: 'node',
@@ -32,7 +32,7 @@ const esbuildOptions = {
 // ================================= BUILDING ===================================
 
 /** Builds the server's scripts, transpiling them all into javascript (no bundling). */
-export async function buildServer(isDev) {
+export async function buildServer(isDev: boolean): Promise<void> {
 	// console.log(`Building server in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
 
 	const context = await esbuild.context(esbuildOptions);
