@@ -1,5 +1,5 @@
 import path from 'path';
-import { getTranslationForReq } from '../utility/translate.js';
+import { getLanguageToServe, getTranslationForReq } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -11,7 +11,7 @@ function send404(req, res) {
 			path.join(
 				__dirname,
 				'../../../dist/client/views',
-				req.i18n.resolvedLanguage,
+				getLanguageToServe(req),
 				'errors/404.html',
 			),
 			{ t: req.t },

@@ -20,30 +20,23 @@ import ko from 'date-fns/locale/ko/index.js';
 import tr from 'date-fns/locale/tr/index.js';
 import fi from 'date-fns/locale/fi/index.js';
 
-type LocaleEntry = {
-	/** The date-fns locale object */
-	locale: Locale;
-	/** The English name of the language */
-	name: string;
-};
-
-/** Maps i18n language codes to date-fns locales and their english names */
-export const localeMap: Record<string, LocaleEntry> = {
-	'en-US': { locale: enUS, name: 'English' },
-	'es-ES': { locale: es, name: 'Spanish' },
-	'fr-FR': { locale: fr, name: 'French' },
-	'pl-PL': { locale: pl, name: 'Polish' },
-	'pt-BR': { locale: ptBR, name: 'Portuguese' },
-	'zh-CN': { locale: zhCN, name: 'Simplified Chinese' },
-	'zh-TW': { locale: zhTW, name: 'Traditional Chinese' },
-	'de-DE': { locale: de, name: 'German' },
-	'el-GR': { locale: el, name: 'Greek' },
-	'ja-JP': { locale: ja, name: 'Japanese' },
-	'ru-RU': { locale: ru, name: 'Russian' },
-	'it-IT': { locale: it, name: 'Italian' },
-	'ar-SA': { locale: arSA, name: 'Arabic' },
-	'hi-IN': { locale: hi, name: 'Hindi' },
-	'ko-KR': { locale: ko, name: 'Korean' },
-	'tr-TR': { locale: tr, name: 'Turkish' },
-	'fi-FI': { locale: fi, name: 'Finnish' },
+/** Maps i18n language codes to date-fns locales. */
+export const localeMap: Record<string, Locale> = {
+	'en-US': enUS,
+	'es-ES': es,
+	'fr-FR': fr,
+	'pl-PL': pl,
+	'pt-BR': ptBR,
+	'zh-CN': zhCN,
+	'zh-TW': zhTW,
+	'de-DE': de,
+	'el-GR': el,
+	'ru-RU': ru,
+	'it-IT': it,
+	'fi-FI': fi,
+	'ja-JP': ja,
+	'ar-SA': arSA,
+	'hi-IN': hi,
+	'ko-KR': ko,
+	'tr-TR': tr,
 };

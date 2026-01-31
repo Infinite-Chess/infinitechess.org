@@ -1,4 +1,5 @@
 name = "Português" # Nome do idioma
+english_name = "Portuguese"
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "64"
 maintainer = "" # No current maintainer

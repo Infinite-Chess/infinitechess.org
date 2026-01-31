@@ -1,4 +1,5 @@
-name = "繁體中文" # Traditional Chinese - Name of language
+name = "繁體中文" # Name of language
+english_name = "Traditional Chinese"
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "20"
 maintainer = "Heinrich Xiao"
