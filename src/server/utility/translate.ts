@@ -1,18 +1,22 @@
+// src/server/utility/translate.ts
+
 /**
  * This script retrieves the translation for the code and language specified.
  * This has no other dependancies.
  */
 
+import type { Request } from 'express';
+
 import i18next from 'i18next';
 
 const defaultLanguage = 'en-US';
 /** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
-let supportedLanguages = [];
+let supportedLanguages: string[] = [];
 
-function getDefaultLanguage() {
+function getDefaultLanguage(): string {
 	return defaultLanguage;
 }
-function setSupportedLanguages(list) {
+function setSupportedLanguages(list: string[]): void {
 	supportedLanguages = list;
 }
 
@@ -28,13 +32,13 @@ function setSupportedLanguages(list) {
  *
  * The selected language is validated against supported languages,
  * using a default language if none are supported.
- * @param {Object} req - The Express request object.
- * @returns {string} The language to be used.
+ * @param req - The Express request object.
+ * @returns The language to be used.
  */
-function getLanguageToServe(req) {
+function getLanguageToServe(req: Request): string {
 	const cookies = req.cookies;
 
-	let language = req.query.lng || cookies.i18next || req.i18n.resolvedLanguage;
+	let language = req.query['lng'] || cookies.i18next || req.i18n.resolvedLanguage;
 	if (!supportedLanguages.includes(language)) language = cookies.i18next; // Query param language not supported
 	if (!supportedLanguages.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
 	if (!supportedLanguages.includes(language)) language = defaultLanguage; // Resolved language from i18next not supported
@@ -43,29 +47,23 @@ function getLanguageToServe(req) {
 
 /**
  * Retrieves the translation for a given key and language.
- * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {string} language - The language code for the translation. Default: `"en-US"`
- * @param {Object} [options={}] - Additional options for the translation.
- * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
- * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
- * @returns {string} The translated string.
+ * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
+ * @param language - The language code for the translation. Default: `"en-US"`
+ * @returns The translated string.
  */
-function getTranslation(key, language = defaultLanguage, options = {}) {
-	options.lng = language;
+function getTranslation(key: string, language: string = defaultLanguage): string {
+	const options = { lng: language };
 	return i18next.t(key, options);
 }
 
 /**
  * Retrieves the translation for a given key and req. It reads the req's cookies for its preferred language.
- * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {Object} req - The request object
- * @param {Object} [options={}] - Additional options for the translation.
- * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
- * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
- * @returns {string} The translated string.
+ * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
+ * @param req - The request object
+ * @returns The translated string.
  */
-function getTranslationForReq(key, req, options = {}) {
-	return getTranslation(key, req.cookies?.i18next, options);
+function getTranslationForReq(key: string, req: Request): string {
+	return getTranslation(key, req.cookies?.i18next); // SHOULD I REPLACE WITH getLanguageToServe(req)??
 }
 
 export {
