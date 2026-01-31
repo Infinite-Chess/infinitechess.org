@@ -12,7 +12,6 @@ import IndexedDB from '../../../util/IndexedDB';
 import boardeditor from '../boardeditor';
 import eactions from './eactions';
 import egamerules from '../egamerules';
-import editorutil from '../../../../../../shared/editor/editorutil';
 // @ts-ignore
 import statustext from '../../gui/statustext';
 
