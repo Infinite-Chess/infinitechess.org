@@ -1745,10 +1745,12 @@ svg.collapse {
 }
 
 .position-name-row input {
-	flex: 1;
+	flex-grow: 1;
+	min-width: 0;
 }
 
 .position-name-btnsave {
+	flex-shrink: 0;
 	width: 75px;
 	border-radius: 8px;
 	font-size: 15px;
