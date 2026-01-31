@@ -99,8 +99,8 @@
     "generate-dependency-graph": "node src/server/utility/generateDependancyGraph.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier src build --write",
-    "format:check": "prettier src build --check",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "lint": "eslint .",
     "prepare": "husky"
   },
