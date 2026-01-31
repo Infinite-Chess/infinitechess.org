@@ -159,4 +159,6 @@ Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeN
 
 Next, read the [Navigation Guide](./NAVIGATING.md) to get a rundown of the project structure, where the game code is located, etc.!
 
-Or, read the [Pull Request Requirements and Guidelines](./CONTRIBUTING.md) to adopt the coding standards of the project!
+For a list of available tasks, please see the [Issues](https://github.com/Infinite-Chess/infinitechess.org/issues), or inquire in the [discord server](https://discord.gg/NFWFGZeNh5).
+
+Also, read the [Pull Request Requirements and Guidelines](./CONTRIBUTING.md) to adopt the coding standards of the project!
