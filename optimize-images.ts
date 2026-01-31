@@ -14,9 +14,9 @@
  * in `src/client/img/` will be skipped. This is because sometimes we only need one format.
  */
 
-import sharp from "sharp";
+import sharp from 'sharp';
 import { existsSync, readdirSync, statSync, mkdirSync } from 'node:fs';
-import path from "path";
+import path from 'path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -26,15 +26,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Effort values. Higher mean better compression but longer processing time.
 const webp_options = {
 	effort: 6, // 0-6
-	quality: 100 // Controls visual quality (1-100). Default if not specified: 80. USE 100 FOR NOISE TEXTURES!
+	quality: 100, // Controls visual quality (1-100). Default if not specified: 80. USE 100 FOR NOISE TEXTURES!
 };
 const png_options = {
 	effort: 10, // 1-10. LOWER YIELDS BETTER COMPRESSION??? But lower image quality.
-	quality: 100 // Default if not specified: 100.
+	quality: 100, // Default if not specified: 100.
 };
 const avif_options = {
 	effort: 9, // 0-9
-	quality: 100 // Default if not specified: 50.
+	quality: 100, // Default if not specified: 50.
 };
 
 // Source folder for original images
@@ -68,17 +68,17 @@ function getAllImagePaths(dirPath: string): string[] {
 	return files;
 }
 
-console.log("Scanning for images to process...");
+console.log('Scanning for images to process...');
 
 // 1. Find all source images
 const allSourceImages = getAllImagePaths(src_path);
 
 // 2. Filter out images that are already fully optimized
-const imagesToProcess = allSourceImages.filter(sourceImagePath => {
+const imagesToProcess = allSourceImages.filter((sourceImagePath) => {
 	// Get the path relative to the source directory (e.g., 'badges/my-badge.png')
 	const relativePath = path.relative(src_path, sourceImagePath);
 	// Remove the original extension to create a base path for output files
-	const destBasePath = path.join(dest_path, relativePath.replace(/\.[^/.]+$/, ""));
+	const destBasePath = path.join(dest_path, relativePath.replace(/\.[^/.]+$/, ''));
 
 	// Check if all three target formats already exist
 	const webpExists = existsSync(`${destBasePath}.webp`);
@@ -90,7 +90,7 @@ const imagesToProcess = allSourceImages.filter(sourceImagePath => {
 });
 
 if (imagesToProcess.length === 0) {
-	console.log("All images are already up-to-date. Nothing to do.");
+	console.log('All images are already up-to-date. Nothing to do.');
 	process.exit(0);
 }
 
@@ -102,19 +102,21 @@ const total_images = imagesToProcess.length * 3;
 
 function logProgress(imageName: string, format: string): void {
 	finished_images += 1;
-	const percentage = Math.round(finished_images / total_images * 100);
-	console.log(`[${percentage}%] Optimized ${path.basename(imageName)} to ${format.toUpperCase()}`);
+	const percentage = Math.round((finished_images / total_images) * 100);
+	console.log(
+		`[${percentage}%] Optimized ${path.basename(imageName)} to ${format.toUpperCase()}`,
+	);
 
 	if (finished_images === total_images) {
-		console.log("\nDone. All images have been processed.");
+		console.log('\nDone. All images have been processed.');
 	}
 }
 
-console.log("Converting images...");
+console.log('Converting images...');
 
 for (const sourceImagePath of imagesToProcess) {
 	const relativePath = path.relative(src_path, sourceImagePath);
-	const destBasePath = path.join(dest_path, relativePath.replace(/\.[^/.]+$/, ""));
+	const destBasePath = path.join(dest_path, relativePath.replace(/\.[^/.]+$/, ''));
 
 	// Ensure the output directory exists before writing files
 	const outputDir = path.dirname(destBasePath);
@@ -125,26 +127,20 @@ for (const sourceImagePath of imagesToProcess) {
 	const imageProcessor = sharp(sourceImagePath);
 
 	// Generate .webp
-	imageProcessor
-		.webp(webp_options)
-		.toFile(`${destBasePath}.webp`, (err) => {
-			if (err) console.error(`Error converting ${relativePath} to WEBP:`, err);
-			logProgress(relativePath, 'webp');
-		});
+	imageProcessor.webp(webp_options).toFile(`${destBasePath}.webp`, (err) => {
+		if (err) console.error(`Error converting ${relativePath} to WEBP:`, err);
+		logProgress(relativePath, 'webp');
+	});
 
 	// Generate .png (re-optimizing the original)
-	imageProcessor
-		.png(png_options)
-		.toFile(`${destBasePath}.png`, (err) => {
-			if (err) console.error(`Error converting ${relativePath} to PNG:`, err);
-			logProgress(relativePath, 'png');
-		});
+	imageProcessor.png(png_options).toFile(`${destBasePath}.png`, (err) => {
+		if (err) console.error(`Error converting ${relativePath} to PNG:`, err);
+		logProgress(relativePath, 'png');
+	});
 
 	// Generate .avif
-	imageProcessor
-		.avif(avif_options)
-		.toFile(`${destBasePath}.avif`, (err) => {
-			if (err) console.error(`Error converting ${relativePath} to AVIF:`, err);
-			logProgress(relativePath, 'avif');
-		});
+	imageProcessor.avif(avif_options).toFile(`${destBasePath}.avif`, (err) => {
+		if (err) console.error(`Error converting ${relativePath} to AVIF:`, err);
+		logProgress(relativePath, 'avif');
+	});
 }
