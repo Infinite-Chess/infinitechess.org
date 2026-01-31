@@ -12,6 +12,7 @@ import IndexedDB from '../../../util/IndexedDB';
 import boardeditor from '../boardeditor';
 import eactions from './eactions';
 import egamerules from '../egamerules';
+import editorutil from '../../../../../../shared/editor/editorutil';
 // @ts-ignore
 import statustext from '../../gui/statustext';
 
@@ -43,25 +44,15 @@ const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-' as const;
 
 /** Schema for validating an EditorAbridgedSaveState */
 const EditorAbridgedSaveStateSchema = z.strictObject({
-	positionname: z
-		.string()
-		.min(1, 'Position name is required')
-		.max(
-			POSITION_NAME_MAX_LENGTH,
-			`Name must be ${POSITION_NAME_MAX_LENGTH} characters or less`,
-		)
-		.optional(),
+	positionname: z.string().min(1, 'Position name is required').optional(),
 	timestamp: z.number(),
-	pieceCount: z
-		.number()
-		.int('Piece count must be an integer')
-		.min(0, 'Position must have nonnegative amount of pieces'),
+	pieceCount: z.number().int('Piece count must be an integer'),
 });
 
 /** Schema for validating an EditorSaveState */
 const EditorSaveStateSchema = EditorAbridgedSaveStateSchema.extend({
 	variantOptions: z
-		.object({})
+		.object()
 		.loose()
 		.transform((v) => v as unknown as VariantOptions), // Workaround, for lack of VariantOptions schema
 	pawnDoublePush: z.boolean().optional(),
