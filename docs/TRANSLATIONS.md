@@ -1,6 +1,10 @@
 # Translation guide
 
-This guide will walk you through the process of creating translations for [InfiniteChess.org](https://www.infinitechess.org). It is assumed you have already gone through the [Setup](./SETUP.md) process.
+This guide will walk you through the process of translating [InfiniteChess.org](https://www.infinitechess.org) into another language.
+
+[← Back to README](../README.md) | [Setup Guide](./SETUP.md) | [Contributing Guide](./CONTRIBUTING.md) | [Translation Directory](../translation/) | [English TOML](../translation/en-US.toml)| [Changelog](../translation/changes.json) | [English News Posts](../translation/news/en-US/)
+
+It is assumed you have already gone through the Setup Guide.
 
 ## Navigation
 
