@@ -12,6 +12,7 @@ import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
 import boardeditor from '../../boardeditor/boardeditor';
+import editorutil from '../../../../../../shared/editor/editorutil';
 // @ts-ignore
 import statustext from '../statustext';
 
@@ -249,9 +250,9 @@ async function onModalYesButtonPress(): Promise<void> {
 async function onSaveButtonPress(): Promise<void> {
 	const positionname = element_saveAsPositionName.value;
 	if (positionname === '') return;
-	if (positionname.length > esave.POSITION_NAME_MAX_LENGTH) {
+	if (positionname.length > editorutil.POSITION_NAME_MAX_LENGTH) {
 		console.error(
-			`This should not happen, position name input box is restricted to ${esave.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
+			`This should not happen, position name input box is restricted to ${editorutil.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
 		);
 		return;
 	}
@@ -371,7 +372,7 @@ async function loadSinglePositionInfo(saveinfo_key: string): Promise<
 	);
 	if (!editorAbridgedSaveStateParsed.success) {
 		console.error(
-			`Invalid EditorAbridgedSaveState ${saveinfo_key} in IndexedDB ${editorAbridgedSaveStateParsed.error}`,
+			`Invalid EditorAbridgedSaveState "${saveinfo_key}" in IndexedDB ${editorAbridgedSaveStateParsed.error}`,
 		);
 		return;
 	}

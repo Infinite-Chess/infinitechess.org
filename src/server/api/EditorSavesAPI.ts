@@ -8,14 +8,12 @@ import * as z from 'zod';
 
 import type { Request, Response } from 'express';
 
+import editorutil from '../../shared/editor/editorutil.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { logZodError } from '../utility/zodlogger.js';
 
 // Constants ---------------------------------------------------------------------------------
-
-/** Maximum length for a position name */
-export const MAX_NAME_LENGTH = 70;
 
 /** Maximum length for ICN notation (also determines max size) */
 export const MAX_ICN_LENGTH = 1_000_000;
@@ -27,7 +25,10 @@ const SavePositionBodySchema = z.strictObject({
 	name: z
 		.string()
 		.min(1, 'Name is required')
-		.max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
+		.max(
+			editorutil.POSITION_NAME_MAX_LENGTH,
+			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+		),
 	icn: z
 		.string()
 		.min(1, 'ICN is required')
@@ -39,7 +40,10 @@ const RenamePositionBodySchema = z.strictObject({
 	name: z
 		.string()
 		.min(1, 'Name is required')
-		.max(MAX_NAME_LENGTH, `Name must be ${MAX_NAME_LENGTH} characters or less`),
+		.max(
+			editorutil.POSITION_NAME_MAX_LENGTH,
+			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+		),
 });
 
 /** Schema for validating position_id in URL params */
@@ -307,7 +311,6 @@ function renamePosition(req: Request, res: Response): void {
 
 export default {
 	// Constants
-	MAX_NAME_LENGTH,
 	MAX_ICN_LENGTH,
 	// Endpoints
 	getSavedPositions,

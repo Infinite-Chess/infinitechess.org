@@ -7,10 +7,13 @@
  * including authentication, validation, quota limits, and ownership verification.
  */
 
+import type { Express, Request, Response, NextFunction } from 'express';
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import type { Express, Request, Response, NextFunction } from 'express';
+
+import editorutil from '../../shared/editor/editorutil.js';
 import EditorSavesAPI from './EditorSavesAPI.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 
@@ -148,7 +151,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name exceeds max length', async () => {
-			const longName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH + 1);
+			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
 
 			const response = await request(app)
 				.post('/api/editor-saves')
@@ -156,7 +159,7 @@ describe('EditorSavesAPI', () => {
 
 			expect(response.status).toBe(400);
 			expect(response.body.error).toContain(
-				`${EditorSavesAPI.MAX_NAME_LENGTH} characters or less`,
+				`${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
 			);
 		});
 
@@ -376,7 +379,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name exceeds max length', async () => {
-			const longName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH + 1);
+			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
 
 			const response = await request(app)
 				.patch('/api/editor-saves/123')
@@ -384,7 +387,7 @@ describe('EditorSavesAPI', () => {
 
 			expect(response.status).toBe(400);
 			expect(response.body.error).toContain(
-				`${EditorSavesAPI.MAX_NAME_LENGTH} characters or less`,
+				`${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
 			);
 		});
 
@@ -443,7 +446,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123,
 			});
 
-			const maxLengthName = 'a'.repeat(EditorSavesAPI.MAX_NAME_LENGTH);
+			const maxLengthName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH);
 
 			const response = await request(app)
 				.post('/api/editor-saves')

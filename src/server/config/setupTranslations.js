@@ -1,20 +1,21 @@
 // src/server/config/setupTranslations.js
 
 import i18next from 'i18next';
-import { parse } from 'smol-toml';
 import fs from 'fs';
 import path from 'path';
 import ejs from 'ejs';
 import middleware from 'i18next-http-middleware';
+import { parse } from 'smol-toml';
 import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
-
 import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import editorutil from '../../shared/editor/editorutil.js';
 import { UNCERTAIN_LEADERBOARD_RD } from '../game/gamemanager/ratingcalculation.js';
 import { localeMap } from './dateLocales.js';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = './translation';
 
@@ -308,6 +309,7 @@ function translateStaticTemplates() {
 
 						// Custom included variables
 						ratingDeviationUncertaintyThreshold: UNCERTAIN_LEADERBOARD_RD,
+						editorPositionNameMaxLength: editorutil.POSITION_NAME_MAX_LENGTH,
 					},
 				),
 			);

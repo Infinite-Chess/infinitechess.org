@@ -33,9 +33,6 @@ interface EditorSaveState extends EditorAbridgedSaveState {
 
 // Constants ----------------------------------------------------------------------
 
-/** Max allowed length of the name of a position */
-const POSITION_NAME_MAX_LENGTH = 70;
-
 /** Prefix for editor saves in local storage */
 const EDITOR_SAVE_PREFIX = 'editor-save-' as const;
 
@@ -136,7 +133,6 @@ async function save(positionname: string): Promise<void> {
 // Exports --------------------------------------------------------------------
 
 export default {
-	POSITION_NAME_MAX_LENGTH,
 	EDITOR_SAVE_PREFIX,
 	EDITOR_SAVEINFO_PREFIX,
 
