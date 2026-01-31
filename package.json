@@ -87,7 +87,7 @@
     "build": "npm run clean && npm run prod:assets && npm run prod:assets-cjs && tsx build/index.ts",
     "start": "node dist/server/server.js",
     "prod:assets": "cpx \"src/**/*.{html,ejs,css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,toml,md}\" dist",
-    "prod:assets-cjs": "cpx \"src/client/scripts/cjs/**/*.js\" dist/client/scripts/cjs",
+    "prod:assets-cjs": "cpx \"src/client/scripts/cjs/**/*\" dist/client/scripts/cjs",
     "copy:views": "cpx \"src/client/views/**/*\" dist/client/views",
     "dev": "npm run clean && concurrently -k \"npm:dev:*\" --prefix-colors \"green,blue,grey,white\"",
     "dev:build": "tsx build/index.ts --dev",
