@@ -7,10 +7,9 @@
 import express from 'express';
 import ejs from 'ejs';
 
+import { initTranslations } from './config/i18n.js';
 // @ts-ignore
 import configureMiddleware from './middleware/middleware.js';
-// @ts-ignore
-import { initTranslations } from './config/setupTranslations.js';
 
 const app = express();
 

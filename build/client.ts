@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { glob } from 'glob';
 import path from 'node:path';
 import fs from 'fs';
-import esbuild, { BuildOptions, PluginBuild } from 'esbuild';
+import esbuild, { BuildOptions, Plugin, PluginBuild } from 'esbuild';
 import swc from '@swc/core';
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
@@ -60,6 +60,37 @@ const CJSBuildPlugin = getESBuildLogStatusLogger(
 	'❌ Client CJS Build failed.',
 );
 
+/**
+ * Returns an esbuild plugin that resolves a promise once the initial esbuild build is complete.
+ * BuildContext.watch() resolves only once the watch mode is SET UP, not when the first build is DONE,
+ * so this provides a promise that ONLY resolves once the first build is done.
+ * @returns An object containing the esbuild plugin and the promise to await.
+ */
+function getInitialBuildPlugin(): { plugin: Plugin; initialBuild: Promise<void> } {
+	let isFirstBuild = true;
+
+	let resolve: () => void;
+	const promise = new Promise<void>((r) => {
+		resolve = r;
+	});
+
+	const plugin: Plugin = {
+		name: 'initial-build-waiter',
+		setup(build: PluginBuild) {
+			// This hook runs when a build has finished
+			build.onEnd(() => {
+				if (!isFirstBuild) return;
+				isFirstBuild = false;
+				// Signal that the first build is done, even if
+				// there was an error, so that watch mode can continue.
+				resolve();
+			});
+		},
+	};
+
+	return { plugin, initialBuild: promise };
+}
+
 /** An esbuild plugin object that minifies GLSL shader files by stripping comments. */
 const GLSLMinifyPlugin = {
 	name: 'glsl-minify',
@@ -106,7 +137,6 @@ const ESMBuildOptions: BuildOptions = {
 	format: 'esm',
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
-	plugins: [ESMBuildPlugin, GLSLMinifyPlugin],
 	loader: { '.wasm': 'file' },
 };
 
@@ -117,7 +147,6 @@ const CJSBuildOptions: BuildOptions = {
 	outbase: 'src/client/scripts/cjs', // Without this, htmlscript.js gets put in cjs/ instead of cjs/game/
 	format: 'cjs',
 	sourcemap: true,
-	plugins: [CJSBuildPlugin, GLSLMinifyPlugin],
 };
 
 // ================================= BUILDING ===================================
@@ -126,18 +155,30 @@ const CJSBuildOptions: BuildOptions = {
 export async function buildClient(isDev: boolean): Promise<void> {
 	// console.log(`Building client in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
 
+	// Create signaling plugins to wait for the initial build in watch mode
+	const { plugin: esmInitialBuildPlugin, initialBuild: esmInitialBuild } =
+		getInitialBuildPlugin();
+	const { plugin: cjsInitialBuildPlugin, initialBuild: cjsInitialBuild } =
+		getInitialBuildPlugin();
+
 	const ESMContext = await esbuild.context({
 		...ESMBuildOptions,
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
+		plugins: [ESMBuildPlugin, GLSLMinifyPlugin, esmInitialBuildPlugin],
 	});
 	const CJSContext = await esbuild.context({
 		...CJSBuildOptions,
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
+		plugins: [CJSBuildPlugin, GLSLMinifyPlugin, cjsInitialBuildPlugin],
 	});
 
 	if (isDev) {
-		await ESMContext.watch();
-		await CJSContext.watch();
+		// Start watch mode. This kicks off the initial builds
+		ESMContext.watch();
+		CJSContext.watch();
+
+		// Wait for both of the initial builds to complete
+		await Promise.all([esmInitialBuild, cjsInitialBuild]);
 	} else {
 		/**
 		 * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
@@ -146,7 +187,7 @@ export async function buildClient(isDev: boolean): Promise<void> {
 		 * This also means more requests to the server, but not many.
 		 */
 		// Production
-		// Build once and exit if not in watch mode
+		// Build once and exit since not in watch mode
 		await ESMContext.rebuild();
 		ESMContext.dispose();
 
