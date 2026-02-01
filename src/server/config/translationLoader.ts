@@ -12,7 +12,6 @@ import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.
 
 const xss_options: IFilterXSSOptions = {
 	whiteList: {
-		// a: ["href", "target"],
 		b: [],
 		strong: [],
 		i: [],
@@ -24,27 +23,6 @@ const xss_options: IFilterXSSOptions = {
 		sub: [],
 		sup: [],
 	},
-	onTagAttr: function (_tag: string, _name: string, _value: string, _isWhiteAttr: boolean): void {
-		/*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
-	  console.warn(
-		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
-	  );
-	}*/
-	},
-	// IT OKAY THIS IS COMMENTED OUT??
-	// safeAttrValue: function (_tag: string, _name: string, _value: string): string {
-	/*if (
-	  tag === "a" &&
-		name === "href" &&
-		link_white_list.includes(value.trim())
-	) {
-	  return value;
-	} else if (name === "href") {
-	  console.warn(
-		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
-	  );
-	}*/
-	// },
 };
 const custom_xss = new FilterXSS(xss_options);
 
