@@ -86,7 +86,7 @@ function getInitialBuildPlugin(): { plugin: Plugin; initialBuild: Promise<void> 
 				// Signal that the first build is done
 				if (result.errors.length === 0)
 					resolve(); // Succeeded
-				else reject(new Error(`Initial build failed: ${result.errors[0]!.text}`)); // Failed
+				else reject(new Error(`Initial build failed. See error(s) above.`)); // Failed
 			});
 		},
 	};
