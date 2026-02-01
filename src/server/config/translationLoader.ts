@@ -17,7 +17,6 @@ const custom_xss = new FilterXSS(xss_options);
  * Recursively traverses a data structure (array or object) and sanitizes all contained
  * strings using an XSS filter. This prevents malicious content from translation files
  * from being rendered in a user's browser.
- *
  * @param value - The input value (e.g., the parsed content of a TOML file).
  * @returns A deep copy of the input with all string values sanitized.
  */
