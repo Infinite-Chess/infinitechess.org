@@ -51,7 +51,7 @@ export async function buildViews(): Promise<void> {
 	const supportedLanguages = Object.keys(translations);
 	const news = translationLoader.loadNews(supportedLanguages);
 
-	// Initialize i18next so the 't' function works during render
+	// Initialize i18next for the build process so the 't' function works during render
 	await i18next.init({
 		resources: translations,
 		defaultNS: 'default',
