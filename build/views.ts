@@ -1,5 +1,9 @@
 // build/views.ts
 
+/**
+ * Generates static HTML views from EJS templates and translation files.
+ */
+
 import i18next from 'i18next';
 import fs from 'fs';
 import path from 'path';
@@ -7,13 +11,11 @@ import ejs from 'ejs';
 import { fileURLToPath } from 'node:url';
 
 import editorutil from '../src/shared/editor/editorutil.js';
+import translationLoader from '../src/server/config/translationLoader.js';
 import { UNCERTAIN_LEADERBOARD_RD } from '../src/server/game/gamemanager/ratingcalculation.js';
-import { loadNews, loadTranslations } from '../src/server/config/translationLoader.js';
 import { getDefaultLanguage } from '../src/server/utility/translate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const translationsFolder = path.join(__dirname, '../translation');
 
 /**
  * Templates without any external data other than translations.
@@ -44,8 +46,8 @@ const staticTranslatedTemplates = [
  */
 export async function buildViews(): Promise<void> {
 	// 1. Load Data using the shared service
-	const translations = loadTranslations(translationsFolder);
-	const news = loadNews(translationsFolder);
+	const translations = translationLoader.loadTranslations();
+	const news = translationLoader.loadNews();
 
 	// 2. Initialize i18next locally so the 't' function works during render
 	await i18next.init({
@@ -57,8 +59,8 @@ export async function buildViews(): Promise<void> {
 	const language_codes = Object.keys(translations);
 
 	const languages_list = language_codes.map((language_code) => {
-		const name = translations[language_code].default.name;
-		const englishName = translations[language_code].default.english_name;
+		const name = translations[language_code].name;
+		const englishName = translations[language_code].english_name;
 		return { code: language_code, name, englishName };
 	});
 
