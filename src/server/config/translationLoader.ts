@@ -48,42 +48,34 @@ const xss_options: IFilterXSSOptions = {
 };
 const custom_xss = new FilterXSS(xss_options);
 
-function html_escape_array(array: any[]): any[] {
-	const escaped = [];
-	for (const member of array) {
-		escaped.push(html_escape(member));
-	}
-	return escaped;
-}
-
-function html_escape_object(object: Record<string, any>): Record<string, any> {
-	const escaped: Record<string, any> = {};
-	for (const key of Object.keys(object)) {
-		escaped[key] = html_escape(object[key]);
-	}
-	return escaped;
-}
-
 /**
- Function to iterate over arrays and objects and html escape strings
+ * Recursively traverses a data structure (array or object) and sanitizes all contained
+ * strings using an XSS filter. This prevents malicious content from translation files
+ * from being rendered in a user's browser.
+ *
+ * @param value - The input value (e.g., the parsed content of a TOML file).
+ * @returns A deep copy of the input with all string values sanitized.
  */
-function html_escape(value: any): any {
-	switch (typeof value) {
-		case 'object':
-			if (value.constructor.name === 'Object') {
-				return html_escape_object(value);
-			} else if (value.constructor.name === 'Array') {
-				return html_escape_array(value);
-			} else {
-				throw 'Unhandled object type while escaping';
-			}
-		case 'string':
-			return custom_xss.process(value); // Html escape strings
-		case 'number':
-			return value;
-		default:
-			throw 'Unhandled type while escaping';
+
+function html_escape(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		const escaped = [];
+		for (const member of value) {
+			escaped.push(html_escape(member));
+		}
+		return escaped;
 	}
+	if (value !== null && typeof value === 'object') {
+		const escaped: Record<any, any> = {};
+		for (const [valueKey, valueValue] of Object.entries(value)) {
+			escaped[valueKey] = html_escape(valueValue);
+		}
+		return escaped;
+	}
+	if (typeof value === 'string') {
+		return custom_xss.process(value);
+	}
+	return value; // numbers, booleans, etc.
 }
 
 /**
