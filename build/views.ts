@@ -69,36 +69,40 @@ export async function buildViews(): Promise<void> {
 	const templatesPath = path.join(__dirname, '../dist/client/views');
 
 	for (const languageCode of Object.keys(translations)) {
+		// Specific ejsOptions for rendering this language
+		const ejsOptions = {
+			// Function for translations
+			t: function (key: string, options: any = {}) {
+				options.lng = languageCode; // Make sure language is correct
+				return i18next.t(key, options);
+			},
+			languages: languages_list,
+			language: languageCode,
+
+			distfolder: path.join(__dirname, '../dist'),
+			viewsfolder: templatesPath,
+
+			// Inject the news HTML
+			newsHTML: news[languageCode],
+
+			// Custom included variables
+			ratingDeviationUncertaintyThreshold: UNCERTAIN_LEADERBOARD_RD,
+			editorPositionNameMaxLength: editorutil.POSITION_NAME_MAX_LENGTH,
+		};
+
+		// The output directory for this language's rendered templates
+		const renderDirectory = path.join(templatesPath, languageCode);
+
+		// Render each of this language's static translated templates
 		for (const template of staticTranslatedTemplates) {
-			const filePath = path.join(templatesPath, languageCode, template + '.html');
-			fs.mkdirSync(path.dirname(filePath), { recursive: true }); // Ensure directory exists
+			const templatePath = path.join(templatesPath, template + '.ejs');
+			const templateFile = fs.readFileSync(templatePath).toString();
 
-			fs.writeFileSync(
-				filePath,
-				ejs.render(
-					// Read EJS template
-					fs.readFileSync(path.join(templatesPath, template + '.ejs')).toString(),
-					{
-						// Function for translations
-						t: function (key: string, options: any = {}) {
-							options.lng = languageCode; // Make sure language is correct
-							return i18next.t(key, options);
-						},
-						languages: languages_list,
-						language: languageCode,
+			const renderedPath = path.join(renderDirectory, template + '.html');
+			const renderedFile = ejs.render(templateFile, ejsOptions);
 
-						// Inject the news HTML from the separate loader
-						newsHTML: news[languageCode],
-
-						distfolder: path.join(__dirname, '../dist'),
-						viewsfolder: templatesPath,
-
-						// Custom included variables
-						ratingDeviationUncertaintyThreshold: UNCERTAIN_LEADERBOARD_RD,
-						editorPositionNameMaxLength: editorutil.POSITION_NAME_MAX_LENGTH,
-					},
-				),
-			);
+			fs.mkdirSync(path.dirname(renderedPath), { recursive: true }); // Ensure directory exists
+			fs.writeFileSync(renderedPath, renderedFile); // Write the rendered file
 		}
 	}
 }
