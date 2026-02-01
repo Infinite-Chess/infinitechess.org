@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as z from 'zod';
-import { parse } from 'smol-toml';
+import { parse, TomlTable } from 'smol-toml';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 import { marked } from 'marked';
 import { fileURLToPath } from 'node:url';
@@ -59,7 +59,7 @@ const custom_xss = new FilterXSS(xss_options);
  * @param value - The input value (e.g., the parsed content of a TOML file).
  * @returns A deep copy of the input with all string values sanitized.
  */
-function html_escape(value: unknown): unknown {
+function html_escape(value: any): any {
 	if (Array.isArray(value)) {
 		const escaped = [];
 		for (const member of value) {
@@ -107,20 +107,20 @@ function remove_key(key_string: string, object: Record<string, any>): Record<str
  * @param changelog - `changes.json` file.
  * @returns Object with outdated translations removed.
  */
-function removeOutdated(
-	object: Record<string, any>,
-	changelog: Record<string, any>,
-): Record<string, any> {
-	const version = object['version'];
+function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
+	const version = object['version'] as string;
 	// Filter out versions that are older than version of current language
-	const filtered_keys = Object.keys(changelog).filter((c) => version < Number(c));
+	const filtered_entries = Object.entries(changelog).filter(
+		([change]) => Number(version) < Number(change),
+	);
 
+	// Collect all keys to be removed
 	let key_strings: string[] = [];
-	for (const key of filtered_keys) {
-		key_strings = key_strings.concat(changelog[key].changes);
+	for (const [, value] of filtered_entries) {
+		if (value.changes === undefined) continue;
+		key_strings = key_strings.concat(value.changes);
 	}
-	// Remove duplicate
-	key_strings = Array.from(new Set(key_strings));
+	key_strings = [...new Set(key_strings)]; // Remove duplicates
 
 	let object_copy = object;
 	for (const key_string of key_strings) {
