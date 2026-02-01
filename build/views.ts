@@ -7,7 +7,7 @@
 import i18next from 'i18next';
 import fs from 'fs';
 import path from 'path';
-import ejs from 'ejs';
+import ejs, { Data } from 'ejs';
 import { fileURLToPath } from 'node:url';
 
 import editorutil from '../src/shared/editor/editorutil.js';
@@ -70,10 +70,10 @@ export async function buildViews(): Promise<void> {
 
 	for (const languageCode of Object.keys(translations)) {
 		// Specific ejsOptions for rendering this language
-		const ejsOptions = {
+		const ejsData: Data = {
 			// Function for translations
-			t: function (key: string, options: any = {}) {
-				options.lng = languageCode; // Make sure language is correct
+			t: function (key: string, options: Record<string, any> = {}) {
+				options['lng'] = languageCode; // Make sure language is correct
 				return i18next.t(key, options);
 			},
 			languages: languages_list,
@@ -99,7 +99,7 @@ export async function buildViews(): Promise<void> {
 			const templateFile = fs.readFileSync(templatePath).toString();
 
 			const renderedPath = path.join(renderDirectory, template + '.html');
-			const renderedFile = ejs.render(templateFile, ejsOptions);
+			const renderedFile = ejs.render(templateFile, ejsData);
 
 			fs.mkdirSync(path.dirname(renderedPath), { recursive: true }); // Ensure directory exists
 			fs.writeFileSync(renderedPath, renderedFile); // Write the rendered file
