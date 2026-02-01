@@ -45,11 +45,13 @@ const staticTranslatedTemplates = [
  * Generates translated versions of templates in staticTranslatedTemplates
  */
 export async function buildViews(): Promise<void> {
-	// 1. Load Data using the shared service
+	// Load data
 	const translations = translationLoader.loadTranslations();
-	const news = translationLoader.loadNews();
+	// Grab supported languages from the loaded translations
+	const supportedLanguages = Object.keys(translations);
+	const news = translationLoader.loadNews(supportedLanguages);
 
-	// 2. Initialize i18next locally so the 't' function works during render
+	// Initialize i18next so the 't' function works during render
 	await i18next.init({
 		resources: translations,
 		defaultNS: 'default',
@@ -64,7 +66,6 @@ export async function buildViews(): Promise<void> {
 		}),
 	);
 
-	// Adjusted path: relative to build/ folder
 	const templatesPath = path.join(__dirname, '../dist/client/views');
 
 	for (const languageCode of Object.keys(translations)) {

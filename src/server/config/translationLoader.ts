@@ -167,12 +167,13 @@ function loadChangelog(): Changelog {
 	return changelogSchema.parse(changelogParsed);
 }
 
-/** Loads news posts from markdown files into an object. */
-function loadNews(): Record<string, string> {
+/**
+ * Loads news posts from markdown files into an object.
+ * @param supportedLanguages - A list of all languages with a TOML file.
+ * @returns An object mapping language codes to their compiled news HTML.
+ */
+function loadNews(supportedLanguages: string[]): Record<string, string> {
 	const newsPosts: Record<string, string> = {};
-
-	/** All language codes with translated news posts */
-	const newsFolders = fs.readdirSync(newsFolder);
 
 	/** Sorted English news posts filenames */
 	const englishNewsPosts = fs
@@ -184,7 +185,7 @@ function loadNews(): Record<string, string> {
 			return dateB.getTime() - dateA.getTime();
 		});
 
-	newsFolders.forEach((languageCode) => {
+	supportedLanguages.forEach((languageCode) => {
 		// Generate News posts HTML for this language
 		newsPosts[languageCode] = englishNewsPosts
 			.map((fileName) => {
