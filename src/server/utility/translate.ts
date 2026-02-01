@@ -9,13 +9,10 @@ import type { Request } from 'express';
 
 import i18next from 'i18next';
 
-const defaultLanguage = 'en-US';
+const DEFAULT_LANGUAGE = 'en-US';
 /** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
 let supportedLanguages: string[] = [];
 
-function getDefaultLanguage(): string {
-	return defaultLanguage;
-}
 function setSupportedLanguages(list: string[]): void {
 	supportedLanguages = list;
 }
@@ -41,7 +38,7 @@ function getLanguageToServe(req: Request): string {
 	let language = req.query['lng'] || cookies.i18next || req.i18n.resolvedLanguage;
 	if (!supportedLanguages.includes(language)) language = cookies.i18next; // Query param language not supported
 	if (!supportedLanguages.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
-	if (!supportedLanguages.includes(language)) language = defaultLanguage; // Resolved language from i18next not supported
+	if (!supportedLanguages.includes(language)) language = DEFAULT_LANGUAGE; // Resolved language from i18next not supported
 	return language;
 }
 
@@ -51,7 +48,7 @@ function getLanguageToServe(req: Request): string {
  * @param language - The language code for the translation. Default: `"en-US"`
  * @returns The translated string.
  */
-function getTranslation(key: string, language: string = defaultLanguage): string {
+function getTranslation(key: string, language: string = DEFAULT_LANGUAGE): string {
 	const options = { lng: language };
 	return i18next.t(key, options);
 }
@@ -68,9 +65,9 @@ function getTranslationForReq(key: string, req: Request): string {
 }
 
 export {
+	DEFAULT_LANGUAGE,
 	setSupportedLanguages,
 	getLanguageToServe,
-	getDefaultLanguage,
 	getTranslation,
 	getTranslationForReq,
 };

@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import editorutil from '../src/shared/editor/editorutil.js';
 import translationLoader from '../src/server/config/translationLoader.js';
 import { UNCERTAIN_LEADERBOARD_RD } from '../src/server/game/gamemanager/ratingcalculation.js';
-import { getDefaultLanguage } from '../src/server/utility/translate.js';
+import { DEFAULT_LANGUAGE } from '../src/server/utility/translate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -53,7 +53,7 @@ export async function buildViews(): Promise<void> {
 	await i18next.init({
 		resources: translations,
 		defaultNS: 'default',
-		fallbackLng: getDefaultLanguage(),
+		fallbackLng: DEFAULT_LANGUAGE,
 	});
 
 	const language_codes = Object.keys(translations);

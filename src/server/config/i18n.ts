@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { LanguageDetector } from 'i18next-http-middleware';
 
 import translationLoader from './translationLoader.js';
-import { getDefaultLanguage } from '../utility/translate.js';
+import { DEFAULT_LANGUAGE } from '../utility/translate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,7 +23,7 @@ function initTranslations(): void {
 		preload: Object.keys(translations), // List of languages to preload
 		resources: translations,
 		defaultNS: 'default',
-		fallbackLng: getDefaultLanguage(),
+		fallbackLng: DEFAULT_LANGUAGE,
 	});
 }
 

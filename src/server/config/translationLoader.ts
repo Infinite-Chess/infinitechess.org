@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { format, parseISO } from 'date-fns';
 
 import { localeMap } from './dateLocales.js';
-import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
+import { DEFAULT_LANGUAGE, setSupportedLanguages } from '../utility/translate.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -41,6 +41,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const translationsFolder = path.join(__dirname, '../../../translation');
 /** The changelog file path for tracking the English TOML version changes. */
 const changesFile = path.join(translationsFolder, 'changes.json');
+
+/** The folder path containing news markdown files for various languages. */
+const newsFolder = path.join(translationsFolder, 'news');
+/** The folder path containing English markdown news posts. */
+const englishNewsFolder = path.join(newsFolder, DEFAULT_LANGUAGE);
 
 const xss_options: IFilterXSSOptions = { whiteList: {} };
 const custom_xss = new FilterXSS(xss_options);
@@ -128,6 +133,7 @@ function removeOutdated(
 /** Loads and processes all translation TOML files into one object. */
 function loadTranslations(): Record<string, any> {
 	const translations: Record<string, any> = {};
+
 	const tomlFiles = fs.readdirSync(translationsFolder).filter((f) => f.endsWith('.toml'));
 	const changelog = loadChangelog();
 	const supportedLanguages: string[] = [];
@@ -158,62 +164,47 @@ function loadChangelog(): Changelog {
 
 /** Loads news posts from markdown files into an object. */
 function loadNews(): Record<string, string> {
-	const newsResources: Record<string, string> = {};
-	const files = fs.readdirSync(translationsFolder); // We use the file list to determine valid language codes
+	const newsPosts: Record<string, string> = {};
 
-	// Get the sorted list of news posts (using default language as source of truth)
-	const newsFiles = fs
-		.readdirSync(path.join(translationsFolder, 'news', getDefaultLanguage()))
-		.filter((n) => n !== '.DS_Store')
+	/** All language codes with translated news posts */
+	const newsFolders = fs.readdirSync(newsFolder);
+
+	/** Sorted English news posts filenames */
+	const englishNewsPosts = fs
+		.readdirSync(englishNewsFolder)
+		.filter((n) => n !== '.DS_Store') // Hidden macOS file
 		.sort((a, b) => {
 			const dateA = new Date(a.replace('.md', ''));
 			const dateB = new Date(b.replace('.md', ''));
-			// @ts-ignore - Date arithmetic works in JS/TS
-			return dateB - dateA;
+			return dateB.getTime() - dateA.getTime();
 		});
 
-	files
-		.filter((x) => x.endsWith('.toml'))
-		.forEach((file) => {
-			const languageCode = file.replace('.toml', '');
+	newsFolders.forEach((languageCode) => {
+		// Generate News posts HTML for this language
+		newsPosts[languageCode] = englishNewsPosts
+			.map((fileName) => {
+				const fullPath = path.join(newsFolder, languageCode, fileName);
 
-			// Generate HTML for this language
-			const newsHTML = newsFiles
-				.map((filePath) => {
-					const fullPath = path.join(translationsFolder, 'news', languageCode, filePath);
+				// Read news post (fallback to default language)
+				const content = fs.existsSync(fullPath)
+					? fs.readFileSync(fullPath)
+					: fs.readFileSync(path.join(englishNewsFolder, fileName));
+				// Compile markdown to HTML
+				const parsedHTML = marked.parse(content.toString());
 
-					// Read file (with fallback to default language)
-					const content = fs.existsSync(fullPath)
-						? fs.readFileSync(fullPath)
-						: fs.readFileSync(
-								path.join(
-									translationsFolder,
-									'news',
-									getDefaultLanguage(),
-									filePath,
-								),
-							);
+				// Date Formatting
+				const dateISO = fileName.replace('.md', ''); // YYYY-MM-DD
+				const date = format(parseISO(dateISO), 'PP', { locale: localeMap[languageCode] });
 
-					// Compile markdown to HTML
-					const parsedHTML = marked.parse(content.toString());
-					const dateISO = filePath.replace('.md', ''); // YYYY-MM-DD
-
-					// Date Formatting
-					const date = format(parseISO(dateISO), 'PP', {
-						locale: localeMap[languageCode],
-					});
-
-					return `<div class='news-post' data-date='${dateISO}'>
+				return `<div class='news-post' data-date='${dateISO}'>
 							<span class='news-post-date'>${date}</span>
 							<div class='news-post-markdown'>${parsedHTML}</div>
 						</div>`;
-				})
-				.join('\n<hr>\n');
+			})
+			.join('\n<hr>\n');
+	});
 
-			newsResources[languageCode] = newsHTML;
-		});
-
-	return newsResources;
+	return newsPosts;
 }
 
 // Exports -------------------------------------------------------------------
