@@ -1,9 +1,10 @@
 // src/server/config/i18n.ts
 
 import i18next from 'i18next';
-import middleware from 'i18next-http-middleware'; // THERE IS NO DEFAULT EXPORT??
 import path from 'path';
 import { fileURLToPath } from 'node:url';
+import { LanguageDetector } from 'i18next-http-middleware';
+
 import { loadTranslations } from './translationLoader.js';
 import { getDefaultLanguage } from '../utility/translate.js';
 
@@ -21,7 +22,7 @@ function initTranslations(): void {
 	// The loader handles reading files, XSS sanitization, and setting supported languages
 	const translations = loadTranslations(translationsFolder);
 
-	i18next.use(middleware.LanguageDetector).init({
+	i18next.use(LanguageDetector).init({
 		// debug: true,
 		preload: Object.keys(translations), // List of languages to preload
 		resources: translations,
