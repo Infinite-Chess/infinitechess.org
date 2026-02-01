@@ -70,10 +70,8 @@ function getInitialBuildPlugin(): { plugin: Plugin; initialBuild: Promise<void> 
 	let isFirstBuild = true;
 
 	let resolve: () => void;
-	let reject: (reason?: any) => void;
-	const promise = new Promise<void>((r, j) => {
+	const promise = new Promise<void>((r) => {
 		resolve = r;
-		reject = j;
 	});
 
 	const plugin: Plugin = {
