@@ -56,20 +56,20 @@ export async function buildViews(): Promise<void> {
 		fallbackLng: DEFAULT_LANGUAGE,
 	});
 
-	const language_codes = Object.keys(translations);
-
-	const languages_list = language_codes.map((language_code) => {
-		const name = translations[language_code].name;
-		const englishName = translations[language_code].english_name;
-		return { code: language_code, name, englishName };
-	});
+	const languages_list = Object.entries(translations).map(
+		([languageCode, languageTranslations]) => ({
+			code: languageCode,
+			name: languageTranslations.default['name'] as string,
+			englishName: languageTranslations.default['english_name'] as string,
+		}),
+	);
 
 	// Adjusted path: relative to build/ folder
 	const templatesPath = path.join(__dirname, '../dist/client/views');
 
-	for (const language_code of language_codes) {
+	for (const languageCode of Object.keys(translations)) {
 		for (const template of staticTranslatedTemplates) {
-			const filePath = path.join(templatesPath, language_code, template + '.html');
+			const filePath = path.join(templatesPath, languageCode, template + '.html');
 			fs.mkdirSync(path.dirname(filePath), { recursive: true }); // Ensure directory exists
 
 			fs.writeFileSync(
@@ -80,14 +80,14 @@ export async function buildViews(): Promise<void> {
 					{
 						// Function for translations
 						t: function (key: string, options: any = {}) {
-							options.lng = language_code; // Make sure language is correct
+							options.lng = languageCode; // Make sure language is correct
 							return i18next.t(key, options);
 						},
 						languages: languages_list,
-						language: language_code,
+						language: languageCode,
 
 						// Inject the news HTML from the separate loader
-						newsHTML: news[language_code],
+						newsHTML: news[languageCode],
 
 						distfolder: path.join(__dirname, '../dist'),
 						viewsfolder: templatesPath,

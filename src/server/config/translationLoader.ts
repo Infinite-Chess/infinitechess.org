@@ -18,6 +18,11 @@ import { DEFAULT_LANGUAGE, setSupportedLanguages } from '../utility/translate.js
 
 // Types ---------------------------------------------------------------------
 
+/** All translations for every single language. */
+type Translations = Record<string, LanguageTranslations>;
+/** All translations for a single language. */
+type LanguageTranslations = { default: Record<string, any> };
+
 const changelogSchema = z.record(
 	z.string().refine((val) => Number.isInteger(Number(val)), {
 		message: 'Key must be an integer string',
@@ -131,8 +136,8 @@ function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
 }
 
 /** Loads and processes all translation TOML files into one object. */
-function loadTranslations(): Record<string, any> {
-	const translations: Record<string, any> = {};
+function loadTranslations(): Translations {
+	const translations: Translations = {};
 
 	const tomlFiles = fs.readdirSync(translationsFolder).filter((f) => f.endsWith('.toml'));
 	const changelog = loadChangelog();
@@ -146,7 +151,7 @@ function loadTranslations(): Record<string, any> {
 		const toml_updated = removeOutdated(toml_parsed, changelog); // Version
 		const toml_sanitized = html_escape(toml_updated); // Sanitize
 
-		translations[languageCode] = toml_sanitized;
+		translations[languageCode] = { default: toml_sanitized };
 		supportedLanguages.push(languageCode);
 	});
 
