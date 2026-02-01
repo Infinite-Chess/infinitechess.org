@@ -6,8 +6,6 @@ import { parse } from 'smol-toml';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
-import { fileURLToPath } from 'node:url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { localeMap } from './dateLocales.js';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
@@ -207,8 +205,6 @@ export function loadNews(folder: string): Record<string, string> {
 
 					// Date Formatting
 					const date = format(parseISO(dateISO), 'PP', {
-						timeZone: 'UTC-6',
-						// Ensure we access the locale correctly from your map
 						locale: localeMap[languageCode],
 					});
 
