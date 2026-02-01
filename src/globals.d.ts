@@ -38,7 +38,6 @@ declare global {
 	namespace Express {
 		export interface Request {
 			memberInfo?: MemberInfo;
-			i18n: { resolvedLanguage: string };
 		}
 	}
 }
