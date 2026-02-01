@@ -13,7 +13,6 @@ import { getDefaultLanguage } from '../src/server/utility/translate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Adjusted path: relative to build/ folder
 const translationsFolder = path.join(__dirname, '../translation');
 
 /**
@@ -39,24 +38,6 @@ const staticTranslatedTemplates = [
 	'errors/409',
 	'errors/500',
 ];
-
-/**
- * Creates file or directory if it doesn't exist
- * @param filePath - Path to create.
- */
-function createFileOrDir(filePath: string): void {
-	if (!fs.existsSync(filePath)) {
-		if (path.extname(filePath) === '') {
-			fs.mkdirSync(filePath, { recursive: true });
-		} else {
-			const dirPath = path.dirname(filePath);
-			if (!fs.existsSync(dirPath)) {
-				fs.mkdirSync(dirPath, { recursive: true });
-			}
-			fs.writeFileSync(filePath, '');
-		}
-	}
-}
 
 /**
  * Generates translated versions of templates in staticTranslatedTemplates
@@ -86,9 +67,11 @@ export async function buildViews(): Promise<void> {
 
 	for (const language_code of language_codes) {
 		for (const template of staticTranslatedTemplates) {
-			createFileOrDir(path.join(templatesPath, language_code, template + '.html')); // Make sure it exists
+			const filePath = path.join(templatesPath, language_code, template + '.html');
+			fs.mkdirSync(path.dirname(filePath), { recursive: true }); // Ensure directory exists
+
 			fs.writeFileSync(
-				path.join(templatesPath, language_code, template + '.html'),
+				filePath,
 				ejs.render(
 					// Read EJS template
 					fs.readFileSync(path.join(templatesPath, template + '.ejs')).toString(),
