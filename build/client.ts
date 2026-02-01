@@ -80,13 +80,12 @@ function getInitialBuildPlugin(): { plugin: Plugin; initialBuild: Promise<void> 
 		name: 'initial-build-waiter',
 		setup(build: PluginBuild) {
 			// This hook runs when a build has finished
-			build.onEnd((result) => {
+			build.onEnd(() => {
 				if (!isFirstBuild) return;
 				isFirstBuild = false;
-				// Signal that the first build is done
-				if (result.errors.length === 0)
-					resolve(); // Succeeded
-				else reject(new Error(`Initial build failed. See error(s) above.`)); // Failed
+				// Signal that the first build is done, even if
+				// there was an error, so that watch mode can continue.
+				resolve();
 			});
 		},
 	};
