@@ -63,7 +63,8 @@ function getTranslation(key: string, language: string = defaultLanguage): string
  * @returns The translated string.
  */
 function getTranslationForReq(key: string, req: Request): string {
-	return getTranslation(key, req.cookies?.i18next); // SHOULD I REPLACE WITH getLanguageToServe(req)??
+	const language = getLanguageToServe(req);
+	return getTranslation(key, language);
 }
 
 export {
