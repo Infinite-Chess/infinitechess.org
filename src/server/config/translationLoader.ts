@@ -10,20 +10,7 @@ import { format, parseISO } from 'date-fns';
 import { localeMap } from './dateLocales.js';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 
-const xss_options: IFilterXSSOptions = {
-	whiteList: {
-		b: [],
-		strong: [],
-		i: [],
-		em: [],
-		mark: [],
-		small: [],
-		del: [],
-		ins: [],
-		sub: [],
-		sup: [],
-	},
-};
+const xss_options: IFilterXSSOptions = { whiteList: {} };
 const custom_xss = new FilterXSS(xss_options);
 
 /**
