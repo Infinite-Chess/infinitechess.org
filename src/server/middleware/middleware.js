@@ -11,7 +11,7 @@ import helmet from 'helmet';
 
 // Middleware
 import cookieParser from 'cookie-parser';
-import secureRedirect from './secureRedirect.js';
+import secureRedirect from './secureRedirect';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
