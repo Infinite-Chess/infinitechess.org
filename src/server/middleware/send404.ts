@@ -1,10 +1,12 @@
+import type { Request, Response } from 'express';
+
 import path from 'path';
 import { getLanguageToServe, getTranslationForReq } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-function send404(req, res) {
+function send404(req: Request, res: Response): void {
 	res.status(404);
 	if (req.accepts('html')) {
 		res.sendFile(
@@ -14,7 +16,6 @@ function send404(req, res) {
 				getLanguageToServe(req),
 				'errors/404.html',
 			),
-			{ t: req.t },
 		);
 	} else if (req.accepts('json')) {
 		res.json({ error: getTranslationForReq('server.javascript.ws-not_found', req) });
