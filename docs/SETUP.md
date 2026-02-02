@@ -28,7 +28,7 @@ This guide will use VSCode, which is **highly** recommended, but you may use ano
 
 ## Step 3: Install Node.js
 
-[Go here](https://nodejs.org/en/download) to download and install Node. Select version `v22.21.1 (LTS)`, `x64` for the architecture, then download the Installer (.msi on Windows or .pkg on Mac). Then run the installer.
+[Go here](https://nodejs.org/en/download) to download and install Node. Select version `v22.XX.X (LTS)`, `x64` for the architecture, then download the Installer (.msi on Windows or .pkg on Mac). Then run the installer.
 
 ## Step 4: Forking the repository
 
