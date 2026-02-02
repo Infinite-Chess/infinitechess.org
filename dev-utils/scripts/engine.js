@@ -23,7 +23,7 @@ const engine = (function () {
 		}
 
 		for (let i = 0; i < diagonalLineArr.length; i++) {
-			const [m1, b1] = diagonalLineArr[i];
+			const [m1, b1] = diagonalLineArr[i]
 
 			// calculate its intersections with all horizontal lines
 			for (const y of ySet) {
