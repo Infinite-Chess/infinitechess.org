@@ -135,12 +135,7 @@ function loadNews(supportedLanguages: string[]): Record<string, string> {
 	return newsPosts;
 }
 
-/**
- * Removes outdated translations.
- * @param object - Object of translations.
- * @param changelog - `changes.json` file.
- * @returns Object with outdated translations removed.
- */
+/** Removes outdated translations from one language's toml object, according to the changelog. */
 function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
 	const version = object['version'] as string;
 	// Filter out versions that are older than version of current language
@@ -162,6 +157,27 @@ function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
 	}
 
 	return object_copy;
+}
+
+/**
+ * Removes keys from `object` based on string of format 'foo.bar'.
+ * @param key_string - String representing key that has to be deleted in format 'foo.bar'.
+ * @param object - Object that is target of the removal.
+ * @returns Copy of `object` with deleted values
+ * @example
+ * const obj = { foo: { bar: 42, baz: 100 }, qux: 7 };
+ * const result = remove_key('foo.bar', obj); // { foo: { baz: 100 }, qux: 7 }
+ */
+function remove_key(key_string: string, object: Record<string, any>): Record<string, any> {
+	const keys = key_string.split('.');
+
+	let currentObj = object;
+	for (let i = 0; i < keys.length - 1; i++) {
+		if (currentObj[keys[i]!] !== undefined) currentObj = currentObj[keys[i]!];
+	}
+
+	if (currentObj[keys.at(-1)!] !== undefined) delete currentObj[keys.at(-1)!];
+	return object;
 }
 
 /**
@@ -190,27 +206,6 @@ function html_escape(value: any): any {
 		return custom_xss.process(value);
 	}
 	return value; // numbers, booleans, etc.
-}
-
-/**
- * Removes keys from `object` based on string of format 'foo.bar'.
- * @param key_string - String representing key that has to be deleted in format 'foo.bar'.
- * @param object - Object that is target of the removal.
- * @returns Copy of `object` with deleted values
- * @example
- * const obj = { foo: { bar: 42, baz: 100 }, qux: 7 };
- * const result = remove_key('foo.bar', obj); // { foo: { baz: 100 }, qux: 7 }
- */
-function remove_key(key_string: string, object: Record<string, any>): Record<string, any> {
-	const keys = key_string.split('.');
-
-	let currentObj = object;
-	for (let i = 0; i < keys.length - 1; i++) {
-		if (currentObj[keys[i]!] !== undefined) currentObj = currentObj[keys[i]!];
-	}
-
-	if (currentObj[keys.at(-1)!] !== undefined) delete currentObj[keys.at(-1)!];
-	return object;
 }
 
 // Exports -------------------------------------------------------------------

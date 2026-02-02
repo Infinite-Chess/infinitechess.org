@@ -8,15 +8,13 @@ import { DEFAULT_LANGUAGE } from '../utility/translate.js';
 
 /** Initializes i18next for the server process, loading languages from .toml files. */
 function initTranslations(): void {
-	// The loader handles reading files, XSS sanitization, and setting supported languages
 	const translations = translationLoader.loadTranslations();
 
 	i18next.use(LanguageDetector).init({
-		// debug: true,
-		preload: Object.keys(translations), // List of languages to preload
 		resources: translations,
 		defaultNS: 'default',
 		fallbackLng: DEFAULT_LANGUAGE,
+		// debug: true, // Enable debug mode to see logs for missing keys and other details
 	});
 }
 

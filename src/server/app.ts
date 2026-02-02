@@ -21,7 +21,8 @@ app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all 
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 
-// This is in here so integration tests work, as they don't run server.js
+// This is in here so integration tests work, as otherwise if
+// this is in server.js, i18next is never initialized for tests.
 initTranslations();
 
 configureMiddleware(app); // Setup the middleware waterfall

@@ -9,9 +9,14 @@ import type { Request } from 'express';
 
 import i18next from 'i18next';
 
+// Constnats -----------------------------------------------------------------
+
 const DEFAULT_LANGUAGE = 'en-US';
-/** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
+
+/** Our supported languages (those with a TOML file) will be auto-appended here. */
 let supportedLanguages: string[] = [];
+
+// Functions -----------------------------------------------------------------
 
 function setSupportedLanguages(list: string[]): void {
 	supportedLanguages = list;
@@ -63,6 +68,8 @@ function getTranslationForReq(key: string, req: Request): string {
 	const language = getLanguageToServe(req);
 	return getTranslation(key, language);
 }
+
+// Exports -------------------------------------------------------------------
 
 export {
 	DEFAULT_LANGUAGE,

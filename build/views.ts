@@ -15,6 +15,8 @@ import translationLoader from '../src/server/config/translationLoader.js';
 import { UNCERTAIN_LEADERBOARD_RD } from '../src/server/game/gamemanager/ratingcalculation.js';
 import { DEFAULT_LANGUAGE } from '../src/server/utility/translate.js';
 
+// Constants -----------------------------------------------------------------
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -41,6 +43,8 @@ const staticTranslatedTemplates = [
 	'errors/500',
 ];
 
+// Functions -----------------------------------------------------------------
+
 /**
  * Generates translated versions of templates in staticTranslatedTemplates
  */
@@ -56,6 +60,7 @@ export async function buildViews(): Promise<void> {
 		resources: translations,
 		defaultNS: 'default',
 		fallbackLng: DEFAULT_LANGUAGE,
+		// debug: true, // Enable debug mode to see logs for missing keys and other details
 	});
 
 	const languages_list = Object.entries(translations).map(
@@ -99,7 +104,7 @@ export async function buildViews(): Promise<void> {
 			const templateFile = fs.readFileSync(templatePath).toString();
 
 			const renderedPath = path.join(renderDirectory, template + '.html');
-			const renderedFile = ejs.render(templateFile, ejsData);
+			const renderedFile = ejs.render(templateFile, ejsData); // Render the file
 
 			fs.mkdirSync(path.dirname(renderedPath), { recursive: true }); // Ensure directory exists
 			fs.writeFileSync(renderedPath, renderedFile); // Write the rendered file

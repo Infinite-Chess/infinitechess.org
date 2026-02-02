@@ -37,7 +37,6 @@ await setupEngineWasm();
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
 
 // Generate Static Views (HTML)
-// If TOML/EJS is broken, the build fails immediately.
 await buildViews();
 
 // console.log('Build process finished.');
