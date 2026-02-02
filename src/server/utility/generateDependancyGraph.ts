@@ -5,14 +5,14 @@
  * npm run generate-dependency-graph
  */
 
-import madge from 'madge';
+import madge, { MadgeInstance } from 'madge';
 
 const pathOfFileToGenerateDependencyGraphFor: string = 'dist/server/server.js'; // Enable for the server-side code
 // const pathOfFileToGenerateDependencyGraphFor = 'dist/client/scripts/esm/game/main.js'; // Enable for the client-side code
 const nameToGiveDependencyGraph: string = 'dependencyGraph.svg';
 
 madge(pathOfFileToGenerateDependencyGraphFor)
-	.then((res: madge.MadgeInstance) => res.image(nameToGiveDependencyGraph))
+	.then((res: MadgeInstance) => res.image(nameToGiveDependencyGraph))
 	.then((writtenImagePath: string) => {
 		console.log('Dependency graph image written to ' + writtenImagePath);
 	});
