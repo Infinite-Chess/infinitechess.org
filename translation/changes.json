@@ -1,7 +1,7 @@
 {
   "85": {
     "note": "Changed seen on line 132 from an array to a single string, deleting the 'ago' part.",
-    "changes": []
+    "changes": ["member.seen"]
   },
   "84": {
     "note": "Added menu_computer on line 368.",
