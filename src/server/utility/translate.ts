@@ -1,8 +1,7 @@
 // src/server/utility/translate.ts
 
 /**
- * This script retrieves the translation for the code and language specified.
- * This has no other dependancies.
+ * Retrieves the translation for the code and language specified.
  */
 
 import type { Request } from 'express';
@@ -13,14 +12,7 @@ import i18next from 'i18next';
 
 const DEFAULT_LANGUAGE = 'en-US';
 
-/** Our supported languages (those with a TOML file) will be auto-appended here. */
-let supportedLanguages: string[] = [];
-
 // Functions -----------------------------------------------------------------
-
-function setSupportedLanguages(list: string[]): void {
-	supportedLanguages = list;
-}
 
 /**
  * Determines the language to be used for serving an HTML file to a request.
@@ -40,10 +32,15 @@ function setSupportedLanguages(list: string[]): void {
 function getLanguageToServe(req: Request): string {
 	const cookies = req.cookies;
 
+	const supportedLngs = i18next.options.supportedLngs;
+	if (!(supportedLngs instanceof Array)) {
+		throw new Error('i18next.options.supportedLngs was not set');
+	}
+
 	let language = req.query['lng'] || cookies.i18next || req.i18n.resolvedLanguage;
-	if (!supportedLanguages.includes(language)) language = cookies.i18next; // Query param language not supported
-	if (!supportedLanguages.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
-	if (!supportedLanguages.includes(language)) language = DEFAULT_LANGUAGE; // Resolved language from i18next not supported
+	if (!supportedLngs.includes(language)) language = cookies.i18next; // Query param language not supported
+	if (!supportedLngs.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
+	if (!supportedLngs.includes(language)) language = DEFAULT_LANGUAGE; // Resolved language from i18next not supported
 	return language;
 }
 
@@ -71,10 +68,4 @@ function getTranslationForReq(key: string, req: Request): string {
 
 // Exports -------------------------------------------------------------------
 
-export {
-	DEFAULT_LANGUAGE,
-	setSupportedLanguages,
-	getLanguageToServe,
-	getTranslation,
-	getTranslationForReq,
-};
+export { DEFAULT_LANGUAGE, getLanguageToServe, getTranslation, getTranslationForReq };

@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { format, parseISO } from 'date-fns';
 
 import { localeMap } from './dateLocales.js';
-import { DEFAULT_LANGUAGE, setSupportedLanguages } from '../utility/translate.js';
+import { DEFAULT_LANGUAGE } from '../utility/translate.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -63,7 +63,6 @@ function loadTranslations(): Translations {
 
 	const tomlFiles = fs.readdirSync(translationsFolder).filter((f) => f.endsWith('.toml'));
 	const changelog = loadChangelog();
-	const supportedLanguages: string[] = [];
 
 	tomlFiles.forEach((file) => {
 		const languageCode = file.replace('.toml', '');
@@ -74,10 +73,7 @@ function loadTranslations(): Translations {
 		const toml_sanitized = html_escape(toml_updated); // Sanitize
 
 		translations[languageCode] = { default: toml_sanitized };
-		supportedLanguages.push(languageCode);
 	});
-
-	setSupportedLanguages(supportedLanguages);
 
 	return translations;
 }
