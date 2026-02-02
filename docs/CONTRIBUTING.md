@@ -87,6 +87,12 @@ Arguments only need documentation if it is not common sense what they would be f
 
 Function bodies should also have comments for documentation, to help understand what it's doing and how it works. Don't be too verbose.
 
+### Imports
+
+Opt for using `import type` over `import`, when an import is only used for its type.
+
+Type imports, and regular imports, should be grouped separately. Type imports preferably should come first, with some spacing between them and the regular imports.
+
 ### Exports
 
 In general, use default exports (e.g. `export default { ... }`) over normal exports `export { ... }`. This reduces global scope pollution. The only exception is when a script has only one exported function, then it may export that function normally.
