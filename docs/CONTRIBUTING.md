@@ -111,4 +111,4 @@ When writing names, keep context in mind. For example, a script whos responsibil
 
 **Constants**: Use UpperSnakeCase (e.g. `SOUND_OFFSET`).
 
-**Variables**: Use either CamelCase (e.g. `playerColor`) or SnakeCase (e.g. `player_color`), depending on what the script you are working on is using more apparently. Remaining consistent is trump: if many other scripts create a local variable named `timeoutId`, choose that for your local variable name instead of `timeout_id`
+**Variables**: Use either CamelCase (e.g. `playerColor`) or SnakeCase (e.g. `player_color`), depending on what the script you are working on is using more apparently. Remaining consistent is trump: if many other scripts create a local variable named `timeoutId`, choose that for your local variable name instead of `timeout_id`.
