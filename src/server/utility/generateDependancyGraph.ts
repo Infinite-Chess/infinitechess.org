@@ -7,12 +7,12 @@
 
 import madge from 'madge';
 
-const pathOfFileToGenerateDependencyGraphFor = 'dist/server/server.js'; // Enable for the server-side code
+const pathOfFileToGenerateDependencyGraphFor: string = 'dist/server/server.js'; // Enable for the server-side code
 // const pathOfFileToGenerateDependencyGraphFor = 'dist/client/scripts/esm/game/main.js'; // Enable for the client-side code
-const nameToGiveDependencyGraph = 'dependencyGraph.svg';
+const nameToGiveDependencyGraph: string = 'dependencyGraph.svg';
 
 madge(pathOfFileToGenerateDependencyGraphFor)
-	.then((res) => res.image(nameToGiveDependencyGraph))
-	.then((writtenImagePath) => {
+	.then((res: madge.MadgeInstance) => res.image(nameToGiveDependencyGraph))
+	.then((writtenImagePath: string) => {
 		console.log('Dependency graph image written to ' + writtenImagePath);
 	});
