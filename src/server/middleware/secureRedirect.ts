@@ -6,9 +6,9 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /**
  * Middleware that redirects all http requests to https
- * @param {Request} req - The request object
- * @param {Response} res - The response object
- * @param {NextFunction} next - The function to call, when finished, to continue the middleware waterfall.
+ * @param req - The request object
+ * @param res - The response object
+ * @param next - The function to call, when finished, to continue the middleware waterfall.
  */
 const secureRedirect = (req: Request, res: Response, next: NextFunction): void => {
 	// 1-year is minimum remember time with preload parameter. Preload means google will always pre-tell clickers-of-your-site to connect via https.
