@@ -5,7 +5,6 @@
  */
 
 import rateLimit from 'express-rate-limit';
-// @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
 import type { Request, Response } from 'express';

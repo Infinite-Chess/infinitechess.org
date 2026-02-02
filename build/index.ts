@@ -10,11 +10,11 @@
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-import { setupEnv } from './env.js';
-import { buildClient } from './client.js';
-import { buildServer } from './server.js';
-import { setupEngineWasm } from './engine-wasm.js';
-import { buildViews } from './views.js';
+import { setupEnv } from './env';
+import { buildClient } from './client';
+import { buildServer } from './server';
+import { setupEngineWasm } from './engine-wasm';
+import { buildViews } from './views';
 
 // Ensure .env file exists and has valid contents
 setupEnv();

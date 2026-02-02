@@ -7,7 +7,6 @@
 
 // Middleware & other imports
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-// @ts-ignore
 import { getTranslation } from '../../utility/translate.js';
 
 // Custom imports
