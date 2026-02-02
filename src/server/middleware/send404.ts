@@ -1,6 +1,7 @@
+import type { Request, Response } from 'express';
+
 import path from 'path';
 import { getLanguageToServe, getTranslationForReq } from '../utility/translate.js';
-import { Request, Response } from 'express';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
