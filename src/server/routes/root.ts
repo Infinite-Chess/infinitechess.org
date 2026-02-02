@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import path from 'path';
 import { getLanguageToServe } from '../utility/translate.js';
 import { fileURLToPath } from 'node:url';
@@ -10,15 +10,15 @@ const htmlDirectory = path.join(__dirname, '../../../dist/client/views');
 
 /**
  * Serves an HTML file based on the requested path and language.
- * @param {string} filePath - The relative file path to serve.
- * @param {boolean} [localized=true] - If the file is not localized to other languages.
- * @returns {Function} Express middleware handler.
+ * @param filePath - The relative file path to serve.
+ * @param localized - If the file is not localized to other languages.
+ * @returns Express middleware handler.
  */
 const serveFile =
-	(filePath, localized = true) =>
-	(req, res) => {
-		const language = localized ? getLanguageToServe(req) : '';
-		const file = path.join(htmlDirectory, language, filePath);
+	(filePath: string, localized: boolean = true) =>
+	(req: Request, res: Response) => {
+		const language: string = localized ? getLanguageToServe(req) : '';
+		const file: string = path.join(htmlDirectory, language, filePath);
 		/**
 		 * sendFile() will AUTOMATICALLY check if the file's Last-Modified
 		 * value is after the request's 'If-Modified-Since' header...
