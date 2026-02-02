@@ -10,7 +10,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-// @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour

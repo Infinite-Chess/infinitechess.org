@@ -5,6 +5,8 @@
 
 import { WebSocket } from 'ws';
 
+// @ts-ignore
+import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
 import {
 	addTimeoutToEchoTimers,
 	deleteEchoTimerForMessageID,
@@ -13,9 +15,6 @@ import {
 import socketUtility from './socketUtility.js';
 import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
-// @ts-ignore
-import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
-// @ts-ignore
 import { getTranslation } from '../utility/translate.js';
 
 // Type Definitions ---------------------------------------------------------------------------

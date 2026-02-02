@@ -8,7 +8,6 @@ import type { Request, Response } from 'express';
 
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-// @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
 // Types ----------------------------------------------------------------------------

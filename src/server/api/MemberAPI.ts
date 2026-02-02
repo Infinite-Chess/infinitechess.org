@@ -15,7 +15,6 @@ import timeutil from '../../shared/util/timeutil.js';
 import metadata from '../../shared/chess/util/metadata.js';
 import { IdentifiedRequest } from '../types.js';
 import { localeMap } from '../config/dateLocales.js';
-// @ts-ignore
 import { getLanguageToServe } from '../utility/translate.js';
 
 // Define the structure of the JSON response body

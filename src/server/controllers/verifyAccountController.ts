@@ -4,7 +4,6 @@
  * This controller handles verifying accounts, either manually or via an email link.
  */
 
-// @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';

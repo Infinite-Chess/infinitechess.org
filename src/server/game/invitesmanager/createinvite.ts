@@ -9,9 +9,8 @@
 import * as z from 'zod';
 
 // @ts-ignore
-import { getTranslation } from '../../utility/translate.js';
-// @ts-ignore
 import clockweb from '../clockweb.js';
+import { getTranslation } from '../../utility/translate.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import {

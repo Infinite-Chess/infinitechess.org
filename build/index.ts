@@ -10,10 +10,11 @@
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-import { setupEnv } from './env.js';
-import { buildClient } from './client.js';
-import { buildServer } from './server.js';
-import { setupEngineWasm } from './engine-wasm.js';
+import { setupEnv } from './env';
+import { buildClient } from './client';
+import { buildServer } from './server';
+import { setupEngineWasm } from './engine-wasm';
+import { buildViews } from './views';
 
 // Ensure .env file exists and has valid contents
 setupEnv();
@@ -34,5 +35,8 @@ await setupEngineWasm();
 // Build both client and server scripts
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
+
+// Generate Static Views (HTML)
+await buildViews();
 
 // console.log('Build process finished.');
