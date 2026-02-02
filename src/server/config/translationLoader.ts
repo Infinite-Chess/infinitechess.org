@@ -57,84 +57,6 @@ const custom_xss = new FilterXSS(xss_options);
 
 // Functions -----------------------------------------------------------------
 
-/**
- * Recursively traverses a data structure (array or object) and sanitizes all contained
- * strings using an XSS filter. This prevents malicious content from translation files
- * from being rendered in a user's browser.
- * @param value - The input value (e.g., the parsed content of a TOML file).
- * @returns A deep copy of the input with all string values sanitized.
- */
-function html_escape(value: any): any {
-	if (Array.isArray(value)) {
-		const escaped = [];
-		for (const member of value) {
-			escaped.push(html_escape(member));
-		}
-		return escaped;
-	}
-	if (value !== null && typeof value === 'object') {
-		const escaped: Record<any, any> = {};
-		for (const [valueKey, valueValue] of Object.entries(value)) {
-			escaped[valueKey] = html_escape(valueValue);
-		}
-		return escaped;
-	}
-	if (typeof value === 'string') {
-		return custom_xss.process(value);
-	}
-	return value; // numbers, booleans, etc.
-}
-
-/**
- * Removes keys from `object` based on string of format 'foo.bar'.
- * @param key_string - String representing key that has to be deleted in format 'foo.bar'.
- * @param object - Object that is target of the removal.
- * @returns Copy of `object` with deleted values
- * @example
- * const obj = { foo: { bar: 42, baz: 100 }, qux: 7 };
- * const result = remove_key('foo.bar', obj); // { foo: { baz: 100 }, qux: 7 }
- */
-function remove_key(key_string: string, object: Record<string, any>): Record<string, any> {
-	const keys = key_string.split('.');
-
-	let currentObj = object;
-	for (let i = 0; i < keys.length - 1; i++) {
-		if (currentObj[keys[i]!] !== undefined) currentObj = currentObj[keys[i]!];
-	}
-
-	if (currentObj[keys.at(-1)!] !== undefined) delete currentObj[keys.at(-1)!];
-	return object;
-}
-
-/**
- * Removes outdated translations.
- * @param object - Object of translations.
- * @param changelog - `changes.json` file.
- * @returns Object with outdated translations removed.
- */
-function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
-	const version = object['version'] as string;
-	// Filter out versions that are older than version of current language
-	const filtered_entries = Object.entries(changelog).filter(
-		([change]) => Number(version) < Number(change),
-	);
-
-	// Collect all keys to be removed
-	let key_strings: string[] = [];
-	for (const [, value] of filtered_entries) {
-		if (value.changes === undefined) continue;
-		key_strings = key_strings.concat(value.changes);
-	}
-	key_strings = [...new Set(key_strings)]; // Remove duplicates
-
-	let object_copy = object;
-	for (const key_string of key_strings) {
-		object_copy = remove_key(key_string, object_copy);
-	}
-
-	return object_copy;
-}
-
 /** Loads and processes all translation TOML files into one object. */
 function loadTranslations(): Translations {
 	const translations: Translations = {};
@@ -211,6 +133,84 @@ function loadNews(supportedLanguages: string[]): Record<string, string> {
 	});
 
 	return newsPosts;
+}
+
+/**
+ * Removes outdated translations.
+ * @param object - Object of translations.
+ * @param changelog - `changes.json` file.
+ * @returns Object with outdated translations removed.
+ */
+function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
+	const version = object['version'] as string;
+	// Filter out versions that are older than version of current language
+	const filtered_entries = Object.entries(changelog).filter(
+		([change]) => Number(version) < Number(change),
+	);
+
+	// Collect all keys to be removed
+	let key_strings: string[] = [];
+	for (const [, value] of filtered_entries) {
+		if (value.changes === undefined) continue;
+		key_strings = key_strings.concat(value.changes);
+	}
+	key_strings = [...new Set(key_strings)]; // Remove duplicates
+
+	let object_copy = object;
+	for (const key_string of key_strings) {
+		object_copy = remove_key(key_string, object_copy);
+	}
+
+	return object_copy;
+}
+
+/**
+ * Recursively traverses a data structure (array or object) and sanitizes all contained
+ * strings using an XSS filter. This prevents malicious content from translation files
+ * from being rendered in a user's browser.
+ * @param value - The input value (e.g., the parsed content of a TOML file).
+ * @returns A deep copy of the input with all string values sanitized.
+ */
+function html_escape(value: any): any {
+	if (Array.isArray(value)) {
+		const escaped = [];
+		for (const member of value) {
+			escaped.push(html_escape(member));
+		}
+		return escaped;
+	}
+	if (value !== null && typeof value === 'object') {
+		const escaped: Record<any, any> = {};
+		for (const [valueKey, valueValue] of Object.entries(value)) {
+			escaped[valueKey] = html_escape(valueValue);
+		}
+		return escaped;
+	}
+	if (typeof value === 'string') {
+		return custom_xss.process(value);
+	}
+	return value; // numbers, booleans, etc.
+}
+
+/**
+ * Removes keys from `object` based on string of format 'foo.bar'.
+ * @param key_string - String representing key that has to be deleted in format 'foo.bar'.
+ * @param object - Object that is target of the removal.
+ * @returns Copy of `object` with deleted values
+ * @example
+ * const obj = { foo: { bar: 42, baz: 100 }, qux: 7 };
+ * const result = remove_key('foo.bar', obj); // { foo: { baz: 100 }, qux: 7 }
+ */
+function remove_key(key_string: string, object: Record<string, any>): Record<string, any> {
+	const keys = key_string.split('.');
+
+	let currentObj = object;
+	for (let i = 0; i < keys.length - 1; i++) {
+		if (currentObj[keys[i]!] !== undefined) currentObj = currentObj[keys[i]!];
+	}
+
+	if (currentObj[keys.at(-1)!] !== undefined) delete currentObj[keys.at(-1)!];
+	return object;
 }
 
 // Exports -------------------------------------------------------------------
