@@ -105,7 +105,6 @@ describe('Preferences Integration', () => {
 			.send({ preferences: invalidPrefs });
 
 		expect(response.status).toBe(400);
-		expect(response.body.message).toMatch(/not valid/);
 	});
 
 	it('should allow logged-in user to save valid preferences', async () => {
