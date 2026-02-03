@@ -475,7 +475,7 @@ describe('EditorSavesAPI Integration', () => {
 
 		it('should allow two different users to have positions with the same name', async () => {
 			// Create first user with unique name to avoid conflicts
-			const user1Username = `ChessMaster${Date.now()}`;
+			const user1Username = `ChessMaster${Math.random().toString(36).substring(2, 10)}`;
 			const user1_id = await generateAccount({
 				username: user1Username,
 				email: `${user1Username}@example.com`,
@@ -493,7 +493,7 @@ describe('EditorSavesAPI Integration', () => {
 			const user1Cookie = [jwt1, memberInfo1].filter(Boolean).join(';');
 
 			// Create second user with unique name
-			const user2Username = `ChessGrandmaster${Date.now()}`;
+			const user2Username = `ChessGrandmaster${Math.random().toString(36).substring(2, 10)}`;
 			const user2_id = await generateAccount({
 				username: user2Username,
 				email: `${user2Username}@example.com`,
