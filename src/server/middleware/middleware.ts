@@ -1,31 +1,27 @@
-// src/server/middleware/middleware.js
+// src/server/middleware/middleware.ts
 
 /**
  * This module configures the middleware waterfall of our server
  */
 
+import type { Express, Request, Response, NextFunction } from 'express';
+
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
+import i18next from 'i18next';
+import { handle } from 'i18next-http-middleware';
+import { fileURLToPath } from 'node:url';
 
-// Middleware
 import cookieParser from 'cookie-parser';
 import secureRedirect from './secureRedirect.js';
 import errorHandler from './errorHandler.js';
+import send404 from './send404.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
-
-// External translation middleware
-import i18next from 'i18next';
-import middleware from 'i18next-http-middleware';
-
-// Other imports
-import { router as rootRouter } from '../routes/root.js';
-import send404 from './send404.js';
-
-import { fileURLToPath } from 'node:url';
+import { rootRouter } from '../routes/root.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { requestConfirmEmail } from '../controllers/sendMail.js';
@@ -34,29 +30,33 @@ import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { handleLogin } from '../controllers/loginController.js';
-import {
-	checkEmailValidity,
-	checkUsernameAvailable,
-	createNewMember,
-} from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from '../api/AdminPanel.js';
 import { getContributors } from '../api/GitHub.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
+import { handleSesWebhook } from '../controllers/awsWebhook.js';
+import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
-import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
 import {
 	createAccountLimiter,
 	resendAccountVerificationLimiter,
 	forgotPasswordLimiter,
 } from './rateLimiters.js';
-import { handleSesWebhook } from '../controllers/awsWebhook.js';
-// import EditorSavesAPI from '../api/EditorSavesAPI.js';
+import {
+	checkEmailValidity,
+	checkUsernameAvailable,
+	createNewMember,
+} from '../controllers/createAccountController.js';
+
+// Constants -------------------------------------------------------------------------
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Functions -------------------------------------------------------------------------
 
 /**
  * Configures the Middleware Waterfall
@@ -65,9 +65,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * Each middleware function must call next() to go to the next middleware.
  * Connections that do not pass one middleware will not continue.
  *
- * @param {object} app - The express application instance.
+ * @param app - The express application instance.
  */
-function configureMiddleware(app) {
+export function configureMiddleware(app: Express): void {
 	// Note: requests that are rate limited will not be logged, to mitigate slow-down during a DDOS.
 	app.use(rateLimit);
 
@@ -96,7 +96,7 @@ function configureMiddleware(app) {
 	);
 
 	// Path Traversal Protection, and error protection from malformed URLs
-	app.use((req, res, next) => {
+	app.use((req: Request, res: Response, next: NextFunction) => {
 		try {
 			const decoded = decodeURIComponent(req.url);
 
@@ -105,7 +105,8 @@ function configureMiddleware(app) {
 			if (encodedPatterns.test(req.url)) {
 				console.warn('Blocked traversal:', req.url);
 				console.warn('Decoded URL:', decoded);
-				return res.status(403).send('Forbidden');
+				res.status(403).send('Forbidden');
+				return;
 			}
 
 			// Check 2: Decoded path segments
@@ -114,7 +115,8 @@ function configureMiddleware(app) {
 				// Console warn both the decoded and the original URL
 				console.warn('Blocked traversal:', req.url);
 				console.warn('Decoded URL:', decoded);
-				return res.status(403).send('Forbidden');
+				res.status(403).send('Forbidden');
+				return;
 			}
 
 			next();
@@ -125,7 +127,7 @@ function configureMiddleware(app) {
 	});
 
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
-	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
+	app.use(handle(i18next, { removeLngFromUrl: false }));
 
 	app.use(cors());
 
@@ -184,13 +186,13 @@ function configureMiddleware(app) {
 
 	app.post('/auth', handleLogin); // Login fetch POST request
 
-	app.post('/setlanguage', (req, res) => {
+	app.post('/setlanguage', (req: Request, res: Response) => {
 		// Language cookie setter POST request
 		res.cookie('i18next', req.i18n.resolvedLanguage);
 		res.send(''); // Doesn't work without this for some reason
 	});
 
-	app.get('/api/contributors', (req, res) => {
+	app.get('/api/contributors', (_req: Request, res: Response) => {
 		const contributors = getContributors();
 		res.send(JSON.stringify(contributors));
 	});
@@ -252,5 +254,3 @@ function configureMiddleware(app) {
 	// Custom error handling. Comes after 404.
 	app.use(errorHandler);
 }
-
-export default configureMiddleware;
