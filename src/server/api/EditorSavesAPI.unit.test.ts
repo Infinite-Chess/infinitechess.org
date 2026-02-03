@@ -18,11 +18,6 @@ import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 // Mock the database manager
 vi.mock('../database/editorSavesManager.js');
-vi.mock('../middleware/logEvents.js', () => ({
-	logEvents: vi.fn(),
-	logEventsAndPrint: vi.fn(),
-	reqLogger: vi.fn((req, res, next) => next()),
-}));
 
 describe('EditorSavesAPI', () => {
 	// Runs once at the very start of this file
@@ -163,17 +158,17 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if icn exceeds max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			// Note: We use a smaller size here because the middleware has a 50kb body limit
-			// Testing with actual MAX_ICN_LENGTH would exceed the body parser limit
-			const longIcn = 'a'.repeat(40000); // 40KB - within body limit
+			const longIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH + 1);
 
 			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test Position', icn: longIcn });
 
-			// This should pass validation as it's under the MAX_ICN_LENGTH
-			expect(response.status).toBe(201);
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain(
+				`${EditorSavesAPI.MAX_ICN_LENGTH} characters or less`,
+			);
 		});
 
 		it('should return 403 if quota is exceeded', async () => {
@@ -411,27 +406,26 @@ describe('EditorSavesAPI', () => {
 	});
 
 	describe('Edge cases and integration', () => {
-		it('should handle large ICN within body limit', async () => {
+		it('should handle very long ICN within limit', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 			vi.mocked(editorSavesManager.addSavedPosition).mockReturnValue({
 				changes: 1,
 				lastInsertRowid: 123,
 			});
 
-			// Use 40KB which is within the 50kb body limit
-			const largeIcn = 'a'.repeat(40000);
+			const maxLengthIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH);
 
 			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test', icn: largeIcn });
+				.send({ name: 'Test', icn: maxLengthIcn });
 
 			expect(response.status).toBe(201);
 			expect(editorSavesManager.addSavedPosition).toHaveBeenCalledWith(
 				expect.any(Number),
 				'Test',
-				40000,
-				largeIcn,
+				EditorSavesAPI.MAX_ICN_LENGTH,
+				maxLengthIcn,
 			);
 		});
 

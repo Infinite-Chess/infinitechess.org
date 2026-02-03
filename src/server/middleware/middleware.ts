@@ -75,7 +75,8 @@ export function configureMiddleware(app: Express): void {
 	// This allows us to retrieve json-received-data as a parameter/data!
 	// The logger can't log the request body without this.
 	// This also ensures all requests with content-type "application/json" have a body as an object, even if empty.
-	app.use(express.json({ limit: '50kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
+	// Increased to 2mb to support large editor position saves (ICN data up to 1MB)
+	app.use(express.json({ limit: '2mb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
 	app.use(reqLogger); // Log the request
 
