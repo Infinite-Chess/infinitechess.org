@@ -159,34 +159,6 @@ function deleteSavedPosition(name: string, user_id: number): RunResult {
 	}
 }
 
-/**
- * Renames a saved position by old name and user_id.
- * Will fail to rename if the user_id doesn't match the position owner or if the new name already exists.
- * @param old_name - The current name of the position
- * @param user_id - The user ID who owns the position
- * @param new_name - The new name for the saved position
- * @returns The RunResult containing the number of changes.
- * @throws NAME_ALREADY_EXISTS if the new name already exists, or a generic database error.
- */
-function renameSavedPosition(old_name: string, user_id: number, new_name: string): RunResult {
-	try {
-		const query = `UPDATE editor_saves SET name = ? WHERE name = ? AND user_id = ?`;
-		return db.run(query, [new_name, old_name, user_id]);
-	} catch (error: unknown) {
-		const errMsg = error instanceof Error ? error.message : String(error);
-		// Handle UNIQUE constraint violation
-		if (errMsg.includes('UNIQUE constraint failed')) {
-			throw new Error(NAME_ALREADY_EXISTS_ERROR);
-		}
-		// Log and throw generic error for all other database errors
-		logEventsAndPrint(
-			`Error renaming position "${old_name}" for user_id ${user_id} to "${new_name}": ${errMsg}`,
-			'errLog.txt',
-		);
-		throw new Error('A database error occurred while managing editor saves.');
-	}
-}
-
 export default {
 	// Constants
 	MAX_SAVED_POSITIONS,
@@ -197,5 +169,4 @@ export default {
 	addSavedPosition,
 	getSavedPositionICN,
 	deleteSavedPosition,
-	renameSavedPosition,
 };

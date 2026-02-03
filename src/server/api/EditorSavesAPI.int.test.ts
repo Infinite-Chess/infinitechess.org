@@ -15,7 +15,6 @@ import integrationUtils from '../../tests/integrationUtils.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { testRequest } from '../../tests/testRequest.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
-import { generateAccount } from '../controllers/createAccountController.js';
 
 describe('EditorSavesAPI Integration', () => {
 	// Runs once at the very start of this file
@@ -36,12 +35,12 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'A simple position', icn: 'icn-data-1' });
+				.send({ name: 'A simple position', icn: 'icn-data-1', piece_count: 10 });
 
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Another simple position', icn: 'icn-data-2.0' });
+				.send({ name: 'Another simple position', icn: 'icn-data-2.0', piece_count: 12 });
 
 			const response = await testRequest()
 				.get('/api/editor-saves')
@@ -68,7 +67,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data' });
+				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
 
 			expect(response.status).toBe(201);
 			expect(response.body).toMatchObject({ success: true });
@@ -93,7 +92,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: '', icn: 'test-icn-data' });
+				.send({ name: '', icn: 'test-icn-data', piece_count: 13 });
 
 			expect(response.status).toBe(400);
 		});
@@ -105,7 +104,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: longName, icn: 'test-icn-data' });
+				.send({ name: longName, icn: 'test-icn-data', piece_count: 13 });
 
 			expect(response.status).toBe(400);
 		});
@@ -115,7 +114,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position' });
+				.send({ name: 'Test Position', piece_count: 13 });
 
 			expect(response.status).toBe(400);
 		});
@@ -125,7 +124,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: '' });
+				.send({ name: 'Test Position', icn: '', piece_count: 0 });
 
 			expect(response.status).toBe(400);
 		});
@@ -137,7 +136,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: longIcn });
+				.send({ name: 'Test Position', icn: longIcn, piece_count: longIcn.length });
 
 			expect(response.status).toBe(400);
 		});
@@ -150,14 +149,14 @@ describe('EditorSavesAPI Integration', () => {
 				await testRequest()
 					.post('/api/editor-saves')
 					.set('Cookie', user.cookie)
-					.send({ name: `Position ${i}`, icn: 'test-icn' });
+					.send({ name: `Position ${i}`, icn: 'test-icn', piece_count: 8 });
 			}
 
 			// Try to add one more, should fail
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data' });
+				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
 
 			expect(response.status).toBe(403);
 		});
@@ -169,13 +168,13 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Duplicate Name', icn: 'test-icn-1' });
+				.send({ name: 'Duplicate Name', icn: 'test-icn-1', piece_count: 10 });
 
 			// Try to save another position with the same name
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Duplicate Name', icn: 'test-icn-2' });
+				.send({ name: 'Duplicate Name', icn: 'test-icn-2', piece_count: 10 });
 
 			expect(response.status).toBe(409);
 		});
@@ -183,7 +182,7 @@ describe('EditorSavesAPI Integration', () => {
 		it('should return 401 if user is not authenticated', async () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
-				.send({ name: 'Test Position', icn: 'test-icn-data' });
+				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
 
 			expect(response.status).toBe(401);
 		});
@@ -197,7 +196,7 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data' });
+				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
 
 			const response = await testRequest()
 				.get(`/api/editor-saves/${encodeURIComponent('Test Position')}`)
@@ -224,7 +223,7 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Position With Spaces', icn: 'test-icn-spaces' });
+				.send({ name: 'Position With Spaces', icn: 'test-icn-spaces', piece_count: 16 });
 
 			const response = await testRequest()
 				.get(`/api/editor-saves/${encodeURIComponent('Position With Spaces')}`)
@@ -251,7 +250,7 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data' });
+				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
 
 			const response = await testRequest()
 				.delete(`/api/editor-saves/${encodeURIComponent('Test Position')}`)
@@ -282,7 +281,7 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Position With Spaces', icn: 'test-icn' });
+				.send({ name: 'Position With Spaces', icn: 'test-icn', piece_count: 8 });
 
 			const response = await testRequest()
 				.delete(`/api/editor-saves/${encodeURIComponent('Position With Spaces')}`)
@@ -300,126 +299,6 @@ describe('EditorSavesAPI Integration', () => {
 		});
 	});
 
-	describe('PATCH /api/editor-saves/:position_name', () => {
-		it('should rename position successfully', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-
-			// Save a position first
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Old Name', icn: 'test-icn-data' });
-
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Old Name')}`)
-				.set('Cookie', user.cookie)
-				.send({ name: 'New Name' });
-
-			expect(response.status).toBe(200);
-			expect(response.body).toEqual({ success: true });
-
-			// Verify the position was actually renamed in the database
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves[0]?.name).toBe('New Name');
-		});
-
-		it('should return 404 if position not found or not owned', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Nonexistent Position')}`)
-				.set('Cookie', user.cookie)
-				.send({ name: 'New Name' });
-
-			expect(response.status).toBe(404);
-		});
-
-		it('should return 409 if new name already exists', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-
-			// Save two positions
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Position 1', icn: 'test-icn-1' });
-
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Position 2', icn: 'test-icn-2' });
-
-			// Try to rename Position 1 to Position 2 (which already exists)
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Position 1')}`)
-				.set('Cookie', user.cookie)
-				.send({ name: 'Position 2' });
-
-			expect(response.status).toBe(409);
-			expect(response.body.error).toBe('Position name already exists');
-		});
-
-		it('should return 400 if name is missing', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Old Name')}`)
-				.set('Cookie', user.cookie)
-				.send({});
-
-			expect(response.status).toBe(400);
-		});
-
-		it('should return 400 if name is empty', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Old Name')}`)
-				.set('Cookie', user.cookie)
-				.send({ name: '' });
-
-			expect(response.status).toBe(400);
-		});
-
-		it('should return 400 if name exceeds max length', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
-
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Old Name')}`)
-				.set('Cookie', user.cookie)
-				.send({ name: longName });
-
-			expect(response.status).toBe(400);
-		});
-
-		it('should handle position names with spaces', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-
-			// Save a position with spaces
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Old Name With Spaces', icn: 'test-icn' });
-
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Old Name With Spaces')}`)
-				.set('Cookie', user.cookie)
-				.send({ name: 'New Name With Spaces' });
-
-			expect(response.status).toBe(200);
-
-			// Verify the rename worked
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves[0]?.name).toBe('New Name With Spaces');
-		});
-
-		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest()
-				.patch(`/api/editor-saves/${encodeURIComponent('Old Name')}`)
-				.send({ name: 'New Name' });
-
-			expect(response.status).toBe(401);
-		});
-	});
-
 	describe('Edge cases and integration', () => {
 		it('should handle very long ICN within limit', async () => {
 			const user = await integrationUtils.createAndLoginUser();
@@ -429,7 +308,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test', icn: maxLengthIcn });
+				.send({ name: 'Test', icn: maxLengthIcn, piece_count: EditorSavesAPI.MAX_ICN_LENGTH });
 
 			expect(response.status).toBe(201);
 
@@ -446,7 +325,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: maxLengthName, icn: 'test' });
+				.send({ name: maxLengthName, icn: 'test', piece_count: 4 });
 
 			expect(response.status).toBe(201);
 
@@ -455,7 +334,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(saves[0]?.name).toBe(maxLengthName);
 		});
 
-		it('should calculate piece_count correctly from ICN length', async () => {
+		it('should receive piece_count from client', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			const icn = '12345';
@@ -463,69 +342,36 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test', icn });
+				.send({ name: 'Test', icn, piece_count: 100 });
 
 			expect(response.status).toBe(201);
 
-			// Verify the piece_count was calculated correctly
+			// Verify the piece_count was set correctly from client
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves[0]?.piece_count).toBe(5);
+			expect(saves[0]?.piece_count).toBe(100);
 		});
 
 		it('should allow two different users to have positions with the same name', async () => {
-			// Create first user with unique name to avoid conflicts
-			const user1Username = `ChessMaster${Math.random().toString(36).substring(2, 10)}`;
-			const user1_id = await generateAccount({
-				username: user1Username,
-				email: `${user1Username}@example.com`,
-				password: 'Password123!',
-				autoVerify: true,
-			});
-
-			const loginResponse1 = await testRequest()
-				.post('/auth')
-				.send({ username: user1Username, password: 'Password123!' });
-
-			const cookies1 = loginResponse1.headers['set-cookie'] as unknown as string[];
-			const jwt1 = cookies1.find((c) => c.startsWith('jwt='));
-			const memberInfo1 = cookies1.find((c) => c.startsWith('memberInfo='));
-			const user1Cookie = [jwt1, memberInfo1].filter(Boolean).join(';');
-
-			// Create second user with unique name
-			const user2Username = `ChessGrandmaster${Math.random().toString(36).substring(2, 10)}`;
-			const user2_id = await generateAccount({
-				username: user2Username,
-				email: `${user2Username}@example.com`,
-				password: 'Password123!',
-				autoVerify: true,
-			});
-
-			const loginResponse2 = await testRequest()
-				.post('/auth')
-				.send({ username: user2Username, password: 'Password123!' });
-
-			const cookies2 = loginResponse2.headers['set-cookie'] as unknown as string[];
-			const jwt2 = cookies2.find((c) => c.startsWith('jwt='));
-			const memberInfo2 = cookies2.find((c) => c.startsWith('memberInfo='));
-			const user2Cookie = [jwt2, memberInfo2].filter(Boolean).join(';');
+			const user1 = await integrationUtils.createAndLoginUser();
+			const user2 = await integrationUtils.createAndLoginUser();
 
 			// Both users save a position with the same name
 			const response1 = await testRequest()
 				.post('/api/editor-saves')
-				.set('Cookie', user1Cookie)
-				.send({ name: 'Same Name', icn: 'icn-user1' });
+				.set('Cookie', user1.cookie)
+				.send({ name: 'Same Name', icn: 'icn-user1', piece_count: 10 });
 
 			const response2 = await testRequest()
 				.post('/api/editor-saves')
-				.set('Cookie', user2Cookie)
-				.send({ name: 'Same Name', icn: 'icn-user2' });
+				.set('Cookie', user2.cookie)
+				.send({ name: 'Same Name', icn: 'icn-user2', piece_count: 10 });
 
 			expect(response1.status).toBe(201);
 			expect(response2.status).toBe(201);
 
 			// Verify both positions exist independently
-			const saves1 = editorSavesManager.getAllSavedPositionsForUser(user1_id);
-			const saves2 = editorSavesManager.getAllSavedPositionsForUser(user2_id);
+			const saves1 = editorSavesManager.getAllSavedPositionsForUser(user1.user_id);
+			const saves2 = editorSavesManager.getAllSavedPositionsForUser(user2.user_id);
 
 			expect(saves1).toHaveLength(1);
 			expect(saves2).toHaveLength(1);

@@ -33,17 +33,7 @@ const SavePositionBodySchema = z.strictObject({
 		.string()
 		.min(1, 'ICN is required')
 		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
-});
-
-/** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
-const RenamePositionBodySchema = z.strictObject({
-	name: z
-		.string()
-		.min(1, 'Name is required')
-		.max(
-			editorutil.POSITION_NAME_MAX_LENGTH,
-			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
-		),
+	piece_count: z.number().int('Piece count must be an integer').nonnegative('Piece count must be 0 or greater'),
 });
 
 /** Schema for validating position_name in URL params */
@@ -94,7 +84,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * API endpoint to save a new position for the current user.
- * Expects { name: string, icn: string } in request body.
+ * Expects { name: string, icn: string, piece_count: number } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
  */
@@ -122,10 +112,7 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, icn } = parseResult.data;
-
-	// Calculate piece_count from ICN length
-	const piece_count = icn.length;
+	const { name, icn, piece_count } = parseResult.data;
 
 	try {
 		// Add the saved position to the database (throws on quota exceeded or name exists)
@@ -252,74 +239,6 @@ function deletePosition(req: Request, res: Response): void {
 	}
 }
 
-/**
- * API endpoint to rename a specific saved position by position_name.
- * Expects { name: string } in request body.
- * Returns { success: true } on success.
- * Requires authentication and ownership of the position.
- */
-function renamePosition(req: Request, res: Response): void {
-	if (!req.memberInfo) {
-		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
-		return;
-	}
-
-	// Check if user is authenticated
-	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ error: 'Must be signed in' });
-		return;
-	}
-
-	const userId = req.memberInfo.user_id;
-
-	// Validate position_name from URL params with Zod
-	const paramsParseResult = PositionNameParamSchema.safeParse(req.params);
-	if (!paramsParseResult.success) {
-		res.status(400).json({ error: 'Invalid position_name' });
-		return;
-	}
-
-	const oldPositionName = paramsParseResult.data.position_name;
-
-	// Validate request body with Zod
-	const bodyParseResult = RenamePositionBodySchema.safeParse(req.body);
-	if (!bodyParseResult.success) {
-		const firstError = bodyParseResult.error.issues[0];
-		const errorMessage = firstError?.message || 'Invalid request body';
-		res.status(400).json({ error: errorMessage });
-		logZodError(req.body, bodyParseResult.error, `Invalid rename position request body.`);
-		return;
-	}
-
-	const { name: newName } = bodyParseResult.data;
-
-	try {
-		// Rename the position in the database (filtered by user_id)
-		const result = editorSavesManager.renameSavedPosition(oldPositionName, userId, newName);
-
-		if (result.changes === 0) {
-			res.status(404).json({ error: 'Position not found' });
-			return;
-		}
-
-		res.json({ success: true });
-	} catch (error: unknown) {
-		const errMsg = error instanceof Error ? error.message : String(error);
-
-		// Handle the name already exists error
-		if (errMsg === editorSavesManager.NAME_ALREADY_EXISTS_ERROR) {
-			res.status(409).json({ error: `Position name already exists` });
-			return;
-		}
-		// Log and return generic error for all other database errors
-		logEventsAndPrint(
-			`Error renaming position "${oldPositionName}" for user_id ${userId} to "${newName}": ${errMsg}`,
-			'errLog.txt',
-		);
-		res.status(500).json({ error: 'Failed to rename position' });
-	}
-}
-
 // Exports -----------------------------------------------------------------------------------
 
 export default {
@@ -330,5 +249,4 @@ export default {
 	savePosition,
 	getPosition,
 	deletePosition,
-	renamePosition,
 };
