@@ -2,7 +2,7 @@
 
 ### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/CONTRIBUTING.md`!
 
-BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `npm run lint --silent`, `npx npx tsc --noEmit`, `npm run build --silent`, and `npm test`.
+BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `prettier . --write`, `npm run lint --silent`, `npx npx tsc --noEmit`, and `npm test`. You must repeat each of these commands even after you make one change to satisfy only one of their errors.
 
 Below are several pointers for navigating the project.
 
