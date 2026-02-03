@@ -6,11 +6,12 @@
 
 import type { Express, Request, Response, NextFunction } from 'express';
 
-import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
+import express from 'express';
 import i18next from 'i18next';
+import EditorSavesAPI from '../api/EditorSavesAPI.js';
 import { handle } from 'i18next-http-middleware';
 import { fileURLToPath } from 'node:url';
 
@@ -51,7 +52,6 @@ import {
 	checkUsernameAvailable,
 	createNewMember,
 } from '../controllers/createAccountController.js';
-import EditorSavesAPI from '../api/EditorSavesAPI.js';
 
 // Constants -------------------------------------------------------------------------
 
