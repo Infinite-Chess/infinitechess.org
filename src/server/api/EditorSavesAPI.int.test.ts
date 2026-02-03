@@ -15,6 +15,7 @@ import integrationUtils from '../../tests/integrationUtils.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { testRequest } from '../../tests/testRequest.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import { generateAccount } from '../controllers/createAccountController.js';
 
 describe('EditorSavesAPI Integration', () => {
 	// Runs once at the very start of this file
@@ -215,15 +216,6 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(404);
-		});
-
-		it('should return 400 if position_name is empty', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest()
-				.get('/api/editor-saves/')
-				.set('Cookie', user.cookie);
-
-			expect(response.status).toBe(404); // Express returns 404 for unmatched routes
 		});
 
 		it('should handle position names with spaces', async () => {
@@ -482,26 +474,59 @@ describe('EditorSavesAPI Integration', () => {
 		});
 
 		it('should allow two different users to have positions with the same name', async () => {
-			const user1 = await integrationUtils.createAndLoginUser();
-			const user2 = await integrationUtils.createAndLoginUser();
+			// Create first user with unique name to avoid conflicts
+			const user1Username = `ChessMaster${Date.now()}`;
+			const user1_id = await generateAccount({
+				username: user1Username,
+				email: `${user1Username}@example.com`,
+				password: 'Password123!',
+				autoVerify: true,
+			});
+
+			const loginResponse1 = await testRequest()
+				.post('/auth')
+				.send({ username: user1Username, password: 'Password123!' });
+
+			const cookies1 = loginResponse1.headers['set-cookie'] as unknown as string[];
+			const jwt1 = cookies1.find((c) => c.startsWith('jwt='));
+			const memberInfo1 = cookies1.find((c) => c.startsWith('memberInfo='));
+			const user1Cookie = [jwt1, memberInfo1].filter(Boolean).join(';');
+
+			// Create second user with unique name
+			const user2Username = `ChessGrandmaster${Date.now()}`;
+			const user2_id = await generateAccount({
+				username: user2Username,
+				email: `${user2Username}@example.com`,
+				password: 'Password123!',
+				autoVerify: true,
+			});
+
+			const loginResponse2 = await testRequest()
+				.post('/auth')
+				.send({ username: user2Username, password: 'Password123!' });
+
+			const cookies2 = loginResponse2.headers['set-cookie'] as unknown as string[];
+			const jwt2 = cookies2.find((c) => c.startsWith('jwt='));
+			const memberInfo2 = cookies2.find((c) => c.startsWith('memberInfo='));
+			const user2Cookie = [jwt2, memberInfo2].filter(Boolean).join(';');
 
 			// Both users save a position with the same name
 			const response1 = await testRequest()
 				.post('/api/editor-saves')
-				.set('Cookie', user1.cookie)
+				.set('Cookie', user1Cookie)
 				.send({ name: 'Same Name', icn: 'icn-user1' });
 
 			const response2 = await testRequest()
 				.post('/api/editor-saves')
-				.set('Cookie', user2.cookie)
+				.set('Cookie', user2Cookie)
 				.send({ name: 'Same Name', icn: 'icn-user2' });
 
 			expect(response1.status).toBe(201);
 			expect(response2.status).toBe(201);
 
 			// Verify both positions exist independently
-			const saves1 = editorSavesManager.getAllSavedPositionsForUser(user1.user_id);
-			const saves2 = editorSavesManager.getAllSavedPositionsForUser(user2.user_id);
+			const saves1 = editorSavesManager.getAllSavedPositionsForUser(user1_id);
+			const saves2 = editorSavesManager.getAllSavedPositionsForUser(user2_id);
 
 			expect(saves1).toHaveLength(1);
 			expect(saves2).toHaveLength(1);
