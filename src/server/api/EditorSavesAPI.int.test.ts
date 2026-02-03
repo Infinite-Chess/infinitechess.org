@@ -59,22 +59,6 @@ describe('EditorSavesAPI Integration', () => {
 
 			expect(response.status).toBe(401);
 		});
-
-		it('should return 500 if database error occurs', async () => {
-			// This test is tricky to implement without mocking database methods
-			// We'll skip this for now as integration tests typically don't test
-			// database failure scenarios (those are unit test concerns)
-			// However, we can still verify the endpoint works under normal conditions
-			const user = await integrationUtils.createAndLoginUser();
-
-			const response = await testRequest()
-				.get('/api/editor-saves')
-				.set('Cookie', user.cookie);
-
-			// Should succeed with empty array when no saves exist
-			expect(response.status).toBe(200);
-			expect(response.body.saves).toEqual([]);
-		});
 	});
 
 	describe('POST /api/editor-saves', () => {
