@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/preferences.ts
+
 import themes from '../../../../../shared/components/header/themes.js';
 import pieceThemes, {
 	PieceColorGroup,

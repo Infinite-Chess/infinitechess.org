@@ -1,3 +1,5 @@
+// src/server/controllers/browserIDManager.ts
+
 import type { Request, Response, NextFunction } from 'express';
 
 import uuid from '../../shared/util/uuid.js';

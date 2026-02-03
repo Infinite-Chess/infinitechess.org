@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/gamecompressor.ts
+
 /**
  * This script handles the compression of a gamefile into a more simple json format,
  * suitable for the icnconverter to turn it into ICN (Infinite Chess Notation).

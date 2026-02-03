@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guiclock.ts
+
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';

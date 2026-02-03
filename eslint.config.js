@@ -1,3 +1,5 @@
+// eslint.config.js
+
 import globals from 'globals';
 import pluginJs from '@eslint/js';
 import pluginTypescript from '@typescript-eslint/eslint-plugin';

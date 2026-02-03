@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/chess/GameBus.ts
+// src/client/scripts/esm/game/GameBus.ts
 
 // import type { FullGame } from '../../../../shared/chess/logic/gamefile';
 import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';

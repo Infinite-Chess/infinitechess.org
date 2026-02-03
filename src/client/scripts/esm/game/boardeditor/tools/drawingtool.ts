@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/tools/drawing/drawingtool.ts
+// src/client/scripts/esm/game/boardeditor/tools/drawingtool.ts
 
 /**
  * Editor Drawing Tool

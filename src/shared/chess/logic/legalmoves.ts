@@ -1,3 +1,5 @@
+// src/shared/chess/logic/legalmoves.ts
+
 /**
  * This script calculates legal moves
  */

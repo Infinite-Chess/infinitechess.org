@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/gui.ts
+
 /**
  * This script adds event listeners for our main overlay html element that
  * contains all of our gui pages.

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/dropdowns/selectiondropdown.ts
+
 // This script allows us to enable or disable premoves and dragging pieces
 
 import preferences from '../preferences.js';

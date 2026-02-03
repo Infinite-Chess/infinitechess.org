@@ -1,3 +1,5 @@
+// src/client/scripts/esm/chess/rendering/svgcache.ts
+
 /**
  * This module handles fetching and caching of chess piece SVGs.
  * It won't request the same SVG twice.

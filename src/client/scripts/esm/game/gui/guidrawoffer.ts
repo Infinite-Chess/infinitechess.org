@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guidrawoffer.ts
+
 /**
  * This script opens and closes our Draw Offer UI
  * on the bottom navigation bar.

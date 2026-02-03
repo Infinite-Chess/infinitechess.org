@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/settings.ts
+
 // This script opens and closes our settings drop-down menu when it is clicked.
 
 import languagedropdown from './dropdowns/languagedropdown.js';

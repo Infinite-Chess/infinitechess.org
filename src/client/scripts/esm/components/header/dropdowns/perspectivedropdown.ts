@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/dropdowns/perspectivedropdown.ts
+
 // This script allows us to adjust the mouse sensitivity in perspective mode
 
 import docutil from '../../../util/docutil.js';

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guigameinfo.ts
+
 /**
  * This script handles the game info bar, during a game,
  * displaying the clocks, and whos turn it currently is.

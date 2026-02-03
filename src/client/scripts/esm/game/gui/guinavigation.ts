@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guinavigation.ts
+
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/engines/hydrochess.ts
+
 /**
  * HydroChess Engine - WASM Version
  * A JavaScript wrapper for the WASM implementation of HydroChess

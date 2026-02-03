@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/game.ts
+
 /**
  * This script prepares our game.
  *
