@@ -40,14 +40,14 @@ const NAME_ALREADY_EXISTS_ERROR = 'NAME_ALREADY_EXISTS';
 
 /**
  * Retrieves all saved positions for a given user_id.
- * Returns only name, piece_count, and timestamp columns.
+ * Returns only name, timestamp, and piece_count columns.
  * @param user_id - The user ID
  * @returns An array of saved positions.
  * @throws A database error occurred while managing editor saves.
  */
 function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 	try {
-		const query = `SELECT name, piece_count, timestamp FROM editor_saves WHERE user_id = ?`;
+		const query = `SELECT name, timestamp, piece_count FROM editor_saves WHERE user_id = ?`;
 		return db.all<EditorSavesListRecord>(query, [user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -64,20 +64,20 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * enforcing the maximum saved positions quota per user.
  * @param user_id - The user ID who owns the position
  * @param name - The name of the saved position
+ * @param timestamp - The timestamp when the position was saved
  * @param piece_count - The client-provided piece count of the position
  * @param icn - The ICN notation of the position
- * @param timestamp - The timestamp when the position was saved
- * @param pawn_double_push - Whether pawn double push is enabled
- * @param castling - Whether castling is enabled
+ * @param pawn_double_push - Whether the pawn double push gamerule is enabled
+ * @param castling - Whether the castling gamerule is enabled
  * @returns The RunResult.
  * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, NAME_ALREADY_EXISTS if the name already exists, or a generic database error.
  */
 function addSavedPosition(
 	user_id: number,
 	name: string,
+	timestamp: number,
 	piece_count: number,
 	icn: string,
-	timestamp: number,
 	pawn_double_push: boolean,
 	castling: boolean,
 ): RunResult {
@@ -98,15 +98,15 @@ function addSavedPosition(
 
 			// 3. Insert the new record
 			const insertQuery = `
-            INSERT INTO editor_saves (user_id, name, piece_count, icn, timestamp, pawn_double_push, castling)
+            INSERT INTO editor_saves (user_id, name, timestamp, piece_count, icn, pawn_double_push, castling)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 			return db.run(insertQuery, [
 				user_id,
 				name,
+				timestamp,
 				piece_count,
 				icn,
-				timestamp,
 				pawn_double_push ? 1 : 0,
 				castling ? 1 : 0,
 			]);

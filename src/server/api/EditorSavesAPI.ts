@@ -29,6 +29,7 @@ const SavePositionBodySchema = z.strictObject({
 			editorutil.POSITION_NAME_MAX_LENGTH,
 			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
 		),
+	timestamp: z.number().int('Timestamp must be an integer').nonnegative('Timestamp must be 0+'),
 	piece_count: z
 		.number()
 		.int('Piece count must be an integer')
@@ -37,7 +38,6 @@ const SavePositionBodySchema = z.strictObject({
 		.string()
 		.min(1, 'ICN is required')
 		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
-	timestamp: z.number().int('Timestamp must be an integer').nonnegative('Timestamp must be 0+'),
 	pawn_double_push: z.boolean(),
 	castling: z.boolean(),
 });
@@ -90,7 +90,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * API endpoint to save a new position for the current user.
- * Expects { name: string, piece_count: number, icn: string, timestamp: number, pawn_double_push: boolean, castling: boolean } in request body.
+ * Expects { name: string, timestamp: number, piece_count: number, icn: string, pawn_double_push: boolean, castling: boolean } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
  */
@@ -118,16 +118,16 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, piece_count, icn, timestamp, pawn_double_push, castling } = parseResult.data;
+	const { name, timestamp, piece_count, icn, pawn_double_push, castling } = parseResult.data;
 
 	try {
 		// Add the saved position to the database (throws on quota exceeded or name exists)
 		editorSavesManager.addSavedPosition(
 			userId,
 			name,
+			timestamp,
 			piece_count,
 			icn,
-			timestamp,
 			pawn_double_push,
 			castling,
 		);
