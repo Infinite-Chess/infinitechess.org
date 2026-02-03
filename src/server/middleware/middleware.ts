@@ -51,6 +51,7 @@ import {
 	checkUsernameAvailable,
 	createNewMember,
 } from '../controllers/createAccountController.js';
+import EditorSavesAPI from '../api/EditorSavesAPI.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -223,11 +224,11 @@ export function configureMiddleware(app: Express): void {
 	app.post('/api/news/mark-read', markNewsAsRead);
 
 	// Editor saves routes
-	// app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
-	// app.post('/api/editor-saves', EditorSavesAPI.savePosition);
-	// app.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
-	// app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
-	// app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
+	app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
+	app.post('/api/editor-saves', EditorSavesAPI.savePosition);
+	app.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
+	app.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
+	app.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
 
 	app.get('/logout', handleLogout);
 
