@@ -6,9 +6,13 @@ import { generateAccount } from '../server/controllers/createAccountController';
 // Functions -------------------------------------------------------------------
 
 /** Creates a new test user, logs them in, and returns their username and session cookie. */
-async function createAndLoginUser(): Promise<{ username: string; cookie: string }> {
+async function createAndLoginUser(): Promise<{
+	user_id: number;
+	username: string;
+	cookie: string;
+}> {
 	const username = 'ChessMaster';
-	await generateAccount({
+	const user_id = await generateAccount({
 		username,
 		email: 'master@example.com',
 		password: 'Password123!',
@@ -28,6 +32,7 @@ async function createAndLoginUser(): Promise<{ username: string; cookie: string 
 
 	// Return both combined
 	return {
+		user_id,
 		username,
 		cookie: [jwt, memberInfo].filter(Boolean).join(';'),
 	};

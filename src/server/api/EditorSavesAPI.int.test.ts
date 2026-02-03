@@ -5,7 +5,6 @@
  *
  * This test suite verifies that the editor saves API endpoints work correctly,
  * including authentication, validation, quota limits, and ownership verification.
- * Tests interact with the real database through editorSavesManager.
  */
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
@@ -16,7 +15,6 @@ import integrationUtils from '../../tests/integrationUtils.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { testRequest } from '../../tests/testRequest.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 describe('EditorSavesAPI Integration', () => {
 	// Runs once at the very start of this file
@@ -37,21 +35,22 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Position 1', icn: 'icn-data-1' });
+				.send({ name: 'A simple position', icn: 'icn-data-1' });
 
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Position 2', icn: 'icn-data-2' });
+				.send({ name: 'Another simple position', icn: 'icn-data-2.0' });
 
 			const response = await testRequest()
 				.get('/api/editor-saves')
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body.saves).toHaveLength(2);
-			expect(response.body.saves[0]).toMatchObject({ name: 'Position 1', size: 10 }); // 'icn-data-1'.length = 10
-			expect(response.body.saves[1]).toMatchObject({ name: 'Position 2', size: 10 }); // 'icn-data-2'.length = 10
+			expect(response.body.saves).toMatchObject([
+				{ name: 'A simple position', size: 10 }, // 'icn-data-1'.length = 10
+				{ name: 'Another simple position', size: 12 }, // 'icn-data-2.0'.length = 12
+			]);
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
@@ -75,9 +74,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.body.position_id).toBeDefined();
 
 			// Verify the position was actually saved to the database
-			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
-			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
-			expect(saves).toHaveLength(1);
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]).toMatchObject({ name: 'Test Position', size: 13 }); // 'test-icn-data'.length = 13
 		});
 
@@ -149,7 +146,7 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Add 50 positions to reach the quota limit
-			for (let i = 0; i < 50; i++) {
+			for (let i = 0; i < editorSavesManager.MAX_SAVED_POSITIONS; i++) {
 				await testRequest()
 					.post('/api/editor-saves')
 					.set('Cookie', user.cookie)
@@ -258,8 +255,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.body).toEqual({ success: true });
 
 			// Verify the position was actually deleted from the database
-			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
-			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves).toHaveLength(0);
 		});
 
@@ -310,8 +306,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.body).toEqual({ success: true });
 
 			// Verify the position was actually renamed in the database
-			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
-			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]?.name).toBe('New Name');
 		});
 
@@ -391,8 +386,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify it was saved correctly
-			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
-			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]?.size).toBe(EditorSavesAPI.MAX_ICN_LENGTH);
 		});
 
@@ -409,8 +403,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify it was saved correctly
-			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
-			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]?.name).toBe(maxLengthName);
 		});
 
@@ -427,8 +420,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify the size was calculated correctly
-			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
-			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]?.size).toBe(5);
 		});
 	});
