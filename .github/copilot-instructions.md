@@ -2,6 +2,8 @@
 
 ### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/CONTRIBUTING.md`!
 
+BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `npm run lint --silent`, `npx npx tsc --noEmit`, `npm run build --silent`, and `npm test`.
+
 Below are several pointers for navigating the project.
 
 ## Project Architecture
