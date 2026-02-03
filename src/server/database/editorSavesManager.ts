@@ -104,7 +104,9 @@ function addSavedPosition(
 		// Handle UNIQUE constraint violation
 		if (
 			error instanceof Error &&
-			error.message.includes('UNIQUE constraint failed: editor_saves.user_id, editor_saves.name')
+			error.message.includes(
+				'UNIQUE constraint failed: editor_saves.user_id, editor_saves.name',
+			)
 		) {
 			throw new Error(NAME_ALREADY_EXISTS_ERROR);
 		}
@@ -178,7 +180,9 @@ function renameSavedPosition(old_name: string, user_id: number, new_name: string
 		// Handle UNIQUE constraint violation
 		if (
 			error instanceof Error &&
-			error.message.includes('UNIQUE constraint failed: editor_saves.user_id, editor_saves.name')
+			error.message.includes(
+				'UNIQUE constraint failed: editor_saves.user_id, editor_saves.name',
+			)
 		) {
 			throw new Error(NAME_ALREADY_EXISTS_ERROR);
 		}

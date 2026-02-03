@@ -140,7 +140,10 @@ function savePosition(req: Request, res: Response): void {
 		}
 
 		// Handle the name already exists error
-		if (error instanceof Error && error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR) {
+		if (
+			error instanceof Error &&
+			error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR
+		) {
 			res.status(409).json({ error: `Position name already exists` });
 			return;
 		}
@@ -302,7 +305,10 @@ function renamePosition(req: Request, res: Response): void {
 		res.json({ success: true });
 	} catch (error: unknown) {
 		// Handle the name already exists error
-		if (error instanceof Error && error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR) {
+		if (
+			error instanceof Error &&
+			error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR
+		) {
 			res.status(409).json({ error: `Position name already exists` });
 			return;
 		}
