@@ -74,18 +74,6 @@ let underAttackMode = false;
 const recentRequests: number[] = []; // List of times of recent connections
 
 /**
- * The maximum size of an incoming websocket message, in bytes.
- * Above this will be rejected, and an error sent to the client.
- *
- * DIRECTLY CONTROLS THE maximum distance players can move in online games!
- * 500 KB allows moves up to 1e100000 squares away, with some padding.
- * On mobile it would take 6 hours of zooming out at
- * MAXIMUM speed to reach that distance, without rest.
- * It would take WAYYYY longer on desktop!
- */
-const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
-
-/**
  * Generates a key for rate limiting based on the client's IP address and user agent.
  * @param IP - The IP address of the request or websocket connection.
  * @param userAgent - The user agent string from the request headers.
@@ -185,16 +173,6 @@ function rateLimitWebSocket(req: IncomingMessage, ws: CustomWebSocket): boolean 
 			'reqLogRateLimited.txt',
 		);
 		ws.close(1009, 'Too Many Requests. Try again soon.');
-		return false;
-	}
-
-	// Test if the message is too big here. People could DDOS this way
-	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
-	// Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
-	const messageSize = ws._socket.bytesRead;
-	if (messageSize > maxWebsocketMessageSizeBytes) {
-		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'reqLogRateLimited.txt');
-		ws.close(1009, 'Message Too Big');
 		return false;
 	}
 
