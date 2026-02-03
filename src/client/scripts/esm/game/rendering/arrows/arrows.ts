@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/arrows/arrows.ts
+
 /**
  * This script calculates and renders the arrow indicators
  * on the sides of the screen, pointing to pieces off-screen

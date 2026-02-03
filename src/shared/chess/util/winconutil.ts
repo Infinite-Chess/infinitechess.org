@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/util/winconutil.ts
+// src/shared/chess/util/winconutil.ts
 
 /**
  * This script contains lists of compatible win conditions in the game.

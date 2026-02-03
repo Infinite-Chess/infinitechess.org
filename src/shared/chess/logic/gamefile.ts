@@ -1,3 +1,5 @@
+// src/shared/chess/logic/gamefile.ts
+
 import type { ClockData, ClockValues } from './clock.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { MetaData } from '../util/metadata.js';

@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/pastereport.ts
+
 /**
  * This script flags private games that have a custom position pasted.
  */

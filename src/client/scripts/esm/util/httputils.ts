@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/httputils.ts
+
 /**
  * This script contains http/fetch utility methods.
  */

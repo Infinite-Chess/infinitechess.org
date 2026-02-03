@@ -1,3 +1,5 @@
+// src/server/game/invitesmanager/invitesmanager.ts
+
 /**
  * This script manages our list of all active invites,
  * subscribes and unsubs sockets to and from the invites

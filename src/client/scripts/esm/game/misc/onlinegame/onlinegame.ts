@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/onlinegame.ts
+
 /**
  * This module keeps trap of the data of the onlinegame we are currently in.
  * */

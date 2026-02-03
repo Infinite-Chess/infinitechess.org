@@ -1,3 +1,5 @@
+// src/shared/chess/logic/checkresolver.ts
+
 /**
  * This script contains methods that reduce the legal moves of a piece
  * to only the ones that don't leave the player in check.

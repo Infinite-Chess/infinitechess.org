@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/specialrighthighlights.ts
+
 /**
  * This is a DEBUGGING script for rendering special right and enpassant highlights.
  *

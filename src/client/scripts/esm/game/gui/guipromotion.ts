@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guipromotion.ts
+
 /**
  * This script handles our promotion menu, when
  * pawns reach the promotion line.

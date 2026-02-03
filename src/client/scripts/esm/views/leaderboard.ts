@@ -1,3 +1,5 @@
+// src/client/scripts/esm/views/leaderboard.ts
+
 /*
  * This script:
  *

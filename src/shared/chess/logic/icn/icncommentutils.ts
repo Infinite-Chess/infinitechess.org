@@ -1,3 +1,5 @@
+// src/shared/chess/logic/icn/icncommentutils.ts
+
 /**
  * This scripts creates and parses embeded command sequences
  * that go into the comments of moves in Infinite Chess Notation.

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/annotations/drawarrows.ts
+
 /**
  * This script allows the user to draw arrows on the board.
  *

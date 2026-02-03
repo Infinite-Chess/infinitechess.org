@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/math.ts
+// src/shared/util/math/math.ts
 
 /**
  * This script contains extra general math operations.

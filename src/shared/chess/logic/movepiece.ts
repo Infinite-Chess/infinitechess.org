@@ -1,3 +1,5 @@
+// src/shared/chess/logic/movepiece.ts
+
 /**
  * This script handles the logical side of moving pieces, nothing graphical.
  *

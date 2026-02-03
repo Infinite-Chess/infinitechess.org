@@ -1,3 +1,5 @@
+// src/server/game/invitesmanager/invitessubscribers.ts
+
 /*
  * This script stores the list of websockets currently subscribed
  * to the invites list.

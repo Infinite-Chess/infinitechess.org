@@ -1,3 +1,5 @@
+// src/shared/chess/util/clockutil.ts
+
 import type { MetaData } from './metadata';
 
 function getTextContentFromTimeRemain(time: number): string {

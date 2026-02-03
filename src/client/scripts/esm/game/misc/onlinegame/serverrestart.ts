@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/serverrestart.ts
+
 /**
  * This script manages the periodic messages that display on-screen when you're in a game,
  * stating the server will restart in N minutes.

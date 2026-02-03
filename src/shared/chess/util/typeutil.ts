@@ -1,3 +1,5 @@
+// src/shared/chess/util/typeutil.ts
+
 /**
  * This script contains lists of all piece types and players,
  * and utility methods for working with them.

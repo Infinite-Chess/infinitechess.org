@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/invites.js
+
 // Import Start
 import websocket from '../websocket.js';
 import LocalStorage from '../../util/LocalStorage.js';

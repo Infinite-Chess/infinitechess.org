@@ -1,3 +1,5 @@
+// src/shared/chess/variants/gamerules.ts
+
 /**
  * This script contains the GameRules interface definition,
  * and contains utility methods for working with them.

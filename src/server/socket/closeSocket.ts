@@ -1,3 +1,5 @@
+// src/server/socket/closeSocket.ts
+
 /**
  * This script terminates websockets.
  */

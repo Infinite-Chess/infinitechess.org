@@ -1,3 +1,5 @@
+// src/server/middleware/logEvents.ts
+
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 import { promises as fsPromises } from 'fs';

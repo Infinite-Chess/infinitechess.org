@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/drawoffers.ts
+
 /**
  * This script stores the logic surrounding draw extending and acceptance
  * in online games, client-side.

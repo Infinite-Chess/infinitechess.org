@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/controls.ts
+
 /**
  * This script controls the board navigation
  * via the WASD keys, space/shift, and mouse wheel.

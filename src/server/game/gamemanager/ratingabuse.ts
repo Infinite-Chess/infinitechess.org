@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/ratingabuse.ts
+
 /**
  * This script can weight a user's level of suspiciousness for rating abuse,
  * in attempt to boost their own elo.

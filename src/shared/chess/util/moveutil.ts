@@ -1,3 +1,5 @@
+// src/shared/chess/util/moveutil.ts
+
 /**
  * This script contains utility methods for working with the gamefile's moves list.
  */

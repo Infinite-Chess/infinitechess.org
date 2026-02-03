@@ -1,3 +1,5 @@
+// src/shared/chess/logic/fourdimensionalmoves.ts
+
 /**
  * This script contains overrides for calculating the legal moves
  * of pieces in four dimensional variants, and for executing those moves.

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/spritesheet.ts
+
 /**
  * This script stores the spritesheet FOR THE CURRENT GAME,
  * and all the piece's texture coordinates within it.

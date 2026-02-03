@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/indexeddb.test.ts
+// src/client/scripts/esm/util/indexeddb.unit.test.ts
 
 /**
  * Functional tests for the IndexedDB storage module using a simulated IDB.

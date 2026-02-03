@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/frametracker.ts
+
 /**
  * This script stores an internal variable that keeps track of whether
  * anything visual has changed on-screen in the game this frame.

@@ -1,3 +1,5 @@
+// src/server/database/ratingAbuseManager.ts
+
 /**
  * This script handles queries to the rating_abuse table.
  */

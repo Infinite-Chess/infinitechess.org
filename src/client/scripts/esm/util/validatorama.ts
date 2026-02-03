@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/validatorama.ts
+
 // I called it validatorama because "validator" was already something
 // in the Node environment or somewhere and so jsdoc wasn't auto suggesting the right one
 

@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/activeplayers.ts
+
 /**
  * This script keeps track of the ID's of games members and browsers are currently in.
  */

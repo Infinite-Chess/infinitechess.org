@@ -1,3 +1,5 @@
+// src/server/middleware/banned.ts
+
 import path from 'path';
 import fs from 'fs';
 

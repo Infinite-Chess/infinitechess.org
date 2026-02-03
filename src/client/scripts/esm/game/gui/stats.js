@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/stats.js
+
 // Import Start
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import config from '../config.js';

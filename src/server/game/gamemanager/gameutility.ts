@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/gameutility.ts
+
 /**
  * This script contains our Game constructor for the server-side,
  * and contains many utility methods for working with them!

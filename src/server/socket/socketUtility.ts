@@ -1,3 +1,5 @@
+// src/server/socket/socketUtility.ts
+
 // This script contains generalized methods for working with websocket objects.
 
 import jsutil from '../../shared/util/jsutil.js';

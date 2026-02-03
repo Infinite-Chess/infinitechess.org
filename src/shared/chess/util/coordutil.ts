@@ -1,3 +1,5 @@
+// src/shared/chess/util/coordutil.ts
+
 /**
  * This script contains utility methods for working with coordinates [x,y].
  *

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/math/vectors.ts
+// src/shared/util/math/vectors.ts
 
 /**
  * This script contains methods for performing vector calculations,

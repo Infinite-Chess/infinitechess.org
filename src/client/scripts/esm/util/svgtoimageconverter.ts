@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/svgtoimageconverter.ts
+
 /**
  * This script can convert SVG elements into HTMLImageElements.
  *

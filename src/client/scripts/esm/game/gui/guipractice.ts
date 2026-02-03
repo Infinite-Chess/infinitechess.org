@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guipractice.ts
+
 /*
  * This script handles our Practice page, containing
  * our practice selection menu.

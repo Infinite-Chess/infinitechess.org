@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/snapping.ts
+
 /**
  * This script initiates teleports to all mini images and square annotes clicked.
  *

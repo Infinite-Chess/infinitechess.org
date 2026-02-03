@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/math/bounds.ts
+// src/shared/util/math/bounds.ts
 
 /**
  * This script contains methods for constructing and operating on bounding boxes.

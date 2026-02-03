@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/gamemanager.ts
+
 /**
  * The script keeps track of all our active online games.
  */

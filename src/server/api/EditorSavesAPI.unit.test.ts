@@ -1,4 +1,4 @@
-// src/server/api/EditorSavesAPI.test.ts
+// src/server/api/EditorSavesAPI.unit.test.ts
 
 /**
  * Tests for the EditorSavesAPI endpoints.

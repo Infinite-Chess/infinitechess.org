@@ -1,3 +1,5 @@
+// src/shared/components/header/themes.ts
+
 // This module stores our themes. Straight forward :P
 
 import jsutil from '../../util/jsutil.js';

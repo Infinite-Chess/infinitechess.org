@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/pieces.ts
+
 /**
  * This script renders all of our pieces on the board,
  * including voids, and mini images.

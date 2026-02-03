@@ -1,3 +1,5 @@
+// src/server/socket/socketManager.ts
+
 /**
  * This script stores all open websockets organized by ID, IP, and session.
  *

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/highlights.ts
+
 /**
  * This script renders all highlights:
  *

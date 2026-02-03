@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/loadingscreen.ts
+
 /**
  * This script manages the spinny pawn loading animation
  * while a game is loading both the LOGICAL and
