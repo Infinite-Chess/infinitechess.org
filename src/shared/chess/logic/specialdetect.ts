@@ -1,3 +1,5 @@
+// src/shared/chess/logic/specialdetect.ts
+
 // Import Start
 import bd from '@naviary/bigdecimal';
 

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/usernamecontainer.ts
+
 /**
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */

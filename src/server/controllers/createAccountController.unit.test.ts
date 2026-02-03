@@ -1,4 +1,4 @@
-// src/server/controllers/createAccountController.test.ts
+// src/server/controllers/createAccountController.unit.test.ts
 
 /**
  * Tests for the profanity filter used in account creation.

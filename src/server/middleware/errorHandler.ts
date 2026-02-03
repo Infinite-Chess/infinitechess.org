@@ -1,3 +1,5 @@
+// src/server/middleware/errorHandler.ts
+
 import type { Request, Response } from 'express';
 
 import { getTranslationForReq } from '../utility/translate.js';

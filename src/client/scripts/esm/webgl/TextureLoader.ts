@@ -1,3 +1,5 @@
+// src/client/scripts/esm/webgl/TextureLoader.ts
+
 interface Options {
 	/** Whether to generate and use mipmaps for the texture. Default is false. */
 	mipmaps?: boolean;

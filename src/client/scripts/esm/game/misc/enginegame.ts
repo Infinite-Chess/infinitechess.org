@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/enginegame.ts
+
 // This module keeps track of the data of the engine game we are currently in.
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';

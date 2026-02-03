@@ -1,3 +1,5 @@
+// src/shared/chess/logic/initvariant.ts
+
 /**
  * This script prepares our variant when a game is constructed
  */

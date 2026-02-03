@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/onOfferDraw.ts
+
 /**
  * This script contains the routes for extending, accepting, and rejecting
  * draw offers in online games.

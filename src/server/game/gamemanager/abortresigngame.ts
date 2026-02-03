@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/abortresigngame.ts
+
 /**
  * This script handles the abortings and resignations of online games
  */

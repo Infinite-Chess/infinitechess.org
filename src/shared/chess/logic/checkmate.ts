@@ -1,3 +1,5 @@
+// src/shared/chess/logic/checkmate.ts
+
 /**
  * This script contains our checkmate algorithm.
  */

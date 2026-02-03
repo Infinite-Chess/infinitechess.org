@@ -1,3 +1,5 @@
+// src/client/scripts/esm/views/index.ts
+
 /**
  * Type definition for a contributor object.
  */

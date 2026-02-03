@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guititle.ts
+
 /**
  * This script handles our Title Screen
  */

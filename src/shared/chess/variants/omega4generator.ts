@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/variants/omega4generator.ts
+// src/shared/chess/variants/omega4generator.ts
 
 /**
  * Here lies the position generator for the Omega^4 Showcase variant.

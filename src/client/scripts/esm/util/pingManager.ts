@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/pingManager.ts
+
 /**
  * PingManager
  * Manages the current ping value and handles events related to ping updates and socket closures.

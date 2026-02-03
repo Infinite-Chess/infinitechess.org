@@ -1,3 +1,5 @@
+// src/server/controllers/roles.js
+
 /**
  * This module handles the addition
  * and removal of roles from members.

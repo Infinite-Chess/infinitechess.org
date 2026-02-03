@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/highlightline.ts
+
 /**
  * This script renders our single-line legal sliding moves
  * when we are zoomed out far.

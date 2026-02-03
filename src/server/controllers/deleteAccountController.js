@@ -1,3 +1,5 @@
+// src/server/controllers/deleteAccountController.js
+
 /**
  * This module handles account deletion.
  */

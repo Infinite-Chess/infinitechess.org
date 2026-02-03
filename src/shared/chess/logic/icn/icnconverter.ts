@@ -1,3 +1,5 @@
+// src/shared/chess/logic/icn/icnconverter.ts
+
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
  * by Naviary and Andreas Tsevas

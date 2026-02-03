@@ -1,4 +1,4 @@
-// src/controllers/awsWebhook.ts
+// src/server/controllers/awsWebhook.ts
 
 /**
  * Controller to handle AWS SNS webhooks for SES bounce and complaint notifications.

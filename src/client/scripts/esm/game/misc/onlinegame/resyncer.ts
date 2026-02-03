@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/resyncer.ts
+
 /**
  * This script handles game updates and recyning an online game,
  * when for one reason or another we become out of sync.

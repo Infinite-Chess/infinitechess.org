@@ -1,3 +1,5 @@
+// src/shared/chess/util/boardutil.ts
+
 /**
  * This script contains utility methods for working with the organized pieces of a game.
  */

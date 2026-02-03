@@ -1,3 +1,5 @@
+// src/server/api/Prefs.ts
+
 /**
  * This script sets the preferences cookie on any request to an HTML file.
  * And it has an API for setting your preferences in the database.

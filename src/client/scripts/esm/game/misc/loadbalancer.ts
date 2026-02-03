@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/loadbalancer.ts
+
 /**
  * This script keeps track of our deltaTime, FPS, AFK status, and hibernation status.
  */

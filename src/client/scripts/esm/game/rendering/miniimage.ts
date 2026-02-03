@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/miniimage.ts
+
 /**
  * This script handles the rendering of the mini images of our pieces when we're zoomed out
  */

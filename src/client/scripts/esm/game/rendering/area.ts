@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/area.js
+// src/client/scripts/esm/game/rendering/area.ts
 
 /**
  * This script handles the calculation of the "Area"s on screen that

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/dragging/draganimation.ts
+
 /**
  * This script hides the original piece and renders a copy at the pointer location.
  * It also highlights the square that the piece would be dropped on (to do)

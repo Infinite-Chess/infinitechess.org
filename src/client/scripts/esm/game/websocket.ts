@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/websocket.ts
+
 // @ts-ignore
 import statustext from './gui/statustext.js';
 // @ts-ignore

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/views/guide.ts
+
 /**
  * This script handles the Guide page fairy piece carousel.
  */

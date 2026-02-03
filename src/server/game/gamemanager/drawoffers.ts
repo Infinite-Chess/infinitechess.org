@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/drawoffers.ts
+
 /**
  * This script contains utility methods for draw offers,
  * and has almost zero dependancies.

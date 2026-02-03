@@ -1,3 +1,5 @@
+// src/shared/chess/logic/organizedpieces.ts
+
 /**
  * This script generates and manages the organized pieces of a game.
  *

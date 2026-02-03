@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/selectedpiecehighlightline.ts
+
 /**
  * [ZOOMED OUT] This script calculates and renders the highlight lines
  * of the currently selected piece's legal moves.

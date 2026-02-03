@@ -1,3 +1,5 @@
+// src/shared/util/wsutil.ts
+
 /*
  * This script should contain utility methods regarding
  * sockets that both the CLIENT and server can use.

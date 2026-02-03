@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/boarddrag.ts
+
 /**
  * This script handles the dragging of the board,
  * and throwing it after letting go.

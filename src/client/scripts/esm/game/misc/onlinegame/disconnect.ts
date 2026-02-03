@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/disconnect.ts
+
 /**
  * This script displays a countdown on screen, when our opponent disconnects,
  * how much longer they have remaining until they are auto-resigned.

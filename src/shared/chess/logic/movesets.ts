@@ -1,3 +1,5 @@
+// src/shared/chess/logic/movesets.ts
+
 /**
  * This script contains the default movesets for all pieces except specials (pawns, castling)
  */

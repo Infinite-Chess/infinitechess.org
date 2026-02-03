@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/movesendreceive.ts
+
 /**
  * This script handles sending our move in online games to the server,
  * and receiving moves from our opponent.
