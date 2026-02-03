@@ -312,6 +312,22 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(400);
 		});
 
+		it('should return 400 if pawn_double_push is missing', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+			const response = await testRequest()
+				.post('/api/editor-saves')
+				.set('Cookie', user.cookie)
+				.send({
+					name: 'Test Position',
+					icn: 'test-icn-data',
+					piece_count: 13,
+					timestamp: Date.now(),
+					castling: true,
+				});
+
+			expect(response.status).toBe(400);
+		});
+
 		it('should return 400 if castling is missing', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const response = await testRequest()
