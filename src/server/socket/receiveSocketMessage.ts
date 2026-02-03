@@ -8,9 +8,8 @@
 import * as z from 'zod';
 
 // @ts-ignore
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-// @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';

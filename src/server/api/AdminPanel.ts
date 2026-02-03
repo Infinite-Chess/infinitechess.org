@@ -10,9 +10,8 @@ import type { Request, Response } from 'express';
 import { manuallyVerifyUser } from '../controllers/verifyAccountController.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
-// @ts-ignore
 import { refreshGitHubContributorsList } from './GitHub.js';
-import { areRolesHigherInPriority, Role } from '../controllers/roles.js';
+import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { addToBlacklist, removeFromBlacklist } from '../database/blacklistManager.js';

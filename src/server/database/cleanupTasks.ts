@@ -5,11 +5,10 @@
  * cleaning up each table in the database of stale data.
  */
 
-// @ts-ignore
-import { deleteAccount } from '../controllers/deleteAccountController.js';
 import db from './database.js'; // Adjust path
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
+import { deleteAccount } from '../controllers/deleteAccountController.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 
 /** The maximum time an account is allowed to remain unverified before the server will delete it from Database. */
