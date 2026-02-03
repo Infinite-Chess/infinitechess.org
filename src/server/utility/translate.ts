@@ -37,8 +37,8 @@ function getLanguageToServe(req: Request): string {
 		throw new Error('i18next.options.supportedLngs was not set');
 	}
 
-	let language = req.query['lng'] || cookies.i18next || req.i18n.resolvedLanguage;
-	if (!supportedLngs.includes(language)) language = cookies.i18next; // Query param language not supported
+	let language = req.query['lng'] || cookies['i18next'] || req.i18n.resolvedLanguage;
+	if (!supportedLngs.includes(language)) language = cookies['i18next']; // Query param language not supported
 	if (!supportedLngs.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
 	if (!supportedLngs.includes(language)) language = DEFAULT_LANGUAGE; // Resolved language from i18next not supported
 	return language;

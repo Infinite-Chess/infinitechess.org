@@ -8,9 +8,8 @@
 import * as z from 'zod';
 
 // @ts-ignore
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-// @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
@@ -53,6 +52,20 @@ const MasterSchemaWithEchos = z.discriminatedUnion('route', [
 /** Represents all possible types an incoming websocket message could be, including echos! */
 type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
 
+// Constants ---------------------------------------------------------------------------
+
+/**
+ * The maximum size of an incoming websocket message, in bytes.
+ * Above this will be rejected, and an error sent to the client.
+ *
+ * DIRECTLY CONTROLS THE maximum distance players can move in online games!
+ * 500 KB allows moves up to 1e100000 squares away, with some padding.
+ * On mobile it would take 6 hours of zooming out at
+ * MAXIMUM speed to reach that distance, without rest.
+ * It would take WAYYYY longer on desktop!
+ */
+const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
+
 // Functions ---------------------------------------------------------------------------
 
 /**
@@ -61,6 +74,14 @@ type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
  * logs the message, then routes the message where it needs to go.
  */
 function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer): void {
+	// Test if the message is too big. People could DDOS this way
+	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
+	if (Buffer.byteLength(rawMessage) > maxWebsocketMessageSizeBytes) {
+		logEvents(`Client sent too big a websocket message.`, 'reqLogRateLimited.txt');
+		ws.close(1009, 'Message Too Big');
+		return;
+	}
+
 	const messageStr = rawMessage.toString('utf8');
 
 	let parsedUnvalidatedMessage: any;

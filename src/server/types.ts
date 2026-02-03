@@ -1,5 +1,7 @@
 // src/server/types.ts
 
+import type { Role } from './controllers/roles';
+
 import { Request } from 'express';
 
 /**
@@ -26,7 +28,7 @@ type SignedInMemberInfo = {
 	signedIn: true;
 	user_id: number;
 	username: string;
-	roles: string[] | null;
+	roles: Role[] | null;
 	browser_id?: string;
 };
 

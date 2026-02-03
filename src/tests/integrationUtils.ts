@@ -1,8 +1,7 @@
 // src/tests/integrationUtils.ts
 
-import request from 'supertest';
-
 import app from '../server/app';
+import { testRequest } from './testRequest';
 import { generateAccount } from '../server/controllers/createAccountController';
 
 // Functions -------------------------------------------------------------------
@@ -17,9 +16,8 @@ async function createAndLoginUser(): Promise<{ username: string; cookie: string 
 		autoVerify: true,
 	});
 
-	const response = await request(app)
+	const response = await testRequest(app)
 		.post('/auth')
-		.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 		.send({ username: 'ChessMaster', password: 'Password123!' });
 
 	// Extract the session cookies

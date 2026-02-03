@@ -1,6 +1,7 @@
 // src/server/api/MemberAPI.ts
 
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+
 import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
@@ -13,7 +14,6 @@ import {
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../shared/util/timeutil.js';
 import metadata from '../../shared/chess/util/metadata.js';
-import { IdentifiedRequest } from '../types.js';
 import { localeMap } from '../config/dateLocales.js';
 import { getLanguageToServe } from '../utility/translate.js';
 
@@ -39,7 +39,7 @@ interface MemberResponse {
  *
  * SHOULD ONLY ever return a JSON.
  */
-const getMemberData = async (req: IdentifiedRequest, res: Response): Promise<Response> => {
+const getMemberData = async (req: Request, res: Response): Promise<Response> => {
 	// What member are we getting data from?
 	const claimedUsername = req.params['member'];
 	if (!claimedUsername) {

@@ -22,7 +22,6 @@ import { onclose } from './closeSocket.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { GAME_VERSION } from '../../shared/game_version.js';
-// @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
