@@ -283,11 +283,38 @@ function generateTables(): void {
 			name TEXT NOT NULL,
 			piece_count INTEGER NOT NULL,
 			icn TEXT NOT NULL,
+			timestamp INTEGER NOT NULL,
+			pawn_double_push INTEGER NOT NULL,
+			castling INTEGER NOT NULL,
 
 			PRIMARY KEY (user_id, name),
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
 		);
 	`);
+
+	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Ensure the timestamp column exists in editor_saves table
+	if (!db.columnExists('editor_saves', 'timestamp')) {
+		console.log('Adding timestamp column to editor_saves table...');
+		db.run('ALTER TABLE editor_saves ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0');
+		console.log('Successfully added timestamp column.');
+	}
+
+	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Ensure the pawn_double_push column exists in editor_saves table
+	if (!db.columnExists('editor_saves', 'pawn_double_push')) {
+		console.log('Adding pawn_double_push column to editor_saves table...');
+		db.run('ALTER TABLE editor_saves ADD COLUMN pawn_double_push INTEGER NOT NULL DEFAULT 0');
+		console.log('Successfully added pawn_double_push column.');
+	}
+
+	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Ensure the castling column exists in editor_saves table
+	if (!db.columnExists('editor_saves', 'castling')) {
+		console.log('Adding castling column to editor_saves table...');
+		db.run('ALTER TABLE editor_saves ADD COLUMN castling INTEGER NOT NULL DEFAULT 0');
+		console.log('Successfully added castling column.');
+	}
 
 	// Blacklisted Emails table
 	db.run(`
