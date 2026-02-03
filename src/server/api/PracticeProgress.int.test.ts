@@ -31,7 +31,8 @@ describe('Practice Progress Integration', () => {
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest');
 
 		expect(response.status).toBe(400);
 	});
@@ -43,6 +44,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({}); // No new_checkmate_beaten
 
 		expect(response.status).toBe(400);
@@ -55,6 +57,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: 12345 }); // Non-string
 
 		expect(response.status).toBe(400);
@@ -64,6 +67,7 @@ describe('Practice Progress Integration', () => {
 		const response = await request(app)
 			.post('/api/update-checkmatelist')
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		expect(response.status).toBe(401);
@@ -76,6 +80,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: 'INVALID-ID-123' });
 
 		expect(response.status).toBe(400);
@@ -89,6 +94,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		expect(response.status).toBe(200);
@@ -117,6 +123,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Second Checkmate
@@ -124,6 +131,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: secondCheckmateId });
 
 		expect(response.status).toBe(200);
@@ -141,6 +149,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Same ID Again
@@ -148,6 +157,7 @@ describe('Practice Progress Integration', () => {
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// Should now be 204 No Content, indicating no change in state

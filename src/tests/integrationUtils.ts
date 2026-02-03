@@ -20,6 +20,7 @@ async function createAndLoginUser(): Promise<{ username: string; cookie: string 
 	const response = await request(app)
 		.post('/auth')
 		.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+		.set('User-Agent', 'supertest')
 		.send({ username: 'ChessMaster', password: 'Password123!' });
 
 	// Extract the session cookies

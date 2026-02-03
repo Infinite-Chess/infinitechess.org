@@ -1,9 +1,9 @@
 // src/server/controllers/loginController.int.test.ts
 
-import app from '../app.js';
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import request from 'supertest';
+import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
+import app from '../app.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
 import { generateAccount } from './createAccountController.js';
 
@@ -67,6 +67,7 @@ describe('Login Controller Integration', () => {
 		const response = await request(app)
 			.post('/auth')
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ username: 'GhostUser', password: 'password123' });
 
 		expect(response.status).toBe(401);
@@ -85,6 +86,7 @@ describe('Login Controller Integration', () => {
 		const response = await request(app)
 			.post('/auth')
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ username: 'RealUser', password: 'WRONG_PASSWORD' });
 
 		expect(response.status).toBe(401);
@@ -103,6 +105,7 @@ describe('Login Controller Integration', () => {
 		const response = await request(app)
 			.post('/auth')
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ username: 'RealUser', password: 'CorrectPassword!' });
 
 		expect(response.status).toBe(200);

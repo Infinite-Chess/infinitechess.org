@@ -44,13 +44,15 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https')
+			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Now test the GET request (HTML request)
 		const response = await request(app)
 			.get('/') // Hitting the homepage (or any HTML route)
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest');
 		// .set('Accept', 'text/html');
 
 		// CAN'T KEEP THIS, because if `dist/` is not built, it will 404. Tests should NOT depend on the build process.
@@ -72,7 +74,8 @@ describe('Preferences Integration', () => {
 		const response = await request(app)
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest');
 
 		expect(response.status).toBe(400);
 	});
@@ -84,6 +87,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({}); // No preferences
 
 		expect(response.status).toBe(400);
@@ -93,6 +97,7 @@ describe('Preferences Integration', () => {
 		const response = await request(app)
 			.post('/api/set-preferences')
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(401);
@@ -111,6 +116,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ preferences: invalidPrefs });
 
 		expect(response.status).toBe(400);
@@ -124,6 +130,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(200);
@@ -143,6 +150,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Save new preferences to overwrite
@@ -150,6 +158,7 @@ describe('Preferences Integration', () => {
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
 			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
+			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_2 });
 
 		expect(response.status).toBe(200);
