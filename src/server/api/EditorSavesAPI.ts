@@ -29,35 +29,25 @@ const SavePositionBodySchema = z.strictObject({
 			editorutil.POSITION_NAME_MAX_LENGTH,
 			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
 		),
+	piece_count: z
+		.number()
+		.int('Piece count must be an integer')
+		.nonnegative('Piece count must be 0+'),
 	icn: z
 		.string()
 		.min(1, 'ICN is required')
 		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
 });
 
-/** Schema for validating the body of PATCH /api/editor-saves/:position_id (rename position) */
-const RenamePositionBodySchema = z.strictObject({
-	name: z
+/** Schema for validating position_name in URL params */
+const PositionNameParamSchema = z.strictObject({
+	position_name: z
 		.string()
-		.min(1, 'Name is required')
+		.min(1, 'Position name is required')
 		.max(
 			editorutil.POSITION_NAME_MAX_LENGTH,
-			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+			`Position name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
 		),
-});
-
-/** Schema for validating position_id in URL params */
-const PositionIdParamSchema = z.strictObject({
-	position_id: z
-		.string()
-		.refine(
-			(val: string) => {
-				const num = Number(val);
-				return !isNaN(num) && num > 0;
-			},
-			{ message: 'Invalid position_id' },
-		)
-		.transform((val: string) => Number(val)),
 });
 
 // API Endpoints -----------------------------------------------------------------------------
@@ -97,8 +87,8 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * API endpoint to save a new position for the current user.
- * Expects { name: string, icn: string } in request body.
- * Returns { success: true, position_id: number } on success.
+ * Expects { name: string, piece_count: number, icn: string } in request body.
+ * Returns { success: true } on success.
  * Requires authentication.
  */
 function savePosition(req: Request, res: Response): void {
@@ -125,20 +115,26 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, icn } = parseResult.data;
-
-	// Calculate size from ICN length
-	const size = icn.length;
+	const { name, piece_count, icn } = parseResult.data;
 
 	try {
-		// Add the saved position to the database (throws on quota exceeded)
-		const result = editorSavesManager.addSavedPosition(userId, name, size, icn);
+		// Add the saved position to the database (throws on quota exceeded or name exists)
+		editorSavesManager.addSavedPosition(userId, name, piece_count, icn);
 
-		res.status(201).json({ success: true, position_id: result.lastInsertRowid });
+		res.status(201).json({ success: true });
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
 			res.status(403).json({ error: `Maximum saved positions exceeded` });
+			return;
+		}
+
+		// Handle the name already exists error
+		if (
+			error instanceof Error &&
+			error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR
+		) {
+			res.status(409).json({ error: `Position name already exists` });
 			return;
 		}
 
@@ -149,7 +145,7 @@ function savePosition(req: Request, res: Response): void {
 }
 
 /**
- * API endpoint to get a specific saved position by position_id.
+ * API endpoint to get a specific saved position by position_name.
  * Returns { icn: string } on success.
  * Requires authentication and ownership of the position.
  */
@@ -167,19 +163,19 @@ function getPosition(req: Request, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Validate position_id from URL params with Zod
-	const parseResult = PositionIdParamSchema.safeParse(req.params);
+	// Validate position_name from URL params with Zod
+	const parseResult = PositionNameParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
-		res.status(400).json({ error: 'Invalid position_id' });
+		res.status(400).json({ error: 'Invalid position_name' });
 		logZodError(req.params, parseResult.error, `Invalid get position request params.`);
 		return;
 	}
 
-	const positionId = parseResult.data.position_id;
+	const positionName = parseResult.data.position_name;
 
 	try {
 		// Get the position from the database (filtered by user_id)
-		const position = editorSavesManager.getSavedPositionICN(positionId, userId);
+		const position = editorSavesManager.getSavedPositionICN(positionName, userId);
 
 		if (!position) {
 			res.status(404).json({ error: 'Position not found' });
@@ -190,7 +186,7 @@ function getPosition(req: Request, res: Response): void {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Error retrieving position for position_id ${positionId}: ${message}`,
+			`Error retrieving position for name "${positionName}": ${message}`,
 			'errLog.txt',
 		);
 		res.status(500).json({ error: 'Failed to retrieve position' });
@@ -198,7 +194,7 @@ function getPosition(req: Request, res: Response): void {
 }
 
 /**
- * API endpoint to delete a specific saved position by position_id.
+ * API endpoint to delete a specific saved position by position_name.
  * Returns { success: true } on success.
  * Requires authentication and ownership of the position.
  */
@@ -216,19 +212,19 @@ function deletePosition(req: Request, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Validate position_id from URL params with Zod
-	const parseResult = PositionIdParamSchema.safeParse(req.params);
+	// Validate position_name from URL params with Zod
+	const parseResult = PositionNameParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
-		res.status(400).json({ error: 'Invalid position_id' });
+		res.status(400).json({ error: 'Invalid position_name' });
 		logZodError(req.params, parseResult.error, `Invalid delete position request params.`);
 		return;
 	}
 
-	const positionId = parseResult.data.position_id;
+	const positionName = parseResult.data.position_name;
 
 	try {
 		// Delete the position from the database (filtered by user_id)
-		const result = editorSavesManager.deleteSavedPosition(positionId, userId);
+		const result = editorSavesManager.deleteSavedPosition(positionName, userId);
 
 		if (result.changes === 0) {
 			res.status(404).json({ error: 'Position not found' });
@@ -239,71 +235,10 @@ function deletePosition(req: Request, res: Response): void {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Error deleting position for position_id ${positionId}: ${message}`,
+			`Error deleting position "${positionName}" for user_id ${userId}: ${message}`,
 			'errLog.txt',
 		);
 		res.status(500).json({ error: 'Failed to delete position' });
-	}
-}
-
-/**
- * API endpoint to rename a specific saved position by position_id.
- * Expects { name: string } in request body.
- * Returns { success: true } on success.
- * Requires authentication and ownership of the position.
- */
-function renamePosition(req: Request, res: Response): void {
-	if (!req.memberInfo) {
-		res.status(500).json({ error: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
-		return;
-	}
-
-	// Check if user is authenticated
-	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ error: 'Must be signed in' });
-		return;
-	}
-
-	const userId = req.memberInfo.user_id;
-
-	// Validate position_id from URL params with Zod
-	const paramsParseResult = PositionIdParamSchema.safeParse(req.params);
-	if (!paramsParseResult.success) {
-		res.status(400).json({ error: 'Invalid position_id' });
-		return;
-	}
-
-	const positionId = paramsParseResult.data.position_id;
-
-	// Validate request body with Zod
-	const bodyParseResult = RenamePositionBodySchema.safeParse(req.body);
-	if (!bodyParseResult.success) {
-		const firstError = bodyParseResult.error.issues[0];
-		const errorMessage = firstError?.message || 'Invalid request body';
-		res.status(400).json({ error: errorMessage });
-		logZodError(req.body, bodyParseResult.error, `Invalid rename position request body.`);
-		return;
-	}
-
-	const { name } = bodyParseResult.data;
-
-	try {
-		// Rename the position in the database (filtered by user_id)
-		const result = editorSavesManager.renameSavedPosition(positionId, userId, name);
-
-		if (result.changes === 0) {
-			res.status(404).json({ error: 'Position not found' });
-			return;
-		}
-
-		res.json({ success: true });
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error renaming position for position_id ${positionId}: ${message}`,
-			'errLog.txt',
-		);
-		res.status(500).json({ error: 'Failed to rename position' });
 	}
 }
 
@@ -317,5 +252,4 @@ export default {
 	savePosition,
 	getPosition,
 	deletePosition,
-	renamePosition,
 };
