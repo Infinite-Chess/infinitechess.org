@@ -13,6 +13,7 @@ import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refr
 
 import type { Request, Response } from 'express';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+import type { Role } from '../roles.js';
 
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 10; // 10s
@@ -25,7 +26,7 @@ export function freshenSession(
 	res: Response,
 	user_id: number,
 	username: string,
-	roles: string[] | null,
+	roles: Role[] | null,
 	tokenRecord: RefreshTokenRecord,
 ): void {
 	// If the token is already consumed (a new one was issued),
@@ -64,7 +65,7 @@ export function createNewSession(
 	res: Response,
 	user_id: number,
 	username: string,
-	roles: string[] | null,
+	roles: Role[] | null,
 ): void {
 	// The payload can be an object with their username and their roles.
 	const refreshToken = signRefreshToken(user_id, username, roles);

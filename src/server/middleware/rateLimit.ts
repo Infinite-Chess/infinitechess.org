@@ -1,4 +1,8 @@
-// src/server/middleware/rateLimit.js
+// src/server/middleware/rateLimit.ts
+
+import type { CustomWebSocket } from '../socket/socketUtility.js';
+import type { Request, Response, NextFunction } from 'express';
+import type { IncomingMessage } from 'node:http';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -7,14 +11,12 @@ import { getClientIP } from '../utility/IP.js';
 import { isIPBanned } from './banned.js';
 import jsutil from '../../shared/util/jsutil.js';
 
-/** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
-
 /**
  * Whether the server is running in development mode.
  * It will be hosted on a different port for local host,
  * and a few other minor adjustments.
  */
-const DEV_BUILD = process.env.NODE_ENV === 'development';
+const DEV_BUILD = process.env['NODE_ENV'] === 'development';
 
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
@@ -26,7 +28,7 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) {
 // For rate limiting a client...
 
 /** The maximum number of requests/messages allowed per IP address, per minute. */
-const maxRequestsPerMinute = process.env.NODE_ENV === 'development' ? 400 : 200; // Default: 400 / 200
+const maxRequestsPerMinute = process.env['NODE_ENV'] === 'development' ? 400 : 200; // Default: 400 / 200
 const minuteInMillis = 60000;
 
 /**
@@ -40,7 +42,7 @@ const rateToUpdateRecentConnections = 1000; // 1 Second
  * and for the value - an array of timestamps of their recent connections.
  * The key format will be `{ "192.538.1.1|User-Agent-String": [timestamp1, timestamp2, ...] }`
  */
-const rateLimitHash = {};
+const rateLimitHash: Record<string, number[]> = {};
 
 // For detecting if we're under a DDOS attack...
 
@@ -68,9 +70,8 @@ let underAttackMode = false;
  * up to {@link requestWindowToToggleAttackModeMillis} ago.
  * The length of this is how many total requests we have
  * received during the past {@link requestWindowToToggleAttackModeMillis}.
- * `[ 521521521, 521521578 ]`
  */
-const recentRequests = []; // List of times of recent connections
+const recentRequests: number[] = []; // List of times of recent connections
 
 /**
  * The maximum size of an incoming websocket message, in bytes.
@@ -86,28 +87,23 @@ const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
 
 /**
  * Generates a key for rate limiting based on the client's IP address and user agent.
- * @param {Object} req - The request object
- * @param {CustomWebSocket} ws - The websocket object, IF it is a websocket connection!
- * @returns {string|null} The combined key in the format "IP|User-Agent" or null if IP cannot be determined
+ * @param IP - The IP address of the request or websocket connection.
+ * @param userAgent - The user agent string from the request headers.
+ * @returns The combined key in the format "IP|User-Agent" or null if IP cannot be determined
  */
-function getIpBrowserAgentKey(req, ws) {
-	const clientIP = ws ? ws.metadata.IP : getClientIP(req); // Get the client IP address
-	const userAgent = req.headers['user-agent']; // Get the user agent string
-
-	if (!clientIP) return null; // Return null if IP is not found
-
+function getIpBrowserAgentKey(IP: string, userAgent: string): string {
 	// Construct the key combining IP and user agent
-	return `${clientIP}|${userAgent}`;
+	return `${IP}|${userAgent}`;
 }
 
 /**
  * Middleware that counts this IP address's recent connections,
  * and rejects this request if they've sent too many.
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @param {Function} next - The function to call, when finished, to continue the middleware waterfall.
+ * @param req - The request object
+ * @param res - The response object
+ * @param next - The function to call, when finished, to continue the middleware waterfall.
  */
-function rateLimit(req, res, next) {
+function rateLimit(req: Request, res: Response, next: NextFunction): void {
 	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
 
 	countRecentRequests();
@@ -118,52 +114,74 @@ function rateLimit(req, res, next) {
 			'Unable to identify client IP address when rate limiting!',
 			'reqLogRateLimited.txt',
 		);
-		return res.status(500).json({ message: 'Unable to identify client IP address' });
+		res.status(400).json({ message: 'Unable to identify client IP address' });
+		return;
 	}
 
 	if (isIPBanned(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 		logEvents(logThis, 'bannedIPLog.txt');
-		return res.status(403).json({ message: 'You are banned' });
+		res.status(403).json({ message: 'You are banned' });
+		return;
 	}
 
-	const userKey = getIpBrowserAgentKey(req); // By this point their IP is defined so this will be defined.
+	const userAgent = req.headers['user-agent'];
+	if (!userAgent) {
+		logEvents(
+			`Unable to identify user agent for IP ${clientIP} when rate limiting!`,
+			'reqLogRateLimited.txt',
+		);
+		res.status(400).json({ message: 'User agent is required' });
+		return;
+	}
+
+	const userKey = getIpBrowserAgentKey(clientIP, userAgent);
 
 	// Add the current timestamp to their list of recent connection timestamps.
 	incrementClientConnectionCount(userKey);
 
-	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
+	const timestamps = rateLimitHash[userKey];
+	if (timestamps && timestamps.length > maxRequestsPerMinute) {
 		// Rate limit them (too many requests sent)
 		logEvents(
-			`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`,
+			`Agent ${userKey} has too many requests! Count: ${timestamps.length}`,
 			'reqLogRateLimited.txt',
 		);
-		return res.status(429).json({ message: 'Too Many Requests. Try again soon.' });
+		res.status(429).json({ message: 'Too Many Requests. Try again soon.' });
+		return;
 	}
 
 	next(); // Continue the middleware waterfall
 }
 
-// Returns true if the connection is allowed. False if too many.
-
 /**
  * Counts this IP address's recent connections,
  * and returns false if they've sent too many requests/messages.
- * @param {IncomingMessage} req - The request object
- * @param {CustomWebSocket} ws - The websocket object
- * @returns {boolean} false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
+ * @param req - The request object
+ * @param ws - The websocket object
+ * @returns false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
  */
-function rateLimitWebSocket(req, ws) {
+function rateLimitWebSocket(req: IncomingMessage, ws: CustomWebSocket): boolean {
 	countRecentRequests();
 
-	const userKey = getIpBrowserAgentKey(req, ws); // By this point their IP is defined so this will be defined.
+	const userAgent = req.headers['user-agent'];
+	if (!userAgent) {
+		logEvents(
+			`Unable to identify user agent for websocket connection when rate limiting!`,
+			'reqLogRateLimited.txt',
+		);
+		ws.close(1008, 'User agent is required');
+		return false;
+	}
+
+	const userKey = getIpBrowserAgentKey(ws.metadata.IP, userAgent);
 
 	// Add the current timestamp to their list of recent connection timestamps.
 	incrementClientConnectionCount(userKey);
 
-	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
+	if (rateLimitHash[userKey]!.length > maxRequestsPerMinute) {
 		logEvents(
-			`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey].length}`,
+			`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey]!.length}`,
 			'reqLogRateLimited.txt',
 		);
 		ws.close(1009, 'Too Many Requests. Try again soon.');
@@ -187,13 +205,13 @@ function rateLimitWebSocket(req, ws) {
  * Increment the provided user key's recent connection count by adding the current timestamp
  * to their list of recent connection timestamps.
  * Only call if we haven't already rejected them for too many requests.
- * @param {string} userKey - The unique key combining IP address and user agent.
+ * @param userKey - The unique key combining IP address and user agent.
  */
-function incrementClientConnectionCount(userKey) {
+function incrementClientConnectionCount(userKey: string): void {
 	// Initialize the array if it doesn't exist
 	if (!rateLimitHash[userKey]) rateLimitHash[userKey] = [];
 	// Add the current timestamp to the user's recent connection timestamp list
-	rateLimitHash[userKey].push(Date.now());
+	rateLimitHash[userKey]!.push(Date.now());
 }
 
 /**
@@ -201,14 +219,13 @@ function incrementClientConnectionCount(userKey) {
  * of IP addresses with no recent connections or outdated timestamps.
  */
 setInterval(() => {
-	const hashKeys = Object.keys(rateLimitHash);
 	const currentTimeMillis = Date.now();
 
-	for (const key of hashKeys) {
-		const timestamps = rateLimitHash[key];
+	for (const [key, timestamps] of Object.entries(rateLimitHash)) {
+		const firstTimestamp = timestamps[0];
 
 		// Check if there are no timestamps
-		if (timestamps.length === 0) {
+		if (firstTimestamp === undefined) {
 			const logMessage =
 				'Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.';
 			logEventsAndPrint(logMessage, 'errLog.txt');
@@ -217,11 +234,10 @@ setInterval(() => {
 		}
 
 		// Check the first timestamp. If the first timestamp is within the valid window, skip processing
-		const firstTimestamp = timestamps[0];
 		if (currentTimeMillis - firstTimestamp <= minuteInMillis) continue;
 
 		// If all timestamps are older, delete the key
-		const mostRecentTimestamp = timestamps[timestamps.length - 1];
+		const mostRecentTimestamp = timestamps.at(-1)!;
 		if (currentTimeMillis - mostRecentTimestamp >= minuteInMillis) {
 			delete rateLimitHash[key];
 			continue;
@@ -244,7 +260,7 @@ setInterval(() => {
  * This should always be called with any request/message,
  * EVEN if they are rate limited.
  */
-function countRecentRequests() {
+function countRecentRequests(): void {
 	const currentTimeMillis = Date.now();
 	recentRequests.push(currentTimeMillis);
 }
@@ -276,13 +292,13 @@ setInterval(() => {
 	}
 }, requestWindowToToggleAttackModeMillis);
 
-function logAttackBegin() {
+function logAttackBegin(): void {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
 	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
 	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
-function logAttackEnd() {
+function logAttackEnd(): void {
 	const logText = `DDOS attack has ended.`;
 	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
 	logEventsAndPrint(logText, 'hackLog.txt');
