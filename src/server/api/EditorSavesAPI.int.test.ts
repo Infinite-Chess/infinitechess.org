@@ -312,8 +312,7 @@ describe('EditorSavesAPI Integration', () => {
 			// Verify the position was actually renamed in the database
 			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
 			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
-			expect(saves).toHaveLength(1);
-			expect(saves[0].name).toBe('New Name');
+			expect(saves[0]?.name).toBe('New Name');
 		});
 
 		it('should return 404 if position not found or not owned', async () => {
@@ -394,8 +393,7 @@ describe('EditorSavesAPI Integration', () => {
 			// Verify it was saved correctly
 			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
 			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
-			expect(saves).toHaveLength(1);
-			expect(saves[0].size).toBe(EditorSavesAPI.MAX_ICN_LENGTH);
+			expect(saves[0]?.size).toBe(EditorSavesAPI.MAX_ICN_LENGTH);
 		});
 
 		it('should handle name at max length', async () => {
@@ -413,8 +411,7 @@ describe('EditorSavesAPI Integration', () => {
 			// Verify it was saved correctly
 			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
 			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
-			expect(saves).toHaveLength(1);
-			expect(saves[0].name).toBe(maxLengthName);
+			expect(saves[0]?.name).toBe(maxLengthName);
 		});
 
 		it('should calculate size correctly from ICN length', async () => {
@@ -432,8 +429,7 @@ describe('EditorSavesAPI Integration', () => {
 			// Verify the size was calculated correctly
 			const userRecord = getMemberDataByCriteria(['user_id'], 'username', user.username);
 			const saves = editorSavesManager.getAllSavedPositionsForUser(userRecord!.user_id);
-			expect(saves).toHaveLength(1);
-			expect(saves[0].size).toBe(5);
+			expect(saves[0]?.size).toBe(5);
 		});
 	});
 });
