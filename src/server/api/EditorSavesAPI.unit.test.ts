@@ -47,6 +47,7 @@ describe('EditorSavesAPI', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
+			expect(response.body).toEqual({ saves: mockSaves });
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
@@ -83,6 +84,7 @@ describe('EditorSavesAPI', () => {
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
 			expect(response.status).toBe(201);
+			expect(response.body).toEqual({ success: true, position_id: 123 });
 		});
 
 		it('should return 400 if name is missing', async () => {
@@ -184,6 +186,7 @@ describe('EditorSavesAPI', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
+			expect(response.body).toEqual({ icn: 'test-icn-data' });
 		});
 
 		it('should return 404 if position not found or not owned', async () => {
@@ -244,6 +247,7 @@ describe('EditorSavesAPI', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
+			expect(response.body).toEqual({ success: true });
 		});
 
 		it('should return 404 if position not found or not owned', async () => {
@@ -290,6 +294,7 @@ describe('EditorSavesAPI', () => {
 				.send({ name: 'New Name' });
 
 			expect(response.status).toBe(200);
+			expect(response.body).toEqual({ success: true });
 		});
 
 		it('should return 404 if position not found or not owned', async () => {
