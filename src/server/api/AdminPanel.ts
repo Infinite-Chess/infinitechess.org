@@ -7,11 +7,9 @@
 
 import { manuallyVerifyUser } from '../controllers/verifyAccountController.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-// @ts-ignore
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 // @ts-ignore
 import { refreshGitHubContributorsList } from './GitHub.js';
-// @ts-ignore
 import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
@@ -119,7 +117,7 @@ function deleteCommand(
 	}
 	// Valid Syntax
 	logCommand(command, req);
-	const reason = commandAndArgs[2];
+	const reason = commandAndArgs[2]!;
 	const usernameArgument = commandAndArgs[1]!;
 	const record = getMemberDataByCriteria(
 		['user_id', 'username', 'roles'],
