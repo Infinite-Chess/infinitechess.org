@@ -1,4 +1,4 @@
-// src/server/server.js
+// src/server/server.ts
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -21,9 +21,9 @@ import { getCertOptions } from './config/certOptions.js';
 const httpsServer = https.createServer(getCertOptions(), app);
 
 // Start the server
-const DEV_BUILD = process.env.NODE_ENV === 'development';
-const HTTPPORT = DEV_BUILD ? process.env.HTTPPORT_LOCAL : process.env.HTTPPORT;
-const HTTPSPORT = DEV_BUILD ? process.env.HTTPSPORT_LOCAL : process.env.HTTPSPORT;
+const DEV_BUILD = process.env['NODE_ENV'] === 'development';
+const HTTPPORT = DEV_BUILD ? process.env['HTTPPORT_LOCAL'] : process.env['HTTPPORT'];
+const HTTPSPORT = DEV_BUILD ? process.env['HTTPSPORT_LOCAL'] : process.env['HTTPSPORT'];
 app.listen(HTTPPORT, () => console.log(`HTTP listening on port ${HTTPPORT}`));
 httpsServer.listen(HTTPSPORT, () => console.log(`HTTPS listening on port ${HTTPSPORT}`));
 
@@ -39,7 +39,7 @@ process.on('SIGUSR2', async () => {
 process.on('SIGINT', async () => {
 	await handleCleanup('SIGINT');
 }); // Ctrl>C was pressed (force terminates nodemon)
-async function handleCleanup(_signal) {
+async function handleCleanup(_signal: string): Promise<void> {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;
 	// console.log(`\nReceived ${signal}. Cleaning up...`);
