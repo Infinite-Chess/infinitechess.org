@@ -113,7 +113,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 /**
  * Generate an account only from the provided username, email, and password.
  * Regex tests are skipped.
- * @returns If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
+ * @returns If it was a success, the row ID of where the member was inserted (same as their user_id).
  *
  * @throws If account creation fails for any reason.
  */

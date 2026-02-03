@@ -174,6 +174,8 @@ function renameSavedPosition(position_id: number, user_id: number, name: string)
 }
 
 export default {
+	MAX_SAVED_POSITIONS,
+
 	// Constants
 	QUOTA_EXCEEDED_ERROR,
 	// Methods
