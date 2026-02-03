@@ -25,9 +25,7 @@ async function createAndLoginUser(): Promise<{
 		autoVerify: true,
 	});
 
-	const response = await testRequest()
-		.post('/auth')
-		.send({ username, password: 'Password123!' });
+	const response = await testRequest().post('/auth').send({ username, password: 'Password123!' });
 
 	// Extract the session cookies
 	const cookies = response.headers['set-cookie'] as unknown as string[]; // set-cookie is actually an array
