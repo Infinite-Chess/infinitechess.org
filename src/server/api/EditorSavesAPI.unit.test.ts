@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 
 import app from '../app.js';
 import editorutil from '../../shared/editor/editorutil.js';
+import EditorSavesAPI from './EditorSavesAPI.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { testRequest } from '../../tests/testRequest.js';
