@@ -1,3 +1,5 @@
+// optimize-images.ts
+
 /**
  * This script automatically finds and compresses all images from the source
  * directory that haven't already been fully optimized in the destination directory.

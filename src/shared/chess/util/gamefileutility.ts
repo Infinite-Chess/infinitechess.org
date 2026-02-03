@@ -1,3 +1,5 @@
+// src/shared/chess/util/gamefileutility.ts
+
 /**
  * This script contains many utility methods for working with gamefiles.
  */

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/header.ts
+
 // This script contains the code related to the
 // header that runs on every single page
 

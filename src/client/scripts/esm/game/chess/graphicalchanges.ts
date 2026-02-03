@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/graphicalchanges.ts
+
 /**
  * This script contains the functions that know what mesh changes to make,
  * and what animations to make, according to each action of a move's actions list.

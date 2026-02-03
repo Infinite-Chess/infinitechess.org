@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/boardpos.ts
+
 /**
  * This script stores the board position and scale,
  * and updates them according to their velocity.

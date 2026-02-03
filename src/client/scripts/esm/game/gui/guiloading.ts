@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guiloading.ts
+
 /**
  * This script hides the loading animation when the page fully loads.
  * */

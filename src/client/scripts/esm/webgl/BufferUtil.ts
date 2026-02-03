@@ -1,3 +1,5 @@
+// src/client/scripts/esm/webgl/BufferUtil.ts
+
 /**
  * This script works with buffers. Creating them, assigning data, and modifying their indices.
  */

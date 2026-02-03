@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/LocalStorage.ts
+
 /**
  * This script handles reading, saving, and deleting expired
  * browser local storage data for us!

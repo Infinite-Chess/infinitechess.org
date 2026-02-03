@@ -1,3 +1,5 @@
+// src/client/scripts/cjs/game/htmlscript.ts
+
 /* global main */
 
 /**

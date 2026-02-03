@@ -1,3 +1,5 @@
+// src/shared/chess/logic/state.ts
+
 /**
  * This script creates, queues, and applies gamefile states
  * to the gamefile when a Move is created, and executed.

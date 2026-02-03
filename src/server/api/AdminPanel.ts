@@ -1,3 +1,5 @@
+// src/server/api/AdminPanel.ts
+
 /**
  * This script handles all incoming commands send from the admin console page
  * /admin

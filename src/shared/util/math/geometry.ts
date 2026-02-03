@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/math/geometry.ts
+// src/shared/util/math/geometry.ts
 
 /**
  * This script contains methods for performing geometric calculations,

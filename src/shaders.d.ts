@@ -1,3 +1,5 @@
+// src/shaders.d.ts
+
 /*
  * This tells TypeScript all .glsl imports are strings.
  *

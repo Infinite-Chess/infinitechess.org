@@ -1,3 +1,5 @@
+// src/server/socket/sendSocketMessage.ts
+
 /**
  * This script sends socket messages,
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).

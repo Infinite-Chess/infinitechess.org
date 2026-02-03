@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/gameformulator.ts
+
 /**
  * This script takes an ICN, or a compressed abridged gamefile, and constructs a full gamefile from them.
  */

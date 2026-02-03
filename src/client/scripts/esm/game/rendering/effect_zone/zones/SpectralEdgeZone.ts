@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
+// src/client/scripts/esm/game/rendering/effect_zone/zones/SpectralEdgeZone.ts
 
 import type { Zone } from '../EffectZoneManager';
 

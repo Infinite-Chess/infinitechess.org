@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/spacing.ts
+
 // Spacing: This script handles the spacing of our header elements at various screen widths
 
 const header = document.querySelector('header')!;

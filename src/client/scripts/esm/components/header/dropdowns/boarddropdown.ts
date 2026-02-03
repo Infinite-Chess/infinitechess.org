@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/dropdowns/boarddropdown.ts
+
 import preferences from '../preferences.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 import themes from '../../../../../../shared/components/header/themes.js';

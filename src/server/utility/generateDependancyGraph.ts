@@ -1,3 +1,5 @@
+// src/server/utility/generateDependancyGraph.ts
+
 /*
  * This script generates the dependency tree graph of the project.
  * To use it, enter the command:

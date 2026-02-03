@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guipause.js
+
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';

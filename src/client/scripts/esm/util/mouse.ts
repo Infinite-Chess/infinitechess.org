@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/mouse.ts
+
 /**
  * This script contains several wrappers for getting the
  * mouse position, world space, or coordinates,

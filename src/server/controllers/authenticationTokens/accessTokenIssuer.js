@@ -1,3 +1,5 @@
+// src/server/controllers/authenticationTokens/accessTokenIssuer.js
+
 // Route
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!

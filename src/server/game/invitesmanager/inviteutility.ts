@@ -1,3 +1,5 @@
+// src/server/game/invitesmanager/inviteutility.ts
+
 /*
  * This script stores utility methods for working
  * with single invites, not multiple

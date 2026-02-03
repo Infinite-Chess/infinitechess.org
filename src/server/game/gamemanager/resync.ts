@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/resync.ts
+
 /**
  * This script handles resyncing a client to a game when their
  * websocket closes unexpectedly, but they haven't left the page.

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/webgl.ts
+
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 import camera from './camera.js';

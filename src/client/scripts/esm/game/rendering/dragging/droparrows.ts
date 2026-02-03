@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/dragging/droparrows.ts
+
 /**
  * This script handles dropping the dragged piece onto
  * arrow indicators to capture the piece the arrow

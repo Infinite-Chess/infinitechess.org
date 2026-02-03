@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/chess/pastegame.js
+// src/client/scripts/esm/game/chess/pastegame.ts
 
 /**
  * This script handles pasting games

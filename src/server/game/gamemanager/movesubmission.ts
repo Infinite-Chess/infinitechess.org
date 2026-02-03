@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/movesubmission.ts
+
 /**
  * The script handles when a user submits a move in
  * the game they are in, and does basic checks to make sure it's valid.

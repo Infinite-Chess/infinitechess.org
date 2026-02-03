@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/premoves.ts
+
 /**
  * This script handles the processing and execution of premoves
  * after the opponent's move.

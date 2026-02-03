@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/PerlinNoise.ts
+
 /**
  * A factory for creating a tileable (periodic) 1D Perlin-style noise generator.
  */

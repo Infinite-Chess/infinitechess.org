@@ -1,4 +1,4 @@
-// src/controllers/passwordResetController.ts
+// src/server/controllers/passwordResetController.ts
 
 import { Request, Response } from 'express';
 import crypto from 'crypto';

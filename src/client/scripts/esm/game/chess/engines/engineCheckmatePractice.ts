@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts
+
 /**
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
  * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.

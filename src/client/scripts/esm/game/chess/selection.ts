@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/selection.ts
+
 /**
  * This script tests for piece selection and keeps track of the selected piece,
  * including the legal moves it has available.

@@ -1,3 +1,5 @@
+// src/server/game/statlogger.ts
+
 import path from 'path';
 import fs from 'fs';
 import 'dotenv/config'; // Imports all properties of process.env, if it exists

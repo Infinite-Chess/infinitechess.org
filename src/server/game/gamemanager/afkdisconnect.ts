@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/afkdisconnect.ts
+
 /**
  * The script handles the setting, resetting, and cancellation
  * of both the auto resign timer when players go AFK in online games,

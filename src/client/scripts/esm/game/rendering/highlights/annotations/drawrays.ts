@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/annotations/drawrays.ts
+
 /**
  * This script allows the user to draw rays on the board.
  *

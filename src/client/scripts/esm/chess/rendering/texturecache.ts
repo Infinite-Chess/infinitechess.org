@@ -1,3 +1,5 @@
+// src/client/scripts/esm/chess/rendering/texturecache.ts
+
 /**
  * This module handles the caching of WebGL textures of the pieces in our game.
  * It prevents redundant texture creation and data uploads to the GPU by caching

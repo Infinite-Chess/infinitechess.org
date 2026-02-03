@@ -1,4 +1,4 @@
-// src/types.ts
+// src/server/types.ts
 
 import { Request } from 'express';
 

@@ -1,3 +1,5 @@
+// src/shared/chess/logic/checkdetection.ts
+
 /**
  * This script is used to detect check,
  * or detect if a specific square is being attacked by any

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/tools/selection.ts
+// src/client/scripts/esm/game/boardeditor/tools/selection/selectiontool.ts
 
 /**
  * The Selection Tool for the Board Editor

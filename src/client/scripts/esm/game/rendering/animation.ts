@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/animation.ts
+
 /**
  * This script handles the animation of pieces.
  * It also plays the sounds.

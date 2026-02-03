@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/checkhighlight.ts
+
 /**
  * This script renders the red glow surrounding
  * royal pieces currently in check.

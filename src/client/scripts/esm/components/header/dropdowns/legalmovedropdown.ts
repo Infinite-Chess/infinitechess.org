@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/dropdowns/legalmovedropdown.ts
+
 // This script selects new languages when we click a language in the language dropdown.
 // It also appends the lng query param to all header navigation links.
 // And it removes the lng query param from the url after loading.

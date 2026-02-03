@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/tabnameflash.ts
+
 /**
  * This script controls the flashing of the tab name "YOUR MOVE"
  * when it is your turn and your in another tab.

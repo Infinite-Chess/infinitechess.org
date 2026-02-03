@@ -1,3 +1,5 @@
+// src/shared/chess/logic/repetition.ts
+
 /**
  * This script contains our algorithm for detecting draw by repetition.
  *

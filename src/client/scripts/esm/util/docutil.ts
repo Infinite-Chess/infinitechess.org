@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/docutil.ts
+
 /**
  * This script contains utility methods for the document/window objects, or the page.
  *

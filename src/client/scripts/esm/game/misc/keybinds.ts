@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/keybinds.ts
+
 /**
  * This script will store the keybinds for various game actions.
  *

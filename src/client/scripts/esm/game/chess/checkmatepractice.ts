@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/checkmatepractice.ts
+
 /**
  * This script handles checkmate practice logic
  */

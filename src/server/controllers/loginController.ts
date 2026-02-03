@@ -1,3 +1,5 @@
+// src/server/controllers/loginController.ts
+
 /**
  * This controller is used when a client logs in.
  *

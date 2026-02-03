@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/gameslot.ts
+
 /**
  * Whether we're in a local game, online game, analysis board, or board editor,
  * what they ALL have in common is a gamefile! This script stores THAT gamefile!

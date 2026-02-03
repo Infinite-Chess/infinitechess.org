@@ -1,3 +1,5 @@
+// src/shared/chess/logic/clock.ts
+
 /**
  * This script keeps track of both players timer,
  * updates them each frame,

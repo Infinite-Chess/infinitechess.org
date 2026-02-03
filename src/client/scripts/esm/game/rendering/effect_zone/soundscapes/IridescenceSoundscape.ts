@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/effect_zone/soundscapes/IridescenceSoundscape.ts
+
 import type { LayerConfig } from '../../../../audio/SoundLayer';
 
 /** The first two layers of the Iridescence soundscape (lower pitch). */

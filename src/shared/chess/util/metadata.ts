@@ -1,3 +1,5 @@
+// src/shared/chess/util/metadata.ts
+
 /**
  * This script stores the type definition for a game's metadata.
  *

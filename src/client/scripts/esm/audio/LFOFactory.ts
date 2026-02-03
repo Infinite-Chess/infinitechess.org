@@ -1,3 +1,5 @@
+// src/client/scripts/esm/audio/LFOFactory.ts
+
 /**
  * A factory for creating Low-Frequency Oscillator (LFO) units for modulating audio parameters.
  */

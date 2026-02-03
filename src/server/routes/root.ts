@@ -1,3 +1,5 @@
+// src/server/routes/root.ts
+
 import express, { Request, Response } from 'express';
 import path from 'path';
 import { getLanguageToServe } from '../utility/translate.js';

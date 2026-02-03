@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guiplay.js
+
 // Import Start
 import LocalStorage from '../../util/LocalStorage.js';
 import statustext from './statustext.js';

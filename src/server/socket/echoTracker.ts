@@ -1,3 +1,5 @@
+// src/server/socket/echoTracker.ts
+
 /**
  * This script keeps track of the echos we are expecting from recent websocket-out messages.
  *

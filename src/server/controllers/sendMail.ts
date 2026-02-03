@@ -1,4 +1,4 @@
-// src/controllers/sendMail.ts
+// src/server/controllers/sendMail.ts
 
 import nodemailer from 'nodemailer';
 import { Response } from 'express';

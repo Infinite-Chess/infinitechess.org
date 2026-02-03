@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/style.ts
+
 /**
  * Utility function for html elements and styles.
  *

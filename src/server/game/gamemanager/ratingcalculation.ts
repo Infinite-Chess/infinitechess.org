@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/ratingcalculation.ts
+
 /**
  * Implementation of Glicko-1 algorithm for calculating rating changes arising from ranked games
  */

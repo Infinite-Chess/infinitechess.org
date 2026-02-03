@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/legalmovehighlights.ts
+
 /**
  * [ZOOMED IN] This script renders legal moves of:
  *

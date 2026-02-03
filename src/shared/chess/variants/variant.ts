@@ -1,3 +1,5 @@
+// src/shared/chess/variants/variant.ts
+
 /**
  * This script stores our variants, and contains methods for
  * retrieving the game rules, or movesets of any given variant.

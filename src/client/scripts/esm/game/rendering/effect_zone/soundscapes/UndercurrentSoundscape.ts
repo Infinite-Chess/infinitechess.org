@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/effect_zone/soundscapes/UndercurrentSoundscape.ts
+
 import { LayerConfig } from '../../../../audio/SoundLayer';
 import { SoundscapeConfig } from '../../../../audio/SoundscapePlayer';
 

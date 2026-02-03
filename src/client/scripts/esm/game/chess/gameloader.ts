@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/gameloader.ts
+
 /**
  * This script contains the logic for loading any kind of game onto our game board:
  * * Local

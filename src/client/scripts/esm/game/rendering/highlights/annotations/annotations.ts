@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/annotations/annotations.ts
+
 /**
  * This script manages all annotations
  * * Squares

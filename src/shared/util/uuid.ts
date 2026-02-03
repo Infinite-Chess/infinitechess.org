@@ -1,3 +1,5 @@
+// src/shared/util/uuid.ts
+
 /**
  * This script generates unique identifiers for us.
  *

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/actions/autosave.ts
+// src/client/scripts/esm/game/boardeditor/actions/eautosave.ts
 
 /**
  * This script handles autosaving the board editor position

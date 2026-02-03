@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/onAFK.ts
+
 /**
  * The script handles the route when users inform us they have gone AFK or returned from being AFK.
  */

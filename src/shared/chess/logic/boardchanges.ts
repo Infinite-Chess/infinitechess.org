@@ -1,3 +1,5 @@
+// src/shared/chess/logic/boardchanges.ts
+
 /**
  * This script both contructs the changes list of a Move, and executes them
  * when requested, modifying the piece lists according to what moved

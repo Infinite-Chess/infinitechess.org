@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/logic/wincondition.js
+// src/shared/chess/logic/wincondition.ts
 
 /**
  * This script contains the methods for calculating if the

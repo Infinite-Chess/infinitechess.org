@@ -1,3 +1,5 @@
+// src/shared/chess/variants/fourdimensionalgenerator.ts
+
 /**
  * This script dynamically generates the positions of 4 dimensional variants
  * with varying number of boards, board sizes, and positions on each board.

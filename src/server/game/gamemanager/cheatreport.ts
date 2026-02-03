@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/cheatreport.ts
+
 /**
  * This script handles cheat reports, aborting games when they come in.
  */

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/movesequence.ts
+
 /**
  * This is a client-side script that executes global and local moves,
  * making both the logical, and graphical changes.

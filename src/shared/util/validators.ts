@@ -1,3 +1,5 @@
+// src/shared/util/validators.ts
+
 /**
  * This has shared validators between client and server,
  * to avoid repeating email/password/username validation

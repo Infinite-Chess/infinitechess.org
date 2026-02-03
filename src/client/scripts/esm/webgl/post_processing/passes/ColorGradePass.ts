@@ -1,3 +1,5 @@
+// src/client/scripts/esm/webgl/post_processing/passes/ColorGradePass.ts
+
 import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 import type { PostProcessPass } from '../PostProcessingPipeline';
 

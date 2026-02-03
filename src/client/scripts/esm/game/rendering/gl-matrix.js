@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/gl-matrix.js
+
 /* eslint-disable */
 /*!
 @fileoverview gl-matrix - High performance matrix and vector operations

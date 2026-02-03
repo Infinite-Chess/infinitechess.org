@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/logic/insufficientmaterial.ts
+// src/shared/chess/logic/insufficientmaterial.ts
 
 /**
  * This script detects draws by insufficient material

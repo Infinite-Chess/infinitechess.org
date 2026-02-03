@@ -1,3 +1,5 @@
+// src/client/scripts/esm/chess/rendering/imagecache.ts
+
 /**
  * This script caches the HTMLImageElement objects for the pieces
  * required by the currently loaded game.

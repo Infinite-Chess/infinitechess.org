@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/bigdecimal/bimath.ts
+// src/shared/util/math/bimath.ts
 
 /**
  * This module contains complex math functions

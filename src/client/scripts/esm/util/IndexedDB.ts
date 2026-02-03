@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/indexeddb.ts
+// src/client/scripts/esm/util/IndexedDB.ts
 
 /**
  * This script handles reading, saving, and deleting browser IndexedDB data.

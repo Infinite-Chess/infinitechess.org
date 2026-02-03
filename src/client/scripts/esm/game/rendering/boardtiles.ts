@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/boardtiles.ts
+
 /**
  * This script renders the board, and changes it's color.
  * We also keep track of what tile the mouse is currently hovering over.

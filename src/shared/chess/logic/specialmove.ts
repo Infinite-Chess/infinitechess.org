@@ -1,3 +1,5 @@
+// src/shared/chess/logic/specialmove.ts
+
 /** This script stores the default methods for EXECUTING special moves */
 
 import boardutil from '../util/boardutil.js';

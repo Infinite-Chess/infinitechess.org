@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/jsutil.ts
+// src/shared/util/jsutil.ts
 
 /**
  * This scripts contains utility methods for working with javascript objects.

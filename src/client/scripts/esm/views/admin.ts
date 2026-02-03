@@ -1,3 +1,5 @@
+// src/client/scripts/esm/views/admin.ts
+
 const commandInput = document.getElementById('commandInput')! as HTMLInputElement;
 const commandHistory = document.getElementById('commandHistory')! as HTMLTextAreaElement;
 const sendCommandButton = document.getElementById('sendButton')! as HTMLButtonElement;

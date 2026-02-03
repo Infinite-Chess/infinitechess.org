@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
+
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';

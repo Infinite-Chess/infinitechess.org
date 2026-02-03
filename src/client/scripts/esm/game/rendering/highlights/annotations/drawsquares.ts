@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/annotations/drawsquares.ts
+
 /**
  * This script allows the user to highlight squares on the board.
  *
