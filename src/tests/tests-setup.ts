@@ -24,7 +24,7 @@ console.warn = vi.fn();
 vi.mock('../server/middleware/logEvents.js', () => ({
 	logEvents: vi.fn(), // Do nothing
 	logEventsAndPrint: vi.fn(), // Do nothing
-	reqLogger: (req: Request, res: Response, next: NextFunction) => next(), // Continue to next middleware
+	reqLogger: (_req: Request, _res: Response, next: NextFunction) => next(), // Continue to next middleware
 	logWebsocketStart: vi.fn(), // Do nothing
 	logReqWebsocketIn: vi.fn(), // Do nothing
 	logReqWebsocketOut: vi.fn(), // Do nothing
