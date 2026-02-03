@@ -1,8 +1,7 @@
 // src/tests/testRequest.ts
 
-import request, { Test } from 'supertest';
-
 import app from '../server/app.js';
+import request, { Test } from 'supertest';
 
 /**
  * A wrapper around supertest to automatically set common headers
