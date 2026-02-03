@@ -1,11 +1,11 @@
 // src/server/controllers/loginController.int.test.ts
 
-import request from 'supertest';
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import app from '../app.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import { testRequest } from '../../tests/testRequest.js';
 import { generateAccount } from './createAccountController.js';
+import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 describe('Login Controller Integration', () => {
 	// Runs once at the very start of this file
@@ -19,55 +19,42 @@ describe('Login Controller Integration', () => {
 	});
 
 	it('should reject login with no body', async () => {
-		const response = await request(app)
-			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send(); // No body
+		const response = await testRequest(app).post('/auth').send(); // No body
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with missing username', async () => {
-		const response = await request(app)
-			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ username: 'OnlyUserNoPass' }); // Missing password
+		const response = await testRequest(app).post('/auth').send({ username: 'OnlyUserNoPass' }); // Missing password
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with missing password', async () => {
-		const response = await request(app)
-			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.send({ password: 'OnlyPassNoUser' }); // Missing username
+		const response = await testRequest(app).post('/auth').send({ password: 'OnlyPassNoUser' }); // Missing username
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with non-string username', async () => {
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ username: 12345, password: 'SomePassword' }); // Non-string username
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with non-string password', async () => {
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ username: 'SomeUser', password: 67890 }); // Non-string password
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login for non-existent user', async () => {
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ username: 'GhostUser', password: 'password123' });
 
 		expect(response.status).toBe(401);
@@ -83,10 +70,8 @@ describe('Login Controller Integration', () => {
 		});
 
 		// 2. Test
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ username: 'RealUser', password: 'WRONG_PASSWORD' });
 
 		expect(response.status).toBe(401);
@@ -102,10 +87,8 @@ describe('Login Controller Integration', () => {
 		});
 
 		// 2. Test
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/auth')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ username: 'RealUser', password: 'CorrectPassword!' });
 
 		expect(response.status).toBe(200);

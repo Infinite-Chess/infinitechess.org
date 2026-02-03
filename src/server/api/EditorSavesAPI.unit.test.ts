@@ -11,11 +11,11 @@ import type { Express, Request, Response, NextFunction } from 'express';
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
-import request from 'supertest';
 
 import editorutil from '../../shared/editor/editorutil.js';
 import EditorSavesAPI from './EditorSavesAPI.js';
 import editorSavesManager from '../database/editorSavesManager.js';
+import { testRequest } from '../../tests/testRequest.js';
 
 // Mock the database manager
 vi.mock('../database/editorSavesManager.js');
@@ -75,7 +75,7 @@ describe('EditorSavesAPI', () => {
 
 			vi.mocked(editorSavesManager.getAllSavedPositionsForUser).mockReturnValue(mockSaves);
 
-			const response = await request(app).get('/api/editor-saves');
+			const response = await testRequest(app).get('/api/editor-saves');
 
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual({ saves: mockSaves });
@@ -92,7 +92,7 @@ describe('EditorSavesAPI', () => {
 			});
 			unauthApp.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
 
-			const response = await request(unauthApp).get('/api/editor-saves');
+			const response = await testRequest(unauthApp).get('/api/editor-saves');
 
 			expect(response.status).toBe(401);
 			expect(response.body).toEqual({ error: 'Must be signed in' });
@@ -103,7 +103,7 @@ describe('EditorSavesAPI', () => {
 				throw new Error('Database error');
 			});
 
-			const response = await request(app).get('/api/editor-saves');
+			const response = await testRequest(app).get('/api/editor-saves');
 
 			expect(response.status).toBe(500);
 			expect(response.body).toEqual({ error: 'Failed to retrieve saved positions' });
@@ -117,7 +117,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123,
 			});
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
@@ -132,7 +132,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name is missing', async () => {
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ icn: 'test-icn-data' });
 
@@ -142,7 +142,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name is empty', async () => {
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: '', icn: 'test-icn-data' });
 
@@ -153,7 +153,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 400 if name exceeds max length', async () => {
 			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: longName, icn: 'test-icn-data' });
 
@@ -164,7 +164,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if icn is missing', async () => {
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position' });
 
@@ -173,7 +173,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if icn is empty', async () => {
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: '' });
 
@@ -184,7 +184,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 400 if icn exceeds max length', async () => {
 			const longIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH + 1);
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: longIcn });
 
@@ -199,7 +199,7 @@ describe('EditorSavesAPI', () => {
 				throw new Error(editorSavesManager.QUOTA_EXCEEDED_ERROR);
 			});
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
@@ -217,7 +217,7 @@ describe('EditorSavesAPI', () => {
 			});
 			unauthApp.post('/api/editor-saves', EditorSavesAPI.savePosition);
 
-			const response = await request(unauthApp)
+			const response = await testRequest(unauthApp)
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
@@ -232,7 +232,7 @@ describe('EditorSavesAPI', () => {
 				icn: 'test-icn-data',
 			});
 
-			const response = await request(app).get('/api/editor-saves/123');
+			const response = await testRequest(app).get('/api/editor-saves/123');
 
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual({ icn: 'test-icn-data' });
@@ -242,28 +242,28 @@ describe('EditorSavesAPI', () => {
 		it('should return 404 if position not found or not owned', async () => {
 			vi.mocked(editorSavesManager.getSavedPositionICN).mockReturnValue(undefined);
 
-			const response = await request(app).get('/api/editor-saves/999');
+			const response = await testRequest(app).get('/api/editor-saves/999');
 
 			expect(response.status).toBe(404);
 			expect(response.body).toEqual({ error: 'Position not found' });
 		});
 
 		it('should return 400 if position_id is invalid', async () => {
-			const response = await request(app).get('/api/editor-saves/invalid');
+			const response = await testRequest(app).get('/api/editor-saves/invalid');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
 		it('should return 400 if position_id is zero', async () => {
-			const response = await request(app).get('/api/editor-saves/0');
+			const response = await testRequest(app).get('/api/editor-saves/0');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
 		});
 
 		it('should return 400 if position_id is negative', async () => {
-			const response = await request(app).get('/api/editor-saves/-5');
+			const response = await testRequest(app).get('/api/editor-saves/-5');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
@@ -278,7 +278,7 @@ describe('EditorSavesAPI', () => {
 			});
 			unauthApp.get('/api/editor-saves/:position_id', EditorSavesAPI.getPosition);
 
-			const response = await request(unauthApp).get('/api/editor-saves/123');
+			const response = await testRequest(unauthApp).get('/api/editor-saves/123');
 
 			expect(response.status).toBe(401);
 			expect(response.body).toEqual({ error: 'Must be signed in' });
@@ -292,7 +292,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await request(app).delete('/api/editor-saves/123');
+			const response = await testRequest(app).delete('/api/editor-saves/123');
 
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual({ success: true });
@@ -305,14 +305,14 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await request(app).delete('/api/editor-saves/999');
+			const response = await testRequest(app).delete('/api/editor-saves/999');
 
 			expect(response.status).toBe(404);
 			expect(response.body).toEqual({ error: 'Position not found' });
 		});
 
 		it('should return 400 if position_id is invalid', async () => {
-			const response = await request(app).delete('/api/editor-saves/invalid');
+			const response = await testRequest(app).delete('/api/editor-saves/invalid');
 
 			expect(response.status).toBe(400);
 			expect(response.body).toEqual({ error: 'Invalid position_id' });
@@ -327,7 +327,7 @@ describe('EditorSavesAPI', () => {
 			});
 			unauthApp.delete('/api/editor-saves/:position_id', EditorSavesAPI.deletePosition);
 
-			const response = await request(unauthApp).delete('/api/editor-saves/123');
+			const response = await testRequest(unauthApp).delete('/api/editor-saves/123');
 
 			expect(response.status).toBe(401);
 			expect(response.body).toEqual({ error: 'Must be signed in' });
@@ -341,7 +341,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.patch('/api/editor-saves/123')
 				.send({ name: 'New Name' });
 
@@ -356,7 +356,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.patch('/api/editor-saves/999')
 				.send({ name: 'New Name' });
 
@@ -365,14 +365,16 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if name is missing', async () => {
-			const response = await request(app).patch('/api/editor-saves/123').send({});
+			const response = await testRequest(app).patch('/api/editor-saves/123').send({});
 
 			expect(response.status).toBe(400);
 			expect(response.body.error).toBeTruthy();
 		});
 
 		it('should return 400 if name is empty', async () => {
-			const response = await request(app).patch('/api/editor-saves/123').send({ name: '' });
+			const response = await testRequest(app)
+				.patch('/api/editor-saves/123')
+				.send({ name: '' });
 
 			expect(response.status).toBe(400);
 			expect(response.body.error).toContain('Name is required');
@@ -381,7 +383,7 @@ describe('EditorSavesAPI', () => {
 		it('should return 400 if name exceeds max length', async () => {
 			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.patch('/api/editor-saves/123')
 				.send({ name: longName });
 
@@ -392,7 +394,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 400 if position_id is invalid', async () => {
-			const response = await request(app)
+			const response = await testRequest(app)
 				.patch('/api/editor-saves/invalid')
 				.send({ name: 'New Name' });
 
@@ -409,7 +411,7 @@ describe('EditorSavesAPI', () => {
 			});
 			unauthApp.patch('/api/editor-saves/:position_id', EditorSavesAPI.renamePosition);
 
-			const response = await request(unauthApp)
+			const response = await testRequest(unauthApp)
 				.patch('/api/editor-saves/123')
 				.send({ name: 'New Name' });
 
@@ -427,7 +429,7 @@ describe('EditorSavesAPI', () => {
 
 			const maxLengthIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH);
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test', icn: maxLengthIcn });
 
@@ -448,7 +450,7 @@ describe('EditorSavesAPI', () => {
 
 			const maxLengthName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH);
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: maxLengthName, icn: 'test' });
 
@@ -463,7 +465,7 @@ describe('EditorSavesAPI', () => {
 
 			const icn = '12345';
 
-			const response = await request(app)
+			const response = await testRequest(app)
 				.post('/api/editor-saves')
 				.send({ name: 'Test', icn });
 

@@ -1,12 +1,12 @@
 // src/server/api/Prefs.int.test.ts
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
-import request from 'supertest';
 
 import app from '../app.js';
 import integrationUtils from '../../tests/integrationUtils.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import { testRequest } from '../../tests/testRequest.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 /** An example of valid preferences. */
 const VALID_PREFS_1 = {
@@ -40,19 +40,15 @@ describe('Preferences Integration', () => {
 
 		// 1. Manually set prefs in DB first (so we have something to fetch)
 		// Since we can't easily inject into DB without the API, we'll use the API first
-		await request(app)
+		await testRequest(app)
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https')
-			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Now test the GET request (HTML request)
-		const response = await request(app)
+		const response = await testRequest(app)
 			.get('/') // Hitting the homepage (or any HTML route)
-			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest');
+			.set('Cookie', cookie);
 		// .set('Accept', 'text/html');
 
 		// CAN'T KEEP THIS, because if `dist/` is not built, it will 404. Tests should NOT depend on the build process.
@@ -71,11 +67,7 @@ describe('Preferences Integration', () => {
 	it('should reject request with no body', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await request(app)
-			.post('/api/set-preferences')
-			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest');
+		const response = await testRequest(app).post('/api/set-preferences').set('Cookie', cookie);
 
 		expect(response.status).toBe(400);
 	});
@@ -83,21 +75,17 @@ describe('Preferences Integration', () => {
 	it('should reject request with missing preferences', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({}); // No preferences
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject requests from unauthenticated users', async () => {
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/api/set-preferences')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(401);
@@ -112,11 +100,9 @@ describe('Preferences Integration', () => {
 			animations: 'yes', // Should be boolean
 		};
 
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ preferences: invalidPrefs });
 
 		expect(response.status).toBe(400);
@@ -126,11 +112,9 @@ describe('Preferences Integration', () => {
 	it('should allow logged-in user to save valid preferences', async () => {
 		const user = await integrationUtils.createAndLoginUser();
 
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(200);
@@ -146,19 +130,15 @@ describe('Preferences Integration', () => {
 		const user = await integrationUtils.createAndLoginUser();
 
 		// 1. Save initial preferences
-		await request(app)
+		await testRequest(app)
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Save new preferences to overwrite
-		const response = await request(app)
+		const response = await testRequest(app)
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
-			.set('User-Agent', 'supertest')
 			.send({ preferences: VALID_PREFS_2 });
 
 		expect(response.status).toBe(200);
