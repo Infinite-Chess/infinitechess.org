@@ -9,13 +9,13 @@
 
 import jwt from 'jsonwebtoken';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 import {
 	deleteRefreshToken,
 	findRefreshToken,
 	updateRefreshTokenIP,
 	type RefreshTokenRecord,
 } from '../../database/refreshTokenManager.js';
-import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 
 import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
 

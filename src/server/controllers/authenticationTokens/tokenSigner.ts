@@ -8,14 +8,16 @@
  * we don't have to do a database lookup to know who they are!
  */
 
-import jwt from 'jsonwebtoken';
+import type { Role } from '../roles.js';
+
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import jwt from 'jsonwebtoken';
 
 /** The payload of the JWT token, containing user information. */
 interface TokenPayload {
 	user_id: number;
 	username: string;
-	roles: string[] | null;
+	roles: Role[] | null;
 }
 
 if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
@@ -37,7 +39,7 @@ const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
 /**
  * Signs and generates an access token for the user.
  */
-function signAccessToken(user_id: number, username: string, roles: string[] | null): string {
+function signAccessToken(user_id: number, username: string, roles: Role[] | null): string {
 	const payload = generatePayload(user_id, username, roles);
 	const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 	return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: accessTokenExpirySecs }); // Typically short-lived, for in-memory storage only.
@@ -47,14 +49,14 @@ function signAccessToken(user_id: number, username: string, roles: string[] | nu
  * Signs and generates a refresh token for the user.
  * The refresh token is long-lived (hours-days) and should be stored in an httpOnly cookie (not accessible via JS).
  */
-function signRefreshToken(user_id: number, username: string, roles: string[] | null): string {
+function signRefreshToken(user_id: number, username: string, roles: Role[] | null): string {
 	const payload = generatePayload(user_id, username, roles);
 	const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 	return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: refreshTokenExpirySecs }); // Longer-lived, stored in an httpOnly cookie.
 }
 
 /** Generates the payload object for a JWT based on the user ID and username. */
-function generatePayload(user_id: number, username: string, roles: string[] | null): TokenPayload {
+function generatePayload(user_id: number, username: string, roles: Role[] | null): TokenPayload {
 	return { user_id, username, roles };
 }
 

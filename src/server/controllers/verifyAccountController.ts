@@ -4,6 +4,8 @@
  * This controller handles verifying accounts, either manually or via an email link.
  */
 
+import type { Request, Response } from 'express';
+
 import { getTranslationForReq } from '../utility/translate.js';
 import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
@@ -13,16 +15,13 @@ import {
 	updateMemberColumns,
 } from '../database/memberManager.js';
 
-import type { Response } from 'express';
-import type { IdentifiedRequest } from '../types.js';
-
 // Functions -------------------------------------------------------------------------
 
 /**
  * Route that verifies an account when the user clicks the link in the email.
  * If they are not signed in, this forwards them to the login page.
  */
-export async function verifyAccount(req: IdentifiedRequest, res: Response): Promise<void> {
+export async function verifyAccount(req: Request, res: Response): Promise<void> {
 	if (!req.memberInfo) {
 		logEventsAndPrint('req.memberInfo must be defined for verify account route!', 'errLog.txt');
 		res.status(500).redirect('/500');

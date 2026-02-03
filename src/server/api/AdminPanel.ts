@@ -5,19 +5,20 @@
  * /admin
  */
 
+import type { Request, Response } from 'express';
+
 import { manuallyVerifyUser } from '../controllers/verifyAccountController.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 // @ts-ignore
 import { refreshGitHubContributorsList } from './GitHub.js';
-import { areRolesHigherInPriority } from '../controllers/roles.js';
+import { areRolesHigherInPriority, Role } from '../controllers/roles.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { addToBlacklist, removeFromBlacklist } from '../database/blacklistManager.js';
 import validators from '../../shared/util/validators.js';
 
-import type { IdentifiedRequest } from '../types.js';
-import type { Response } from 'express';
+// Constants -------------------------------------------------------------------------
 
 const validCommands = [
 	'ban',
@@ -29,14 +30,16 @@ const validCommands = [
 	'userinfo',
 	'updatecontributors',
 	'help',
-];
+] as const;
 
-function processCommand(req: IdentifiedRequest, res: Response): void {
+// Functions -------------------------------------------------------------------------
+
+function processCommand(req: Request, res: Response): void {
 	const command = req.params['command']!;
 
 	const commandAndArgs = parseArgumentsFromCommand(command);
 
-	if (!req.memberInfo.signedIn) {
+	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		res.status(401).send('Cannot send commands while logged out.');
 		return;
 	}
@@ -106,7 +109,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 function deleteCommand(
 	command: string,
 	commandAndArgs: string[],
-	req: IdentifiedRequest,
+	req: Request,
 	res: Response,
 ): void {
 	if (commandAndArgs.length < 3) {
@@ -128,7 +131,7 @@ function deleteCommand(
 		return sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
 
 	// They were found...
-	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
+	const adminsRoles = req.memberInfo?.signedIn ? req.memberInfo.roles : null;
 	const rolesOfAffectedUser = record.roles === null ? null : JSON.parse(record.roles);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser))
@@ -146,7 +149,7 @@ function deleteCommand(
 function banEmailCommand(
 	command: string,
 	commandAndArgs: string[],
-	req: IdentifiedRequest,
+	req: Request,
 	res: Response,
 ): void {
 	if (commandAndArgs.length !== 2) {
@@ -179,7 +182,7 @@ function banEmailCommand(
 function unbanEmailCommand(
 	command: string,
 	commandAndArgs: string[],
-	req: IdentifiedRequest,
+	req: Request,
 	res: Response,
 ): void {
 	if (commandAndArgs.length !== 2) {
@@ -212,7 +215,7 @@ function unbanEmailCommand(
 function usernameCommand(
 	command: string,
 	commandAndArgs: string[],
-	req: IdentifiedRequest,
+	req: Request,
 	res: Response,
 ): void {
 	if (commandAndArgs[1] === 'get') {
@@ -251,12 +254,7 @@ function usernameCommand(
 	}
 }
 
-function logoutUser(
-	command: string,
-	commandAndArgs: string[],
-	req: IdentifiedRequest,
-	res: Response,
-): void {
+function logoutUser(command: string, commandAndArgs: string[], req: Request, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send(
 			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
@@ -291,12 +289,7 @@ function logoutUser(
 	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
 }
 
-function verify(
-	command: string,
-	commandAndArgs: string[],
-	req: IdentifiedRequest,
-	res: Response,
-): void {
+function verify(command: string, commandAndArgs: string[], req: Request, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send(
 			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
@@ -322,12 +315,7 @@ function verify(
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
-function getUserInfo(
-	command: string,
-	commandAndArgs: string[],
-	req: IdentifiedRequest,
-	res: Response,
-): void {
+function getUserInfo(command: string, commandAndArgs: string[], req: Request, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send(
 			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
@@ -357,7 +345,7 @@ function getUserInfo(
 	else sendAndLogResponse(res, 200, JSON.stringify(record));
 }
 
-function updateContributorsCommand(command: string, req: IdentifiedRequest, res: Response): void {
+function updateContributorsCommand(command: string, req: Request, res: Response): void {
 	logCommand(command, req);
 	refreshGitHubContributorsList();
 	sendAndLogResponse(res, 200, 'Contributors should now be updated!');
@@ -418,8 +406,8 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 	}
 }
 
-function logCommand(command: string, req: IdentifiedRequest): void {
-	if (req.memberInfo.signedIn) {
+function logCommand(command: string, req: Request): void {
+	if (req.memberInfo?.signedIn) {
 		logEventsAndPrint(
 			`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` +
 				command,

@@ -166,7 +166,7 @@ function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReaso
  * @param closureReason - The reason for closure, sent to the client.
  */
 function closeAllSocketsOfMember(
-	user_id: string,
+	user_id: number,
 	closureCode: number,
 	closureReason: string,
 ): void {

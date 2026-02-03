@@ -1,15 +1,16 @@
 // src/server/controllers/sendMail.ts
 
+import type { Request } from 'express';
+
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
 import { SESClient } from '@aws-sdk/client-ses';
 import { fromEnv } from '@aws-sdk/credential-providers';
 // Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
 import * as aws from '@aws-sdk/client-ses';
+
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-
-import { IdentifiedRequest } from '../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 
@@ -170,7 +171,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 }
 
 /** API to resend the verification email. */
-function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
+function requestConfirmEmail(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		res.status(401).json({ message: 'You must be signed in to perform this action.' });
 		return;

@@ -58,4 +58,4 @@ router.get('/404(.html)?', serveFile('errors/404.html', true));
 router.get('/409(.html)?', serveFile('errors/409.html', true));
 router.get('/500(.html)?', serveFile('errors/500.html', true));
 
-export { router };
+export { router as rootRouter };

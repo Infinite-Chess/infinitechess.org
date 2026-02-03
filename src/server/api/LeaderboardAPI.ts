@@ -15,8 +15,7 @@ import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-import type { Response } from 'express';
-import type { IdentifiedRequest } from '../types.js';
+import type { Request, Response } from 'express';
 
 /** Maximum number of players allowed to be requested in a single request. */
 const MAX_N_PLAYERS_REQUEST_CAP = 100;
@@ -27,7 +26,7 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
  * Responds to the request to fetch top (N = n_players) players of leaderboard
  * leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
  */
-const getLeaderboardData = async (req: IdentifiedRequest, res: Response): Promise<void> => {
+const getLeaderboardData = async (req: Request, res: Response): Promise<void> => {
 	// route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
 
 	/** ID of leaderboard to be fetched */
@@ -58,7 +57,7 @@ const getLeaderboardData = async (req: IdentifiedRequest, res: Response): Promis
 
 	/** Username of user whose global ranking should be returned. Set to undefined if its global rank should not be found. */
 	const requester_username =
-		find_requester_rank && req.memberInfo.signedIn ? req.memberInfo.username : undefined;
+		find_requester_rank && req.memberInfo?.signedIn ? req.memberInfo.username : undefined;
 
 	// Query leaderboard database
 	const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
