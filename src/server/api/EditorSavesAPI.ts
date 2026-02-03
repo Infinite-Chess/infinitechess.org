@@ -304,18 +304,16 @@ function renamePosition(req: Request, res: Response): void {
 
 		res.json({ success: true });
 	} catch (error: unknown) {
+		const errMsg = error instanceof Error ? error.message : String(error);
+
 		// Handle the name already exists error
-		if (
-			error instanceof Error &&
-			error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR
-		) {
+		if (errMsg === editorSavesManager.NAME_ALREADY_EXISTS_ERROR) {
 			res.status(409).json({ error: `Position name already exists` });
 			return;
 		}
-
-		const message = error instanceof Error ? error.message : String(error);
+		// Log and return generic error for all other database errors
 		logEventsAndPrint(
-			`Error renaming position "${oldPositionName}" for user_id ${userId} to "${newName}": ${message}`,
+			`Error renaming position "${oldPositionName}" for user_id ${userId} to "${newName}": ${errMsg}`,
 			'errLog.txt',
 		);
 		res.status(500).json({ error: 'Failed to rename position' });

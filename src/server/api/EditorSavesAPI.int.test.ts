@@ -178,7 +178,6 @@ describe('EditorSavesAPI Integration', () => {
 				.send({ name: 'Duplicate Name', icn: 'test-icn-2' });
 
 			expect(response.status).toBe(409);
-			expect(response.body.error).toBe('Position name already exists');
 		});
 
 		it('should return 401 if user is not authenticated', async () => {

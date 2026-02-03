@@ -40,7 +40,7 @@ const NAME_ALREADY_EXISTS_ERROR = 'NAME_ALREADY_EXISTS';
  * Returns only name and piece_count columns.
  * @param user_id - The user ID
  * @returns An array of saved positions.
- * @throws {Error} A database error occurred while managing editor saves.
+ * @throws A database error occurred while managing editor saves.
  */
 function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 	try {
@@ -61,10 +61,10 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * enforcing the maximum saved positions quota per user.
  * @param user_id - The user ID who owns the position
  * @param name - The name of the saved position
- * @param piece_count - The piece_count (icn length) of the position
+ * @param piece_count - The client-provided piece count of the position
  * @param icn - The ICN notation of the position
  * @returns The RunResult.
- * @throws {Error} QUOTA_EXCEEDED if the user has reached the maximum saved positions, NAME_ALREADY_EXISTS if the name already exists, or a generic database error.
+ * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, NAME_ALREADY_EXISTS if the name already exists, or a generic database error.
  */
 function addSavedPosition(
 	user_id: number,
@@ -97,23 +97,19 @@ function addSavedPosition(
 
 		return transaction();
 	} catch (error: unknown) {
+		const errMsg = error instanceof Error ? error.message : String(error);
+
 		// Re-throw quota exceeded errors as-is (expected business logic failure)
-		if (error instanceof Error && error.message === QUOTA_EXCEEDED_ERROR) {
+		if (errMsg === QUOTA_EXCEEDED_ERROR) {
 			throw error;
 		}
 		// Handle UNIQUE constraint violation
-		if (
-			error instanceof Error &&
-			error.message.includes(
-				'UNIQUE constraint failed: editor_saves.user_id, editor_saves.name',
-			)
-		) {
+		if (errMsg.includes('UNIQUE constraint failed')) {
 			throw new Error(NAME_ALREADY_EXISTS_ERROR);
 		}
 		// Log and throw generic error for all other database errors
-		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`,
+			`Error adding saved position for user_id ${user_id} with name "${name}": ${errMsg}`,
 			'errLog.txt',
 		);
 		throw new Error('A database error occurred while managing editor saves.');
@@ -125,7 +121,7 @@ function addSavedPosition(
  * @param name - The position name
  * @param user_id - The user ID who owns the position
  * @returns The ICN record if found and owned by the user, otherwise undefined.
- * @throws {Error} A database error occurred while managing editor saves.
+ * @throws A database error occurred while managing editor saves.
  */
 function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
 	try {
@@ -147,7 +143,7 @@ function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecor
  * @param name - The position name
  * @param user_id - The user ID who owns the position
  * @returns The RunResult containing the number of changes.
- * @throws {Error} A database error occurred while managing editor saves.
+ * @throws A database error occurred while managing editor saves.
  */
 function deleteSavedPosition(name: string, user_id: number): RunResult {
 	try {
@@ -170,25 +166,21 @@ function deleteSavedPosition(name: string, user_id: number): RunResult {
  * @param user_id - The user ID who owns the position
  * @param new_name - The new name for the saved position
  * @returns The RunResult containing the number of changes.
- * @throws {Error} NAME_ALREADY_EXISTS if the new name already exists, or a generic database error.
+ * @throws NAME_ALREADY_EXISTS if the new name already exists, or a generic database error.
  */
 function renameSavedPosition(old_name: string, user_id: number, new_name: string): RunResult {
 	try {
 		const query = `UPDATE editor_saves SET name = ? WHERE name = ? AND user_id = ?`;
 		return db.run(query, [new_name, old_name, user_id]);
 	} catch (error: unknown) {
+		const errMsg = error instanceof Error ? error.message : String(error);
 		// Handle UNIQUE constraint violation
-		if (
-			error instanceof Error &&
-			error.message.includes(
-				'UNIQUE constraint failed: editor_saves.user_id, editor_saves.name',
-			)
-		) {
+		if (errMsg.includes('UNIQUE constraint failed')) {
 			throw new Error(NAME_ALREADY_EXISTS_ERROR);
 		}
-		const message = error instanceof Error ? error.message : String(error);
+		// Log and throw generic error for all other database errors
 		logEventsAndPrint(
-			`Error renaming position "${old_name}" for user_id ${user_id} to "${new_name}": ${message}`,
+			`Error renaming position "${old_name}" for user_id ${user_id} to "${new_name}": ${errMsg}`,
 			'errLog.txt',
 		);
 		throw new Error('A database error occurred while managing editor saves.');
@@ -196,9 +188,8 @@ function renameSavedPosition(old_name: string, user_id: number, new_name: string
 }
 
 export default {
-	MAX_SAVED_POSITIONS,
-
 	// Constants
+	MAX_SAVED_POSITIONS,
 	QUOTA_EXCEEDED_ERROR,
 	NAME_ALREADY_EXISTS_ERROR,
 	// Methods
