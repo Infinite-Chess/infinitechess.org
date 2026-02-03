@@ -2,7 +2,6 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
-import app from '../app.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { testRequest } from '../../tests/testRequest.js';
@@ -28,7 +27,7 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with no body', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie);
 
@@ -38,7 +37,7 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with missing new_checkmate_beaten', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.send({}); // No new_checkmate_beaten
@@ -49,7 +48,7 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with non-string new_checkmate_beaten', async () => {
 		const cookie = await integrationUtils.createAndLoginUser();
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie.cookie)
 			.send({ new_checkmate_beaten: 12345 }); // Non-string
@@ -58,7 +57,7 @@ describe('Practice Progress Integration', () => {
 	});
 
 	it('should reject requests from unauthenticated users', async () => {
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
@@ -68,7 +67,7 @@ describe('Practice Progress Integration', () => {
 	it('should reject invalid checkmate IDs', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
 			.send({ new_checkmate_beaten: 'INVALID-ID-123' });
@@ -80,7 +79,7 @@ describe('Practice Progress Integration', () => {
 	it('should allow a logged-in user to save a new checkmate', async () => {
 		const user = await integrationUtils.createAndLoginUser();
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
@@ -106,13 +105,13 @@ describe('Practice Progress Integration', () => {
 		if (!secondCheckmateId) throw new Error('Not enough valid checkmate IDs for this test!');
 
 		// 1. Submit First Checkmate
-		await testRequest(app)
+		await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Second Checkmate
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: secondCheckmateId });
@@ -128,13 +127,13 @@ describe('Practice Progress Integration', () => {
 		const user = await integrationUtils.createAndLoginUser();
 
 		// 1. Submit First Time
-		await testRequest(app)
+		await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Same ID Again
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });

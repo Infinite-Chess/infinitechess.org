@@ -1,14 +1,14 @@
 // src/tests/testRequest.ts
 
-import type { Express } from 'express';
-
 import request, { Test } from 'supertest';
+
+import app from '../server/app.js';
 
 /**
  * A wrapper around supertest to automatically set common headers
  * required by the application (e.g. to bypass HTTPS redirects and 404s).
  */
-export function testRequest(app: Express): {
+export function testRequest(): {
 	get: (url: string) => Test;
 	post: (url: string) => Test;
 	put: (url: string) => Test;

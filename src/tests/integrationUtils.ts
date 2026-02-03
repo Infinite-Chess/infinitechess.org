@@ -1,6 +1,5 @@
 // src/tests/integrationUtils.ts
 
-import app from '../server/app';
 import { testRequest } from './testRequest';
 import { generateAccount } from '../server/controllers/createAccountController';
 
@@ -16,7 +15,7 @@ async function createAndLoginUser(): Promise<{ username: string; cookie: string 
 		autoVerify: true,
 	});
 
-	const response = await testRequest(app)
+	const response = await testRequest()
 		.post('/auth')
 		.send({ username: 'ChessMaster', password: 'Password123!' });
 
