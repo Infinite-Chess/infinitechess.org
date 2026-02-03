@@ -9,7 +9,6 @@
 
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 
-import app from '../app.js';
 import editorutil from '../../shared/editor/editorutil.js';
 import EditorSavesAPI from './EditorSavesAPI.js';
 import integrationUtils from '../../tests/integrationUtils.js';
@@ -43,7 +42,7 @@ describe('EditorSavesAPI', () => {
 
 			vi.mocked(editorSavesManager.getAllSavedPositionsForUser).mockReturnValue(mockSaves);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves')
 				.set('Cookie', user.cookie);
 
@@ -53,7 +52,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest(app).get('/api/editor-saves');
+			const response = await testRequest().get('/api/editor-saves');
 
 			expect(response.status).toBe(401);
 			expect(response.body).toEqual({ error: 'Must be signed in' });
@@ -65,7 +64,7 @@ describe('EditorSavesAPI', () => {
 				throw new Error('Database error');
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves')
 				.set('Cookie', user.cookie);
 
@@ -82,7 +81,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 123,
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
@@ -99,7 +98,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if name is missing', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ icn: 'test-icn-data' });
@@ -111,7 +110,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if name is empty', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: '', icn: 'test-icn-data' });
@@ -124,7 +123,7 @@ describe('EditorSavesAPI', () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: longName, icn: 'test-icn-data' });
@@ -137,7 +136,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if icn is missing', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test Position' });
@@ -148,7 +147,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if icn is empty', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test Position', icn: '' });
@@ -161,7 +160,7 @@ describe('EditorSavesAPI', () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const longIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH + 1);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test Position', icn: longIcn });
@@ -178,7 +177,7 @@ describe('EditorSavesAPI', () => {
 				throw new Error(editorSavesManager.QUOTA_EXCEEDED_ERROR);
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
@@ -189,7 +188,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.send({ name: 'Test Position', icn: 'test-icn-data' });
 
@@ -205,7 +204,7 @@ describe('EditorSavesAPI', () => {
 				icn: 'test-icn-data',
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves/123')
 				.set('Cookie', user.cookie);
 
@@ -218,7 +217,7 @@ describe('EditorSavesAPI', () => {
 			const user = await integrationUtils.createAndLoginUser();
 			vi.mocked(editorSavesManager.getSavedPositionICN).mockReturnValue(undefined);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves/999')
 				.set('Cookie', user.cookie);
 
@@ -228,7 +227,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if position_id is invalid', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves/invalid')
 				.set('Cookie', user.cookie);
 
@@ -238,7 +237,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if position_id is zero', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves/0')
 				.set('Cookie', user.cookie);
 
@@ -248,7 +247,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if position_id is negative', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.get('/api/editor-saves/-5')
 				.set('Cookie', user.cookie);
 
@@ -257,7 +256,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest(app).get('/api/editor-saves/123');
+			const response = await testRequest().get('/api/editor-saves/123');
 
 			expect(response.status).toBe(401);
 			expect(response.body).toEqual({ error: 'Must be signed in' });
@@ -272,7 +271,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.delete('/api/editor-saves/123')
 				.set('Cookie', user.cookie);
 
@@ -288,7 +287,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.delete('/api/editor-saves/999')
 				.set('Cookie', user.cookie);
 
@@ -298,7 +297,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if position_id is invalid', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.delete('/api/editor-saves/invalid')
 				.set('Cookie', user.cookie);
 
@@ -307,7 +306,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest(app).delete('/api/editor-saves/123');
+			const response = await testRequest().delete('/api/editor-saves/123');
 
 			expect(response.status).toBe(401);
 			expect(response.body).toEqual({ error: 'Must be signed in' });
@@ -322,7 +321,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/123')
 				.set('Cookie', user.cookie)
 				.send({ name: 'New Name' });
@@ -339,7 +338,7 @@ describe('EditorSavesAPI', () => {
 				lastInsertRowid: 0,
 			});
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/999')
 				.set('Cookie', user.cookie)
 				.send({ name: 'New Name' });
@@ -350,7 +349,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if name is missing', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/123')
 				.set('Cookie', user.cookie)
 				.send({});
@@ -361,7 +360,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if name is empty', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/123')
 				.set('Cookie', user.cookie)
 				.send({ name: '' });
@@ -374,7 +373,7 @@ describe('EditorSavesAPI', () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/123')
 				.set('Cookie', user.cookie)
 				.send({ name: longName });
@@ -387,7 +386,7 @@ describe('EditorSavesAPI', () => {
 
 		it('should return 400 if position_id is invalid', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/invalid')
 				.set('Cookie', user.cookie)
 				.send({ name: 'New Name' });
@@ -397,7 +396,7 @@ describe('EditorSavesAPI', () => {
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.patch('/api/editor-saves/123')
 				.send({ name: 'New Name' });
 
@@ -416,7 +415,7 @@ describe('EditorSavesAPI', () => {
 
 			const maxLengthIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test', icn: maxLengthIcn });
@@ -439,7 +438,7 @@ describe('EditorSavesAPI', () => {
 
 			const maxLengthName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH);
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: maxLengthName, icn: 'test' });
@@ -456,7 +455,7 @@ describe('EditorSavesAPI', () => {
 
 			const icn = '12345';
 
-			const response = await testRequest(app)
+			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({ name: 'Test', icn });

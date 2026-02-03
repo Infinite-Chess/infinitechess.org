@@ -2,7 +2,6 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
-import app from '../app.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 import { testRequest } from '../../tests/testRequest.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
@@ -40,13 +39,13 @@ describe('Preferences Integration', () => {
 
 		// 1. Manually set prefs in DB first (so we have something to fetch)
 		// Since we can't easily inject into DB without the API, we'll use the API first
-		await testRequest(app)
+		await testRequest()
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Now test the GET request (HTML request)
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.get('/') // Hitting the homepage (or any HTML route)
 			.set('Cookie', cookie);
 		// .set('Accept', 'text/html');
@@ -67,7 +66,7 @@ describe('Preferences Integration', () => {
 	it('should reject request with no body', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest(app).post('/api/set-preferences').set('Cookie', cookie);
+		const response = await testRequest().post('/api/set-preferences').set('Cookie', cookie);
 
 		expect(response.status).toBe(400);
 	});
@@ -75,7 +74,7 @@ describe('Preferences Integration', () => {
 	it('should reject request with missing preferences', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.send({}); // No preferences
@@ -84,7 +83,7 @@ describe('Preferences Integration', () => {
 	});
 
 	it('should reject requests from unauthenticated users', async () => {
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/set-preferences')
 			.send({ preferences: VALID_PREFS_1 });
 
@@ -100,7 +99,7 @@ describe('Preferences Integration', () => {
 			animations: 'yes', // Should be boolean
 		};
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/set-preferences')
 			.set('Cookie', cookie)
 			.send({ preferences: invalidPrefs });
@@ -112,7 +111,7 @@ describe('Preferences Integration', () => {
 	it('should allow logged-in user to save valid preferences', async () => {
 		const user = await integrationUtils.createAndLoginUser();
 
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
 			.send({ preferences: VALID_PREFS_1 });
@@ -130,13 +129,13 @@ describe('Preferences Integration', () => {
 		const user = await integrationUtils.createAndLoginUser();
 
 		// 1. Save initial preferences
-		await testRequest(app)
+		await testRequest()
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Save new preferences to overwrite
-		const response = await testRequest(app)
+		const response = await testRequest()
 			.post('/api/set-preferences')
 			.set('Cookie', user.cookie)
 			.send({ preferences: VALID_PREFS_2 });
