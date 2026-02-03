@@ -19,7 +19,6 @@ Below are several pointers for navigating the project.
 - **Start Dev Server:** `npm run dev` (uses nodemon for hot reload)
 - **Build:** `node build/index.js` (custom build script)
 - **Image Optimization:** `node optimize-images.js`
-- **No standard test suite detected.** If adding tests, follow the structure in `src/shared` and `src/server`.
 
 ## Conventions & Patterns
 
