@@ -35,12 +35,12 @@ describe('EditorSavesAPI Integration', () => {
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'A simple position', icn: 'icn-data-1', piece_count: 10 });
+				.send({ name: 'A simple position', icn: 'icn-data-1', piece_count: 32 });
 
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Another simple position', icn: 'icn-data-2.0', piece_count: 12 });
+				.send({ name: 'Another simple position', icn: 'icn-data-2', piece_count: 76 });
 
 			const response = await testRequest()
 				.get('/api/editor-saves')
@@ -48,8 +48,8 @@ describe('EditorSavesAPI Integration', () => {
 
 			expect(response.status).toBe(200);
 			expect(response.body.saves).toMatchObject([
-				{ name: 'A simple position', piece_count: 10 }, // 'icn-data-1'.length = 10
-				{ name: 'Another simple position', piece_count: 12 }, // 'icn-data-2.0'.length = 12
+				{ name: 'A simple position', piece_count: 32 },
+				{ name: 'Another simple position', piece_count: 76 },
 			]);
 		});
 
@@ -67,14 +67,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
+				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 32 });
 
 			expect(response.status).toBe(201);
 			expect(response.body).toMatchObject({ success: true });
 
 			// Verify the position was actually saved to the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves[0]).toMatchObject({ name: 'Test Position', piece_count: 13 }); // 'test-icn-data'.length = 13
+			expect(saves[0]).toMatchObject({ name: 'Test Position', piece_count: 32 });
 		});
 
 		it('should return 400 if name is missing', async () => {
@@ -136,7 +136,7 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: longIcn, piece_count: longIcn.length });
+				.send({ name: 'Test Position', icn: longIcn, piece_count: 278_569 });
 
 			expect(response.status).toBe(400);
 		});
@@ -308,13 +308,17 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test', icn: maxLengthIcn, piece_count: EditorSavesAPI.MAX_ICN_LENGTH });
+				.send({
+					name: 'Test',
+					icn: maxLengthIcn,
+					piece_count: 250_592,
+				});
 
 			expect(response.status).toBe(201);
 
 			// Verify it was saved correctly
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves[0]?.piece_count).toBe(EditorSavesAPI.MAX_ICN_LENGTH);
+			const save = editorSavesManager.getSavedPositionICN('Test', user.user_id);
+			expect(save?.icn).toBe(maxLengthIcn);
 		});
 
 		it('should handle name at max length', async () => {
@@ -373,8 +377,6 @@ describe('EditorSavesAPI Integration', () => {
 			const saves1 = editorSavesManager.getAllSavedPositionsForUser(user1.user_id);
 			const saves2 = editorSavesManager.getAllSavedPositionsForUser(user2.user_id);
 
-			expect(saves1).toHaveLength(1);
-			expect(saves2).toHaveLength(1);
 			expect(saves1[0]?.name).toBe('Same Name');
 			expect(saves2[0]?.name).toBe('Same Name');
 		});

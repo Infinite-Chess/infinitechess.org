@@ -29,11 +29,14 @@ const SavePositionBodySchema = z.strictObject({
 			editorutil.POSITION_NAME_MAX_LENGTH,
 			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
 		),
+	piece_count: z
+		.number()
+		.int('Piece count must be an integer')
+		.nonnegative('Piece count must be 0+'),
 	icn: z
 		.string()
 		.min(1, 'ICN is required')
 		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
-	piece_count: z.number().int('Piece count must be an integer').nonnegative('Piece count must be 0 or greater'),
 });
 
 /** Schema for validating position_name in URL params */
@@ -84,7 +87,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * API endpoint to save a new position for the current user.
- * Expects { name: string, icn: string, piece_count: number } in request body.
+ * Expects { name: string, piece_count: number, icn: string } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
  */
@@ -112,7 +115,7 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, icn, piece_count } = parseResult.data;
+	const { name, piece_count, icn } = parseResult.data;
 
 	try {
 		// Add the saved position to the database (throws on quota exceeded or name exists)
