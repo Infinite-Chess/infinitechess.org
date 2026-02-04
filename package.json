@@ -96,7 +96,7 @@
     "dev:tsc": "tsc --noEmit --watch --preserveWatchOutput",
     "dev:server": "wait-on dist/server/server.js && nodemon",
     "dev:assets": "cpx \"src/**/*.{css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,toml,md}\" dist --watch",
-    "optimize-images": "tsx optimize-images.ts",
+    "optimize-images": "tsx scripts/optimize-images.ts",
     "generate-dependency-graph": "tsx src/server/utility/generateDependancyGraph.ts",
     "test": "vitest run",
     "test:watch": "vitest",

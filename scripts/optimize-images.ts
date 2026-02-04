@@ -1,4 +1,4 @@
-// optimize-images.ts
+// scripts/optimize-images.ts
 
 /**
  * This script automatically finds and compresses all images from the source
