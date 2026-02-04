@@ -62,7 +62,7 @@ function disable(): void {
 
 function toggle(): void {
 	enabled = !enabled;
-	toast.showStatus(`Toggled special rights highlights: ${enabled}`, false, 0.5);
+	toast.show(`Toggled special rights highlights: ${enabled}`, { durationMultiplier: 0.5 });
 	regenModel();
 	frametracker.onVisualChange();
 }

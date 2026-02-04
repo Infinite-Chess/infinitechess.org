@@ -227,7 +227,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			console.error(
 				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
-			toast.showStatus(`The position was corrupted.`, true);
+			toast.show(`The position was corrupted.`, { error: true });
 			await deleteSavedPosition(modal_config);
 			updateSavedPositionListUI();
 			return;

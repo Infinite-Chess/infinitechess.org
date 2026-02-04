@@ -71,20 +71,20 @@ async function callbackPaste(_event: Event): Promise<void> {
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame()) {
 		if (!onlinegame.getIsPrivate())
-			return toast.showStatus(translations['copypaste'].cannot_paste_in_public);
+			return toast.show(translations['copypaste'].cannot_paste_in_public);
 		if (onlinegame.isRated())
-			return toast.showStatus(translations['copypaste'].cannot_paste_in_rated);
+			return toast.show(translations['copypaste'].cannot_paste_in_rated);
 	}
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame())
-		return toast.showStatus(translations['copypaste'].cannot_paste_in_engine);
+		return toast.show(translations['copypaste'].cannot_paste_in_engine);
 	// Make sure it's legal in a private match
 	if (
 		onlinegame.areInOnlineGame() &&
 		onlinegame.getIsPrivate() &&
 		gameslot.getGamefile()!.boardsim.moves.length > 0
 	)
-		return toast.showStatus(translations['copypaste'].cannot_paste_after_moves);
+		return toast.show(translations['copypaste'].cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard: string;
@@ -92,7 +92,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
 		const message: string = translations['copypaste'].clipboard_denied;
-		return toast.showStatus(message + '\n' + error, true);
+		return toast.show(message + '\n' + error, { error: true });
 	}
 
 	// Convert clipboard text to object
@@ -101,7 +101,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		toast.showStatus(translations['copypaste'].clipboard_invalid, true);
+		toast.show(translations['copypaste'].clipboard_invalid, { error: true });
 		return;
 	}
 
@@ -124,10 +124,9 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
 		.forEach((winCondition) => {
 			if (!winconutil.isWinConditionValid(winCondition)) {
 				// Not valid ❌
-				toast.showStatus(
-					`${translations['copypaste'][`invalid_wincon`]} "${winCondition}".`,
-					true,
-				);
+				toast.show(`${translations['copypaste'][`invalid_wincon`]} "${winCondition}".`, {
+					error: true,
+				});
 				oneInvalid = true;
 			} // else valid ✅
 		});
@@ -239,16 +238,13 @@ function pasteGame(longformOut: LongFormatOut): void {
 		const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
 		if (pieceCount >= pieceCountToDisableCheckmate) {
 			// TOO MANY pieces!
-			toast.showStatus(
+			toast.show(
 				`${translations['copypaste'].piece_count} ${pieceCount} ${translations['copypaste'].exceeded} ${pieceCountToDisableCheckmate}! ${translations['copypaste'].changed_wincon}${privateMatchWarning}`,
-				false,
-				1.5,
+				{ durationMultiplier: 1.5 },
 			);
 		} else {
 			// Only print "Loaded game from clipboard." if we haven't already shown a different toast cause of too many pieces
-			toast.showStatus(
-				`${translations['copypaste'].loaded_from_clipboard}${privateMatchWarning}`,
-			);
+			toast.show(`${translations['copypaste'].loaded_from_clipboard}${privateMatchWarning}`);
 		}
 	});
 

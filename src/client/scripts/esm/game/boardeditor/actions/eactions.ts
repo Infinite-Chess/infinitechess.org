@@ -150,7 +150,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);
-	toast.showStatus('Position successfully loaded.');
+	toast.show('Position successfully loaded.');
 }
 
 /**
@@ -179,7 +179,7 @@ function copy(): void {
 		move_numbers: false,
 	});
 	docutil.copyToClipboard(shortFormatOut);
-	toast.showStatus(translations['copypaste']['copied_position']);
+	toast.show(translations['copypaste']['copied_position']);
 }
 
 /** Loads the position from the clipboard. */
@@ -194,7 +194,7 @@ async function paste(): Promise<undefined> {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
 		const message: string = translations['copypaste'].clipboard_denied;
-		toast.showStatus(message + '\n' + error, true);
+		toast.show(message + '\n' + error, { error: true });
 		return;
 	}
 
@@ -203,13 +203,13 @@ async function paste(): Promise<undefined> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		toast.showStatus(translations['copypaste'].clipboard_invalid, true);
+		toast.show(translations['copypaste'].clipboard_invalid, { error: true });
 		return;
 	}
 
 	loadFromLongformat(longformOut);
 	selectiontool.resetState(); // Clear current selection
-	toast.showStatus(translations['copypaste'].loaded_position_from_clipboard);
+	toast.show(translations['copypaste'].loaded_position_from_clipboard);
 }
 
 /** Starts a local game from the current board editor position, to test play. */
@@ -218,7 +218,7 @@ function startLocalGame(): void {
 
 	const variantOptions = getCurrentPositionInformation(true);
 	if (variantOptions.position.size === 0) {
-		toast.showStatus('Cannot start local game from empty position!', true);
+		toast.show('Cannot start local game from empty position!', { error: true });
 		return;
 	}
 
@@ -252,7 +252,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Determine whether it's not supported...
 
 	if (variantOptions.position.size === 0) {
-		toast.showStatus('Cannot start engine game from empty position!', true);
+		toast.show('Cannot start engine game from empty position!', { error: true });
 		return;
 	}
 
@@ -276,7 +276,9 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
-		toast.showStatus(`Position is not supported for reason: ${supported_result.reason}`, true);
+		toast.show(`Position is not supported for reason: ${supported_result.reason}`, {
+			error: true,
+		});
 		return;
 	}
 

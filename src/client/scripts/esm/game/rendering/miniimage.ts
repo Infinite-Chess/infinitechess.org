@@ -93,8 +93,8 @@ function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
-	if (disabled) toast.showStatus(translations['rendering'].icon_rendering_off);
-	else toast.showStatus(translations['rendering'].icon_rendering_on);
+	if (disabled) toast.show(translations['rendering'].icon_rendering_off);
+	else toast.show(translations['rendering'].icon_rendering_on);
 }
 
 // Updating --------------------------------------------------------------------------

@@ -60,9 +60,9 @@ function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean):
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.isOurAFKAutoResignTimerRunning())
-		toast.showStatusForDuration(
+		toast.show(
 			`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`,
-			1000,
+			{ durationMillis: 1000 },
 		);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop

@@ -60,7 +60,7 @@ function getIsViewingBlackPerspective(): boolean {
 
 function toggle(): void {
 	if (!docutil.isMouseSupported())
-		return toast.showStatus(translations['rendering'].perspective_mode_on_desktop);
+		return toast.show(translations['rendering'].perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
@@ -79,7 +79,7 @@ function enable(): void {
 
 	initCrosshairModel();
 
-	toast.showStatus(translations['rendering'].movement_tutorial);
+	toast.show(translations['rendering'].movement_tutorial);
 }
 
 function disable(): void {
