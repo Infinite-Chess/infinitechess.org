@@ -321,7 +321,7 @@ function sortImports(imports: Import[]): string {
 	regularSourceWithTsIgnore.sort(sortFn);
 	regularPackage.sort(sortFn);
 	regularSource.sort(sortFn);
-	// Side-effect imports: maintain their relative order (stable) but sort by length
+	// Side-effect imports: sort by length (shortest first)
 	sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
 
 	// Build output with proper blank line rules
