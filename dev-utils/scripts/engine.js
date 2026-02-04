@@ -7,7 +7,7 @@ const engine = (function () {
 	 * @param {gamefile} gamefile - gamefile
 	 */
 	function getIntersections(gamefile) {
-		const intersections = new Set();
+		const intersections = new Set()
 
 		const diagonalLineArr = []; // an array holding arrays of the slope and the y-intercept of each diagonal line respectfully. this will help us determine the intersections between them
 		const xSet = new Set();
