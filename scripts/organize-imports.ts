@@ -1,7 +1,7 @@
 
 /**
- * This script organizes TypeScript import statements for specific files passed as arguments.
- * Designed to be used with lint-staged.
+ * This organizes TypeScript import statements.
+ * Usage: tsx organize-imports.ts <file1> <file2> ...
  */
 
 import * as fs from 'fs';
@@ -17,9 +17,7 @@ interface Import {
 	lengthUntilFrom: number;
 }
 
-// ----------------------------------------------------------------------------
-// Parsing Logic (Identical to original script)
-// ----------------------------------------------------------------------------
+// Parsing Logic -----------------------------------------------------------
 
 function parseImport(importStr: string): Import {
 	const trimmed = importStr.trim();
@@ -297,36 +295,38 @@ function processFile(filePath: string): boolean {
 			fs.writeFileSync(filePath, newContent, 'utf-8');
 			return true;
 		}
-	} catch (err) {
-		console.error(`Error processing file ${filePath}:`, err);
+	} catch (error) {
+		console.error(`Error processing file ${filePath}:`, error);
 	}
 
 	return false;
 }
 
-// ----------------------------------------------------------------------------
-// CLI Execution Logic
-// ----------------------------------------------------------------------------
+// Main Execution ----------------------------------------------------------
 
 function main(): void {
-	// Capture arguments passed by lint-staged (files)
-	const filesToProcess = process.argv.slice(2);
+	// Get arguments from the command line (excluding 'node' and script path)
+	let filesToProcess = process.argv.slice(2);
 
 	if (filesToProcess.length === 0) {
 		// If no arguments passed, do nothing (or print help)
-		console.log('[organize-imports] No files provided.');
+		console.log(
+			'[organize-imports] No files provided. Usage: tsx organize-imports.ts <file1> <file2> ...',
+		);
 		return;
 	}
+
+	filesToProcess = filesToProcess.filter((f) => f.endsWith('.ts')); // Filter only .ts files
 
 	let changedCount = 0;
 	const rootDir = process.cwd();
 
 	for (const file of filesToProcess) {
-		// Check if file exists to avoid crashing if a file was deleted but still staged
-		if (!fs.existsSync(file)) continue;
-		if (!processFile(file)) continue;
-		const relativePath = path.relative(rootDir, file);
-		console.log(`Organized imports: ${relativePath}`);
+		if (!fs.existsSync(file)) continue; // Deleted but still staged
+		if (!processFile(file)) continue; // No changes made
+		// Output relative path for cleaner logs
+		const relativePath = path.isAbsolute(file) ? path.relative(rootDir, file) : file;
+		console.log(relativePath);
 		changedCount++;
 	}
 
