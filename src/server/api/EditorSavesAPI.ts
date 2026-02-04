@@ -33,10 +33,13 @@ const SavePositionBodySchema = z.strictObject({
 		.number()
 		.int('Piece count must be an integer')
 		.nonnegative('Piece count must be 0+'),
+	timestamp: z.number().int('Timestamp must be an integer').nonnegative('Timestamp must be 0+'),
 	icn: z
 		.string()
 		.min(1, 'ICN is required')
 		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
+	pawn_double_push: z.boolean(),
+	castling: z.boolean(),
 });
 
 /** Schema for validating position_name in URL params */
@@ -87,7 +90,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * API endpoint to save a new position for the current user.
- * Expects { name: string, piece_count: number, icn: string } in request body.
+ * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push: boolean, castling: boolean } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
  */
@@ -115,11 +118,19 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, piece_count, icn } = parseResult.data;
+	const { name, piece_count, timestamp, icn, pawn_double_push, castling } = parseResult.data;
 
 	try {
 		// Add the saved position to the database (throws on quota exceeded or name exists)
-		editorSavesManager.addSavedPosition(userId, name, piece_count, icn);
+		editorSavesManager.addSavedPosition(
+			userId,
+			name,
+			piece_count,
+			timestamp,
+			icn,
+			pawn_double_push,
+			castling,
+		);
 
 		res.status(201).json({ success: true });
 	} catch (error: unknown) {
@@ -146,7 +157,7 @@ function savePosition(req: Request, res: Response): void {
 
 /**
  * API endpoint to get a specific saved position by position_name.
- * Returns { icn: string } on success.
+ * Returns { icn: string, pawn_double_push: number, castling: number } on success.
  * Requires authentication and ownership of the position.
  */
 function getPosition(req: Request, res: Response): void {
@@ -182,7 +193,11 @@ function getPosition(req: Request, res: Response): void {
 			return;
 		}
 
-		res.json({ icn: position.icn });
+		res.json({
+			icn: position.icn,
+			pawn_double_push: position.pawn_double_push,
+			castling: position.castling,
+		});
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(

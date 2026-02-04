@@ -31,16 +31,34 @@ describe('EditorSavesAPI Integration', () => {
 		it('should return all saved positions for authenticated user', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
+			const position1 = {
+				name: 'A simple position',
+				piece_count: 32,
+				timestamp: Date.now(),
+				icn: 'icn-data-1',
+				pawn_double_push: true,
+				castling: true,
+			};
+
+			const position2 = {
+				name: 'Another simple position',
+				piece_count: 76,
+				timestamp: Date.now(),
+				icn: 'icn-data-2',
+				pawn_double_push: false,
+				castling: true,
+			};
+
 			// Save positions to the database through the API
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'A simple position', icn: 'icn-data-1', piece_count: 32 });
+				.send(position1);
 
 			await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Another simple position', icn: 'icn-data-2', piece_count: 76 });
+				.send(position2);
 
 			const response = await testRequest()
 				.get('/api/editor-saves')
@@ -48,8 +66,16 @@ describe('EditorSavesAPI Integration', () => {
 
 			expect(response.status).toBe(200);
 			expect(response.body.saves).toMatchObject([
-				{ name: 'A simple position', piece_count: 32 },
-				{ name: 'Another simple position', piece_count: 76 },
+				{
+					name: position1.name,
+					piece_count: position1.piece_count,
+					timestamp: position1.timestamp,
+				},
+				{
+					name: position2.name,
+					piece_count: position2.piece_count,
+					timestamp: position2.timestamp,
+				},
 			]);
 		});
 
@@ -64,17 +90,30 @@ describe('EditorSavesAPI Integration', () => {
 		it('should save a new position successfully', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
+			const position = {
+				name: 'Test Position',
+				piece_count: 32,
+				timestamp: Date.now(),
+				icn: 'test-icn-data',
+				pawn_double_push: true,
+				castling: false,
+			};
+
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 32 });
+				.send(position);
 
 			expect(response.status).toBe(201);
 			expect(response.body).toMatchObject({ success: true });
 
 			// Verify the position was actually saved to the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves[0]).toMatchObject({ name: 'Test Position', piece_count: 32 });
+			expect(saves[0]).toMatchObject({
+				name: position.name,
+				piece_count: position.piece_count,
+				timestamp: position.timestamp,
+			});
 		});
 
 		it('should return 400 if name is missing', async () => {
@@ -82,7 +121,13 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ icn: 'test-icn-data' });
+				.send({
+					piece_count: 10,
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					pawn_double_push: true,
+					castling: true,
+				});
 
 			expect(response.status).toBe(400);
 		});
@@ -92,7 +137,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: '', icn: 'test-icn-data', piece_count: 13 });
+				.send({
+					name: '',
+					piece_count: 13,
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					pawn_double_push: false,
+					castling: false,
+				});
 
 			expect(response.status).toBe(400);
 		});
@@ -104,7 +156,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: longName, icn: 'test-icn-data', piece_count: 13 });
+				.send({
+					name: longName,
+					piece_count: 13,
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					pawn_double_push: true,
+					castling: true,
+				});
 
 			expect(response.status).toBe(400);
 		});
@@ -114,7 +173,13 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', piece_count: 13 });
+				.send({
+					name: 'Test Position',
+					piece_count: 13,
+					timestamp: Date.now(),
+					pawn_double_push: true,
+					castling: true,
+				});
 
 			expect(response.status).toBe(400);
 		});
@@ -124,7 +189,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: '', piece_count: 0 });
+				.send({
+					name: 'Test Position',
+					piece_count: 0,
+					timestamp: Date.now(),
+					icn: '',
+					pawn_double_push: false,
+					castling: false,
+				});
 
 			expect(response.status).toBe(400);
 		});
@@ -136,7 +208,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: longIcn, piece_count: 278_569 });
+				.send({
+					name: 'Test Position',
+					piece_count: 278_569,
+					timestamp: Date.now(),
+					icn: longIcn,
+					pawn_double_push: true,
+					castling: false,
+				});
 
 			expect(response.status).toBe(400);
 		});
@@ -149,14 +228,28 @@ describe('EditorSavesAPI Integration', () => {
 				await testRequest()
 					.post('/api/editor-saves')
 					.set('Cookie', user.cookie)
-					.send({ name: `Position ${i}`, icn: 'test-icn', piece_count: 8 });
+					.send({
+						name: `Position ${i}`,
+						piece_count: 8,
+						timestamp: Date.now(),
+						icn: 'test-icn',
+						pawn_double_push: true,
+						castling: true,
+					});
 			}
 
 			// Try to add one more, should fail
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
+				.send({
+					name: 'Test Position',
+					piece_count: 13,
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					pawn_double_push: false,
+					castling: false,
+				});
 
 			expect(response.status).toBe(403);
 		});
@@ -165,26 +258,106 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Save first position
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Duplicate Name', icn: 'test-icn-1', piece_count: 10 });
+			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
+				name: 'Duplicate Name',
+				piece_count: 10,
+				timestamp: Date.now(),
+				icn: 'test-icn-1',
+				pawn_double_push: true,
+				castling: false,
+			});
 
 			// Try to save another position with the same name
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Duplicate Name', icn: 'test-icn-2', piece_count: 10 });
+				.send({
+					name: 'Duplicate Name',
+					piece_count: 10,
+					timestamp: Date.now(),
+					icn: 'test-icn-2',
+					pawn_double_push: false,
+					castling: true,
+				});
 
 			expect(response.status).toBe(409);
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
-			const response = await testRequest()
-				.post('/api/editor-saves')
-				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
+			const response = await testRequest().post('/api/editor-saves').send({
+				name: 'Test Position',
+				piece_count: 13,
+				timestamp: Date.now(),
+				icn: 'test-icn-data',
+				pawn_double_push: true,
+				castling: true,
+			});
 
 			expect(response.status).toBe(401);
+		});
+
+		it('should return 400 if timestamp is missing', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+			const response = await testRequest()
+				.post('/api/editor-saves')
+				.set('Cookie', user.cookie)
+				.send({
+					name: 'Test Position',
+					piece_count: 13,
+					icn: 'test-icn-data',
+					pawn_double_push: true,
+					castling: true,
+				});
+
+			expect(response.status).toBe(400);
+		});
+
+		it('should return 400 if piece_count is missing', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+			const response = await testRequest()
+				.post('/api/editor-saves')
+				.set('Cookie', user.cookie)
+				.send({
+					name: 'Test Position',
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					pawn_double_push: true,
+					castling: true,
+				});
+
+			expect(response.status).toBe(400);
+		});
+
+		it('should return 400 if pawn_double_push is missing', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+			const response = await testRequest()
+				.post('/api/editor-saves')
+				.set('Cookie', user.cookie)
+				.send({
+					name: 'Test Position',
+					piece_count: 13,
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					castling: true,
+				});
+
+			expect(response.status).toBe(400);
+		});
+
+		it('should return 400 if castling is missing', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+			const response = await testRequest()
+				.post('/api/editor-saves')
+				.set('Cookie', user.cookie)
+				.send({
+					name: 'Test Position',
+					piece_count: 13,
+					timestamp: Date.now(),
+					icn: 'test-icn-data',
+					pawn_double_push: true,
+				});
+
+			expect(response.status).toBe(400);
 		});
 	});
 
@@ -193,17 +366,25 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Save a position first
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
+			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
+				name: 'Test Position',
+				piece_count: 13,
+				timestamp: Date.now(),
+				icn: 'test-icn-data',
+				pawn_double_push: true,
+				castling: false,
+			});
 
 			const response = await testRequest()
 				.get(`/api/editor-saves/${encodeURIComponent('Test Position')}`)
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toEqual({ icn: 'test-icn-data' });
+			expect(response.body).toEqual({
+				icn: 'test-icn-data',
+				pawn_double_push: 1,
+				castling: 0,
+			});
 		});
 
 		it('should return 404 if position not found or not owned', async () => {
@@ -220,17 +401,25 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Save a position with spaces in the name
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Position With Spaces', icn: 'test-icn-spaces', piece_count: 16 });
+			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
+				name: 'Position With Spaces',
+				piece_count: 16,
+				timestamp: Date.now(),
+				icn: 'test-icn-spaces',
+				pawn_double_push: false,
+				castling: true,
+			});
 
 			const response = await testRequest()
 				.get(`/api/editor-saves/${encodeURIComponent('Position With Spaces')}`)
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toEqual({ icn: 'test-icn-spaces' });
+			expect(response.body).toEqual({
+				icn: 'test-icn-spaces',
+				pawn_double_push: 0,
+				castling: 1,
+			});
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
@@ -247,10 +436,14 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Save a position first
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Test Position', icn: 'test-icn-data', piece_count: 13 });
+			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
+				name: 'Test Position',
+				piece_count: 13,
+				timestamp: Date.now(),
+				icn: 'test-icn-data',
+				pawn_double_push: true,
+				castling: true,
+			});
 
 			const response = await testRequest()
 				.delete(`/api/editor-saves/${encodeURIComponent('Test Position')}`)
@@ -278,10 +471,14 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Save a position with spaces
-			await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({ name: 'Position With Spaces', icn: 'test-icn', piece_count: 8 });
+			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
+				name: 'Position With Spaces',
+				piece_count: 8,
+				timestamp: Date.now(),
+				icn: 'test-icn',
+				pawn_double_push: false,
+				castling: false,
+			});
 
 			const response = await testRequest()
 				.delete(`/api/editor-saves/${encodeURIComponent('Position With Spaces')}`)
@@ -310,8 +507,11 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test',
-					icn: maxLengthIcn,
 					piece_count: 250_592,
+					timestamp: Date.now(),
+					icn: maxLengthIcn,
+					pawn_double_push: true,
+					castling: false,
 				});
 
 			expect(response.status).toBe(201);
@@ -329,7 +529,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: maxLengthName, icn: 'test', piece_count: 4 });
+				.send({
+					name: maxLengthName,
+					piece_count: 4,
+					timestamp: Date.now(),
+					icn: 'test',
+					pawn_double_push: false,
+					castling: true,
+				});
 
 			expect(response.status).toBe(201);
 
@@ -346,7 +553,14 @@ describe('EditorSavesAPI Integration', () => {
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
-				.send({ name: 'Test', icn, piece_count: 100 });
+				.send({
+					name: 'Test',
+					piece_count: 100,
+					timestamp: Date.now(),
+					icn,
+					pawn_double_push: true,
+					castling: true,
+				});
 
 			expect(response.status).toBe(201);
 
@@ -363,12 +577,26 @@ describe('EditorSavesAPI Integration', () => {
 			const response1 = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user1.cookie)
-				.send({ name: 'Same Name', icn: 'icn-user1', piece_count: 10 });
+				.send({
+					name: 'Same Name',
+					piece_count: 10,
+					timestamp: Date.now(),
+					icn: 'icn-user1',
+					pawn_double_push: true,
+					castling: false,
+				});
 
 			const response2 = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user2.cookie)
-				.send({ name: 'Same Name', icn: 'icn-user2', piece_count: 10 });
+				.send({
+					name: 'Same Name',
+					piece_count: 10,
+					timestamp: Date.now(),
+					icn: 'icn-user2',
+					pawn_double_push: false,
+					castling: true,
+				});
 
 			expect(response1.status).toBe(201);
 			expect(response2.status).toBe(201);

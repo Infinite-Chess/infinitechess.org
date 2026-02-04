@@ -282,7 +282,10 @@ function generateTables(): void {
 			user_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
 			piece_count INTEGER NOT NULL,
+			timestamp INTEGER NOT NULL,
 			icn TEXT NOT NULL,
+			pawn_double_push BOOLEAN NOT NULL CHECK (pawn_double_push IN (0, 1)),
+			castling BOOLEAN NOT NULL CHECK (castling IN (0, 1)),
 
 			PRIMARY KEY (user_id, name),
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
