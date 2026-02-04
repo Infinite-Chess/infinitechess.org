@@ -263,7 +263,7 @@ function callback_OfferDraw() {
 		return;
 	}
 
-	toast.showStatus("Can't offer draw.");
+	toast.show("Can't offer draw.");
 }
 
 function callback_ToggleArrows() {
@@ -275,7 +275,7 @@ function callback_ToggleArrows() {
 			   : mode === 2 ? translations.arrows_all
 			   : translations.arrows_all_hippogonals;
 	element_pointers.textContent = text;
-	if (!isPaused) toast.showStatus(translations.toggled + ' ' + text);
+	if (!isPaused) toast.show(translations.toggled + ' ' + text);
 }
 
 function callback_Perspective() {

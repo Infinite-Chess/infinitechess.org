@@ -38,7 +38,7 @@ function randomizePanVelDir(): void {
 
 /** Displays the status message on screen "Feature is planned". */
 function displayStatus_FeaturePlanned(): void {
-	toast.showStatus(translations['planned_feature']);
+	toast.show(translations['planned_feature']);
 }
 
 export default {

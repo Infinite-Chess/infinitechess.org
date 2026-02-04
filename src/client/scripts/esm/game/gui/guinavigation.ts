@@ -428,12 +428,12 @@ function callback_CoordsChange(index: 0 | 1): void {
 		proposed = parseStringToBigInt(target.value);
 	} catch (_e) {
 		console.log(`Entered: ${target.value}`);
-		toast.showStatus(translations['coords-invalid'], true);
+		toast.show(translations['coords-invalid'], { error: true });
 		return;
 	}
 
 	if (bimath.abs(proposed) > TELEPORT_LIMIT) {
-		toast.showStatus(translations['coords-exceeded'], true);
+		toast.show(translations['coords-exceeded'], { error: true });
 		return;
 	}
 

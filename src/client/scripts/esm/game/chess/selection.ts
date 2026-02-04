@@ -146,7 +146,7 @@ function toggleEditMode(): void {
 	if (boardeditor.areInBoardEditor()) return; // Don't toggle if in board editor
 
 	editMode = !editMode;
-	toast.showStatus(`Toggled Edit Mode: ${editMode}`);
+	toast.show(`Toggled Edit Mode: ${editMode}`);
 }
 
 function disableEditMode(): void {

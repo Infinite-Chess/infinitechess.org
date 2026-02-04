@@ -299,10 +299,9 @@ function makeEngineMove(compactMove: unknown): void {
 	const moveValidationResults = movevalidation.isEnginesMoveLegal(gamefile, compactMove);
 
 	if (!moveValidationResults.valid) {
-		toast.showStatus(
+		toast.show(
 			`Engine submitted an illegal move. Please report this bug! Move ${compactMove} is illegal for reason: ${moveValidationResults.reason}`,
-			true,
-			100,
+			{ error: true, durationMultiplier: 100 },
 		);
 		console.error(
 			`Engine move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
@@ -344,7 +343,7 @@ function makeEngineMove(compactMove: unknown): void {
 /** Toggles the rendering of engine generated legal moves for debugging purposes. */
 function toggleDebug(): void {
 	move_gen_debug = !move_gen_debug;
-	toast.showStatus(`Toggled engine move gen highlights: ${move_gen_debug}`);
+	toast.show(`Toggled engine move gen highlights: ${move_gen_debug}`);
 
 	if (!move_gen_debug)
 		pendingDebugRequests.length = 0; // Turning off: Clear pending requests.

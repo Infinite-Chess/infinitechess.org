@@ -98,7 +98,7 @@ function toggleDebug(): void {
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	onPositionChange();
 	perspective.initCrosshairModel();
-	toast.showStatus(`Toggled camera debug: ${DEBUG}`);
+	toast.show(`Toggled camera debug: ${DEBUG}`);
 }
 
 function getDebug(): boolean {

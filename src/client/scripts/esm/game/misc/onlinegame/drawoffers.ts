@@ -81,7 +81,7 @@ function onOpponentExtendedOffer(): void {
 
 /** Is called when our opponent declines our draw offer */
 function onOpponentDeclinedOffer(): void {
-	toast.showStatus(`Opponent declined draw offer.`);
+	toast.show(`Opponent declined draw offer.`);
 }
 
 /**
@@ -92,7 +92,7 @@ function extendOffer(): void {
 	websocket.sendmessage('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
-	toast.showStatus(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
+	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 	guipause.updateDrawOfferButton();
 }
 
@@ -120,7 +120,7 @@ function callback_declineDraw(): void {
 	closeDraw();
 	// Notify the server
 	websocket.sendmessage('game', 'declinedraw');
-	toast.showStatus(`Draw declined`); // TODO: This needs to be localized to the user's language
+	toast.show(`Draw declined`); // TODO: This needs to be localized to the user's language
 }
 
 /**

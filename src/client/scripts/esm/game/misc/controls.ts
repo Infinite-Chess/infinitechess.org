@@ -234,7 +234,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile.boardsim, mesh);
-		toast.showStatus('Regenerated piece models.', false, 0.5);
+		toast.show('Regenerated piece models.', { durationMultiplier: 0.5 });
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();

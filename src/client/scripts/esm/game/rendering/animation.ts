@@ -248,7 +248,7 @@ function clearAnimations(playSounds = false): void {
 
 function toggleDebug(): void {
 	DEBUG = !DEBUG;
-	toast.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
+	toast.show(`Toggled animation splines: ${DEBUG}`, { durationMultiplier: 0.5 });
 }
 
 // Helper Functions -----------------------------------------------------------

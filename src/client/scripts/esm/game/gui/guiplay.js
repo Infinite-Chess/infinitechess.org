@@ -442,7 +442,7 @@ function savePreferredRatedOption(ratedValue) {
 function callback_joinPrivate() {
 	const code = element_textboxPrivate.value.toLowerCase();
 
-	if (code.length !== 5) return toast.showStatus(translations.invite_error_digits);
+	if (code.length !== 5) return toast.show(translations.invite_error_digits);
 
 	element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
 
@@ -466,7 +466,7 @@ function callback_copyInviteCode() {
 	const code = invites.gelement_iCodeCode().textContent;
 
 	docutil.copyToClipboard(code);
-	toast.showStatus(translations.invite_copied);
+	toast.show(translations.invite_copied);
 }
 
 function initListeners_Invites() {

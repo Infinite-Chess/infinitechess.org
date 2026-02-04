@@ -114,7 +114,7 @@ async function save(positionname: string): Promise<void> {
 			await save(positionname);
 		} else {
 			boardeditor.setActivePositionName(positionname);
-			toast.showStatus('Position successfully saved in browser.');
+			toast.show('Position successfully saved in browser.');
 		}
 	}
 }

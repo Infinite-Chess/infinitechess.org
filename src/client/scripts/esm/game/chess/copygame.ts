@@ -64,7 +64,7 @@ function copyGame(copySinglePosition: boolean): void {
 	});
 
 	docutil.copyToClipboard(shortformat);
-	toast.showStatus(translations['copypaste'].copied_game);
+	toast.show(translations['copypaste'].copied_game);
 }
 
 export default {
