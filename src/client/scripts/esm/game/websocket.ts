@@ -1,9 +1,8 @@
 // src/client/scripts/esm/game/websocket.ts
 
 // @ts-ignore
-import statustext from './gui/statustext.js';
-// @ts-ignore
 import invites from './misc/invites.js';
+import toast from './gui/toast.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
 import LocalStorage from '../util/LocalStorage.js';
 import timeutil from '../../../../shared/util/timeutil.js';
@@ -112,17 +111,14 @@ function initListeners(): void {
 
 function toggleDebug(): void {
 	if (!docutil.isLocalEnvironment())
-		statustext.showStatus("Can't enable websocket latency in production.");
+		toast.showStatus("Can't enable websocket latency in production.");
 	DEBUG = !DEBUG;
-	statustext.showStatus(`Toggled websocket latency: ${DEBUG}`);
+	toast.showStatus(`Toggled websocket latency: ${DEBUG}`);
 }
 
 function alertUserLostConnection(): void {
 	noConnection = true;
-	statustext.showStatusForDuration(
-		translations['websocket'].no_connection,
-		timeToWaitForHTTPMillis,
-	); // Alert the user
+	toast.showStatusForDuration(translations['websocket'].no_connection, timeToWaitForHTTPMillis); // Alert the user
 }
 
 /**
@@ -158,7 +154,7 @@ async function establishSocket(): Promise<boolean> {
 	while (!success && !zeroSubs()) {
 		// Request came back with an error
 		noConnection = true;
-		statustext.showStatusForDuration(
+		toast.showStatusForDuration(
 			translations['websocket'].no_connection,
 			timeToResubAfterNetworkLossMillis,
 		);
@@ -168,7 +164,7 @@ async function establishSocket(): Promise<boolean> {
 	}
 	// This is the only instance where we've reconnected.
 	if (success && noConnection)
-		statustext.showStatusForDuration(translations['websocket'].reconnected, 1000);
+		toast.showStatusForDuration(translations['websocket'].reconnected, 1000);
 	noConnection = false;
 	cancelAllTimerIDsToCancelOnNewSocket();
 
@@ -221,10 +217,7 @@ function onReqBack(): void {
  * and keeps stating that until we successfully open a websocket. */
 function httpLostConnection(): void {
 	noConnection = true;
-	statustext.showStatusForDuration(
-		translations['websocket'].no_connection,
-		timeToWaitForHTTPMillis,
-	);
+	toast.showStatusForDuration(translations['websocket'].no_connection, timeToWaitForHTTPMillis);
 	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
 	//console.log("Reset http timer")
 }
@@ -342,10 +335,10 @@ function onmessage(serverMessage: MessageEvent): void {
 function ongeneralmessage(action: string, value: WebsocketMessageValue): void {
 	switch (action) {
 		case 'notify':
-			statustext.showStatus(value);
+			toast.showStatus(value);
 			break;
 		case 'notifyerror':
-			statustext.showStatus(value, true, 2);
+			toast.showStatus(value, true, 2);
 			break;
 		case 'print':
 			console.log(value);
@@ -473,7 +466,7 @@ function onclose(event: CloseEvent): void {
 			resubAll(); // Instantly reconnects.
 			break;
 		case 'Unable to identify client IP address':
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['websocket'].unable_to_identify_ip} ${translations['websocket'].please_report_bug}`,
 				true,
 				100,
@@ -488,14 +481,14 @@ function onclose(event: CloseEvent): void {
 			resubAll(); // Instantly reconnects.
 			break;
 		case 'Too Many Requests. Try again soon.':
-			statustext.showStatusForDuration(
+			toast.showStatusForDuration(
 				translations['websocket'].too_many_requests,
 				timeToResubAfterTooManyRequestsMillis,
 			);
 			enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
 			break;
 		case 'Message Too Big':
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['websocket'].message_too_big} ${translations['websocket'].please_report_bug}`,
 				true,
 				3,
@@ -503,7 +496,7 @@ function onclose(event: CloseEvent): void {
 			enterTimeout(timeToResubAfterMessageTooBigMillis);
 			break;
 		case 'Too Many Sockets':
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['websocket'].too_many_sockets} ${translations['websocket'].please_report_bug}`,
 				true,
 				3,
@@ -511,7 +504,7 @@ function onclose(event: CloseEvent): void {
 			window.setTimeout(() => resubAll(), timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Origin Error':
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['websocket'].origin_error} ${translations['websocket'].please_report_bug}`,
 				true,
 				3,
@@ -524,7 +517,7 @@ function onclose(event: CloseEvent): void {
 			resubAll(); // Instantly reconnects.
 			break;
 		default:
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['websocket'].connection_closed} "${trimmedReason}". Code: ${event.code}. ${translations['websocket'].please_report_bug}`,
 				true,
 				100,
@@ -582,7 +575,7 @@ async function sendmessage(
 ): Promise<boolean> {
 	// invites, createinvite, inviteinfo
 	if (!(await establishSocket())) {
-		if (isUserAction) statustext.showStatus(translations['websocket'].too_many_requests);
+		if (isUserAction) toast.showStatus(translations['websocket'].too_many_requests);
 		if (onreplyFunc) onreplyFunc(); // Execute this now
 		return false;
 	}
@@ -787,7 +780,7 @@ async function onAuthenticationNeeded(): Promise<void> {
 	if (lastTimeWeGotAuthorizationNeededMessage !== undefined) {
 		const difference = now - lastTimeWeGotAuthorizationNeededMessage;
 		if (difference < 1000 * 60 * 60 * 24) {
-			statustext.showStatus(translations['websocket'].online_play_disabled);
+			toast.showStatus(translations['websocket'].online_play_disabled);
 			lastTimeWeGotAuthorizationNeededMessage = now;
 			// Perhaps tell the play page to not try to open another socket?
 			// Because this error will repeatedly pop up.

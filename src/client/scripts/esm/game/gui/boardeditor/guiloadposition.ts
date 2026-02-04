@@ -13,8 +13,7 @@ import esave from '../../boardeditor/actions/esave';
 import style from '../style';
 import boardeditor from '../../boardeditor/boardeditor';
 import editorutil from '../../../../../../shared/editor/editorutil';
-// @ts-ignore
-import statustext from '../statustext';
+import toast from '../toast';
 
 // Types -------------------------------------------------------------------------
 
@@ -228,7 +227,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			console.error(
 				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
 			);
-			statustext.showStatus(`The position was corrupted.`, true);
+			toast.showStatus(`The position was corrupted.`, true);
 			await deleteSavedPosition(modal_config);
 			updateSavedPositionListUI();
 			return;

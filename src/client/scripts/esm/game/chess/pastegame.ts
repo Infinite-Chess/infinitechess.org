@@ -5,9 +5,8 @@
  */
 
 // @ts-ignore
-import statustext from '../gui/statustext.js';
-// @ts-ignore
 import guipause from '../gui/guipause.js';
+import toast from '../gui/toast.js';
 import websocket from '../websocket.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import IndexedDB from '../../util/IndexedDB.js';
@@ -67,25 +66,25 @@ async function callbackPaste(_event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
 
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
-	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return toast.pleaseWaitForTask();
 
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame()) {
 		if (!onlinegame.getIsPrivate())
-			return statustext.showStatus(translations['copypaste'].cannot_paste_in_public);
+			return toast.showStatus(translations['copypaste'].cannot_paste_in_public);
 		if (onlinegame.isRated())
-			return statustext.showStatus(translations['copypaste'].cannot_paste_in_rated);
+			return toast.showStatus(translations['copypaste'].cannot_paste_in_rated);
 	}
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame())
-		return statustext.showStatus(translations['copypaste'].cannot_paste_in_engine);
+		return toast.showStatus(translations['copypaste'].cannot_paste_in_engine);
 	// Make sure it's legal in a private match
 	if (
 		onlinegame.areInOnlineGame() &&
 		onlinegame.getIsPrivate() &&
 		gameslot.getGamefile()!.boardsim.moves.length > 0
 	)
-		return statustext.showStatus(translations['copypaste'].cannot_paste_after_moves);
+		return toast.showStatus(translations['copypaste'].cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard: string;
@@ -93,7 +92,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
 		const message: string = translations['copypaste'].clipboard_denied;
-		return statustext.showStatus(message + '\n' + error, true);
+		return toast.showStatus(message + '\n' + error, true);
 	}
 
 	// Convert clipboard text to object
@@ -102,7 +101,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
+		toast.showStatus(translations['copypaste'].clipboard_invalid, true);
 		return;
 	}
 
@@ -125,7 +124,7 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
 		.forEach((winCondition) => {
 			if (!winconutil.isWinConditionValid(winCondition)) {
 				// Not valid ❌
-				statustext.showStatus(
+				toast.showStatus(
 					`${translations['copypaste'][`invalid_wincon`]} "${winCondition}".`,
 					true,
 				);
@@ -240,14 +239,14 @@ function pasteGame(longformOut: LongFormatOut): void {
 		const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
 		if (pieceCount >= pieceCountToDisableCheckmate) {
 			// TOO MANY pieces!
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['copypaste'].piece_count} ${pieceCount} ${translations['copypaste'].exceeded} ${pieceCountToDisableCheckmate}! ${translations['copypaste'].changed_wincon}${privateMatchWarning}`,
 				false,
 				1.5,
 			);
 		} else {
 			// Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
-			statustext.showStatus(
+			toast.showStatus(
 				`${translations['copypaste'].loaded_from_clipboard}${privateMatchWarning}`,
 			);
 		}

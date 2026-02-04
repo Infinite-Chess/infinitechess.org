@@ -7,8 +7,7 @@
 
 // @ts-ignore
 import guipause from '../gui/guipause.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
 import websocket from '../websocket.js';
 import loadbalancer from './loadbalancer.js';
@@ -235,7 +234,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile.boardsim, mesh);
-		statustext.showStatus('Regenerated piece models.', false, 0.5);
+		toast.showStatus('Regenerated piece models.', false, 0.5);
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();

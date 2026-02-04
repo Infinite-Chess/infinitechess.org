@@ -21,8 +21,7 @@ import type { VariantOptions } from '../../../../../../shared/chess/logic/initva
 import type { EngineUIConfig } from '../../gui/boardeditor/guistartenginegame';
 import type { EditorSaveState } from './esave';
 
-// @ts-ignore
-import statustext from '../../gui/statustext';
+import toast from '../../gui/toast';
 import gamefile, {
 	Additional,
 	Board,
@@ -151,7 +150,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);
-	statustext.showStatus('Position successfully loaded.');
+	toast.showStatus('Position successfully loaded.');
 }
 
 /**
@@ -180,7 +179,7 @@ function copy(): void {
 		move_numbers: false,
 	});
 	docutil.copyToClipboard(shortFormatOut);
-	statustext.showStatus(translations['copypaste']['copied_position']);
+	toast.showStatus(translations['copypaste']['copied_position']);
 }
 
 /** Loads the position from the clipboard. */
@@ -195,7 +194,7 @@ async function paste(): Promise<undefined> {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
 		const message: string = translations['copypaste'].clipboard_denied;
-		statustext.showStatus(message + '\n' + error, true);
+		toast.showStatus(message + '\n' + error, true);
 		return;
 	}
 
@@ -204,13 +203,13 @@ async function paste(): Promise<undefined> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		statustext.showStatus(translations['copypaste'].clipboard_invalid, true);
+		toast.showStatus(translations['copypaste'].clipboard_invalid, true);
 		return;
 	}
 
 	loadFromLongformat(longformOut);
 	selectiontool.resetState(); // Clear current selection
-	statustext.showStatus(translations['copypaste'].loaded_position_from_clipboard);
+	toast.showStatus(translations['copypaste'].loaded_position_from_clipboard);
 }
 
 /** Starts a local game from the current board editor position, to test play. */
@@ -219,7 +218,7 @@ function startLocalGame(): void {
 
 	const variantOptions = getCurrentPositionInformation(true);
 	if (variantOptions.position.size === 0) {
-		statustext.showStatus('Cannot start local game from empty position!', true);
+		toast.showStatus('Cannot start local game from empty position!', true);
 		return;
 	}
 
@@ -253,7 +252,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Determine whether it's not supported...
 
 	if (variantOptions.position.size === 0) {
-		statustext.showStatus('Cannot start engine game from empty position!', true);
+		toast.showStatus('Cannot start engine game from empty position!', true);
 		return;
 	}
 
@@ -277,10 +276,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
-		statustext.showStatus(
-			`Position is not supported for reason: ${supported_result.reason}`,
-			true,
-		);
+		toast.showStatus(`Position is not supported for reason: ${supported_result.reason}`, true);
 		return;
 	}
 

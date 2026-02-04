@@ -13,8 +13,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import toast from '../gui/toast.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document } from '../chess/game.js';
 import { GameBus } from '../GameBus.js';
@@ -414,7 +413,7 @@ function Cut(): void {
 /** Custom Board Editor handler for Paste event. */
 function Paste(): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
-	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return toast.pleaseWaitForTask();
 
 	if (currentTool !== 'selection-tool') {
 		// Paste game notation

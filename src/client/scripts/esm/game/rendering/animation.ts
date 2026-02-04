@@ -11,8 +11,7 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import toast from '../gui/toast.js';
 import arrows from './arrows/arrows.js';
 import frametracker from './frametracker.js';
 import math from '../../../../../shared/util/math/math.js';
@@ -249,7 +248,7 @@ function clearAnimations(playSounds = false): void {
 
 function toggleDebug(): void {
 	DEBUG = !DEBUG;
-	statustext.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
+	toast.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
 }
 
 // Helper Functions -----------------------------------------------------------

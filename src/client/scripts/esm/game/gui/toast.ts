@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/gui/statustext.js
+// src/client/scripts/esm/game/gui/toast.ts
 
 /**
  * This script handles the showing and hiding of toast (status message) at the bottom of the page
@@ -6,8 +6,8 @@
 
 // Elements ----------------------------------------------------------
 
-const statusMessage = document.getElementById('statusmessage')!;
-const statusText = document.getElementById('statustext')!;
+const statusMessage = document.getElementById('toastmessage')!;
+const statusText = document.getElementById('toast')!;
 
 // Constants ---------------------------------------------------------
 

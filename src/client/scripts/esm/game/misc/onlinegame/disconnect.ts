@@ -12,8 +12,7 @@ import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+import toast from '../../gui/toast.js';
 
 /** The timestamp our opponent will lose from disconnection, if they don't reconnect before then. */
 let timeOpponentLoseFromDisconnect: number | undefined;
@@ -61,7 +60,7 @@ function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean):
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.isOurAFKAutoResignTimerRunning())
-		statustext.showStatusForDuration(
+		toast.showStatusForDuration(
 			`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`,
 			1000,
 		);

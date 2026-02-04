@@ -2,7 +2,7 @@
 
 // Import Start
 import LocalStorage from '../../util/LocalStorage.js';
-import statustext from './statustext.js';
+import toast from './toast.js';
 import invites from '../misc/invites.js';
 import guititle from './guititle.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
@@ -442,7 +442,7 @@ function savePreferredRatedOption(ratedValue) {
 function callback_joinPrivate() {
 	const code = element_textboxPrivate.value.toLowerCase();
 
-	if (code.length !== 5) return statustext.showStatus(translations.invite_error_digits);
+	if (code.length !== 5) return toast.showStatus(translations.invite_error_digits);
 
 	element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
 
@@ -466,7 +466,7 @@ function callback_copyInviteCode() {
 	const code = invites.gelement_iCodeCode().textContent;
 
 	docutil.copyToClipboard(code);
-	statustext.showStatus(translations.invite_copied);
+	toast.showStatus(translations.invite_copied);
 }
 
 function initListeners_Invites() {

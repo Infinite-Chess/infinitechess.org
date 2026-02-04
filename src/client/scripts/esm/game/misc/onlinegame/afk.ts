@@ -20,8 +20,7 @@ import pingManager from '../../../util/pingManager.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 import gamesound from '../gamesound.js';
 import websocket from '../../websocket.js';
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+import toast from '../../gui/toast.js';
 
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */
 const timeUntilAFKSecs: number = 40; // 40 + 20 = 1 minute
@@ -153,7 +152,7 @@ function displayWeAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
 		? translations['onlinegame'].auto_resigning_in
 		: translations['onlinegame'].auto_aborting_in;
-	statustext.showStatusForDuration(
+	toast.showStatusForDuration(
 		`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`,
 		1000,
 	);
@@ -204,7 +203,7 @@ function displayOpponentAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
 		? translations['onlinegame'].auto_resigning_in
 		: translations['onlinegame'].auto_aborting_in;
-	statustext.showStatusForDuration(
+	toast.showStatusForDuration(
 		`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`,
 		1000,
 	);

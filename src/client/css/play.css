@@ -1861,7 +1861,7 @@ button.practicemenu {
 
 /* Status text showing alerts and errors */
 
-.statusmessage {
+.toastmessage {
 	position: absolute;
 	bottom: 84px;
 	left: 0;
@@ -1871,7 +1871,7 @@ button.practicemenu {
 	pointer-events: none;
 }
 
-.statusmessage .statustext {
+.toastmessage .toast {
 	margin: 0 auto;
 	padding: 0.4em 3em;
 	width: fit-content;
@@ -1882,7 +1882,7 @@ button.practicemenu {
 	line-height: 1.5;
 }
 
-.statustext.ok {
+.toast.ok {
 	opacity: 1;
 	color: black;
 	--color: white;
@@ -1897,7 +1897,7 @@ button.practicemenu {
 	);
 }
 
-.statustext.error {
+.toast.error {
 	opacity: 1;
 	color: white;
 	--color: rgb(255, 0, 0);
@@ -1981,5 +1981,5 @@ a {
 }
 
 .fade-out-1s {
-	animation: fade-out 1s; /* UPDATE 1s within the document in the statustext module! */
+	animation: fade-out 1s; /* UPDATE 1s within the document in the toast module! */
 }
