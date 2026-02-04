@@ -1,28 +1,29 @@
 // src/client/scripts/esm/game/gui/guiplay.ts
 
-// Import Start
+/**
+ * This script handles our Play page, containing our invite creation menu.
+ */
+
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import LocalStorage from '../../util/LocalStorage.js';
-import toast from './toast.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import toast from './toast.js';
 import guititle from './guititle.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
-// Import End
+import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
 
-// Type Definitions --------------------------------------------------------------------
+// Types --------------------------------------------------------------------
 
-/**
- * An object containing the values of each of the invite options on the invite creation screen.
- */
+/** Create lobby invite options. */
 interface InviteOptions {
 	variant: string;
 	clock: TimeControl;
@@ -31,16 +32,7 @@ interface InviteOptions {
 	rated: 'casual' | 'rated';
 }
 
-// Variables --------------------------------------------------------------------
-
-('use strict');
-
-/**
- * This script handles our Play page, containing
- * our invite creation menu.
- */
-
-// Variables
+// Elements --------------------------------------------------------------------
 
 const element_menuExternalLinks = document.getElementById('menu-external-links')!;
 
@@ -50,64 +42,43 @@ const element_playBack = document.getElementById('play-back')!;
 const element_online = document.getElementById('online')!;
 const element_local = document.getElementById('local')!;
 const element_computer = document.getElementById('computer')!;
-const element_createInvite = document.getElementById('create-invite')! as HTMLButtonElement;
+const element_createInvite = document.getElementById('create-invite') as HTMLButtonElement;
 
 const element_optionCardColor = document.getElementById('option-card-color')!;
 const element_optionCardPrivate = document.getElementById('option-card-private')!;
 const element_optionCardRated = document.getElementById('option-card-rated')!;
 const element_optionCardClock = document.getElementById('option-card-clock')!;
-const element_optionVariant = document.getElementById('option-variant')! as HTMLSelectElement;
-const element_optionClock = document.getElementById('option-clock')! as HTMLSelectElement;
-const element_optionColor = document.getElementById('option-color')! as HTMLSelectElement;
-const element_optionPrivate = document.getElementById('option-private')! as HTMLSelectElement;
-const element_optionRated = document.getElementById('option-rated')! as HTMLSelectElement;
-const element_optionRatedYes = document.getElementById('option-rated-yes')! as HTMLOptionElement;
+const element_optionVariant = document.getElementById('option-variant') as HTMLSelectElement;
+const element_optionClock = document.getElementById('option-clock') as HTMLSelectElement;
+const element_optionColor = document.getElementById('option-color') as HTMLSelectElement;
+const element_optionPrivate = document.getElementById('option-private') as HTMLSelectElement;
+const element_optionRated = document.getElementById('option-rated') as HTMLSelectElement;
+const element_optionRatedYes = document.getElementById('option-rated-yes') as HTMLOptionElement;
 
 const element_optionCardStrength = document.getElementById('option-card-strength');
-const element_optionDifficulty = document.getElementById(
-	'option-difficulty',
-) as HTMLSelectElement | null;
+const element_optionDifficulty = document.getElementById('option-difficulty') as HTMLSelectElement;
 
 const element_joinPrivate = document.getElementById('join-private')!;
 const element_inviteCode = document.getElementById('invite-code')!;
 const element_copyInviteCode = document.getElementById('copy-button')!;
-const element_joinPrivateMatch = document.getElementById('join-button')! as HTMLButtonElement;
-const element_textboxPrivate = document.getElementById('textbox-private')! as HTMLInputElement;
+const element_joinPrivateMatch = document.getElementById('join-button') as HTMLButtonElement;
+const element_textboxPrivate = document.getElementById('textbox-private') as HTMLInputElement;
+
+// Constants --------------------------------------------------------------------
+
+/** Selection option indices for some time controls. */
+const TIME_CONTROL_IDXS = {
+	'10M': 5,
+	INFINITE: 12,
+} as const;
+
+// Variables --------------------------------------------------------------------
 
 /** Whether the play screen is open */
 let pageIsOpen: boolean = false;
 
 /** Whether we've selected "online", "local", or a "computer" game. */
 let modeSelected: 'online' | 'local' | 'computer';
-
-const indexOf10m = 5;
-const indexOfInfiniteTime = 12;
-
-/**
- * Variants that the engine officially supports well enough for the engine tab.
- * When on the Computer tab, the variant dropdown will be restricted to this set.
- */
-const engineSupportedVariants = new Set([
-	'Classical',
-	'Confined_Classical',
-	'Classical_Plus',
-	'Core',
-	'CoaIP',
-	'CoaIP_HO',
-	'CoaIP_RO',
-	'CoaIP_NO',
-	'Palace',
-	'Pawndard',
-	'Standarch',
-	'Space_Classic',
-	'Space',
-	'Abundance',
-	'Pawn_Horde',
-	'Knightline',
-	'Obstocean',
-	'Chess',
-	'Omega',
-]);
 
 /**
  * Whether the create invite button is currently locked.
@@ -137,17 +108,13 @@ document.addEventListener('socket-closed', () => {
 
 // Functions --------------------------------------------------------------------------------
 
-/**
- * Whether or not the play page is currently open, and the invites are visible.
- */
+/** Whether or not the play page is currently open, and the invites are visible. */
 function isOpen(): boolean {
 	return pageIsOpen;
 }
 
-/**
- * Returns whether we've selected "online", "local", or a "computer" game.
- */
-function getModeSelected(): 'online' | 'local' | 'computer' {
+/** Returns whether we've selected "online", "local", or a "computer" game. */
+function getModeSelected(): typeof modeSelected {
 	return modeSelected;
 }
 
@@ -217,7 +184,7 @@ function closeListeners(): void {
 	element_textboxPrivate.removeEventListener('keyup', callback_textboxPrivateEnter);
 }
 
-function changePlayMode(mode: 'online' | 'local' | 'computer'): void {
+function changePlayMode(mode: typeof modeSelected): void {
 	if (modeSelected === mode) return; // No change
 
 	// online / local / computer
@@ -242,7 +209,7 @@ function changePlayMode(mode: 'online' | 'local' | 'computer'): void {
 		const localStorageClock = LocalStorage.loadItem('preferred_online_clock_invite_value');
 		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex =
-			localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
+			localStorageClock !== undefined ? localStorageClock : TIME_CONTROL_IDXS['10M']; // 10m+4s
 		element_joinPrivate.classList.remove('hidden');
 		const localStorageRated = LocalStorage.loadItem('preferred_rated_invite_value');
 		element_optionRated.value = localStorageRated !== undefined ? localStorageRated : 'casual'; // Casual
@@ -272,7 +239,7 @@ function changePlayMode(mode: 'online' | 'local' | 'computer'): void {
 		element_optionCardClock.classList.remove('hidden');
 		const localStorageClock = LocalStorage.loadItem('preferred_local_clock_invite_value');
 		element_optionClock.selectedIndex =
-			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+			localStorageClock !== undefined ? localStorageClock : TIME_CONTROL_IDXS.INFINITE; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
@@ -297,17 +264,17 @@ function changePlayMode(mode: 'online' | 'local' | 'computer'): void {
 		element_optionCardClock.classList.remove('hidden');
 		const localStorageClock = LocalStorage.loadItem('preferred_computer_clock_invite_value');
 		element_optionClock.selectedIndex =
-			localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+			localStorageClock !== undefined ? localStorageClock : TIME_CONTROL_IDXS.INFINITE; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 		if (element_optionCardStrength) element_optionCardStrength.classList.remove('hidden');
 		// Restrict the variant dropdown to the variants that HydroChess officially supports.
 		for (const option of element_optionVariant.options) {
 			// Keep options whose value is in the supported set; hide the rest.
-			option.hidden = !engineSupportedVariants.has(option.value);
+			option.hidden = !hydrochess_card.SUPPORTED_VARIANTS.has(option.value);
 		}
 		const selectedVariant = element_optionVariant.value;
-		if (!engineSupportedVariants.has(selectedVariant)) {
+		if (!hydrochess_card.SUPPORTED_VARIANTS.has(selectedVariant)) {
 			element_optionVariant.value = 'Classical';
 		}
 	}
@@ -333,6 +300,7 @@ function callback_computer(): void {
 // Also starts local games
 function callback_createInvite(): void {
 	const inviteOptions = getInviteOptions();
+	console.log('Creating invite with options:', inviteOptions);
 
 	if (modeSelected === 'local') {
 		// Load options the game loader needs to load a local loaded game
@@ -348,7 +316,7 @@ function callback_createInvite(): void {
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
 		// prettier-ignore
-		const ourColor = inviteOptions.color !== players.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? players.WHITE : players.BLACK;
+		const ourColor = inviteOptions.color !== p.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? p.WHITE : p.BLACK;
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
@@ -367,12 +335,12 @@ function callback_createInvite(): void {
 }
 
 /**
- * Returns an object containing the values of each of the invite options on the invite creation screen.
+ * Returns an object containing the values of each of
+ * the invite options on the invite creation screen.
  */
 function getInviteOptions(): InviteOptions {
 	const strcolor = element_optionColor.value;
-	// prettier-ignore
-	const color = strcolor === "White" ? players.WHITE : strcolor === "Black" ? players.BLACK : players.NEUTRAL;
+	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : p.NEUTRAL;
 	return {
 		variant: element_optionVariant.value,
 		clock: element_optionClock.value as TimeControl,
@@ -541,9 +509,7 @@ function setElement_CreateInviteTextContent(text: string): void {
 	element_createInvite.textContent = text;
 }
 
-/**
- * Whether the Create Invite button is locked.
- */
+/** Whether the Create Invite button is locked. */
 function isCreateInviteButtonLocked(): boolean {
 	return createInviteButtonIsLocked;
 }
@@ -574,6 +540,8 @@ function unlockAcceptInviteButton(): void {
 function isAcceptInviteButtonLocked(): boolean {
 	return acceptInviteButtonIsLocked;
 }
+
+// Exports ------------------------------------------------------------
 
 export default {
 	isOpen,
