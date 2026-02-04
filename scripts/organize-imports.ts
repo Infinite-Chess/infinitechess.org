@@ -190,17 +190,11 @@ function sortImports(imports: Import[]): string {
 
 	for (const imp of imports) {
 		if (imp.isType) {
-			if (imp.isPackage) {
-				typePackage.push(imp);
-			} else {
-				typeSource.push(imp);
-			}
+			if (imp.isPackage) typePackage.push(imp);
+			else typeSource.push(imp);
 		} else {
-			if (imp.isPackage) {
-				regularPackage.push(imp);
-			} else {
-				regularSource.push(imp);
-			}
+			if (imp.isPackage) regularPackage.push(imp);
+			else regularSource.push(imp);
 		}
 	}
 
@@ -320,9 +314,7 @@ function main(): void {
 
 	if (filesToProcess.length === 0) {
 		// If no arguments passed, do nothing (or print help)
-		console.log(
-			'No files provided. Usage: ts-node organize-imports-cli.ts <file1> <file2> ...',
-		);
+		console.log('[organize-imports] No files provided.');
 		return;
 	}
 
@@ -331,13 +323,11 @@ function main(): void {
 
 	for (const file of filesToProcess) {
 		// Check if file exists to avoid crashing if a file was deleted but still staged
-		if (fs.existsSync(file)) {
-			if (processFile(file)) {
-				const relativePath = path.relative(rootDir, file);
-				console.log(`Organized imports: ${relativePath}`);
-				changedCount++;
-			}
-		}
+		if (!fs.existsSync(file)) continue;
+		if (!processFile(file)) continue;
+		const relativePath = path.relative(rootDir, file);
+		console.log(`Organized imports: ${relativePath}`);
+		changedCount++;
 	}
 
 	if (changedCount > 0) {
