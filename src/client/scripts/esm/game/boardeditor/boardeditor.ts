@@ -413,7 +413,7 @@ function Cut(): void {
 /** Custom Board Editor handler for Paste event. */
 function Paste(): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
-	if (gameloader.areWeLoadingGame()) return toast.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
 
 	if (currentTool !== 'selection-tool') {
 		// Paste game notation

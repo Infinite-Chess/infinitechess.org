@@ -66,7 +66,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
 
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
-	if (gameloader.areWeLoadingGame()) return toast.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
 
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame()) {

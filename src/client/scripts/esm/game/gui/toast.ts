@@ -97,7 +97,7 @@ function hideAfter(ms: number): void {
 }
 
 /** Shows a toast message stating to please wait to perform this task. */
-function pleaseWaitForTask(): void {
+function showPleaseWaitForTask(): void {
 	show(translations['please_wait'], { durationMultiplier: 0.5 });
 }
 
@@ -105,5 +105,5 @@ function pleaseWaitForTask(): void {
 
 export default {
 	show,
-	pleaseWaitForTask,
+	showPleaseWaitForTask,
 };
