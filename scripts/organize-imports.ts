@@ -145,9 +145,28 @@ function extractImports(content: string): {
 	};
 
 	// Extract leading comments (before any imports)
+	let inMultiLineComment = false;
 	while (i < lines.length) {
 		const line = lines[i]!;
 		const trimmed = line.trim();
+
+		// Track multi-line comment state
+		if (trimmed.startsWith('/*')) {
+			inMultiLineComment = true;
+		}
+		if (trimmed.endsWith('*/') || trimmed === '*/') {
+			leadingContent += line + '\n';
+			i++;
+			inMultiLineComment = false;
+			continue;
+		}
+
+		// If we're inside a multi-line comment, keep everything
+		if (inMultiLineComment) {
+			leadingContent += line + '\n';
+			i++;
+			continue;
+		}
 
 		// Skip empty lines at the start
 		if (!trimmed) {
@@ -166,8 +185,7 @@ function extractImports(content: string): {
 		if (
 			trimmed.startsWith('//') ||
 			trimmed.startsWith('/*') ||
-			trimmed.startsWith('*') ||
-			trimmed === '*/'
+			trimmed.startsWith('*')
 		) {
 			leadingContent += line + '\n';
 			i++;
