@@ -27,7 +27,7 @@ function simplifyMesh(voidList: PooledArray<Coords>): BoundingBox[] { // array o
 	const alreadyMerged: { [coordsKey: CoordsKey]: true } = { }; // Set the coordinate key `x,y` to true when a void has been merged
 
 	for (const thisVoid of voidList) { // [x,y]
-		if (!thisVoid) continue;
+		if (!thisVoid) continue
 
 		// Has this void already been merged with another previous?
 		const key = coordutil.getKeyFromCoords(thisVoid);
