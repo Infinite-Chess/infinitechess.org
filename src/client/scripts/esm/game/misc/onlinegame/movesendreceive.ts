@@ -26,7 +26,6 @@ import { animateMove } from '../../chess/graphicalchanges.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import websocket from '../../websocket.js';
 import { GameBus } from '../../GameBus.js';
-// @ts-ignore
 import guipause from '../../gui/guipause.js';
 
 // Events ---------------------------------------------------------------------

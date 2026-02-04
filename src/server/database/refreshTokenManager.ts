@@ -7,7 +7,6 @@
 
 import db from './database.js';
 import { refreshTokenExpiryMillis } from '../controllers/authenticationTokens/tokenSigner.js';
-// @ts-ignore
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 

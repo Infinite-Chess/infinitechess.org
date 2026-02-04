@@ -25,11 +25,8 @@ import {
 } from '../../../shared/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
-// @ts-ignore
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
-// @ts-ignore
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-// @ts-ignore
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import clock from '../../../shared/chess/logic/clock.js';
 

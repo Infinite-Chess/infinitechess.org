@@ -13,9 +13,7 @@ import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import gameformulator from '../gameformulator.js';
 
 // Import WASM glue code statically so esbuild can bundle it and handle the .wasm file
-// @ts-ignore
 import init, * as wasmBindings from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
-// @ts-ignore
 import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
 
 const wasm = wasmBindings as typeof wasmBindings;

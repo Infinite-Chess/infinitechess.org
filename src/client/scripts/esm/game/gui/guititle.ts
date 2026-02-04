@@ -7,7 +7,6 @@
 import guipractice from './guipractice.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
 import guiplay from './guiplay.js';
-// @ts-ignore
 import languagedropdown from '../../components/header/dropdowns/languagedropdown.js';
 
 // Variables ----------------------------------------------------------------------------

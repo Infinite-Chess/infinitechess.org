@@ -7,7 +7,6 @@
 
 import { WebSocket } from 'ws';
 
-// @ts-ignore
 import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
 import {
 	addTimeoutToEchoTimers,

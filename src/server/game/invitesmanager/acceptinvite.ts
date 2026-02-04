@@ -5,12 +5,13 @@
  * creating a new game if successful.
  */
 
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
 import * as z from 'zod';
 
-// Custom imports
-// @ts-ignore
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
-// @ts-ignore
 import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import { getTranslation } from '../../utility/translate.js';
 import { memberInfoEq } from './inviteutility.js';
@@ -27,10 +28,6 @@ import {
 import gameutility from '../gamemanager/gameutility.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 /** The zod schema for validating the contents of the acceptinvite message. */
 const acceptinviteschem = z.strictObject({

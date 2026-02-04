@@ -1,6 +1,5 @@
 // src/client/scripts/esm/game/websocket.ts
 
-// @ts-ignore
 import invites from './misc/invites.js';
 import toast from './gui/toast.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';

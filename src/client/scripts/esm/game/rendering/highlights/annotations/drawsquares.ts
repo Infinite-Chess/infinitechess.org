@@ -17,7 +17,6 @@ import variant from '../../../../../../../shared/chess/variants/variant.js';
 import gameslot from '../../../chess/gameslot.js';
 import squarerendering from '../squarerendering.js';
 import { Mouse } from '../../../input.js';
-// @ts-ignore
 import guipause from '../../../gui/guipause.js';
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';

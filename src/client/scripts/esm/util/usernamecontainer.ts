@@ -4,7 +4,6 @@
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
-// @ts-ignore
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 import metadata from '../../../../shared/chess/util/metadata.js';
 import docutil from './docutil.js';

@@ -2,7 +2,6 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-// @ts-ignore
 import loadbalancer from '../../../misc/loadbalancer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';

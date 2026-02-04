@@ -5,7 +5,6 @@ import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
 import guipause from './guipause.js';
 import toast from './toast.js';
 import stats from './stats.js';

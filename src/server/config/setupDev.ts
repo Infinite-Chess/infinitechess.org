@@ -6,7 +6,6 @@ import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
-// @ts-ignore
 import { giveRole } from '../controllers/roles.js';
 
 export function initDevEnvironment(): void {

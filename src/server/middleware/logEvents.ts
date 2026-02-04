@@ -6,7 +6,6 @@ import { promises as fsPromises } from 'fs';
 import path from 'path';
 import fs from 'fs';
 
-// @ts-ignore
 import { getClientIP } from '../utility/IP.js';
 import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
 

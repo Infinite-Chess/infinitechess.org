@@ -7,7 +7,6 @@
 
 import * as z from 'zod';
 
-// @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
