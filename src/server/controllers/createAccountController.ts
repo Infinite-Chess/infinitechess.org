@@ -11,6 +11,7 @@
 
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
+// @ts-ignore this package has no types
 import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
