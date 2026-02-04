@@ -1,6 +1,6 @@
 // src/shared/chess/util/clockutil.ts
 
-import type { MetaData } from './metadata';
+import type { TimeControl } from './metadata';
 
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);
@@ -19,7 +19,7 @@ function getTextContentFromTimeRemain(time: number): string {
  * @param clock - The clock value (e.g. "10+5").
  * @returns *true* if it's infinite.
  */
-function isClockValueInfinite(clock: MetaData['TimeControl']): boolean {
+function isClockValueInfinite(clock: TimeControl): boolean {
 	return clock === '-';
 }
 
@@ -28,7 +28,7 @@ function isClockValueInfinite(clock: MetaData['TimeControl']): boolean {
  * @param key - The clock string: `600+5`, where the left is the start time in seconds, right is increment in seconds.
  * @returns
  */
-function getClockFromKey(key: MetaData['TimeControl']): string {
+function getClockFromKey(key: TimeControl): string {
 	// ssss+ss  converted to  15m+15s
 	const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
 	if (minutesAndIncrement === null) return translations['no_clock'];
@@ -42,7 +42,7 @@ function getClockFromKey(key: MetaData['TimeControl']): string {
  * @returns An object with 2 properties: `minutes`, `increment`, or `null` if the clock is infinite.
  */
 function getMinutesAndIncrementFromClock(
-	clock: MetaData['TimeControl'],
+	clock: TimeControl,
 ): null | { minutes: number; increment: number } {
 	if (isClockValueInfinite(clock)) return null;
 	const [seconds, increment] = clock.split('+').map((part) => +part) as [number, number]; // Convert them into a number
@@ -55,7 +55,7 @@ function getMinutesAndIncrementFromClock(
  * @param time_control
  * @returns
  */
-function splitTimeControl(time_control: MetaData['TimeControl']): {
+function splitTimeControl(time_control: TimeControl): {
 	base_time_seconds: number | null;
 	increment_seconds: number | null;
 } {

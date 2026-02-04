@@ -16,13 +16,11 @@ import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 
 // Type Definitions --------------------------------------------------------------------
 
-/** @typedef {import('../../../../../shared/chess/util/metadata.js').MetaData} MetaData*/
-
 /**
  * An object containing the values of each of the invite options on the invite creation screen.
  * @typedef {Object} InviteOptions
  * @property {string} variant
- * @property {MetaData['TimeControl']} clock
+ * @property {TimeControl} clock
  * @property {'White' | 'Black' | 'Random'} color
  * @property {'public' | 'private'} private
  * @property {'casual'} rated

@@ -39,7 +39,7 @@ import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../shared/chess/util/metadata.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -391,7 +391,7 @@ function getRatingDataForGamePlayers(
 function constructMetadataOfGame(
 	rated: boolean,
 	variant: string,
-	clock: MetaData['TimeControl'],
+	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
 	const RatedOrCasual = rated ? 'Rated' : 'Casual';

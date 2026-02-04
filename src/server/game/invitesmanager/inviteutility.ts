@@ -8,7 +8,7 @@
 import jsutil from '../../../shared/util/jsutil.js';
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { MetaData } from '../../../shared/chess/util/metadata.js';
+import type { TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
@@ -29,7 +29,7 @@ interface SafeInvite {
 	usernamecontainer: ServerUsernameContainer; // The type of the owner (guest/player), their username, and elo if applicable.
 	tag: string; // Used to verify if an invite is your own.
 	variant: string;
-	clock: MetaData['TimeControl'];
+	clock: TimeControl;
 	color: Player;
 	rated: 'casual' | 'rated';
 	publicity: 'public' | 'private';
