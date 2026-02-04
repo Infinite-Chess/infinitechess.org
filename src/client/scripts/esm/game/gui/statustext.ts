@@ -1,41 +1,57 @@
 // src/client/scripts/esm/game/gui/statustext.js
 
-'use strict';
+/**
+ * This script handles the showing and hiding of toast (status message) at the bottom of the page
+ */
 
-/** This script handles the showing and hiding of status message at the bottom of the page */
+// Elements ----------------------------------------------------------
 
-const statusMessage = document.getElementById('statusmessage');
-const statusText = document.getElementById('statustext');
+const statusMessage = document.getElementById('statusmessage')!;
+const statusText = document.getElementById('statustext')!;
 
-const fadeTimer = 1000; // In milliseconds. UPDATE with the document!
+// Constants ---------------------------------------------------------
 
-const stapleLength = 900; // How many ms each status message at least lasts! Can be shortened by the multiplier.
-const length = 45; // This is multiplied by the messages character count to add to it's life span.
+/** Base duration for toasts, in milliseconds. */
+const DURATION_BASE = 900;
+/** Duration multiplier per character in toasts, in milliseconds. */
+const DURATION_MULTIPLIER = 45;
 
-let layers = 0;
+/** Duration of the toasts' fade-out animation, in milliseconds. */
+const FADE_DURATION = 1000;
+
+// Variables ---------------------------------------------------------
+
+/**
+ * Weight of visibility for the status message.
+ * When it is 0, the status message is hidden.
+ */
+let visibilityWeight = 0;
+
+// Functions ---------------------------------------------------------
 
 /**
  * Display a status message on-screen, auto-calculating its duration.
- * @param {string} text Message to display
- * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
- * @param {number} durationMultiplier - Optional. Multiplies the default duration. Default: 1.
+ * @param text - Message to display
+ * @param [isError] Whether the backdrop should be red for an error
+ * @param durationMultiplier - Optional. Multiplies the default duration. Default: 1.
  */
-function showStatus(text, isError, durationMultiplier = 1) {
-	if (!text) return; // Not defined (can happen if translation unavailable)
-	const duration = (stapleLength + text.length * length) * durationMultiplier;
+function showStatus(text: unknown, isError = false, durationMultiplier = 1): void {
+	if (typeof text !== 'string') return; // Not defined (can happen if translation unavailable)
+
+	const duration = (DURATION_BASE + text.length * DURATION_MULTIPLIER) * durationMultiplier;
 	showStatusForDuration(text, duration, isError);
 }
 
 /**
  * Display a status message on-screen, manually passing in duration.
- * @param {string} text - Message to display
- * @param {number} durationMillis - Amount of time, in milliseconds, to display the message
- * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
+ * @param text - Message to display
+ * @param durationMillis - Amount of time, in milliseconds, to display the message
+ * @param [isError] Optional. Whether the backdrop should be red for an error
  */
-function showStatusForDuration(text, durationMillis, isError) {
+function showStatusForDuration(text: string, durationMillis: number, isError = false): void {
 	if (!text) return; // Not defined (can happen if translation unavailable)
 
-	layers++;
+	visibilityWeight++;
 
 	fadeAfter(durationMillis);
 
@@ -53,42 +69,41 @@ function showStatusForDuration(text, durationMillis, isError) {
 	}
 }
 
-function fadeAfter(ms) {
-	setTimeout(function () {
-		if (layers === 1) {
+/**
+ * Fades out the status message after the provided time,
+ * if no new messages have been displayed in the meantime.
+ */
+function fadeAfter(ms: number): void {
+	setTimeout(() => {
+		if (visibilityWeight === 1) {
 			statusText.classList.add('fade-out-1s');
-			hideAfter(fadeTimer);
-		} else layers--; // This layer has been overwritten!
+			hideAfter(FADE_DURATION);
+		} else visibilityWeight--; // This layer has been overwritten!
 	}, ms);
 }
 
-function hideAfter(ms) {
-	setTimeout(function () {
-		layers--;
-		if (layers > 0) return; // Only one left, hide!
+/**
+ * Hides the status message after the provided time,
+ * if no new messages have been displayed in the meantime.
+ */
+function hideAfter(ms: number): void {
+	setTimeout(() => {
+		visibilityWeight--;
+		if (visibilityWeight > 0) return; // Only one left, hide!
 		statusMessage.classList.add('hidden');
 		statusText.classList.remove('fade-out-1s');
 	}, ms);
 }
 
-function lostConnection() {
-	showStatus(translations.lost_connection);
-}
-
 /** Shows a status message stating to please wait to perform this task. */
-function pleaseWaitForTask() {
-	showStatus(translations.please_wait, false, 0.5);
+function pleaseWaitForTask(): void {
+	showStatus(translations['please_wait'], false, 0.5);
 }
 
-// Dev purposes
-function getLayerCount() {
-	return layers;
-}
+// Exports -----------------------------------------------------------
 
 export default {
 	showStatus,
-	lostConnection,
-	pleaseWaitForTask,
-	getLayerCount,
 	showStatusForDuration,
+	pleaseWaitForTask,
 };

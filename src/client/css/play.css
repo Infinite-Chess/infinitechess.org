@@ -1983,11 +1983,3 @@ a {
 .fade-out-1s {
 	animation: fade-out 1s; /* UPDATE 1s within the document in the statustext module! */
 }
-
-.fade-in-2_3s {
-	animation: fade-in 0.67s;
-}
-
-.fade-out-2_3s {
-	animation: fade-out 0.67s; /* UPDATE 1s within the document in the statustext module! */
-}

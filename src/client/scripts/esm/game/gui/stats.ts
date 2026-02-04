@@ -22,7 +22,7 @@ const elementStatusFPS = document.getElementById('status-fps')!;
 /** The Move Number text element. */
 const elementStatusMoves = document.getElementById('status-moves')!;
 
-// Constants -------------------------------------------------------------
+// Variables -------------------------------------------------------------
 
 /**
  * Weight of visibility for the move number stat.
