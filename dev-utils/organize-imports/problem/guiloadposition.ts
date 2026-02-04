@@ -11,6 +11,7 @@ import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
+// @ts-ignore
 import boardeditor from '../../boardeditor/boardeditor';
 import editorutil from '../../../../../../shared/editor/editorutil';
 import toast from '../toast';
