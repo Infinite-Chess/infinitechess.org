@@ -5,9 +5,8 @@
  */
 
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { InviteOptions } from '../misc/invites.js';
 
-// @ts-ignore
 import invites from '../misc/invites.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import toast from './toast.js';
@@ -22,15 +21,6 @@ import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
 
 // Types --------------------------------------------------------------------
-
-/** Create lobby invite options. */
-interface InviteOptions {
-	variant: string;
-	clock: TimeControl;
-	color: Player;
-	private: 'public' | 'private';
-	rated: 'casual' | 'rated';
-}
 
 // Elements --------------------------------------------------------------------
 
@@ -473,7 +463,7 @@ function callback_inviteClicked(event: Event): void {
 		return;
 	}
 
-	invites.click((event as MouseEvent).currentTarget);
+	invites.click((event as MouseEvent).currentTarget as HTMLElement);
 }
 
 /**
