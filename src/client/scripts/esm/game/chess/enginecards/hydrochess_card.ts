@@ -12,6 +12,28 @@ import bimath from '../../../../../../shared/util/math/bimath';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
 
+const SUPPORTED_VARIANTS = new Set([
+	'Classical',
+	'Confined_Classical',
+	'Classical_Plus',
+	'Core',
+	'CoaIP',
+	'CoaIP_HO',
+	'CoaIP_RO',
+	'CoaIP_NO',
+	'Palace',
+	'Pawndard',
+	'Standarch',
+	'Space_Classic',
+	'Space',
+	'Abundance',
+	'Pawn_Horde',
+	'Knightline',
+	'Obstocean',
+	'Chess',
+	'Omega',
+]);
+
 /**
  * Determines whether the given position is supported by the engine.
  * If it's not, and we play a game with it anyway, the engine may crash.
@@ -121,4 +143,4 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	return { supported: true };
 }
 
-export default { isPositionSupported };
+export default { SUPPORTED_VARIANTS, isPositionSupported };
