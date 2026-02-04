@@ -254,33 +254,50 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(403);
 		});
 
-		it('should return 409 if position name already exists', async () => {
+		it('should overwrite position if name already exists', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Save first position
 			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
 				name: 'Duplicate Name',
 				piece_count: 10,
-				timestamp: Date.now(),
+				timestamp: 1000,
 				icn: 'test-icn-1',
 				pawn_double_push: true,
 				castling: false,
 			});
 
-			// Try to save another position with the same name
+			// Save another position with the same name but different data
 			const response = await testRequest()
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Duplicate Name',
-					piece_count: 10,
-					timestamp: Date.now(),
+					piece_count: 20,
+					timestamp: 2000,
 					icn: 'test-icn-2',
 					pawn_double_push: false,
 					castling: true,
 				});
 
-			expect(response.status).toBe(409);
+			// Should succeed
+			expect(response.status).toBe(201);
+
+			// Verify only one position exists with the new data
+			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
+			expect(saves).toMatchObject([
+				{
+					name: 'Duplicate Name',
+					piece_count: 20,
+					timestamp: 2000,
+				},
+			]);
+
+			// Verify the ICN was also overwritten
+			const icnData = editorSavesManager.getSavedPositionICN('Duplicate Name', user.user_id);
+			expect(icnData?.icn).toBe('test-icn-2');
+			expect(icnData?.pawn_double_push).toBe(0);
+			expect(icnData?.castling).toBe(1);
 		});
 
 		it('should return 401 if user is not authenticated', async () => {

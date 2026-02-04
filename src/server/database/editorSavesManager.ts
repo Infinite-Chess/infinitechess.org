@@ -21,8 +21,8 @@ export type EditorSavesListRecord = {
 /** Represents a saved position ICN record (icn, pawn_double_push, castling). */
 export type EditorSavesIcnRecord = {
 	icn: string;
-	pawn_double_push: number;
-	castling: number;
+	pawn_double_push: 0 | 1;
+	castling: 0 | 1;
 };
 
 // Constants ---------------------------------------------------------------------------------
@@ -32,9 +32,6 @@ const MAX_SAVED_POSITIONS = 50;
 
 /** Error message for when the user's save quota is exceeded. */
 const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
-
-/** Error message for when a position name already exists for the user. */
-const NAME_ALREADY_EXISTS_ERROR = 'NAME_ALREADY_EXISTS';
 
 // Methods -----------------------------------------------------------------------------
 
@@ -62,6 +59,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 /**
  * Adds a new saved position to the editor_saves table,
  * enforcing the maximum saved positions quota per user.
+ * If a position with the same name already exists, it will be overwritten.
  * @param user_id - The user ID who owns the position
  * @param name - The name of the saved position
  * @param piece_count - The client-provided piece count of the position
@@ -70,7 +68,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @param pawn_double_push - Whether the pawn double push gamerule is enabled
  * @param castling - Whether the castling gamerule is enabled
  * @returns The RunResult.
- * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, NAME_ALREADY_EXISTS if the name already exists, or a generic database error.
+ * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, or a generic database error.
  */
 function addSavedPosition(
 	user_id: number,
@@ -83,22 +81,30 @@ function addSavedPosition(
 ): RunResult {
 	try {
 		const transaction = db.transaction(() => {
-			// 1. Get count within the transaction
-			const countResult = db.get<{ count: number }>(
-				`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`,
-				[user_id],
+			// Check if a position with the same name already exists
+			const existingPosition = db.get<{ name: string }>(
+				`SELECT name FROM editor_saves WHERE user_id = ? AND name = ?`,
+				[user_id, name],
 			);
-			const currentCount = countResult?.count ?? 0;
 
-			// 2. Check quota
-			if (currentCount >= MAX_SAVED_POSITIONS) {
-				// Throw an error to roll back the transaction
-				throw new Error(QUOTA_EXCEEDED_ERROR);
+			// Get count within the transaction, only if it's a new position
+			if (!existingPosition) {
+				const countResult = db.get<{ count: number }>(
+					`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`,
+					[user_id],
+				);
+				const currentCount = countResult?.count ?? 0;
+
+				// Check quota
+				if (currentCount >= MAX_SAVED_POSITIONS) {
+					// Throw an error to roll back the transaction
+					throw new Error(QUOTA_EXCEEDED_ERROR);
+				}
 			}
 
-			// 3. Insert the new record
+			// Insert the record (overwrites any existing one)
 			const insertQuery = `
-            INSERT INTO editor_saves (user_id, name, piece_count, timestamp, icn, pawn_double_push, castling)
+            INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, pawn_double_push, castling)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 			return db.run(insertQuery, [
@@ -119,10 +125,6 @@ function addSavedPosition(
 		// Re-throw quota exceeded errors as-is (expected business logic failure)
 		if (errMsg === QUOTA_EXCEEDED_ERROR) {
 			throw error;
-		}
-		// Handle UNIQUE constraint violation
-		if (errMsg.includes('UNIQUE constraint failed')) {
-			throw new Error(NAME_ALREADY_EXISTS_ERROR);
 		}
 		// Log and throw generic error for all other database errors
 		logEventsAndPrint(
@@ -180,7 +182,6 @@ export default {
 	// Constants
 	MAX_SAVED_POSITIONS,
 	QUOTA_EXCEEDED_ERROR,
-	NAME_ALREADY_EXISTS_ERROR,
 	// Methods
 	getAllSavedPositionsForUser,
 	addSavedPosition,
