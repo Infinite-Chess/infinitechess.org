@@ -202,7 +202,14 @@ function cancel(id?: string): void {
 /**
  * Generates a tag id for the invite parameters before we send off action "createinvite" to the server
  */
-function generateTagForInvite(inviteOptions: any): void {
+function generateTagForInvite(inviteOptions: {
+	variant: string;
+	clock: TimeControl;
+	color: Player;
+	publicity: 'public' | 'private';
+	rated: 'casual' | 'rated';
+	tag?: string;
+}): void {
 	// Create and send invite with a tag so we know which ones ours
 	const tag = uuid.generateID_Base62(8);
 
@@ -318,9 +325,9 @@ function playSoundNewOpponentInvite(): void {
 
 /**
  * Close all previous event listeners and delete invites from the document
- * @param recentUsersInLastList - If true, resets the local scope variables for next time
+ * @param resetRecentUsersCache - If true, resets the playBaseIfNewInvite closure's internal state for tracking recent users
  */
-function clear(recentUsersInLastList: boolean = false): void {
+function clear(resetRecentUsersCache: boolean = false): void {
 	guiplay.closeListeners_Invites();
 	ourInviteContainer.innerHTML = ''; // Deletes all contained invite elements
 	invitesContainer.innerHTML = ''; // Deletes all contained invite elements
@@ -328,7 +335,7 @@ function clear(recentUsersInLastList: boolean = false): void {
 	ourInviteID = undefined;
 	element_inviteCodeCode.textContent = '';
 	// Passing in an empty list resets the local scope variables for next time.
-	if (recentUsersInLastList) playBaseIfNewInvite([]);
+	if (resetRecentUsersCache) playBaseIfNewInvite([]);
 }
 
 /**
@@ -365,8 +372,15 @@ function isInviteOurs(invite: Invite): boolean {
 
 /**
  * Creates an invite object from the given HTML element.
- * Note: The clock and color fields will be strings since they're parsed from HTML,
- * but they're not used in the context where this function is called (only id, tag, and usernamecontainer are used).
+ *
+ * **Type Safety Note:** The clock and color fields are parsed from HTML text content
+ * and cast to their respective types (TimeControl, Player). While this creates a technical
+ * type mismatch (they remain strings at runtime), this is acceptable because:
+ * 1. This function is only called in the `click()` handler
+ * 2. The resulting invite is only passed to `isInviteOurs()`, which only uses
+ *    the `id`, `tag`, and `usernamecontainer` fields
+ * 3. The clock and color fields are never actually accessed in this context
+ *
  * @param inviteElement - The invite, as an element.
  * @returns The invite object, parsed from an HTML element.
  */
