@@ -8,7 +8,6 @@
 
 import * as z from 'zod';
 
-// @ts-ignore
 import clockweb from '../clockweb.js';
 import { getTranslation } from '../../utility/translate.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
@@ -43,7 +42,7 @@ const createinviteschem = z
 		// `${number}+${number}` | '-'
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
-			.refine(clockweb.isClockValueValid, { error: 'Invalid clock value.' }),
+			.refine((c) => clockweb.isClockValueValid(c), { error: 'Invalid clock value.' }),
 		color: z.literal([players.WHITE, players.BLACK, players.NEUTRAL]),
 		publicity: z.enum(['public', 'private']),
 		rated: z.enum(['casual', 'rated']),

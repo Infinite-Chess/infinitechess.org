@@ -1,6 +1,6 @@
-// src/server/game/clockweb.js
+// src/server/game/clockweb.ts
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import type { MetaData } from '../../shared/chess/util/metadata';
 
 /** These are the allowed time controls in production. */
 const validTimeControls = [
@@ -22,43 +22,14 @@ const validTimeControls = [
 /** These are only allowed in development. */
 const devTimeControls = ['15+2'];
 
-/**
- * Returns true if the provided time control is valid.
- * If false, that means somebody is time control (e.g. "600+6").
- * @param {string} time_control - The time control to check.
- * @returns {boolean} *true* if it is valid.
- */
-function isClockValueValid(time_control) {
+/** Whether the given time control is valid. */
+function isClockValueValid(time_control: MetaData['TimeControl']): boolean {
 	return (
 		validTimeControls.includes(time_control) ||
-		(process.env.NODE_ENV === 'development' && devTimeControls.includes(time_control))
+		(process.env['NODE_ENV'] === 'development' && devTimeControls.includes(time_control))
 	);
-}
-
-/**
- * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
- * If it is an untimed game (represented by `-`), then this will return null.
- * @param {string} clock - The string representing the clock value: `10+5`
- * @returns {Object} An object with 2 properties: `minutes`, `increment`, or `null` if the clock is infinite.
- */
-function getMinutesAndIncrementFromClock(clock) {
-	if (isClockValueInfinite(clock)) return null;
-	const [seconds, increment] = clock.split('+').map((part) => +part); // Convert them into a number
-	const minutes = seconds / 60;
-	return { minutes, increment };
-}
-
-/**
- * Returns true if the clock value is infinite. Internally, untimed games are represented with a "-".
- * @param {string} clock - The clock value (e.g. "10+5").
- * @returns {boolean} *true* if it's infinite.
- */
-function isClockValueInfinite(clock) {
-	return clock === '-';
 }
 
 export default {
 	isClockValueValid,
-	getMinutesAndIncrementFromClock,
-	isClockValueInfinite,
 };
