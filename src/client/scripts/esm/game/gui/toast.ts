@@ -52,6 +52,8 @@ function show(text: string, options: ToastOptions = {}): void {
 	const duration =
 		durationMillis ?? (DURATION_BASE + text.length * DURATION_MULTIPLIER) * durationMultiplier;
 
+	visibilityWeight++;
+
 	fadeAfter(duration);
 
 	statusText.textContent = text;
@@ -65,46 +67,6 @@ function show(text: string, options: ToastOptions = {}): void {
 	} else {
 		statusText.classList.remove('error');
 		statusText.classList.add('ok');
-	}
-}
-
-/**
- * Display a status message on-screen, auto-calculating its duration.
- * @param text - Message to display
- * @param [isError] Whether the backdrop should be red for an error
- * @param durationMultiplier - Optional. Multiplies the default duration. Default: 1.
- */
-function showStatus(text: unknown, isError = false, durationMultiplier = 1): void {
-	if (typeof text !== 'string') return; // Not defined (can happen if translation unavailable)
-
-	const duration = (DURATION_BASE + text.length * DURATION_MULTIPLIER) * durationMultiplier;
-	showStatusForDuration(text, duration, isError);
-}
-
-/**
- * Display a status message on-screen, manually passing in duration.
- * @param text - Message to display
- * @param durationMillis - Amount of time, in milliseconds, to display the message
- * @param [isError] Optional. Whether the backdrop should be red for an error
- */
-function showStatusForDuration(text: string, durationMillis: number, isError = false): void {
-	if (!text) return; // Not defined (can happen if translation unavailable)
-
-	visibilityWeight++;
-
-	fadeAfter(durationMillis);
-
-	statusText.textContent = text;
-	statusText.classList.remove('fade-out-1s');
-	statusMessage.classList.remove('hidden');
-
-	if (!isError) {
-		statusText.classList.remove('error');
-		statusText.classList.add('ok');
-	} else {
-		statusText.classList.remove('ok');
-		statusText.classList.add('error');
-		console.error(text);
 	}
 }
 
@@ -136,15 +98,12 @@ function hideAfter(ms: number): void {
 
 /** Shows a toast message stating to please wait to perform this task. */
 function pleaseWaitForTask(): void {
-	showStatus(translations['please_wait'], false, 0.5);
+	show(translations['please_wait'], { durationMultiplier: 0.5 });
 }
 
 // Exports -----------------------------------------------------------
 
 export default {
 	show,
-
-	showStatus,
-	showStatusForDuration,
 	pleaseWaitForTask,
 };
