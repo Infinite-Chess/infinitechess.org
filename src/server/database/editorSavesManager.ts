@@ -81,13 +81,13 @@ function addSavedPosition(
 ): RunResult {
 	try {
 		const transaction = db.transaction(() => {
-			// 1. Check if position already exists
+			// Check if a position with the same name already exists
 			const existingPosition = db.get<{ name: string }>(
 				`SELECT name FROM editor_saves WHERE user_id = ? AND name = ?`,
 				[user_id, name],
 			);
 
-			// 2. Get count within the transaction, only if it's a new position
+			// Get count within the transaction, only if it's a new position
 			if (!existingPosition) {
 				const countResult = db.get<{ count: number }>(
 					`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`,
@@ -95,14 +95,14 @@ function addSavedPosition(
 				);
 				const currentCount = countResult?.count ?? 0;
 
-				// 3. Check quota for new positions only
+				// Check quota
 				if (currentCount >= MAX_SAVED_POSITIONS) {
 					// Throw an error to roll back the transaction
 					throw new Error(QUOTA_EXCEEDED_ERROR);
 				}
 			}
 
-			// 4. Insert or replace the record (overwrites if it exists)
+			// Insert the record (overwrites any existing one)
 			const insertQuery = `
             INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, pawn_double_push, castling)
             VALUES (?, ?, ?, ?, ?, ?, ?)

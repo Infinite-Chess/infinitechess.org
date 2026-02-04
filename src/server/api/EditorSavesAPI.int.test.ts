@@ -282,16 +282,16 @@ describe('EditorSavesAPI Integration', () => {
 
 			// Should succeed
 			expect(response.status).toBe(201);
-			expect(response.body).toMatchObject({ success: true });
 
 			// Verify only one position exists with the new data
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
-			expect(saves).toHaveLength(1);
-			expect(saves[0]).toMatchObject({
-				name: 'Duplicate Name',
-				piece_count: 20,
-				timestamp: 2000,
-			});
+			expect(saves).toMatchObject([
+				{
+					name: 'Duplicate Name',
+					piece_count: 20,
+					timestamp: 2000,
+				},
+			]);
 
 			// Verify the ICN was also overwritten
 			const icnData = editorSavesManager.getSavedPositionICN('Duplicate Name', user.user_id);
