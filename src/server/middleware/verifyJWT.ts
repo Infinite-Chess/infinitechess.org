@@ -1,5 +1,3 @@
-// src/server/middleware/verifyJWT.ts
-
 /*
  * This module reads incoming requests, searching for a
  * valid authorization header, or a valid refresh token cookie,
@@ -8,6 +6,11 @@
  * if they are logged in.
  */
 
+import type { Request, Response, NextFunction } from 'express';
+
+import { getClientIP } from '../utility/IP.js';
+import { CustomWebSocket } from '../socket/socketUtility.js';
+import { logEventsAndPrint } from './logEvents.js';
 import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../types.js';
 import {
 	freshenSession,
@@ -17,11 +20,6 @@ import {
 	isAccessTokenValid,
 	isRefreshTokenValid,
 } from '../controllers/authenticationTokens/tokenValidator.js';
-import { CustomWebSocket } from '../socket/socketUtility.js';
-import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from './logEvents.js';
-
-import type { Request, Response, NextFunction } from 'express';
 
 /**
  * [HTTP] Reads the request's bearer token (from the authorization header)

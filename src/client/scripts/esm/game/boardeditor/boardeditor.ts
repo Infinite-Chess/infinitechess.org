@@ -6,41 +6,39 @@
  * It handles initialization, edit history, executing edits, current tool, etc.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 import toast from '../gui/toast.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { listener_document } from '../chess/game.js';
-import { GameBus } from '../GameBus.js';
-import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import gameslot from '../chess/gameslot.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import selection from '../chess/selection.js';
 import state from '../../../../../shared/chess/logic/state.js';
-import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import movesequence from '../chess/movesequence.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import guinavigation from '../gui/guinavigation.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import selectiontool from './tools/selection/selectiontool.js';
-import egamerules from './egamerules.js';
-import drawingtool from './tools/drawingtool.js';
-import stransformations from './tools/selection/stransformations.js';
+import arrows from '../rendering/arrows/arrows.js';
+import gameslot from '../chess/gameslot.js';
 import eactions from './actions/eactions.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import selection from '../chess/selection.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import miniimage from '../rendering/miniimage.js';
-import arrows from '../rendering/arrows/arrows.js';
-import perspective from '../rendering/perspective.js';
-import gameloader from '../chess/gameloader.js';
 import eautosave from './actions/eautosave.js';
-
-// Type Definitions -------------------------------------------------------------
+import egamerules from './egamerules.js';
+import gameloader from '../chess/gameloader.js';
+import drawingtool from './tools/drawingtool.js';
+import perspective from '../rendering/perspective.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import movesequence from '../chess/movesequence.js';
+import guinavigation from '../gui/guinavigation.js';
+import selectiontool from './tools/selection/selectiontool.js';
+import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import stransformations from './tools/selection/stransformations.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { GameBus } from '../GameBus.js';
+import { listener_document } from '../chess/game.js';
 
 type Tool = (typeof validTools)[number];
 

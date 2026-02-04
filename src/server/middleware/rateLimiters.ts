@@ -1,13 +1,12 @@
-// src/server/middleware/rateLimiters.ts
-
 /**
  * Stores rate limiting rules for various endpoints.
  */
 
-import rateLimit from 'express-rate-limit';
-import { getTranslationForReq } from '../utility/translate.js';
-
 import type { Request, Response } from 'express';
+
+import rateLimit from 'express-rate-limit';
+
+import { getTranslationForReq } from '../utility/translate.js';
 
 // Options -------------------------------------------------------------
 

@@ -5,20 +5,18 @@
  * and what animations to make, according to each action of a move's actions list.
  */
 
+import type { Mesh } from '../rendering/piecemodels.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type {
 	ChangeApplication,
 	Change,
 	genericChangeFunc,
 } from '../../../../../shared/chess/logic/boardchanges.js';
-import type { Mesh } from '../rendering/piecemodels.js';
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 
 import animation from '../rendering/animation.js';
 import piecemodels from '../rendering/piecemodels.js';
 import preferences from '../../components/header/preferences.js';
-
-// Type Definitions -----------------------------------------------------------------------------------------
 
 /**
  * An object mapping move changes to a function that performs the graphical mesh change for that action.

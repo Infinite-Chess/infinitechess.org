@@ -4,22 +4,22 @@
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
-import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { Edit } from '../../boardeditor/boardeditor';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
 
+import bounds from '../../../../../../shared/util/math/bounds';
+import gameslot from '../../chess/gameslot';
+import boardutil from '../../../../../../shared/chess/util/boardutil';
+import boardeditor from '../../boardeditor/boardeditor';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import guifloatingwindow from './guifloatingwindow';
+import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
 import typeutil, {
 	players as p,
 	rawTypes as r,
 	RawType,
 } from '../../../../../../shared/chess/util/typeutil';
-import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
-import boardeditor from '../../boardeditor/boardeditor';
-import gameslot from '../../chess/gameslot';
-import guifloatingwindow from './guifloatingwindow';
-import boardutil from '../../../../../../shared/chess/util/boardutil';
-import bounds from '../../../../../../shared/util/math/bounds';
 
 // Elements ----------------------------------------------------------
 

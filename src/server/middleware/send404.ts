@@ -1,11 +1,10 @@
-// src/server/middleware/send404.ts
-
 import type { Request, Response } from 'express';
 
 import path from 'path';
+import { fileURLToPath } from 'node:url';
+
 import { getLanguageToServe, getTranslationForReq } from '../utility/translate.js';
 
-import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function send404(req: Request, res: Response): void {

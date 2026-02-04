@@ -10,8 +10,17 @@
  * still human-readable, but taking less space to describe positions.
  */
 
+import type { BaseRay } from '../../../util/math/geometry.js';
+import type { MetaData } from '../../util/metadata.js';
+import type { GameRules } from '../../variants/gamerules.js';
+import type { UnboundedRectangle } from '../../../util/math/bounds.js';
+import type { EnPassant, GlobalGameState } from '../state.js';
+
 import jsutil from '../../../util/jsutil.js';
+import bimath from '../../../util/math/bimath.js';
+import typeutil from '../../util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
+import icncommentutils, { CommandObject } from './icncommentutils.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -20,17 +29,6 @@ import {
 	Player,
 	PlayerGroup,
 } from '../../util/typeutil.js';
-import typeutil from '../../util/typeutil.js';
-import icncommentutils, { CommandObject } from './icncommentutils.js';
-import bimath from '../../../util/math/bimath.js';
-
-import type { GameRules } from '../../variants/gamerules.js';
-import type { MetaData } from '../../util/metadata.js';
-import type { EnPassant, GlobalGameState } from '../state.js';
-import type { BaseRay } from '../../../util/math/geometry.js';
-import type { UnboundedRectangle } from '../../../util/math/bounds.js';
-
-// Type Definitions -------------------------------------------------------------------
 
 /** Represents the game format coming IN to the converter. */
 interface LongFormatIn extends LongFormatBase {

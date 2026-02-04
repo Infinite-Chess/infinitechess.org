@@ -4,12 +4,11 @@
  * The web worker script for the ICN Validator Tool.
  */
 
-import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
+import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../game/chess/gameformulator.js';
+import { players as p } from '../../../../shared/chess/util/typeutil.js';
 
-// Define types (duplicated briefly for worker context)
 export interface WorkerMessage {
 	chunkId: number;
 	games: { index: number; icn: string }[];

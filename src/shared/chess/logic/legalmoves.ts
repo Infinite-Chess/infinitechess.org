@@ -4,28 +4,26 @@
  * This script calculates legal moves
  */
 
-import specialdetect from './specialdetect.js';
-import boardutil from '../util/boardutil.js';
-import organizedpieces from './organizedpieces.js';
-import coordutil from '../util/coordutil.js';
-import movesets from './movesets.js';
-import variant from '../variants/variant.js';
-import checkresolver from './checkresolver.js';
-import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
-import typeutil, { players, rawTypes } from '../util/typeutil.js';
-
-import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
-import type { PieceMoveset } from './movesets.js';
-import type { CoordsKey, Coords } from '../util/coordutil.js';
-import type { IgnoreFunction, BlockingFunction } from './movesets.js';
-import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
+import type { MetaData } from '../util/metadata.js';
+import type { PieceMoveset } from './movesets.js';
 import type { CoordsSpecial } from './movepiece.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
-import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import type { CoordsKey, Coords } from '../util/coordutil.js';
+import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
+import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 
-// Type Definitions ----------------------------------------------------------------
+import variant from '../variants/variant.js';
+import movesets from './movesets.js';
+import boardutil from '../util/boardutil.js';
+import coordutil from '../util/coordutil.js';
+import specialdetect from './specialdetect.js';
+import checkresolver from './checkresolver.js';
+import organizedpieces from './organizedpieces.js';
+import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
+import typeutil, { players, rawTypes } from '../util/typeutil.js';
 
 /**
  * The negative/positive vector step-limit of a sliding direction.

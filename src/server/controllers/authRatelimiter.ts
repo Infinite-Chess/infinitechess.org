@@ -10,8 +10,6 @@ import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 
-// Types ----------------------------------------------------------------------------
-
 type LoginAttemptData = {
 	attempts: number;
 	cooldownTimeSecs: number;

@@ -6,60 +6,60 @@
  * And contains our main update() and render() methods
  */
 
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
-import invites from '../misc/invites.js';
-import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
-import highlights from '../rendering/highlights/highlights.js';
-import gameslot from './gameslot.js';
-import guinavigation from '../gui/guinavigation.js';
-import pieces from '../rendering/pieces.js';
-import guititle from '../gui/guititle.js';
-import droparrows from '../rendering/dragging/droparrows.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import arrows from '../rendering/arrows/arrows.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
-import animation from '../rendering/animation.js';
-import draganimation from '../rendering/dragging/draganimation.js';
-import selection from './selection.js';
-import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
-import boarddrag from '../rendering/boarddrag.js';
+import mouse from '../../util/mouse.js';
+import pieces from '../rendering/pieces.js';
+import arrows from '../rendering/arrows/arrows.js';
+import border from '../rendering/border.js';
+import camera from '../rendering/camera.js';
+import bimath from '../../../../../shared/util/math/bimath.js';
+import invites from '../misc/invites.js';
+import gameslot from './gameslot.js';
+import guititle from '../gui/guititle.js';
 import boardpos from '../rendering/boardpos.js';
 import controls from '../misc/controls.js';
-import frametracker from '../rendering/frametracker.js';
-import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
-import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import guiclock from '../gui/guiclock.js';
-import boardeditor from '../boardeditor/boardeditor.js';
-import mouse from '../../util/mouse.js';
 import premoves from './premoves.js';
-import boardtiles from '../rendering/boardtiles.js';
-import promotionlines from '../rendering/promotionlines.js';
-import Transition from '../rendering/transitions/Transition.js';
-import perspective from '../rendering/perspective.js';
-import border from '../rendering/border.js';
-import starfield from '../rendering/starfield.js';
-import camera from '../rendering/camera.js';
-import primitives from '../rendering/primitives.js';
-import piecemodels from '../rendering/piecemodels.js';
 import keybinds from '../misc/keybinds.js';
-import bimath from '../../../../../shared/util/math/bimath.js';
-import WaterRipples from '../rendering/WaterRipples.js';
+import animation from '../rendering/animation.js';
+import selection from './selection.js';
+import boarddrag from '../rendering/boarddrag.js';
+import starfield from '../rendering/starfield.js';
+import gameloader from './gameloader.js';
+import highlights from '../rendering/highlights/highlights.js';
+import droparrows from '../rendering/dragging/droparrows.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import boardtiles from '../rendering/boardtiles.js';
+import Transition from '../rendering/transitions/Transition.js';
+import primitives from '../rendering/primitives.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import perspective from '../rendering/perspective.js';
+import piecemodels from '../rendering/piecemodels.js';
 import screenshake from '../rendering/screenshake.js';
+import frametracker from '../rendering/frametracker.js';
+import WaterRipples from '../rendering/WaterRipples.js';
+import guinavigation from '../gui/guinavigation.js';
+import draganimation from '../rendering/dragging/draganimation.js';
+import promotionlines from '../rendering/promotionlines.js';
+import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
+import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import webgl, { gl } from '../rendering/webgl.js';
+import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
+import { GameBus } from '../GameBus.js';
+import { ProgramManager } from '../../webgl/ProgramManager.js';
+import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
+import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,
 	PostProcessPass,
 } from '../../webgl/post_processing/PostProcessingPipeline.js';
-import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
-import { CreateInputListener, InputListener } from '../input.js';
-import { ProgramManager } from '../../webgl/ProgramManager.js';
-import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
-import { GameBus } from '../GameBus.js';
 
 // Variables -------------------------------------------------------------------------------
 

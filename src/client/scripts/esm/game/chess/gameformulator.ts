@@ -4,12 +4,6 @@
  * This script takes an ICN, or a compressed abridged gamefile, and constructs a full gamefile from them.
  */
 
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
-import { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
-
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type {
@@ -17,6 +11,12 @@ import type {
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import variant from '../../../../../shared/chess/variants/variant.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.

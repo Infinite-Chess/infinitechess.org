@@ -7,12 +7,12 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { memberInfoEq } from './inviteutility.js';
-import socketUtility from '../../socket/socketUtility.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import socketUtility from '../../socket/socketUtility.js';
+import { memberInfoEq } from './inviteutility.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * List of clients currently subscribed to invites list events, with their

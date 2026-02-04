@@ -1,9 +1,7 @@
-// src/server/middleware/errorHandler.ts
-
 import type { Request, Response } from 'express';
 
-import { getTranslationForReq } from '../utility/translate.js';
 import { logEventsAndPrint } from './logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
 function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
 	try {

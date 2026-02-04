@@ -7,18 +7,16 @@
 
 import { WebSocket } from 'ws';
 
+import uuid from '../../shared/util/uuid.js';
+import jsutil from '../../shared/util/jsutil.js';
+import socketUtility from './socketUtility.js';
+import { getTranslation } from '../utility/translate.js';
 import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
 import {
 	addTimeoutToEchoTimers,
 	deleteEchoTimerForMessageID,
 	timeToWaitForEchoMillis,
 } from './echoTracker.js';
-import socketUtility from './socketUtility.js';
-import uuid from '../../shared/util/uuid.js';
-import jsutil from '../../shared/util/jsutil.js';
-import { getTranslation } from '../utility/translate.js';
-
-// Type Definitions ---------------------------------------------------------------------------
 
 /**
  * Represents an incoming WebSocket server message.

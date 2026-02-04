@@ -8,16 +8,16 @@
  */
 
 import jwt from 'jsonwebtoken';
+
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
+import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
 import {
 	deleteRefreshToken,
 	findRefreshToken,
 	updateRefreshTokenIP,
 	type RefreshTokenRecord,
 } from '../../database/refreshTokenManager.js';
-
-import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
 
 if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');

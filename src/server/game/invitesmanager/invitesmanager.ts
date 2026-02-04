@@ -7,26 +7,26 @@
  * and broadcasts changes out to the clients.
  */
 
-import type { SafeInvite, Invite } from './inviteutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { SafeInvite, Invite } from './inviteutility.js';
 
-import {
-	getInviteSubscribers,
-	addSocketToInvitesSubs,
-	removeSocketFromInvitesSubs,
-	doesUserHaveActiveConnection,
-} from './invitessubscribers.js';
-import { getActiveGameCount } from '../gamemanager/gamecount.js';
+import jsutil from '../../../shared/util/jsutil.js';
 import socketUtility from '../../socket/socketUtility.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import {
 	isInvitePrivate,
 	safelyCopyInvite,
 	isInvitePublic,
 	memberInfoEq,
 } from './inviteutility.js';
-import jsutil from '../../../shared/util/jsutil.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import {
+	getInviteSubscribers,
+	addSocketToInvitesSubs,
+	removeSocketFromInvitesSubs,
+	doesUserHaveActiveConnection,
+} from './invitessubscribers.js';
 
 //-------------------------------------------------------------------------------------------
 

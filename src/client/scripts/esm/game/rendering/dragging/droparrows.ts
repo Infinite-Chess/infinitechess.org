@@ -9,15 +9,15 @@
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
-import arrows from '../arrows/arrows.js';
-import selection from '../../chess/selection.js';
-import draganimation from './draganimation.js';
 import space from '../../misc/space.js';
+import arrows from '../arrows/arrows.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import gameslot from '../../chess/gameslot.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import selection from '../../chess/selection.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
+import draganimation from './draganimation.js';
 
 let capturedPieceThisFrame: Piece | undefined;
 

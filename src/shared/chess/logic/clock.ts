@@ -7,18 +7,16 @@
  * if somebody loses on time.
  */
 
-import moveutil from '../util/moveutil.js';
-import timeutil from '../../util/timeutil.js';
-import gamefileutility from '../util/gamefileutility.js';
-import typeutil from '../util/typeutil.js';
-import clockutil from '../util/clockutil.js';
-
-// Type Definitions ---------------------------------------------------------------
-
+import type { Player } from '../util/typeutil.js';
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { TimeControl } from '../util/metadata.js';
 import type { ClockDependant, Game } from './gamefile.js';
-import type { Player } from '../util/typeutil.js';
+
+import typeutil from '../util/typeutil.js';
+import moveutil from '../util/moveutil.js';
+import timeutil from '../../util/timeutil.js';
+import clockutil from '../util/clockutil.js';
+import gamefileutility from '../util/gamefileutility.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
 interface ClockValues {

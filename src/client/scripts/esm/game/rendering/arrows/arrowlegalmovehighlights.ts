@@ -5,29 +5,27 @@
  * legal moves of all arrow indicators being hovered over.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { RenderableInstanced } from '../../../webgl/Renderable.js';
-import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
+import meshes from '../meshes.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import gameslot from '../../chess/gameslot.js';
-import selection from '../../chess/selection.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import preferences from '../../../components/header/preferences.js';
 import boardpos from '../boardpos.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
-import legalmovemodel from '../highlights/legalmovemodel.js';
-import arrows, { ArrowPiece } from './arrows.js';
-import meshes from '../meshes.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import { GameBus } from '../../GameBus.js';
+import selection from '../../chess/selection.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gameloader from '../../chess/gameloader.js';
+import preferences from '../../../components/header/preferences.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
-
-// Type Definitions -------------------------------------------------------------------------------------------
+import legalmovemodel from '../highlights/legalmovemodel.js';
+import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import arrows, { ArrowPiece } from './arrows.js';
+import { GameBus } from '../../GameBus.js';
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {

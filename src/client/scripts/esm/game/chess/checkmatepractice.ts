@@ -4,31 +4,31 @@
  * This script handles checkmate practice logic
  */
 
-import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import LocalStorage from '../../util/LocalStorage.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import gameslot from './gameslot.js';
-import guipractice from '../gui/guipractice.js';
+import bimath from '../../../../../shared/util/math/bimath.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
-import gameloader from './gameloader.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import movesequence from '../chess/movesequence.js';
-import selection from '../chess/selection.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import animation from '../rendering/animation.js';
-import validatorama from '../../util/validatorama.js';
-import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
-import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import gameslot from './gameslot.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import selection from '../chess/selection.js';
+import animation from '../rendering/animation.js';
+import gameloader from './gameloader.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
+import guipractice from '../gui/guipractice.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import movesequence from '../chess/movesequence.js';
+import validatorama from '../../util/validatorama.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import bimath from '../../../../../shared/util/math/bimath.js';
+import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------
 

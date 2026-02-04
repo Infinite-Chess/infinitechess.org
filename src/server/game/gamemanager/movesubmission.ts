@@ -6,17 +6,17 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import winconutil from '../../../shared/chess/util/winconutil.js';
+import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import socketUtility from '../../socket/socketUtility.js';
-import bimath from '../../../shared/util/math/bimath.js';
 import gameutility, { ServerGame } from './gameutility.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';

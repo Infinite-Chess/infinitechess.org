@@ -8,27 +8,27 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
-import preferences from '../../../../components/header/preferences.js';
-import snapping from '../snapping.js';
 import space from '../../../misc/space.js';
+import mouse from '../../../../util/mouse.js';
+import meshes from '../../meshes.js';
+import variant from '../../../../../../../shared/chess/variants/variant.js';
+import snapping from '../snapping.js';
 import gameslot from '../../../chess/gameslot.js';
 import boardpos from '../../boardpos.js';
-import mouse from '../../../../util/mouse.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import preferences from '../../../../components/header/preferences.js';
 import annotations from './annotations.js';
-import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
-import variant from '../../../../../../../shared/chess/variants/variant.js';
-import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
 import legalmovemodel from '../legalmovemodel.js';
-import meshes from '../../meshes.js';
+import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
+import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
+import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
 import highlightline, { Line } from '../highlightline.js';
-import { Mouse } from '../../../input.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
-import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import { Mouse } from '../../../input.js';
 
 // Variables -----------------------------------------------------------------
 

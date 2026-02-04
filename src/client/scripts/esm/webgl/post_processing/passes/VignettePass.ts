@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/post_processing/passes/VignettePass.ts
 
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /**
  * A post-processing pass for applying a vignette effect,

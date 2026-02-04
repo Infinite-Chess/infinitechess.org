@@ -6,22 +6,22 @@
  * conditions except for checkmate, stalemate, and repetition.
  */
 
-import insufficientmaterial from './insufficientmaterial.js';
-import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
+import type { Coords } from '../util/coordutil.js';
+import type { Board, FullGame } from './gamefile.js';
+
 import moveutil from '../util/moveutil.js';
-import typeutil, { RawType } from '../util/typeutil.js';
+import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
+import gamefileutility from '../util/gamefileutility.js';
+import insufficientmaterial from './insufficientmaterial.js';
+import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
+import { players, rawTypes, Player } from '../util/typeutil.js';
 import {
 	detectCheckmateOrStalemate,
 	pieceCountToDisableCheckmate,
 	royalCountToDisableCheckmate,
 } from './checkmate.js';
-import { players, rawTypes, Player } from '../util/typeutil.js';
-
-import type { Board, FullGame } from './gamefile.js';
-import type { Coords } from '../util/coordutil.js';
 
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore

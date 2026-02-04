@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/post_processing/passes/SineWavePass.ts
 
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /**
  * A post-processing pass that applies a double-axis sine wave distortion to the image.

@@ -7,24 +7,24 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
-import loadbalancer from '../misc/loadbalancer.js';
 import camera from './camera.js';
-import primitives from './primitives.js';
-import preferences from '../../components/header/preferences.js';
-import perspective from './perspective.js';
-import frametracker from './frametracker.js';
+import bounds from '../../../../../shared/util/math/bounds.js';
+import docutil from '../../util/docutil.js';
 import gameslot from '../chess/gameslot.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import primitives from './primitives.js';
 import boardtiles from './boardtiles.js';
-import bounds from '../../../../../shared/util/math/bounds.js';
 import gameloader from '../chess/gameloader.js';
-import docutil from '../../util/docutil.js';
+import preferences from '../../components/header/preferences.js';
+import perspective from './perspective.js';
+import loadbalancer from '../misc/loadbalancer.js';
+import frametracker from './frametracker.js';
+import { GameBus } from '../GameBus.js';
+import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 import {
 	AttributeInfoInstanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
-import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
-import { GameBus } from '../GameBus.js';
 
 /** A sigle star particle. */
 type Star = {

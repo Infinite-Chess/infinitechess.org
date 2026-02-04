@@ -1,9 +1,10 @@
 // src/server/routes/root.ts
 
-import express, { Request, Response } from 'express';
 import path from 'path';
-import { getLanguageToServe } from '../utility/translate.js';
+import express, { Request, Response } from 'express';
 import { fileURLToPath } from 'node:url';
+
+import { getLanguageToServe } from '../utility/translate.js';
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -4,12 +4,10 @@
  * This script handles queries to the player stats table.
  */
 
+import db from './database.js';
 import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
-import db from './database.js';
 import { allPlayerStatsColumns } from './databaseTables.js';
-
-// Type Definitions -----------------------------------------------------------------------------------
 
 /** Structure of a player_stats record. This is all allowed columns of a user_id. */
 interface PlayerStatsRecord {

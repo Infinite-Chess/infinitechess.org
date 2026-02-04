@@ -5,10 +5,8 @@
  * It validates user input for a new password and sends it to the server.
  */
 
-// Import the shared password validation utility.
 import validators from '../../../../shared/util/validators.js';
 
-// --- Type Definitions for Clarity ---
 type FormElements = {
 	form: HTMLFormElement;
 	newPasswordInput: HTMLInputElement;

@@ -10,8 +10,8 @@
 import fs from 'fs';
 import path from 'path';
 
-import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { readFile, writeFile } from '../utility/lockFile.js';
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 

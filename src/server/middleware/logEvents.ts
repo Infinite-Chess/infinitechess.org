@@ -1,15 +1,13 @@
-// src/server/middleware/logEvents.ts
-
+import fs from 'fs';
+import path from 'path';
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
-import { promises as fsPromises } from 'fs';
-import path from 'path';
-import fs from 'fs';
-
-import { getClientIP } from '../utility/IP.js';
-import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
-
 import { fileURLToPath } from 'node:url';
+import { promises as fsPromises } from 'fs';
+
+import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
+import { getClientIP } from '../utility/IP.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import type { Request, Response } from 'express';

@@ -1,7 +1,7 @@
 // src/server/config/certOptions.ts
 
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
 const pathToCertFolder = path.resolve('cert'); // Resolve results in an absolute path
 

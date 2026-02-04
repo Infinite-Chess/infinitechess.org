@@ -1,9 +1,9 @@
 // src/client/scripts/esm/components/header/dropdowns/boarddropdown.ts
 
+import style from '../../../game/gui/style.js';
+import themes from '../../../../../../shared/components/header/themes.js';
 import preferences from '../preferences.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
-import themes from '../../../../../../shared/components/header/themes.js';
-import style from '../../../game/gui/style.js';
 
 // Document Elements -------------------------------------------------------------------------
 

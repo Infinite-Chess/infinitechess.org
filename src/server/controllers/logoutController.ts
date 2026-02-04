@@ -2,8 +2,8 @@
 
 import type { Request, Response } from 'express';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 

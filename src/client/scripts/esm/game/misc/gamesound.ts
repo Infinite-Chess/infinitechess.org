@@ -8,13 +8,13 @@
  * calling {@link AudioManager.playAudio}.
  */
 
-import type { EffectConfig } from '../../audio/AudioEffects.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { EffectConfig } from '../../audio/AudioEffects.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import screenshake from '../rendering/screenshake.js';
 import math from '../../../../../shared/util/math/math.js';
+import screenshake from '../rendering/screenshake.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 import AudioManager, { SoundObject } from '../../audio/AudioManager.js';
 

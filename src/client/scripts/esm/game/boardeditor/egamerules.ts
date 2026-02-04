@@ -6,23 +6,21 @@
  * Manages the game rules of the board editor position.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil';
-import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
-import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 import type { Edit } from './boardeditor';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
+import type { Coords } from '../../../../../shared/chess/util/coordutil';
+import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
+import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 
+import gameslot from '../chess/gameslot';
+import boardutil from '../../../../../shared/chess/util/boardutil';
+import winconutil from '../../../../../shared/chess/util/winconutil';
+import boardeditor from './boardeditor';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
+import guigamerules from '../gui/boardeditor/guigamerules';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
-import winconutil from '../../../../../shared/chess/util/winconutil';
-import gameslot from '../chess/gameslot';
-import guigamerules from '../gui/boardeditor/guigamerules';
-import boardeditor from './boardeditor';
-import boardutil from '../../../../../shared/chess/util/boardutil';
-
-// Type Definitions --------------------------------------------------------------
 
 /** Type encoding information for the game rules object of the editor position */
 interface GameRulesGUIinfo {

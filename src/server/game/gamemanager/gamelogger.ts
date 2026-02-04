@@ -6,30 +6,30 @@
  * It also updates the players' stats in the "players_stats" table
  */
 
+import type { Game } from '../../../shared/chess/logic/gamefile.js';
+import type { ServerGame } from './gameutility.js';
+import type { RatingData } from './ratingcalculation.js';
+
+import db from '../../database/database.js';
+import timeutil from '../../../shared/util/timeutil.js';
+import clockutil from '../../../shared/chess/util/clockutil.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
+import gameutility from './gameutility.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { PlayerGroup, players, type Player } from '../../../shared/chess/util/typeutil.js';
+import {
+	computeRatingDataChanges,
+	DEFAULT_LEADERBOARD_ELO,
+	DEFAULT_LEADERBOARD_RD,
+} from './ratingcalculation.js';
 import {
 	addUserToLeaderboard_core,
 	getPlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	updatePlayerLeaderboardRating_core,
 } from '../../database/leaderboardsManager.js';
-import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import {
-	computeRatingDataChanges,
-	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_LEADERBOARD_RD,
-} from './ratingcalculation.js';
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-import gameutility from './gameutility.js';
-import db from '../../database/database.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import clockutil from '../../../shared/chess/util/clockutil.js';
-import timeutil from '../../../shared/util/timeutil.js';
-
-import type { ServerGame } from './gameutility.js';
-import type { RatingData } from './ratingcalculation.js';
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
 
 // Functions -------------------------------------------------------------------------------
 

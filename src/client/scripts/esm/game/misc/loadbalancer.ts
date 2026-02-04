@@ -7,9 +7,9 @@
 import stats from '../gui/stats.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import config from '../config.js';
+import invites from './invites.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
-import invites from './invites.js';
 
 // Variables -------------------------------------------------------------
 

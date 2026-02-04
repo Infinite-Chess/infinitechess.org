@@ -5,15 +5,15 @@
  * including voids, and mini images.
  */
 
+import type { Mesh } from './piecemodels.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { Mesh } from './piecemodels.js';
 
-import spritesheet from './spritesheet.js';
-import { createRenderable } from '../../webgl/Renderable.js';
-import piecemodels from './piecemodels.js';
-import miniimage from './miniimage.js';
 import meshes from './meshes.js';
+import miniimage from './miniimage.js';
+import spritesheet from './spritesheet.js';
+import piecemodels from './piecemodels.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 
 // Variables ---------------------------------------------------------------------
 

@@ -6,22 +6,23 @@
  */
 
 // @ts-ignore
-import mat4 from './gl-matrix.js';
-import guipause from '../gui/guipause.js';
-import toast from '../gui/toast.js';
-import webgl from './webgl.js';
-import camera, { Mat4 } from './camera.js';
-import { Renderable, createRenderable } from '../../webgl/Renderable.js';
-import selection from '../chess/selection.js';
-import frametracker from './frametracker.js';
-import config from '../config.js';
-import preferences from '../../components/header/preferences.js';
-import gameslot from '../chess/gameslot.js';
-import docutil from '../../util/docutil.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
-import { Mouse } from '../input.js';
 
 import type { Color } from '../../../../../shared/util/math/math.js';
+
+import mat4 from './gl-matrix.js';
+import toast from '../gui/toast.js';
+import webgl from './webgl.js';
+import config from '../config.js';
+import docutil from '../../util/docutil.js';
+import guipause from '../gui/guipause.js';
+import gameslot from '../chess/gameslot.js';
+import selection from '../chess/selection.js';
+import preferences from '../../components/header/preferences.js';
+import frametracker from './frametracker.js';
+import camera, { Mat4 } from './camera.js';
+import { Mouse } from '../input.js';
+import { Renderable, createRenderable } from '../../webgl/Renderable.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 
 /** Whether perspective mode is enabled. */
 let enabled = false;

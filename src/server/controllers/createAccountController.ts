@@ -9,25 +9,24 @@
  * a specific username or email is available.
  */
 
-// @ts-ignore this package has no type definitions
-import emailValidator from 'node-email-verifier';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
+import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
-
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
+
+import validators from '../../shared/util/validators.js';
 import { handleLogin } from './loginController.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
+import { sendEmailConfirmation } from './sendMail.js';
 import {
 	addUser,
 	isEmailTaken,
 	isUsernameTaken,
 	SQLITE_CONSTRAINT_ERROR,
 } from '../database/memberManager.js';
-import { sendEmailConfirmation } from './sendMail.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import validators from '../../shared/util/validators.js';
-import { isBlacklisted } from '../database/blacklistManager.js';
 
 // Variables -------------------------------------------------------------------------
 

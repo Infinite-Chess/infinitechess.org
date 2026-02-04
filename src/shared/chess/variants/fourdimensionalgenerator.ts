@@ -7,15 +7,15 @@
  * Also generates their moveset, and specialVicinity, overrides.
  */
 
-import type { Movesets, RawMovesets } from '../logic/movesets.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
+import type { Movesets, RawMovesets } from '../logic/movesets.js';
 
-import coordutil from '../util/coordutil.js';
-import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
-import { rawTypes as r, ext as e } from '../util/typeutil.js';
-import icnconverter from '../logic/icn/icnconverter.js';
 import bimath from '../../util/math/bimath.js';
 import movesets from '../logic/movesets.js';
+import coordutil from '../util/coordutil.js';
+import icnconverter from '../logic/icn/icnconverter.js';
+import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
+import { rawTypes as r, ext as e } from '../util/typeutil.js';
 
 /** An object that contains all relevant quantities for the size of a single 4D chess board. */
 type Dimensions = {

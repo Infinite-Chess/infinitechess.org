@@ -8,8 +8,6 @@
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// Type Definitions ------------------------------------------------------------
-
 /**
  * A length-2 array of coordinates: `[x,y]`
  * Contains infinite precision integers, represented as BigInt.

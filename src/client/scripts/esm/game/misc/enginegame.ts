@@ -4,27 +4,25 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import selection from '../chess/selection.js';
-import checkmatepractice from '../chess/checkmatepractice.js';
-import gameslot from '../chess/gameslot.js';
-import movesequence from '../chess/movesequence.js';
-import gamecompressor from '../chess/gamecompressor.js';
+import toast from '../gui/toast.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
-import { animateMove } from '../chess/graphicalchanges.js';
+import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
-import perspective from '../rendering/perspective.js';
-import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
-import squarerendering from '../rendering/highlights/squarerendering.js';
+import selection from '../chess/selection.js';
+import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+import movesequence from '../chess/movesequence.js';
 import frametracker from '../rendering/frametracker.js';
+import gamecompressor from '../chess/gamecompressor.js';
+import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+import squarerendering from '../rendering/highlights/squarerendering.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
+import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import { GameBus } from '../GameBus.js';
-import toast from '../gui/toast.js';
-
-// Type Definitions -------------------------------------------------------------
+import { animateMove } from '../chess/graphicalchanges.js';
 
 /** List of valid engines */
 type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added

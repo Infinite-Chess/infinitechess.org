@@ -1,5 +1,3 @@
-// src/server/types.ts
-
 import type { Role } from './controllers/roles';
 
 import { Request } from 'express';

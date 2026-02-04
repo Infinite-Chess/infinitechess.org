@@ -4,12 +4,12 @@
  * This script handles the incoming general websocket message route.
  */
 
+import type { CustomWebSocket } from './socketUtility.js';
+
 import * as z from 'zod';
 
-import { subToInvitesList, unsubFromInvitesList } from '../game/invitesmanager/invitesmanager.js';
 import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
-
-import type { CustomWebSocket } from './socketUtility.js';
+import { subToInvitesList, unsubFromInvitesList } from '../game/invitesmanager/invitesmanager.js';
 
 const validUnsubs = ['invites', 'game'] as const;
 

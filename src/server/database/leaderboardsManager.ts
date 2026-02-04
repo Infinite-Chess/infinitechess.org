@@ -4,20 +4,19 @@
  * This script handles queries to the leaderboards table.
  */
 
-import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import type { RunResult } from 'better-sqlite3'; // Import necessary types
+
+import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
+
 import db from './database.js';
+import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import {
 	DEFAULT_LEADERBOARD_ELO,
 	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
 } from '../game/gamemanager/ratingcalculation.js';
-import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
-
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
-import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
-
-// Type Definitions -----------------------------------------------------------------------------------
 
 /** Structure of a leaderboard entry record for a user. */
 interface LeaderboardEntry {

@@ -10,8 +10,8 @@
 
 import type { Role } from '../roles.js';
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
 import jwt from 'jsonwebtoken';
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /** The payload of the JWT token, containing user information. */
 interface TokenPayload {

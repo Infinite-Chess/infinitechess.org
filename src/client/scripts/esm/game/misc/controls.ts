@@ -5,36 +5,36 @@
  * via the WASD keys, space/shift, and mouse wheel.
  */
 
-import guipause from '../gui/guipause.js';
+import type { Mesh } from '../rendering/piecemodels.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+
 import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
-import websocket from '../websocket.js';
-import loadbalancer from './loadbalancer.js';
-import camera from '../rendering/camera.js';
-import perspective from '../rendering/perspective.js';
-import copygame from '../chess/copygame.js';
-import docutil from '../../util/docutil.js';
 import mouse from '../../util/mouse.js';
-import guipromotion from '../gui/guipromotion.js';
-import boarddrag from '../rendering/boarddrag.js';
-import boardpos from '../rendering/boardpos.js';
-import selection from '../chess/selection.js';
+import camera from '../rendering/camera.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import animation from '../rendering/animation.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import piecemodels from '../rendering/piecemodels.js';
-import guinavigation from '../gui/guinavigation.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import miniimage from '../rendering/miniimage.js';
-import boardeditor from '../boardeditor/boardeditor.js';
+import docutil from '../../util/docutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
+import guipause from '../gui/guipause.js';
+import copygame from '../chess/copygame.js';
+import boardpos from '../rendering/boardpos.js';
+import websocket from '../websocket.js';
+import boarddrag from '../rendering/boarddrag.js';
+import selection from '../chess/selection.js';
+import animation from '../rendering/animation.js';
+import miniimage from '../rendering/miniimage.js';
 import Transition from '../rendering/transitions/Transition.js';
 import enginegame from './enginegame.js';
+import perspective from '../rendering/perspective.js';
+import piecemodels from '../rendering/piecemodels.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import loadbalancer from './loadbalancer.js';
+import guipromotion from '../gui/guipromotion.js';
+import guinavigation from '../gui/guinavigation.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { listener_document } from '../chess/game.js';
-
-import type { Mesh } from '../rendering/piecemodels.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 // Constants -------------------------------------------------------------------
 

@@ -6,22 +6,22 @@
  * Enable by pressing `7`.
  */
 
-import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
-import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import toast from '../../gui/toast.js';
+import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
+import boardpos from '../boardpos.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import piecemodels from '../piecemodels.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import boardpos from '../boardpos.js';
 import legalmoveshapes from '../instancedshapes.js';
-import piecemodels from '../piecemodels.js';
 import squarerendering from './squarerendering.js';
-import meshes from '../meshes.js';
-import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 import { GameBus } from '../../GameBus.js';
+import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables -------------------------------------------------------------------------------------
 

@@ -12,8 +12,6 @@
 
 import { createLFO, LFOConfig } from './LFOFactory';
 
-// Type Definitions ------------------------------------------------------------------
-
 /** A single sound layer within a soundscape. */
 export interface LayerConfig {
 	volume: ModulatedParamConfig;

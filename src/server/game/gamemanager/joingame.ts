@@ -5,11 +5,11 @@
  * message, and if so, sends them the game info
  */
 
-import gameutility from './gameutility.js';
-import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
-import { getGameBySocket } from './gamemanager.js';
-
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import gameutility from './gameutility.js';
+import { getGameBySocket } from './gamemanager.js';
+import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 
 /**
  * The method that fires when a client sends the 'joingame' command after refreshing the page.

@@ -11,13 +11,13 @@
  * Grid space: 1 unit = width of 1 square
  */
 
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
+import board from '../rendering/boardtiles.js';
 import camera from '../rendering/camera.js';
 import boardpos from '../rendering/boardpos.js';
-import board from '../rendering/boardtiles.js';
-
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 const HALF: BigDecimal = bd.fromNumber(0.5);
 

@@ -8,12 +8,10 @@
  * And unsubbing a socket from subscriptions.
  */
 
-import { handleUnsubbing } from './generalrouter.js';
-import uuid from '../../shared/util/uuid.js';
-
-// Type Definitions ---------------------------------------------------------------------------
-
 import type { CustomWebSocket } from './socketUtility.js';
+
+import uuid from '../../shared/util/uuid.js';
+import { handleUnsubbing } from './generalrouter.js';
 
 // Variables ---------------------------------------------------------------------------
 

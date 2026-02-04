@@ -11,12 +11,12 @@
  * ALWAYS has a stride length of 6 (x,y, r,g,b,a)
  */
 
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import board from './boardtiles.js';
-import primitives from './primitives.js';
 import meshes from './meshes.js';
+import primitives from './primitives.js';
 
 // Variables ------------------------------------------------------------------------------
 

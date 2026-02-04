@@ -8,9 +8,9 @@ import type { Snapshot } from './gamefile.js';
 import type { MetaData } from '../util/metadata.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { GlobalGameState } from './state.js';
 import type { PieceMoveset } from './movesets.js';
 import type { RawTypeGroup } from '../util/typeutil.js';
+import type { GlobalGameState } from './state.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 
 import variant from '../variants/variant.js';

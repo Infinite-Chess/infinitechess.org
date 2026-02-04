@@ -17,8 +17,6 @@ import validatorama from '../util/validatorama.js';
 import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
-// --- Type Definitions ---
-
 interface MemberData {
 	joined: string;
 	seen: string;

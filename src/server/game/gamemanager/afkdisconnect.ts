@@ -6,14 +6,11 @@
  * and the disconnection timer when they leave the page / lose internet.
  */
 
-// Custom imports
-
-import gameutility from './gameutility.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-
-// Type imports
-import type { MatchInfo, ServerGame } from './gameutility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { MatchInfo, ServerGame } from './gameutility.js';
+
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import gameutility from './gameutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 

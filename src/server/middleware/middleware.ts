@@ -1,5 +1,3 @@
-// src/server/middleware/middleware.ts
-
 /**
  * This module configures the middleware waterfall of our server
  */
@@ -11,47 +9,47 @@ import cors from 'cors';
 import helmet from 'helmet';
 import express from 'express';
 import i18next from 'i18next';
-import EditorSavesAPI from '../api/EditorSavesAPI.js';
+import cookieParser from 'cookie-parser';
 import { handle } from 'i18next-http-middleware';
 import { fileURLToPath } from 'node:url';
 
-import cookieParser from 'cookie-parser';
-import secureRedirect from './secureRedirect.js';
-import errorHandler from './errorHandler.js';
 import send404 from './send404.js';
+import errorHandler from './errorHandler.js';
+import EditorSavesAPI from '../api/EditorSavesAPI.js';
+import secureRedirect from './secureRedirect.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 import { rootRouter } from '../routes/root.js';
-import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
-import { verifyAccount } from '../controllers/verifyAccountController.js';
-import { requestConfirmEmail } from '../controllers/sendMail.js';
-import { getMemberData } from '../api/MemberAPI.js';
-import { handleLogout } from '../controllers/logoutController.js';
-import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
-import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { handleLogin } from '../controllers/loginController.js';
+import { handleLogout } from '../controllers/logoutController.js';
+import { verifyAccount } from '../controllers/verifyAccountController.js';
+import { getMemberData } from '../api/MemberAPI.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
-import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from '../api/AdminPanel.js';
 import { getContributors } from '../api/GitHub.js';
-import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
+import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
+import { getLeaderboardData } from '../api/LeaderboardAPI.js';
+import { requestConfirmEmail } from '../controllers/sendMail.js';
+import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
+import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
 import {
-	createAccountLimiter,
-	resendAccountVerificationLimiter,
-	forgotPasswordLimiter,
-} from './rateLimiters.js';
-import {
 	checkEmailValidity,
 	checkUsernameAvailable,
 	createNewMember,
 } from '../controllers/createAccountController.js';
+import {
+	createAccountLimiter,
+	resendAccountVerificationLimiter,
+	forgotPasswordLimiter,
+} from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
 

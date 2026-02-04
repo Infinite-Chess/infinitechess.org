@@ -4,15 +4,14 @@
  * This script handles queries to the player_games table.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
-import db from './database.js';
-import { allPlayerGamesColumns } from './databaseTables.js';
-
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
+
 import type { Player } from '../../shared/chess/util/typeutil.js';
 
-// Type Definitions -----------------------------------------------------------------------------------
+import db from './database.js';
+import jsutil from '../../shared/util/jsutil.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import { allPlayerGamesColumns } from './databaseTables.js';
 
 /** Structure of a player_games record. This is all allowed columns of a (user_id, game_id). */
 interface PlayerGamesRecord {

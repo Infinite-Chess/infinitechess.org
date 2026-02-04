@@ -8,8 +8,6 @@
  * [World Space] - DOES NOT require positional or scale transformations when rendering.
  */
 
-import bd, { BigDecimal } from '@naviary/bigdecimal';
-
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type {
 	BoundingBox,
@@ -17,19 +15,21 @@ import type {
 	DoubleBoundingBox,
 } from '../../../../../shared/util/math/bounds.js';
 
-import boardtiles from './boardtiles.js';
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
+import bounds from '../../../../../shared/util/math/bounds.js';
 import boardpos from './boardpos.js';
-import spritesheet from './spritesheet.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
+import spritesheet from './spritesheet.js';
 import perspective from './perspective.js';
-import { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../shared/chess/util/coordutil.js';
-import bounds from '../../../../../shared/util/math/bounds.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 // Constants -------------------------------------------------------------------------
 

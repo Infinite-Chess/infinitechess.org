@@ -14,19 +14,19 @@ import type {
 } from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../util/mouse';
-import arrows from '../../../rendering/arrows/arrows';
-import stoolgraphics from './stoolgraphics';
-import { Mouse } from '../../../input';
-import { listener_document, listener_overlay } from '../../../chess/game';
-import meshes from '../../../rendering/meshes';
-import bimath from '../../../../../../../shared/util/math/bimath';
 import sfill from './sfill';
 import sdrag from './sdrag';
-import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
-import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import arrows from '../../../rendering/arrows/arrows';
+import meshes from '../../../rendering/meshes';
+import bimath from '../../../../../../../shared/util/math/bimath';
 import gameslot from '../../../chess/gameslot';
+import boardutil from '../../../../../../../shared/chess/util/boardutil';
 import boardeditor from '../../boardeditor';
+import stoolgraphics from './stoolgraphics';
+import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
 import stransformations from './stransformations';
+import { Mouse } from '../../../input';
+import { listener_document, listener_overlay } from '../../../chess/game';
 
 // State ----------------------------------------------
 

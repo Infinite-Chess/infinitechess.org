@@ -5,11 +5,20 @@
  */
 
 import type WebSocket from 'ws';
-import type { CustomWebSocket } from './socketUtility.js';
 import type { IncomingMessage } from 'http';
 
+import type { CustomWebSocket } from './socketUtility.js';
+
 import socketUtility from './socketUtility.js';
+import { onclose } from './closeSocket.js';
+import { onmessage } from './receiveSocketMessage.js';
+import { GAME_VERSION } from '../../shared/game_version.js';
+import { executeSafely } from '../utility/errorGuard.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
+import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 import {
 	addConnectionToConnectionLists,
 	doesClientHaveMaxSocketCount,
@@ -17,14 +26,6 @@ import {
 	generateUniqueIDForSocket,
 	terminateAllIPSockets,
 } from './socketManager.js';
-import { onmessage } from './receiveSocketMessage.js';
-import { onclose } from './closeSocket.js';
-import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { GAME_VERSION } from '../../shared/game_version.js';
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
-import { executeSafely } from '../utility/errorGuard.js';
 
 // Variables ---------------------------------------------------------------------------
 

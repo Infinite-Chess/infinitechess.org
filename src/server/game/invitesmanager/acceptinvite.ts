@@ -5,18 +5,21 @@
  * creating a new game if successful.
  */
 
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import * as z from 'zod';
 
-import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
-import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
-import { getTranslation } from '../../utility/translate.js';
-import { memberInfoEq } from './inviteutility.js';
+import gameutility from '../gamemanager/gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
+import { memberInfoEq } from './inviteutility.js';
+import { getTranslation } from '../../utility/translate.js';
+import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import {
 	getInviteAndIndexByID,
 	deleteInviteByIndex,
@@ -25,9 +28,6 @@ import {
 	onPublicInvitesChange,
 	IDLengthOfInvites,
 } from './invitesmanager.js';
-import gameutility from '../gamemanager/gameutility.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /** The zod schema for validating the contents of the acceptinvite message. */
 const acceptinviteschem = z.strictObject({

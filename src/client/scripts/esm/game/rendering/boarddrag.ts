@@ -10,21 +10,19 @@ import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/co
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import mouse from '../../util/mouse.js';
-import boardpos from './boardpos.js';
-import guipromotion from '../gui/guipromotion.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
+import boardpos from './boardpos.js';
+import drawrays from './highlights/annotations/drawrays.js';
+import keybinds from '../misc/keybinds.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import perspective from './perspective.js';
+import selection from '../chess/selection.js';
 import Transition from './transitions/Transition.js';
 import drawarrows from './highlights/annotations/drawarrows.js';
-import drawrays from './highlights/annotations/drawrays.js';
-import selection from '../chess/selection.js';
-import keybinds from '../misc/keybinds.js';
+import perspective from './perspective.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import guipromotion from '../gui/guipromotion.js';
 import { listener_overlay } from '../chess/game.js';
-
-// Types -------------------------------------------------------------
 
 /**
  * A board position/scale entry, used for calculating its velocity

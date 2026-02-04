@@ -1,16 +1,17 @@
 // src/server/controllers/passwordResetController.ts
 
-import { Request, Response } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
+import { Request, Response } from 'express';
+
 import db from '../database/database.js';
-import { sendPasswordResetEmail } from './sendMail.js';
-import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
+import { sendPasswordResetEmail } from './sendMail.js';
+import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
+import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 

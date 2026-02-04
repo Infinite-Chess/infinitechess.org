@@ -9,12 +9,12 @@
  * It also takes into account special rights.
  */
 
-import type { FullGame } from './gamefile.js';
 import type { Move } from './movepiece.js';
+import type { FullGame } from './gamefile.js';
 import type { StateChange } from './state.js';
 
-import boardchanges from './boardchanges.js';
 import typeutil from '../util/typeutil.js';
+import boardchanges from './boardchanges.js';
 import { players, rawTypes } from '../util/typeutil.js';
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */

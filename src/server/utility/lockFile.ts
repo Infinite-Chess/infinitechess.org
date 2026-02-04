@@ -10,8 +10,8 @@
  * try to read/write the members file at the same time.
  */
 
-import lockfile from 'proper-lockfile';
 import fs from 'fs/promises';
+import lockfile from 'proper-lockfile';
 
 // Locks the file while reading, then immediately unlocks and returns the data.
 // MUST BE CALLED WITH 'await' or this returns a promise!

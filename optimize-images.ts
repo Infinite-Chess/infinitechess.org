@@ -16,10 +16,10 @@
  * in `src/client/img/` will be skipped. This is because sometimes we only need one format.
  */
 
-import sharp from 'sharp';
-import { existsSync, readdirSync, statSync, mkdirSync } from 'node:fs';
 import path from 'path';
+import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
+import { existsSync, readdirSync, statSync, mkdirSync } from 'node:fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

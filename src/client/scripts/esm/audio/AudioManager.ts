@@ -4,12 +4,10 @@
  * This module is responsible for creating and playing sounds using the Web Audio API.
  */
 
-import preferences from '../components/header/preferences';
 import AudioUtils from './AudioUtils';
-import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
+import preferences from '../components/header/preferences';
 import { DownsamplerNode } from './processors/downsampler/DownsamplerNode';
-
-// Type Definitions ----------------------------------------------------------------------------------
+import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
 
 type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode };
 
