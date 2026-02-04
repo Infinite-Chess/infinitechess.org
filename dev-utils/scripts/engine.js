@@ -92,7 +92,7 @@ const engine = (function () {
 	 */
 	function loneBlackKingEval(gamefile) {
 		let evaluation = 0;
-		const kingCoords = gamefile.pieces.kingsB[0];
+		const kingCoords = gamefile.pieces.kingsB[0]
 		const piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, 'kingsB', kingCoords);
 		const kingLegalMoves = legalmoves.calculate(gamefile, piece);
 		evaluation += kingLegalMoves.individual.length;
