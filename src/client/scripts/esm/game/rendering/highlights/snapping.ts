@@ -8,7 +8,6 @@
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
 import guipause from '../../gui/guipause.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';

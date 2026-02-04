@@ -8,7 +8,6 @@ import { IncomingMessage } from 'http';
 import WebSocket from 'ws';
 
 import { onConnectionRequest } from './openSocket.js';
-// @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 
 // Type Definitions...

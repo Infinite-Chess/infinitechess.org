@@ -23,6 +23,7 @@ import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
+import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 
 import perspective from '../rendering/perspective.js';
 import Transition from '../rendering/transitions/Transition.js';
@@ -121,7 +122,7 @@ function update(): void {
 async function startLocalGame(options: {
 	/** Must be one of the valid variants in variant.ts */
 	Variant: string;
-	TimeControl: MetaData['TimeControl'];
+	TimeControl: TimeControl;
 }): Promise<void> {
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
@@ -232,7 +233,7 @@ async function startEngineGame(options: {
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
-	TimeControl?: MetaData['TimeControl'];
+	TimeControl?: TimeControl;
 	youAreColor: Player;
 	currentEngine: validEngineName;
 	engineConfig: EngineConfig;

@@ -1,6 +1,5 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/OceanZone.ts
 
-// @ts-ignore
 import loadbalancer from '../../../misc/loadbalancer';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 import { ProgramManager } from '../../../../webgl/ProgramManager';

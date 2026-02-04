@@ -5,27 +5,24 @@
  * the game they are in, and does basic checks to make sure it's valid.
  */
 
-import * as z from 'zod';
-
-// Middleware imports
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
-// @ts-ignore
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import { declineDraw } from './onOfferDraw.js';
-import { resyncToGame } from './resync.js';
-import { pushGameClock, setGameConclusion } from './gamemanager.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import gameutility, { ServerGame } from './gameutility.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import socketUtility from '../../socket/socketUtility.js';
-import bimath from '../../../shared/util/math/bimath.js';
-
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
+
+import * as z from 'zod';
+
+import winconutil from '../../../shared/chess/util/winconutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import socketUtility from '../../socket/socketUtility.js';
+import bimath from '../../../shared/util/math/bimath.js';
+import gameutility, { ServerGame } from './gameutility.js';
+import { declineDraw } from './onOfferDraw.js';
+import { resyncToGame } from './resync.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { pushGameClock, setGameConclusion } from './gamemanager.js';
 
 /** The zod schema for validating the contents of the submitmove message. */
 const submitmoveschem = z.strictObject({

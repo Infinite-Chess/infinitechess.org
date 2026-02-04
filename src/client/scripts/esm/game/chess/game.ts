@@ -10,7 +10,6 @@ import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 
-// @ts-ignore
 import invites from '../misc/invites.js';
 import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';

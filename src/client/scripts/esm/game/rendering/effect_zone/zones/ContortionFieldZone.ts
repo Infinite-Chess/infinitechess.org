@@ -1,6 +1,5 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/ContortionFieldZone.ts
 
-// @ts-ignore
 import loadbalancer from '../../../misc/loadbalancer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';

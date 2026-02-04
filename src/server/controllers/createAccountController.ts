@@ -9,15 +9,15 @@
  * a specific username or email is available.
  */
 
+// @ts-ignore this package has no type definitions
+import emailValidator from 'node-email-verifier';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
-import bcrypt from 'bcrypt';
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
 import { handleLogin } from './loginController.js';
 import { getTranslationForReq } from '../utility/translate.js';
-// @ts-ignore
-import emailValidator from 'node-email-verifier';
 import {
 	addUser,
 	isEmailTaken,

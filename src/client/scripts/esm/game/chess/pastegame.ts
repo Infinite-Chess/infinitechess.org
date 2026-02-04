@@ -4,7 +4,6 @@
  * This script handles pasting games
  */
 
-// @ts-ignore
 import guipause from '../gui/guipause.js';
 import toast from '../gui/toast.js';
 import websocket from '../websocket.js';

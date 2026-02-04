@@ -10,7 +10,6 @@
 
 import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-// @ts-ignore
 import guipause from '../../gui/guipause.js';
 import toast from '../../gui/toast.js';
 import websocket from '../../websocket.js';

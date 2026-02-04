@@ -11,7 +11,6 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
 import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
-// @ts-ignore
 import guipause from '../gui/guipause.js';
 import gameslot from './gameslot.js';
 import droparrows from '../rendering/dragging/droparrows.js';

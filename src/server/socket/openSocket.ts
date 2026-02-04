@@ -23,9 +23,7 @@ import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { GAME_VERSION } from '../../shared/game_version.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-// @ts-ignore
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
-// @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 
 // Variables ---------------------------------------------------------------------------

@@ -16,7 +16,7 @@ import clockutil from '../util/clockutil.js';
 // Type Definitions ---------------------------------------------------------------
 
 import type { PlayerGroup } from '../util/typeutil.js';
-import type { MetaData } from '../util/metadata.js';
+import type { TimeControl } from '../util/metadata.js';
 import type { ClockDependant, Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
@@ -85,7 +85,7 @@ type ClockData = {
  * Sets the clocks. If no current clock values are specified, clocks will
  * be set to the starting values, according to the game's TimeControl metadata.
  */
-function init(players: Iterable<Player>, time_control: MetaData['TimeControl']): ClockDependant {
+function init(players: Iterable<Player>, time_control: TimeControl): ClockDependant {
 	const untimed = clockutil.isClockValueInfinite(time_control);
 	if (untimed) return { untimed: true, clocks: undefined };
 	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(time_control)!; // { minutes, increment }

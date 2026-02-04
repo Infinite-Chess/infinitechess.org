@@ -11,7 +11,6 @@ import type {
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-// @ts-ignore
 import guiplay from '../../gui/guiplay.js';
 import toast from '../../gui/toast.js';
 import websocket, { WebsocketMessage } from '../../websocket.js';

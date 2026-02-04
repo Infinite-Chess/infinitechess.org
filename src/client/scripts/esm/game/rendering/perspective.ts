@@ -7,7 +7,6 @@
 
 // @ts-ignore
 import mat4 from './gl-matrix.js';
-// @ts-ignore
 import guipause from '../gui/guipause.js';
 import toast from '../gui/toast.js';
 import webgl from './webgl.js';

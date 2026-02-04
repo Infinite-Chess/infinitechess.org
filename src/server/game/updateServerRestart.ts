@@ -7,17 +7,12 @@
  * The actual reading is done in src/server/game/invitesmanager
  */
 
-// System imports
 import fs from 'fs';
 import path from 'path';
 
-// Middleware imports
 import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-
-// Custom imports
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
-// @ts-ignore
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
 //--------------------------------------------------------------------------------------------------------

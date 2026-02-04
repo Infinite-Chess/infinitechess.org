@@ -1,6 +1,5 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/DustyWastesZone.ts
 
-// @ts-ignore
 import loadbalancer from '../../../misc/loadbalancer';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { GlitchPass } from '../../../../webgl/post_processing/passes/GlitchPass';

@@ -5,7 +5,6 @@
  * via the WASD keys, space/shift, and mouse wheel.
  */
 
-// @ts-ignore
 import guipause from '../gui/guipause.js';
 import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';

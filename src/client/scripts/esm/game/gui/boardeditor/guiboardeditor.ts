@@ -9,7 +9,6 @@ import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
-// @ts-ignore
 import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';

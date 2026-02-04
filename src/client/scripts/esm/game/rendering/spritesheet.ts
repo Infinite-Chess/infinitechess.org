@@ -84,7 +84,6 @@ function getSpritesheetDataTexLocation(type: number): DoubleCoords {
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Board): Promise<void> {
 	// Filter our voids from all types in the game.
-	// @ts-ignore
 	const types: number[] = boardsim.existingTypes.filter(
 		(type) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type)),
 	);

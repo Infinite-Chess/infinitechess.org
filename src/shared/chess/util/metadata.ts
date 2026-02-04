@@ -7,20 +7,13 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import { Rating } from '../../../server/database/leaderboardsManager.js';
-import { players } from './typeutil.js';
-
+import type { Rating } from '../../../server/database/leaderboardsManager.js';
+import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { Player } from './typeutil.js';
 
-// Type Definitions ---------------------------------------------------------------
+import { players } from './typeutil.js';
 
-/**
- * The clock value for the game, in the form `"s+s"`, where the left
- * is start time in seconds, and the right is increment in seconds.
- *
- * If the game is untimed, this should be `"-"`
- */
-type TimeControl = `${number}+${number}` | '-';
+// Type Definitions ---------------------------------------------------------------
 
 interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */

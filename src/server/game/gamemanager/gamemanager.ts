@@ -7,17 +7,13 @@
 // System imports
 import WebSocket from 'ws';
 
-// @ts-ignore
 import { executeSafely_async } from '../../utility/errorGuard.js';
-// @ts-ignore
 import {
 	incrementActiveGameCount,
 	decrementActiveGameCount,
 	printActiveGameCount,
 } from './gamecount.js';
-// @ts-ignore
 import { closeDrawOffer } from './drawoffers.js';
-// @ts-ignore
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import gameutility from './gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';

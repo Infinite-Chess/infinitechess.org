@@ -94,7 +94,6 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
 function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vicinity {
-	// @ts-ignore
 	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(metadata);
 	const vicinity = {} as Vicinity;
 	// Object keys are strings, so we need to cast the type to a number

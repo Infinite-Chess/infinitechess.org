@@ -25,11 +25,8 @@ import {
 } from '../../../shared/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
-// @ts-ignore
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
-// @ts-ignore
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-// @ts-ignore
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import clock from '../../../shared/chess/logic/clock.js';
 
@@ -39,7 +36,7 @@ import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../shared/chess/util/metadata.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -391,7 +388,7 @@ function getRatingDataForGamePlayers(
 function constructMetadataOfGame(
 	rated: boolean,
 	variant: string,
-	clock: MetaData['TimeControl'],
+	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
 	const RatedOrCasual = rated ? 'Rated' : 'Casual';

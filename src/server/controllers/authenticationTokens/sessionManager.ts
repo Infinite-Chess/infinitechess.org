@@ -5,7 +5,6 @@
  * It uses secure cookies and interacts with the `refreshTokenManager` for database operations.
  */
 
-// @ts-ignore
 import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
