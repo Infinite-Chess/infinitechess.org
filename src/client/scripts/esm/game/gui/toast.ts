@@ -1,8 +1,19 @@
 // src/client/scripts/esm/game/gui/toast.ts
 
 /**
- * This script handles the showing and hiding of toast (status message) at the bottom of the page
+ * This script displays the toast (status message) on the bottom of the page.
  */
+
+// Types --------------------------------------------------------
+
+interface ToastOptions {
+	/** Whether the toast indicates an error. The backdrop will be red. */
+	error?: boolean;
+	/** Overrides the default duration of the toast. */
+	durationMillis?: number;
+	/** Multiplies the duration of the toast. */
+	durationMultiplier?: number;
+}
 
 // Elements ----------------------------------------------------------
 
@@ -22,12 +33,40 @@ const FADE_DURATION = 1000;
 // Variables ---------------------------------------------------------
 
 /**
- * Weight of visibility for the status message.
- * When it is 0, the status message is hidden.
+ * Weight of visibility for the toast.
+ * When it is 0, it is hidden.
  */
 let visibilityWeight = 0;
 
 // Functions ---------------------------------------------------------
+
+function showToast(text: string, options: ToastOptions = {}): void {
+	// Safety net in case `text` was provided by an undefined translation of the `any` type:
+	if (typeof text !== 'string') {
+		console.warn('Unable to show toast: Not a string.');
+		return;
+	}
+
+	const { error = false, durationMillis, durationMultiplier = 1 } = options;
+
+	const duration =
+		durationMillis ?? (DURATION_BASE + text.length * DURATION_MULTIPLIER) * durationMultiplier;
+
+	fadeAfter(duration);
+
+	statusText.textContent = text;
+	statusText.classList.remove('fade-out-1s');
+	statusMessage.classList.remove('hidden');
+
+	if (error) {
+		statusText.classList.remove('ok');
+		statusText.classList.add('error');
+		console.error(text);
+	} else {
+		statusText.classList.remove('error');
+		statusText.classList.add('ok');
+	}
+}
 
 /**
  * Display a status message on-screen, auto-calculating its duration.
@@ -70,7 +109,7 @@ function showStatusForDuration(text: string, durationMillis: number, isError = f
 }
 
 /**
- * Fades out the status message after the provided time,
+ * Fades the current toast after the provided time,
  * if no new messages have been displayed in the meantime.
  */
 function fadeAfter(ms: number): void {
@@ -83,7 +122,7 @@ function fadeAfter(ms: number): void {
 }
 
 /**
- * Hides the status message after the provided time,
+ * Hides the current toast after the provided time,
  * if no new messages have been displayed in the meantime.
  */
 function hideAfter(ms: number): void {
@@ -95,7 +134,7 @@ function hideAfter(ms: number): void {
 	}, ms);
 }
 
-/** Shows a status message stating to please wait to perform this task. */
+/** Shows a toast message stating to please wait to perform this task. */
 function pleaseWaitForTask(): void {
 	showStatus(translations['please_wait'], false, 0.5);
 }
@@ -103,6 +142,8 @@ function pleaseWaitForTask(): void {
 // Exports -----------------------------------------------------------
 
 export default {
+	showToast,
+
 	showStatus,
 	showStatusForDuration,
 	pleaseWaitForTask,

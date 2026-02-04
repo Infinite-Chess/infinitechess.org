@@ -245,7 +245,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 				1.5,
 			);
 		} else {
-			// Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
+			// Only print "Loaded game from clipboard." if we haven't already shown a different toast cause of too many pieces
 			toast.showStatus(
 				`${translations['copypaste'].loaded_from_clipboard}${privateMatchWarning}`,
 			);

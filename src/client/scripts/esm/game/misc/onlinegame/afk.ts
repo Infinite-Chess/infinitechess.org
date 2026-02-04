@@ -53,8 +53,7 @@ let timeOpponentLoseFromAFK: number | undefined;
 /** The timeout ID of the timer to display the next "Opponent is AFK..." message. */
 let displayOpponentAFKTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
-// If we lost connection while displaying status messages of when our opponent
-// will disconnect, stop doing that.
+// If we lost connection while displaying toast status messages of when our opponent will disconnect, stop doing that.
 document.addEventListener('connection-lost', () => {
 	// Stop saying when the opponent will lose from being afk
 	clearTimeout(displayOpponentAFKTimeoutID);
