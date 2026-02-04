@@ -399,8 +399,8 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual({
 				icn: 'test-icn-data',
-				pawn_double_push: 1,
-				castling: 0,
+				pawn_double_push: true,
+				castling: false,
 			});
 		});
 
@@ -434,8 +434,8 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual({
 				icn: 'test-icn-spaces',
-				pawn_double_push: 0,
-				castling: 1,
+				pawn_double_push: false,
+				castling: true,
 			});
 		});
 

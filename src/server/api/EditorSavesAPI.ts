@@ -187,8 +187,8 @@ function getPosition(req: Request, res: Response): void {
 
 		res.json({
 			icn: position.icn,
-			pawn_double_push: position.pawn_double_push,
-			castling: position.castling,
+			pawn_double_push: Boolean(position.pawn_double_push),
+			castling: Boolean(position.castling),
 		});
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
