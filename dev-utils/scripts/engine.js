@@ -31,7 +31,7 @@ const engine = (function () {
 				// intersections.add([(y - b1) / m1, y]);
 				// but because m1 is either 1 or -1 multiplying is the same as dividing
 				// and dividing is known to be slower.
-				intersections.add(`${(y - b1) * m1},${y}`);
+				intersections.add(`${(y - b1) * m1},${y}`)
 			}
 
 			// calculate its intersections with all vertical lines
