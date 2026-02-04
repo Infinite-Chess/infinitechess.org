@@ -1,6 +1,9 @@
 // src/client/scripts/esm/game/gui/guipause.ts
 
-// Import Start
+/**
+ * This script handles our Pause menu
+ */
+
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
 import toast from './toast.js';
@@ -22,11 +25,6 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import { listener_document } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import { GameBus } from '../GameBus.js';
-// Import End
-
-/**
- * This script handles our Pause menu
- */
 
 // Types --------------------------------------------------------
 
