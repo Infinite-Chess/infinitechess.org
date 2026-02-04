@@ -106,6 +106,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
+    "**/*.ts": "tsx scripts/organize-imports.ts",
     "**/*": "prettier --write --ignore-unknown"
   }
 }
