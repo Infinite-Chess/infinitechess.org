@@ -31,6 +31,8 @@ import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/t
 import { GameBus } from '../GameBus.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
+// Type Definitions -----------------------------------------------------------------------
+
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {
 	start: BDCoords;

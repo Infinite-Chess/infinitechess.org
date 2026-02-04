@@ -9,6 +9,8 @@
 
 import type { Color } from '../../../../../shared/util/math/math';
 
+// Types -------------------------------------------------------------
+
 /** HSL Color representation */
 interface HSLColor {
 	/** Hue (0 - 360) */

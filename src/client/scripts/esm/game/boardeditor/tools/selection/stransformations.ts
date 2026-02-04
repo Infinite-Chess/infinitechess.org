@@ -24,6 +24,8 @@ import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardut
 import boardeditor, { Edit } from '../../boardeditor';
 import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
 
+// Type Definitions ----------------------------------------------------------
+
 /** A Piece object that also remembers its specialrights state. */
 interface StatePiece extends Piece {
 	specialrights: boolean;

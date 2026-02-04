@@ -11,6 +11,8 @@ import docutil from './docutil.js';
 import metadata from '../../../../shared/chess/util/metadata.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
+// Types ----------------------------------------------------------------------------------------
+
 /**
  * Such an object contains all display information for a given user
  */

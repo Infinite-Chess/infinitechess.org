@@ -25,6 +25,8 @@ import organizedpieces from './organizedpieces.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
 import typeutil, { players, rawTypes } from '../util/typeutil.js';
 
+// Type Definitions ----------------------------------------------------------------
+
 /**
  * The negative/positive vector step-limit of a sliding direction.
  *

@@ -38,6 +38,8 @@ import {
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
+// Type Definitions -----------------------------------------------------------------------------
+
 type ServerGameMoveMessage = { compact: string; clockStamp?: number };
 
 /** The message contents expected when we send a websocket 'move' message.  */

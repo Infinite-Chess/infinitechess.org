@@ -24,6 +24,8 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import guipromotion from '../gui/guipromotion.js';
 import { listener_overlay } from '../chess/game.js';
 
+// Types -------------------------------------------------------------
+
 /**
  * A board position/scale entry, used for calculating its velocity
  * for throwing the board after dragging it.

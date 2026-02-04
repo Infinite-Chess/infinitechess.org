@@ -1,3 +1,5 @@
+// src/server/middleware/middleware.ts
+
 /**
  * This module configures the middleware waterfall of our server
  */

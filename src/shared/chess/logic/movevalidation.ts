@@ -11,6 +11,8 @@ import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 import { FullGame } from './gamefile.js';
 
+// Type Definitions ------------------------------------------------------------
+
 type MoveValidationResult = { valid: true; draft: MoveDraft } | { valid: false; reason: string };
 type ConclusionValidityResult = { valid: true } | { valid: false; reason: string };
 

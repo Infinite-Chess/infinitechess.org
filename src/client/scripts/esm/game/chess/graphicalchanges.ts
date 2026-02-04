@@ -18,6 +18,8 @@ import animation from '../rendering/animation.js';
 import piecemodels from '../rendering/piecemodels.js';
 import preferences from '../../components/header/preferences.js';
 
+// Type Definitions -----------------------------------------------------------------------------------------
+
 /**
  * An object mapping move changes to a function that performs the graphical mesh change for that action.
  */

@@ -32,6 +32,8 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 
+// Type Definitions ---------------------------------------------------------------------------------
+
 /**
  * Piece Mesh Instance Data.
  * HIGH RESOLUTION bigint values.

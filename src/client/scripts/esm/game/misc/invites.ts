@@ -21,6 +21,8 @@ import validatorama from '../../util/validatorama.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 
+// Types -------------------------------------------------------------------------
+
 /** The invite object. NOT an HTML object. */
 export interface Invite {
 	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */

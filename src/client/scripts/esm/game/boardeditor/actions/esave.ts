@@ -14,6 +14,8 @@ import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
 
+// Types ------------------------------------------------------------------
+
 /** Minimal information about a saved position */
 interface EditorAbridgedSaveState {
 	positionname?: string;

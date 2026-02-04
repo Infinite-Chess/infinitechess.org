@@ -1,3 +1,5 @@
+// src/server/middleware/send404.ts
+
 import type { Request, Response } from 'express';
 
 import path from 'path';

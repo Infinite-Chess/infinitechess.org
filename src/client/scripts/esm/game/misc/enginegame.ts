@@ -24,6 +24,8 @@ import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/c
 import { GameBus } from '../GameBus.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 
+// Type Definitions -------------------------------------------------------------
+
 /** List of valid engines */
 type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
 

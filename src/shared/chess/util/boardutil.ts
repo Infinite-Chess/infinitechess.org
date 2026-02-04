@@ -15,6 +15,8 @@ import coordutil from './coordutil.js';
 import organizedpieces from '../logic/organizedpieces.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
+// Type Definitions -----------------------------------------------------------------------------------------
+
 interface Piece {
 	type: number;
 	coords: Coords;

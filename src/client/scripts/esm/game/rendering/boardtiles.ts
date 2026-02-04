@@ -34,6 +34,8 @@ import webgl, { gl } from './webgl.js';
 import { GameBus } from '../GameBus.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 
+// Type Definitions ----------------------------------------------------------------
+
 /**
  * Optional noise textures to bind during rendering,
  * for the uber shader to apply board Zone effects.

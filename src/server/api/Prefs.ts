@@ -15,6 +15,8 @@ import { logZodError } from '../utility/zodlogger.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
+// Types -------------------------------------------------------------------------------
+
 export type Preferences = z.infer<typeof prefsSchema>;
 
 // Variables -----------------------------------------------------------------------------

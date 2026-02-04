@@ -18,6 +18,8 @@ import {
 	RD_UPDATE_FREQUENCY,
 } from '../game/gamemanager/ratingcalculation.js';
 
+// Type Definitions -----------------------------------------------------------------------------------
+
 /** Structure of a leaderboard entry record for a user. */
 interface LeaderboardEntry {
 	user_id?: number;

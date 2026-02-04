@@ -16,6 +16,8 @@ import { FilterXSS, IFilterXSSOptions } from 'xss';
 import { localeMap } from './dateLocales.js';
 import { DEFAULT_LANGUAGE } from '../utility/translate.js';
 
+// Types ---------------------------------------------------------------------
+
 /** All translations for every single language. */
 type Translations = Record<string, LanguageTranslations>;
 /** All translations for a single language. */

@@ -10,6 +10,8 @@ import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+// Type Definitions ---------------------------------------------------------------------------
+
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
 interface CustomWebSocket extends WebSocket {

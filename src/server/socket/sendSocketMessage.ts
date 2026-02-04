@@ -18,6 +18,8 @@ import {
 	timeToWaitForEchoMillis,
 } from './echoTracker.js';
 
+// Type Definitions ---------------------------------------------------------------------------
+
 /**
  * Represents an incoming WebSocket server message.
  */

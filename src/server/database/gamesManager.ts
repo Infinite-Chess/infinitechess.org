@@ -11,6 +11,8 @@ import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
+// Type Definitions -----------------------------------------------------------------------------------
+
 /** Structure of a games record. This is all allowed columns of a game_id. */
 interface GamesRecord {
 	game_id?: number;

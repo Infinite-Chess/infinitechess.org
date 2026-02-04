@@ -13,6 +13,8 @@ import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import { allPlayerGamesColumns } from './databaseTables.js';
 
+// Type Definitions -----------------------------------------------------------------------------------
+
 /** Structure of a player_games record. This is all allowed columns of a (user_id, game_id). */
 interface PlayerGamesRecord {
 	user_id?: number;

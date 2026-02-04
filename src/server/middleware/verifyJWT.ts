@@ -1,3 +1,5 @@
+// src/server/middleware/verifyJWT.ts
+
 /*
  * This module reads incoming requests, searching for a
  * valid authorization header, or a valid refresh token cookie,

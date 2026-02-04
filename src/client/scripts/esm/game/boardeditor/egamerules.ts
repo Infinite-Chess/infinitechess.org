@@ -22,6 +22,8 @@ import guigamerules from '../gui/boardeditor/guigamerules';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 
+// Type Definitions --------------------------------------------------------------
+
 /** Type encoding information for the game rules object of the editor position */
 interface GameRulesGUIinfo {
 	playerToMove: 'white' | 'black';

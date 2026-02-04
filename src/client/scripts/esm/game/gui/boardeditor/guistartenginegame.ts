@@ -13,6 +13,8 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter'
 import guifloatingwindow from './guifloatingwindow';
 import { players } from '../../../../../../shared/chess/util/typeutil';
 
+// Types -------------------------------------------------------------
+
 interface EngineUIConfig {
 	youAreColor: Player;
 	TimeControl: TimeControl;

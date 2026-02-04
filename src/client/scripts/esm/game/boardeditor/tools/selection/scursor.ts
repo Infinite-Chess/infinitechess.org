@@ -9,6 +9,8 @@
 
 import game from '../../../chess/game';
 
+// Type Definitions -----------------------------------------
+
 type Cursor = 'grab' | 'grabbing' | 'crosshair';
 
 // Constants ------------------------------------------------

@@ -40,6 +40,8 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { GameBus } from '../GameBus.js';
 import { listener_document } from '../chess/game.js';
 
+// Type Definitions -------------------------------------------------------------
+
 type Tool = (typeof validTools)[number];
 
 /**

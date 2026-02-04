@@ -33,6 +33,8 @@ import { Mouse } from '../input.js';
 import { GameBus } from '../GameBus.js';
 import { animateMove } from './graphicalchanges.js';
 
+// Type Definitions ---------------------------------------------
+
 interface Premove extends Edit, MoveDraft {
 	/** The type of piece moved */
 	type: number;

@@ -17,6 +17,8 @@ import validatorama from '../util/validatorama.js';
 import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
+// Type Definitions ----------------------------------------------------------------------
+
 interface MemberData {
 	joined: string;
 	seen: string;
@@ -31,7 +33,7 @@ interface MemberData {
 	verified_notified?: boolean; // True if they've seen the "thank you" message.
 }
 
-// --- DOM Element Selection ---
+// Elements -----------------------------------------------------------------------
 
 const element_verifyErrorElement = document.getElementById('verifyerror')!;
 const element_verifyConfirmElement = document.getElementById('verifyconfirm')!;

@@ -15,6 +15,8 @@ import editorutil from '../../../../../../shared/editor/editorutil';
 import boardeditor from '../../boardeditor/boardeditor';
 import guifloatingwindow from './guifloatingwindow';
 
+// Types -------------------------------------------------------------------------
+
 /** Object to keep track of listener for position button */
 type ButtonHandlerPair = {
 	type: 'click';

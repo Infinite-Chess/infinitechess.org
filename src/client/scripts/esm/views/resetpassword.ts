@@ -7,6 +7,8 @@
 
 import validators from '../../../../shared/util/validators.js';
 
+// Types ----------------------------------------------------------------
+
 type FormElements = {
 	form: HTMLFormElement;
 	newPasswordInput: HTMLInputElement;

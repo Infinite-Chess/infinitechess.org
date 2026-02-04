@@ -30,6 +30,8 @@ import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
+// Type Definitions ---------------------------------------------------------------------------------------------------------------
+
 /**
  * A pair of coordinates, WITH attached special move information.
  * This usually denotes a legal square you can move to that will

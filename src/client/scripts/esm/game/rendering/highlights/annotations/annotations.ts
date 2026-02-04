@@ -23,6 +23,8 @@ import preferences from '../../../../components/header/preferences.js';
 import { Mouse } from '../../../input.js';
 import { GameBus } from '../../../GameBus.js';
 
+// Type Definitions ------------------------------------------------------------
+
 /** An object storing all visible annotations for a specific ply. */
 interface Annotes {
 	/** First type of annotation: A square highlight. */

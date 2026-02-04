@@ -51,6 +51,8 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { GameBus } from '../GameBus.js';
 import { animateMove } from './graphicalchanges.js';
 
+// Type Definitions ----------------------------------------------------------
+
 /** Options for loading a game. */
 interface LoadOptions {
 	/** The metadata of the game */

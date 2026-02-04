@@ -2,8 +2,6 @@
 
 // This script opens and closes our settings drop-down menu when it is clicked.
 
-import './pingmeter.js';
-
 import math from '../../../../../shared/util/math/math.js';
 import style from '../../game/gui/style.js';
 import themes from '../../../../../shared/components/header/themes.js';
@@ -14,6 +12,8 @@ import languagedropdown from './dropdowns/languagedropdown.js';
 import legalmovedropdown from './dropdowns/legalmovedropdown.js';
 import selectiondropdown from './dropdowns/selectiondropdown.js';
 import perspectivedropdown from './dropdowns/perspectivedropdown.js';
+
+import './pingmeter.js'; // Only imported so its code runs
 
 // Document Elements -------------------------------------------------------------------------
 

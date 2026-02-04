@@ -27,6 +27,8 @@ import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil
 import arrows, { ArrowPiece } from './arrows.js';
 import { GameBus } from '../../GameBus.js';
 
+// Type Definitions -------------------------------------------------------------------------------------------
+
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {
 	/** The Piece this arrow is pointing to, including its coords & type. */

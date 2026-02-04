@@ -13,6 +13,8 @@ import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 
+// Type Definitions ----------------------------------------------------------
+
 /** Structure of a complete member record. */
 export interface MemberRecord {
 	user_id: number;

@@ -12,6 +12,8 @@ import type { ServerUsernameContainer } from '../../../shared/types.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
+// Type Definitions
+
 /** A lobby game invite. */
 interface Invite extends SafeInvite {
 	/** Contains the identifier of the owner of the invite, whether a member or browser. */

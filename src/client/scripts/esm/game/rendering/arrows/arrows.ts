@@ -52,6 +52,8 @@ import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
 
+// Type Definitions --------------------------------------------------------------------
+
 /**
  * An object containing all the arrow lines of a single frame,
  * BEFORE removing access arrows due to our mode.

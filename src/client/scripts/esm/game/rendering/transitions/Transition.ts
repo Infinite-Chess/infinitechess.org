@@ -32,6 +32,8 @@ import coordutil, {
 } from '../../../../../../shared/chess/util/coordutil.js';
 import { GameBus } from '../../GameBus.js';
 
+// Type Definitions ----------------------------------------------------------------------
+
 /** Main Transition type. Either Zooming OR Panning. */
 type Transition =
 	| (ZoomTransition & {

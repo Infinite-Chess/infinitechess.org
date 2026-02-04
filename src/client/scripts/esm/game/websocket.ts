@@ -14,6 +14,8 @@ import validatorama from '../util/validatorama.js';
 import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 import { GAME_VERSION } from '../../../../shared/game_version.js';
 
+// Types -----------------------------------------------------------------------
+
 type WebsocketMessageValue = MessageEvent['data'];
 
 /** Information about the last hard refresh we attempted. */
@@ -40,6 +42,8 @@ export interface WebsocketMessage {
 }
 
 type MessageID = number;
+
+// Variables -----------------------------------------------------------------------
 
 /**
  * This script creates websockets connected to the server,

@@ -35,6 +35,8 @@ import movesendreceive from './movesendreceive.js';
 import websocket, { WebsocketMessage } from '../../websocket.js';
 import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
+// Type Definitions --------------------------------------------------------------------------------------
+
 /**
  * Static information about an online game that is unchanging.
  * Only need this once, when we originally load the game,
