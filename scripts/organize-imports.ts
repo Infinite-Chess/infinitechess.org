@@ -26,8 +26,8 @@ function parseImport(importStr: string, hasTsIgnore: boolean): Import {
 	const isMultiLine = importStr.includes('\n');
 
 	// Check if it's a side-effect-only import (no name, just a path)
-	// Examples: import './file.js'; or import './file.js'; // comment
-	const isSideEffectOnly = /^import\s+['"][^'"]+['"];/.test(trimmed);
+	// Examples: import './file.js'; or import './file.js' (with or without semicolon)
+	const isSideEffectOnly = /^import\s+['"][^'"]+['"];?/.test(trimmed);
 
 	// Extract the 'from' part to determine if it's a package or source import
 	const fromMatch = importStr.match(/from\s+['"]([^'"]+)['"]/);
@@ -102,8 +102,9 @@ function extractImports(content: string): {
 		const lower = trimmed.toLowerCase();
 
 		// Check for typical import section headers
-		// These contain words like "import", "system", etc. but are purely about organizing imports
-		// We want to exclude these but keep other comments
+		// Check for typical import section headers that should be removed
+		// These are comments specifically about organizing imports, not general code comments
+		// Examples: "// Import start", "// System imports", "// Only imported so their code will run!"
 		const isImportOrganizationComment =
 			(lower.includes('import') && (lower.includes('start') || lower.includes('end'))) ||
 			lower.includes('system imports') ||
@@ -194,7 +195,7 @@ function extractImports(content: string): {
 		// Skip import section headers
 		if (isImportSectionHeader(trimmed)) {
 			i++;
-			consecutiveNonImportLines = 0;
+			consecutiveNonImportLines++; // Count section headers as non-import lines
 			continue;
 		}
 
@@ -203,21 +204,21 @@ function extractImports(content: string): {
 			tsIgnoreLines.push(line);
 			pendingTsIgnore = true;
 			i++;
-			consecutiveNonImportLines = 0;
+			consecutiveNonImportLines = 0; // Reset because @ts-ignore is part of an import
 			continue;
 		}
 
 		// Skip empty lines between imports
 		if (!trimmed) {
 			i++;
-			consecutiveNonImportLines = 0;
+			consecutiveNonImportLines = 0; // Empty lines don't count as non-import lines
 			continue;
 		}
 
 		// Check if it's an import statement
 		if (trimmed.startsWith('import ')) {
 			foundFirstImport = true;
-			consecutiveNonImportLines = 0;
+			consecutiveNonImportLines = 0; // Reset counter when we find an import
 			let importStr = line;
 			i++;
 
@@ -240,14 +241,15 @@ function extractImports(content: string): {
 
 		// If we found imports and hit a non-import line
 		if (foundFirstImport) {
+			consecutiveNonImportLines++; // Increment for each non-import line
+
 			// Skip single explanatory comments between imports (like "// Import WASM...")
-			// But if we hit multiple consecutive non-import lines or a section divider,
+			// But if we hit a section divider or multiple consecutive non-import lines,
 			// we're done with imports
 			if (trimmed.startsWith('//') && !isSectionDivider(trimmed)) {
-				if (consecutiveNonImportLines === 0) {
+				if (consecutiveNonImportLines === 1) {
 					// First non-import comment - skip it (it's likely an explanatory comment)
 					i++;
-					consecutiveNonImportLines++;
 					continue;
 				}
 			}
