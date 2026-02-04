@@ -117,7 +117,7 @@ I would place all imports with ts-ignore comments into the regular `import` grou
 
 It also puts any imports that are only imported so their code will run, on top. For example:
 `import './pingmeter.js'; // Only imported so its code runs`
-I would place these all together in their own group, below the regular imports.
+I would place these all together in their own group, below the regular imports, separated by one empty line.
 
 After all the imports are finished, it will tend to KEEP these lines, as intended:
 `// Constants ----------------------------------------------------------------------`
