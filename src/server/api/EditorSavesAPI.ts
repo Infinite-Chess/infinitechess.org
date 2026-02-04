@@ -90,6 +90,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * API endpoint to save a new position for the current user.
+ * If a position with the same name already exists, it will be overwritten.
  * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push: boolean, castling: boolean } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
@@ -121,7 +122,7 @@ function savePosition(req: Request, res: Response): void {
 	const { name, piece_count, timestamp, icn, pawn_double_push, castling } = parseResult.data;
 
 	try {
-		// Add the saved position to the database (throws on quota exceeded or name exists)
+		// Add the saved position to the database (throws on quota exceeded)
 		editorSavesManager.addSavedPosition(
 			userId,
 			name,
@@ -137,15 +138,6 @@ function savePosition(req: Request, res: Response): void {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
 			res.status(403).json({ error: `Maximum saved positions exceeded` });
-			return;
-		}
-
-		// Handle the name already exists error
-		if (
-			error instanceof Error &&
-			error.message === editorSavesManager.NAME_ALREADY_EXISTS_ERROR
-		) {
-			res.status(409).json({ error: `Position name already exists` });
 			return;
 		}
 
