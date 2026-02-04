@@ -2,6 +2,8 @@
 
 ### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/CONTRIBUTING.md`!
 
+Each session requires installing dependancies via `npm i --silent`.
+
 BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `prettier . --write`, `npm run lint --silent`, `npx npx tsc --noEmit`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
 
 ## Key Guidelines
