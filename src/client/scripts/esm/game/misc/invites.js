@@ -6,7 +6,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
-import statustext from '../gui/statustext.js';
+import toast from '../gui/toast.js';
 import uuid from '../../../../../shared/util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 import docutil from '../../util/docutil.js';
@@ -51,7 +51,7 @@ function gelement_iCodeCode() {
 function update() {
 	if (!guiplay.isOpen()) return; // Not on the play screen
 	if (loadbalancer.areWeHibernating())
-		statustext.showStatus(translations.invites.move_mouse, false, 0.1);
+		toast.show(translations.invites.move_mouse, { durationMultiplier: 0.1 });
 }
 
 function unsubIfWeNotHave() {
@@ -83,9 +83,9 @@ function onmessage(data) {
 			updateActiveGameCount(data.value);
 			break;
 		default:
-			statustext.showStatus(
+			toast.show(
 				`${translations.invites.unknown_action_received_1} ${data.action} ${translations.invites.unknown_action_received_2}`,
-				true,
+				{ error: true },
 			);
 			break;
 	}
@@ -122,7 +122,7 @@ function create(variantOptions) {
 
 function cancel(id = ourInviteID) {
 	if (!weHaveInvite) return;
-	if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
+	if (!id) return toast.show(translations.invites.cannot_cancel, { error: true });
 
 	LocalStorage.deleteItem('invite-tag');
 

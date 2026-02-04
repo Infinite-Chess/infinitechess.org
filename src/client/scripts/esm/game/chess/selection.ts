@@ -11,6 +11,8 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
 import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
+// @ts-ignore
+import guipause from '../gui/guipause.js';
 import gameslot from './gameslot.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
@@ -40,15 +42,12 @@ import perspective from '../rendering/perspective.js';
 import keybinds from '../misc/keybinds.js';
 import normaltool from '../boardeditor/tools/normaltool.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
+import toast from '../gui/toast.js';
 import { animateMove } from './graphicalchanges.js';
 import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input.js';
 import { GameBus } from '../GameBus.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
 
 // Variables -----------------------------------------------------------------------------
 
@@ -147,7 +146,7 @@ function toggleEditMode(): void {
 	if (boardeditor.areInBoardEditor()) return; // Don't toggle if in board editor
 
 	editMode = !editMode;
-	statustext.showStatus(`Toggled Edit Mode: ${editMode}`);
+	toast.show(`Toggled Edit Mode: ${editMode}`);
 }
 
 function disableEditMode(): void {

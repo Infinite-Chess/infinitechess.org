@@ -13,8 +13,7 @@ import type {
 
 import bd from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
@@ -94,8 +93,8 @@ function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
-	if (disabled) statustext.showStatus(translations['rendering'].icon_rendering_off);
-	else statustext.showStatus(translations['rendering'].icon_rendering_on);
+	if (disabled) toast.show(translations['rendering'].icon_rendering_off);
+	else toast.show(translations['rendering'].icon_rendering_on);
 }
 
 // Updating --------------------------------------------------------------------------

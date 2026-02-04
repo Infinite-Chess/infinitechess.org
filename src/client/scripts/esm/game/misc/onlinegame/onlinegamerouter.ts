@@ -13,8 +13,7 @@ import type {
 
 // @ts-ignore
 import guiplay from '../../gui/guiplay.js';
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+import toast from '../../gui/toast.js';
 import websocket, { WebsocketMessage } from '../../websocket.js';
 import board from '../../rendering/boardtiles.js';
 import disconnect from './disconnect.js';
@@ -142,10 +141,9 @@ function routeMessage(data: WebsocketMessage): void {
 			drawoffers.onOpponentDeclinedOffer();
 			break;
 		default:
-			statustext.showStatus(
-				`Unknown action "${data.action}" received from server in 'game' route.`,
-				true,
-			);
+			toast.show(`Unknown action "${data.action}" received from server in 'game' route.`, {
+				error: true,
+			});
 			break;
 	}
 }
@@ -188,9 +186,9 @@ function handleLoggedGameInfo(message: {
 	} catch (e) {
 		// Hmm, this isn't good. Why is a server-sent ICN crashing?
 		console.error(e);
-		statustext.showStatus(
+		toast.show(
 			'There was an error processing the game ICN sent from the server. This is a bug, please report!',
-			true,
+			{ error: true },
 		);
 		return;
 	}
@@ -279,7 +277,7 @@ function handleUnsubbing(): void {
  * due to the reason we are no longer logged in.
  */
 function handleLogin(basegame: Game): void {
-	statustext.showStatus(translations['onlinegame'].not_logged_in, true, 100);
+	toast.show(translations['onlinegame'].not_logged_in, { error: true, durationMultiplier: 100 });
 	websocket.deleteSub('game');
 	clock.endGame(basegame);
 	guiclock.stopClocks(basegame);
@@ -298,7 +296,7 @@ function handleLogin(basegame: Game): void {
  * * The server restarts mid-game.
  */
 function handleNoGame(basegame: Game): void {
-	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
+	toast.show(translations['onlinegame'].game_no_longer_exists, { durationMultiplier: 1.5 });
 	websocket.deleteSub('game');
 	basegame.gameConclusion = 'aborted';
 	gameslot.concludeGame();
@@ -313,7 +311,7 @@ function handleNoGame(basegame: Game): void {
  * However you can start a local game.
  */
 function handleLeaveGame(): void {
-	statustext.showStatus(translations['onlinegame'].another_window_connected);
+	toast.show(translations['onlinegame'].another_window_connected);
 	websocket.deleteSub('game');
 	gameloader.unloadGame();
 	guititle.open();

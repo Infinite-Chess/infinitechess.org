@@ -4,8 +4,7 @@
  * This script handles copying games
  */
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import toast from '../gui/toast.js';
 import docutil from '../../util/docutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 import gamecompressor from './gamecompressor.js';
@@ -65,7 +64,7 @@ function copyGame(copySinglePosition: boolean): void {
 	});
 
 	docutil.copyToClipboard(shortformat);
-	statustext.showStatus(translations['copypaste'].copied_game);
+	toast.show(translations['copypaste'].copied_game);
 }
 
 export default {

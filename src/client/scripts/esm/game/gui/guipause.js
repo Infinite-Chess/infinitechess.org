@@ -3,7 +3,7 @@
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
-import statustext from './statustext.js';
+import toast from './toast.js';
 import copygame from '../chess/copygame.js';
 import pastegame from '../chess/pastegame.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
@@ -263,7 +263,7 @@ function callback_OfferDraw() {
 		return;
 	}
 
-	statustext.showStatus("Can't offer draw.");
+	toast.show("Can't offer draw.");
 }
 
 function callback_ToggleArrows() {
@@ -275,7 +275,7 @@ function callback_ToggleArrows() {
 			   : mode === 2 ? translations.arrows_all
 			   : translations.arrows_all_hippogonals;
 	element_pointers.textContent = text;
-	if (!isPaused) statustext.showStatus(translations.toggled + ' ' + text);
+	if (!isPaused) toast.show(translations.toggled + ' ' + text);
 }
 
 function callback_Perspective() {

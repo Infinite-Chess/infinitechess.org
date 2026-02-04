@@ -9,8 +9,7 @@
 
 import bd from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from './statustext.js';
+import toast from './toast.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
@@ -39,7 +38,7 @@ function randomizePanVelDir(): void {
 
 /** Displays the status message on screen "Feature is planned". */
 function displayStatus_FeaturePlanned(): void {
-	statustext.showStatus(translations['planned_feature']);
+	toast.show(translations['planned_feature']);
 }
 
 export default {

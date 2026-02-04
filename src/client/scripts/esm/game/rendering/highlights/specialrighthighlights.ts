@@ -10,8 +10,7 @@ import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coord
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import frametracker from '../frametracker.js';
@@ -63,7 +62,7 @@ function disable(): void {
 
 function toggle(): void {
 	enabled = !enabled;
-	statustext.showStatus(`Toggled special rights highlights: ${enabled}`, false, 0.5);
+	toast.show(`Toggled special rights highlights: ${enabled}`, { durationMultiplier: 0.5 });
 	regenModel();
 	frametracker.onVisualChange();
 }

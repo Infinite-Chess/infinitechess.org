@@ -12,8 +12,7 @@ import IndexedDB from '../../../util/IndexedDB';
 import boardeditor from '../boardeditor';
 import eactions from './eactions';
 import egamerules from '../egamerules';
-// @ts-ignore
-import statustext from '../../gui/statustext';
+import toast from '../../gui/toast';
 
 // Types ------------------------------------------------------------------
 
@@ -115,7 +114,7 @@ async function save(positionname: string): Promise<void> {
 			await save(positionname);
 		} else {
 			boardeditor.setActivePositionName(positionname);
-			statustext.showStatus('Position successfully saved in browser.');
+			toast.show('Position successfully saved in browser.');
 		}
 	}
 }

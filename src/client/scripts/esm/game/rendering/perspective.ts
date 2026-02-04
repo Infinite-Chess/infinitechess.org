@@ -8,9 +8,8 @@
 // @ts-ignore
 import mat4 from './gl-matrix.js';
 // @ts-ignore
-import statustext from '../gui/statustext.js';
-// @ts-ignore
 import guipause from '../gui/guipause.js';
+import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import camera, { Mat4 } from './camera.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
@@ -61,7 +60,7 @@ function getIsViewingBlackPerspective(): boolean {
 
 function toggle(): void {
 	if (!docutil.isMouseSupported())
-		return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
+		return toast.show(translations['rendering'].perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
@@ -80,7 +79,7 @@ function enable(): void {
 
 	initCrosshairModel();
 
-	statustext.showStatus(translations['rendering'].movement_tutorial);
+	toast.show(translations['rendering'].movement_tutorial);
 }
 
 function disable(): void {

@@ -4,14 +4,13 @@
  * This script keeps track of our deltaTime, FPS, AFK status, and hibernation status.
  */
 
+import stats from '../gui/stats.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import config from '../config.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 // @ts-ignore
 import invites from './invites.js';
-// @ts-ignore
-import stats from '../gui/stats.js';
 
 // Variables -------------------------------------------------------------
 

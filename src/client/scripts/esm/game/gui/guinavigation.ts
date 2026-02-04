@@ -7,10 +7,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 // @ts-ignore
 import guipause from './guipause.js';
-// @ts-ignore
+import toast from './toast.js';
 import stats from './stats.js';
-// @ts-ignore
-import statustext from './statustext.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
@@ -430,12 +428,12 @@ function callback_CoordsChange(index: 0 | 1): void {
 		proposed = parseStringToBigInt(target.value);
 	} catch (_e) {
 		console.log(`Entered: ${target.value}`);
-		statustext.showStatus(translations['coords-invalid'], true);
+		toast.show(translations['coords-invalid'], { error: true });
 		return;
 	}
 
 	if (bimath.abs(proposed) > TELEPORT_LIMIT) {
-		statustext.showStatus(translations['coords-exceeded'], true);
+		toast.show(translations['coords-exceeded'], { error: true });
 		return;
 	}
 
