@@ -40,7 +40,7 @@ let visibilityWeight = 0;
 
 // Functions ---------------------------------------------------------
 
-function showToast(text: string, options: ToastOptions = {}): void {
+function show(text: string, options: ToastOptions = {}): void {
 	// Safety net in case `text` was provided by an undefined translation of the `any` type:
 	if (typeof text !== 'string') {
 		console.warn('Unable to show toast: Not a string.');
@@ -142,7 +142,7 @@ function pleaseWaitForTask(): void {
 // Exports -----------------------------------------------------------
 
 export default {
-	showToast,
+	show,
 
 	showStatus,
 	showStatusForDuration,
