@@ -281,8 +281,8 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS editor_saves (
 			user_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
-			timestamp INTEGER NOT NULL,
 			piece_count INTEGER NOT NULL,
+			timestamp INTEGER NOT NULL,
 			icn TEXT NOT NULL,
 			pawn_double_push BOOLEAN NOT NULL CHECK (pawn_double_push IN (0, 1)),
 			castling BOOLEAN NOT NULL CHECK (castling IN (0, 1)),

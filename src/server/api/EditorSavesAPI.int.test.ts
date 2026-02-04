@@ -33,8 +33,8 @@ describe('EditorSavesAPI Integration', () => {
 
 			const position1 = {
 				name: 'A simple position',
-				timestamp: Date.now(),
 				piece_count: 32,
+				timestamp: Date.now(),
 				icn: 'icn-data-1',
 				pawn_double_push: true,
 				castling: true,
@@ -42,8 +42,8 @@ describe('EditorSavesAPI Integration', () => {
 
 			const position2 = {
 				name: 'Another simple position',
-				timestamp: Date.now(),
 				piece_count: 76,
+				timestamp: Date.now(),
 				icn: 'icn-data-2',
 				pawn_double_push: false,
 				castling: true,
@@ -68,13 +68,13 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.body.saves).toMatchObject([
 				{
 					name: position1.name,
-					timestamp: position1.timestamp,
 					piece_count: position1.piece_count,
+					timestamp: position1.timestamp,
 				},
 				{
 					name: position2.name,
-					timestamp: position2.timestamp,
 					piece_count: position2.piece_count,
+					timestamp: position2.timestamp,
 				},
 			]);
 		});
@@ -92,8 +92,8 @@ describe('EditorSavesAPI Integration', () => {
 
 			const position = {
 				name: 'Test Position',
-				timestamp: Date.now(),
 				piece_count: 32,
+				timestamp: Date.now(),
 				icn: 'test-icn-data',
 				pawn_double_push: true,
 				castling: false,
@@ -111,8 +111,8 @@ describe('EditorSavesAPI Integration', () => {
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]).toMatchObject({
 				name: position.name,
-				timestamp: position.timestamp,
 				piece_count: position.piece_count,
+				timestamp: position.timestamp,
 			});
 		});
 
@@ -122,8 +122,8 @@ describe('EditorSavesAPI Integration', () => {
 				.post('/api/editor-saves')
 				.set('Cookie', user.cookie)
 				.send({
-					timestamp: Date.now(),
 					piece_count: 10,
+					timestamp: Date.now(),
 					icn: 'test-icn-data',
 					pawn_double_push: true,
 					castling: true,
@@ -139,8 +139,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: '',
-					timestamp: Date.now(),
 					piece_count: 13,
+					timestamp: Date.now(),
 					icn: 'test-icn-data',
 					pawn_double_push: false,
 					castling: false,
@@ -158,8 +158,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: longName,
-					timestamp: Date.now(),
 					piece_count: 13,
+					timestamp: Date.now(),
 					icn: 'test-icn-data',
 					pawn_double_push: true,
 					castling: true,
@@ -175,8 +175,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test Position',
-					timestamp: Date.now(),
 					piece_count: 13,
+					timestamp: Date.now(),
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -191,8 +191,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test Position',
-					timestamp: Date.now(),
 					piece_count: 0,
+					timestamp: Date.now(),
 					icn: '',
 					pawn_double_push: false,
 					castling: false,
@@ -210,8 +210,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test Position',
-					timestamp: Date.now(),
 					piece_count: 278_569,
+					timestamp: Date.now(),
 					icn: longIcn,
 					pawn_double_push: true,
 					castling: false,
@@ -230,8 +230,8 @@ describe('EditorSavesAPI Integration', () => {
 					.set('Cookie', user.cookie)
 					.send({
 						name: `Position ${i}`,
-						timestamp: Date.now(),
 						piece_count: 8,
+						timestamp: Date.now(),
 						icn: 'test-icn',
 						pawn_double_push: true,
 						castling: true,
@@ -244,8 +244,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test Position',
-					timestamp: Date.now(),
 					piece_count: 13,
+					timestamp: Date.now(),
 					icn: 'test-icn-data',
 					pawn_double_push: false,
 					castling: false,
@@ -260,8 +260,8 @@ describe('EditorSavesAPI Integration', () => {
 			// Save first position
 			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
 				name: 'Duplicate Name',
-				timestamp: Date.now(),
 				piece_count: 10,
+				timestamp: Date.now(),
 				icn: 'test-icn-1',
 				pawn_double_push: true,
 				castling: false,
@@ -273,8 +273,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Duplicate Name',
-					timestamp: Date.now(),
 					piece_count: 10,
+					timestamp: Date.now(),
 					icn: 'test-icn-2',
 					pawn_double_push: false,
 					castling: true,
@@ -286,8 +286,8 @@ describe('EditorSavesAPI Integration', () => {
 		it('should return 401 if user is not authenticated', async () => {
 			const response = await testRequest().post('/api/editor-saves').send({
 				name: 'Test Position',
-				timestamp: Date.now(),
 				piece_count: 13,
+				timestamp: Date.now(),
 				icn: 'test-icn-data',
 				pawn_double_push: true,
 				castling: true,
@@ -335,8 +335,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test Position',
-					timestamp: Date.now(),
 					piece_count: 13,
+					timestamp: Date.now(),
 					icn: 'test-icn-data',
 					castling: true,
 				});
@@ -351,8 +351,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test Position',
-					timestamp: Date.now(),
 					piece_count: 13,
+					timestamp: Date.now(),
 					icn: 'test-icn-data',
 					pawn_double_push: true,
 				});
@@ -368,8 +368,8 @@ describe('EditorSavesAPI Integration', () => {
 			// Save a position first
 			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
 				name: 'Test Position',
-				timestamp: Date.now(),
 				piece_count: 13,
+				timestamp: Date.now(),
 				icn: 'test-icn-data',
 				pawn_double_push: true,
 				castling: false,
@@ -403,8 +403,8 @@ describe('EditorSavesAPI Integration', () => {
 			// Save a position with spaces in the name
 			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
 				name: 'Position With Spaces',
-				timestamp: Date.now(),
 				piece_count: 16,
+				timestamp: Date.now(),
 				icn: 'test-icn-spaces',
 				pawn_double_push: false,
 				castling: true,
@@ -438,8 +438,8 @@ describe('EditorSavesAPI Integration', () => {
 			// Save a position first
 			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
 				name: 'Test Position',
-				timestamp: Date.now(),
 				piece_count: 13,
+				timestamp: Date.now(),
 				icn: 'test-icn-data',
 				pawn_double_push: true,
 				castling: true,
@@ -473,8 +473,8 @@ describe('EditorSavesAPI Integration', () => {
 			// Save a position with spaces
 			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
 				name: 'Position With Spaces',
-				timestamp: Date.now(),
 				piece_count: 8,
+				timestamp: Date.now(),
 				icn: 'test-icn',
 				pawn_double_push: false,
 				castling: false,
@@ -507,8 +507,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test',
-					timestamp: Date.now(),
 					piece_count: 250_592,
+					timestamp: Date.now(),
 					icn: maxLengthIcn,
 					pawn_double_push: true,
 					castling: false,
@@ -531,8 +531,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: maxLengthName,
-					timestamp: Date.now(),
 					piece_count: 4,
+					timestamp: Date.now(),
 					icn: 'test',
 					pawn_double_push: false,
 					castling: true,
@@ -555,8 +555,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie)
 				.send({
 					name: 'Test',
-					timestamp: Date.now(),
 					piece_count: 100,
+					timestamp: Date.now(),
 					icn,
 					pawn_double_push: true,
 					castling: true,
@@ -579,8 +579,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user1.cookie)
 				.send({
 					name: 'Same Name',
-					timestamp: Date.now(),
 					piece_count: 10,
+					timestamp: Date.now(),
 					icn: 'icn-user1',
 					pawn_double_push: true,
 					castling: false,
@@ -591,8 +591,8 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user2.cookie)
 				.send({
 					name: 'Same Name',
-					timestamp: Date.now(),
 					piece_count: 10,
+					timestamp: Date.now(),
 					icn: 'icn-user2',
 					pawn_double_push: false,
 					castling: true,
