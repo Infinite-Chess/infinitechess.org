@@ -327,7 +327,7 @@ function playSoundNewOpponentInvite(): void {
  * Close all previous event listeners and delete invites from the document
  * @param resetRecentUsersCache - If true, resets the playBaseIfNewInvite closure's internal state for tracking recent users
  */
-function clear(resetRecentUsersCache: boolean = false): void {
+function clear(resetRecentUsersCache: boolean): void {
 	guiplay.closeListeners_Invites();
 	ourInviteContainer.innerHTML = ''; // Deletes all contained invite elements
 	invitesContainer.innerHTML = ''; // Deletes all contained invite elements
