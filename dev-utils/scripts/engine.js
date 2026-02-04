@@ -14,7 +14,7 @@ const engine = (function () {
 		const ySet = new Set();
 		// generate the line array
 		for (const i in gamefile.piecesOrganizedByKey) {
-			const [x, y] = math.getCoordsFromKey(i);
+			const [x, y] = math.getCoordsFromKey(i)
 			xSet.add(x);
 			ySet.add(y);
 			const firstLine = [1, y - x];
