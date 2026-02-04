@@ -12,8 +12,10 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import bounds from './bounds.js';
 import bimath from './bimath.js';
 import bdcoords from '../../chess/util/bdcoords.js';
-import coordutil, { BDCoords, Coords } from '../../chess/util/coordutil.js';
 import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from './vectors.js';
+import coordutil, { BDCoords, Coords } from '../../chess/util/coordutil.js';
+
+// ================================ Type Definitions =================================
 
 /** The form of the intersection points returned by {@link findLineBoxIntersectionsBD}. */
 type IntersectionPoint = {

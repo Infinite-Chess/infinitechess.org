@@ -4,15 +4,17 @@
  * Handles the saving of positions in boardeditor
  */
 
-import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
-
 import * as z from 'zod';
 
-import toast from '../../gui/toast';
-import eactions from './eactions';
+import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
+
 import IndexedDB from '../../../util/IndexedDB';
-import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
+import eactions from './eactions';
+import egamerules from '../egamerules';
+import toast from '../../gui/toast';
+
+// Types ------------------------------------------------------------------
 
 /** Minimal information about a saved position */
 interface EditorAbridgedSaveState {

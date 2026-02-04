@@ -3,15 +3,15 @@
 // This script contains the code related to the
 // header that runs on every single page
 
+import validatorama from '../../util/validatorama.js';
+import languagedropdown from './dropdowns/languagedropdown.js';
+
 import './spacing.js';
 import './settings.js';
 import './faviconselector.js';
 import './currpage-greyer.js';
 import './news-notification.js'; // Handles unread news badge
 import '../../util/tooltips.js'; // This should be imported on EVERY page!
-
-import validatorama from '../../util/validatorama.js';
-import languagedropdown from './dropdowns/languagedropdown.js';
 
 // --------------------------------------------------------------------------------------
 

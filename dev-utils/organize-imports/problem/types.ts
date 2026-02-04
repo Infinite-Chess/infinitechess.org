@@ -1,6 +1,7 @@
-import type { Role } from './controllers/roles';
+// src/server/types.ts
 
 import { Request } from 'express';
+import type { Role } from './controllers/roles';
 
 /**
  * A req object, but with their memberInfo defined. This may include

@@ -15,6 +15,8 @@ import editorutil from '../../../../../../shared/editor/editorutil';
 import boardeditor from '../../boardeditor/boardeditor';
 import guifloatingwindow from './guifloatingwindow';
 
+// Types -------------------------------------------------------------------------
+
 type ButtonHandlerPair = {
 	type: 'click';
 	handler: (e: MouseEvent) => void;

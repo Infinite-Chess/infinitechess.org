@@ -7,9 +7,11 @@
  * dev-utils/sounds/SoundscapeGenerator.html
  */
 
-import AudioUtils from './AudioUtils';
 import AudioManager from './AudioManager';
+import AudioUtils from './AudioUtils';
 import { LayerConfig, SoundLayer } from './SoundLayer';
+
+// Type Definitions ------------------------------------------------------------------
 
 /** The complete configuration for a soundscape. */
 export interface SoundscapeConfig {
