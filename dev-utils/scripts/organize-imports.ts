@@ -136,6 +136,7 @@ import {
  * it also strangely happened for these files:
  * `// src/server/types.ts`
  * `// src/shared/types.ts`
+ * it also deleted lots of empty lines in the long documentation inside `src/shared/util/isprime.ts`
  */
 
 import * as fs from 'fs';
