@@ -8,9 +8,9 @@
  * caching prepared statements for performance,  and handling database transactions.
  */
 
+import path from 'path';
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
-import path from 'path';
 
 // Get the current file path and derive the directory (ESM doesn't support __dirname)
 const __filename: string = fileURLToPath(import.meta.url);

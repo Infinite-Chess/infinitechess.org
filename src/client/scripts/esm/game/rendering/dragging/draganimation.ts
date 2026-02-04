@@ -6,35 +6,35 @@
  * and plays the sound when the piece is dropped.
  */
 
-import type { Renderable } from '../../../webgl/Renderable.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Renderable } from '../../../webgl/Renderable.js';
+import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';
 
-import spritesheet from '../spritesheet.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import frametracker from '../frametracker.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
 import space from '../../misc/space.js';
-import droparrows from './droparrows.js';
-import selection from '../../chess/selection.js';
-import preferences from '../../../components/header/preferences.js';
-import themes from '../../../../../../shared/components/header/themes.js';
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import animation from '../animation.js';
 import mouse from '../../../util/mouse.js';
+import themes from '../../../../../../shared/components/header/themes.js';
+import meshes from '../meshes.js';
+import camera from '../camera.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import boardpos from '../boardpos.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import selection from '../../chess/selection.js';
+import animation from '../animation.js';
+import droparrows from './droparrows.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
-import { listener_overlay } from '../../chess/game.js';
-import { Mouse } from '../../input.js';
-import meshes from '../meshes.js';
+import spritesheet from '../spritesheet.js';
+import preferences from '../../../components/header/preferences.js';
 import perspective from '../perspective.js';
-import camera from '../camera.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import frametracker from '../frametracker.js';
+import { Mouse } from '../../input.js';
 import { GameBus } from '../../GameBus.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
+import { listener_overlay } from '../../chess/game.js';
 
 // Variables --------------------------------------------------------------------------------------
 

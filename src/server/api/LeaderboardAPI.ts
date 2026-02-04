@@ -6,16 +6,16 @@
  * Sends the client the information about the leaderboard they are currently profile viewing.
  */
 
+import type { Request, Response } from 'express';
+
+import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
 import {
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getEloOfPlayerInLeaderboard,
 } from '../database/leaderboardsManager.js';
-import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-
-import type { Request, Response } from 'express';
 
 /** Maximum number of players allowed to be requested in a single request. */
 const MAX_N_PLAYERS_REQUEST_CAP = 100;

@@ -4,12 +4,12 @@
  * This script handles queries to the games table.
  */
 
+import type { RunResult } from 'better-sqlite3';
+
+import db from './database.js';
 import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
-import db from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
-
-import type { RunResult } from 'better-sqlite3';
 
 // Type Definitions -----------------------------------------------------------------------------------
 

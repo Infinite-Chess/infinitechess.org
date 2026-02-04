@@ -4,18 +4,18 @@ import type { Request, Response } from 'express';
 
 import { format, formatDistance } from 'date-fns';
 
-import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
+import timeutil from '../../shared/util/timeutil.js';
+import metadata from '../../shared/chess/util/metadata.js';
+import { localeMap } from '../config/dateLocales.js';
 import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getLanguageToServe } from '../utility/translate.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import {
 	getPlayerLeaderboardRating,
 	getEloOfPlayerInLeaderboard,
 	getPlayerRankInLeaderboard,
 } from '../database/leaderboardsManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import timeutil from '../../shared/util/timeutil.js';
-import metadata from '../../shared/chess/util/metadata.js';
-import { localeMap } from '../config/dateLocales.js';
-import { getLanguageToServe } from '../utility/translate.js';
 
 // Define the structure of the JSON response body
 interface MemberResponse {

@@ -5,14 +5,15 @@
  * It uses secure cookies and interacts with the `refreshTokenManager` for database operations.
  */
 
-import { deletePreferencesCookie } from '../../api/Prefs.js';
-import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
-import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
-import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
-
 import type { Request, Response } from 'express';
-import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+
 import type { Role } from '../roles.js';
+import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+
+import { deletePreferencesCookie } from '../../api/Prefs.js';
+import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
+import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
+import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
 
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 10; // 10s

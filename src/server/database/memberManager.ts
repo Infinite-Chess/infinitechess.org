@@ -6,11 +6,12 @@
 
 import type { DeleteReason } from '../controllers/deleteAccountController.js';
 
+import { SqliteError } from 'better-sqlite3';
+
+import db from './database.js';
 import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
-import { SqliteError } from 'better-sqlite3';
 
 // Type Definitions ----------------------------------------------------------
 

@@ -5,29 +5,29 @@ import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import guipause from './guipause.js';
 import toast from './toast.js';
 import stats from './stats.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import frametracker from '../rendering/frametracker.js';
-import movesequence from '../chess/movesequence.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import gameslot from '../chess/gameslot.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import selection from '../chess/selection.js';
 import mouse from '../../util/mouse.js';
-import boardpos from '../rendering/boardpos.js';
-import annotations from '../rendering/highlights/annotations/annotations.js';
-import snapping from '../rendering/highlights/snapping.js';
-import boardeditor from '../boardeditor/boardeditor.js';
-import guiboardeditor from './boardeditor/guiboardeditor.js';
-import premoves from '../chess/premoves.js';
-import Transition from '../rendering/transitions/Transition.js';
 import space from '../misc/space.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
+import guipause from './guipause.js';
+import gameslot from '../chess/gameslot.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import boardpos from '../rendering/boardpos.js';
+import snapping from '../rendering/highlights/snapping.js';
+import premoves from '../chess/premoves.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import selection from '../chess/selection.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import Transition from '../rendering/transitions/Transition.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import frametracker from '../rendering/frametracker.js';
+import movesequence from '../chess/movesequence.js';
+import guiboardeditor from './boardeditor/guiboardeditor.js';
 import { GameBus } from '../GameBus.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 
 /**
  * This script handles the navigation bar, in a game,

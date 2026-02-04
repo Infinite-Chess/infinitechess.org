@@ -3,16 +3,16 @@
 // This script contains the code related to the
 // header that runs on every single page
 
-import languagedropdown from './dropdowns/languagedropdown.js';
 import validatorama from '../../util/validatorama.js';
+import languagedropdown from './dropdowns/languagedropdown.js';
 
 // Only imported so their code will run! ------------------------------------------------
-import './faviconselector.js';
 import './spacing.js';
-import './currpage-greyer.js';
 import './settings.js';
-import '../../util/tooltips.js'; // This should be imported on EVERY page!
+import './faviconselector.js';
+import './currpage-greyer.js';
 import './news-notification.js'; // Handles unread news badge
+import '../../util/tooltips.js'; // This should be imported on EVERY page!
 // --------------------------------------------------------------------------------------
 
 const loginLink = document.getElementById('login-link') as HTMLAnchorElement;

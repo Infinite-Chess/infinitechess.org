@@ -6,9 +6,9 @@
 
 import type { Request, Response } from 'express';
 
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	getMemberDataByCriteria,
 	MemberRecord,

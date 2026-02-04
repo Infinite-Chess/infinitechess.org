@@ -2,10 +2,10 @@
 
 import loadbalancer from '../../../misc/loadbalancer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { Zone } from '../EffectZoneManager';
 import { SineWavePass } from '../../../../webgl/post_processing/passes/SineWavePass';
+import { ProgramManager } from '../../../../webgl/ProgramManager';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class ContortionFieldZone implements Zone {

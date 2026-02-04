@@ -4,21 +4,19 @@
  * This script contains the default movesets for all pieces except specials (pawns, castling)
  */
 
-import vectors from '../../util/math/vectors.js';
-import specialdetect from './specialdetect.js';
+import type { Piece } from '../util/boardutil.js';
+import type { Coords } from '../util/coordutil.js';
+import type { FullGame } from './gamefile.js';
+import type { CoordsSpecial } from './movepiece.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
+
 import bimath from '../../util/math/bimath.js';
+import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
+import specialdetect from './specialdetect.js';
 import { rawTypes } from '../util/typeutil.js';
 import { primalityTest } from '../../util/isprime.js';
-
-// Type definitions...
-
-import type { Coords } from '../util/coordutil.js';
-import type { CoordsSpecial } from './movepiece.js';
-import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
-import type { Piece } from '../util/boardutil.js';
-import type { FullGame } from './gamefile.js';
-import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
 type Movesets = RawTypeGroup<PieceMoveset>;

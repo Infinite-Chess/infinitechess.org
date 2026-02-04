@@ -5,7 +5,9 @@
  */
 
 import type { Request, Response } from 'express';
+
 import MessageValidator from 'sns-validator';
+
 import { addToBlacklist } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 

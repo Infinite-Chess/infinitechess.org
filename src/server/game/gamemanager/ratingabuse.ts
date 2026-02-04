@@ -10,6 +10,18 @@
  * Naviary is notified by email of any flagged users.
  */
 
+import type { ServerGame } from './gameutility.js';
+import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+
+import timeutil from '../../../shared/util/timeutil.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
+import gameutility from './gameutility.js';
+import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import { getMultipleGameData } from '../../database/gamesManager.js';
+import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
+import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
+import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
 import {
 	getRecentNRatedGamesForUser,
 	getOpponentsOfUserFromGames,
@@ -20,18 +32,6 @@ import {
 	getRatingAbuseData,
 	updateRatingAbuseColumns,
 } from '../../database/ratingAbuseManager.js';
-import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
-import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-import { getMultipleGameData } from '../../database/gamesManager.js';
-import timeutil from '../../../shared/util/timeutil.js';
-import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
-import gameutility from './gameutility.js';
-
-import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
-import type { ServerGame } from './gameutility.js';
 
 /**
  * Potential red flags (already implemented checks are marked with an X at the start of the line):

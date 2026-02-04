@@ -7,19 +7,19 @@
  * * Rays
  */
 
-import type { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil.js';
 import type { Ray } from '../../../../../../../shared/util/math/vectors.js';
+import type { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil.js';
 
-import drawsquares from './drawsquares.js';
-import preferences from '../../../../components/header/preferences.js';
-import gameslot from '../../../chess/gameslot.js';
 import jsutil from '../../../../../../../shared/util/jsutil.js';
-import drawarrows from './drawarrows.js';
-import gameloader from '../../../chess/gameloader.js';
+import gameslot from '../../../chess/gameslot.js';
 import drawrays from './drawrays.js';
-import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
 import keybinds from '../../../misc/keybinds.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import drawarrows from './drawarrows.js';
+import gameloader from '../../../chess/gameloader.js';
+import drawsquares from './drawsquares.js';
+import preferences from '../../../../components/header/preferences.js';
 import { Mouse } from '../../../input.js';
 import { GameBus } from '../../../GameBus.js';
 

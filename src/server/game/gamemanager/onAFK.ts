@@ -4,14 +4,13 @@
  * The script handles the route when users inform us they have gone AFK or returned from being AFK.
  */
 
-// Custom imports
-import { onPlayerLostByAbandonment } from './gamemanager.js';
-import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
-import gameutility from './gameutility.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import gameutility from './gameutility.js';
+import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
+import { onPlayerLostByAbandonment } from './gamemanager.js';
 
 //--------------------------------------------------------------------------------------------------------
 

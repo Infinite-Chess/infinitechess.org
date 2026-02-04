@@ -10,8 +10,8 @@
  * If no game is loaded, the cache should be empty.
  */
 
-import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';

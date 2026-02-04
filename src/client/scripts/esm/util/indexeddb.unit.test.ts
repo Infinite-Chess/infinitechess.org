@@ -5,8 +5,8 @@
  * Uses fake-indexeddb and the module's resetDBInstance() for isolation.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import indexeddb from './IndexedDB.js';
 

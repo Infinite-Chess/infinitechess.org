@@ -4,23 +4,23 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  * */
 
+import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
+import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { ServerGameInfo } from './onlinegamerouter.js';
 import type { ParticipantState } from '../../../../../../server/game/gamemanager/gameutility.js';
 import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
-import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
+import afk from './afk.js';
+import gameslot from '../../chess/gameslot.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import websocket from '../../websocket.js';
 import IndexedDB from '../../../util/IndexedDB.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import gameslot from '../../chess/gameslot.js';
-import afk from './afk.js';
-import tabnameflash from './tabnameflash.js';
 import disconnect from './disconnect.js';
-import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
+import tabnameflash from './tabnameflash.js';
+import serverrestart from './serverrestart.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { GameBus } from '../../GameBus.js';
 
 // Variables ------------------------------------------------------------------------------------------------------

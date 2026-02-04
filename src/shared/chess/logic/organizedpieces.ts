@@ -11,15 +11,15 @@
  * - By line
  */
 
-import typeutil, { ext, players, rawTypes, neutralRawTypes } from '../util/typeutil.js';
-import coordutil from '../util/coordutil.js';
-import movesets from './movesets.js';
-import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import bimath from '../../util/math/bimath.js';
-
-import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
+import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
+
+import bimath from '../../util/math/bimath.js';
+import movesets from './movesets.js';
+import coordutil from '../util/coordutil.js';
+import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import typeutil, { ext, players, rawTypes, neutralRawTypes } from '../util/typeutil.js';
 
 // Type Definitions ----------------------------------------------------------------
 

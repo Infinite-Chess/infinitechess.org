@@ -6,39 +6,39 @@
  * It also manages all renderd entities when zoomed out.
  */
 
-import bd, { BigDecimal } from '@naviary/bigdecimal';
-
-import guipause from '../../gui/guipause.js';
-import Transition from '../transitions/Transition.js';
-import perspective from '../perspective.js';
-import miniimage from '../miniimage.js';
-import drawsquares from './annotations/drawsquares.js';
-import space from '../../misc/space.js';
-import annotations from './annotations/annotations.js';
-import selectedpiecehighlightline from './selectedpiecehighlightline.js';
-import gameslot from '../../chess/gameslot.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
-import spritesheet from '../spritesheet.js';
-import drawrays from './annotations/drawrays.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import mouse from '../../../util/mouse.js';
-import boardpos from '../boardpos.js';
-import preferences from '../../../components/header/preferences.js';
-import geometry from '../../../../../../shared/util/math/geometry.js';
-import jsutil from '../../../../../../shared/util/jsutil.js';
-import primitives from '../primitives.js';
-import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
-import { Mouse } from '../../input.js';
-import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
-
+import type { Line } from './highlightline.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
 import type {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import type { Line } from './highlightline.js';
-import type { Color } from '../../../../../../shared/util/math/math.js';
+
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
+import space from '../../misc/space.js';
+import mouse from '../../../util/mouse.js';
+import jsutil from '../../../../../../shared/util/jsutil.js';
+import guipause from '../../gui/guipause.js';
+import gameslot from '../../chess/gameslot.js';
+import drawrays from './annotations/drawrays.js';
+import boardpos from '../boardpos.js';
+import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import miniimage from '../miniimage.js';
+import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import Transition from '../transitions/Transition.js';
+import primitives from '../primitives.js';
+import perspective from '../perspective.js';
+import drawsquares from './annotations/drawsquares.js';
+import annotations from './annotations/annotations.js';
+import spritesheet from '../spritesheet.js';
+import preferences from '../../../components/header/preferences.js';
+import selectedpiecehighlightline from './selectedpiecehighlightline.js';
+import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
+import { Mouse } from '../../input.js';
+import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
 

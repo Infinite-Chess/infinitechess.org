@@ -7,26 +7,26 @@
  * * All hovered arrows
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
-import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import selection from '../../chess/selection.js';
-import frametracker from '../frametracker.js';
-import preferences from '../../../components/header/preferences.js';
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import boardpos from '../boardpos.js';
-import piecemodels from '../piecemodels.js';
-import legalmoveshapes from '../instancedshapes.js';
-import legalmovemodel from './legalmovemodel.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
-import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import boardpos from '../boardpos.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import selection from '../../chess/selection.js';
+import preferences from '../../../components/header/preferences.js';
+import piecemodels from '../piecemodels.js';
+import frametracker from '../frametracker.js';
+import legalmovemodel from './legalmovemodel.js';
+import legalmoveshapes from '../instancedshapes.js';
+import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import { GameBus } from '../../GameBus.js';
+import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables -----------------------------------------------------------------------------
 

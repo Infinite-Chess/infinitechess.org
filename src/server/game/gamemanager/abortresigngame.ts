@@ -4,12 +4,12 @@
  * This script handles the abortings and resignations of online games
  */
 
+import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ServerGame } from './gameutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 

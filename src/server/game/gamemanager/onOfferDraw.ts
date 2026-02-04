@@ -5,7 +5,12 @@
  * draw offers in online games.
  */
 
+import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gameutility from './gameutility.js';
+import { players } from '../../../shared/chess/util/typeutil.js';
 import { setGameConclusion } from './gamemanager.js';
 import {
 	isDrawOfferOpen,
@@ -14,11 +19,6 @@ import {
 	doesColorHaveExtendedDrawOffer,
 	closeDrawOffer,
 } from './drawoffers.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ServerGame } from './gameutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 

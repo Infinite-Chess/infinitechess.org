@@ -4,13 +4,13 @@
  * This script contains utility methods for working with the gamefile's moves list.
  */
 
-import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
-import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board } from '../logic/gamefile.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { Game, Board } from '../logic/gamefile.js';
+import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { _Move_Compact } from '../logic/icn/icnconverter.js';
+import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
 import { players } from './typeutil.js';

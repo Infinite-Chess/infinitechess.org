@@ -9,13 +9,13 @@
  * * Premove highlights
  */
 
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+
 import space from '../../misc/space.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import instancedshapes from '../instancedshapes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
-
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
-import type { Color } from '../../../../../../shared/util/math/math.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 /**
  * Generates a renderable buffer model for square highlights from given coordinates.

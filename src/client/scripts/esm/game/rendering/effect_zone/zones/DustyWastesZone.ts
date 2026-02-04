@@ -1,11 +1,11 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/DustyWastesZone.ts
 
 import loadbalancer from '../../../misc/loadbalancer';
-import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
-import { GlitchPass } from '../../../../webgl/post_processing/passes/GlitchPass';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { Zone } from '../EffectZoneManager';
+import { GlitchPass } from '../../../../webgl/post_processing/passes/GlitchPass';
+import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
+import { ProgramManager } from '../../../../webgl/ProgramManager';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class DustyWastesZone implements Zone {

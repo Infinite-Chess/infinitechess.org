@@ -4,14 +4,14 @@
  * This script contains utility methods for working with the organized pieces of a game.
  */
 
-import type { OrganizedPieces, TypeRange } from '../logic/organizedpieces.js';
-import type { Coords, CoordsKey } from './coordutil.js';
 import type { RawType, Player } from './typeutil.js';
+import type { Coords, CoordsKey } from './coordutil.js';
+import type { OrganizedPieces, TypeRange } from '../logic/organizedpieces.js';
 
-import typeutil from './typeutil.js';
-import coordutil from './coordutil.js';
 import jsutil from '../../util/jsutil.js';
 import vectors from '../../util/math/vectors.js';
+import typeutil from './typeutil.js';
+import coordutil from './coordutil.js';
 import organizedpieces from '../logic/organizedpieces.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 

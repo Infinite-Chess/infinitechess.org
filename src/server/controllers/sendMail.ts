@@ -2,17 +2,16 @@
 
 import type { Request } from 'express';
 
+import * as aws from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
+import { fromEnv } from '@aws-sdk/credential-providers';
 import { Response } from 'express';
 import { SESClient } from '@aws-sdk/client-ses';
-import { fromEnv } from '@aws-sdk/credential-providers';
-// Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
-import * as aws from '@aws-sdk/client-ses';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 // --- Module Setup ---
 const AWS_REGION = process.env['AWS_REGION'];

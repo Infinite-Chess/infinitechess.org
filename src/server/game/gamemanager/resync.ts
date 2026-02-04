@@ -12,16 +12,16 @@
  * both gamemanager and movesubmission depend on this, so we avoid circular dependancy.
  */
 
+import type { ServerGame } from './gameutility.js';
+
+import jsutil from '../../../shared/util/jsutil.js';
 import gameutility from './gameutility.js';
+import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 import { getGameByID } from './gamemanager.js';
-import { cancelDisconnectTimer } from './afkdisconnect.js';
+import { getGameData } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getGameData } from '../../database/gamesManager.js';
-import jsutil from '../../../shared/util/jsutil.js';
-import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
-
-import type { ServerGame } from './gameutility.js';
+import { cancelDisconnectTimer } from './afkdisconnect.js';
 
 /**
  * Resyncs a client's websocket to a game. The client already

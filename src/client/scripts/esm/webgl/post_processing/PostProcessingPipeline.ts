@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/post_processing/PostProcessingPipeline.ts
 
-import { ProgramManager } from '../ProgramManager';
 import { ShaderProgram } from '../ShaderProgram';
+import { ProgramManager } from '../ProgramManager';
 import { PassThroughPass } from './passes/PassThroughPass';
 
 /** A Post Processing Effect applied to the whole screen after rendering the scene. */

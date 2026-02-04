@@ -8,10 +8,10 @@
  * nor does it keep track of our current offers!
  */
 
-import guigameinfo from './guigameinfo.js';
 import gameslot from '../chess/gameslot.js';
-import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guiclock from './guiclock.js';
+import drawoffers from '../misc/onlinegame/drawoffers.js';
+import guigameinfo from './guigameinfo.js';
 
 // Variables -------------------------------------------------------------------
 

@@ -2,7 +2,6 @@
 
 import * as z from 'zod';
 
-// Type definitions
 interface VariantStats {
 	total: number;
 	icn: number;

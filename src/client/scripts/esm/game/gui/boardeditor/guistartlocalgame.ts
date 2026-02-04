@@ -4,8 +4,8 @@
  * Manages the GUI popup window for the Start local game button of the Board Editor
  */
 
-import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/actions/eactions';
+import guifloatingwindow from './guifloatingwindow';
 
 // Elements ----------------------------------------------------------
 

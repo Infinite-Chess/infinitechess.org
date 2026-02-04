@@ -7,11 +7,11 @@
 import fs from 'fs';
 import path from 'path';
 import * as z from 'zod';
-import { parse, TomlTable } from 'smol-toml';
-import { FilterXSS, IFilterXSSOptions } from 'xss';
 import { marked } from 'marked';
 import { fileURLToPath } from 'node:url';
+import { parse, TomlTable } from 'smol-toml';
 import { format, parseISO } from 'date-fns';
+import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import { localeMap } from './dateLocales.js';
 import { DEFAULT_LANGUAGE } from '../utility/translate.js';

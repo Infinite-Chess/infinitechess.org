@@ -4,27 +4,27 @@
  * This script handles our Pause menu.
  */
 
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import arrows from '../rendering/arrows/arrows.js';
 import toast from './toast.js';
+import arrows from '../rendering/arrows/arrows.js';
+import docutil from '../../util/docutil.js';
 import copygame from '../chess/copygame.js';
-import pastegame from '../chess/pastegame.js';
-import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guititle from './guititle.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import perspective from '../rendering/perspective.js';
-import frametracker from '../rendering/frametracker.js';
-import gameloader from '../chess/gameloader.js';
 import gameslot from '../chess/gameslot.js';
-import guipractice from './guipractice.js';
-import checkmatepractice from '../chess/checkmatepractice.js';
-import docutil from '../../util/docutil.js';
 import boardpos from '../rendering/boardpos.js';
+import pastegame from '../chess/pastegame.js';
 import boarddrag from '../rendering/boarddrag.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import drawoffers from '../misc/onlinegame/drawoffers.js';
+import gameloader from '../chess/gameloader.js';
+import perspective from '../rendering/perspective.js';
+import guipractice from './guipractice.js';
+import frametracker from '../rendering/frametracker.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import { listener_document } from '../chess/game.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
 import { Mouse } from '../input.js';
 import { GameBus } from '../GameBus.js';
+import { listener_document } from '../chess/game.js';
 
 // Elements ------------------------------------------------------------------------------
 

@@ -14,14 +14,35 @@
  * * Start local game from position
  */
 
-import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
-import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/guistartenginegame';
 import type { EditorSaveState } from './esave';
+import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
+import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 
 import toast from '../../gui/toast';
+import docutil from '../../../util/docutil';
+import variant from '../../../../../../shared/chess/variants/variant';
+import timeutil from '../../../../../../shared/util/timeutil';
+import gameslot from '../../chess/gameslot';
+import pastegame from '../../chess/pastegame';
+import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import gameloader from '../../chess/gameloader';
+import egamerules from '../egamerules';
+import annotations from '../../rendering/highlights/annotations/annotations';
+import guinavigation from '../../gui/guinavigation';
+import selectiontool from '../tools/selection/selectiontool';
+import gameformulator from '../../chess/gameformulator';
+import hydrochess_card from '../../chess/enginecards/hydrochess_card';
+import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import boardeditor, { Edit } from '../boardeditor';
+import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
+import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
+import organizedpieces, {
+	OrganizedPieces,
+} from '../../../../../../shared/chess/logic/organizedpieces';
+import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 import gamefile, {
 	Additional,
 	Board,
@@ -32,31 +53,10 @@ import icnconverter, {
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
-import boardeditor, { Edit } from '../boardeditor';
-import organizedpieces, {
-	OrganizedPieces,
-} from '../../../../../../shared/chess/logic/organizedpieces';
-import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
-import timeutil from '../../../../../../shared/util/timeutil';
-import docutil from '../../../util/docutil';
-import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import gameformulator from '../../chess/gameformulator';
-import gameloader from '../../chess/gameloader';
-import gameslot from '../../chess/gameslot';
-import pastegame from '../../chess/pastegame';
-import guinavigation from '../../gui/guinavigation';
-import annotations from '../../rendering/highlights/annotations/annotations';
-import egamerules from '../egamerules';
-import selectiontool from '../tools/selection/selectiontool';
-import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
-import hydrochess_card from '../../chess/enginecards/hydrochess_card';
 import {
 	engineDefaultTimeLimitPerMoveMillisDict,
 	engineWorldBorderDict,
 } from '../../misc/enginegame';
-import variant from '../../../../../../shared/chess/variants/variant';
-import movepiece from '../../../../../../shared/chess/logic/movepiece';
 
 // Constants ----------------------------------------------------------------------
 

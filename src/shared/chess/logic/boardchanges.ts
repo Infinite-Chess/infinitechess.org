@@ -10,10 +10,10 @@
  * know how to change the mesh, or what to animate.
  */
 
-import organizedpieces from './organizedpieces.js';
 import jsutil from '../../util/jsutil.js';
-import boardutil from '../util/boardutil.js';
 import typeutil from '../util/typeutil.js';
+import boardutil from '../util/boardutil.js';
+import organizedpieces from './organizedpieces.js';
 import coordutil, { CoordsKey } from '../util/coordutil.js';
 
 // Variables -------------------------------------------------------------------------

@@ -4,8 +4,8 @@
  * Defines and configures the Express application instance.
  */
 
-import express from 'express';
 import ejs from 'ejs';
+import express from 'express';
 
 import { initTranslations } from './config/i18n.js';
 import { configureMiddleware } from './middleware/middleware.js';

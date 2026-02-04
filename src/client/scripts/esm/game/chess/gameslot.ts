@@ -7,48 +7,49 @@
  * It also has the loader and unloader methods for the gamefile.
  */
 
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bd from '@naviary/bigdecimal';
-import guinavigation from '../gui/guinavigation.js';
-import guipromotion from '../gui/guipromotion.js';
-import spritesheet from '../rendering/spritesheet.js';
-import movesequence from './movesequence.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import piecemodels from '../rendering/piecemodels.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import miniimage from '../rendering/miniimage.js';
-import arrows from '../rendering/arrows/arrows.js';
+
+import area from '../rendering/area.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import imagecache from '../../chess/rendering/imagecache.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import board from '../rendering/boardtiles.js';
+import arrows from '../rendering/arrows/arrows.js';
+import meshes from '../rendering/meshes.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import boardpos from '../rendering/boardpos.js';
-import texturecache from '../../chess/rendering/texturecache.js';
 import guiclock from '../gui/guiclock.js';
-import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import copygame from './copygame.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
+import miniimage from '../rendering/miniimage.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import pastegame from './pastegame.js';
-import board from '../rendering/boardtiles.js';
-import Transition from '../rendering/transitions/Transition.js';
-import perspective from '../rendering/perspective.js';
-import area from '../rendering/area.js';
 import gamesound from '../misc/gamesound.js';
-import meshes from '../rendering/meshes.js';
 import starfield from '../rendering/starfield.js';
+import imagecache from '../../chess/rendering/imagecache.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
+import Transition from '../rendering/transitions/Transition.js';
 import gameloader from './gameloader.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { animateMove } from './graphicalchanges.js';
+import spritesheet from '../rendering/spritesheet.js';
+import piecemodels from '../rendering/piecemodels.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+import perspective from '../rendering/perspective.js';
+import guipromotion from '../gui/guipromotion.js';
+import movesequence from './movesequence.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import guinavigation from '../gui/guinavigation.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { gl } from '../rendering/webgl.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { GameBus } from '../GameBus.js';
+import { animateMove } from './graphicalchanges.js';
 
 // Type Definitions ----------------------------------------------------------
 

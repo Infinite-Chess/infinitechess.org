@@ -4,8 +4,8 @@
  * Manages the GUI popup window for the Reset position button of the Board Editor
  */
 
-import guifloatingwindow from './guifloatingwindow';
 import eactions from '../../boardeditor/actions/eactions';
+import guifloatingwindow from './guifloatingwindow';
 
 // Elements ----------------------------------------------------------
 

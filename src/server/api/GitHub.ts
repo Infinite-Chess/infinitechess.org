@@ -6,17 +6,17 @@
  * probably below our patron donors.
  */
 
-import { request, RequestOptions } from 'node:https';
-import AbortController from 'abort-controller';
-import process from 'node:process';
-import { writeFile } from 'node:fs/promises';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 import * as z from 'zod';
+import process from 'node:process';
+import AbortController from 'abort-controller';
+import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { request, RequestOptions } from 'node:https';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { logZodError } from '../utility/zodlogger.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

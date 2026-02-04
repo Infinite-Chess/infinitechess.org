@@ -1,39 +1,39 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
-import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
-import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
-import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
+import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
+import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
+import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
+import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import guiplay from '../../gui/guiplay.js';
-import toast from '../../gui/toast.js';
-import websocket, { WebsocketMessage } from '../../websocket.js';
-import board from '../../rendering/boardtiles.js';
-import disconnect from './disconnect.js';
 import afk from './afk.js';
-import serverrestart from './serverrestart.js';
-import movesendreceive from './movesendreceive.js';
+import uuid from '../../../../../../shared/util/uuid.js';
+import toast from '../../gui/toast.js';
+import board from '../../rendering/boardtiles.js';
+import clock from '../../../../../../shared/chess/logic/clock.js';
+import guiplay from '../../gui/guiplay.js';
 import resyncer from './resyncer.js';
-import drawoffers from './drawoffers.js';
-import gameloader from '../../chess/gameloader.js';
 import gameslot from '../../chess/gameslot.js';
 import guititle from '../../gui/guititle.js';
-import clock from '../../../../../../shared/chess/logic/clock.js';
-import selection from '../../chess/selection.js';
-import onlinegame from './onlinegame.js';
 import guiclock from '../../gui/guiclock.js';
+import metadata from '../../../../../../shared/chess/util/metadata.js';
+import selection from '../../chess/selection.js';
+import disconnect from './disconnect.js';
+import drawoffers from './drawoffers.js';
+import gameloader from '../../chess/gameloader.js';
+import onlinegame from './onlinegame.js';
+import guigameinfo from '../../gui/guigameinfo.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import validatorama from '../../../util/validatorama.js';
-import uuid from '../../../../../../shared/util/uuid.js';
-import metadata from '../../../../../../shared/chess/util/metadata.js';
+import serverrestart from './serverrestart.js';
+import movesendreceive from './movesendreceive.js';
+import websocket, { WebsocketMessage } from '../../websocket.js';
 import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
-import guigameinfo from '../../gui/guigameinfo.js';
 
 // Type Definitions --------------------------------------------------------------------------------------
 

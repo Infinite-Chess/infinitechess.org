@@ -4,15 +4,15 @@
  * Handles the saving of positions in boardeditor
  */
 
-import * as z from 'zod';
-
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 
-import IndexedDB from '../../../util/IndexedDB';
-import boardeditor from '../boardeditor';
-import eactions from './eactions';
-import egamerules from '../egamerules';
+import * as z from 'zod';
+
 import toast from '../../gui/toast';
+import eactions from './eactions';
+import IndexedDB from '../../../util/IndexedDB';
+import egamerules from '../egamerules';
+import boardeditor from '../boardeditor';
 
 // Types ------------------------------------------------------------------
 

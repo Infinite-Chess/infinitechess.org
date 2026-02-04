@@ -8,8 +8,8 @@
 import meshes from './meshes.js';
 import camera from './camera.js';
 import primitives from './primitives.js';
-import perspective from './perspective.js';
 import boardtiles from './boardtiles.js';
+import perspective from './perspective.js';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,

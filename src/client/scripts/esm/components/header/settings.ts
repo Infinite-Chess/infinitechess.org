@@ -2,18 +2,18 @@
 
 // This script opens and closes our settings drop-down menu when it is clicked.
 
-import languagedropdown from './dropdowns/languagedropdown.js';
-import boarddropdown from './dropdowns/boarddropdown.js';
-import legalmovedropdown from './dropdowns/legalmovedropdown.js';
-import perspectivedropdown from './dropdowns/perspectivedropdown.js';
-import selectiondropdown from './dropdowns/selectiondropdown.js';
-import sounddropdown from './dropdowns/sounddropdown.js';
-import preferences from './preferences.js';
-import themes from '../../../../../shared/components/header/themes.js';
-import style from '../../game/gui/style.js';
 import math from '../../../../../shared/util/math/math.js';
-// Only imported so its code runs
-import './pingmeter.js';
+import style from '../../game/gui/style.js';
+import themes from '../../../../../shared/components/header/themes.js';
+import preferences from './preferences.js';
+import boarddropdown from './dropdowns/boarddropdown.js';
+import sounddropdown from './dropdowns/sounddropdown.js';
+import languagedropdown from './dropdowns/languagedropdown.js';
+import legalmovedropdown from './dropdowns/legalmovedropdown.js';
+import selectiondropdown from './dropdowns/selectiondropdown.js';
+import perspectivedropdown from './dropdowns/perspectivedropdown.js';
+
+import './pingmeter.js'; // Only imported so its code runs
 
 // Document Elements -------------------------------------------------------------------------
 

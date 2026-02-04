@@ -10,10 +10,10 @@
 import bd from '@naviary/bigdecimal';
 
 import toast from './toast.js';
-import loadbalancer from '../misc/loadbalancer.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
-import vectors from '../../../../../shared/util/math/vectors.js';
+import loadbalancer from '../misc/loadbalancer.js';
 
 // Functions ------------------------------------------------------------------------------
 

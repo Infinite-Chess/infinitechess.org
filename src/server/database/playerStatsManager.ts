@@ -4,9 +4,9 @@
  * This script handles queries to the player stats table.
  */
 
+import db from './database.js';
 import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
-import db from './database.js';
 import { allPlayerStatsColumns } from './databaseTables.js';
 
 // Type Definitions -----------------------------------------------------------------------------------

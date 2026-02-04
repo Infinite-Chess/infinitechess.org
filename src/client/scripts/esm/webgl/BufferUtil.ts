@@ -4,8 +4,8 @@
  * This script works with buffers. Creating them, assigning data, and modifying their indices.
  */
 
-import { TypedArray } from './Renderable.js';
 import { gl } from '../game/rendering/webgl.js';
+import { TypedArray } from './Renderable.js';
 
 // Variables --------------------------------------------------------------------------------
 

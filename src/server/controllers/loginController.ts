@@ -12,10 +12,10 @@
 
 import type { Request, Response } from 'express';
 
-import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { testPasswordForRequest } from './authController.js';
+import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
 
 /**
  * Called when the login page submits login form data.

@@ -6,10 +6,10 @@
  * It also autosaves when leaving the editor
  */
 
-import IndexedDB from '../../../util/IndexedDB';
-import boardeditor from '../boardeditor';
 import eactions from './eactions';
+import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
+import boardeditor from '../boardeditor';
 
 // Constants -------------------------------------------------------------
 

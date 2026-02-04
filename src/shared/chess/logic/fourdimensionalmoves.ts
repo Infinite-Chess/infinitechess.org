@@ -9,22 +9,22 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { CoordsSpecial } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { Game, Board, FullGame } from './gamefile.js';
+import type { CoordsSpecial } from './movepiece.js';
 import type { MoveDraftEdit } from './specialmove.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
+import type { Game, Board, FullGame } from './gamefile.js';
 
+import state from './state.js';
+import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import boardutil from '../util/boardutil.js';
-import boardchanges from './boardchanges.js';
-import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
-import state from './state.js';
-import specialdetect from './specialdetect.js';
-import bimath from '../../util/math/bimath.js';
 import legalmoves from './legalmoves.js';
+import boardchanges from './boardchanges.js';
+import specialdetect from './specialdetect.js';
+import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
 import { players } from '../util/typeutil.js';
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------

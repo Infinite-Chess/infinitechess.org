@@ -8,9 +8,9 @@
 
 import type { Zone } from '../EffectZoneManager';
 
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 
 export class UndercurrentZone implements Zone {
 	/** The unique integer id this effect zone gets. */

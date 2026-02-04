@@ -6,9 +6,9 @@
 
 import type { Request, Response } from 'express';
 
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
  * API endpoint to get the count of unread news posts for the current user.

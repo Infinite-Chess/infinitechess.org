@@ -5,14 +5,14 @@
  * with single invites, not multiple
  */
 
-import jsutil from '../../../shared/util/jsutil.js';
-
-import type { AuthMemberInfo } from '../../types.js';
-import type { TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
-// Type Definitions -------------------------------------------------------------------------------------------
+import jsutil from '../../../shared/util/jsutil.js';
+
+// Type Definitions
 
 /** A lobby game invite. */
 interface Invite extends SafeInvite {

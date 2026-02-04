@@ -4,48 +4,47 @@
  * The script keeps track of all our active online games.
  */
 
-// System imports
+import type { Invite } from '../invitesmanager/inviteutility.js';
+import type { Rating } from '../../database/leaderboardsManager.js';
+import type { ServerGame } from './gameutility.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+
 import WebSocket from 'ws';
 
+import clock from '../../../shared/chess/logic/clock.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import gamefile from '../../../shared/chess/logic/gamefile.js';
+import statlogger from '../statlogger.js';
+import gamelogger from './gamelogger.js';
+import gameutility from './gameutility.js';
+import ratingabuse from './ratingabuse.js';
+import socketUtility from '../../socket/socketUtility.js';
+import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import { closeDrawOffer } from './drawoffers.js';
+import { genUniqueGameID } from '../../database/gamesManager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
+import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import {
 	incrementActiveGameCount,
 	decrementActiveGameCount,
 	printActiveGameCount,
 } from './gamecount.js';
-import { closeDrawOffer } from './drawoffers.js';
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
-import gameutility from './gameutility.js';
-import socketUtility from '../../socket/socketUtility.js';
-import statlogger from '../statlogger.js';
-import gamelogger from './gamelogger.js';
-import {
-	cancelAutoAFKResignTimer,
-	startDisconnectTimer,
-	cancelDisconnectTimers,
-	getDisconnectionForgivenessDuration,
-} from './afkdisconnect.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
 	getIDOfGamePlayerIsIn,
 	hasColorInGameSeenConclusion,
 } from './activeplayers.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-import { genUniqueGameID } from '../../database/gamesManager.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import ratingabuse from './ratingabuse.js';
-import clock from '../../../shared/chess/logic/clock.js';
-import gamefile from '../../../shared/chess/logic/gamefile.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-
-import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { Invite } from '../invitesmanager/inviteutility.js';
-import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
+import {
+	cancelAutoAFKResignTimer,
+	startDisconnectTimer,
+	cancelDisconnectTimers,
+	getDisconnectionForgivenessDuration,
+} from './afkdisconnect.js';
 
 //--------------------------------------------------------------------------------------------------------
 

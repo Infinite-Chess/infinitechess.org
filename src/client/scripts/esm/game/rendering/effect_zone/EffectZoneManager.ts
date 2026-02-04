@@ -1,23 +1,23 @@
 // src/client/scripts/esm/game/rendering/effect_zone/EffectZoneManager.ts
 
-import ImageLoader from '../../../util/ImageLoader';
-import TextureLoader from '../../../webgl/TextureLoader';
 import boardtiles from '../boardtiles';
-import frametracker from '../frametracker';
+import ImageLoader from '../../../util/ImageLoader';
 import preferences from '../../../components/header/preferences';
-import { ProgramManager } from '../../../webgl/ProgramManager';
-import { TheBeginningZone } from './zones/TheBeginningZone';
-import { UndercurrentZone } from './zones/UndercurrentZone';
-import { DustyWastesZone } from './zones/DustyWastesZone';
-import { ContortionFieldZone } from './zones/ContortionFieldZone';
-import { EchoRiftZone } from './zones/EchoRiftZone';
+import frametracker from '../frametracker';
+import TextureLoader from '../../../webgl/TextureLoader';
+import { OceanZone } from './zones/OceanZone';
 import { StaticZone } from './zones/StaticZone';
+import { EchoRiftZone } from './zones/EchoRiftZone';
+import { ProgramManager } from '../../../webgl/ProgramManager';
+import { EmberVergeZone } from './zones/EmberVergeZone';
+import { DustyWastesZone } from './zones/DustyWastesZone';
 import { PostProcessPass } from '../../../webgl/post_processing/PostProcessingPipeline';
 import { IridescenceZone } from './zones/IridescenceZone';
-import { SpectralEdgeZone } from './zones/SpectralEdgeZone';
 import { AshfallVocsZone } from './zones/AshfallVocsZone';
-import { OceanZone } from './zones/OceanZone';
-import { EmberVergeZone } from './zones/EmberVergeZone';
+import { TheBeginningZone } from './zones/TheBeginningZone';
+import { UndercurrentZone } from './zones/UndercurrentZone';
+import { SpectralEdgeZone } from './zones/SpectralEdgeZone';
+import { ContortionFieldZone } from './zones/ContortionFieldZone';
 
 /**
  * Defines a zone in space that applies a specific visual effect to the board.

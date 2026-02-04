@@ -8,14 +8,14 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd from '@naviary/bigdecimal';
 
-import boardtiles from './boardtiles.js';
-import gameslot from '../chess/gameslot.js';
-import boardpos from './boardpos.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { createRenderable } from '../../webgl/Renderable.js';
-import primitives from './primitives.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
+import gameslot from '../chess/gameslot.js';
+import boardpos from './boardpos.js';
+import boardtiles from './boardtiles.js';
+import primitives from './primitives.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 
 // ===================================== Constants =====================================
 

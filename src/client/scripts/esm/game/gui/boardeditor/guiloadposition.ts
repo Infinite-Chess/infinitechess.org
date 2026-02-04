@@ -6,14 +6,14 @@
 
 import type { EditorSaveState, EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
 
-import IndexedDB from '../../../util/IndexedDB';
-import guifloatingwindow from './guifloatingwindow';
-import eactions from '../../boardeditor/actions/eactions';
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
-import boardeditor from '../../boardeditor/boardeditor';
-import editorutil from '../../../../../../shared/editor/editorutil';
 import toast from '../toast';
+import eactions from '../../boardeditor/actions/eactions';
+import IndexedDB from '../../../util/IndexedDB';
+import editorutil from '../../../../../../shared/editor/editorutil';
+import boardeditor from '../../boardeditor/boardeditor';
+import guifloatingwindow from './guifloatingwindow';
 
 // Types -------------------------------------------------------------------------
 

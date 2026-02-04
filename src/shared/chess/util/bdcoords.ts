@@ -1,8 +1,8 @@
 // src/shared/chess/util/bdcoords.ts
 
-import { fromBigInt, fromNumber, isInteger, toBigInt, toNumber } from '@naviary/bigdecimal';
-
 import type { BDCoords, Coords, DoubleCoords } from './coordutil';
+
+import { fromBigInt, fromNumber, isInteger, toBigInt, toNumber } from '@naviary/bigdecimal';
 
 // Constructors --------------------------------------------------------------------
 

@@ -4,12 +4,12 @@
  * This script handles queries to the rating_abuse table.
  */
 
+import type { RunResult } from 'better-sqlite3'; // Import necessary types
+
+import db from './database.js';
 import jsutil from '../../shared/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
-import db from './database.js';
 import { allRatingAbuseColumns } from './databaseTables.js';
-
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
 
 // Type Definitions -----------------------------------------------------------------------------------
 

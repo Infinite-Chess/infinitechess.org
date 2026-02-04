@@ -9,29 +9,29 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { CoordsSpecial, MoveDraft, path } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { LegalMoves } from './legalmoves.js';
 import type { FullGame } from './gamefile.js';
+import type { LegalMoves } from './legalmoves.js';
+import type { CoordsSpecial, MoveDraft, path } from './movepiece.js';
 
-import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
-import boardchanges from './boardchanges.js';
-import coordutil from '../util/coordutil.js';
-import movepiece from './movepiece.js';
 import jsutil from '../../util/jsutil.js';
-import moveutil from '../util/moveutil.js';
-import { players } from '../util/typeutil.js';
-import typeutil from '../util/typeutil.js';
-import checkdetection from './checkdetection.js';
-import legalmoves from './legalmoves.js';
 import bimath from '../../util/math/bimath.js';
-import specialdetect from './specialdetect.js';
-import vectors, { Vec2Key } from '../../util/math/vectors.js';
-import bounds, { BoundingBox } from '../../util/math/bounds.js';
+import typeutil from '../util/typeutil.js';
+import moveutil from '../util/moveutil.js';
 import geometry from '../../util/math/geometry.js';
 import bdcoords from '../util/bdcoords.js';
+import boardutil from '../util/boardutil.js';
+import coordutil from '../util/coordutil.js';
+import movepiece from './movepiece.js';
+import legalmoves from './legalmoves.js';
+import boardchanges from './boardchanges.js';
+import specialdetect from './specialdetect.js';
+import checkdetection from './checkdetection.js';
+import gamefileutility from '../util/gamefileutility.js';
+import vectors, { Vec2Key } from '../../util/math/vectors.js';
+import bounds, { BoundingBox } from '../../util/math/bounds.js';
+import { players } from '../util/typeutil.js';
 
 // Functions ------------------------------------------------------------------------------
 

@@ -10,6 +10,9 @@
 import type { Request, Response } from 'express';
 
 import bcrypt from 'bcrypt';
+
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import {
 	getBrowserAgent,
@@ -17,8 +20,6 @@ import {
 	onIncorrectPassword,
 	rateLimitLogin,
 } from './authRatelimiter.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getTranslationForReq } from '../utility/translate.js';
 
 /**
  * Called when any fetch request submits login form data.

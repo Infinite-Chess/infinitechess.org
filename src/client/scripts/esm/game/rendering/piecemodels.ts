@@ -4,25 +4,26 @@
  * This generates and renders the meshes of each individual piece type in the game.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import { gl } from './webgl.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import instancedshapes from './instancedshapes.js';
-import miniimage from './miniimage.js';
-import frametracker from './frametracker.js';
-import boardpos from './boardpos.js';
-import texturecache from '../../chess/rendering/texturecache.js';
-import geometry from '../../../../../shared/util/math/geometry.js';
-import vectors from '../../../../../shared/util/math/vectors.js';
-import perspective from './perspective.js';
 import meshes from './meshes.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import boardpos from './boardpos.js';
+import geometry from '../../../../../shared/util/math/geometry.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import miniimage from './miniimage.js';
+import perspective from './perspective.js';
+import frametracker from './frametracker.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import instancedshapes from './instancedshapes.js';
+import { gl } from './webgl.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
 import {
 	AttributeInfoInstanced,
@@ -30,7 +31,6 @@ import {
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 

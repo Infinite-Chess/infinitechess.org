@@ -4,11 +4,11 @@
  * This script flags private games that have a custom position pasted.
  */
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import gameutility from './gameutility.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import gameutility from './gameutility.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 /**
  * Called when a player submits a websocket message informing us they

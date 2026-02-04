@@ -4,9 +4,9 @@
  * This script handles our Title Screen
  */
 
+import guiplay from './guiplay.js';
 import guipractice from './guipractice.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
-import guiplay from './guiplay.js';
 import languagedropdown from '../../components/header/dropdowns/languagedropdown.js';
 
 // Variables ----------------------------------------------------------------------------

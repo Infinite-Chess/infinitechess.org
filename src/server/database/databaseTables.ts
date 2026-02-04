@@ -5,8 +5,8 @@
  */
 
 import db from './database.js';
-import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
+import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
 // Variables -----------------------------------------------------------------------------------
 

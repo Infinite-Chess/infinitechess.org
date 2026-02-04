@@ -16,32 +16,32 @@ import bd from '@naviary/bigdecimal';
 import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import space from '../misc/space.js';
-import frametracker from './frametracker.js';
-import gameslot from '../chess/gameslot.js';
-import animation from './animation.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import mouse from '../../util/mouse.js';
-import boardpos from './boardpos.js';
-import snapping from './highlights/snapping.js';
-import instancedshapes from './instancedshapes.js';
-import texturecache from '../../chess/rendering/texturecache.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import gameslot from '../chess/gameslot.js';
+import boardpos from './boardpos.js';
+import snapping from './highlights/snapping.js';
+import premoves from '../chess/premoves.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import animation from './animation.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import selection from '../chess/selection.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import boardtiles from './boardtiles.js';
 import perspective from './perspective.js';
-import premoves from '../chess/premoves.js';
-import { Color } from '../../../../../shared/util/math/math.js';
+import frametracker from './frametracker.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import instancedshapes from './instancedshapes.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import { Color } from '../../../../../shared/util/math/math.js';
+import { GameBus } from '../GameBus.js';
 import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import {
 	RenderableInstanced,
 	AttributeInfoInstanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import { GameBus } from '../GameBus.js';
 
 // Variables --------------------------------------------------------------
 

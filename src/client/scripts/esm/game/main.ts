@@ -7,16 +7,16 @@
  * and input listeners, and begins the game loop.
  */
 
-import webgl from './rendering/webgl.js';
-import LocalStorage from '../util/LocalStorage.js';
 import game from './chess/game.js';
+import webgl from './rendering/webgl.js';
 import camera from './rendering/camera.js';
 import websocket from './websocket.js';
-import guiloading from './gui/guiloading.js';
-import frametracker from './rendering/frametracker.js';
-import frameratelimiter from './rendering/frameratelimiter.js';
-import loadbalancer from './misc/loadbalancer.js';
 import IndexedDB from '../util/IndexedDB.js';
+import guiloading from './gui/guiloading.js';
+import LocalStorage from '../util/LocalStorage.js';
+import frametracker from './rendering/frametracker.js';
+import loadbalancer from './misc/loadbalancer.js';
+import frameratelimiter from './rendering/frameratelimiter.js';
 
 // Starts the game. Runs automatically once the page is loaded.
 function start(): void {

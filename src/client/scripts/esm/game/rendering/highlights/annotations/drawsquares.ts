@@ -6,23 +6,23 @@
  * Helpful for analysis, and requested by many.
  */
 
-import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../../../../shared/util/math/math.js';
+import type { Square } from './annotations.js';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil.js';
+
 import space from '../../../misc/space.js';
-import preferences from '../../../../components/header/preferences.js';
-import snapping from '../snapping.js';
-import boardpos from '../../boardpos.js';
 import mouse from '../../../../util/mouse.js';
 import vectors from '../../../../../../../shared/util/math/vectors.js';
 import variant from '../../../../../../../shared/chess/variants/variant.js';
+import snapping from '../snapping.js';
+import boardpos from '../../boardpos.js';
 import gameslot from '../../../chess/gameslot.js';
+import guipause from '../../../gui/guipause.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import preferences from '../../../../components/header/preferences.js';
 import squarerendering from '../squarerendering.js';
 import { Mouse } from '../../../input.js';
-import guipause from '../../../gui/guipause.js';
-
-import type { Color } from '../../../../../../../shared/util/math/math.js';
-import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil.js';
-import type { Square } from './annotations.js';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 
 // Variables -----------------------------------------------------------------
 

@@ -6,13 +6,13 @@
 
 import type { Request, Response } from 'express';
 
+import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import { deleteUser, getMemberDataByCriteria } from '../database/memberManager.js';
 import { testPasswordForRequest } from './authController.js';
-import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 import { isMemberInSomeActiveGame } from '../game/gamemanager/gamemanager.js';
+import { deleteUser, getMemberDataByCriteria } from '../database/memberManager.js';
 
 // Constants -------------------------------------------------------------------------
 

@@ -4,14 +4,14 @@
  * This script contains utility methods for working with splines.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 import type { Color } from '../../../../shared/util/math/math.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import { createRenderable } from '../webgl/Renderable.js';
 import space from '../game/misc/space.js';
 import boardpos from '../game/rendering/boardpos.js';
+import { createRenderable } from '../webgl/Renderable.js';
 
 // Constants ------------------------------------------------------
 

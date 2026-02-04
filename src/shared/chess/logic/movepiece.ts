@@ -6,29 +6,29 @@
  * Both ends, client & server, should be able to use this script.
  */
 
-import type { Board, FullGame } from './gamefile.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
-import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
+import type { Board, FullGame } from './gamefile.js';
+import type { EnPassant, MoveState } from './state.js';
+import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
 
-import typeutil from '../util/typeutil.js';
-import coordutil from '../util/coordutil.js';
 import state from './state.js';
-import boardchanges from './boardchanges.js';
-import boardutil from '../util/boardutil.js';
+import bimath from '../../util/math/bimath.js';
+import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
-import { rawTypes as r } from '../util/typeutil.js';
-import icnconverter from './icn/icnconverter.js';
+import coordutil from '../util/coordutil.js';
+import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
-import checkdetection from './checkdetection.js';
-import specialdetect from './specialdetect.js';
+import boardchanges from './boardchanges.js';
+import icnconverter from './icn/icnconverter.js';
 import wincondition from './wincondition.js';
+import specialdetect from './specialdetect.js';
+import checkdetection from './checkdetection.js';
 import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
-import bimath from '../../util/math/bimath.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 

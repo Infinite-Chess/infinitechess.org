@@ -1,9 +1,11 @@
 // src/client/scripts/esm/game/chess/gamecompressor.unit.test.ts
 
-import { describe, it, expect } from 'vitest';
-import gamecompressor from './gamecompressor.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { SimplifiedGameState } from './gamecompressor.js';
+
+import { describe, it, expect } from 'vitest';
+
+import gamecompressor from './gamecompressor.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 describe('gamecompressor', () => {

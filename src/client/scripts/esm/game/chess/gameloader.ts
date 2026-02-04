@@ -11,38 +11,38 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
+import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type {
 	ParticipantState,
 	ServerGameMoveMessage,
 } from '../../../../../server/game/gamemanager/gameutility.js';
-import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
-import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 
-import perspective from '../rendering/perspective.js';
-import Transition from '../rendering/transitions/Transition.js';
 import gui from '../gui/gui.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import gameslot from './gameslot.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
-import loadingscreen from '../gui/loadingscreen.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import guinavigation from '../gui/guinavigation.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import IndexedDB from '../../util/IndexedDB.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
+import IndexedDB from '../../util/IndexedDB.js';
+import Transition from '../rendering/transitions/Transition.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import perspective from '../rendering/perspective.js';
+import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import loadingscreen from '../gui/loadingscreen.js';
+import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 // Variables --------------------------------------------------------------------
 

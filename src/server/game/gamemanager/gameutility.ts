@@ -7,39 +7,36 @@
  * At most this ever handles a single game, not multiple.
  */
 
-// Middleware & other imports
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { getTranslation } from '../../utility/translate.js';
+import type { Game } from '../../../shared/chess/logic/gamefile.js';
+import type { Rating } from '../../database/leaderboardsManager.js';
+import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
+import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
+import type { RatingData } from './ratingcalculation.js';
+import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 
-// Custom imports
-import timeutil from '../../../shared/util/timeutil.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
 import uuid from '../../../shared/util/uuid.js';
+import clock from '../../../shared/chess/logic/clock.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
-import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
-import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
+import { getTranslation } from '../../utility/translate.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
+import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
-import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import clock from '../../../shared/chess/logic/clock.js';
-
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
-import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
-import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
-import type { ClockValues } from '../../../shared/chess/logic/clock.js';
-import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
-import type { RatingData } from './ratingcalculation.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 // Type Definitions -----------------------------------------------------------------------------
 

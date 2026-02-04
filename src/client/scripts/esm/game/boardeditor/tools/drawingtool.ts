@@ -9,19 +9,19 @@
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile';
 
 import state from '../../../../../../shared/chess/logic/state';
-import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil';
-import typeutil, { Player, players, rawTypes } from '../../../../../../shared/chess/util/typeutil';
-import bounds from '../../../../../../shared/util/math/bounds';
 import mouse from '../../../util/mouse';
+import bounds from '../../../../../../shared/util/math/bounds';
+import arrows from '../../rendering/arrows/arrows';
 import gameslot from '../../chess/gameslot';
 import selection from '../../chess/selection';
-import guiboardeditor from '../../gui/boardeditor/guiboardeditor';
-import { Mouse } from '../../input';
-import arrows from '../../rendering/arrows/arrows';
-import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
-import boardeditor, { Edit, Tool } from '../boardeditor';
 import egamerules from '../egamerules';
+import guiboardeditor from '../../gui/boardeditor/guiboardeditor';
+import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
+import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil';
+import boardeditor, { Edit, Tool } from '../boardeditor';
+import typeutil, { Player, players, rawTypes } from '../../../../../../shared/chess/util/typeutil';
+import { Mouse } from '../../input';
 
 // Constants -------------------------------------------------------
 

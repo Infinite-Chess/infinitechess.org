@@ -6,8 +6,8 @@
  *
  */
 
-import type { GameRules } from '../variants/gamerules.js';
 import type { Player } from './typeutil.js';
+import type { GameRules } from '../variants/gamerules.js';
 
 /** Valid win conditions that either color can have. */
 const validWinConditions = [

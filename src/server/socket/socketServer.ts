@@ -1,18 +1,13 @@
 // src/server/socket/socketServer.ts
 
-import { WebSocketServer as Server } from 'ws';
-import { IncomingMessage } from 'http';
-
-// Custom imports...
+import type { Server as HttpsServer } from 'https';
 
 import WebSocket from 'ws';
+import { IncomingMessage } from 'http';
+import { WebSocketServer as Server } from 'ws';
 
-import { onConnectionRequest } from './openSocket.js';
 import { executeSafely } from '../utility/errorGuard.js';
-
-// Type Definitions...
-
-import type { Server as HttpsServer } from 'https';
+import { onConnectionRequest } from './openSocket.js';
 
 let WebSocketServer: Server;
 

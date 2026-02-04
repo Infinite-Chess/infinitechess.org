@@ -1,17 +1,17 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
+import type { Game } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
+import type { SoundObject } from '../../audio/AudioManager.js';
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+
+import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../misc/gamesound.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import gameloader from '../chess/gameloader.js';
-import clock from '../../../../../shared/chess/logic/clock.js';
 import { GameBus } from '../GameBus.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
-
-import type { SoundObject } from '../../audio/AudioManager.js';
-import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { Game } from '../../../../../shared/chess/logic/gamefile.js';
-import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
 	[players.WHITE]: {

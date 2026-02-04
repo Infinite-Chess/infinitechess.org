@@ -2,16 +2,16 @@
 
 /** This script stores the default methods for EXECUTING special moves */
 
-import boardutil from '../util/boardutil.js';
-import boardchanges from './boardchanges.js';
-import state from './state.js';
-import { rawTypes } from '../util/typeutil.js';
-
-import type { RawTypeGroup } from '../util/typeutil.js';
-import type { Coords } from '../util/coordutil.js';
-import type { Edit, MoveDraft } from './movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './gamefile.js';
+import type { Coords } from '../util/coordutil.js';
+import type { RawTypeGroup } from '../util/typeutil.js';
+import type { Edit, MoveDraft } from './movepiece.js';
+
+import state from './state.js';
+import boardutil from '../util/boardutil.js';
+import boardchanges from './boardchanges.js';
+import { rawTypes } from '../util/typeutil.js';
 
 /**
  * Function that queues all of the changes a special move makes when executed.

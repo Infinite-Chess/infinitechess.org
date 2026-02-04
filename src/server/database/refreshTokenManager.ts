@@ -5,12 +5,12 @@
  * to add, find, delete, and update them in the `refresh_tokens` table.
  */
 
+import type { Request } from 'express';
+
 import db from './database.js';
-import { refreshTokenExpiryMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-
-import type { Request } from 'express';
+import { refreshTokenExpiryMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 
 /**
  * Represents a record in the `refresh_tokens` database table.

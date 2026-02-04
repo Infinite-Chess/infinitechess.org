@@ -2,8 +2,8 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
-import integrationUtils from '../../tests/integrationUtils.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+import integrationUtils from '../../tests/integrationUtils.js';
 import { testRequest } from '../../tests/testRequest.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';

@@ -8,16 +8,17 @@
  * @author Andreas Tsevas
  */
 
-import { primalityTest } from '../../../../../../shared/util/isprime.js';
+import jsutil from '../../../../../../shared/util/jsutil.js';
+import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import { primalityTest } from '../../../../../../shared/util/isprime.js';
 import {
 	rawTypes as r,
 	ext as e,
 	players,
 	numTypes,
 } from '../../../../../../shared/chess/util/typeutil.js';
-import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
-import jsutil from '../../../../../../shared/util/jsutil.js';
+
 /**
  * Typescript types are erased during compilation, so adding these
  * here doesn't actually mean adding dependancies.

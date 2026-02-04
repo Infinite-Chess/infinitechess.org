@@ -8,8 +8,8 @@
  */
 
 import type { Rating } from '../../../server/database/leaderboardsManager.js';
-import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { Player } from './typeutil.js';
+import type { TimeControl } from '../../../server/game/timecontrol.js';
 
 import { players } from './typeutil.js';
 

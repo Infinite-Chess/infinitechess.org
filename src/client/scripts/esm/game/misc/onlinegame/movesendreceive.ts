@@ -5,28 +5,28 @@
  * and receiving moves from our opponent.
  */
 
-import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
-import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../../rendering/piecemodels.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import onlinegame from './onlinegame.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import selection from '../../chess/selection.js';
 import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import guiclock from '../../gui/guiclock.js';
+import premoves from '../../chess/premoves.js';
+import guipause from '../../gui/guipause.js';
+import selection from '../../chess/selection.js';
+import websocket from '../../websocket.js';
+import onlinegame from './onlinegame.js';
 import movesequence from '../../chess/movesequence.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import icnconverter, {
 	_Move_Compact,
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import guiclock from '../../gui/guiclock.js';
-import premoves from '../../chess/premoves.js';
-import { animateMove } from '../../chess/graphicalchanges.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-import websocket from '../../websocket.js';
 import { GameBus } from '../../GameBus.js';
-import guipause from '../../gui/guipause.js';
+import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Events ---------------------------------------------------------------------
 

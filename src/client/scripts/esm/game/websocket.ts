@@ -1,20 +1,20 @@
 // src/client/scripts/esm/game/websocket.ts
 
-import invites from './misc/invites.js';
-import toast from './gui/toast.js';
-import onlinegame from './misc/onlinegame/onlinegame.js';
-import LocalStorage from '../util/LocalStorage.js';
-import timeutil from '../../../../shared/util/timeutil.js';
 import uuid from '../../../../shared/util/uuid.js';
+import toast from './gui/toast.js';
 import config from './config.js';
 import thread from '../util/thread.js';
-import validatorama from '../util/validatorama.js';
 import wsutil from '../../../../shared/util/wsutil.js';
-import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
+import invites from './misc/invites.js';
 import docutil from '../util/docutil.js';
+import timeutil from '../../../../shared/util/timeutil.js';
+import onlinegame from './misc/onlinegame/onlinegame.js';
+import LocalStorage from '../util/LocalStorage.js';
+import validatorama from '../util/validatorama.js';
+import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 import { GAME_VERSION } from '../../../../shared/game_version.js';
 
-// Custom type definitions...
+// Types -----------------------------------------------------------------------
 
 type WebsocketMessageValue = MessageEvent['data'];
 
@@ -42,6 +42,8 @@ export interface WebsocketMessage {
 }
 
 type MessageID = number;
+
+// Variables -----------------------------------------------------------------------
 
 /**
  * This script creates websockets connected to the server,

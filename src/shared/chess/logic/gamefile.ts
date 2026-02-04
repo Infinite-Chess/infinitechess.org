@@ -1,33 +1,33 @@
 // src/shared/chess/logic/gamefile.ts
 
-import type { ClockData, ClockValues } from './clock.js';
-import type { CoordsKey } from '../util/coordutil.js';
 import type { MetaData } from '../util/metadata.js';
+import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
-import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { Move, BaseMove } from './movepiece.js';
-import type { OrganizedPieces } from './organizedpieces.js';
-import type { PieceMoveset } from './movesets.js';
-import type { GameState, GlobalGameState } from './state.js';
-import type { VariantOptions } from './initvariant.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
-import type { SpecialMoveFunction } from './specialmove.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
+import type { PieceMoveset } from './movesets.js';
+import type { Move, BaseMove } from './movepiece.js';
+import type { VariantOptions } from './initvariant.js';
+import type { OrganizedPieces } from './organizedpieces.js';
+import type { SpecialMoveFunction } from './specialmove.js';
+import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
+import type { ClockData, ClockValues } from './clock.js';
+import type { GameState, GlobalGameState } from './state.js';
+import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
-import organizedpieces from './organizedpieces.js';
-import initvariant from './initvariant.js';
-import jsutil from '../../util/jsutil.js';
-import typeutil from '../util/typeutil.js';
-import legalmoves from './legalmoves.js';
-import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
 import clock from './clock.js';
-import movepiece from './movepiece.js';
-import checkdetection from './checkdetection.js';
-import gamerules from '../variants/gamerules.js';
-import wincondition from './wincondition.js';
+import jsutil from '../../util/jsutil.js';
 import variant from '../variants/variant.js';
+import typeutil from '../util/typeutil.js';
 import movesets from './movesets.js';
+import boardutil from '../util/boardutil.js';
+import movepiece from './movepiece.js';
+import gamerules from '../variants/gamerules.js';
+import legalmoves from './legalmoves.js';
+import initvariant from './initvariant.js';
+import wincondition from './wincondition.js';
+import checkdetection from './checkdetection.js';
+import organizedpieces from './organizedpieces.js';
+import gamefileutility from '../util/gamefileutility.js';
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */

@@ -1,15 +1,15 @@
 // src/shared/chess/logic/movevalidation.ts
 
 import jsutil from '../../util/jsutil.js';
-import boardutil, { Piece } from '../util/boardutil.js';
-import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 import winconutil from '../util/winconutil.js';
-import checkresolver from './checkresolver.js';
-import { FullGame } from './gamefile.js';
-import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
-import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
+import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
+import boardutil, { Piece } from '../util/boardutil.js';
+import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
+import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
+import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
+import { FullGame } from './gamefile.js';
 
 // Type Definitions ------------------------------------------------------------
 
