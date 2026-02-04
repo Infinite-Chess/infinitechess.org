@@ -10,9 +10,11 @@
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
+// @ts-ignore
 import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
-import gameformulator from '../gameformulator.js';
+// @ts-ignore
 import init, * as wasmBindings from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
+import gameformulator from '../gameformulator.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 const wasm = wasmBindings as typeof wasmBindings;
