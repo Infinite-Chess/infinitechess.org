@@ -1,7 +1,7 @@
 // src/client/scripts/esm/game/gui/guipause.ts
 
 /**
- * This script handles our Pause menu
+ * This script handles our Pause menu.
  */
 
 import onlinegame from '../misc/onlinegame/onlinegame.js';
@@ -26,24 +26,7 @@ import { listener_document } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import { GameBus } from '../GameBus.js';
 
-// Types --------------------------------------------------------
-
-interface UpdateTextOfMainMenuButtonOptions {
-	/** If true, and the main menu changes from "Abort" to "Resign" or from "Resign"/"Abort" to "Main Menu",
-	 * we will disable it and grey it out for 1 second so the player doesn't accidentally click resign when they wanted to abort or "Main Menu" when they wanted to resign.
-	 * This should only be true when called from onReceiveOpponentsMove() or onReceiveGameConclusion(), not on open()
-	 */
-	freezeMainMenuButtonUponChange?: boolean;
-}
-
-// Variables ---------------------------------------------------------
-
-// Pause UI
-let isPaused: boolean = false;
-/** This is true if the main menu button says "Resign Game" or "Abort Game". In all other cases, this is false. */
-let is_main_menu_button_used_as_resign_or_abort_button: boolean = false;
-/** Amount of milliseconds to freeze the Main Menu button after the text on it changes */
-const MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS: number = 1000;
+// Elements ------------------------------------------------------------------------------
 
 const element_pauseUI: HTMLElement = document.getElementById('pauseUI')!;
 const element_resume: HTMLElement = document.getElementById('resume')!;
@@ -52,29 +35,37 @@ const element_copygame: HTMLElement = document.getElementById('copygame')!;
 const element_pastegame: HTMLElement = document.getElementById('pastegame')!;
 const element_mainmenu: HTMLButtonElement = document.getElementById(
 	'mainmenu',
-)! as HTMLButtonElement;
+) as HTMLButtonElement;
 const element_practicemenu: HTMLElement = document.getElementById('practicemenu')!;
 const element_offerDraw: HTMLElement = document.getElementById('offerdraw')!;
 const element_perspective: HTMLElement = document.getElementById('toggleperspective')!;
 
+// Constants ---------------------------------------------------------------------------
+
+/** Amount of milliseconds to freeze the Main Menu button after the text on it changes */
+const MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS: number = 1000;
+
+// Variables -----------------------------------------------------------------------------
+
+// Pause UI
+let isPaused: boolean = false;
+/** This is true if the main menu button says "Resign Game" or "Abort Game". In all other cases, this is false. */
+let is_main_menu_button_used_as_resign_or_abort_button: boolean = false;
+
 // Events -----------------------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => {
-	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
+	updateTextOfMainMenuButton(true);
 });
 
 // Functions --------------------------------------------------------------------------------
 
-/**
- * Returns *true* if the game is currently paused.
- */
+/** Returns *true* if the game is currently paused. */
 function areWePaused(): boolean {
 	return isPaused;
 }
 
-/**
- * Returns the perspective toggle button element.
- */
+/** Returns the perspective toggle button element. */
 function getelement_perspective(): HTMLElement {
 	return element_perspective;
 }
@@ -113,6 +104,7 @@ function toggle(): void {
 function updatePasteButtonTransparency(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
+
 	const moves = gamefile.boardsim.moves;
 
 	const legalInPrivateMatch =
@@ -149,19 +141,21 @@ function updateDrawOfferButton(): void {
 
 /** Called when we receive an opponent's move, to update the pause menu buttons. */
 function onReceiveOpponentsMove(): void {
-	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
+	updateTextOfMainMenuButton(true);
 	updateDrawOfferButton();
 }
 
 /**
- * Updates the text content of the Main Menu button to either say
- * "Main Menu", "Abort Game", or "Resign Game", whichever is relevant
- * in the situation.
+ * Updates the text content of the Main Menu button to either say "Main Menu",
+ * "Abort Game", or "Resign Game", whichever is relevant in the situation.
+ * @param freezeMainMenuButtonUponChange - If true, and the main menu changes from "Abort" to "Resign" or from "Resign"/"Abort" to "Main Menu",
+ * we will disable it and grey it out for 1 second so the player doesn't accidentally click resign when they wanted to abort or "Main Menu" when they wanted to resign.
+ * This should only be true when called from onReceiveOpponentsMove() or onReceiveGameConclusion(), not on open()
  */
-function updateTextOfMainMenuButton({
-	freezeMainMenuButtonUponChange,
-}: UpdateTextOfMainMenuButtonOptions = {}): void {
+function updateTextOfMainMenuButton(freezeMainMenuButtonUponChange?: true): void {
 	if (!isPaused) return;
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
 
 	if (
 		!onlinegame.areInOnlineGame() ||
@@ -180,8 +174,7 @@ function updateTextOfMainMenuButton({
 	}
 
 	is_main_menu_button_used_as_resign_or_abort_button = true;
-	const gamefile = gameslot.getGamefile();
-	if (gamefile && moveutil.isGameResignable(gamefile.basegame)) {
+	if (moveutil.isGameResignable(gamefile.basegame)) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
 		if (
 			freezeMainMenuButtonUponChange &&
@@ -305,6 +298,8 @@ function callback_Perspective(): void {
 	listener_document.claimMouseClick(Mouse.LEFT);
 	perspective.toggle();
 }
+
+// Exports ---------------------------------------------------------------------------------
 
 export default {
 	areWePaused,
