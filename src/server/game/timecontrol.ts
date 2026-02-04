@@ -1,6 +1,15 @@
 // src/server/game/clockweb.ts
 
-import type { MetaData } from '../../shared/chess/util/metadata';
+/**
+ * Stores valid time controls for lobby invites.
+ */
+
+/**
+ * The clock value for the game, `s+s`, where the left side is
+ * start time in seconds, and the right is increment in seconds.
+ * Untimed = `-`
+ */
+export type TimeControl = `${number}+${number}` | '-';
 
 /** These are the allowed time controls in production. */
 const validTimeControls = [
@@ -23,7 +32,7 @@ const validTimeControls = [
 const devTimeControls = ['15+2'];
 
 /** Whether the given time control is valid. */
-function isClockValueValid(time_control: MetaData['TimeControl']): boolean {
+function isValid(time_control: TimeControl): boolean {
 	return (
 		validTimeControls.includes(time_control) ||
 		(process.env['NODE_ENV'] === 'development' && devTimeControls.includes(time_control))
@@ -31,5 +40,5 @@ function isClockValueValid(time_control: MetaData['TimeControl']): boolean {
 }
 
 export default {
-	isClockValueValid,
+	isValid,
 };
