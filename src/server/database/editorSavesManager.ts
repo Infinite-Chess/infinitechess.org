@@ -21,8 +21,8 @@ export type EditorSavesListRecord = {
 /** Represents a saved position ICN record (icn, pawn_double_push, castling). */
 export type EditorSavesIcnRecord = {
 	icn: string;
-	pawn_double_push: number;
-	castling: number;
+	pawn_double_push: 0 | 1;
+	castling: 0 | 1;
 };
 
 // Constants ---------------------------------------------------------------------------------
