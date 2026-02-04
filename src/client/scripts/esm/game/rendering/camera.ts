@@ -16,9 +16,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
 import mat4 from './gl-matrix.js';
+import stats from '../gui/stats.js';
 import perspective from './perspective.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../../../../shared/util/jsutil.js';

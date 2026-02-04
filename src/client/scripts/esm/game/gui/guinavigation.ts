@@ -8,9 +8,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
-import stats from './stats.js';
-// @ts-ignore
 import statustext from './statustext.js';
+import stats from './stats.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';

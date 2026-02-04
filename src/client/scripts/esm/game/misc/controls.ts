@@ -8,9 +8,8 @@
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
 import statustext from '../gui/statustext.js';
+import stats from '../gui/stats.js';
 import websocket from '../websocket.js';
 import loadbalancer from './loadbalancer.js';
 import camera from '../rendering/camera.js';
