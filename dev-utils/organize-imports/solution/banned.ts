@@ -1,5 +1,9 @@
 // src/server/middleware/banned.ts
 
+/**
+ * BLACKLISTED EMAILS are now handled in the email_blacklist database table!
+ */
+
 import fs from 'fs';
 import path from 'path';
 

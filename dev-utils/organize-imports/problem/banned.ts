@@ -1,11 +1,11 @@
 // src/server/middleware/banned.ts
 
-import path from 'path';
-import fs from 'fs';
-
 /**
  * BLACKLISTED EMAILS are now handled in the email_blacklist database table!
  */
+
+import path from 'path';
+import fs from 'fs';
 
 import { readFile } from '../utility/lockFile.js';
 
