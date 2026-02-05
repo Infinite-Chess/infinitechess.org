@@ -1,6 +1,9 @@
 /**
  * TypeScript Import Organizer
  *
+ * PREREQUISITES:
+ * - All import statements must end in a semicolon `;`
+ *
  * Usage: tsx scripts/organize-imports.ts <file1> <file2> ...
  *
  * ========================================
@@ -143,22 +146,27 @@ function findImportBoundaries(lines: string[]): { start: number; end: number } |
 	for (let i = 0; i < lines.length; i++) {
 		const trimmed = lines[i]!.trim();
 
-		// Skip @ts-ignore comments when looking for boundaries
-		if (trimmed.startsWith('// @ts-ignore')) {
+		// Skip empty lines
+		if (!trimmed) continue;
+		// Check for comments
+		else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
 			continue;
 		}
-
-		if (trimmed.startsWith('import ')) {
-			if (start === -1) {
-				start = i;
-			}
+		// Check for import
+		else if (trimmed.startsWith('import ')) {
+			if (start === -1) start = i;
 			end = i;
 
 			// Handle multi-line imports
-			while (i < lines.length - 1 && !lines[i]!.includes(';')) {
+			// Imports end at a non-commented semicolon
+			while (i < lines.length - 1 && !lines[i]!.split('//')[0]!.includes(';')) {
 				i++;
 				end = i;
 			}
+		} else {
+			// SAFETY STOP: We hit code that is NOT an import and NOT a comment.
+			// If we have found an import block already, stop looking.
+			if (start !== -1) break;
 		}
 	}
 
@@ -172,6 +180,8 @@ function extractImports(content: string): {
 } {
 	const lines = content.split('\n');
 	const boundaries = findImportBoundaries(lines);
+
+	// console.log('Import boundaries:', boundaries);
 
 	if (!boundaries) {
 		return {
@@ -230,9 +240,10 @@ function extractImports(content: string): {
 			i++;
 
 			// Collect multi-line import
-			while (i <= boundaries.end && !importText.includes(';')) {
-				importText += '\n' + lines[i];
+			while (i <= boundaries.end && !lines[i - 1]!.split('//')[0]!.includes(';')) {
+				importText += '\n' + lines[i]; // Add the next line
 				i++;
+				// console.log('Collecting multi-line import:', lines[i]);
 			}
 
 			// Prepend ts-ignore if present
@@ -240,7 +251,15 @@ function extractImports(content: string): {
 				importText = tsIgnoreLine + '\n' + importText;
 			}
 
-			imports.push(parseImport(importText, hasTsIgnore));
+			// console.log('Whole import:');
+			// console.log(importText);
+			// console.log('\n');
+
+			const parsedImport = parseImport(importText, hasTsIgnore);
+
+			// console.log('Parsed import:', parsedImport, '\n');
+
+			imports.push(parsedImport);
 
 			// Reset ts-ignore flag after using it
 			hasTsIgnore = false;
