@@ -1,17 +1,17 @@
 /**
- * TypeScript Import Organizer (Simplified Version)
+ * TypeScript Import Organizer
  *
  * Usage: tsx organize-imports-v2.ts <file1> <file2> ...
  *
  * ========================================
- * IMPORT ORGANIZATION RULES (SIMPLIFIED)
+ * IMPORT ORGANIZATION RULES
  * ========================================
  *
  * BOUNDARY DETECTION:
  * - Import section starts at the first import statement
  * - Import section ends at the last import statement
  * - Everything above and below is preserved as-is
- * - All comments within the import boundary (except @ts-ignore) are deleted
+ * - All comments within the import boundary (except @ts-ignore, and inline comments on import lines) are deleted
  *
  * GROUPING (groups separated by blank line):
  * 1. Type imports (package and source together, no separation)
