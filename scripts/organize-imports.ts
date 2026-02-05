@@ -1,7 +1,7 @@
 /**
  * TypeScript Import Organizer
  *
- * Usage: tsx organize-imports-v2.ts <file1> <file2> ...
+ * Usage: tsx scripts/organize-imports.ts <file1> <file2> ...
  *
  * ========================================
  * IMPORT ORGANIZATION RULES
