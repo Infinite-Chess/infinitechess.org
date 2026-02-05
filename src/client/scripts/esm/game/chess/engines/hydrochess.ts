@@ -10,6 +10,7 @@
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
+// Import WASM glue code statically so esbuild can bundle it and handle the .wasm file
 // @ts-ignore without this, the type check job fails
 import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
 // @ts-ignore without this, the type check job fails
