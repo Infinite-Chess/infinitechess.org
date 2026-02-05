@@ -68,9 +68,9 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 	const fromPath = fromMatch ? fromMatch[1]! : '';
 	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
 
-	// Calculate length before "from" - use full import text for multi-line imports
-	const fromIndex = importText.indexOf(' from ');
-	const lengthBeforeFrom = fromIndex !== -1 ? fromIndex : importText.length;
+	// Calculate length before "from" followed by whitespace and a quote
+	const match = /\sfrom\s+['"]/.exec(importText);
+	const lengthBeforeFrom = match ? match.index : importText.length;
 
 	// Check if multi-line
 	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
