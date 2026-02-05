@@ -64,7 +64,7 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 	const isSideEffect = /^import\s+['"][^'"]+['"];?/.test(trimmed);
 
 	// Determine if package or source
-	const fromMatch = importText.match(/from\s+['"]([^'"]+)['"]/);
+	const fromMatch = importText.match(/from\s+(['"])(.*?)\1/);
 	const fromPath = fromMatch ? fromMatch[1]! : '';
 	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
 
