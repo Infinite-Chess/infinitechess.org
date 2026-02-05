@@ -240,6 +240,8 @@ function extractImports(content: string): {
 			i++;
 
 			// Collect multi-line import
+			// TODO: WHY IS THIS SO WEIRD?!
+			// "Stop if the previous line contains a semicolon"?!
 			while (i <= boundaries.end && !lines[i - 1]!.split('//')[0]!.includes(';')) {
 				importText += '\n' + lines[i]; // Add the next line
 				i++;
