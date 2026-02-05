@@ -27,7 +27,3 @@ const secureRedirect = (req: Request, res: Response, next: NextFunction): void =
 };
 
 export default secureRedirect;
-
-const five = [5,6];
-
-five.join

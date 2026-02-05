@@ -1,91 +1,36 @@
 /**
- * TypeScript Import Organizer
+ * TypeScript Import Organizer (Simplified Version)
  *
- * This script automatically organizes TypeScript import statements according to specific rules.
- * Usage: tsx organize-imports.ts <file1> <file2> ...
- *
- * ========================================
- * IMPORT ORDERING RULES
- * ========================================
- *
- * The script organizes imports into the following groups, in this order:
- *
- * 1. TYPE IMPORTS - PACKAGE
- *    - Type imports from npm packages (paths not starting with . or /)
- *    - Example: import type { Request } from 'express';
- *
- * 2. [blank line if both type package and type source exist]
- *
- * 3. TYPE IMPORTS - SOURCE
- *    - Type imports from local source files (paths starting with . or /)
- *    - Example: import type { User } from './types';
- *
- * 4. [blank line if any type imports exist AND any regular imports exist]
- *
- * 5. REGULAR IMPORTS WITH @ts-ignore - PACKAGE
- *    - Regular imports preceded by @ts-ignore comments, from npm packages
- *    - Example:
- *      // @ts-ignore
- *      import something from 'package';
- *
- * 6. [blank line if both package and source @ts-ignore imports exist]
- *
- * 7. REGULAR IMPORTS WITH @ts-ignore - SOURCE
- *    - Regular imports preceded by @ts-ignore comments, from local files
- *
- * 8. REGULAR IMPORTS - PACKAGE
- *    - Standard imports from npm packages (without @ts-ignore)
- *
- * 9. [blank line if both regular package and regular source exist]
- *
- * 10. REGULAR IMPORTS - SOURCE
- *     - Standard imports from local source files (without @ts-ignore)
- *
- * 11. [blank line if regular imports exist AND side-effect imports exist]
- *
- * 12. SIDE-EFFECT IMPORTS
- *     - Imports that only execute code, no bindings
- *     - Example: import './setup.js';
+ * Usage: tsx organize-imports-v2.ts <file1> <file2> ...
  *
  * ========================================
- * SORTING WITHIN EACH GROUP
+ * IMPORT ORGANIZATION RULES (SIMPLIFIED)
  * ========================================
  *
- * Within each import group, imports are sorted by:
+ * BOUNDARY DETECTION:
+ * - Import section starts at the first import statement
+ * - Import section ends at the last import statement
+ * - Everything above and below is preserved as-is
+ * - All comments within the import boundary (except @ts-ignore) are deleted
  *
- * 1. Import style (in this order):
- *    a. Default-only imports
- *       Example: import React from 'react';
+ * GROUPING (groups separated by blank line):
+ * 1. Type imports (package and source together, no separation)
+ * 2. Regular package imports
+ * 3. Regular source imports
+ * 4. Side-effect imports
  *
- *    b. Hybrid imports (default + named or default + namespace)
- *       Example: import React, { useState } from 'react';
- *       Example: import fs, * as path from 'fs';
+ * SORTING WITHIN GROUPS:
+ * - @ts-ignore imports first
+ * - Default-only imports
+ * - Hybrid imports (default + named/namespace)
+ * - Regular imports
+ * - Multi-line imports
+ * - Then by length before "from"
  *
- *    c. Normal single-line imports (named imports only)
- *       Example: import { useState } from 'react';
- *
- *    d. Multi-line imports (spanning multiple lines)
- *       Example: import {
- *                  useState,
- *                  useEffect
- *                } from 'react';
- *
- * 2. Length of the import statement before "from"
- *    - Shorter imports come before longer imports
- *    - This creates a visually pleasing staircase effect
- *
- * Side-effect imports are sorted only by total length (shortest first).
- *
- * ========================================
- * SPECIAL HANDLING
- * ========================================
- *
- * - File path comments (e.g., // src/server/types.ts) are preserved
- * - Multi-line comment blocks (slash-star ... star-slash) are fully preserved with all internal blank lines
- * - Section divider comments after imports (e.g., // Constants ------) are preserved
- * - Import organization comments (e.g., // System imports, // Import start) are removed
- * - Explanatory comments between imports (e.g., // Import WASM...) are removed
- * - @ts-ignore comments stay attached to their imports
+ * SPACING:
+ * - One blank line above imports (unless at file top)
+ * - One blank line below imports
+ * - Blank lines between groups
  */
 
 import * as fs from 'fs';
@@ -97,436 +42,310 @@ interface Import {
 	raw: string;
 	isType: boolean;
 	isPackage: boolean;
+	isSideEffect: boolean;
+	hasTsIgnore: boolean;
 	isDefaultOnly: boolean;
 	isHybrid: boolean;
 	isMultiLine: boolean;
-	lengthUntilFrom: number;
-	hasTsIgnore: boolean;
-	isSideEffectOnly: boolean;
-}
-
-interface ImportGroups {
-	typePackage: Import[];
-	typeSource: Import[];
-	regularPackageWithTsIgnore: Import[];
-	regularSourceWithTsIgnore: Import[];
-	regularPackage: Import[];
-	regularSource: Import[];
-	sideEffectImports: Import[];
+	lengthBeforeFrom: number;
 }
 
 // Helper Functions --------------------------------------------------------
 
-/**
- * Checks if a comment line is an import-related section header that should be removed.
- * Examples: "// Import start", "// System imports", "// Only imported so their code will run!"
- */
-function isImportSectionHeader(line: string): boolean {
-	const trimmed = line.trim();
-	if (!trimmed.startsWith('//')) return false;
+function parseImport(importText: string, hasTsIgnore: boolean): Import {
+	const lines = importText.split('\n');
+	const importLine = hasTsIgnore ? lines[lines.length - 1]! : lines[0]!;
+	const trimmed = importLine.trim();
 
-	const lower = trimmed.toLowerCase();
-	return (
-		(lower.includes('import') && (lower.includes('start') || lower.includes('end'))) ||
-		lower.includes('system imports') ||
-		lower.includes('package imports') ||
-		lower.includes('regular imports') ||
-		lower.includes('custom imports') ||
-		(lower.includes('only imported') && lower.includes('code') && lower.includes('run'))
-	);
-}
-
-/**
- * Checks if a comment is a section divider that should be preserved.
- * Examples: "// Types -----", "// Constants ===", "// ----"
- */
-function isSectionDivider(line: string): boolean {
-	const trimmed = line.trim();
-	if (!trimmed.startsWith('//')) return false;
-
-	// Has repeating dashes or equals (3 or more)
-	return /[-=]{3,}/.test(trimmed);
-}
-
-/**
- * Determines the import style order for sorting.
- * Returns: 0 (default-only), 1 (hybrid), 2 (normal), 3 (multi-line)
- */
-function getImportStyleOrder(imp: Import): number {
-	if (imp.isDefaultOnly) return 0;
-	if (imp.isHybrid) return 1;
-	if (imp.isMultiLine) return 3;
-	return 2; // normal single-line
-}
-
-/**
- * Comparison function for sorting imports within a group.
- * Sorts by style first, then by length before "from".
- */
-function compareImports(a: Import, b: Import): number {
-	const styleOrderA = getImportStyleOrder(a);
-	const styleOrderB = getImportStyleOrder(b);
-
-	if (styleOrderA !== styleOrderB) {
-		return styleOrderA - styleOrderB;
-	}
-
-	return a.lengthUntilFrom - b.lengthUntilFrom;
-}
-
-/**
- * Adds imports to the output with proper blank line separation.
- */
-function addImportGroup(parts: string[], imports: Import[]): void {
-	if (imports.length > 0) {
-		parts.push(imports.map((i) => i.raw).join('\n'));
-	}
-}
-
-/**
- * Adds a blank line separator if needed.
- */
-function addBlankLineIfNeeded(parts: string[], condition: boolean): void {
-	if (condition) {
-		parts.push('');
-	}
-}
-
-// Import Parsing ----------------------------------------------------------
-
-/**
- * Parses a single import statement and extracts its characteristics.
- */
-function parseImport(importStr: string, hasTsIgnore: boolean): Import {
-	const trimmed = importStr.trim();
+	// Check if type import
 	const isType = trimmed.startsWith('import type ') || trimmed.startsWith('import type{');
-	const isMultiLine = importStr.includes('\n');
 
-	// Check if it's a side-effect-only import (no bindings)
-	const isSideEffectOnly = /^import\s+['"][^'"]+['"];?/.test(trimmed);
+	// Check if side-effect import (no bindings)
+	const isSideEffect = /^import\s+['"][^'"]+['"];?/.test(trimmed);
 
-	// Determine if it's a package (npm) or source (local file) import
-	const fromMatch = importStr.match(/from\s+['"]([^'"]+)['"]/);
+	// Determine if package or source
+	const fromMatch = importText.match(/from\s+['"]([^'"]+)['"]/);
 	const fromPath = fromMatch ? fromMatch[1]! : '';
-	const isPackage = !fromPath.startsWith('.') && !fromPath.startsWith('/');
+	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
 
-	// Calculate length until "from" keyword
-	const fromIndex = importStr.indexOf(' from ');
-	const lengthUntilFrom = fromIndex !== -1 ? fromIndex : importStr.length;
+	// Calculate length before "from" - use full import text for multi-line imports
+	const fromIndex = importText.indexOf(' from ');
+	const lengthBeforeFrom = fromIndex !== -1 ? fromIndex : importText.length;
 
-	// Determine import style (default-only, hybrid, or normal)
+	// Check if multi-line
+	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
+
+	// Determine import style
 	let isDefaultOnly = false;
 	let isHybrid = false;
 
-	if (!isSideEffectOnly) {
-		const afterImport = importStr.replace(/^import\s+type\s+/, '').replace(/^import\s+/, '');
+	if (!isSideEffect) {
+		const afterImport = importLine.replace(/^import\s+type\s+/, '').replace(/^import\s+/, '');
 		const beforeFrom = afterImport.split(' from ')[0]?.trim() || '';
 
-		const hasCurlyBraces = beforeFrom.includes('{');
+		const hasCurly = beforeFrom.includes('{');
 		const hasComma = beforeFrom.includes(',');
-
-		// Check if comma appears before opening curly brace
 		const curlyIndex = beforeFrom.indexOf('{');
-		const hasCommaBeforeCurly =
+		const commaBeforeCurly =
 			curlyIndex > 0 && beforeFrom.substring(0, curlyIndex).includes(',');
 
-		if (!hasCurlyBraces && !hasComma) {
+		if (!hasCurly && !hasComma) {
 			isDefaultOnly = true;
-		} else if (hasCommaBeforeCurly || (hasComma && !hasCurlyBraces)) {
+		} else if (commaBeforeCurly || (hasComma && !hasCurly)) {
 			isHybrid = true;
 		}
 	}
 
 	return {
-		raw: importStr,
+		raw: importText,
 		isType,
 		isPackage,
+		isSideEffect,
+		hasTsIgnore,
 		isDefaultOnly,
 		isHybrid,
 		isMultiLine,
-		lengthUntilFrom,
-		hasTsIgnore,
-		isSideEffectOnly,
+		lengthBeforeFrom,
 	};
+}
+
+function compareImports(a: Import, b: Import): number {
+	// First: ts-ignore imports come first
+	if (a.hasTsIgnore !== b.hasTsIgnore) {
+		return a.hasTsIgnore ? -1 : 1;
+	}
+
+	// Second: by import style
+	const getStyleOrder = (imp: Import): number => {
+		if (imp.isDefaultOnly) return 0;
+		if (imp.isHybrid) return 1;
+		if (imp.isMultiLine) return 3;
+		return 2; // regular
+	};
+
+	const styleA = getStyleOrder(a);
+	const styleB = getStyleOrder(b);
+
+	if (styleA !== styleB) {
+		return styleA - styleB;
+	}
+
+	// Third: by length before "from"
+	return a.lengthBeforeFrom - b.lengthBeforeFrom;
 }
 
 // Import Extraction -------------------------------------------------------
 
-/**
- * Extracts imports from file content, separating them from leading/trailing content.
- */
-function extractImports(content: string): {
-	imports: Import[];
-	leadingContent: string;
-	trailingContent: string;
-} {
-	const lines = content.split('\n');
-	let leadingContent = '';
-	let trailingContent = '';
-	const imports: Import[] = [];
+function findImportBoundaries(lines: string[]): { start: number; end: number } | null {
+	let start = -1;
+	let end = -1;
 
-	let i = 0;
-	let foundFirstImport = false;
+	for (let i = 0; i < lines.length; i++) {
+		const trimmed = lines[i]!.trim();
 
-	// Extract leading content (comments, whitespace before imports)
-	let inMultiLineComment = false;
-	while (i < lines.length) {
-		const line = lines[i]!;
-		const trimmed = line.trim();
-
-		// Track multi-line comment state to preserve all content within
-		if (trimmed.startsWith('/*')) {
-			inMultiLineComment = true;
-		}
-		if (trimmed.endsWith('*/') || trimmed === '*/') {
-			leadingContent += line + '\n';
-			i++;
-			inMultiLineComment = false;
+		// Skip @ts-ignore comments when looking for boundaries
+		if (trimmed.startsWith('// @ts-ignore')) {
 			continue;
 		}
 
-		// Preserve everything inside multi-line comments
-		if (inMultiLineComment) {
-			leadingContent += line + '\n';
-			i++;
-			continue;
-		}
-
-		// Preserve empty lines and comments
-		if (!trimmed) {
-			leadingContent += line + '\n';
-			i++;
-			continue;
-		}
-
-		// Skip import section headers (they'll be removed)
-		if (isImportSectionHeader(trimmed)) {
-			i++;
-			continue;
-		}
-
-		// Preserve regular comments
-		if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
-			leadingContent += line + '\n';
-			i++;
-			continue;
-		}
-
-		// Stop when we hit an import or other code
 		if (trimmed.startsWith('import ')) {
-			break;
-		}
+			if (start === -1) {
+				start = i;
+			}
+			end = i;
 
-		break;
+			// Handle multi-line imports
+			while (i < lines.length - 1 && !lines[i]!.includes(';')) {
+				i++;
+				end = i;
+			}
+		}
 	}
 
-	// Extract imports section
-	let pendingTsIgnore = false;
-	let tsIgnoreLines: string[] = [];
-	let consecutiveNonImportLines = 0;
+	return start !== -1 ? { start, end } : null;
+}
 
-	while (i < lines.length) {
+function extractImports(content: string): {
+	imports: Import[];
+	beforeImports: string;
+	afterImports: string;
+} {
+	const lines = content.split('\n');
+	const boundaries = findImportBoundaries(lines);
+
+	if (!boundaries) {
+		return {
+			imports: [],
+			beforeImports: content,
+			afterImports: '',
+		};
+	}
+
+	// Find all @ts-ignore lines before the start
+	let actualStart = boundaries.start;
+	while (actualStart > 0 && lines[actualStart - 1]!.trim().startsWith('// @ts-ignore')) {
+		actualStart--;
+	}
+
+	const beforeImports = lines.slice(0, actualStart).join('\n');
+	const afterImports = lines.slice(boundaries.end + 1).join('\n');
+
+	// Extract imports within boundaries
+	const imports: Import[] = [];
+	let i = actualStart;
+	let hasTsIgnore = false; // Move outside loop
+	let tsIgnoreLine = ''; // Move outside loop
+
+	while (i <= boundaries.end) {
 		const line = lines[i]!;
 		const trimmed = line.trim();
 
-		// Skip import section headers
-		if (isImportSectionHeader(trimmed)) {
-			i++;
-			consecutiveNonImportLines++;
-			continue;
-		}
-
-		// Handle @ts-ignore comments
+		// Check for @ts-ignore
 		if (trimmed.startsWith('// @ts-ignore')) {
-			tsIgnoreLines.push(line);
-			pendingTsIgnore = true;
+			hasTsIgnore = true;
+			tsIgnoreLine = line;
 			i++;
-			consecutiveNonImportLines = 0;
+			if (i > boundaries.end) break;
+			continue; // Continue to next line
+		}
+
+		// Skip empty lines and all comments (except we already handled @ts-ignore)
+		if (!trimmed || (trimmed.startsWith('//') && !trimmed.startsWith('import '))) {
+			i++;
 			continue;
 		}
 
-		// Skip empty lines between imports
-		if (!trimmed) {
-			i++;
-			consecutiveNonImportLines = 0;
+		// Skip multi-line comments
+		if (trimmed.startsWith('/*') || trimmed.startsWith('/**')) {
+			while (i <= boundaries.end && !lines[i]!.includes('*/')) {
+				i++;
+			}
+			i++; // Skip the closing */
 			continue;
 		}
 
-		// Process import statements
+		// Process import statement
 		if (trimmed.startsWith('import ')) {
-			foundFirstImport = true;
-			consecutiveNonImportLines = 0;
-			let importStr = line;
+			let importText = line;
 			i++;
 
 			// Collect multi-line import
-			while (i < lines.length && !importStr.includes(';')) {
-				importStr += '\n' + lines[i];
+			while (i <= boundaries.end && !importText.includes(';')) {
+				importText += '\n' + lines[i];
 				i++;
 			}
 
-			// Attach @ts-ignore comment if present
-			if (pendingTsIgnore) {
-				importStr = tsIgnoreLines.join('\n') + '\n' + importStr;
-				tsIgnoreLines = [];
+			// Prepend ts-ignore if present
+			if (hasTsIgnore) {
+				importText = tsIgnoreLine + '\n' + importText;
 			}
 
-			imports.push(parseImport(importStr, pendingTsIgnore));
-			pendingTsIgnore = false;
-			continue;
+			imports.push(parseImport(importText, hasTsIgnore));
+
+			// Reset ts-ignore flag after using it
+			hasTsIgnore = false;
+			tsIgnoreLine = '';
+		} else {
+			i++;
 		}
-
-		// Check if we've reached the end of imports
-		if (foundFirstImport) {
-			consecutiveNonImportLines++;
-
-			// Skip single explanatory comments between imports
-			if (trimmed.startsWith('//') && !isSectionDivider(trimmed)) {
-				if (consecutiveNonImportLines === 1) {
-					i++;
-					continue;
-				}
-			}
-
-			// End of imports section - collect remaining content
-			trailingContent = lines.slice(i).join('\n');
-			break;
-		}
-
-		// Still in leading content
-		leadingContent += line + '\n';
-		i++;
 	}
 
-	return { imports, leadingContent, trailingContent };
+	return { imports, beforeImports, afterImports };
 }
 
 // Import Sorting ----------------------------------------------------------
 
-/**
- * Categorizes imports into their respective groups.
- */
-function categorizeImports(imports: Import[]): ImportGroups {
-	const groups: ImportGroups = {
-		typePackage: [],
-		typeSource: [],
-		regularPackageWithTsIgnore: [],
-		regularSourceWithTsIgnore: [],
-		regularPackage: [],
-		regularSource: [],
-		sideEffectImports: [],
-	};
+function organizeImports(imports: Import[]): string {
+	// Group imports
+	const typeImports: Import[] = [];
+	const packageImports: Import[] = [];
+	const sourceImports: Import[] = [];
+	const sideEffectImports: Import[] = [];
 
 	for (const imp of imports) {
-		if (imp.isSideEffectOnly) {
-			groups.sideEffectImports.push(imp);
+		if (imp.isSideEffect) {
+			sideEffectImports.push(imp);
 		} else if (imp.isType) {
-			if (imp.isPackage) groups.typePackage.push(imp);
-			else groups.typeSource.push(imp);
-		} else if (imp.hasTsIgnore) {
-			if (imp.isPackage) groups.regularPackageWithTsIgnore.push(imp);
-			else groups.regularSourceWithTsIgnore.push(imp);
+			typeImports.push(imp);
+		} else if (imp.isPackage) {
+			packageImports.push(imp);
 		} else {
-			if (imp.isPackage) groups.regularPackage.push(imp);
-			else groups.regularSource.push(imp);
+			sourceImports.push(imp);
 		}
 	}
 
-	return groups;
-}
-
-/**
- * Sorts all import groups and combines them with proper blank line spacing.
- */
-function sortImports(imports: Import[]): string {
-	const groups = categorizeImports(imports);
-
 	// Sort each group
-	groups.typePackage.sort(compareImports);
-	groups.typeSource.sort(compareImports);
-	groups.regularPackageWithTsIgnore.sort(compareImports);
-	groups.regularSourceWithTsIgnore.sort(compareImports);
-	groups.regularPackage.sort(compareImports);
-	groups.regularSource.sort(compareImports);
-	groups.sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
+	typeImports.sort((a, b) => {
+		// Within types: package before source
+		if (a.isPackage !== b.isPackage) {
+			return a.isPackage ? -1 : 1;
+		}
+		return compareImports(a, b);
+	});
 
-	// Build output with proper spacing
-	const parts: string[] = [];
+	packageImports.sort(compareImports);
+	sourceImports.sort(compareImports);
+	sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
 
-	// Type imports
-	addImportGroup(parts, groups.typePackage);
-	addBlankLineIfNeeded(parts, groups.typePackage.length > 0 && groups.typeSource.length > 0);
-	addImportGroup(parts, groups.typeSource);
+	// Build groups array
+	const groups: string[] = [];
 
-	// Blank line between type and regular imports
-	const hasTypeImports = groups.typePackage.length > 0 || groups.typeSource.length > 0;
-	const hasRegularImports =
-		groups.regularPackageWithTsIgnore.length > 0 ||
-		groups.regularSourceWithTsIgnore.length > 0 ||
-		groups.regularPackage.length > 0 ||
-		groups.regularSource.length > 0;
-	addBlankLineIfNeeded(parts, hasTypeImports && hasRegularImports);
+	if (typeImports.length > 0) {
+		groups.push(typeImports.map((i) => i.raw).join('\n'));
+	}
 
-	// Regular imports with @ts-ignore (no blank line between these and regular imports)
-	addImportGroup(parts, groups.regularPackageWithTsIgnore);
-	addBlankLineIfNeeded(
-		parts,
-		groups.regularPackageWithTsIgnore.length > 0 && groups.regularSourceWithTsIgnore.length > 0,
-	);
-	addImportGroup(parts, groups.regularSourceWithTsIgnore);
+	if (packageImports.length > 0) {
+		groups.push(packageImports.map((i) => i.raw).join('\n'));
+	}
 
-	// Regular imports without @ts-ignore
-	addImportGroup(parts, groups.regularPackage);
-	addBlankLineIfNeeded(
-		parts,
-		groups.regularPackage.length > 0 && groups.regularSource.length > 0,
-	);
-	addImportGroup(parts, groups.regularSource);
+	if (sourceImports.length > 0) {
+		groups.push(sourceImports.map((i) => i.raw).join('\n'));
+	}
 
-	// Side-effect imports
-	addBlankLineIfNeeded(parts, hasRegularImports && groups.sideEffectImports.length > 0);
-	addImportGroup(parts, groups.sideEffectImports);
+	if (sideEffectImports.length > 0) {
+		groups.push(sideEffectImports.map((i) => i.raw).join('\n'));
+	}
 
-	return parts.join('\n');
+	// Join groups with blank lines
+	return groups.join('\n\n');
 }
 
 // File Processing ---------------------------------------------------------
 
-/**
- * Processes a single file, organizing its imports if needed.
- * Returns true if the file was modified.
- */
 function processFile(filePath: string): boolean {
 	try {
 		const content = fs.readFileSync(filePath, 'utf-8');
-		const { imports, leadingContent, trailingContent } = extractImports(content);
+		const { imports, beforeImports, afterImports } = extractImports(content);
 
 		if (imports.length === 0) {
-			return false; // No imports to organize
+			return false;
 		}
 
-		const sortedImports = sortImports(imports);
+		const organizedImports = organizeImports(imports);
 
-		// Clean up spacing around imports
-		let cleanLeadingContent = leadingContent.trimEnd();
-		if (cleanLeadingContent) {
-			cleanLeadingContent += '\n\n';
+		// Build new content
+		let newContent = '';
+
+		// Add content before imports
+		if (beforeImports) {
+			newContent = beforeImports.trimEnd() + '\n\n';
 		}
 
-		let cleanTrailingContent = trailingContent.trimStart();
-		if (cleanTrailingContent) {
-			cleanTrailingContent = '\n\n' + cleanTrailingContent;
+		// Add organized imports
+		newContent += organizedImports;
+
+		// Add content after imports
+		if (afterImports) {
+			newContent += '\n\n' + afterImports.trimStart();
 		}
 
-		const newContent = cleanLeadingContent + sortedImports + cleanTrailingContent;
-
-		// Only write if content changed
+		// Write if changed
 		if (content !== newContent) {
 			fs.writeFileSync(filePath, newContent, 'utf-8');
 			return true;
 		}
 	} catch (error) {
-		console.error(`Error processing file ${filePath}:`, error);
+		console.error(`Error processing ${filePath}:`, error);
 	}
 
 	return false;
@@ -535,31 +354,29 @@ function processFile(filePath: string): boolean {
 // Main Execution ----------------------------------------------------------
 
 function main(): void {
-	let filesToProcess = process.argv.slice(2);
+	const files = process.argv.slice(2).filter((f) => f.endsWith('.ts'));
 
-	if (filesToProcess.length === 0) {
+	if (files.length === 0) {
 		console.log(
 			'[organize-imports] No files provided. Usage: tsx organize-imports.ts <file1> <file2> ...',
 		);
 		return;
 	}
 
-	filesToProcess = filesToProcess.filter((f) => f.endsWith('.ts'));
+	let changed = 0;
+	const cwd = process.cwd();
 
-	let changedCount = 0;
-	const rootDir = process.cwd();
-
-	for (const file of filesToProcess) {
+	for (const file of files) {
 		if (!fs.existsSync(file)) continue;
 		if (!processFile(file)) continue;
 
-		const relativePath = path.isAbsolute(file) ? path.relative(rootDir, file) : file;
-		console.log(relativePath);
-		changedCount++;
+		const relative = path.isAbsolute(file) ? path.relative(cwd, file) : file;
+		console.log(relative);
+		changed++;
 	}
 
-	if (changedCount > 0) {
-		console.log(`Organized imports in ${changedCount} file(s).`);
+	if (changed > 0) {
+		console.log(`Organized imports in ${changed} file(s).`);
 	}
 }
 
