@@ -153,6 +153,8 @@ create_button = "Create Account"
 agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
+js-username_reserved = "That username is reserved"
+js-username_length = "Username must be between 3-20 characters"
 js-username_tooshort = "Username must be at least 3 characters long"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"
@@ -632,11 +634,9 @@ ws-incorrect_password = "Password is incorrect"
 ws-login_failure_retry_in = "Failed to login, try again in"
 ws-seconds = "seconds" # unit of time
 ws-second = "second" # unit of time
-ws-username_length = "Username must be between 3-20 characters"
 ws-username_letters = "Username must only contain letters A-Z and numbers 0-9"
 ws-username_taken = "That username is taken"
 ws-username_bad_word = "That username contains a word that is not allowed"
-ws-username_reserved = "That username is reserved"
 ws-email_too_long = "Your email is too looooooong."
 ws-email_invalid = "This is not a valid email"
 ws-email_in_use = "This email is already in use"

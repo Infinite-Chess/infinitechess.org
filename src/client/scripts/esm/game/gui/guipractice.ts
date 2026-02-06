@@ -142,6 +142,7 @@ function createPracticeHTML(): void {
 
 			const checkmateDifficulty = document.createElement('div');
 			checkmateDifficulty.className = 'checkmate-difficulty';
+			// @ts-ignore
 			checkmateDifficulty.textContent = translations[difficulty];
 
 			for (const entry of piecelist) {
@@ -394,7 +395,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 			earnedKey: 'checkmate_gold',
 			unearnedKey: 'checkmate_gold_unearned',
 		},
-	];
+	] as const;
 
 	badgeConfigs.forEach((config) => {
 		if (!config.element || !config.image) return;

@@ -73,6 +73,7 @@ function setSupportedVariantsDisplay(): void {
 	const variantslist: string[] = [];
 	valid_variants.forEach((variant: string | null) => {
 		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
+		// @ts-ignore
 		variantslist.push(variant in translations ? translations[variant] : variant);
 	});
 	element_supportedVariants.textContent = `${translations['supported_variants']} ${variantslist.join(', ')}.`;

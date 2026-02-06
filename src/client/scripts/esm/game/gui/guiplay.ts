@@ -308,6 +308,7 @@ function callback_createInvite(): void {
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
+			// @ts-ignore
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
 			TimeControl: inviteOptions.clock,

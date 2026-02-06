@@ -221,7 +221,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		validators.UsernameValidationResult.UsernameIsReserved
 	) {
 		allowed = false;
-		reason = getTranslationForReq('server.javascript.ws-username_reserved', req);
+		reason = getTranslationForReq('create-account.javascript.js-username_reserved', req);
 	}
 
 	res.json({
@@ -239,7 +239,10 @@ function doUsernameValidation(username: string, req: Request, res: Response): bo
 			case validators.UsernameValidationResult.UsernameTooShort:
 			case validators.UsernameValidationResult.UsernameTooLong:
 				res.status(400).json({
-					message: getTranslationForReq('server.javascript.ws-username_length', req),
+					message: getTranslationForReq(
+						'create-account.javascript.js-username_length',
+						req,
+					),
 				});
 				return false;
 			case validators.UsernameValidationResult.OnlyLettersAndNumbers:

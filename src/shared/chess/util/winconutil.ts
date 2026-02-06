@@ -106,7 +106,8 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
 		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
 	}
-	return translations['termination'][condition] as string;
+	// @ts-ignore
+	return translations['termination'][condition];
 }
 
 export default {

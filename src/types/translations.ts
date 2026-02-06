@@ -107,8 +107,10 @@ export type TranslationKeys =
 	| 'create-account.password'
 	| 'create-account.create_button'
 	| 'create-account.agreement'
+	| 'create-account.javascript.js-username_length'
 	| 'create-account.javascript.js-username_tooshort'
 	| 'create-account.javascript.js-username_wrongenc'
+	| 'create-account.javascript.js-username_reserved'
 	| 'create-account.javascript.js-email_invalid'
 	| 'create-account.javascript.js-email_too_long'
 	| 'create-account.javascript.js-email_inuse'
@@ -481,11 +483,9 @@ export type TranslationKeys =
 	| 'server.javascript.ws-login_failure_retry_in'
 	| 'server.javascript.ws-seconds'
 	| 'server.javascript.ws-second'
-	| 'server.javascript.ws-username_length'
 	| 'server.javascript.ws-username_letters'
 	| 'server.javascript.ws-username_taken'
 	| 'server.javascript.ws-username_bad_word'
-	| 'server.javascript.ws-username_reserved'
 	| 'server.javascript.ws-email_too_long'
 	| 'server.javascript.ws-email_invalid'
 	| 'server.javascript.ws-email_in_use'
@@ -639,8 +639,10 @@ export interface TranslationsObject {
 		create_button: string;
 		agreement: string[];
 		javascript: {
+			'js-username_length': string;
 			'js-username_tooshort': string;
 			'js-username_wrongenc': string;
+			'js-username_reserved': string;
 			'js-email_invalid': string;
 			'js-email_too_long': string;
 			'js-email_inuse': string;
@@ -1093,11 +1095,9 @@ export interface TranslationsObject {
 			'ws-login_failure_retry_in': string;
 			'ws-seconds': string;
 			'ws-second': string;
-			'ws-username_length': string;
 			'ws-username_letters': string;
 			'ws-username_taken': string;
 			'ws-username_bad_word': string;
-			'ws-username_reserved': string;
 			'ws-email_too_long': string;
 			'ws-email_invalid': string;
 			'ws-email_in_use': string;
