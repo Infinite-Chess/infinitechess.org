@@ -11,7 +11,8 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 1. Follow code standards and best practices of today.
 2. Maintain existing code structure and organization.
 3. Perform testing for new complex functions to ensure their output is as expected.
-4. Remember before committing changes, that all pull requests must follow the guidelines in `docs/CONTRIBUTING.md`.
+4. Actual unit/integration tests are not required, unless explicitly asked for.
+5. Remember before committing changes, that all pull requests must follow the guidelines in `docs/CONTRIBUTING.md`.
 
 ## Project Architecture
 
