@@ -1,7 +1,7 @@
 // build/server.ts
 
-import esbuild, { BuildOptions } from 'esbuild';
 import { glob } from 'glob';
+import esbuild, { BuildOptions } from 'esbuild';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
 

@@ -4,16 +4,17 @@
  * Generates static HTML views from EJS templates and translation files.
  */
 
-import i18next from 'i18next';
 import fs from 'fs';
 import path from 'path';
+import i18next from 'i18next';
 import ejs, { Data } from 'ejs';
 import { fileURLToPath } from 'node:url';
 
 import editorutil from '../src/shared/editor/editorutil.js';
+
 import translationLoader from '../src/server/config/translationLoader.js';
-import { UNCERTAIN_LEADERBOARD_RD } from '../src/server/game/gamemanager/ratingcalculation.js';
 import { DEFAULT_LANGUAGE } from '../src/server/utility/translate.js';
+import { UNCERTAIN_LEADERBOARD_RD } from '../src/server/game/gamemanager/ratingcalculation.js';
 
 // Constants -----------------------------------------------------------------
 
