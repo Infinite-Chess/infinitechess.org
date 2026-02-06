@@ -20,6 +20,7 @@ import clock from '../../../../../shared/chess/logic/clock.js';
 import board from '../rendering/boardtiles.js';
 import arrows from '../rendering/arrows/arrows.js';
 import meshes from '../rendering/meshes.js';
+import { gl } from '../rendering/webgl.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
@@ -41,14 +42,13 @@ import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import perspective from '../rendering/perspective.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { GameBus } from '../GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import guinavigation from '../gui/guinavigation.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import { gl } from '../rendering/webgl.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { GameBus } from '../GameBus.js';
 import { animateMove } from './graphicalchanges.js';
 
 // Type Definitions ----------------------------------------------------------

@@ -26,9 +26,9 @@ import validatorama from '../../util/validatorama.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 
 // Variables ----------------------------------------------------------------------------
 

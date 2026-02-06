@@ -16,10 +16,10 @@ import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import legalmoves from './legalmoves.js';
+import { players } from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
-import { players } from '../util/typeutil.js';
 
 // Functions ----------------------------------------------------------------
 

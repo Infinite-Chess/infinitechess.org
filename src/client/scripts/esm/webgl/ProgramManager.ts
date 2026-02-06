@@ -12,6 +12,7 @@ import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
 import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
 import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
+import { ShaderProgram } from './ShaderProgram';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
 import fsSource_posterize from '../../../shaders/posterize/fragment.glsl';
 import vsSource_miniImages from '../../../shaders/mini_images/vertex.glsl';
@@ -28,7 +29,6 @@ import vsSource_boardUberShader from '../../../shaders/board_uber_shader/vertex.
 import fsSource_boardUberShader from '../../../shaders/board_uber_shader/fragment.glsl';
 import vsSource_textureInstanced from '../../../shaders/texture/instanced/vertex.glsl';
 import fsSource_voronoiDistortion from '../../../shaders/voronoi_distortion/fragment.glsl';
-import { ShaderProgram } from './ShaderProgram';
 
 // =============================== Type Definitions ===============================
 

@@ -15,8 +15,8 @@ import timeutil from '../../../../../shared/util/timeutil.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
-import usernamecontainer from '../../util/usernamecontainer.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 

@@ -4,8 +4,8 @@
  * Here lies the position generator for the Omega^4 Showcase variant.
  */
 
-import coordutil, { CoordsKey, Coords } from '../util/coordutil.js';
 import { rawTypes as r, ext as e } from '../util/typeutil.js';
+import coordutil, { CoordsKey, Coords } from '../util/coordutil.js';
 
 /**
  * Generates the Omega^4 position example

@@ -24,15 +24,15 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import selection from '../../chess/selection.js';
 import animation from '../animation.js';
+import { Mouse } from '../../input.js';
 import droparrows from './droparrows.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import perspective from '../perspective.js';
-import frametracker from '../frametracker.js';
-import { Mouse } from '../../input.js';
 import { GameBus } from '../../GameBus.js';
+import frametracker from '../frametracker.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 import { listener_overlay } from '../../chess/game.js';
 

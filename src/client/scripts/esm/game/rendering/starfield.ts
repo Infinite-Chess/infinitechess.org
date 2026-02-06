@@ -17,9 +17,9 @@ import boardtiles from './boardtiles.js';
 import gameloader from '../chess/gameloader.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
+import { GameBus } from '../GameBus.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import frametracker from './frametracker.js';
-import { GameBus } from '../GameBus.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 import {
 	AttributeInfoInstanced,

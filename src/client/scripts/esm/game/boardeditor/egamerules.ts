@@ -19,8 +19,8 @@ import winconutil from '../../../../../shared/chess/util/winconutil';
 import boardeditor from './boardeditor';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
 import guigamerules from '../gui/boardeditor/guigamerules';
-import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
+import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 
 // Type Definitions --------------------------------------------------------------
 

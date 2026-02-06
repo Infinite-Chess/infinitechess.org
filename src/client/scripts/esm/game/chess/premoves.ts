@@ -19,19 +19,19 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import selection from './selection.js';
 import animation from '../rendering/animation.js';
+import { Mouse } from '../input.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import preferences from '../../components/header/preferences.js';
+import { GameBus } from '../GameBus.js';
 import movesequence from './movesequence.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
+import { animateMove } from './graphicalchanges.js';
 import movepiece, {
 	CoordsSpecial,
 	Edit,
 	MoveDraft,
 } from '../../../../../shared/chess/logic/movepiece.js';
-import { Mouse } from '../input.js';
-import { GameBus } from '../GameBus.js';
-import { animateMove } from './graphicalchanges.js';
 
 // Type Definitions ---------------------------------------------
 

@@ -21,11 +21,11 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../components/header/preferences.js';
 import piecemodels from '../piecemodels.js';
+import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../instancedshapes.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import { GameBus } from '../../GameBus.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables -----------------------------------------------------------------------------

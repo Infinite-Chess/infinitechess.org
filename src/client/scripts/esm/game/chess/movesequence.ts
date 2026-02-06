@@ -15,17 +15,17 @@ import stats from '../gui/stats.js';
 import gameslot from './gameslot.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import guiclock from '../gui/guiclock.js';
+import { Mesh } from '../rendering/piecemodels.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import { GameBus } from '../GameBus.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import frametracker from '../rendering/frametracker.js';
 import guinavigation from '../gui/guinavigation.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import { Mesh } from '../rendering/piecemodels.js';
-import { GameBus } from '../GameBus.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------

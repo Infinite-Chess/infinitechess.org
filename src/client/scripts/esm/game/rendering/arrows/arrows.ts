@@ -42,14 +42,14 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import perspective from '../perspective.js';
 import frametracker from '../frametracker.js';
 import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
+import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
 import guinavigation from '../../gui/guinavigation.js';
+import { listener_overlay } from '../../chess/game.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
-import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
-import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
 
 // Type Definitions --------------------------------------------------------------------
