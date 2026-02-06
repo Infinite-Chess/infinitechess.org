@@ -83,15 +83,17 @@ function convertToSingleLine(importText: string): string {
 	// Remove any leading @ts-ignore comments
 	const lines = importText.split('\n');
 	const importLines = lines.filter((line) => !line.trim().startsWith('// @ts-ignore'));
-	
+
 	// Join all import lines and normalize whitespace
 	let singleLine = importLines.join(' ').replace(/\s+/g, ' ').trim();
-	
+
 	// Ensure there's exactly one space after commas in the import specifiers
 	// Match the pattern: import { ... } from '...'
 	const importMatch = singleLine.match(/^(import\s+(?:type\s+)?{)(.+?)(}\s+from\s+.+)$/);
-	if (importMatch) {
-		const [, prefix, specifiers, suffix] = importMatch;
+	if (importMatch && importMatch[1] && importMatch[2] && importMatch[3]) {
+		const prefix = importMatch[1];
+		const specifiers = importMatch[2];
+		const suffix = importMatch[3];
 		// Clean up specifiers: remove extra spaces around commas
 		const cleanedSpecifiers = specifiers
 			.split(',')
@@ -100,7 +102,7 @@ function convertToSingleLine(importText: string): string {
 			.join(', ');
 		singleLine = `${prefix} ${cleanedSpecifiers} ${suffix}`;
 	}
-	
+
 	return singleLine;
 }
 
@@ -178,7 +180,7 @@ function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: 
 	if (isMultiLine) {
 		// Create single-line version
 		singleLineVersion = convertToSingleLine(importText);
-		
+
 		// Calculate length from single-line version
 		const match = FROM_WITH_QUOTE_PATTERN.exec(singleLineVersion);
 		lengthBeforeFrom = match ? match.index : singleLineVersion.length;
