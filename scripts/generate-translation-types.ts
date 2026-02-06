@@ -58,7 +58,7 @@ function generateNestedType(obj: TomlTable | any, indentLevel = 1): string {
 			// Nested object - add index signature for dynamic access
 			lines.push(`${indent}${safeKey}: {`);
 			lines.push(generateNestedType(value, indentLevel + 1));
-			lines.push(`${indent}[key: string]: any;`); // Add index signature at proper indent
+			lines.push(`${indent}\t[key: string]: any;`);
 			lines.push(`${indent}};`);
 		} else if (Array.isArray(value)) {
 			// Array type
@@ -91,7 +91,7 @@ function generateTypes(): void {
  * @example
  * i18next.t("play.javascript.termination.checkmate")
  */
-export type TranslationKeys = ${dotPaths.map((p) => `\n\t| '${p}'`).join('')};
+export type TranslationKeys =${dotPaths.map((p) => `\n\t| '${p}'`).join('')};
 
 /**
  * Nested object type for client-side translation access.
