@@ -12,10 +12,10 @@ import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnc
 
 // @ts-ignore without this, the type check job fails
 import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
-// @ts-ignore without this, the type check job fails
-import init, * as wasmBindings from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
 import gameformulator from '../gameformulator.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
+// @ts-ignore without this, the type check job fails
+import init, * as wasmBindings from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
 
 const wasm = wasmBindings as typeof wasmBindings;
 let wasmInitialized = false;
