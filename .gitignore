@@ -39,6 +39,3 @@ specs
 
 # HydroChess Engine build output
 src/client/pkg/
-
-# Test directories
-.test-add-file-paths/
