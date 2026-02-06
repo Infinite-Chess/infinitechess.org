@@ -12,11 +12,8 @@ import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-import {
-	getTopPlayersForLeaderboard,
-	getPlayerRankInLeaderboard,
-	getEloOfPlayerInLeaderboard,
-} from '../database/leaderboardsManager.js';
+// prettier-ignore
+import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getEloOfPlayerInLeaderboard } from '../database/leaderboardsManager.js';
 
 /** Maximum number of players allowed to be requested in a single request. */
 const MAX_N_PLAYERS_REQUEST_CAP = 100;

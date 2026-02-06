@@ -14,12 +14,8 @@ import bcrypt from 'bcrypt';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-import {
-	getBrowserAgent,
-	onCorrectPassword,
-	onIncorrectPassword,
-	rateLimitLogin,
-} from './authRatelimiter.js';
+// prettier-ignore
+import { getBrowserAgent, onCorrectPassword, onIncorrectPassword, rateLimitLogin } from './authRatelimiter.js';
 
 /**
  * Called when any fetch request submits login form data.

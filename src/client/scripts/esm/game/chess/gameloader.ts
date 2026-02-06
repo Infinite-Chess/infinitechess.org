@@ -20,10 +20,8 @@ import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icncon
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
-import type {
-	ParticipantState,
-	ServerGameMoveMessage,
-} from '../../../../../server/game/gamemanager/gameutility.js';
+// prettier-ignore
+import type { ParticipantState, ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';

@@ -11,11 +11,8 @@ import type { UnboundedRectangle } from '../../../../../../shared/util/math/boun
 import bounds from '../../../../../../shared/util/math/bounds';
 import boardutil from '../../../../../../shared/chess/util/boardutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import typeutil, {
-	players as p,
-	rawTypes as r,
-	RawType,
-} from '../../../../../../shared/chess/util/typeutil';
+// prettier-ignore
+import typeutil, { players as p, rawTypes as r, RawType, } from '../../../../../../shared/chess/util/typeutil';
 
 import gameslot from '../../chess/gameslot';
 import boardeditor from '../../boardeditor/boardeditor';

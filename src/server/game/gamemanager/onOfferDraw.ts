@@ -13,13 +13,8 @@ import { players } from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import {
-	isDrawOfferOpen,
-	hasColorOfferedDrawTooFast,
-	openDrawOffer,
-	doesColorHaveExtendedDrawOffer,
-	closeDrawOffer,
-} from './drawoffers.js';
+// prettier-ignore
+import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
 
 //--------------------------------------------------------------------------------------------------------
 

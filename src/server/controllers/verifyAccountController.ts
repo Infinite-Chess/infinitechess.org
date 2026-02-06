@@ -9,11 +9,8 @@ import type { Request, Response } from 'express';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
-import {
-	getMemberDataByCriteria,
-	MemberRecord,
-	updateMemberColumns,
-} from '../database/memberManager.js';
+// prettier-ignore
+import { getMemberDataByCriteria, MemberRecord, updateMemberColumns } from '../database/memberManager.js';
 
 // Functions -------------------------------------------------------------------------
 

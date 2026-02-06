@@ -26,12 +26,8 @@ import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
-import {
-	AttributeInfoInstanced,
-	RenderableInstanced,
-	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../webgl/Renderable.js';
+// prettier-ignore
+import { AttributeInfoInstanced, RenderableInstanced, createRenderable_Instanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 

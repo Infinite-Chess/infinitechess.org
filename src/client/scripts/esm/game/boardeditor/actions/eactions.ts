@@ -27,19 +27,12 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
-import organizedpieces, {
-	OrganizedPieces,
-} from '../../../../../../shared/chess/logic/organizedpieces';
-import gamefile, {
-	Additional,
-	Board,
-	FullGame,
-} from '../../../../../../shared/chess/logic/gamefile';
-import icnconverter, {
-	_Move_Out,
-	LongFormatIn,
-	LongFormatOut,
-} from '../../../../../../shared/chess/logic/icn/icnconverter';
+// prettier-ignore
+import organizedpieces, { OrganizedPieces, } from '../../../../../../shared/chess/logic/organizedpieces';
+// prettier-ignore
+import gamefile, { Additional, Board, FullGame, } from '../../../../../../shared/chess/logic/gamefile';
+// prettier-ignore
+import icnconverter, { _Move_Out, LongFormatIn, LongFormatOut, } from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import toast from '../../gui/toast';
 import docutil from '../../../util/docutil';
@@ -54,10 +47,8 @@ import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/enginecards/hydrochess_card';
 import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import {
-	engineDefaultTimeLimitPerMoveMillisDict,
-	engineWorldBorderDict,
-} from '../../misc/enginegame';
+// prettier-ignore
+import { engineDefaultTimeLimitPerMoveMillisDict, engineWorldBorderDict } from '../../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
 

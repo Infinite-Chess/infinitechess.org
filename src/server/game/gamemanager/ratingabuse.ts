@@ -23,16 +23,10 @@ import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
 import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
-import {
-	getRecentNRatedGamesForUser,
-	getOpponentsOfUserFromGames,
-} from '../../database/playerGamesManager.js';
-import {
-	addEntryToRatingAbuseTable,
-	isEntryInRatingAbuseTable,
-	getRatingAbuseData,
-	updateRatingAbuseColumns,
-} from '../../database/ratingAbuseManager.js';
+// prettier-ignore
+import { getRecentNRatedGamesForUser, getOpponentsOfUserFromGames } from '../../database/playerGamesManager.js';
+// prettier-ignore
+import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from '../../database/ratingAbuseManager.js';
 
 /**
  * Potential red flags (already implemented checks are marked with an X at the start of the line):

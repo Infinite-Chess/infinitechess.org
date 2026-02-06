@@ -6,9 +6,8 @@ import themes from '../../../../../shared/components/header/themes.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import pieceThemes, {
-	PieceColorGroup,
-} from '../../../../../shared/components/header/pieceThemes.js';
+// prettier-ignore
+import pieceThemes, { PieceColorGroup, } from '../../../../../shared/components/header/pieceThemes.js';
 
 import docutil from '../../util/docutil.js';
 import LocalStorage from '../../util/LocalStorage.js';

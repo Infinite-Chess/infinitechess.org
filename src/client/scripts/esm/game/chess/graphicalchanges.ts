@@ -8,11 +8,8 @@
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type {
-	ChangeApplication,
-	Change,
-	genericChangeFunc,
-} from '../../../../../shared/chess/logic/boardchanges.js';
+// prettier-ignore
+import type { ChangeApplication, Change, genericChangeFunc } from '../../../../../shared/chess/logic/boardchanges.js';
 
 import animation from '../rendering/animation.js';
 import piecemodels from '../rendering/piecemodels.js';

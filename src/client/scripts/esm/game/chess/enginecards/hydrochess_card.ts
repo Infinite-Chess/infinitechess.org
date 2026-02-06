@@ -3,12 +3,8 @@
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 
 import bimath from '../../../../../../shared/util/math/bimath';
-import typeutil, {
-	Player,
-	rawTypes,
-	RawType,
-	PlayerGroup,
-} from '../../../../../../shared/chess/util/typeutil';
+// prettier-ignore
+import typeutil, { Player, rawTypes, RawType, PlayerGroup, } from '../../../../../../shared/chess/util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
 

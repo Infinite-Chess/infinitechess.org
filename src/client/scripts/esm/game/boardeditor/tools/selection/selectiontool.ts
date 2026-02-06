@@ -7,11 +7,8 @@
  */
 
 import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
-import type {
-	BoundingBox,
-	BoundingBoxBD,
-	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
+// prettier-ignore
+import type { BoundingBox, BoundingBoxBD, DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
 
 import bimath from '../../../../../../../shared/util/math/bimath';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';

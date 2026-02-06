@@ -12,11 +12,8 @@ import { localeMap } from '../config/dateLocales.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
-import {
-	getPlayerLeaderboardRating,
-	getEloOfPlayerInLeaderboard,
-	getPlayerRankInLeaderboard,
-} from '../database/leaderboardsManager.js';
+// prettier-ignore
+import { getPlayerLeaderboardRating, getEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 
 // Define the structure of the JSON response body
 interface MemberResponse {

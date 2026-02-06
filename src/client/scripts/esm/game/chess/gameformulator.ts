@@ -6,11 +6,8 @@
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type {
-	_Move_In,
-	LongFormatIn,
-	LongFormatOut,
-} from '../../../../../shared/chess/logic/icn/icnconverter.js';
+// prettier-ignore
+import type { _Move_In, LongFormatIn, LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';

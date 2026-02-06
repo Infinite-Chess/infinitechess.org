@@ -8,21 +8,16 @@
 
 import type { Arrow } from './annotations.js';
 import type { Color } from '../../../../../../../shared/util/math/math.js';
-import type {
-	BoundingBoxBD,
-	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds.js';
+// prettier-ignore
+import type { BoundingBoxBD, DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import vectors from '../../../../../../../shared/util/math/vectors.js';
 import geometry from '../../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import coordutil, { BDCoords, Coords, DoubleCoords, } from '../../../../../../../shared/chess/util/coordutil.js';
 
 import space from '../../../misc/space.js';
 import mouse from '../../../../util/mouse.js';

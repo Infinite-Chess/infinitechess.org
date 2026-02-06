@@ -15,11 +15,8 @@ import jsutil from '../../shared/util/jsutil.js';
 import socketUtility from './socketUtility.js';
 import { getTranslation } from '../utility/translate.js';
 import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
-import {
-	addTimeoutToEchoTimers,
-	deleteEchoTimerForMessageID,
-	timeToWaitForEchoMillis,
-} from './echoTracker.js';
+// prettier-ignore
+import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis } from './echoTracker.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 

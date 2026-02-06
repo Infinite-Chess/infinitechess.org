@@ -20,14 +20,8 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
-import {
-	getInviteAndIndexByID,
-	deleteInviteByIndex,
-	deleteUsersExistingInvite,
-	findSocketFromOwner,
-	onPublicInvitesChange,
-	IDLengthOfInvites,
-} from './invitesmanager.js';
+// prettier-ignore
+import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 
 /** The zod schema for validating the contents of the acceptinvite message. */
 const acceptinviteschem = z.strictObject({

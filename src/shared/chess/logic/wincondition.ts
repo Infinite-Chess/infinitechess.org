@@ -17,11 +17,8 @@ import insufficientmaterial from './insufficientmaterial.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { players, rawTypes, Player } from '../util/typeutil.js';
-import {
-	detectCheckmateOrStalemate,
-	pieceCountToDisableCheckmate,
-	royalCountToDisableCheckmate,
-} from './checkmate.js';
+// prettier-ignore
+import { detectCheckmateOrStalemate, pieceCountToDisableCheckmate, royalCountToDisableCheckmate } from './checkmate.js';
 
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore

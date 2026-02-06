@@ -22,10 +22,8 @@ import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import frametracker from './frametracker.js';
-import {
-	AttributeInfoInstanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../webgl/Renderable.js';
+// prettier-ignore
+import { AttributeInfoInstanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 /** A sigle star particle. */
 type Star = {

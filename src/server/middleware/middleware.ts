@@ -37,21 +37,13 @@ import { requestConfirmEmail } from '../controllers/sendMail.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
+// prettier-ignore
+import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
+// prettier-ignore
+import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
-import {
-	handleForgotPasswordRequest,
-	handleResetPassword,
-} from '../controllers/passwordResetController.js';
-import {
-	checkEmailValidity,
-	checkUsernameAvailable,
-	createNewMember,
-} from '../controllers/createAccountController.js';
-import {
-	createAccountLimiter,
-	resendAccountVerificationLimiter,
-	forgotPasswordLimiter,
-} from './rateLimiters.js';
+// prettier-ignore
+import { createAccountLimiter, resendAccountVerificationLimiter, forgotPasswordLimiter } from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
 

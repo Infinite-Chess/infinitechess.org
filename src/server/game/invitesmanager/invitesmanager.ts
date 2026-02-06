@@ -16,18 +16,10 @@ import jsutil from '../../../shared/util/jsutil.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import {
-	isInvitePrivate,
-	safelyCopyInvite,
-	isInvitePublic,
-	memberInfoEq,
-} from './inviteutility.js';
-import {
-	getInviteSubscribers,
-	addSocketToInvitesSubs,
-	removeSocketFromInvitesSubs,
-	doesUserHaveActiveConnection,
-} from './invitessubscribers.js';
+// prettier-ignore
+import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from './inviteutility.js';
+// prettier-ignore
+import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs, doesUserHaveActiveConnection } from './invitessubscribers.js';
 
 //-------------------------------------------------------------------------------------------
 

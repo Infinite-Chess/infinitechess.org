@@ -5,11 +5,8 @@
  * animation of games with a world border.
  */
 
-import bounds, {
-	BoundingBox,
-	DoubleBoundingBox,
-	UnboundedRectangle,
-} from '../../../../../shared/util/math/bounds.js';
+// prettier-ignore
+import bounds, { BoundingBox, DoubleBoundingBox, UnboundedRectangle, } from '../../../../../shared/util/math/bounds.js';
 
 import meshes from './meshes.js';
 import camera from './camera.js';

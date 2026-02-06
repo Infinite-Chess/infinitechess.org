@@ -13,15 +13,11 @@ import type { Request, Response, NextFunction } from 'express';
 import { getClientIP } from '../utility/IP.js';
 import { CustomWebSocket } from '../socket/socketUtility.js';
 import { logEventsAndPrint } from './logEvents.js';
+// prettier-ignore
+import { freshenSession, revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
+// prettier-ignore
+import { isAccessTokenValid, isRefreshTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
 import { IdentifiedRequest, isRequestIdentified, ParsedCookies } from '../types.js';
-import {
-	freshenSession,
-	revokeSession,
-} from '../controllers/authenticationTokens/sessionManager.js';
-import {
-	isAccessTokenValid,
-	isRefreshTokenValid,
-} from '../controllers/authenticationTokens/tokenValidator.js';
 
 /**
  * [HTTP] Reads the request's bearer token (from the authorization header)

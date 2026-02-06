@@ -14,11 +14,8 @@ import type { GameRules } from '../../../../../shared/chess/variants/gamerules.j
 import state from '../../../../../shared/chess/logic/state.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import {
-	_Move_In,
-	LongFormatIn,
-	PresetAnnotes,
-} from '../../../../../shared/chess/logic/icn/icnconverter.js';
+// prettier-ignore
+import { _Move_In, LongFormatIn, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 /**
  * This is the bare minimum gamefile you need to keep track of STATE,

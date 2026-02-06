@@ -12,11 +12,8 @@ import variant from '../../../../../../../shared/chess/variants/variant.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
 import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import coordutil, { BDCoords, Coords, DoubleCoords, } from '../../../../../../../shared/chess/util/coordutil.js';
 
 import space from '../../../misc/space.js';
 import mouse from '../../../../util/mouse.js';

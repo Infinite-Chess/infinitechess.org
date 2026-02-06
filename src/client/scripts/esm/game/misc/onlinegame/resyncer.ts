@@ -14,10 +14,8 @@
 
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type {
-	GameUpdateMessage,
-	ServerGameMoveMessage,
-} from '../../../../../../server/game/gamemanager/gameutility.js';
+// prettier-ignore
+import type { GameUpdateMessage, ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';

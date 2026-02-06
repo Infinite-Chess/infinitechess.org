@@ -14,11 +14,8 @@ import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movese
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -42,13 +39,8 @@ import piecemodels from '../piecemodels.js';
 import perspective from '../perspective.js';
 import legalmoveshapes from '../instancedshapes.js';
 import instancedshapes from '../instancedshapes.js';
-import {
-	AttributeInfoInstanced,
-	RenderableInstanced,
-	createRenderable,
-	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../../webgl/Renderable.js';
+// prettier-ignore
+import { AttributeInfoInstanced, RenderableInstanced, createRenderable, createRenderable_Instanced, createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
 
 // Type Definitions ------------------------------------------------------------
 

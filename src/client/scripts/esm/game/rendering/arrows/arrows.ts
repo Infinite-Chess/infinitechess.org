@@ -14,11 +14,8 @@ import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 

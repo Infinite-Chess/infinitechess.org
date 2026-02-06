@@ -21,14 +21,8 @@ import bimath from '../../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
-import {
-	rawTypes as r,
-	ext as e,
-	players as p,
-	RawType,
-	Player,
-	PlayerGroup,
-} from '../../util/typeutil.js';
+// prettier-ignore
+import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from '../../util/typeutil.js';
 
 // Type Definitions -------------------------------------------------------------------
 

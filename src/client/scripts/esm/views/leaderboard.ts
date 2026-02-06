@@ -9,10 +9,8 @@
 
 import type { UsernameItem } from '../util/usernamecontainer.js';
 
-import {
-	Leaderboards,
-	VariantLeaderboards,
-} from '../../../../shared/chess/variants/validleaderboard.js';
+// prettier-ignore
+import { Leaderboards, VariantLeaderboards } from '../../../../shared/chess/variants/validleaderboard.js';
 
 import validatorama from '../util/validatorama.js';
 import usernamecontainer from '../util/usernamecontainer.js';

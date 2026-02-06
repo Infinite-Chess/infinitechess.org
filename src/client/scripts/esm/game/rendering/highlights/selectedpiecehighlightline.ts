@@ -13,11 +13,8 @@ import bd from '@naviary/bigdecimal';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	CoordsKey,
-} from '../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import coordutil, { BDCoords, Coords, CoordsKey, } from '../../../../../../shared/chess/util/coordutil.js';
 
 import boardpos from '../boardpos.js';
 import selection from '../../chess/selection.js';

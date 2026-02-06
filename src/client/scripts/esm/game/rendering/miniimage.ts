@@ -4,12 +4,8 @@
  * This script handles the rendering of the mini images of our pieces when we're zoomed out
  */
 
-import type {
-	BDCoords,
-	Coords,
-	CoordsKey,
-	DoubleCoords,
-} from '../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import type { BDCoords, Coords, CoordsKey, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -38,11 +34,8 @@ import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
-import {
-	RenderableInstanced,
-	AttributeInfoInstanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../webgl/Renderable.js';
+// prettier-ignore
+import { RenderableInstanced, AttributeInfoInstanced, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
 

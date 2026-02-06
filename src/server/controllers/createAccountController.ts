@@ -23,12 +23,8 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './sendMail.js';
-import {
-	addUser,
-	isEmailTaken,
-	isUsernameTaken,
-	SQLITE_CONSTRAINT_ERROR,
-} from '../database/memberManager.js';
+// prettier-ignore
+import { addUser, isEmailTaken, isUsernameTaken, SQLITE_CONSTRAINT_ERROR } from '../database/memberManager.js';
 
 // Variables -------------------------------------------------------------------------
 

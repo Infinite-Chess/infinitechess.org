@@ -6,10 +6,8 @@ import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type {
-	GameUpdateMessage,
-	ServerGameMoveMessage,
-} from '../../../../../../server/game/gamemanager/gameutility.js';
+// prettier-ignore
+import type { GameUpdateMessage, ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';

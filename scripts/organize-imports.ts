@@ -68,9 +68,41 @@ interface Import {
 	lengthBeforeFrom: number;
 	/** Which source directory this relative import belongs to, or null if it's a package import or not in shared/client/tests/server directories */
 	sourceDir: 'shared' | 'client' | 'tests' | 'server' | null;
+	/** Single-line version of the import (for multi-line imports) */
+	singleLineVersion?: string;
 }
 
 // Helper Functions --------------------------------------------------------
+
+/**
+ * Converts a multi-line import statement to a single line.
+ * @param importText - The import statement (potentially multi-line)
+ * @returns Single-line version of the import
+ */
+function convertToSingleLine(importText: string): string {
+	// Remove any leading @ts-ignore comments
+	const lines = importText.split('\n');
+	const importLines = lines.filter((line) => !line.trim().startsWith('// @ts-ignore'));
+	
+	// Join all import lines and normalize whitespace
+	let singleLine = importLines.join(' ').replace(/\s+/g, ' ').trim();
+	
+	// Ensure there's exactly one space after commas in the import specifiers
+	// Match the pattern: import { ... } from '...'
+	const importMatch = singleLine.match(/^(import\s+(?:type\s+)?{)(.+?)(}\s+from\s+.+)$/);
+	if (importMatch) {
+		const [, prefix, specifiers, suffix] = importMatch;
+		// Clean up specifiers: remove extra spaces around commas
+		const cleanedSpecifiers = specifiers
+			.split(',')
+			.map((s) => s.trim())
+			.filter((s) => s.length > 0)
+			.join(', ');
+		singleLine = `${prefix} ${cleanedSpecifiers} ${suffix}`;
+	}
+	
+	return singleLine;
+}
 
 /**
  * Resolves an import path from the current file and determines which source directory it belongs to.
@@ -136,14 +168,27 @@ function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: 
 	// Determine which source directory the import belongs to
 	const sourceDir = isPackage ? null : resolveImportSourceDir(currentFilePath, fromPath);
 
-	// Calculate length before "from" followed by whitespace and a quote
-	// For ts-ignore imports, calculate from the import line only, not including the comment
-	const textForLength = hasTsIgnore ? importLine : importText;
-	const match = FROM_WITH_QUOTE_PATTERN.exec(textForLength);
-	const lengthBeforeFrom = match ? match.index : textForLength.length;
-
 	// Check if multi-line
 	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
+
+	// Generate single-line version for multi-line imports
+	let singleLineVersion: string | undefined;
+	let lengthBeforeFrom: number;
+
+	if (isMultiLine) {
+		// Create single-line version
+		singleLineVersion = convertToSingleLine(importText);
+		
+		// Calculate length from single-line version
+		const match = FROM_WITH_QUOTE_PATTERN.exec(singleLineVersion);
+		lengthBeforeFrom = match ? match.index : singleLineVersion.length;
+	} else {
+		// Calculate length before "from" followed by whitespace and a quote
+		// For ts-ignore imports, calculate from the import line only, not including the comment
+		const textForLength = hasTsIgnore ? importLine : importText;
+		const match = FROM_WITH_QUOTE_PATTERN.exec(textForLength);
+		lengthBeforeFrom = match ? match.index : textForLength.length;
+	}
 
 	return {
 		raw: importText,
@@ -153,16 +198,13 @@ function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: 
 		isMultiLine,
 		lengthBeforeFrom,
 		sourceDir,
+		singleLineVersion,
 	};
 }
 
 function compareImports(a: Import, b: Import): number {
-	// First: multi-line imports come last
-	if (a.isMultiLine !== b.isMultiLine) {
-		return a.isMultiLine ? 1 : -1;
-	}
-
-	// Second: by length before "from"
+	// Sort by length before "from"
+	// Note: multi-line imports now have their length calculated from single-line version
 	return a.lengthBeforeFrom - b.lengthBeforeFrom;
 }
 
@@ -359,41 +401,49 @@ function organizeImports(imports: Import[]): string {
 	otherSourceImports.sort(compareImports);
 	sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
 
+	// Helper function to format an import (add prettier-ignore if it was multi-line)
+	const formatImport = (imp: Import): string => {
+		if (imp.isMultiLine && imp.singleLineVersion) {
+			return `// prettier-ignore\n${imp.singleLineVersion}`;
+		}
+		return imp.raw;
+	};
+
 	// Build groups array
 	const groups: string[] = [];
 
 	if (typeImports.length > 0) {
-		groups.push(typeImports.map((i) => i.raw).join('\n'));
+		groups.push(typeImports.map(formatImport).join('\n'));
 	}
 
 	if (packageImports.length > 0) {
-		groups.push(packageImports.map((i) => i.raw).join('\n'));
+		groups.push(packageImports.map(formatImport).join('\n'));
 	}
 
 	// Add source imports in order: shared, client, tests, server
 	if (sharedImports.length > 0) {
-		groups.push(sharedImports.map((i) => i.raw).join('\n'));
+		groups.push(sharedImports.map(formatImport).join('\n'));
 	}
 
 	if (clientImports.length > 0) {
-		groups.push(clientImports.map((i) => i.raw).join('\n'));
+		groups.push(clientImports.map(formatImport).join('\n'));
 	}
 
 	if (testsImports.length > 0) {
-		groups.push(testsImports.map((i) => i.raw).join('\n'));
+		groups.push(testsImports.map(formatImport).join('\n'));
 	}
 
 	if (serverImports.length > 0) {
-		groups.push(serverImports.map((i) => i.raw).join('\n'));
+		groups.push(serverImports.map(formatImport).join('\n'));
 	}
 
 	// Other source imports that don't belong to shared/client/server
 	if (otherSourceImports.length > 0) {
-		groups.push(otherSourceImports.map((i) => i.raw).join('\n'));
+		groups.push(otherSourceImports.map(formatImport).join('\n'));
 	}
 
 	if (sideEffectImports.length > 0) {
-		groups.push(sideEffectImports.map((i) => i.raw).join('\n'));
+		groups.push(sideEffectImports.map(formatImport).join('\n'));
 	}
 
 	// Join groups with blank lines

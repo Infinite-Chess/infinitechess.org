@@ -16,11 +16,8 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
-import movepiece, {
-	CoordsSpecial,
-	Edit,
-	MoveDraft,
-} from '../../../../../shared/chess/logic/movepiece.js';
+// prettier-ignore
+import movepiece, { CoordsSpecial, Edit, MoveDraft, } from '../../../../../shared/chess/logic/movepiece.js';
 
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';

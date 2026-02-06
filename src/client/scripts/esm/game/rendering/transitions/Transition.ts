@@ -18,11 +18,8 @@ import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/m
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../../shared/util/math/math.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import coordutil, { BDCoords, Coords, DoubleCoords, } from '../../../../../../shared/chess/util/coordutil.js';
 
 import space from '../../misc/space.js';
 import meshes from '../meshes.js';

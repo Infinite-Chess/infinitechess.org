@@ -9,25 +9,17 @@
  */
 
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type {
-	Coords,
-	CoordsKey,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+// prettier-ignore
+import type { Coords, CoordsKey, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
 import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
-import icnconverter, {
-	_Move_Compact,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import {
-	rawTypes as r,
-	ext as e,
-	players,
-	numTypes,
-} from '../../../../../../shared/chess/util/typeutil.js';
+// prettier-ignore
+import icnconverter, { _Move_Compact, } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+// prettier-ignore
+import { rawTypes as r, ext as e, players, numTypes } from '../../../../../../shared/chess/util/typeutil.js';
 
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;

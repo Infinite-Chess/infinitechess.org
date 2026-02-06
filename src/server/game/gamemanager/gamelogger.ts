@@ -20,17 +20,10 @@ import { PlayerGroup, players, type Player } from '../../../shared/chess/util/ty
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-import {
-	computeRatingDataChanges,
-	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_LEADERBOARD_RD,
-} from './ratingcalculation.js';
-import {
-	addUserToLeaderboard_core,
-	getPlayerLeaderboardRating_core,
-	isPlayerInLeaderboard,
-	updatePlayerLeaderboardRating_core,
-} from '../../database/leaderboardsManager.js';
+// prettier-ignore
+import { computeRatingDataChanges, DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD } from './ratingcalculation.js';
+// prettier-ignore
+import { addUserToLeaderboard_core, getPlayerLeaderboardRating_core, isPlayerInLeaderboard, updatePlayerLeaderboardRating_core } from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------------------
 

@@ -19,13 +19,8 @@ import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
-import {
-	addConnectionToConnectionLists,
-	doesClientHaveMaxSocketCount,
-	doesSessionHaveMaxSocketCount,
-	generateUniqueIDForSocket,
-	terminateAllIPSockets,
-} from './socketManager.js';
+// prettier-ignore
+import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessionHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
 
 // Variables ---------------------------------------------------------------------------
 

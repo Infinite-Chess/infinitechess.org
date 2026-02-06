@@ -57,10 +57,8 @@ import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighligh
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
-import {
-	PostProcessingPipeline,
-	PostProcessPass,
-} from '../../webgl/post_processing/PostProcessingPipeline.js';
+// prettier-ignore
+import { PostProcessingPipeline, PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline.js';
 
 // Variables -------------------------------------------------------------------------------
 

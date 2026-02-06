@@ -16,10 +16,8 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
-import icnconverter, {
-	_Move_Out,
-	LongFormatOut,
-} from '../../../../../shared/chess/logic/icn/icnconverter.js';
+// prettier-ignore
+import icnconverter, { _Move_Out, LongFormatOut, } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
 import guipause from '../gui/guipause.js';

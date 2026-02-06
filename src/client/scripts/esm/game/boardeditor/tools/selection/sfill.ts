@@ -11,10 +11,8 @@ import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/uti
 
 import bimath from '../../../../../../../shared/util/math/bimath';
 import vectors from '../../../../../../../shared/util/math/vectors';
-import bounds, {
-	BoundingBox,
-	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
+// prettier-ignore
+import bounds, { BoundingBox, DoubleBoundingBox, } from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
