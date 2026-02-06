@@ -8,7 +8,7 @@ import typeutil, {
 	rawTypes,
 	RawType,
 	PlayerGroup,
-	players,
+	players as p,
 } from '../../../../../../shared/chess/util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
@@ -86,7 +86,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	let nonNeutralCount = 0;
 	for (const type of variantOptions.position.values()) {
 		const color = typeutil.getColorFromType(type);
-		if (color !== players.NEUTRAL) nonNeutralCount++;
+		if (color !== p.NEUTRAL) nonNeutralCount++;
 	}
 	if (nonNeutralCount > maxPieces) {
 		return {
