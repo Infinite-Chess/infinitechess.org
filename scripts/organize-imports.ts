@@ -17,7 +17,7 @@
  *
  * BOUNDARY DETECTION:
  * - Import section starts at the first import statement
- * - Import section ends at the last import statement
+ * - Import section ends at the last import statement, or where we encounter the first non-import, non-comment line.
  * - Everything above and below is preserved as-is
  * - All comments within the import boundary (except @ts-ignore, and inline comments on import lines) are deleted
  *
